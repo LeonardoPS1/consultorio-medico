@@ -1,35 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { toast } from '@/components/ui/use-toast';
 import {
   TrendingUp, TrendingDown, Users, Calendar, MessageSquare, DollarSign,
   Download, BarChart3, PieChart, Activity, Phone, Mail, CheckCircle2, XCircle,
-  Clock, ArrowUpRight, ArrowDownRight,
+  Clock, ArrowUpRight, ArrowDownRight, FileSpreadsheet,
 } from 'lucide-react';
 
 // ============================================================
-// Datos mock completos
+// Tipos y datos
 // ============================================================
 
-const metricasGenerales = [
-  { titulo: 'Turnos este mes', valor: '142', cambio: '+12%', icon: Calendar, up: true },
-  { titulo: 'Pacientes activos', valor: '89', cambio: '+8%', icon: Users, up: true },
-  { titulo: 'Tasa de ausentismo', valor: '6.3%', cambio: '-2.1%', icon: TrendingDown, up: false },
-  { titulo: 'Ingresos estimados', valor: '$425,000', cambio: '+18%', icon: DollarSign, up: true },
-];
+type Periodo = 'semana' | 'mes' | 'año';
 
-const turnosPorDia = [
-  { dia: 'Lun', cantidad: 28, completados: 24, cancelados: 2, ausentes: 2 },
-  { dia: 'Mar', cantidad: 32, completados: 30, cancelados: 1, ausentes: 1 },
-  { dia: 'Mié', cantidad: 25, completados: 22, cancelados: 2, ausentes: 1 },
-  { dia: 'Jue', cantidad: 35, completados: 32, cancelados: 1, ausentes: 2 },
-  { dia: 'Vie', cantidad: 30, completados: 28, cancelados: 1, ausentes: 1 },
-  { dia: 'Sáb', cantidad: 8, completados: 7, cancelados: 1, ausentes: 0 },
-];
+interface Metricas { titulo: string; valor: string; cambio: string; icon?: any; up: boolean; }
+interface TurnoDia { dia: string; cantidad: number; completados: number; cancelados: number; ausentes: number; }
+interface WhatsAppM { titulo: string; valor: string; cambio: string; up: boolean; }
 
 const intencionesData = [
   { intencion: 'Consulta', cantidad: 245, porcentaje: 38, icon: MessageSquare },
@@ -41,26 +32,122 @@ const intencionesData = [
 ];
 
 const pacientesPorObraSocial = [
-  { obra: 'OSDE', cantidad: 28 },
-  { obra: 'Swiss Medical', cantidad: 22 },
-  { obra: 'Galeno', cantidad: 15 },
-  { obra: 'Medicus', cantidad: 10 },
-  { obra: 'Particular', cantidad: 32 },
-  { obra: 'Otras', cantidad: 8 },
+  { obra: 'OSDE', cantidad: 28 }, { obra: 'Swiss Medical', cantidad: 22 },
+  { obra: 'Galeno', cantidad: 15 }, { obra: 'Medicus', cantidad: 10 },
+  { obra: 'Particular', cantidad: 32 }, { obra: 'Otras', cantidad: 8 },
 ];
 
-const metricasWhatsApp = [
-  { titulo: 'Mensajes recibidos', valor: '1,245', cambio: '+23%', up: true },
-  { titulo: 'Mensajes enviados', valor: '980', cambio: '+18%', up: true },
-  { titulo: 'Tasa de respuesta', valor: '94%', cambio: '+5%', up: true },
-  { titulo: 'Opt-outs', valor: '12', cambio: '-3%', up: false },
-];
+const MaxObraSocial = Math.max(...pacientesPorObraSocial.map(t => t.cantidad));
 
-const MaxTurnos = Math.max(...turnosPorDia.map(t => t.cantidad));
-const MaxObraSocial = Math.max(...pacientesPorObraSocial.map(p => p.cantidad));
+const datosPorPeriodo: Record<Periodo, { metricas: Metricas[]; turnos: TurnoDia[]; whatsapp: WhatsAppM[]; nuevosPacientes: number[] }> = {
+  semana: {
+    metricas: [
+      { titulo: 'Turnos esta semana', valor: '34', cambio: '+5%', icon: Calendar, up: true },
+      { titulo: 'Pacientes nuevos', valor: '3', cambio: '+2', icon: Users, up: true },
+      { titulo: 'Tasa de ausentismo', valor: '4.1%', cambio: '-0.5%', icon: TrendingDown, up: false },
+      { titulo: 'Ingresos estimados', valor: '$98,000', cambio: '+7%', icon: DollarSign, up: true },
+    ],
+    turnos: [
+      { dia: 'Lun', cantidad: 7, completados: 6, cancelados: 1, ausentes: 0 },
+      { dia: 'Mar', cantidad: 8, completados: 7, cancelados: 0, ausentes: 1 },
+      { dia: 'Mié', cantidad: 6, completados: 5, cancelados: 1, ausentes: 0 },
+      { dia: 'Jue', cantidad: 8, completados: 8, cancelados: 0, ausentes: 0 },
+      { dia: 'Vie', cantidad: 5, completados: 4, cancelados: 0, ausentes: 1 },
+    ],
+    whatsapp: [
+      { titulo: 'Mensajes recibidos', valor: '287', cambio: '+8%', up: true },
+      { titulo: 'Mensajes enviados', valor: '245', cambio: '+5%', up: true },
+      { titulo: 'Tasa de respuesta', valor: '96%', cambio: '+2%', up: true },
+      { titulo: 'Opt-outs', valor: '2', cambio: '-1', up: false },
+    ],
+    nuevosPacientes: [2, 1, 3, 0, 2],
+  },
+  mes: {
+    metricas: [
+      { titulo: 'Turnos este mes', valor: '142', cambio: '+12%', icon: Calendar, up: true },
+      { titulo: 'Pacientes activos', valor: '89', cambio: '+8%', icon: Users, up: true },
+      { titulo: 'Tasa de ausentismo', valor: '6.3%', cambio: '-2.1%', icon: TrendingDown, up: false },
+      { titulo: 'Ingresos estimados', valor: '$425,000', cambio: '+18%', icon: DollarSign, up: true },
+    ],
+    turnos: [
+      { dia: 'Lun', cantidad: 28, completados: 24, cancelados: 2, ausentes: 2 },
+      { dia: 'Mar', cantidad: 32, completados: 30, cancelados: 1, ausentes: 1 },
+      { dia: 'Mié', cantidad: 25, completados: 22, cancelados: 2, ausentes: 1 },
+      { dia: 'Jue', cantidad: 35, completados: 32, cancelados: 1, ausentes: 2 },
+      { dia: 'Vie', cantidad: 30, completados: 28, cancelados: 1, ausentes: 1 },
+      { dia: 'Sáb', cantidad: 8, completados: 7, cancelados: 1, ausentes: 0 },
+    ],
+    whatsapp: [
+      { titulo: 'Mensajes recibidos', valor: '1,245', cambio: '+23%', up: true },
+      { titulo: 'Mensajes enviados', valor: '980', cambio: '+18%', up: true },
+      { titulo: 'Tasa de respuesta', valor: '94%', cambio: '+5%', up: true },
+      { titulo: 'Opt-outs', valor: '12', cambio: '-3%', up: false },
+    ],
+    nuevosPacientes: [5, 8, 12, 10, 8],
+  },
+  año: {
+    metricas: [
+      { titulo: 'Turnos este año', valor: '1,892', cambio: '+22%', icon: Calendar, up: true },
+      { titulo: 'Pacientes totales', valor: '245', cambio: '+35%', icon: Users, up: true },
+      { titulo: 'Tasa de ausentismo', valor: '5.8%', cambio: '-1.2%', icon: TrendingDown, up: false },
+      { titulo: 'Ingresos estimados', valor: '$5.2M', cambio: '+31%', icon: DollarSign, up: true },
+    ],
+    turnos: [
+      { dia: 'Ene', cantidad: 142, completados: 130, cancelados: 8, ausentes: 4 },
+      { dia: 'Feb', cantidad: 158, completados: 145, cancelados: 7, ausentes: 6 },
+      { dia: 'Mar', cantidad: 165, completados: 152, cancelados: 8, ausentes: 5 },
+      { dia: 'Abr', cantidad: 148, completados: 138, cancelados: 6, ausentes: 4 },
+      { dia: 'May', cantidad: 142, completados: 130, cancelados: 7, ausentes: 5 },
+    ],
+    whatsapp: [
+      { titulo: 'Mensajes recibidos', valor: '12,450', cambio: '+45%', up: true },
+      { titulo: 'Mensajes enviados', valor: '10,200', cambio: '+38%', up: true },
+      { titulo: 'Tasa de respuesta', valor: '92%', cambio: '+3%', up: true },
+      { titulo: 'Opt-outs', valor: '85', cambio: '-12%', up: false },
+    ],
+    nuevosPacientes: [12, 18, 22, 15, 20, 25, 28, 30, 22, 18, 15, 20],
+  },
+};
 
 export default function ReportesPage() {
-  const [periodo, setPeriodo] = useState('mes');
+  const [periodo, setPeriodo] = useState<Periodo>('mes');
+  const datos = datosPorPeriodo[periodo];
+  const MaxTurnos = Math.max(...datos.turnos.map(t => t.cantidad));
+
+  const exportarReporte = () => {
+    const fecha = new Date().toLocaleDateString('es-AR');
+    const lineas = [
+      `=== REPORTE DEL CONSULTORIO - ${fecha.toUpperCase()} ===`,
+      `Período: ${periodo === 'semana' ? 'Semana' : periodo === 'mes' ? 'Mes' : 'Año'}`,
+      '',
+      '=== MÉTRICAS GENERALES ===',
+      ...datos.metricas.map(m => `${m.titulo}: ${m.valor} (${m.cambio})`),
+      '',
+      '=== TURNOS POR DÍA ===',
+      ...datos.turnos.map(t => `${t.dia}: ${t.cantidad} (${t.completados} completados, ${t.cancelados} cancelados, ${t.ausentes} ausentes)`),
+      '',
+      '=== WHATSAPP ===',
+      ...datos.whatsapp.map(w => `${w.titulo}: ${w.valor} (${w.cambio})`),
+      '',
+      '=== INTENCIONES ===',
+      ...intencionesData.map(i => `${i.intencion}: ${i.cantidad} (${i.porcentaje}%)`),
+      '',
+      '=== PACIENTES POR OBRA SOCIAL ===',
+      ...pacientesPorObraSocial.map(p => `${p.obra}: ${p.cantidad}`),
+      '',
+      `Generado el ${new Date().toLocaleString('es-AR')}`,
+      'Consultorio Médico - Sistema de Gestión',
+    ].join('\n');
+
+    const blob = new Blob([lineas], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reporte-${periodo}-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({ title: '📊 Reporte exportado', description: `Período: ${periodo}` });
+  };
 
   return (
     <div className="space-y-6 animate-in">
@@ -84,7 +171,7 @@ export default function ReportesPage() {
               Año
             </Button>
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={exportarReporte}>
             <Download className="h-4 w-4 mr-1" />
             Exportar
           </Button>
@@ -115,7 +202,7 @@ export default function ReportesPage() {
         <TabsContent value="general" className="mt-4 space-y-6">
           {/* KPIs */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {metricasGenerales.map((m) => {
+            {datos.metricas.map((m) => {
               const Icon = m.icon;
               return (
                 <Card key={m.titulo} className="transition-all hover:shadow-md">
@@ -152,19 +239,23 @@ export default function ReportesPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-end justify-between gap-2 h-48">
-                  {turnosPorDia.map((t) => (
-                    <div key={t.dia} className="flex flex-col items-center gap-2 flex-1">
-                      <span className="text-xs font-medium text-muted-foreground">{t.cantidad}</span>
-                      <div className="w-full rounded-md bg-primary/80 hover:bg-primary transition-colors relative group"
-                        style={{ height: `${(t.cantidad / MaxTurnos) * 100}%` }}
-                      >
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md">
-                          {t.completados} completados · {t.cancelados} cancelados
+                  {datos.turnos.map((t) => {
+                    const maxVal = MaxTurnos || 1;
+                    return (
+                      <div key={t.dia} className="flex flex-col items-center gap-2 flex-1">
+                        <span className="text-xs font-medium text-muted-foreground">{t.cantidad}</span>
+                        <div
+                          className="w-full rounded-md bg-primary/80 hover:bg-primary transition-colors relative group"
+                          style={{ height: `${(t.cantidad / maxVal) * 100}%` }}
+                        >
+                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md">
+                            {t.completados} completados · {t.cancelados} cancelados
+                          </div>
                         </div>
+                        <span className="text-xs text-muted-foreground">{t.dia}</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">{t.dia}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
@@ -397,7 +488,7 @@ export default function ReportesPage() {
         {/* ============ TAB WHATSAPP ============ */}
         <TabsContent value="whatsapp" className="mt-4 space-y-6">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {metricasWhatsApp.map((m) => (
+            {datos.whatsapp.map((m) => (
               <Card key={m.titulo}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">{m.titulo}</CardTitle>
