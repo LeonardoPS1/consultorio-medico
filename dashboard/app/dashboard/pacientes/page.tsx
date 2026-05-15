@@ -171,10 +171,20 @@ export default function PacientesPage() {
                   </div>
 
                   <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                    <Button variant="ghost" size="icon" title="Enviar WhatsApp">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Enviar WhatsApp"
+                      onClick={() => router.push(`/dashboard/conversaciones`)}
+                    >
                       <MessageSquare className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" title="Ver ficha completa">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Ver ficha completa"
+                      onClick={() => router.push(`/dashboard/pacientes/${paciente.id}`)}
+                    >
                       <ExternalLink className="h-4 w-4" />
                     </Button>
                   </div>

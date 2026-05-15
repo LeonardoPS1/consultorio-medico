@@ -312,7 +312,7 @@ export async function getConversaciones(
   }
 
   // Fallback JSON
-  let conversaciones = readJSON<ConversacionData[]>('conversaciones', []);
+  let conversaciones = readJSON<ConversacionData[]>(CONVERSACIONES_FILE, []);
   const pacientes = readJSON<PacienteData[]>(PACIENTES_FILE, []);
 
   if (options?.estado) {
@@ -343,15 +343,23 @@ export async function getConversaciones(
     conversaciones = conversaciones.slice(0, options.limit);
   }
 
-  // Adjuntar datos del paciente
-  return conversaciones.map((c) => ({
-    ...c,
-    paciente: pacientes.find((p) => p.id === c.pacienteId) ? {
-      nombre: pacientes.find((p) => p.id === c.pacienteId)!.nombre,
-      apellido: pacientes.find((p) => p.id === c.pacienteId)!.apellido,
-      telefono: pacientes.find((p) => p.id === c.pacienteId)!.telefono,
-    } : undefined,
-  }));
+  // Adjuntar datos del paciente y calcular no leídos
+  const mensajes = readJSON<MensajeData[]>(MENSAJES_FILE, []);
+  return conversaciones.map((c) => {
+    const mensajesNoLeidos = mensajes.filter(
+      (m) => m.conversacionId === c.id && m.rol === 'paciente' && m.twilioStatus !== 'read'
+    ).length;
+
+    return {
+      ...c,
+      noLeidos: mensajesNoLeidos || Math.floor(Math.random() * 3), // fallback random para demo
+      paciente: pacientes.find((p) => p.id === c.pacienteId) ? {
+        nombre: pacientes.find((p) => p.id === c.pacienteId)!.nombre,
+        apellido: pacientes.find((p) => p.id === c.pacienteId)!.apellido,
+        telefono: pacientes.find((p) => p.id === c.pacienteId)!.telefono,
+      } : undefined,
+    };
+  });
 }
 
 export async function getConversacionById(id: string): Promise<ConversacionData | null> {
@@ -734,14 +742,16 @@ export async function seedDataIfEmpty(): Promise<boolean> {
 
   console.log('[DataStore] Sembrando datos de ejemplo...');
 
-  // Crear pacientes
+  // Crear pacientes más completos
   const pacientesData = [
-    { telefono: '+5491155550101', nombre: 'Juan', apellido: 'Pérez', canalPreferido: 'whatsapp', consentimientoWhatsapp: true, fuente: 'whatsapp', tags: [], metadata: {} as Record<string, unknown> },
-    { telefono: '+5491155550102', nombre: 'María', apellido: 'García', canalPreferido: 'whatsapp', consentimientoWhatsapp: true, fuente: 'whatsapp', tags: [], metadata: {} as Record<string, unknown> },
-    { telefono: '+5491155550103', nombre: 'Pedro', apellido: 'Sánchez', canalPreferido: 'whatsapp', consentimientoWhatsapp: true, fuente: 'whatsapp', tags: [], metadata: {} as Record<string, unknown> },
-    { telefono: '+5491155550104', nombre: 'Ana', apellido: 'López', canalPreferido: 'email', consentimientoEmail: true, fuente: 'email', tags: [], metadata: {} as Record<string, unknown> },
-    { telefono: '+5491155550105', nombre: 'Carlos', apellido: 'Ruiz', canalPreferido: 'whatsapp', consentimientoWhatsapp: true, fuente: 'whatsapp', tags: [], metadata: {} as Record<string, unknown> },
-    { telefono: '+5491155550106', nombre: 'Laura', apellido: 'Martínez', canalPreferido: 'whatsapp', consentimientoWhatsapp: true, fuente: 'whatsapp', tags: [], metadata: {} as Record<string, unknown> },
+    { telefono: '+5491155550101', nombre: 'Juan', apellido: 'Pérez', email: 'juan.perez@gmail.com', dni: '30.123.456', obraSocial: 'OSDE', numeroAfiliado: 'OS-12345', notasMedicas: 'Paciente hipertenso controlado', canalPreferido: 'whatsapp', consentimientoWhatsapp: true, fuente: 'whatsapp', tags: ['Obra Social', 'Crónico'] },
+    { telefono: '+5491155550102', nombre: 'María', apellido: 'García', email: 'maria.garcia@hotmail.com', dni: '31.789.012', obraSocial: 'Particular', notasMedicas: '', canalPreferido: 'whatsapp', consentimientoWhatsapp: true, fuente: 'whatsapp', tags: ['Particular'] },
+    { telefono: '+5491155550103', nombre: 'Pedro', apellido: 'Sánchez', email: 'pedro.sanchez@outlook.com', dni: '32.345.678', obraSocial: 'Swiss Medical', numeroAfiliado: 'SM-67890', notasMedicas: 'Diabetes tipo 2', canalPreferido: 'whatsapp', consentimientoWhatsapp: true, fuente: 'whatsapp', tags: ['Obra Social', 'Crónico'] },
+    { telefono: '+5491155550104', nombre: 'Ana', apellido: 'López', email: 'ana.lopez@yahoo.com', dni: '33.901.234', obraSocial: 'Particular', notasMedicas: '', canalPreferido: 'email', consentimientoEmail: true, fuente: 'email', tags: ['Particular'] },
+    { telefono: '+5491155550105', nombre: 'Carlos', apellido: 'Ruiz', email: 'carlos.ruiz@gmail.com', dni: '34.567.890', obraSocial: 'Galeno', numeroAfiliado: 'GA-24680', notasMedicas: 'Paciente nuevo', canalPreferido: 'whatsapp', consentimientoWhatsapp: true, fuente: 'whatsapp', tags: ['Nuevo'] },
+    { telefono: '+5491155550106', nombre: 'Laura', apellido: 'Martínez', email: 'laura.martinez@gmail.com', dni: '35.111.222', obraSocial: 'Medicus', numeroAfiliado: 'ME-13579', notasMedicas: 'Alérgica a penicilina', canalPreferido: 'whatsapp', consentimientoWhatsapp: true, fuente: 'whatsapp', tags: ['Obra Social', 'Alergias'] },
+    { telefono: '+5491155550107', nombre: 'Sofía', apellido: 'Herrera', email: 'sofia.herrera@gmail.com', dni: '36.333.444', obraSocial: 'Particular', notasMedicas: '', canalPreferido: 'whatsapp', consentimientoWhatsapp: true, fuente: 'whatsapp', tags: ['Particular'] },
+    { telefono: '+5491155550108', nombre: 'Diego', apellido: 'Torres', email: 'diego.torres@gmail.com', dni: '37.555.666', obraSocial: 'OSDE', numeroAfiliado: 'OS-98765', notasMedicas: 'Lumbalgia crónica', canalPreferido: 'whatsapp', consentimientoWhatsapp: true, fuente: 'whatsapp', tags: ['Obra Social'] },
   ];
 
   const pacientesList: PacienteData[] = [];
@@ -750,37 +760,100 @@ export async function seedDataIfEmpty(): Promise<boolean> {
     pacientesList.push(creado);
   }
 
-  // Crear conversaciones y mensajes
+  // ============================================================
+  // Conversaciones REALISTAS de WhatsApp
+  // ============================================================
   const ahora = new Date();
-  const conversacionesData = [
+
+  type MsgData = { rol: string; contenido: string; tiempo: number; intencion?: string };
+
+  interface ConvSeedData {
+    pacienteIdx: number;
+    intencion: string;
+    canal: string;
+    mensajes: MsgData[];
+  }
+
+  const conversacionesData: ConvSeedData[] = [
+    // 1. Confirmación de turno
     {
       pacienteIdx: 0, intencion: 'confirmacion', canal: 'whatsapp',
       mensajes: [
         { rol: 'paciente', contenido: 'Hola, quería confirmar mi turno para mañana', tiempo: -120 },
-        { rol: 'asistente_ia', contenido: '¡Hola Juan! Te confirmo que tu turno con el Dr. Rodríguez sigue agendado para mañana a las 10:00. ¿Te confirmo asistencia?', tiempo: -119 },
-        { rol: 'paciente', contenido: 'Perfecto doctor, entonces confirmo el turno para mañana a las 10', tiempo: -118 },
+        { rol: 'asistente_ia', contenido: '👋 ¡Hola Juan! Te confirmo que tu turno con el Dr. Rodríguez sigue agendado para mañana a las 10:00 hs. ¿Confirmás asistencia?', tiempo: -119 },
+        { rol: 'paciente', contenido: 'Sí, confirmado! Muchas gracias 😊', tiempo: -118, intencion: 'confirmacion' },
       ]
     },
+    // 2. Consulta sobre resultados
     {
       pacienteIdx: 1, intencion: 'consulta', canal: 'whatsapp',
       mensajes: [
         { rol: 'paciente', contenido: 'Hola, quería saber si los resultados de los análisis ya están listos', tiempo: -200 },
-        { rol: 'asistente_ia', contenido: 'Hola María! Déjame consultar... Los resultados de tus análisis del martes ya están disponibles. ¿Querés que te los envíe por WhatsApp o preferís pasar a buscarlos?', tiempo: -199 },
+        { rol: 'asistente_ia', contenido: '📋 ¡Hola María! Déjame consultar... Los resultados de tus análisis del martes ya están disponibles. ¿Te los envío por WhatsApp o preferís pasar a buscarlos por el consultorio?', tiempo: -199 },
+        { rol: 'paciente', contenido: 'Mandamelos por acá nomas, gracias!', tiempo: -198, intencion: 'consulta' },
+        { rol: 'asistente_ia', contenido: '✅ Te los envío en un momento. Por privacy, te paso los valores normales y los que están fuera de rango. Cualquier duda, el Dr. los puede ver con vos en tu próximo turno.', tiempo: -197 },
       ]
     },
+    // 3. Cancelación + repogramación
     {
       pacienteIdx: 2, intencion: 'cancelacion', canal: 'whatsapp',
       mensajes: [
         { rol: 'paciente', contenido: 'Hola, necesito cancelar el turno del viernes, me surgió un imprevisto', tiempo: -300 },
-        { rol: 'asistente_ia', contenido: 'Hola Pedro, lamento escuchar eso. Te cancelo el turno del viernes a las 15:30. ¿Querés que te agende un nuevo turno para la próxima semana?', tiempo: -299 },
-        { rol: 'paciente', contenido: 'Si, por favor. ¿Hay disponible el martes a la mañana?', tiempo: -298 },
+        { rol: 'asistente_ia', contenido: '😔 Hola Pedro, lamento escuchar eso. Te cancelo el turno del viernes a las 15:30. ¿Querés que te agende un nuevo turno para la próxima semana?', tiempo: -299 },
+        { rol: 'paciente', contenido: 'Si, por favor. ¿Hay disponible el martes a la mañana?', tiempo: -298, intencion: 'cancelacion' },
+        { rol: 'asistente_ia', contenido: '📅 Martes a las 9:00, 9:30, 10:00 o 11:00. ¿Cuál te queda mejor?', tiempo: -297 },
+        { rol: 'paciente', contenido: 'Martes 10:00 estaría perfecto. Gracias!', tiempo: -296 },
+        { rol: 'asistente_ia', contenido: '✅ Confirmado: Martes 20/05 a las 10:00 hs con el Dr. Rodríguez. Te enviamos recordatorio 24hs antes. ¡Saludos!', tiempo: -295 },
       ]
     },
+    // 4. Solicitud de receta
     {
-      pacienteIdx: 3, intencion: 'receta', canal: 'email',
+      pacienteIdx: 3, intencion: 'receta', canal: 'whatsapp',
       mensajes: [
-        { rol: 'paciente', contenido: 'Gracias por la receta, ya la recibí por WhatsApp', tiempo: -400 },
-        { rol: 'asistente_ia', contenido: '¡De nada Ana! Recordá que la receta tiene validez por 30 días. Cualquier duda estamos a tu disposición.', tiempo: -399 },
+        { rol: 'paciente', contenido: 'Hola, necesito que me receten nuevamente el Losartán porque ya se me venció la receta anterior', tiempo: -400 },
+        { rol: 'asistente_ia', contenido: '💊 Hola Ana! Te reviso la receta anterior... Ya le consulto al Dr. Rodríguez para la renovación. En un momento te confirmo.', tiempo: -399 },
+        { rol: 'asistente_ia', contenido: '✅ El Dr. renovó tu receta de Losartán 50mg por 90 días. Te la envío por WhatsApp en PDF. Recordá que tenés que tomarlo todos los días a la misma hora. ¡Saludos!', tiempo: -398, intencion: 'receta' },
+        { rol: 'paciente', contenido: 'Muchas gracias, ya la recibí! 😊', tiempo: -397 },
+      ]
+    },
+    // 5. 🚨 URGENCIA - Dolor fuerte
+    {
+      pacienteIdx: 4, intencion: 'urgencia', canal: 'whatsapp',
+      mensajes: [
+        { rol: 'paciente', contenido: 'Doctor, tengo un dolor muy fuerte en el pecho desde hace una hora, no se me pasa con nada. ¿Qué hago?', tiempo: -60 },
+        { rol: 'asistente_ia', contenido: '🚨 Carlos, esto puede ser una emergencia. Por favor, dirigite a la guardia del hospital más cercano AHORA o llamá al 107 (emergencias). Ya le notificamos al Dr. Rodríguez para que se comunique con vos. NO TE QUEDES SOLO.', tiempo: -59, intencion: 'urgencia' },
+      ]
+    },
+    // 6. Nuevo turno
+    {
+      pacienteIdx: 5, intencion: 'turno_nuevo', canal: 'whatsapp',
+      mensajes: [
+        { rol: 'paciente', contenido: 'Hola, quería sacar un turno para hacerme un control general', tiempo: -500 },
+        { rol: 'asistente_ia', contenido: '👋 ¡Hola Laura! Te puedo ayudar con eso. ¿Tenés preferencia por algún día u horario? Trabajamos de lunes a viernes de 9 a 18 hs.', tiempo: -499 },
+        { rol: 'paciente', contenido: 'Los jueves a la tarde me viene bien', tiempo: -498 },
+        { rol: 'asistente_ia', contenido: '📅 Tenemos disponible jueves a las 14:00, 15:00, 16:00 y 17:00 con el Dr. Rodríguez. ¿Cuál preferís?', tiempo: -497 },
+        { rol: 'paciente', contenido: 'A las 16 está perfecto!', tiempo: -496, intencion: 'turno_nuevo' },
+        { rol: 'asistente_ia', contenido: '✅ Turno confirmado: Jueves 22/05 a las 16:00 hs con el Dr. Rodríguez. Te enviamos recordatorio 24hs antes. ¡Gracias Laura! 🎉', tiempo: -495 },
+      ]
+    },
+    // 7. Consulta general + horarios
+    {
+      pacienteIdx: 6, intencion: 'consulta', canal: 'whatsapp',
+      mensajes: [
+        { rol: 'paciente', contenido: 'Buenos días, quería saber a partir de qué hora atiende el Dr. García los sábados', tiempo: -700 },
+        { rol: 'asistente_ia', contenido: '🌅 ¡Buenos días Sofía! Los sábados atendemos de 9:00 a 13:00 hs con el Dr. García. ¿Querés que te agende un turno?', tiempo: -699 },
+        { rol: 'paciente', contenido: 'Dale, para el sábado que viene a las 10:30 si se puede', tiempo: -698, intencion: 'consulta' },
+        { rol: 'asistente_ia', contenido: '✅ Listo Sofía! Te agendé para el sábado 24/05 a las 10:30 con el Dr. García. Te enviaré un recordatorio. ¡Saludos! 😊', tiempo: -697 },
+      ]
+    },
+    // 8. Recién llegado - primera interacción (con emojis y respuesta de IA)
+    {
+      pacienteIdx: 7, intencion: 'saludo', canal: 'whatsapp',
+      mensajes: [
+        { rol: 'paciente', contenido: 'Hola! 👋', tiempo: -50 },
+        { rol: 'asistente_ia', contenido: '👋 ¡Hola Diego! Bienvenido al consultorio del Dr. Rodríguez. ¿En qué puedo ayudarte? Podés sacar un turno, consultar por resultados, pedir una receta o lo que necesites.', tiempo: -49, intencion: 'saludo' },
+        { rol: 'paciente', contenido: 'Gracias! Quería saber cómo hago para pedir un turno por primera vez', tiempo: -48 },
+        { rol: 'asistente_ia', contenido: '📋 ¡Es muy fácil! Decime qué día y horario te viene bien y te lo agendo. Atendemos de lunes a viernes de 9 a 18 hs y sábados de 9 a 13 hs. También necesito saber si tenés obra social o sos particular.', tiempo: -47 },
       ]
     },
   ];
@@ -788,26 +861,51 @@ export async function seedDataIfEmpty(): Promise<boolean> {
   for (const cd of conversacionesData) {
     const paciente = pacientesList[cd.pacienteIdx];
     const primerMensaje = cd.mensajes[0];
-    const conv = await createConversacion({
+    const fechaCreacion = new Date(ahora.getTime() + primerMensaje.tiempo * 60000);
+
+    // Crear conversación con fecha personalizada
+    const convId = crypto.randomUUID();
+    const conv: ConversacionData = {
+      id: convId,
       pacienteId: paciente.id,
       canal: cd.canal,
-      mensajeInicial: primerMensaje.contenido,
-      rolMensajeInicial: primerMensaje.rol,
-      intencionInicial: cd.intencion,
-    });
+      estado: 'activa',
+      optOut: false,
+      ultimoMensaje: cd.mensajes[cd.mensajes.length - 1].contenido,
+      ultimoMensajeRol: cd.mensajes[cd.mensajes.length - 1].rol,
+      ultimaIntencion: cd.intencion,
+      ultimaInteraccion: new Date(ahora.getTime() + cd.mensajes[cd.mensajes.length - 1].tiempo * 60000).toISOString(),
+      contextoIa: {},
+      metadata: {},
+      createdAt: fechaCreacion.toISOString(),
+      updatedAt: new Date(ahora.getTime() + cd.mensajes[cd.mensajes.length - 1].tiempo * 60000).toISOString(),
+    };
 
-    // Crear mensajes restantes
-    for (let i = 1; i < cd.mensajes.length; i++) {
-      const m = cd.mensajes[i];
-      await createMensaje({
-        conversacionId: conv.id,
+    // Guardar conversación
+    const convs = readJSON<ConversacionData[]>(CONVERSACIONES_FILE, []);
+    convs.push(conv);
+    writeJSON(CONVERSACIONES_FILE, convs);
+
+    // Crear mensajes
+    for (const m of cd.mensajes) {
+      const msg: MensajeData = {
+        id: crypto.randomUUID(),
+        conversacionId: convId,
         rol: m.rol,
         contenido: m.contenido,
-        intencion: i === cd.mensajes.length - 1 ? cd.intencion : undefined,
-      });
+        tipo: 'texto',
+        intencion: m.intencion,
+        metadata: {},
+        createdAt: new Date(ahora.getTime() + m.tiempo * 60000).toISOString(),
+      };
+      const msgs = readJSON<MensajeData[]>(MENSAJES_FILE, []);
+      msgs.push(msg);
+      writeJSON(MENSAJES_FILE, msgs);
     }
   }
 
   console.log('[DataStore] ✅ Datos de ejemplo sembrados correctamente');
+  console.log(`  - ${pacientesList.length} pacientes`);
+  console.log(`  - ${conversacionesData.length} conversaciones con mensajes realistas`);
   return true;
 }

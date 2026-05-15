@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { getInitials, formatRelative, truncate, formatPhone } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
+import { NuevaConversacionModal } from '@/components/modals/nueva-conversacion-modal';
 
 // ============================================================
 // Tipos
@@ -200,10 +201,12 @@ export default function ConversacionesPage() {
             <RefreshCw className={`h-4 w-4 mr-1 ${loadingConversaciones ? 'animate-spin' : ''}`} />
             Actualizar
           </Button>
-          <Button size="sm" onClick={() => {/* TODO: modal nueva conversación */}}>
-            <Plus className="h-4 w-4 mr-1" />
-            Nueva
-          </Button>
+          <NuevaConversacionModal
+            onCreated={() => {
+              refetchConversaciones();
+              toast({ title: 'Conversación creada', description: 'La conversación se inició correctamente' });
+            }}
+          />
         </div>
       </div>
 

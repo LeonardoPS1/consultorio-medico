@@ -84,20 +84,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Buscar conversación activa existente
-    const conversacionesActivas = await getConversaciones({
-      estado: 'activa',
-      search: telefono,
-      limit: 1,
-    });
+    // Buscar conversación activa existente de este paciente
+    const convsActivas = await getConversaciones({ estado: 'activa' });
+    const convExistente = convsActivas.find((c) => c.pacienteId === paciente.id);
 
     let conversacionId: string;
     let esNueva = false;
-
-    // Verificar si alguna conversación activa pertenece a este paciente
-    const convExistente = conversacionesActivas.find(
-      (c) => c.pacienteId === paciente.id
-    );
 
     if (convExistente) {
       conversacionId = convExistente.id;

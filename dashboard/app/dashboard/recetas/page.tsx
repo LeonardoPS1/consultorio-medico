@@ -8,6 +8,122 @@ import { Plus, Syringe, Download, Send, AlertCircle, RotateCcw, FileText, Printe
 import { formatDate } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NuevaRecetaModal } from '@/components/modals/nueva-receta-modal';
+import { toast } from '@/components/ui/use-toast';
+
+// ============================================================
+// Funciones auxiliares para acciones de recetas
+// ============================================================
+
+function descargarReceta(receta: Receta) {
+  const contenido = [
+    '========================================',
+    '        RECETA MÉDICA',
+    '========================================',
+    '',
+    `Paciente: ${receta.paciente}`,
+    `Medicamento: ${receta.medicamento}`,
+    `Dosis: ${receta.dosis}`,
+    `Duración: ${receta.duracion}`,
+    receta.indicaciones ? `Indicaciones: ${receta.indicaciones}` : '',
+    '',
+    `Fecha: ${formatDate(new Date().toISOString(), 'dd/MM/yyyy')}`,
+    `Vence: ${formatDate(receta.vence, 'dd/MM/yyyy')}`,
+    '',
+    '========================================',
+    '  Consultorio Médico',
+    '  Firma del profesional',
+    '========================================',
+  ].filter(Boolean).join('\n');
+
+  const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `receta-${receta.paciente.replace(/\s+/g, '-').toLowerCase()}-${receta.medicamento.replace(/\s+/g, '-').toLowerCase()}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  toast({ title: '✅ Receta descargada', description: `${receta.medicamento} - ${receta.paciente}` });
+}
+
+function enviarRecetaWhatsApp(receta: Receta) {
+  const texto = encodeURIComponent(
+    `📋 *RECETA MÉDICA*%0A%0A` +
+    `Paciente: ${receta.paciente}%0A` +
+    `Medicamento: ${receta.medicamento}%0A` +
+    `Dosis: ${receta.dosis}%0A` +
+    `Duración: ${receta.duracion}%0A` +
+    (receta.indicaciones ? `Indicaciones: ${receta.indicaciones}%0A` : '') +
+    `%0AVence: ${formatDate(receta.vence, 'dd/MM/yyyy')}%0A%0A` +
+    `Enviado desde Consultorio Médico`
+  );
+  window.open(`https://wa.me/?text=${texto}`, '_blank');
+  toast({ title: '📱 Abriendo WhatsApp', description: 'Se abrirá una ventana para enviar la receta' });
+}
+
+function imprimirReceta(receta: Receta) {
+  const ventana = window.open('', '_blank');
+  if (!ventana) {
+    toast({ title: '❌ Error', description: 'Permití ventanas emergentes para imprimir', variant: 'destructive' });
+    return;
+  }
+  ventana.document.write(`
+    <html>
+    <head><title>Receta - ${receta.paciente}</title>
+    <style>
+      body { font-family: 'Courier New', monospace; padding: 40px; max-width: 600px; margin: 0 auto; }
+      h1 { text-align: center; font-size: 18px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+      .header { text-align: center; margin-bottom: 30px; }
+      .header h2 { margin: 0; font-size: 14px; }
+      .content { line-height: 2; font-size: 14px; }
+      .content strong { display: inline-block; width: 120px; }
+      .footer { margin-top: 40px; border-top: 1px solid #999; padding-top: 20px; font-size: 12px; text-align: center; color: #666; }
+      .firma { margin-top: 50px; border-top: 1px solid #000; width: 250px; text-align: center; padding-top: 5px; font-size: 12px; margin-left: auto; margin-right: auto; }
+      @media print { body { padding: 20px; } }
+    </style>
+    </head>
+    <body>
+      <h1>RECETA MÉDICA</h1>
+      <div class="header"><h2>Consultorio Médico</h2></div>
+      <div class="content">
+        <p><strong>Paciente:</strong> ${receta.paciente}</p>
+        <p><strong>Medicamento:</strong> ${receta.medicamento}</p>
+        <p><strong>Dosis:</strong> ${receta.dosis}</p>
+        <p><strong>Duración:</strong> ${receta.duracion}</p>
+        ${receta.indicaciones ? `<p><strong>Indicaciones:</strong> ${receta.indicaciones}</p>` : ''}
+        <p><strong>Fecha:</strong> ${formatDate(new Date().toISOString(), 'dd/MM/yyyy')}</p>
+        <p><strong>Vence:</strong> ${formatDate(receta.vence, 'dd/MM/yyyy')}</p>
+      </div>
+      <div class="firma">Firma del profesional</div>
+      <div class="footer">Documento generado electrónicamente - Consultorio Médico</div>
+      <script>window.print();window.close();</script>
+    </body>
+    </html>
+  `);
+  ventana.document.close();
+}
+
+function renovarReceta(receta: Receta, setRecetas: React.Dispatch<React.SetStateAction<Receta[]>>) {
+  const nuevaVence = new Date();
+  nuevaVence.setDate(nuevaVence.getDate() + 30);
+
+  const renovada: Receta = {
+    ...receta,
+    id: String(Date.now()),
+    estado: 'activa',
+    fechaCreacion: new Date().toISOString().split('T')[0],
+    vence: nuevaVence.toISOString().split('T')[0],
+    renovable: true,
+  };
+
+  setRecetas((prev: Receta[]) => [renovada, ...prev]);
+  toast({
+    title: '🔄 Receta renovada',
+    description: `${receta.medicamento} para ${receta.paciente} - Vence ${formatDate(renovada.vence, 'dd/MM/yyyy')}`,
+  });
+}
 
 interface Receta {
   id: string;
@@ -93,17 +209,29 @@ export default function RecetasPage() {
           </p>
         </div>
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon" title="Descargar PDF">
+          <Button
+            variant="ghost" size="icon" title="Descargar"
+            onClick={(e) => { e.stopPropagation(); descargarReceta(receta); }}
+          >
             <Download className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" title="Enviar por WhatsApp">
+          <Button
+            variant="ghost" size="icon" title="Enviar por WhatsApp"
+            onClick={(e) => { e.stopPropagation(); enviarRecetaWhatsApp(receta); }}
+          >
             <Send className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" title="Imprimir">
+          <Button
+            variant="ghost" size="icon" title="Imprimir"
+            onClick={(e) => { e.stopPropagation(); imprimirReceta(receta); }}
+          >
             <Printer className="h-4 w-4" />
           </Button>
           {(isActiva || isVencida) && receta.renovable && (
-            <Button variant="outline" size="sm" className="text-xs">
+            <Button
+              variant="outline" size="sm" className="text-xs"
+              onClick={(e) => { e.stopPropagation(); renovarReceta(receta, setRecetas); }}
+            >
               <RotateCcw className="h-3 w-3 mr-1" />
               Renovar
             </Button>

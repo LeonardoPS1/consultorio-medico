@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -115,8 +115,12 @@ export default function ConfiguracionPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="integraciones">
+      <Tabs defaultValue="perfil">
         <TabsList className="flex-wrap">
+          <TabsTrigger value="perfil">
+            <svg className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Perfil
+          </TabsTrigger>
           <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
           <TabsTrigger value="horarios">Horarios</TabsTrigger>
           <TabsTrigger value="ia">IA & Automatización</TabsTrigger>
@@ -124,6 +128,11 @@ export default function ConfiguracionPage() {
           <TabsTrigger value="notificaciones">Notificaciones</TabsTrigger>
           <TabsTrigger value="equipo">Equipo</TabsTrigger>
         </TabsList>
+
+        {/* ======== PERFIL / ORGANIZACIÓN ======== */}
+        <TabsContent value="perfil" className="mt-4">
+          <PerfilOrganizacion />
+        </TabsContent>
 
         {/* ======== INTEGRACIONES ======== */}
         <TabsContent value="integraciones" className="mt-4 space-y-4">
@@ -717,6 +726,241 @@ function PlantillaModal({
 // ============================================================
 // Modal Invitar Miembro
 // ============================================================
+
+// ============================================================
+// Componente Perfil de la Organización
+// ============================================================
+
+function PerfilOrganizacion() {
+  const [data, setData] = useState({
+    nombre: 'Consultorio Médico',
+    eslogan: 'Tu salud, nuestra prioridad',
+    descripcion: 'Centro médico especializado en atención clínica general.',
+    logoUrl: '',
+    colorPrimario: '#2563eb',
+    colorSecundario: '#7c3aed',
+    direccion: 'Av. Corrientes 1234',
+    ciudad: 'CABA',
+    provincia: 'Buenos Aires',
+    telefono: '+54 11 5555-0000',
+    telefonoSecundario: '',
+    whatsapp: '+5491155550000',
+    email: 'info@consultorio.com',
+    sitioWeb: 'https://consultorio.com',
+    instagram: '',
+    facebook: '',
+  });
+  const [guardando, setGuardando] = useState(false);
+  const [mensaje, setMensaje] = useState('');
+  const [previewColor, setPreviewColor] = useState(data.colorPrimario);
+
+  // Cargar datos al montar
+  useEffect(() => {
+    fetch('/api/organization')
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.data) {
+          setData((prev) => ({ ...prev, ...res.data, redesSociales: undefined }));
+          setPreviewColor(res.data.colorPrimario || '#2563eb');
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSave = async () => {
+    setGuardando(true);
+    setMensaje('');
+    try {
+      const res = await fetch('/api/organization', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        setMensaje('✅ Configuración guardada correctamente');
+        setPreviewColor(data.colorPrimario);
+        setTimeout(() => setMensaje(''), 3000);
+      } else {
+        setMensaje('❌ Error al guardar');
+      }
+    } catch {
+      setMensaje('❌ Error de conexión');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const updateField = (field: string, value: string) => {
+    setData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Vista previa del perfil */}
+      <Card className="overflow-hidden">
+        <div className="h-24" style={{ background: `linear-gradient(135deg, ${previewColor}, ${data.colorSecundario || previewColor})` }} />
+        <CardContent className="relative -mt-12 flex items-end gap-4 pb-4">
+          <div
+            className="h-20 w-20 rounded-2xl border-4 border-background flex items-center justify-center text-2xl font-bold text-white shadow-lg"
+            style={{ backgroundColor: previewColor }}
+          >
+            {data.nombre ? data.nombre.charAt(0).toUpperCase() : '?'}
+          </div>
+          <div className="pb-1">
+            <h3 className="text-lg font-bold">{data.nombre || 'Mi Consultorio'}</h3>
+            <p className="text-sm text-muted-foreground">{data.eslogan}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {mensaje && (
+        <div className="text-sm font-medium p-3 rounded-lg bg-muted text-center">
+          {mensaje}
+        </div>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Datos básicos */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Datos del Consultorio</CardTitle>
+            <CardDescription>Información principal que se muestra en la interfaz</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Field label="Nombre del consultorio / médico" value={data.nombre} onChange={(v) => updateField('nombre', v)} />
+            <Field label="Eslogan" value={data.eslogan} onChange={(v) => updateField('eslogan', v)} />
+            <div className="space-y-1">
+              <Label>Descripción</Label>
+              <Textarea
+                value={data.descripcion}
+                onChange={(e) => updateField('descripcion', e.target.value)}
+                rows={3}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Colores */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Personalización Visual</CardTitle>
+            <CardDescription>Colores principales de la interfaz</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ColorField
+              label="Color primario"
+              value={data.colorPrimario}
+              onChange={(v) => { updateField('colorPrimario', v); setPreviewColor(v); }}
+            />
+            <ColorField
+              label="Color secundario"
+              value={data.colorSecundario}
+              onChange={(v) => updateField('colorSecundario', v)}
+            />
+            <div className="pt-2">
+              <p className="text-sm text-muted-foreground mb-2">Vista previa de los colores:</p>
+              <div className="flex gap-2">
+                <div className="h-8 w-8 rounded-lg" style={{ backgroundColor: data.colorPrimario }} />
+                <div className="h-8 w-8 rounded-lg" style={{ backgroundColor: data.colorSecundario }} />
+                <div className="h-8 w-8 rounded-lg" style={{ background: `linear-gradient(135deg, ${data.colorPrimario}, ${data.colorSecundario})` }} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dirección */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Dirección y Contacto</CardTitle>
+            <CardDescription>Datos de ubicación del consultorio</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Field label="Dirección" value={data.direccion} onChange={(v) => updateField('direccion', v)} />
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Ciudad" value={data.ciudad} onChange={(v) => updateField('ciudad', v)} />
+              <Field label="Provincia" value={data.provincia} onChange={(v) => updateField('provincia', v)} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Teléfonos */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Teléfonos y Email</CardTitle>
+            <CardDescription>Canales de comunicación</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Field label="Teléfono principal" value={data.telefono} onChange={(v) => updateField('telefono', v)} />
+            <Field label="Teléfono secundario" value={data.telefonoSecundario} onChange={(v) => updateField('telefonoSecundario', v)} />
+            <Field label="WhatsApp" value={data.whatsapp} onChange={(v) => updateField('whatsapp', v)} />
+            <Field label="Email" type="email" value={data.email} onChange={(v) => updateField('email', v)} />
+            <Field label="Sitio web" value={data.sitioWeb} onChange={(v) => updateField('sitioWeb', v)} />
+          </CardContent>
+        </Card>
+
+        {/* Redes Sociales */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base">Redes Sociales</CardTitle>
+            <CardDescription>Vinculá las redes del consultorio</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-3">
+              <Field label="Instagram" value={data.instagram} onChange={(v) => updateField('instagram', v)} placeholder="@usuario" />
+              <Field label="Facebook" value={data.facebook} onChange={(v) => updateField('facebook', v)} placeholder="facebook.com/pagina" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={() => {
+          setMensaje(''); fetch('/api/organization').then(r => r.json()).then(res => {
+            if (res.data) setData(res.data);
+          });
+        }}>
+          Restablecer
+        </Button>
+        <Button onClick={handleSave} disabled={guardando}>
+          {guardando ? 'Guardando...' : 'Guardar cambios'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Subcomponentes de Perfil
+// ============================================================
+
+function Field({ label, value, onChange, type = 'text', placeholder }: {
+  label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <Label>{label}</Label>
+      <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+    </div>
+  );
+}
+
+function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-1">
+      <Label>{label}</Label>
+      <div className="flex gap-2">
+        <div className="h-10 w-10 rounded-md border shrink-0" style={{ backgroundColor: value }} />
+        <Input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full h-10 cursor-pointer p-1"
+        />
+        <Input value={value} onChange={(e) => onChange(e.target.value)} className="w-28 font-mono text-xs" />
+      </div>
+    </div>
+  );
+}
 
 function InviteModal({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const [email, setEmail] = useState('');

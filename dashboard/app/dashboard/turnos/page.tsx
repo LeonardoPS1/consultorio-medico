@@ -9,6 +9,24 @@ import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarView, type CalendarioTurno } from '@/components/calendar/calendar-view';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
+import { toast } from '@/components/ui/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/select';
 
 // Mock data extendida con fechas
 const hoy = new Date();
@@ -32,6 +50,8 @@ export default function TurnosPage() {
   const [view, setView] = useState<'lista' | 'calendario'>('lista');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showNewTurno, setShowNewTurno] = useState(false);
+  const [editTurno, setEditTurno] = useState<typeof turnosDelDia[0] | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState<string | null>(null);
   const [turnos, setTurnos] = useState(turnosDelDia);
 
   const filteredByDate = turnos.filter((t) => {
@@ -184,8 +204,15 @@ export default function TurnosPage() {
 
                       {/* Acciones */}
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="sm">Editar</Button>
-                        <Button variant="ghost" size="sm" className="text-destructive">Cancelar</Button>
+                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setEditTurno(turno); }}>
+                          Editar
+                        </Button>
+                        <Button
+                          variant="ghost" size="sm" className="text-destructive"
+                          onClick={(e) => { e.stopPropagation(); setShowCancelDialog(turno.id); }}
+                        >
+                          Cancelar
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -226,6 +253,82 @@ export default function TurnosPage() {
         onOpenChange={setShowNewTurno}
         onSubmit={handleNuevoTurno}
       />
+
+      {/* Modal Editar Turno */}
+      <Dialog open={!!editTurno} onOpenChange={(o) => { if (!o) setEditTurno(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Turno</DialogTitle>
+            <DialogDescription>Modificá los datos del turno</DialogDescription>
+          </DialogHeader>
+          {editTurno && (
+            <div className="space-y-4 py-2">
+              <div className="space-y-1">
+                <Label>Paciente</Label>
+                <Input defaultValue={editTurno.paciente} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Fecha</Label>
+                  <Input type="date" defaultValue={editTurno.fecha} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Hora</Label>
+                  <Input type="time" defaultValue={editTurno.hora} />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Estado</Label>
+                <Select defaultValue={editTurno.estado}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pendiente">Pendiente</SelectItem>
+                    <SelectItem value="confirmada">Confirmada</SelectItem>
+                    <SelectItem value="en_consulta">En consulta</SelectItem>
+                    <SelectItem value="completada">Completada</SelectItem>
+                    <SelectItem value="cancelada">Cancelada</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditTurno(null)}>Cancelar</Button>
+            <Button onClick={() => { setEditTurno(null); toast({ title: '✅ Turno actualizado' }); }}>Guardar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de confirmación cancelar */}
+      <Dialog open={!!showCancelDialog} onOpenChange={(o) => { if (!o) setShowCancelDialog(null); }}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Cancelar Turno</DialogTitle>
+            <DialogDescription>¿Estás seguro de que querés cancelar este turno?</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Motivo de cancelación</Label>
+            <Input placeholder="Ej: El paciente solicitó cancelación" />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCancelDialog(null)}>Volver</Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (showCancelDialog) {
+                  setTurnos((prev) => prev.map((t) =>
+                    t.id === showCancelDialog ? { ...t, estado: 'cancelada' as const } : t
+                  ));
+                  toast({ title: '❌ Turno cancelado', description: 'El turno fue cancelado correctamente' });
+                  setShowCancelDialog(null);
+                }
+              }}
+            >
+              Confirmar cancelación
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
