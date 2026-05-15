@@ -1,12 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import { toast } from '@/components/ui/use-toast';
 import {
   ArrowLeft,
   Phone,
@@ -23,6 +30,8 @@ import {
   Activity,
   Heart,
   User,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { formatDate, formatPhone, getInitials, getTurnoLabel } from '@/lib/utils';
 
@@ -110,12 +119,101 @@ const recetasMock: Record<string, any[]> = {
 export default function PacienteDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const pid = params.id as string;
   const [activeTab, setActiveTab] = useState('resumen');
 
-  const paciente = pacientesMock[params.id as string];
-  const turnos = turnosMock[params.id as string] || [];
-  const historial = historialMock[params.id as string] || [];
-  const recetas = recetasMock[params.id as string] || [];
+  const paciente = pacientesMock[pid];
+  const turnos = turnosMock[pid] || [];
+  const recetas = recetasMock[pid] || [];
+
+  // Estados editables
+  const [notas, setNotas] = useState(paciente?.notasMedicas || '');
+  const [alergias, setAlergias] = useState(paciente?.alergias || '');
+  const [medCronica, setMedCronica] = useState(paciente?.medicacionCronica || '');
+  const [editandoNotas, setEditandoNotas] = useState(false);
+  const [editandoAlergias, setEditandoAlergias] = useState(false);
+  const [editandoMed, setEditandoMed] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+
+  // Historial
+  const [historial, setHistorial] = useState<any[]>(historialMock[pid] || []);
+  const [showHistorialModal, setShowHistorialModal] = useState(false);
+  const [editHistorialEntry, setEditHistorialEntry] = useState<any>(null);
+
+  // Cargar datos guardados del paciente
+  useEffect(() => {
+    fetch(`/api/pacientes/${pid}`)
+      .then(r => r.json())
+      .then(res => {
+        if (res.data) {
+          setNotas(res.data.notasMedicas || '');
+          setAlergias(res.data.alergias || '');
+          setMedCronica(res.data.medicacionCronica || '');
+        }
+      })
+      .catch(() => {});
+
+    fetch(`/api/pacientes/${pid}/historial`)
+      .then(r => r.json())
+      .then(res => {
+        if (res.data?.length > 0) setHistorial(res.data);
+      })
+      .catch(() => {});
+  }, [pid]);
+
+  // Guardar datos del paciente
+  const guardarCampo = async (field: string, value: string) => {
+    setGuardando(true);
+    try {
+      await fetch(`/api/pacientes/${pid}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value }),
+      });
+      toast({ title: '✅ Guardado', description: 'Los cambios se guardaron correctamente' });
+    } catch {
+      toast({ title: '❌ Error', description: 'No se pudo guardar', variant: 'destructive' });
+    }
+    setGuardando(false);
+  };
+
+  // Handlers historial
+  const guardarHistorialEntry = async (data: { tipo: string; titulo: string; descripcion: string; codigo: string; fecha: string }) => {
+    try {
+      if (editHistorialEntry?.id) {
+        // Editar
+        await fetch(`/api/pacientes/${pid}/historial?entryId=${editHistorialEntry.id}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        setHistorial(prev => prev.map(h => h.id === editHistorialEntry.id ? { ...h, ...data } : h));
+        toast({ title: '✅ Entrada actualizada' });
+      } else {
+        // Nuevo
+        const res = await fetch(`/api/pacientes/${pid}/historial`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const j = await res.json();
+        setHistorial(prev => [j.data, ...prev]);
+        toast({ title: '✅ Entrada agregada' });
+      }
+      setShowHistorialModal(false);
+      setEditHistorialEntry(null);
+    } catch {
+      toast({ title: '❌ Error', description: 'No se pudo guardar', variant: 'destructive' });
+    }
+  };
+
+  const eliminarHistorialEntry = async (entryId: string) => {
+    try {
+      await fetch(`/api/pacientes/${pid}/historial?entryId=${entryId}`, { method: 'DELETE' });
+      setHistorial(prev => prev.filter(h => h.id !== entryId));
+      toast({ title: '🗑️ Entrada eliminada' });
+    } catch {
+      toast({ title: '❌ Error', description: 'No se pudo eliminar', variant: 'destructive' });
+    }
+  };
 
   if (!paciente) {
     return (
@@ -250,20 +348,50 @@ export default function PacienteDetailPage() {
               <CardContent className="space-y-3">
                 <div>
                   <p className="text-xs text-muted-foreground">Alergias</p>
-                  <p className="text-sm font-medium">{paciente.alergias || 'Sin alergias registradas'}</p>
+                  {editandoAlergias ? (
+                    <div className="flex gap-1 mt-1">
+                      <Input value={alergias} onChange={e => setAlergias(e.target.value)} className="h-8 text-sm" placeholder="Ej: Penicilina" />
+                      <Button size="sm" variant="outline" className="h-8" onClick={() => { setEditandoAlergias(false); guardarCampo('alergias', alergias); }}>Guardar</Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <p className="text-sm font-medium">{alergias || 'Sin alergias'}</p>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditandoAlergias(true)}><Edit3 className="h-3 w-3" /></Button>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Medicación Crónica</p>
-                  <p className="text-sm font-medium">{paciente.medicacionCronica || 'Sin medicación crónica'}</p>
+                  {editandoMed ? (
+                    <div className="flex gap-1 mt-1">
+                      <Input value={medCronica} onChange={e => setMedCronica(e.target.value)} className="h-8 text-sm" />
+                      <Button size="sm" variant="outline" className="h-8" onClick={() => { setEditandoMed(false); guardarCampo('medicacionCronica', medCronica); }}>Guardar</Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <p className="text-sm font-medium">{medCronica || 'Sin medicación crónica'}</p>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditandoMed(true)}><Edit3 className="h-3 w-3" /></Button>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-muted-foreground">Notas Médicas</p>
-                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditandoNotas(!editandoNotas)}>
                       <Edit3 className="h-3 w-3" />
                     </Button>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">{paciente.notasMedicas || 'Sin notas'}</p>
+                  {editandoNotas ? (
+                    <div className="space-y-1 mt-1">
+                      <Textarea value={notas} onChange={e => setNotas(e.target.value)} rows={3} className="text-sm" />
+                      <div className="flex gap-1">
+                        <Button size="sm" onClick={() => { setEditandoNotas(false); guardarCampo('notasMedicas', notas); }} disabled={guardando}>Guardar</Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditandoNotas(false)}>Cancelar</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-1">{notas || 'Sin notas'}</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -341,34 +469,46 @@ export default function PacienteDetailPage() {
         {/* === TAB HISTORIAL MÉDICO === */}
         <TabsContent value="historial" className="mt-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <Activity className="h-4 w-4" />
                 Historial Clínico
               </CardTitle>
+              <Button size="sm" onClick={() => { setEditHistorialEntry(null); setShowHistorialModal(true); }}>
+                <Plus className="h-4 w-4 mr-1" /> Nueva entrada
+              </Button>
             </CardHeader>
             <CardContent>
               {historial.length === 0 ? (
                 <div className="text-center py-12">
                   <FileText className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
                   <p className="text-sm text-muted-foreground">Sin entradas en el historial médico</p>
+                  <Button variant="outline" size="sm" className="mt-3" onClick={() => { setEditHistorialEntry(null); setShowHistorialModal(true); }}>
+                    Agregar primera entrada
+                  </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {historial.map((entry: any) => (
-                    <div key={entry.id} className="border-l-2 border-primary/30 pl-4 pb-4">
+                    <div key={entry.id} className="border-l-2 border-primary/30 pl-4 pb-3 group relative">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="secondary" className="text-[10px]">
-                          {entry.tipo === 'consulta' ? 'Consulta' : entry.tipo === 'estudio' ? 'Estudio' : 'Receta'}
+                          {entry.tipo === 'consulta' ? 'Consulta' : entry.tipo === 'estudio' ? 'Estudio' : entry.tipo === 'receta' ? 'Receta' : entry.tipo}
                         </Badge>
                         <span className="text-xs text-muted-foreground">{formatDate(entry.fecha, 'dd/MM/yyyy')}</span>
+                        <div className="flex gap-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditHistorialEntry(entry); setShowHistorialModal(true); }}>
+                            <Edit3 className="h-3 w-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => eliminarHistorialEntry(entry.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                       <p className="font-medium text-sm">{entry.titulo}</p>
                       <p className="text-sm text-muted-foreground mt-0.5">{entry.descripcion}</p>
                       {entry.codigo && (
-                        <Badge variant="outline" className="text-[10px] mt-1 font-mono">
-                          CIE-10: {entry.codigo}
-                        </Badge>
+                        <Badge variant="outline" className="text-[10px] mt-1 font-mono">CIE-10: {entry.codigo}</Badge>
                       )}
                     </div>
                   ))}
@@ -431,6 +571,91 @@ export default function PacienteDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modal Historial */}
+      <HistorialEntryModal
+        open={showHistorialModal}
+        onOpenChange={setShowHistorialModal}
+        entry={editHistorialEntry}
+        onSave={guardarHistorialEntry}
+      />
     </div>
+  );
+}
+
+// ============================================================
+// Modal para agregar/editar entrada de historial
+// ============================================================
+
+function HistorialEntryModal({
+  open, onOpenChange, entry, onSave,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  entry: any;
+  onSave: (data: { tipo: string; titulo: string; descripcion: string; codigo: string; fecha: string }) => void;
+}) {
+  const [tipo, setTipo] = useState(entry?.tipo || 'consulta');
+  const [titulo, setTitulo] = useState(entry?.titulo || '');
+  const [descripcion, setDescripcion] = useState(entry?.descripcion || '');
+  const [codigo, setCodigo] = useState(entry?.codigo || '');
+  const [fecha, setFecha] = useState(entry?.fecha || new Date().toISOString().split('T')[0]);
+
+  useEffect(() => {
+    if (open) {
+      setTipo(entry?.tipo || 'consulta');
+      setTitulo(entry?.titulo || '');
+      setDescripcion(entry?.descripcion || '');
+      setCodigo(entry?.codigo || '');
+      setFecha(entry?.fecha || new Date().toISOString().split('T')[0]);
+    }
+  }, [open, entry]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>{entry?.id ? 'Editar entrada' : 'Nueva entrada'}</DialogTitle>
+          <DialogDescription>Registrá una entrada en el historial clínico</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="space-y-1">
+            <Label>Tipo</Label>
+            <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={tipo} onChange={e => setTipo(e.target.value)}>
+              <option value="consulta">Consulta</option>
+              <option value="estudio">Estudio</option>
+              <option value="receta">Receta</option>
+              <option value="internacion">Internación</option>
+              <option value="vacuna">Vacuna</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <Label>Título</Label>
+            <Input value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Ej: Control de presión arterial" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>Fecha</Label>
+              <Input type="date" value={fecha} onChange={e => setFecha(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label>Código CIE-10</Label>
+              <Input value={codigo} onChange={e => setCodigo(e.target.value)} placeholder="Ej: I10" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label>Descripción</Label>
+            <Textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3} placeholder="Detalles del diagnóstico, tratamiento, etc." />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={() => onSave({ tipo, titulo, descripcion, codigo, fecha })} disabled={!titulo}>
+            {entry?.id ? 'Guardar cambios' : 'Agregar entrada'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
