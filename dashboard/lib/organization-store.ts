@@ -17,6 +17,7 @@ export interface OrganizationData {
   descripcion: string;
   logoUrl: string;
   avatarUrl: string;
+  fondoUrl: string;
   firmaNombre: string;
   colorPrimario: string;
   colorSecundario: string;
@@ -38,6 +39,7 @@ const DEFAULT_ORG: OrganizationData = {
   descripcion: 'Centro médico especializado en atención clínica general y de especialidades.',
   logoUrl: '',
   avatarUrl: '',
+  fondoUrl: '',
   firmaNombre: 'Dr. García',
   colorPrimario: '#2563eb',
   colorSecundario: '#7c3aed',

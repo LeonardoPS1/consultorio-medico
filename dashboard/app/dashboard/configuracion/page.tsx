@@ -759,6 +759,7 @@ function PerfilOrganizacion() {
     descripcion: 'Centro médico especializado en atención clínica general.',
     logoUrl: '',
     avatarUrl: '',
+    fondoUrl: '',
     firmaNombre: 'Dr. García',
     colorPrimario: '#2563eb',
     colorSecundario: '#7c3aed',
@@ -818,47 +819,54 @@ function PerfilOrganizacion() {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Banner con logo y avatar */}
+      <div className="space-y-4">
+      {/* Banner del perfil - fondo + avatar único */}
       <Card className="overflow-hidden">
-        <div className="h-24 relative" style={{ background: `linear-gradient(135deg, ${previewColor}, ${data.colorSecundario || previewColor})` }} />
-        <CardContent className="relative -mt-12 flex items-end gap-4 pb-4">
-          {/* Logo del consultorio */}
+        <div
+          className="h-28 relative bg-cover bg-center transition-all"
+          style={
+            data.fondoUrl
+              ? { backgroundImage: `url(${data.fondoUrl})` }
+              : { background: `linear-gradient(135deg, ${previewColor}, ${data.colorSecundario || previewColor})` }
+          }
+        >
+          {/* Botón para cambiar fondo */}
           <ImageUpload
-            value={data.logoUrl}
-            onChange={(url) => updateField('logoUrl', url)}
-            onRemove={() => updateField('logoUrl', '')}
-            shape="rounded"
-            size="md"
-            label="Logo"
-            className="shrink-0"
+            value=""
+            onChange={(url) => updateField('fondoUrl', url)}
+            onRemove={() => updateField('fondoUrl', '')}
+            shape="square"
+            size="sm"
+            label="Fondo"
+            className="absolute bottom-2 right-2"
             fallback={
-              <span className="text-xl font-bold" style={{ color: previewColor }}>
-                {data.nombre ? data.nombre.charAt(0).toUpperCase() : '?'}
+              <span className="text-white text-[9px] flex items-center gap-1 bg-black/30 rounded-md px-2 py-1">
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Fondo
               </span>
             }
           />
-          {/* Avatar del profesional */}
+        </div>
+        <CardContent className="relative -mt-10 flex items-end gap-4 pb-4">
+          {/* AVATAR único */}
           <ImageUpload
             value={data.avatarUrl}
             onChange={(url) => updateField('avatarUrl', url)}
             onRemove={() => updateField('avatarUrl', '')}
             shape="circle"
             size="md"
-            label="Avatar"
+            label="Foto"
             className="shrink-0"
             fallback={
-              <span className="text-lg font-bold" style={{ color: previewColor }}>
+              <span className="text-xl font-bold" style={{ color: previewColor }}>
                 {data.firmaNombre ? data.firmaNombre.charAt(0).toUpperCase() : '👤'}
               </span>
             }
           />
           <div className="pb-1 flex-1">
-            <h3 className="text-lg font-bold">{data.nombre || 'Mi Consultorio'}</h3>
-            <p className="text-sm text-muted-foreground">{data.eslogan}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {data.firmaNombre} · {data.email}
-            </p>
+            <h3 className="text-lg font-bold">{data.firmaNombre || 'Dr. García'}</h3>
+            <p className="text-sm text-muted-foreground">{data.nombre || 'Mi Consultorio'}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{data.email}</p>
           </div>
         </CardContent>
       </Card>
@@ -908,6 +916,18 @@ function PerfilOrganizacion() {
               value={data.colorSecundario}
               onChange={(v) => updateField('colorSecundario', v)}
             />
+            <div className="space-y-1 pt-2">
+              <Label>Logo del consultorio</Label>
+              <p className="text-xs text-muted-foreground">Se usa en recetas y documentos</p>
+              <ImageUpload
+                value={data.logoUrl}
+                onChange={(url) => updateField('logoUrl', url)}
+                onRemove={() => updateField('logoUrl', '')}
+                shape="rounded"
+                size="sm"
+                label="Logo"
+              />
+            </div>
             <div className="pt-2">
               <p className="text-sm text-muted-foreground mb-2">Vista previa de los colores:</p>
               <div className="flex gap-2">

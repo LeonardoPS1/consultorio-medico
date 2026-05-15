@@ -106,23 +106,29 @@ export function Header() {
   const [notificaciones, setNotificaciones] = useState(notificacionesMock);
   const [notifOpen, setNotifOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [orgNombre, setOrgNombre] = useState('Consultorio Médico');
+  const [orgFirma, setOrgFirma] = useState('Dr.');
 
-  // Cargar avatar desde organización
+  // Cargar datos desde organización
   useEffect(() => {
     fetch('/api/organization')
       .then(r => r.json())
-      .then(res => { if (res.data?.avatarUrl) setAvatarUrl(res.data.avatarUrl); })
+      .then(res => {
+        if (res.data) {
+          if (res.data.avatarUrl) setAvatarUrl(res.data.avatarUrl);
+          if (res.data.firmaNombre) setOrgFirma(res.data.firmaNombre);
+          if (res.data.nombre) setOrgNombre(res.data.nombre);
+        }
+      })
       .catch(() => {});
   }, []);
 
   const user = session?.user;
   const nombreCompleto = user?.name || 'Dr.';
   const nameParts = nombreCompleto.trim().split(/\s+/);
-  const primerNombre = nameParts[0] || 'Dr.';
-  const apellido = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
-  const initials = apellido
-    ? (primerNombre.charAt(0) + apellido.charAt(0)).toUpperCase()
-    : primerNombre.charAt(0).toUpperCase();
+  const initials = nameParts.length > 1
+    ? (nameParts[0].charAt(0) + nameParts[1].charAt(0)).toUpperCase()
+    : nameParts[0].charAt(0).toUpperCase();
 
   const noLeidas = notificaciones.filter((n) => !n.leido).length;
 
@@ -138,18 +144,24 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
-      <div>
-        <h1 className="text-lg font-semibold text-foreground">
-          Bienvenido, {primerNombre}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {new Date().toLocaleDateString('es-AR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </p>
+      <div className="flex items-center gap-3">
+        <Avatar className="h-9 w-9 ring-2 ring-border">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="Avatar" className="h-full w-full rounded-full object-cover" />
+          ) : (
+            <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+              {orgFirma.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          )}
+        </Avatar>
+        <div>
+          <h1 className="text-base font-semibold text-foreground">
+            {orgFirma || 'Dr.'}
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            {orgNombre} · {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
