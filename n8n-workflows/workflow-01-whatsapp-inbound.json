@@ -155,7 +155,7 @@
         "from": "={{ $json.body.To }}",
         "body": "={{ $json.message.content }}",
         "options": {
-          "statusCallback": "https://n8n.tudominio.com/webhook/twilio-status"
+          "statusCallback": "http://localhost:5678/webhook/twilio-status"
         }
       }
     },
@@ -173,7 +173,7 @@
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            { "name": "To", "value": "whatsapp:+549XXXXXXXXX" },
+            { "name": "To", "value": "whatsapp:+5491155550000" },
             { "name": "From", "value": "={{ $json.body.To }}" },
             { "name": "Body", "value": "=🚨 URGENCIA - {{ $json.body.ProfileName }} ({{ $json.body.From }}): \"{{ $json.body.Body }}\"" }
           ]

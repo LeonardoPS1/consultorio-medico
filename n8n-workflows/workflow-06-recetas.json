@@ -73,7 +73,7 @@
       "position": [1000, 200],
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO recetas (paciente_id, medico_id, medicamento, dosis, frecuencia, duracion, indicaciones, estado, receta_anterior_id)\nVALUES (\n  (SELECT id FROM pacientes WHERE telefono = $1 LIMIT 1),\n  'medico-id',\n  $2, $3, $4, $5,\n  'Renovación automática. Misma indicación que receta anterior.',\n  'pendiente',\n  $6\n)\nRETURNING id;",
+        "query": "INSERT INTO recetas (paciente_id, medico_id, medicamento, dosis, frecuencia, duracion, indicaciones, estado, receta_anterior_id)\nVALUES (\n  (SELECT id FROM pacientes WHERE telefono = $1 LIMIT 1),\n  '00000000-0000-0000-0000-000000000001',\n  $2, $3, $4, $5,\n  'Renovación automática. Misma indicación que receta anterior.',\n  'pendiente',\n  $6\n)\nRETURNING id;",
         "additionalFields": {
           "queryParams": "={{ [$json.body.From.replace('whatsapp:', ''), $json.medicamento, $json.dosis || $json.Dosis, $json.frecuencia || 'Según indicación médica', $json.duracion || '30 días', $json.id] }}"
         }
@@ -88,7 +88,7 @@
       "parameters": {
         "resource": "message",
         "operation": "create",
-        "to": "whatsapp:+549XXXXXXXXX",
+        "to": "whatsapp:+5491155550000",
         "from": "{{ $env.TWILIO_WHATSAPP_NUMBER }}",
         "body": "={{ '📋 Solicitud de receta NUEVA de ' + $json.body.ProfileName + ': ' + $json.medicamento + '. Revisá el dashboard para autorizar.' }}"
       }

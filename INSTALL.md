@@ -216,3 +216,83 @@ consultorio-medico/
 - ✅ Reportes con gráficos
 - ✅ Modo oscuro / claro
 - ✅ Responsive (mobile-friendly)
+
+---
+
+## 🚀 Acceso Rápido (Desarrollo Local)
+
+### Dashboard Web
+
+```bash
+cd dashboard
+
+# Iniciar en modo desarrollo
+npm run dev
+
+# Abrir en el navegador:
+# http://localhost:3000
+```
+
+### Credenciales de Prueba
+
+| Usuario | Email | Contraseña | Rol |
+|---------|-------|------------|-----|
+| Admin | `admin@consultorio.com` | `admin123` | Administrador |
+| Médico | `medico@consultorio.com` | `medico123` | Médico |
+
+### Notas
+
+- **Sin PostgreSQL**: El dashboard funciona automáticamente con almacenamiento JSON local (`.data/`). No necesitás PostgreSQL para desarrollo.
+- **Con PostgreSQL**: Configurá `DATABASE_URL` en `.env.local` y ejecutá las migraciones SQL.
+- **Ollama**: Opcional para desarrollo. Sin Ollama, el dashboard muestra mock data.
+- **Twilio**: Opcional para desarrollo. Sin Twilio, las conversaciones usan datos mock.
+
+### Probar el Sistema
+
+1. Abrí `http://localhost:3000`
+2. Iniciá sesión con `admin@consultorio.com` / `admin123`
+3. Explorá las secciones:
+   - **Panel Principal** → KPIs del día
+   - **Turnos** → Vista lista + calendario, crear nuevo turno
+   - **Pacientes** → Buscar y ver detalle completo
+   - **Conversaciones** → Bandeja unificada con IA
+   - **Recetas** → Activas, vencidas, crear nueva
+   - **Reportes** → Métricas detalladas con gráficos
+   - **Configuración** → Integraciones, plantillas WhatsApp, equipo
+
+---
+
+## 🐳 Deploy en VPS con Dokploy
+
+```bash
+# 1. Clonar el repo en la VPS
+git clone https://github.com/tu-usuario/consultorio-medico.git
+cd consultorio-medico
+
+# 2. Configurar PostgreSQL (desde Dokploy o directo)
+createdb consultorio_medico
+cat database/migrations/*.sql | psql -U postgres -d consultorio_medico
+
+# 3. Configurar variables de entorno
+cp dashboard/.env.example dashboard/.env.local
+nano dashboard/.env.local
+
+# 4. Dashboard - Build y start
+cd dashboard
+npm install
+npm run build
+
+# Para Dokploy: usar next.config.js con output: 'standalone'
+# Dokploy va a levantar: node .next/standalone/server.js
+
+# 5. Configurar n8n (desde Dokploy)
+# Importar los 6 workflows desde n8n-workflows/
+# Configurar credenciales PostgreSQL, Twilio y Ollama en n8n
+
+# 6. Configurar Twilio
+# Consola Twilio → WhatsApp → Sandbox o número propio
+# Webhook: https://tu-dominio.com/webhook/whatsapp-inbound
+
+# 7. Ollama
+docker exec -it ollama ollama pull mistral
+```

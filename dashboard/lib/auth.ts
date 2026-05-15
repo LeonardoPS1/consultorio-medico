@@ -1,9 +1,7 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
-import { db } from '@/lib/db';
-import { usuarios } from '@/drizzle/schema';
-import { eq, and } from 'drizzle-orm';
+import { getUserByEmail, createAdminUserIfNotExists } from '@/lib/data-store';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -19,23 +17,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const email = credentials.email as string;
         const password = credentials.password as string;
 
-        const user = await db
-          .select()
-          .from(usuarios)
-          .where(and(eq(usuarios.email, email), eq(usuarios.activo, true)))
-          .limit(1);
+        try {
+          // Asegurar que existe el admin por si es primera vez
+          await createAdminUserIfNotExists();
 
-        if (!user.length) return null;
+          // Buscar usuario (PostgreSQL o JSON fallback)
+          const user = await getUserByEmail(email);
 
-        const isValid = await compare(password, user[0].passwordHash);
-        if (!isValid) return null;
+          if (!user) return null;
 
-        return {
-          id: user[0].id,
-          email: user[0].email,
-          name: user[0].nombre,
-          role: user[0].rol,
-        };
+          const isValid = await compare(password, user.passwordHash);
+          if (!isValid) return null;
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.nombre,
+            role: user.rol,
+          };
+        } catch (error) {
+          console.error('[Auth] Error en authorize:', error);
+          return null;
+        }
       },
     }),
   ],
@@ -56,7 +59,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   pages: {
-    signIn: '/login',
+    signIn: '/',
   },
   session: {
     strategy: 'jwt',

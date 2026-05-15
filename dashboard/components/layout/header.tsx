@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Bell, Moon, Sun } from 'lucide-react';
@@ -96,5 +96,4 @@ export function Header() {
   );
 }
 
-// Necesitamos importar signOut para el dropdown
-import { signOut } from 'next-auth/react';
+

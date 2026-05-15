@@ -3,7 +3,6 @@ const nextConfig = {
   images: {
     domains: ['localhost'],
   },
-  // Para que funcione con Dokploy
   output: 'standalone',
   // Variables de entorno que expone al cliente
   env: {

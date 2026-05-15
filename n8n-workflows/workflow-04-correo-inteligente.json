@@ -64,7 +64,7 @@
       "parameters": {
         "resource": "message",
         "operation": "create",
-        "to": "whatsapp:+549XXXXXXXXX",
+        "to": "whatsapp:+5491155550000",
         "from": "{{ $env.TWILIO_WHATSAPP_NUMBER }}",
         "body": "={{ '🚨 Email URGENTE de ' + $json.from + '\\nAsunto: ' + $json.subject + '\\n\\nRevisá la bandeja de entrada.' }}"
       }

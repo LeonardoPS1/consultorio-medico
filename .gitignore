@@ -37,3 +37,12 @@ build/
 
 # Drizzle
 drizzle/migrations/
+
+# Desarrollo local (JSON fallback)
+dashboard/.data/
+
+# Next.js generated
+dashboard/next-env.d.ts
+
+# Package manager
+dashboard/pnpm-lock.yaml
