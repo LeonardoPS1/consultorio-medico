@@ -46,3 +46,6 @@ dashboard/next-env.d.ts
 
 # Package manager
 dashboard/pnpm-lock.yaml
+
+# Artifacts
+dashboard/conversaciones
