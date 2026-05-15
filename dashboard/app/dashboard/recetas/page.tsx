@@ -194,7 +194,7 @@ function generarPDFReceta(receta: Receta, org: Record<string, string>) {
     <div></div>
     <div class="firma">
       <div class="firma-line"></div>
-      <div class="firma-label">Firma y sello del profesional</div>
+      <div class="firma-label">${org.firmaNombre || 'Firma del profesional'}</div>
     </div>
   </div>
 
@@ -372,7 +372,7 @@ function generarHTMLReceta(receta: Receta, org: Record<string, string>, autoPrin
     <div></div>
     <div class="firma-box">
       <div class="firma-line"></div>
-      <div class="firma-label">Firma y sello del profesional</div>
+      <div class="firma-label">${org.firmaNombre || 'Firma del profesional'}</div>
     </div>
   </div>
   <div class="footer-text"><strong>${nombreOrg}</strong> · Documento generado electrónicamente el ${hoy}</div>

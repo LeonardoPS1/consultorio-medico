@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { ImageUpload } from '@/components/ui/image-upload';
 
 // ============================================================
 // Tipos
@@ -757,6 +758,8 @@ function PerfilOrganizacion() {
     eslogan: 'Tu salud, nuestra prioridad',
     descripcion: 'Centro médico especializado en atención clínica general.',
     logoUrl: '',
+    avatarUrl: '',
+    firmaNombre: 'Dr. García',
     colorPrimario: '#2563eb',
     colorSecundario: '#7c3aed',
     direccion: 'Av. Corrientes 1234',
@@ -773,7 +776,6 @@ function PerfilOrganizacion() {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [previewColor, setPreviewColor] = useState(data.colorPrimario);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Cargar datos al montar
   useEffect(() => {
@@ -815,98 +817,48 @@ function PerfilOrganizacion() {
     setData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const [logoError, setLogoError] = useState(false);
-
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      setMensaje('❌ La imagen es muy grande (máx 2MB)');
-      setTimeout(() => setMensaje(''), 3000);
-      return;
-    }
-    // Verificar que sea una imagen válida
-    if (!file.type.startsWith('image/')) {
-      setMensaje('❌ El archivo debe ser una imagen');
-      setTimeout(() => setMensaje(''), 3000);
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      if (dataUrl) {
-        updateField('logoUrl', dataUrl);
-        setLogoError(false);
-      }
-    };
-    reader.onerror = () => {
-      setMensaje('❌ Error al leer la imagen');
-      setTimeout(() => setMensaje(''), 3000);
-    };
-    reader.readAsDataURL(file);
-    // Resetear el input para permitir seleccionar el mismo archivo de nuevo
-    e.target.value = '';
-  };
-
-  const removeLogo = () => {
-    updateField('logoUrl', '');
-    setLogoError(false);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
   return (
     <div className="space-y-4">
-      {/* Vista previa del perfil */}
+      {/* Banner con logo y avatar */}
       <Card className="overflow-hidden">
-        <div className="h-24 relative" style={{ background: `linear-gradient(135deg, ${previewColor}, ${data.colorSecundario || previewColor})` }}>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-2 right-2 h-7 px-2 rounded-md bg-black/20 hover:bg-black/30 text-white text-xs transition-colors flex items-center gap-1"
-            title="Cambiar logo"
-          >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            Logo
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleLogoUpload}
-            className="hidden"
-          />
-        </div>
+        <div className="h-24 relative" style={{ background: `linear-gradient(135deg, ${previewColor}, ${data.colorSecundario || previewColor})` }} />
         <CardContent className="relative -mt-12 flex items-end gap-4 pb-4">
-          <div className="relative group">
-            <div
-              className="h-20 w-20 rounded-2xl border-4 border-background flex items-center justify-center text-2xl font-bold text-white shadow-lg overflow-hidden"
-              style={{ backgroundColor: data.logoUrl ? 'transparent' : previewColor }}
-            >
-              {data.logoUrl && !logoError ? (
-                <img
-                  src={data.logoUrl}
-                  alt="Logo"
-                  className="h-full w-full object-cover"
-                  onError={() => setLogoError(true)}
-                />
-              ) : (
-                <span className="text-2xl font-bold text-white">
-                  {data.nombre ? data.nombre.charAt(0).toUpperCase() : '?'}
-                </span>
-              )}
-            </div>
-            {data.logoUrl && (
-              <button
-                onClick={removeLogo}
-                className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Eliminar logo"
-              >
-                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </button>
-            )}
-          </div>
-          <div className="pb-1">
+          {/* Logo del consultorio */}
+          <ImageUpload
+            value={data.logoUrl}
+            onChange={(url) => updateField('logoUrl', url)}
+            onRemove={() => updateField('logoUrl', '')}
+            shape="rounded"
+            size="md"
+            label="Logo"
+            className="shrink-0"
+            fallback={
+              <span className="text-xl font-bold" style={{ color: previewColor }}>
+                {data.nombre ? data.nombre.charAt(0).toUpperCase() : '?'}
+              </span>
+            }
+          />
+          {/* Avatar del profesional */}
+          <ImageUpload
+            value={data.avatarUrl}
+            onChange={(url) => updateField('avatarUrl', url)}
+            onRemove={() => updateField('avatarUrl', '')}
+            shape="circle"
+            size="md"
+            label="Avatar"
+            className="shrink-0"
+            fallback={
+              <span className="text-lg font-bold" style={{ color: previewColor }}>
+                {data.firmaNombre ? data.firmaNombre.charAt(0).toUpperCase() : '👤'}
+              </span>
+            }
+          />
+          <div className="pb-1 flex-1">
             <h3 className="text-lg font-bold">{data.nombre || 'Mi Consultorio'}</h3>
             <p className="text-sm text-muted-foreground">{data.eslogan}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {data.firmaNombre} · {data.email}
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -926,6 +878,7 @@ function PerfilOrganizacion() {
           </CardHeader>
           <CardContent className="space-y-3">
             <Field label="Nombre del consultorio / médico" value={data.nombre} onChange={(v) => updateField('nombre', v)} />
+            <Field label="Nombre del profesional (firma)" value={data.firmaNombre} onChange={(v) => updateField('firmaNombre', v)} placeholder="Ej: Dr. Juan García" />
             <Field label="Eslogan" value={data.eslogan} onChange={(v) => updateField('eslogan', v)} />
             <div className="space-y-1">
               <Label>Descripción</Label>

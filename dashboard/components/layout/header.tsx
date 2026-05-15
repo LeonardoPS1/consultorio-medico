@@ -105,6 +105,15 @@ export function Header() {
   const router = useRouter();
   const [notificaciones, setNotificaciones] = useState(notificacionesMock);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState('');
+
+  // Cargar avatar desde organización
+  useEffect(() => {
+    fetch('/api/organization')
+      .then(r => r.json())
+      .then(res => { if (res.data?.avatarUrl) setAvatarUrl(res.data.avatarUrl); })
+      .catch(() => {});
+  }, []);
 
   const user = session?.user;
   const nombreCompleto = user?.name || 'Dr.';
@@ -248,9 +257,13 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full h-9 w-9">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                  {initials}
-                </AvatarFallback>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" className="h-full w-full rounded-full object-cover" />
+                ) : (
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    {initials}
+                  </AvatarFallback>
+                )}
               </Avatar>
             </Button>
           </DropdownMenuTrigger>

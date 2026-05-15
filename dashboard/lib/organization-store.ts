@@ -16,6 +16,8 @@ export interface OrganizationData {
   eslogan: string;
   descripcion: string;
   logoUrl: string;
+  avatarUrl: string;
+  firmaNombre: string;
   colorPrimario: string;
   colorSecundario: string;
   direccion: string;
@@ -26,14 +28,8 @@ export interface OrganizationData {
   whatsapp: string;
   email: string;
   sitioWeb: string;
-  horarios: {
-    [key: string]: { activo: boolean; inicio: string; fin: string } | undefined;
-  };
-  redesSociales: {
-    instagram: string;
-    facebook: string;
-    twitter: string;
-  };
+  horarios: { [key: string]: { activo: boolean; inicio: string; fin: string } | undefined };
+  redesSociales: { instagram: string; facebook: string; twitter: string };
 }
 
 const DEFAULT_ORG: OrganizationData = {
@@ -41,6 +37,8 @@ const DEFAULT_ORG: OrganizationData = {
   eslogan: 'Tu salud, nuestra prioridad',
   descripcion: 'Centro médico especializado en atención clínica general y de especialidades.',
   logoUrl: '',
+  avatarUrl: '',
+  firmaNombre: 'Dr. García',
   colorPrimario: '#2563eb',
   colorSecundario: '#7c3aed',
   direccion: 'Av. Corrientes 1234',
