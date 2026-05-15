@@ -15,94 +15,371 @@ import { toast } from '@/components/ui/use-toast';
 // ============================================================
 
 function descargarReceta(receta: Receta) {
-  const contenido = [
-    '========================================',
-    '        RECETA MÉDICA',
-    '========================================',
-    '',
-    `Paciente: ${receta.paciente}`,
-    `Medicamento: ${receta.medicamento}`,
-    `Dosis: ${receta.dosis}`,
-    `Duración: ${receta.duracion}`,
-    receta.indicaciones ? `Indicaciones: ${receta.indicaciones}` : '',
-    '',
-    `Fecha: ${formatDate(new Date().toISOString(), 'dd/MM/yyyy')}`,
-    `Vence: ${formatDate(receta.vence, 'dd/MM/yyyy')}`,
-    '',
-    '========================================',
-    '  Consultorio Médico',
-    '  Firma del profesional',
-    '========================================',
-  ].filter(Boolean).join('\n');
+  // Intentar cargar datos de la organización para el encabezado
+  fetch('/api/organization')
+    .then(r => r.json())
+    .then(resp => {
+      const org = resp.data || {};
+      generarPDFReceta(receta, org);
+    })
+    .catch(() => generarPDFReceta(receta, {}));
+}
 
-  const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `receta-${receta.paciente.replace(/\s+/g, '-').toLowerCase()}-${receta.medicamento.replace(/\s+/g, '-').toLowerCase()}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+function generarPDFReceta(receta: Receta, org: Record<string, string>) {
+  const nombreOrg = org.nombre || 'Consultorio Médico';
+  const direccion = org.direccion || '';
+  const ciudad = org.ciudad || '';
+  const telefono = org.telefono || '';
+  const email = org.email || '';
+  const logoUrl = org.logoUrl || '';
+  const colorPrimario = org.colorPrimario || '#2563eb';
 
-  toast({ title: '✅ Receta descargada', description: `${receta.medicamento} - ${receta.paciente}` });
+  const hoy = formatDate(new Date().toISOString(), "dd 'de' MMMM 'de' yyyy");
+  const vence = formatDate(receta.vence, "dd 'de' MMMM 'de' yyyy");
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Receta - ${receta.paciente}</title>
+<style>
+  @page { margin: 20mm 25mm; size: A4; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: #1a1a1a;
+    line-height: 1.6;
+    padding: 0;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid ${colorPrimario};
+    margin-bottom: 30px;
+  }
+  .header-logo {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: ${colorPrimario};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+  }
+  .header-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .header-info h1 { font-size: 20px; color: ${colorPrimario}; margin-bottom: 2px; }
+  .header-info p { font-size: 12px; color: #666; }
+  .titulo-documento {
+    text-align: center;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: #333;
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+  .receta-content {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 30px;
+  }
+  .paciente-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 30px;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed #ddd;
+  }
+  .paciente-info .label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+  .paciente-info .value { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+  .prescripcion { margin-bottom: 20px; }
+  .prescripcion h3 {
+    font-size: 13px;
+    color: ${colorPrimario};
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+  .prescripcion-item {
+    background: white;
+    border-left: 4px solid ${colorPrimario};
+    padding: 15px 20px;
+    border-radius: 0 8px 8px 0;
+  }
+  .prescripcion-item .medicamento { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+  .prescripcion-item .detalle { font-size: 13px; color: #555; margin-top: 5px; }
+  .prescripcion-item .indicaciones { font-size: 13px; color: #666; margin-top: 8px; font-style: italic; }
+  .fechas { display: flex; gap: 40px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e5e5; }
+  .fechas div { text-align: center; }
+  .fechas .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+  .fechas .value { font-size: 14px; font-weight: 600; margin-top: 2px; }
+  .firma-area {
+    margin-top: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+  }
+  .firma {
+    text-align: center;
+    min-width: 250px;
+  }
+  .firma-line {
+    border-top: 2px solid #333;
+    width: 250px;
+    margin-bottom: 5px;
+  }
+  .firma-label { font-size: 11px; color: #666; }
+  .footer {
+    margin-top: 40px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    text-align: center;
+    font-size: 10px;
+    color: #999;
+  }
+  .footer strong { color: #666; }
+  @media print {
+    body { padding: 0; }
+    .no-print { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-logo">
+      ${logoUrl ? `<img src="${logoUrl}" alt="Logo">` : nombreOrg.charAt(0).toUpperCase()}
+    </div>
+    <div class="header-info">
+      <h1>${nombreOrg}</h1>
+      <p>${[direccion, ciudad].filter(Boolean).join(', ')}</p>
+      <p>${[telefono, email].filter(Boolean).join(' | ')}</p>
+    </div>
+  </div>
+
+  <div class="titulo-documento">Receta Médica</div>
+
+  <div class="receta-content">
+    <div class="paciente-info">
+      <div><div class="label">Paciente</div><div class="value">${receta.paciente}</div></div>
+      <div><div class="label">Fecha de emisión</div><div class="value">${hoy}</div></div>
+    </div>
+
+    <div class="prescripcion">
+      <h3>Prescripción</h3>
+      <div class="prescripcion-item">
+        <div class="medicamento">${receta.medicamento}</div>
+        <div class="detalle"><strong>Dosis:</strong> ${receta.dosis} &nbsp;·&nbsp; <strong>Duración:</strong> ${receta.duracion}</div>
+        ${receta.indicaciones ? `<div class="indicaciones">📋 ${receta.indicaciones}</div>` : ''}
+      </div>
+    </div>
+
+    <div class="fechas">
+      <div><div class="label">Fecha de emisión</div><div class="value">${hoy}</div></div>
+      <div><div class="label">Válida hasta</div><div class="value">${vence}</div></div>
+    </div>
+  </div>
+
+  <div class="firma-area">
+    <div></div>
+    <div class="firma">
+      <div class="firma-line"></div>
+      <div class="firma-label">Firma y sello del profesional</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <strong>${nombreOrg}</strong> &nbsp;·&nbsp; Documento generado electrónicamente el ${hoy}
+  </div>
+
+  <div class="no-print" style="text-align:center;margin-top:30px;padding-top:20px;border-top:2px dashed #ddd">
+    <button onclick="window.print()" style="padding:10px 30px;background:${colorPrimario};color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">💾 Guardar como PDF / Imprimir</button>
+    <p style="font-size:12px;color:#888;margin-top:8px">Hacé clic en "Guardar como PDF" en el diálogo de impresión</p>
+  </div>
+</body>
+</html>`;
+
+  const ventana = window.open('', '_blank');
+  if (!ventana) {
+    toast({ title: '❌ Error', description: 'Permití ventanas emergentes para abrir la receta', variant: 'destructive' });
+    return;
+  }
+  ventana.document.write(html);
+  ventana.document.close();
+  toast({ title: '📄 Receta generada', description: `${receta.medicamento} - ${receta.paciente}` });
 }
 
 function enviarRecetaWhatsApp(receta: Receta) {
-  const texto = encodeURIComponent(
-    `📋 *RECETA MÉDICA*%0A%0A` +
-    `Paciente: ${receta.paciente}%0A` +
-    `Medicamento: ${receta.medicamento}%0A` +
-    `Dosis: ${receta.dosis}%0A` +
-    `Duración: ${receta.duracion}%0A` +
-    (receta.indicaciones ? `Indicaciones: ${receta.indicaciones}%0A` : '') +
-    `%0AVence: ${formatDate(receta.vence, 'dd/MM/yyyy')}%0A%0A` +
-    `Enviado desde Consultorio Médico`
-  );
-  window.open(`https://wa.me/?text=${texto}`, '_blank');
-  toast({ title: '📱 Abriendo WhatsApp', description: 'Se abrirá una ventana para enviar la receta' });
+  // Intentar cargar el nombre real de la organización
+  fetch('/api/organization')
+    .then(r => r.json())
+    .then(resp => {
+      const org = resp.data || {};
+      const nombreOrg = org.nombre || 'Consultorio Médico';
+      const texto = encodeURIComponent(
+        `📋 *RECETA MÉDICA*%0A%0A` +
+        `Paciente: ${receta.paciente}%0A` +
+        `Medicamento: ${receta.medicamento}%0A` +
+        `Dosis: ${receta.dosis}%0A` +
+        `Duración: ${receta.duracion}%0A` +
+        (receta.indicaciones ? `Indicaciones: ${receta.indicaciones}%0A` : '') +
+        `%0AVence: ${formatDate(receta.vence, 'dd/MM/yyyy')}%0A%0A` +
+        `Enviado desde ${nombreOrg}`
+      );
+      window.open(`https://wa.me/?text=${texto}`, '_blank');
+      toast({ title: '📱 Abriendo WhatsApp', description: 'Se abrirá una ventana para enviar la receta' });
+    })
+    .catch(() => {
+      const texto = encodeURIComponent(
+        `📋 *RECETA MÉDICA*%0A%0A` +
+        `Paciente: ${receta.paciente}%0A` +
+        `Medicamento: ${receta.medicamento}%0A` +
+        `Dosis: ${receta.dosis}%0A` +
+        `Duración: ${receta.duracion}%0A` +
+        (receta.indicaciones ? `Indicaciones: ${receta.indicaciones}%0A` : '') +
+        `%0AVence: ${formatDate(receta.vence, 'dd/MM/yyyy')}%0A%0A` +
+        `Enviado desde Consultorio Médico`
+      );
+      window.open(`https://wa.me/?text=${texto}`, '_blank');
+      toast({ title: '📱 Abriendo WhatsApp', description: 'Se abrirá una ventana para enviar la receta' });
+    });
 }
 
 function imprimirReceta(receta: Receta) {
-  const ventana = window.open('', '_blank');
-  if (!ventana) {
-    toast({ title: '❌ Error', description: 'Permití ventanas emergentes para imprimir', variant: 'destructive' });
-    return;
+  fetch('/api/organization')
+    .then(r => r.json())
+    .then(resp => {
+      const org = resp.data || {};
+      const html = generarHTMLReceta(receta, org, true);
+      const ventana = window.open('', '_blank');
+      if (ventana) { ventana.document.write(html); ventana.document.close(); }
+    })
+    .catch(() => {
+      const html = generarHTMLReceta(receta, {}, true);
+      const ventana = window.open('', '_blank');
+      if (ventana) { ventana.document.write(html); ventana.document.close(); }
+    });
+}
+
+function generarHTMLReceta(receta: Receta, org: Record<string, string>, autoPrint: boolean = false): string {
+  const nombreOrg = org.nombre || 'Consultorio Médico';
+  const direccion = org.direccion || '';
+  const ciudad = org.ciudad || '';
+  const telefono = org.telefono || '';
+  const email = org.email || '';
+  const logoUrl = org.logoUrl || '';
+  const colorPrimario = org.colorPrimario || '#2563eb';
+  const hoy = formatDate(new Date().toISOString(), "dd 'de' MMMM 'de' yyyy");
+  const vence = formatDate(receta.vence, "dd 'de' MMMM 'de' yyyy");
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Receta - ${receta.paciente}</title>
+<style>
+  @page { margin: 20mm 25mm; size: A4; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: #1a1a1a; line-height: 1.6; padding: 0;
   }
-  ventana.document.write(`
-    <html>
-    <head><title>Receta - ${receta.paciente}</title>
-    <style>
-      body { font-family: 'Courier New', monospace; padding: 40px; max-width: 600px; margin: 0 auto; }
-      h1 { text-align: center; font-size: 18px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-      .header { text-align: center; margin-bottom: 30px; }
-      .header h2 { margin: 0; font-size: 14px; }
-      .content { line-height: 2; font-size: 14px; }
-      .content strong { display: inline-block; width: 120px; }
-      .footer { margin-top: 40px; border-top: 1px solid #999; padding-top: 20px; font-size: 12px; text-align: center; color: #666; }
-      .firma { margin-top: 50px; border-top: 1px solid #000; width: 250px; text-align: center; padding-top: 5px; font-size: 12px; margin-left: auto; margin-right: auto; }
-      @media print { body { padding: 20px; } }
-    </style>
-    </head>
-    <body>
-      <h1>RECETA MÉDICA</h1>
-      <div class="header"><h2>Consultorio Médico</h2></div>
-      <div class="content">
-        <p><strong>Paciente:</strong> ${receta.paciente}</p>
-        <p><strong>Medicamento:</strong> ${receta.medicamento}</p>
-        <p><strong>Dosis:</strong> ${receta.dosis}</p>
-        <p><strong>Duración:</strong> ${receta.duracion}</p>
-        ${receta.indicaciones ? `<p><strong>Indicaciones:</strong> ${receta.indicaciones}</p>` : ''}
-        <p><strong>Fecha:</strong> ${formatDate(new Date().toISOString(), 'dd/MM/yyyy')}</p>
-        <p><strong>Vence:</strong> ${formatDate(receta.vence, 'dd/MM/yyyy')}</p>
+  .header {
+    display: flex; align-items: center; gap: 20px;
+    padding-bottom: 20px; border-bottom: 3px solid ${colorPrimario}; margin-bottom: 25px;
+  }
+  .header-logo {
+    width: 65px; height: 65px; border-radius: 12px; overflow: hidden; flex-shrink: 0;
+    background: ${colorPrimario}; display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 26px; font-weight: bold;
+  }
+  .header-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .header-info h1 { font-size: 18px; color: ${colorPrimario}; margin-bottom: 2px; }
+  .header-info p { font-size: 11px; color: #666; }
+  .titulo-receta {
+    text-align: center; font-size: 15px; text-transform: uppercase; letter-spacing: 4px;
+    color: #333; margin-bottom: 25px; padding-bottom: 8px; border-bottom: 1px solid #ddd;
+  }
+  .receta-body {
+    background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 25px; margin-bottom: 25px;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 30px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #ddd; }
+  .grid-2 .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+  .grid-2 .value { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+  .med-section h3 { font-size: 12px; color: ${colorPrimario}; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+  .med-card {
+    background: white; border-left: 4px solid ${colorPrimario};
+    padding: 14px 18px; border-radius: 0 8px 8px 0;
+  }
+  .med-card .name { font-size: 17px; font-weight: 700; color: #1a1a1a; }
+  .med-card .detail { font-size: 12px; color: #555; margin-top: 4px; }
+  .med-card .notes { font-size: 12px; color: #666; margin-top: 6px; font-style: italic; }
+  .fechas-row { display: flex; gap: 30px; margin-top: 15px; padding-top: 12px; border-top: 1px solid #e5e5e5; }
+  .fechas-row div { text-align: center; }
+  .fechas-row .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+  .fechas-row .value { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .firma-area { margin-top: 45px; display: flex; justify-content: space-between; align-items: end; }
+  .firma-box { text-align: center; min-width: 220px; }
+  .firma-line { border-top: 2px solid #333; width: 220px; margin-bottom: 4px; }
+  .firma-label { font-size: 10px; color: #666; }
+  .footer-text { margin-top: 30px; padding-top: 12px; border-top: 1px solid #ddd; text-align: center; font-size: 10px; color: #999; }
+  .footer-text strong { color: #666; }
+  .print-btn { text-align: center; margin-top: 25px; padding-top: 20px; border-top: 2px dashed #ddd; }
+  .print-btn button { padding: 10px 30px; background: ${colorPrimario}; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
+  .print-btn p { font-size: 11px; color: #888; margin-top: 6px; }
+  @media print { .print-btn { display: none; } }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-logo">${logoUrl ? `<img src="${logoUrl}" alt="Logo">` : nombreOrg.charAt(0).toUpperCase()}</div>
+    <div class="header-info">
+      <h1>${nombreOrg}</h1>
+      <p>${[direccion, ciudad].filter(Boolean).join(', ')}</p>
+      <p>${[telefono, email].filter(Boolean).join(' | ')}</p>
+    </div>
+  </div>
+  <div class="titulo-receta">Receta Médica</div>
+  <div class="receta-body">
+    <div class="grid-2">
+      <div><div class="label">Paciente</div><div class="value">${receta.paciente}</div></div>
+      <div><div class="label">Fecha de emisión</div><div class="value">${hoy}</div></div>
+    </div>
+    <div class="med-section">
+      <h3>Prescripción</h3>
+      <div class="med-card">
+        <div class="name">${receta.medicamento}</div>
+        <div class="detail"><strong>Dosis:</strong> ${receta.dosis} · <strong>Duración:</strong> ${receta.duracion}</div>
+        ${receta.indicaciones ? `<div class="notes">📋 ${receta.indicaciones}</div>` : ''}
       </div>
-      <div class="firma">Firma del profesional</div>
-      <div class="footer">Documento generado electrónicamente - Consultorio Médico</div>
-      <script>window.print();window.close();</script>
-    </body>
-    </html>
-  `);
-  ventana.document.close();
+    </div>
+    <div class="fechas-row">
+      <div><div class="label">Emisión</div><div class="value">${hoy}</div></div>
+      <div><div class="label">Válida hasta</div><div class="value">${vence}</div></div>
+    </div>
+  </div>
+  <div class="firma-area">
+    <div></div>
+    <div class="firma-box">
+      <div class="firma-line"></div>
+      <div class="firma-label">Firma y sello del profesional</div>
+    </div>
+  </div>
+  <div class="footer-text"><strong>${nombreOrg}</strong> · Documento generado electrónicamente el ${hoy}</div>
+  ${autoPrint ? '<div class="print-btn"><button onclick="window.print()">🖨️ Imprimir / Guardar PDF</button><p>Seleccioná "Guardar como PDF" en el diálogo de impresión</p></div>' : ''}
+  ${autoPrint ? '' : '<script>window.print();window.close();</script>'}
+</body>
+</html>`;
 }
 
 function renovarReceta(receta: Receta, setRecetas: React.Dispatch<React.SetStateAction<Receta[]>>) {

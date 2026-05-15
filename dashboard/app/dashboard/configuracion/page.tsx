@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -101,10 +102,29 @@ const miembrosEquipo: MiembroEquipo[] = [
 // ============================================================
 
 export default function ConfiguracionPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-96"><div className="skeleton h-8 w-48" /></div>}>
+      <ConfigContent />
+    </Suspense>
+  );
+}
+
+function ConfigContent() {
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') || 'perfil';
   const [plantillas, setPlantillas] = useState(plantillasIniciales);
   const [showPlantillaModal, setShowPlantillaModal] = useState(false);
   const [editingPlantilla, setEditingPlantilla] = useState<PlantillaWhatsApp | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [activeTab, setActiveTab] = useState(tabFromUrl);
+
+  // Sincronizar tabs con la URL
+  useEffect(() => {
+    const urlTab = searchParams.get('tab');
+    if (urlTab && urlTab !== activeTab) {
+      setActiveTab(urlTab);
+    }
+  }, [searchParams, activeTab]);
 
   return (
     <div className="space-y-6 animate-in">
@@ -115,7 +135,7 @@ export default function ConfiguracionPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="perfil">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="perfil">
             <svg className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -753,6 +773,7 @@ function PerfilOrganizacion() {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [previewColor, setPreviewColor] = useState(data.colorPrimario);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Cargar datos al montar
   useEffect(() => {
@@ -794,17 +815,69 @@ function PerfilOrganizacion() {
     setData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setMensaje('❌ La imagen es muy grande (máx 2MB)');
+      setTimeout(() => setMensaje(''), 3000);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      updateField('logoUrl', dataUrl);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeLogo = () => {
+    updateField('logoUrl', '');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   return (
     <div className="space-y-4">
       {/* Vista previa del perfil */}
       <Card className="overflow-hidden">
-        <div className="h-24" style={{ background: `linear-gradient(135deg, ${previewColor}, ${data.colorSecundario || previewColor})` }} />
-        <CardContent className="relative -mt-12 flex items-end gap-4 pb-4">
-          <div
-            className="h-20 w-20 rounded-2xl border-4 border-background flex items-center justify-center text-2xl font-bold text-white shadow-lg"
-            style={{ backgroundColor: previewColor }}
+        <div className="h-24 relative" style={{ background: `linear-gradient(135deg, ${previewColor}, ${data.colorSecundario || previewColor})` }}>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="absolute bottom-2 right-2 h-7 px-2 rounded-md bg-black/20 hover:bg-black/30 text-white text-xs transition-colors flex items-center gap-1"
+            title="Cambiar logo"
           >
-            {data.nombre ? data.nombre.charAt(0).toUpperCase() : '?'}
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Logo
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/svg+xml,image/webp"
+            onChange={handleLogoUpload}
+            className="hidden"
+          />
+        </div>
+        <CardContent className="relative -mt-12 flex items-end gap-4 pb-4">
+          <div className="relative group">
+            <div
+              className="h-20 w-20 rounded-2xl border-4 border-background flex items-center justify-center text-2xl font-bold text-white shadow-lg overflow-hidden"
+              style={{ backgroundColor: data.logoUrl ? 'transparent' : previewColor }}
+            >
+              {data.logoUrl ? (
+                <img src={data.logoUrl} alt="Logo" className="h-full w-full object-cover" />
+              ) : (
+                data.nombre ? data.nombre.charAt(0).toUpperCase() : '?'
+              )}
+            </div>
+            {data.logoUrl && (
+              <button
+                onClick={removeLogo}
+                className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Eliminar logo"
+              >
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            )}
           </div>
           <div className="pb-1">
             <h3 className="text-lg font-bold">{data.nombre || 'Mi Consultorio'}</h3>
