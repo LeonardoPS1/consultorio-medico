@@ -1,0 +1,276 @@
+{
+  "name": "01 - WhatsApp Inbound + Triaje",
+  "nodes": [
+    {
+      "id": "webhook-twilio",
+      "name": "Webhook - Twilio WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "parameters": {
+        "path": "whatsapp-inbound",
+        "method": "POST",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "validate-message",
+      "name": "Validar Mensaje",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.Body }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "get-create-patient",
+      "name": "Obtener o Crear Paciente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [500, 200],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO pacientes (telefono, nombre, apellido, fuente, consentimiento_whatsapp)\nVALUES ($1, $2, '', 'whatsapp', TRUE)\nON CONFLICT (telefono) \nDO UPDATE SET updated_at = NOW()\nRETURNING id, telefono, nombre, apellido, email, tags, canal_preferido;",
+        "additionalFields": {
+          "queryParams": "={{ [$json.body.From.replace('whatsapp:', ''), $json.body.ProfileName || 'Paciente'] }}"
+        }
+      }
+    },
+    {
+      "id": "get-conversation",
+      "name": "Obtener Conversación Activa",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [500, 400],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT c.id, c.estado, c.contexto_ia, \n  m.rol, m.contenido, m.intencion, m.created_at\nFROM conversaciones c\nLEFT JOIN mensajes m ON m.conversacion_id = c.id\nWHERE c.paciente_id = $1 AND c.estado = 'activa'\nORDER BY m.created_at DESC\nLIMIT 10;",
+        "additionalFields": {
+          "queryParams": "={{ [$json.id] }}"
+        }
+      }
+    },
+    {
+      "id": "classify-intent",
+      "name": "Ollama - Clasificar Intención",
+      "type": "n8n-nodes-base.ollama",
+      "typeVersion": 2,
+      "position": [750, 300],
+      "parameters": {
+        "model": "mistral",
+        "temperature": 0.1,
+        "maxTokens": 100,
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Eres un clasificador de mensajes para un consultorio médico. Clasificá el mensaje del paciente en UNA de estas categorías:\n\n- TURNO_NUEVO: Quiere sacar un turno nuevo\n- TURNO_CANCELAR: Quiere cancelar un turno\n- TURNO_CONFIRMAR: Quiere confirmar asistencia\n- CONSULTA: Pregunta general sobre salud, horarios, etc.\n- RECETA: Pide receta o renovación\n- URGENCIA: Dolor fuerte, accidente, emergencia, síntomas graves\n- SALUDO: Saludo inicial, 'hola', 'buenos días'\n- OTRO: No aplica a las anteriores\n\nRespondé SOLO con el nombre de la categoría, sin explicación."
+            },
+            {
+              "role": "user",
+              "content": "={{ 'Mensaje: \"' + $json.body.Body + '\"' }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "route-intent",
+      "name": "Enrutar por Intención",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [1000, 300],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.message.content.trim() }}",
+        "rules": [
+          { "value2": "TURNO_NUEVO", "output": 0 },
+          { "value2": "TURNO_CANCELAR", "output": 1 },
+          { "value2": "TURNO_CONFIRMAR", "output": 2 },
+          { "value2": "URGENCIA", "output": 3 },
+          { "value2": "RECETA", "output": 4 },
+          { "value2": "SALUDO", "output": 5 }
+        ],
+        "fallbackOutput": 6
+      }
+    },
+    {
+      "id": "save-message",
+      "name": "Guardar Mensaje en DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 700],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO mensajes (conversacion_id, rol, contenido, tipo, intencion, twilio_sid, n8n_execution_id)\nVALUES (\n  (SELECT id FROM conversaciones WHERE paciente_id = $1 AND estado = 'activa' LIMIT 1),\n  'paciente', $2, 'texto', $3, $4, $5\n);",
+        "additionalFields": {
+          "queryParams": "={{ [$json.id, $json.body.Body, $json.intencion || 'otro', $json.body.SmsSid, $json.executionId] }}"
+        }
+      }
+    },
+    {
+      "id": "respond-ia",
+      "name": "Ollama - Generar Respuesta",
+      "type": "n8n-nodes-base.ollama",
+      "typeVersion": 2,
+      "position": [1250, 500],
+      "parameters": {
+        "model": "mistral",
+        "temperature": 0.7,
+        "maxTokens": 300,
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Sos el asistente virtual del Consultorio Médico. Respondés mensajes de WhatsApp de forma amable, profesional y en español argentino. Sé breve y resolutivo. \n\nSi el paciente pregunta algo que no sabés, decí que lo vas a derivar al médico.\n\nReglas:\n- NO inventes diagnósticos\n- NO recetes medicamentos\n- SIEMPRE derivá urgencias al médico\n- Usá un tono cálido pero profesional"
+            },
+            {
+              "role": "user",
+              "content": "={{ 'Paciente: \"' + $json.body.Body + '\"\\n\\nRespondé de forma natural:' }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "send-whatsapp",
+      "name": "Twilio - Enviar WhatsApp",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
+      "position": [1500, 500],
+      "parameters": {
+        "resource": "message",
+        "operation": "create",
+        "to": "={{ 'whatsapp:' + $json.body.From.replace('whatsapp:', '') }}",
+        "from": "={{ $json.body.To }}",
+        "body": "={{ $json.message.content }}",
+        "options": {
+          "statusCallback": "https://n8n.tudominio.com/webhook/twilio-status"
+        }
+      }
+    },
+    {
+      "id": "handle-urgency",
+      "name": "Notify Emergency - Notificar al Médico",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To", "value": "whatsapp:+549XXXXXXXXX" },
+            { "name": "From", "value": "={{ $json.body.To }}" },
+            { "name": "Body", "value": "=🚨 URGENCIA - {{ $json.body.ProfileName }} ({{ $json.body.From }}): \"{{ $json.body.Body }}\"" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "respond-urgency",
+      "name": "Ollama - Respuesta Urgencia",
+      "type": "n8n-nodes-base.ollama",
+      "typeVersion": 2,
+      "position": [1500, 200],
+      "parameters": {
+        "model": "mistral",
+        "temperature": 0.5,
+        "maxTokens": 200,
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Sos el asistente virtual de un consultorio médico. El paciente reportó una URGENCIA. Respondé de forma calmada pero seria, indicando que:\n1) Se notificó al médico de guardia\n2) Si es muy grave, vaya a la guardia\n3) Pronto se comunicarán con él/ella\n\nNO minimices la situación. Sé empático."
+            },
+            {
+              "role": "user",
+              "content": "={{ 'Paciente dijo: \"' + $json.body.Body + '\"\\n\\nRespondé:' }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "log-execution",
+      "name": "Log a PostgreSQL",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 900],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje)\nVALUES ($1, 'WhatsApp Inbound', $2, 'info', $3);",
+        "additionalFields": {
+          "queryParams": "={{ ['workflow-01', $json.executionId, 'Mensaje procesado: ' + $json.body.Body] }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Twilio WhatsApp": {
+      "main": [
+        [{ "node": "Validar Mensaje", "type": "main", "index": 0 }]
+      ]
+    },
+    "Validar Mensaje": {
+      "main": [
+        [{ "node": "Obtener o Crear Paciente", "type": "main", "index": 0 }],
+        [{ "node": "Log a PostgreSQL", "type": "main", "index": 0 }]
+      ]
+    },
+    "Obtener o Crear Paciente": {
+      "main": [
+        [{ "node": "Enrutar por Intención", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ollama - Clasificar Intención": {
+      "main": [
+        [{ "node": "Enrutar por Intención", "type": "main", "index": 0 }]
+      ]
+    },
+    "Enrutar por Intención": {
+      "main": [
+        [{ "node": "Ollama - Generar Respuesta", "type": "main", "index": 0 }],
+        [{ "node": "Ollama - Generar Respuesta", "type": "main", "index": 0 }],
+        [{ "node": "Ollama - Generar Respuesta", "type": "main", "index": 0 }],
+        [{ "node": "Notify Emergency - Notificar al Médico", "type": "main", "index": 0 }],
+        [{ "node": "Ollama - Generar Respuesta", "type": "main", "index": 0 }],
+        [{ "node": "Ollama - Generar Respuesta", "type": "main", "index": 0 }],
+        [{ "node": "Ollama - Generar Respuesta", "type": "main", "index": 0 }]
+      ]
+    },
+    "Notify Emergency - Notificar al Médico": {
+      "main": [
+        [{ "node": "Ollama - Respuesta Urgencia", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ollama - Respuesta Urgencia": {
+      "main": [
+        [{ "node": "Twilio - Enviar WhatsApp", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ollama - Generar Respuesta": {
+      "main": [
+        [{ "node": "Twilio - Enviar WhatsApp", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["whatsapp", "ia", "triaje"],
+  "active": true
+}

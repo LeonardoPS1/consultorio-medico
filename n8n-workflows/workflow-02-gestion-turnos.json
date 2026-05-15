@@ -1,0 +1,176 @@
+{
+  "name": "02 - Gestión de Turnos",
+  "nodes": [
+    {
+      "id": "webhook-turnos",
+      "name": "Webhook - Solicitud Turno",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "parameters": {
+        "path": "turno-solicitar",
+        "method": "POST"
+      }
+    },
+    {
+      "id": "extract-turno-info",
+      "name": "Ollama - Extraer Info del Turno",
+      "type": "n8n-nodes-base.ollama",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "model": "mistral",
+        "temperature": 0.1,
+        "maxTokens": 200,
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Extraé la información del pedido de turno. Respondé SOLO con JSON válido:\n\n{\n  \"motivo\": \"motivo de la consulta\",\n  \"fecha_preferida\": \"fecha que menciona o null\",\n  \"horario_preferido\": \"horario o null\",\n  \"medico_preferido\": \"médico o null\",\n  \"tipo_consulta\": \"presencial/virtual/domicilio\"\n}\n\nSi no hay suficiente info, poné null en los campos que faltan."
+            },
+            {
+              "role": "user",
+              "content": "={{ 'Mensaje: \"' + $json.body.Body + '\"' }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-availability",
+      "name": "PG - Verificar Disponibilidad",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [500, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.fecha_hora, t.duracion_minutos\nFROM turnos t\nWHERE t.medico_id = $1\n  AND t.estado IN ('pendiente', 'confirmada')\n  AND DATE(t.fecha_hora) = $2\nORDER BY t.fecha_hora;",
+        "additionalFields": {
+          "queryParams": "={{ ['medico-id-por-defecto', $json.fecha_preferida || $json.Fecha] }}"
+        }
+      }
+    },
+    {
+      "id": "generate-slots",
+      "name": "Generar Franjas Disponibles",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [750, 300],
+      "parameters": {
+        "functionCode": "// Horarios base: 9:00 a 17:00, turnos de 30 min\nconst slotsDisponibles = [];\nconst horariosOcupados = $input.all()[0].json || [];\n\nfor (let h = 9; h < 17; h++) {\n  for (let m = 0; m < 60; m += 30) {\n    const hora = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;\n    const ocupado = horariosOcupados.some(t => {\n      const th = new Date(t.fecha_hora);\n      return th.getHours() === h && th.getMinutes() === m;\n    });\n    if (!ocupado) {\n      slotsDisponibles.push(hora);\n    }\n  }\n}\n\nreturn { slots: slotsDisponibles.slice(0, 5) };"
+      }
+    },
+    {
+      "id": "respond-slots",
+      "name": "Ollama - Responder con Horarios",
+      "type": "n8n-nodes-base.ollama",
+      "typeVersion": 2,
+      "position": [1000, 300],
+      "parameters": {
+        "model": "mistral",
+        "temperature": 0.7,
+        "maxTokens": 200,
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Sos el asistente virtual del Consultorio Médico. Te van a pasar horarios disponibles y tenés que ofrecerlos al paciente de forma amable, pidiendo que elija uno."
+            },
+            {
+              "role": "user",
+              "content": "={{ 'Horarios disponibles para mañana: ' + $json.slots.join(', ') + '\\n\\nRespondé ofreciendo estos horarios al paciente:' }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "create-appointment",
+      "name": "PG - Crear Turno",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [500, 600],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO turnos (paciente_id, medico_id, fecha_hora, duracion_minutos, motivo, estado, tipo_consulta, fuente, notas_paciente)\nVALUES ($1, $2, $3, 30, $4, 'pendiente', $5, 'whatsapp', $6)\nRETURNING id, fecha_hora;",
+        "additionalFields": {
+          "queryParams": "={{ [$json.paciente_id, 'medico-id', $json.fecha_hora, $json.motivo, $json.tipo_consulta || 'presencial', $json.notas || ''] }}"
+        }
+      }
+    },
+    {
+      "id": "send-confirmation",
+      "name": "Twilio - Confirmación Turno",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
+      "position": [750, 600],
+      "parameters": {
+        "resource": "message",
+        "operation": "create",
+        "to": "={{ 'whatsapp:' + $json.body.From.replace('whatsapp:', '') }}",
+        "from": "={{ $json.body.To }}",
+        "body": "={{ '✅ Turno confirmado para el ' + $json.fecha_hora + '. Te enviamos un recordatorio 24hs antes. Si necesitás cancelar o modificar, respondé a este mensaje.' }}"
+      }
+    },
+    {
+      "id": "create-google-event",
+      "name": "Google Calendar - Crear Evento",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 2,
+      "position": [750, 750],
+      "parameters": {
+        "operation": "create",
+        "calendarId": "primary",
+        "summary": "={{ 'Turno: ' + $json.paciente_nombre }}",
+        "start": "={{ $json.fecha_hora }}",
+        "end": "={{ new Date(new Date($json.fecha_hora).getTime() + 30*60000).toISOString() }}",
+        "description": "={{ 'Paciente: ' + $json.paciente_nombre + '\\nMotivo: ' + $json.motivo + '\\nTeléfono: ' + $json.body.From }}"
+      }
+    },
+    {
+      "id": "log-turno",
+      "name": "PG - Log de Operación",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [500, 900],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, execution_id, nivel, mensaje)\nVALUES ('workflow-02', $1, 'info', $2);",
+        "additionalFields": {
+          "queryParams": "={{ [$json.executionId, 'Turno creado para paciente ' + $json.paciente_id] }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Solicitud Turno": {
+      "main": [[{ "node": "Ollama - Extraer Info del Turno", "type": "main", "index": 0 }]]
+    },
+    "Ollama - Extraer Info del Turno": {
+      "main": [[{ "node": "PG - Verificar Disponibilidad", "type": "main", "index": 0 }]]
+    },
+    "PG - Verificar Disponibilidad": {
+      "main": [[{ "node": "Generar Franjas Disponibles", "type": "main", "index": 0 }]]
+    },
+    "Generar Franjas Disponibles": {
+      "main": [[{ "node": "Ollama - Responder con Horarios", "type": "main", "index": 0 }]]
+    },
+    "Ollama - Responder con Horarios": {
+      "main": [[{ "node": "Twilio - Confirmación Turno", "type": "main", "index": 0 }]]
+    },
+    "PG - Crear Turno": {
+      "main": [[{ "node": "Twilio - Confirmación Turno", "type": "main", "index": 0 }]]
+    },
+    "Twilio - Confirmación Turno": {
+      "main": [
+        [{ "node": "Google Calendar - Crear Evento", "type": "main", "index": 0 }],
+        [{ "node": "PG - Log de Operación", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["turnos", "calendario", "google"],
+  "active": false
+}

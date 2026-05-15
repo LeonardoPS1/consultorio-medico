@@ -1,0 +1,188 @@
+{
+  "name": "06 - Recetas y Renovaciones",
+  "nodes": [
+    {
+      "id": "webhook-recetas",
+      "name": "Webhook - Solicitud Receta",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "parameters": {
+        "path": "receta-solicitar",
+        "method": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "id": "classify-receta",
+      "name": "Ollama - Analizar Solicitud",
+      "type": "n8n-nodes-base.ollama",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "model": "mistral",
+        "temperature": 0.1,
+        "maxTokens": 200,
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Analizá la solicitud de receta del paciente. Respondé SOLO con JSON:\n\n{\n  \"es_renovacion\": true/false,\n  \"medicamento\": \"nombre del medicamento o null\",\n  \"dosis\": \"dosis o null\",\n  \"tipo\": \"renovacion\" / \"nueva\" / \"consulta\"\n}"
+            },
+            {
+              "role": "user",
+              "content": "={{ 'Mensaje del paciente: \"' + $json.body.Body + '\"' }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-receta-existente",
+      "name": "PG - Buscar Receta Activa",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [500, 200],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT r.*, p.nombre, p.apellido\nFROM recetas r\nJOIN pacientes p ON p.id = r.paciente_id\nWHERE p.telefono = $1\n  AND r.estado = 'activa'\n  AND r.medicamento ILIKE '%' || $2 || '%'\nORDER BY r.created_at DESC\nLIMIT 1;",
+        "additionalFields": {
+          "queryParams": "={{ [$json.body.From.replace('whatsapp:', ''), $json.medicamento || ''] }}"
+        }
+      }
+    },
+    {
+      "id": "is-renovation",
+      "name": "¿Es renovación?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [750, 300],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            { "value1": "={{ $json.es_renovacion }}", "operation": "equal", "value2": true }
+          ]
+        }
+      }
+    },
+    {
+      "id": "create-receta",
+      "name": "PG - Crear Receta",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1000, 200],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO recetas (paciente_id, medico_id, medicamento, dosis, frecuencia, duracion, indicaciones, estado, receta_anterior_id)\nVALUES (\n  (SELECT id FROM pacientes WHERE telefono = $1 LIMIT 1),\n  'medico-id',\n  $2, $3, $4, $5,\n  'Renovación automática. Misma indicación que receta anterior.',\n  'pendiente',\n  $6\n)\nRETURNING id;",
+        "additionalFields": {
+          "queryParams": "={{ [$json.body.From.replace('whatsapp:', ''), $json.medicamento, $json.dosis || $json.Dosis, $json.frecuencia || 'Según indicación médica', $json.duracion || '30 días', $json.id] }}"
+        }
+      }
+    },
+    {
+      "id": "request-authorization",
+      "name": "Notificar al Médico",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
+      "position": [1000, 500],
+      "parameters": {
+        "resource": "message",
+        "operation": "create",
+        "to": "whatsapp:+549XXXXXXXXX",
+        "from": "{{ $env.TWILIO_WHATSAPP_NUMBER }}",
+        "body": "={{ '📋 Solicitud de receta NUEVA de ' + $json.body.ProfileName + ': ' + $json.medicamento + '. Revisá el dashboard para autorizar.' }}"
+      }
+    },
+    {
+      "id": "generate-pdf",
+      "name": "Generar PDF Receta",
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 2,
+      "position": [1000, 700],
+      "parameters": {
+        "operation": "generateHtmlTemplate",
+        "html": "<h2>Receta Médica</h2><p><strong>Paciente:</strong> {{ nombre }}</p><p><strong>Medicamento:</strong> {{ medicamento }} {{ presentacion }}</p><p><strong>Dosis:</strong> {{ dosis }}</p><p><strong>Frecuencia:</strong> {{ frecuencia }}</p><p><strong>Duración:</strong> {{ duracion }}</p><p><strong>Indicaciones:</strong> {{ indicaciones }}</p><hr/><p><em>Receta generada automáticamente - Consultorio Médico</em></p>",
+        "options": {}
+      }
+    },
+    {
+      "id": "send-receta-whatsapp",
+      "name": "Twilio - Enviar Receta",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
+      "position": [1250, 700],
+      "parameters": {
+        "resource": "message",
+        "operation": "create",
+        "to": "={{ 'whatsapp:+549' + $json.body.From.replace('whatsapp:', '') }}",
+        "from": "{{ $env.TWILIO_WHATSAPP_NUMBER }}",
+        "body": "={{ '📋 Tu receta de ' + $json.medicamento + ' fue renovada. Te la enviamos en PDF. Saludos!' }}"
+      }
+    },
+    {
+      "id": "update-receta-sent",
+      "name": "PG - Marcar Enviada",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 900],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE recetas SET whatsapp_enviado = TRUE, whatsapp_enviado_at = NOW() WHERE id = $1;",
+        "additionalFields": {
+          "queryParams": "={{ [$json.id] }}"
+        }
+      }
+    },
+    {
+      "id": "log-receta",
+      "name": "PG - Log Receta",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1000, 1000],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, execution_id, nivel, mensaje, metadata)\nVALUES ('workflow-06', $1, 'info', $2, $3);",
+        "additionalFields": {
+          "queryParams": "={{ [$json.executionId, 'Receta procesada: ' + $json.medicamento, JSON.stringify({medicamento: $json.medicamento, tipo: $json.tipo || $json.es_renovacion ? 'renovacion' : 'nueva'})] }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Solicitud Receta": {
+      "main": [[{ "node": "Ollama - Analizar Solicitud", "type": "main", "index": 0 }]]
+    },
+    "Ollama - Analizar Solicitud": {
+      "main": [[{ "node": "¿Es renovación?", "type": "main", "index": 0 }]]
+    },
+    "¿Es renovación?": {
+      "main": [
+        [{ "node": "PG - Buscar Receta Activa", "type": "main", "index": 0 }],
+        [{ "node": "Notificar al Médico", "type": "main", "index": 0 }]
+      ]
+    },
+    "PG - Buscar Receta Activa": {
+      "main": [[{ "node": "PG - Crear Receta", "type": "main", "index": 0 }]]
+    },
+    "PG - Crear Receta": {
+      "main": [[{ "node": "Generar PDF Receta", "type": "main", "index": 0 }]]
+    },
+    "Generar PDF Receta": {
+      "main": [[{ "node": "Twilio - Enviar Receta", "type": "main", "index": 0 }]]
+    },
+    "Twilio - Enviar Receta": {
+      "main": [[{ "node": "PG - Marcar Enviada", "type": "main", "index": 0 }]]
+    },
+    "PG - Marcar Enviada": {
+      "main": [[{ "node": "PG - Log Receta", "type": "main", "index": 0 }]]
+    },
+    "Notificar al Médico": {
+      "main": [[{ "node": "PG - Log Receta", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["recetas", "whatsapp", "pdf"],
+  "active": false
+}

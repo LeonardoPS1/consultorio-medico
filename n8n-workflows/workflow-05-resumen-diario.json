@@ -1,0 +1,169 @@
+{
+  "name": "05 - Resumen Diario del Médico",
+  "nodes": [
+    {
+      "id": "cron-diario",
+      "name": "Cron - 7:00 AM",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            { "mode": "everyDay", "hour": 7, "minute": 0 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "query-turnos-hoy",
+      "name": "PG - Turnos de Hoy",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [250, 150],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.fecha_hora, t.estado, t.motivo, t.tipo_consulta,\n  p.nombre || ' ' || p.apellido as paciente_nombre,\n  p.telefono as paciente_telefono,\n  p.obra_social\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nWHERE DATE(t.fecha_hora AT TIME ZONE 'America/Argentina/Buenos_Aires') = CURRENT_DATE\n  AND t.medico_id = $1\nORDER BY t.fecha_hora;",
+        "additionalFields": {
+          "queryParams": "={{ ['medico-id'] }}"
+        }
+      }
+    },
+    {
+      "id": "query-pacientes-nuevos",
+      "name": "PG - Pacientes Nuevos (24h)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [250, 350],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT nombre, apellido, telefono, obra_social\nFROM pacientes\nWHERE created_at >= NOW() - INTERVAL '24 hours'\n  AND deleted_at IS NULL\nORDER BY created_at DESC;"
+      }
+    },
+    {
+      "id": "query-mensajes-pendientes",
+      "name": "PG - Mensajes sin Responder",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [250, 550],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT c.id, p.nombre || ' ' || p.apellido as paciente,\n  c.ultimo_mensaje, c.ultima_intencion, c.ultima_interaccion\nFROM conversaciones c\nJOIN pacientes p ON p.id = c.paciente_id\nWHERE c.estado = 'activa'\n  AND c.ultima_interaccion < NOW() - INTERVAL '1 hour'\n  AND c.ultimo_mensaje_rol = 'paciente'\nORDER BY c.ultima_interaccion DESC;"
+      }
+    },
+    {
+      "id": "query-recetas-pendientes",
+      "name": "PG - Recetas x Autorizar",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [250, 750],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT r.medicamento, r.dosis, r.frecuencia,\n  p.nombre || ' ' || p.apellido as paciente_nombre\nFROM recetas r\nJOIN pacientes p ON p.id = r.paciente_id\nWHERE r.estado = 'activa'\n  AND r.created_at >= NOW() - INTERVAL '48 hours'\nORDER BY r.created_at DESC;"
+      }
+    },
+    {
+      "id": "generate-summary",
+      "name": "Ollama - Generar Resumen",
+      "type": "n8n-nodes-base.ollama",
+      "typeVersion": 2,
+      "position": [500, 400],
+      "parameters": {
+        "model": "mistral",
+        "temperature": 0.3,
+        "maxTokens": 800,
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Sos un asistente médico que prepara el resumen diario para el doctor. Organizá la información de forma clara y profesional."
+            },
+            {
+              "role": "user",
+              "content": "={{ 'Generá un resumen diario para el médico con esta información:\\n\\nTURNOS DE HOY:\\n' + JSON.stringify($json.turnos) + '\\n\\nPACIENTES NUEVOS:\\n' + JSON.stringify($json.nuevos) + '\\n\\nMENSAJES PENDIENTES:\\n' + JSON.stringify($json.pendientes) + '\\n\\nRECETAS RECIENTES:\\n' + JSON.stringify($json.recetas) + '\\n\\nFormatealo lindo para leer.' }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "send-email-summary",
+      "name": "Email - Enviar Resumen",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [750, 400],
+      "parameters": {
+        "fromEmail": "{{ $env.EMAIL_FROM }}",
+        "toEmail": "dr.garcia@consultorio.com",
+        "subject": "={{ '📋 Resumen Diario - ' + new Date().toLocaleDateString('es-AR') }}",
+        "text": "={{ $json.message.content }}"
+      }
+    },
+    {
+      "id": "send-whatsapp-summary",
+      "name": "Twilio - Resumen WhatsApp (Opc)",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
+      "position": [750, 600],
+      "parameters": {
+        "resource": "message",
+        "operation": "create",
+        "to": "whatsapp:+549XXXXXXXXX",
+        "from": "{{ $env.TWILIO_WHATSAPP_NUMBER }}",
+        "body": "={{ '📋 Resumen del día\\nTurnos hoy: ' + $json.turnos.length + '\\nPacientes nuevos: ' + $json.nuevos.length + '\\nPendientes: ' + $json.pendientes.length + '\\n\\nRevisá tu email para el detalle completo.' }}"
+      }
+    },
+    {
+      "id": "log-resumen",
+      "name": "PG - Log de Resumen",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [500, 900],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, execution_id, nivel, mensaje, metadata)\nVALUES ('workflow-05', $1, 'info', 'Resumen diario enviado', $2);",
+        "additionalFields": {
+          "queryParams": "={{ [$json.executionId, JSON.stringify({turnos: $json.turnos?.length, nuevos: $json.nuevos?.length, pendientes: $json.pendientes?.length})] }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cron - 7:00 AM": {
+      "main": [
+        [
+          { "node": "PG - Turnos de Hoy", "type": "main", "index": 0 },
+          { "node": "PG - Pacientes Nuevos (24h)", "type": "main", "index": 0 },
+          { "node": "PG - Mensajes sin Responder", "type": "main", "index": 0 },
+          { "node": "PG - Recetas x Autorizar", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "PG - Turnos de Hoy": {
+      "main": [[{ "node": "Ollama - Generar Resumen", "type": "main", "index": 0 }]]
+    },
+    "PG - Pacientes Nuevos (24h)": {
+      "main": [[{ "node": "Ollama - Generar Resumen", "type": "main", "index": 0 }]]
+    },
+    "PG - Mensajes sin Responder": {
+      "main": [[{ "node": "Ollama - Generar Resumen", "type": "main", "index": 0 }]]
+    },
+    "PG - Recetas x Autorizar": {
+      "main": [[{ "node": "Ollama - Generar Resumen", "type": "main", "index": 0 }]]
+    },
+    "Ollama - Generar Resumen": {
+      "main": [
+        [{ "node": "Email - Enviar Resumen", "type": "main", "index": 0 }],
+        [{ "node": "Twilio - Resumen WhatsApp (Opc)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Email - Enviar Resumen": {
+      "main": [[{ "node": "PG - Log de Resumen", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["resumen", "cron", "email", "medico"],
+  "active": false
+}
