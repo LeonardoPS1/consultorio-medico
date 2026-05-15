@@ -115,38 +115,84 @@ export default function ReportesPage() {
   const MaxTurnos = Math.max(...datos.turnos.map(t => t.cantidad));
 
   const exportarReporte = () => {
-    const fecha = new Date().toLocaleDateString('es-AR');
-    const lineas = [
-      `=== REPORTE DEL CONSULTORIO - ${fecha.toUpperCase()} ===`,
-      `Período: ${periodo === 'semana' ? 'Semana' : periodo === 'mes' ? 'Mes' : 'Año'}`,
-      '',
-      '=== MÉTRICAS GENERALES ===',
-      ...datos.metricas.map(m => `${m.titulo}: ${m.valor} (${m.cambio})`),
-      '',
-      '=== TURNOS POR DÍA ===',
-      ...datos.turnos.map(t => `${t.dia}: ${t.cantidad} (${t.completados} completados, ${t.cancelados} cancelados, ${t.ausentes} ausentes)`),
-      '',
-      '=== WHATSAPP ===',
-      ...datos.whatsapp.map(w => `${w.titulo}: ${w.valor} (${w.cambio})`),
-      '',
-      '=== INTENCIONES ===',
-      ...intencionesData.map(i => `${i.intencion}: ${i.cantidad} (${i.porcentaje}%)`),
-      '',
-      '=== PACIENTES POR OBRA SOCIAL ===',
-      ...pacientesPorObraSocial.map(p => `${p.obra}: ${p.cantidad}`),
-      '',
-      `Generado el ${new Date().toLocaleString('es-AR')}`,
-      'Consultorio Médico - Sistema de Gestión',
-    ].join('\n');
+    const periodoLabel = periodo === 'semana' ? 'Semanal' : periodo === 'mes' ? 'Mensual' : 'Anual';
+    const fechaHoy = new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-    const blob = new Blob([lineas], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `reporte-${periodo}-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast({ title: '📊 Reporte exportado', description: `Período: ${periodo}` });
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Reporte ${periodoLabel} - ${fechaHoy}</title>
+<style>
+  @page { margin: 15mm 20mm; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Helvetica', Arial, sans-serif; color:#1a1a1a; padding:0; font-size:12px; line-height:1.5; }
+  .header { text-align:center; padding-bottom:15px; border-bottom:3px solid #2563eb; margin-bottom:20px; }
+  .header h1 { font-size:20px; color:#2563eb; margin-bottom:4px; }
+  .header p { font-size:11px; color:#666; }
+  h2 { font-size:14px; color:#2563eb; margin:18px 0 8px; border-bottom:1px solid #ddd; padding-bottom:4px; }
+  table { width:100%; border-collapse:collapse; margin-bottom:12px; }
+  th, td { padding:6px 8px; text-align:left; border-bottom:1px solid #eee; font-size:11px; }
+  th { background:#f8f9fa; font-weight:600; color:#333; }
+  .kpi-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:16px; }
+  .kpi-card { background:#f8f9fa; border-radius:6px; padding:10px; text-align:center; }
+  .kpi-card .value { font-size:18px; font-weight:700; color:#2563eb; }
+  .kpi-card .label { font-size:9px; color:#666; text-transform:uppercase; letter-spacing:0.5px; }
+  .footer { margin-top:25px; padding-top:12px; border-top:1px solid #ddd; text-align:center; font-size:10px; color:#999; }
+  .print-btn { text-align:center; margin-top:20px; }
+  .print-btn button { padding:10px 28px; background:#2563eb; color:white; border:none; border-radius:6px; font-size:13px; cursor:pointer; }
+  @media print { .print-btn { display:none; } }
+</style></head>
+<body>
+<div class="header">
+  <h1>Reporte ${periodoLabel}</h1>
+  <p>Generado el ${fechaHoy} · Consultorio Médico</p>
+</div>
+
+<h2>Métricas Generales</h2>
+<div class="kpi-grid">
+  ${datos.metricas.map(m => `<div class="kpi-card"><div class="value">${m.valor}</div><div class="label">${m.titulo}</div><div style="font-size:9px;color:${m.up ? '#10b981' : '#ef4444'}">${m.cambio}</div></div>`).join('')}
+</div>
+
+<h2>Turnos por Día</h2>
+<table>
+  <tr><th>Día</th><th>Total</th><th>Completados</th><th>Cancelados</th><th>Ausentes</th></tr>
+  ${datos.turnos.map(t => `<tr><td>${t.dia}</td><td>${t.cantidad}</td><td>${t.completados}</td><td>${t.cancelados}</td><td>${t.ausentes}</td></tr>`).join('')}
+</table>
+
+<h2>WhatsApp</h2>
+<table>
+  <tr><th>Métrica</th><th>Valor</th><th>Cambio</th></tr>
+  ${datos.whatsapp.map(w => `<tr><td>${w.titulo}</td><td>${w.valor}</td><td style="color:${w.up ? '#10b981' : '#ef4444'}">${w.cambio}</td></tr>`).join('')}
+</table>
+
+<h2>Intenciones de Mensajes</h2>
+<table>
+  <tr><th>Intención</th><th>Cantidad</th><th>Porcentaje</th></tr>
+  ${intencionesData.map(i => `<tr><td>${i.intencion}</td><td>${i.cantidad}</td><td>${i.porcentaje}%</td></tr>`).join('')}
+</table>
+
+<h2>Pacientes por Obra Social</h2>
+<table>
+  <tr><th>Obra Social</th><th>Cantidad</th></tr>
+  ${pacientesPorObraSocial.map(p => `<tr><td>${p.obra}</td><td>${p.cantidad}</td></tr>`).join('')}
+</table>
+
+<div class="footer">
+  <strong>Consultorio Médico</strong> · Sistema de Gestión · Reporte generado automáticamente
+</div>
+<div class="print-btn">
+  <button onclick="window.print()">🖨️ Guardar como PDF / Imprimir</button>
+  <p style="font-size:11px;color:#888;margin-top:6px">Seleccioná "Guardar como PDF" en el diálogo de impresión</p>
+</div>
+</body></html>`;
+
+    const ventana = window.open('', '_blank');
+    if (ventana) {
+      ventana.document.write(html);
+      ventana.document.close();
+    } else {
+      toast({ title: '❌ Error', description: 'Permití ventanas emergentes', variant: 'destructive' });
+    }
+    toast({ title: '📊 Reporte generado', description: `Período ${periodoLabel} - ${fechaHoy}` });
   };
 
   return (
@@ -241,14 +287,15 @@ export default function ReportesPage() {
                 <div className="flex items-end justify-between gap-2 h-48">
                   {datos.turnos.map((t) => {
                     const maxVal = MaxTurnos || 1;
+                    const altura = Math.max((t.cantidad / maxVal) * 100, t.cantidad > 0 ? 4 : 0);
                     return (
-                      <div key={t.dia} className="flex flex-col items-center gap-2 flex-1">
+                      <div key={t.dia} className="flex flex-col items-center gap-1 flex-1 h-full justify-end">
                         <span className="text-xs font-medium text-muted-foreground">{t.cantidad}</span>
                         <div
                           className="w-full rounded-md bg-primary/80 hover:bg-primary transition-colors relative group"
-                          style={{ height: `${(t.cantidad / maxVal) * 100}%` }}
+                          style={{ height: `${altura}%`, minHeight: t.cantidad > 0 ? '12px' : 0 }}
                         >
-                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md">
+                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md pointer-events-none">
                             {t.completados} completados · {t.cancelados} cancelados
                           </div>
                         </div>
