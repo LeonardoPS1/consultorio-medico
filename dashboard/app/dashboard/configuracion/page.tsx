@@ -815,6 +815,8 @@ function PerfilOrganizacion() {
     setData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const [logoError, setLogoError] = useState(false);
+
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -823,16 +825,32 @@ function PerfilOrganizacion() {
       setTimeout(() => setMensaje(''), 3000);
       return;
     }
+    // Verificar que sea una imagen válida
+    if (!file.type.startsWith('image/')) {
+      setMensaje('❌ El archivo debe ser una imagen');
+      setTimeout(() => setMensaje(''), 3000);
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
-      updateField('logoUrl', dataUrl);
+      if (dataUrl) {
+        updateField('logoUrl', dataUrl);
+        setLogoError(false);
+      }
+    };
+    reader.onerror = () => {
+      setMensaje('❌ Error al leer la imagen');
+      setTimeout(() => setMensaje(''), 3000);
     };
     reader.readAsDataURL(file);
+    // Resetear el input para permitir seleccionar el mismo archivo de nuevo
+    e.target.value = '';
   };
 
   const removeLogo = () => {
     updateField('logoUrl', '');
+    setLogoError(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -852,7 +870,7 @@ function PerfilOrganizacion() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/svg+xml,image/webp"
+            accept="image/*"
             onChange={handleLogoUpload}
             className="hidden"
           />
@@ -863,10 +881,17 @@ function PerfilOrganizacion() {
               className="h-20 w-20 rounded-2xl border-4 border-background flex items-center justify-center text-2xl font-bold text-white shadow-lg overflow-hidden"
               style={{ backgroundColor: data.logoUrl ? 'transparent' : previewColor }}
             >
-              {data.logoUrl ? (
-                <img src={data.logoUrl} alt="Logo" className="h-full w-full object-cover" />
+              {data.logoUrl && !logoError ? (
+                <img
+                  src={data.logoUrl}
+                  alt="Logo"
+                  className="h-full w-full object-cover"
+                  onError={() => setLogoError(true)}
+                />
               ) : (
-                data.nombre ? data.nombre.charAt(0).toUpperCase() : '?'
+                <span className="text-2xl font-bold text-white">
+                  {data.nombre ? data.nombre.charAt(0).toUpperCase() : '?'}
+                </span>
               )}
             </div>
             {data.logoUrl && (

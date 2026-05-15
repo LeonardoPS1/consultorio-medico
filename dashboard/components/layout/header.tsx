@@ -108,10 +108,12 @@ export function Header() {
 
   const user = session?.user;
   const nombreCompleto = user?.name || 'Dr.';
-  const nameParts = nombreCompleto.split(' ');
+  const nameParts = nombreCompleto.trim().split(/\s+/);
   const primerNombre = nameParts[0] || 'Dr.';
   const apellido = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
-  const initials = getInitials(primerNombre, apellido);
+  const initials = apellido
+    ? (primerNombre.charAt(0) + apellido.charAt(0)).toUpperCase()
+    : primerNombre.charAt(0).toUpperCase();
 
   const noLeidas = notificaciones.filter((n) => !n.leido).length;
 
