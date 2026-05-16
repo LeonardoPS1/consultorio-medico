@@ -427,11 +427,11 @@ export default function AtencionPage() {
     e.dataTransfer.setData('text/plain', JSON.stringify({ id: turno.id, estado: turno.estado }));
     e.dataTransfer.effectAllowed = 'move';
     setDraggingId(turno.id);
-    // Pequeño delay para que se vea el efecto visual
-    setTimeout(() => {
-      const el = e.currentTarget as HTMLElement;
-      el.classList.add('dragging');
-    }, 0);
+    // Capturar referencia antes del setTimeout (evita event pooling en React <18)
+    const el = e.currentTarget as HTMLElement;
+    requestAnimationFrame(() => {
+      if (el) el.classList.add('dragging');
+    });
   }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
