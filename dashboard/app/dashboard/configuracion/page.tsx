@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Bot, Twitch as Twilio, Database, Globe, Bell, Shield,
   CheckCircle2, XCircle, Edit3, Save, Plus, Trash2, ChevronRight, Key,
+  RefreshCw, Lock, Wifi,
 } from 'lucide-react';
 import {
   Dialog,
@@ -168,108 +169,7 @@ function ConfigContent() {
 
         {/* ======== INTEGRACIONES ======== */}
         <TabsContent value="integraciones" className="mt-4 space-y-4">
-          {/* Twilio */}
-          <IntegrationCard
-            icon={<Twilio className="h-5 w-5 text-red-600 dark:text-red-400" />}
-            title="Twilio (WhatsApp)"
-            description="Conectá tu número de WhatsApp Business"
-            status="conectado"
-            bgColor="bg-red-100 dark:bg-red-900/30"
-          >
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-1">
-                <Label>Account SID</Label>
-                <Input value="AC****************************" readOnly />
-              </div>
-              <div className="space-y-1">
-                <Label>Auth Token</Label>
-                <Input type="password" value="****************" readOnly />
-              </div>
-            </div>
-            <div className="space-y-1 mt-3">
-              <Label>Número de WhatsApp</Label>
-              <Input value="whatsapp:+14155238886" readOnly />
-            </div>
-            <div className="flex gap-2 mt-3">
-              <Button variant="outline" size="sm">Verificar conexión</Button>
-              <Button variant="outline" size="sm">Configurar</Button>
-            </div>
-          </IntegrationCard>
-
-          {/* PostgreSQL */}
-          <IntegrationCard
-            icon={<Database className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
-            title="PostgreSQL"
-            description="Base de datos local en la VPS"
-            status="conectado"
-            bgColor="bg-blue-100 dark:bg-blue-900/30"
-          >
-            <div className="space-y-1">
-              <Label>Estado</Label>
-              <p className="text-sm text-emerald-600 font-medium">✅ Operativa — 2.1 GB usados de 10 GB</p>
-            </div>
-            <div className="mt-2">
-              <Label>URL de conexión</Label>
-              <Input value="postgresql://postgres:****@localhost:5432/consultorio_medico" readOnly />
-            </div>
-          </IntegrationCard>
-
-          {/* Ollama */}
-          <IntegrationCard
-            icon={<Bot className="h-5 w-5 text-purple-600 dark:text-purple-400" />}
-            title="Ollama (IA Local)"
-            description="Modelo Mistral corriendo en la VPS"
-            status="conectado"
-            bgColor="bg-purple-100 dark:bg-purple-900/30"
-          >
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-1">
-                <Label>Modelo activo</Label>
-                <Input value="mistral:latest" readOnly />
-              </div>
-              <div className="space-y-1">
-                <Label>Temperatura default</Label>
-                <Input value="0.3" readOnly />
-              </div>
-            </div>
-            <div className="flex gap-2 mt-3">
-              <Button variant="outline" size="sm">Probar conexión</Button>
-              <Button variant="outline" size="sm">Ver modelos</Button>
-            </div>
-          </IntegrationCard>
-
-          {/* n8n */}
-          <IntegrationCard
-            icon={<Globe className="h-5 w-5 text-orange-600 dark:text-orange-400" />}
-            title="n8n (Automatización)"
-            description="Workflows activos y monitoreo"
-            status="warning"
-            statusText="1 pendiente"
-            bgColor="bg-orange-100 dark:bg-orange-900/30"
-          >
-            <div className="space-y-2">
-              <WorkflowItem name="WhatsApp Inbound" active />
-              <WorkflowItem name="Gestión de Turnos" active />
-              <WorkflowItem name="Recordatorios" active />
-              <WorkflowItem name="Correo Inteligente" active={false} />
-              <WorkflowItem name="Resumen Diario" active />
-              <WorkflowItem name="Recetas" active />
-            </div>
-          </IntegrationCard>
-
-          {/* Google Calendar */}
-          <IntegrationCard
-            icon={<CalendarIcon className="h-5 w-5 text-green-600 dark:text-green-400" />}
-            title="Google Calendar"
-            description="Sincronización de turnos con Google Calendar"
-            status="desconectado"
-            bgColor="bg-green-100 dark:bg-green-900/30"
-          >
-            <p className="text-sm text-muted-foreground mb-3">
-              Conectá tu cuenta de Google para sincronizar los turnos automáticamente.
-            </p>
-            <Button variant="outline" size="sm">Conectar Google Calendar</Button>
-          </IntegrationCard>
+          <IntegracionesDashboard isAdmin={isAdmin} />
         </TabsContent>
 
         {/* ======== HORARIOS ======== */}
@@ -586,54 +486,6 @@ function ConfigContent() {
 // ============================================================
 // Subcomponentes
 // ============================================================
-
-function IntegrationCard({
-  icon,
-  title,
-  description,
-  status,
-  statusText,
-  bgColor,
-  children,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  status: 'conectado' | 'desconectado' | 'warning';
-  statusText?: string;
-  bgColor: string;
-  children: React.ReactNode;
-}) {
-  const statusConfig = {
-    conectado: { dot: 'bg-emerald-500', text: 'Conectado', textColor: 'text-emerald-600' },
-    desconectado: { dot: 'bg-red-500', text: 'Desconectado', textColor: 'text-red-600' },
-    warning: { dot: 'bg-amber-500', text: statusText || 'Atención', textColor: 'text-amber-600' },
-  };
-  const cfg = statusConfig[status];
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`h-10 w-10 rounded-xl ${bgColor} flex items-center justify-center`}>
-              {icon}
-            </div>
-            <div>
-              <CardTitle className="text-base">{title}</CardTitle>
-              <CardDescription>{description}</CardDescription>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
-            <span className={`text-sm font-medium ${cfg.textColor}`}>{cfg.text}</span>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
-  );
-}
 
 function WorkflowItem({ name, active }: { name: string; active: boolean }) {
   return (
@@ -1048,6 +900,265 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
         <Input value={value} onChange={(e) => onChange(e.target.value)} className="w-28 font-mono text-xs" />
       </div>
     </div>
+  );
+}
+
+// ============================================================
+// Dashboard de Integraciones (health check, sin credenciales)
+// ============================================================
+
+function IntegracionesDashboard({ isAdmin }: { isAdmin: boolean }) {
+  const [servicios, setServicios] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadStatus = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/credenciales');
+      const data = await res.json();
+      if (res.ok && data.grouped) {
+        setServicios(data.grouped);
+      }
+    } catch (err) {
+      console.error('Error cargando estado de integraciones:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadStatus();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground/50" />
+      </div>
+    );
+  }
+
+  // Mapa de iconos y colores por servicio
+  const iconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
+    twilio: { icon: <Twilio className="h-5 w-5 text-red-600 dark:text-red-400" />, bg: 'bg-red-100 dark:bg-red-900/30' },
+    ollama: { icon: <Bot className="h-5 w-5 text-purple-600 dark:text-purple-400" />, bg: 'bg-purple-100 dark:bg-purple-900/30' },
+    n8n: { icon: <Globe className="h-5 w-5 text-orange-600 dark:text-orange-400" />, bg: 'bg-orange-100 dark:bg-orange-900/30' },
+    smtp: { icon: <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />, bg: 'bg-blue-100 dark:bg-blue-900/30' },
+    imap: { icon: <Mail className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />, bg: 'bg-cyan-100 dark:bg-cyan-900/30' },
+    postgres: { icon: <Database className="h-5 w-5 text-blue-600 dark:text-blue-400" />, bg: 'bg-blue-100 dark:bg-blue-900/30' },
+    google_calendar: { icon: <CalendarIcon className="h-5 w-5 text-green-600 dark:text-green-400" />, bg: 'bg-green-100 dark:bg-green-900/30' },
+    telefono_doctor: { icon: <PhoneIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />, bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
+  };
+
+  const displayNames: Record<string, string> = {
+    twilio: 'Twilio (WhatsApp)',
+    ollama: 'Ollama (IA Local)',
+    n8n: 'n8n (Automatización)',
+    smtp: 'SMTP (Correo Saliente)',
+    imap: 'IMAP (Correo Entrante)',
+    postgres: 'PostgreSQL',
+    google_calendar: 'Google Calendar',
+    telefono_doctor: 'Teléfono del Médico',
+  };
+
+  const descripciones: Record<string, string> = {
+    twilio: 'Mensajería WhatsApp',
+    ollama: 'Modelo de IA local (Mistral)',
+    n8n: 'Servidor de automatización',
+    smtp: 'Envío de correos',
+    imap: 'Recepción de correos',
+    postgres: 'Base de datos principal',
+    google_calendar: 'Sincronización de turnos',
+    telefono_doctor: 'Contacto para alertas',
+  };
+
+  const irAGestion = () => {
+    // Cambiar a la pestaña de credenciales via URL
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', 'credenciales');
+    window.history.pushState({}, '', url.toString());
+    window.dispatchEvent(new Event('popstate'));
+  };
+
+  return (
+    <>
+      {/* Mosaico de integraciones */}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {/* Workflows de n8n (card especial) */}
+        <Card className="md:col-span-2 xl:col-span-3">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                  <Globe className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">n8n — Workflows Activos</CardTitle>
+                  <CardDescription>Estado de las automatizaciones del consultorio</CardDescription>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="text-xs font-medium text-emerald-600">5/6 activos</span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <WorkflowItem name="WhatsApp AI Agent" active />
+              <WorkflowItem name="Gestión de Turnos" active />
+              <WorkflowItem name="Recordatorios" active />
+              <WorkflowItem name="Correo Inteligente" active={false} />
+              <WorkflowItem name="Resumen Diario" active />
+              <WorkflowItem name="Recetas" active />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Cards de cada servicio */}
+        {servicios.map((sv: any) => {
+          const srv = sv.servicio;
+          const style = iconMap[srv] || { icon: <Globe className="h-5 w-5" />, bg: 'bg-muted' };
+          const creds = sv.credenciales || {};
+          const campos = sv.config?.campos || [];
+          const totalCampos = campos.length;
+          const completados = campos.filter((c: any) => creds[c.clave]?.length > 0).length;
+          const porcentaje = totalCampos > 0 ? Math.round((completados / totalCampos) * 100) : 0;
+
+          let status: 'success' | 'warning' | 'error' = 'error';
+          let statusLabel = 'Sin configurar';
+          if (completados === totalCampos && totalCampos > 0) {
+            status = 'success';
+            statusLabel = 'Configurado';
+          } else if (completados > 0) {
+            status = 'warning';
+            statusLabel = `${completados}/${totalCampos} campos`;
+          }
+
+          return (
+            <Card key={srv}>
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-9 w-9 rounded-xl ${style.bg} flex items-center justify-center`}>
+                      {style.icon}
+                    </div>
+                    <div>
+                      <CardTitle className="text-sm">{displayNames[srv] || srv}</CardTitle>
+                      <CardDescription className="text-xs">{descripciones[srv] || ''}</CardDescription>
+                    </div>
+                  </div>
+                  {/* Indicador de estado compacto */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className={`h-2 w-2 rounded-full ${
+                      status === 'success' ? 'bg-emerald-500' :
+                      status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
+                    }`} />
+                    <span className={`text-[11px] font-medium ${
+                      status === 'success' ? 'text-emerald-600' :
+                      status === 'warning' ? 'text-amber-600' : 'text-red-600'
+                    }`}>
+                      {statusLabel}
+                    </span>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {/* Barra de progreso de configuración */}
+                {totalCampos > 0 && (
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                      <span>{completados} de {totalCampos} campos</span>
+                      <span>{porcentaje}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          porcentaje === 100 ? 'bg-emerald-500' :
+                          porcentaje > 50 ? 'bg-amber-500' :
+                          'bg-red-500'
+                        }`}
+                        style={{ width: `${porcentaje}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Última actualización de credenciales */}
+                <div className="text-xs text-muted-foreground">
+                  {completados > 0 && sv.config?.n8nSync && (
+                    <span className="flex items-center gap-1">
+                      <Wifi className="h-3 w-3" />
+                      Sincronizable con n8n
+                    </span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Acciones globales */}
+      <Card>
+        <CardContent className="flex items-center justify-between py-4">
+          <div className="flex items-center gap-3">
+            {isAdmin ? (
+              <>
+                <Key className="h-5 w-5 text-amber-500" />
+                <div>
+                  <p className="text-sm font-medium">Gestionar credenciales</p>
+                  <p className="text-xs text-muted-foreground">
+                    Los valores de API keys y tokens se gestionan desde la sección Credenciales
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <Lock className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Solo administradores</p>
+                  <p className="text-xs text-muted-foreground">
+                    Contactá al administrador del sistema para configurar o modificar integraciones
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+          {isAdmin && (
+            <Button size="sm" onClick={irAGestion}>
+              <Key className="h-4 w-4 mr-1" />
+              Ir a Credenciales
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Botón para refrescar estado */}
+      <div className="flex justify-end">
+        <Button variant="ghost" size="sm" onClick={loadStatus} className="text-xs">
+          <RefreshCw className="h-3 w-3 mr-1" />
+          Refrescar estado
+        </Button>
+      </div>
+    </>
+  );
+}
+
+function Mail(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  );
+}
+
+function PhoneIcon(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
   );
 }
 
