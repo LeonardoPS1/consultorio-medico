@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Plus, ChevronLeft, ChevronRight, Filter, List } from 'lucide-react';
+import { Calendar, Plus, ChevronLeft, ChevronRight, Filter, List, Play, CheckCircle2, XCircle } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarView, type CalendarioTurno } from '@/components/calendar/calendar-view';
@@ -34,16 +34,16 @@ const hoyStr = hoy.toISOString().split('T')[0];
 const mananaStr = new Date(hoy.getTime() + 86400000).toISOString().split('T')[0];
 
 const turnosDelDia = [
-  { id: '1', hora: '09:00', paciente: 'Juan Pérez', tipo: 'Consulta Médica', medico: 'Dr. García', estado: 'confirmada', fecha: hoyStr },
-  { id: '2', hora: '09:30', paciente: 'María Rodríguez', tipo: 'Control', medico: 'Dr. García', estado: 'pendiente', fecha: hoyStr },
-  { id: '3', hora: '10:30', paciente: 'Pedro Sánchez', tipo: 'Resultados', medico: 'Dra. López', estado: 'confirmada', fecha: hoyStr },
-  { id: '4', hora: '11:00', paciente: 'Ana López', tipo: 'Consulta', medico: 'Dr. García', estado: 'en_consulta', fecha: hoyStr },
-  { id: '5', hora: '12:00', paciente: 'Carlos Ruiz', tipo: 'Especialista', medico: 'Dra. López', estado: 'pendiente', fecha: hoyStr },
-  { id: '6', hora: '15:30', paciente: 'Laura Martínez', tipo: 'Control', medico: 'Dr. García', estado: 'confirmada', fecha: hoyStr },
-  { id: '7', hora: '16:00', paciente: 'Sofía Herrera', tipo: 'Primera vez', medico: 'Dra. López', estado: 'cancelada', fecha: hoyStr },
-  { id: '8', hora: '17:00', paciente: 'Diego Torres', tipo: 'Consulta', medico: 'Dr. García', estado: 'pendiente', fecha: hoyStr },
-  { id: '9', hora: '10:00', paciente: 'Elena Martínez', tipo: 'Control', medico: 'Dr. García', estado: 'confirmada', fecha: mananaStr },
-  { id: '10', hora: '11:30', paciente: 'Roberto Fernández', tipo: 'Primera vez', medico: 'Dra. López', estado: 'pendiente', fecha: mananaStr },
+  { id: '1', hora: '09:00', paciente: 'Juan Pérez', tipo: 'Consulta Médica', medico: 'Dr. García', estado: 'confirmada' as const, fecha: hoyStr },
+  { id: '2', hora: '09:30', paciente: 'María Rodríguez', tipo: 'Control', medico: 'Dr. García', estado: 'atendido' as const, fecha: hoyStr },
+  { id: '3', hora: '10:30', paciente: 'Pedro Sánchez', tipo: 'Resultados', medico: 'Dra. López', estado: 'en_atencion' as const, fecha: hoyStr },
+  { id: '4', hora: '11:00', paciente: 'Ana López', tipo: 'Consulta', medico: 'Dr. García', estado: 'en_consulta' as const, fecha: hoyStr },
+  { id: '5', hora: '12:00', paciente: 'Carlos Ruiz', tipo: 'Especialista', medico: 'Dra. López', estado: 'pendiente' as const, fecha: hoyStr },
+  { id: '6', hora: '15:30', paciente: 'Laura Martínez', tipo: 'Control', medico: 'Dr. García', estado: 'confirmada' as const, fecha: hoyStr },
+  { id: '7', hora: '16:00', paciente: 'Sofía Herrera', tipo: 'Primera vez', medico: 'Dra. López', estado: 'cancelada' as const, fecha: hoyStr },
+  { id: '8', hora: '17:00', paciente: 'Diego Torres', tipo: 'Consulta', medico: 'Dr. García', estado: 'pendiente' as const, fecha: hoyStr },
+  { id: '9', hora: '10:00', paciente: 'Elena Martínez', tipo: 'Control', medico: 'Dr. García', estado: 'atendido' as const, fecha: mananaStr },
+  { id: '10', hora: '11:30', paciente: 'Roberto Fernández', tipo: 'Primera vez', medico: 'Dra. López', estado: 'pendiente' as const, fecha: mananaStr },
 ];
 
 export default function TurnosPage() {
@@ -204,15 +204,28 @@ export default function TurnosPage() {
 
                       {/* Acciones */}
                       <div className="flex gap-1">
+                        {(turno.estado === 'pendiente' || turno.estado === 'confirmada') && (
+                          <Button variant="outline" size="sm" className="text-xs h-8 gap-1" onClick={(e) => { e.stopPropagation(); setTurnos((prev) => prev.map((t) => t.id === turno.id ? { ...t, estado: 'en_atencion' as const } : t)); toast({ title: '🟦 En atención', description: `${turno.paciente} está siendo atendido` }); }}>
+                            <Play className="h-3 w-3" /> Atender
+                          </Button>
+                        )}
+                        {turno.estado === 'en_atencion' && (
+                          <Button variant="outline" size="sm" className="text-xs h-8 gap-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50" onClick={(e) => { e.stopPropagation(); setTurnos((prev) => prev.map((t) => t.id === turno.id ? { ...t, estado: 'atendido' as const } : t)); toast({ title: '✅ Atendido', description: `${turno.paciente} fue atendido` }); }}>
+                            <CheckCircle2 className="h-3 w-3" /> Finalizar
+                          </Button>
+                        )}
                         <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setEditTurno(turno); }}>
                           Editar
                         </Button>
-                        <Button
-                          variant="ghost" size="sm" className="text-destructive"
-                          onClick={(e) => { e.stopPropagation(); setShowCancelDialog(turno.id); }}
-                        >
-                          Cancelar
-                        </Button>
+                        {(turno.estado !== 'atendido' && turno.estado !== 'cancelada') && (
+                          <Button
+                            variant="ghost" size="sm" className="text-destructive"
+                            onClick={(e) => { e.stopPropagation(); setShowCancelDialog(turno.id); }}
+                          >
+                            <XCircle className="h-3.5 w-3.5 mr-1" />
+                            Cancelar
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -232,15 +245,18 @@ export default function TurnosPage() {
       )}
 
       {/* Leyenda de estados */}
-      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('confirmada') }} /> Confirmada
-        </span>
+      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
         <span className="flex items-center gap-1">
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('pendiente') }} /> Pendiente
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('en_consulta') }} /> En consulta
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('confirmada') }} /> Confirmada
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('en_atencion') }} /> En atención
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('atendido') }} /> Atendido
         </span>
         <span className="flex items-center gap-1">
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('cancelada') }} /> Cancelada
@@ -285,8 +301,11 @@ export default function TurnosPage() {
                     <SelectItem value="pendiente">Pendiente</SelectItem>
                     <SelectItem value="confirmada">Confirmada</SelectItem>
                     <SelectItem value="en_consulta">En consulta</SelectItem>
+                    <SelectItem value="en_atencion">En atención</SelectItem>
+                    <SelectItem value="atendido">Atendido</SelectItem>
                     <SelectItem value="completada">Completada</SelectItem>
                     <SelectItem value="cancelada">Cancelada</SelectItem>
+                    <SelectItem value="no_asistio">No asistió</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
