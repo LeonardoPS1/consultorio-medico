@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Syringe,
   LogOut,
+  Activity,
 } from 'lucide-react';
 import { useState } from 'react';
 import { signOut } from 'next-auth/react';
@@ -30,6 +31,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: 'Panel Principal', href: '/dashboard', icon: LayoutDashboard },
+  { title: 'Atención', href: '/dashboard/atencion', icon: Activity },
   { title: 'Turnos', href: '/dashboard/turnos', icon: Calendar },
   { title: 'Pacientes', href: '/dashboard/pacientes', icon: Users },
   { title: 'Conversaciones', href: '/dashboard/conversaciones', icon: MessageSquare },
