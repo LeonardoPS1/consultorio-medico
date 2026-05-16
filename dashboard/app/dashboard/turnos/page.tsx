@@ -86,7 +86,7 @@ const TURNOS_INICIALES: TurnoData[] = [
 // Estados agrupados para filtro
 // ============================================================
 const OPCIONES_ESTADO = [
-  { value: '', label: 'Todos los estados' },
+  { value: '__all__', label: 'Todos los estados' },
   { value: 'pendiente', label: 'Pendiente' },
   { value: 'confirmada', label: 'Confirmada' },
   { value: 'en_atencion', label: 'En atención' },
@@ -108,9 +108,9 @@ export default function TurnosPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   // Filtros
-  const [filtroMedico, setFiltroMedico] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState('');
-  const [filtroTipo, setFiltroTipo] = useState('');
+  const [filtroMedico, setFiltroMedico] = useState('__all__');
+  const [filtroEstado, setFiltroEstado] = useState('__all__');
+  const [filtroTipo, setFiltroTipo] = useState('__all__');
   const [searchText, setSearchText] = useState('');
 
   // Valores únicos para filtros
@@ -118,19 +118,19 @@ export default function TurnosPage() {
   const tipos = useMemo(() => Array.from(new Set(turnos.map((t) => t.tipo))), [turnos]);
 
   // Cantidad de filtros activos
-  const filtrosActivos = [filtroMedico, filtroEstado, filtroTipo, searchText].filter(Boolean).length;
+  const filtrosActivos = [filtroMedico, filtroEstado, filtroTipo, searchText].filter((v) => v && v !== '__all__').length;
 
   // Turnos filtrados
   const turnosFiltrados = useMemo(() => {
     let result = [...turnos];
 
-    if (filtroMedico) {
+    if (filtroMedico && filtroMedico !== '__all__') {
       result = result.filter((t) => t.medico === filtroMedico);
     }
-    if (filtroEstado) {
+    if (filtroEstado && filtroEstado !== '__all__') {
       result = result.filter((t) => t.estado === filtroEstado);
     }
-    if (filtroTipo) {
+    if (filtroTipo && filtroTipo !== '__all__') {
       result = result.filter((t) => t.tipo === filtroTipo);
     }
     if (searchText.trim()) {
@@ -159,9 +159,9 @@ export default function TurnosPage() {
   }, [turnosFiltrados, selectedDate]);
 
   const limpiarFiltros = () => {
-    setFiltroMedico('');
-    setFiltroEstado('');
-    setFiltroTipo('');
+    setFiltroMedico('__all__');
+    setFiltroEstado('__all__');
+    setFiltroTipo('__all__');
     setSearchText('');
   };
 
@@ -315,10 +315,10 @@ export default function TurnosPage() {
                     <Label className="text-xs text-muted-foreground">Médico</Label>
                     <div className="flex gap-1.5 flex-wrap">
                       <Button
-                        variant={filtroMedico === '' ? 'secondary' : 'outline'}
+                        variant={filtroMedico === '__all__' ? 'secondary' : 'outline'}
                         size="sm"
                         className="h-9 text-xs"
-                        onClick={() => setFiltroMedico('')}
+                        onClick={() => setFiltroMedico('__all__')}
                       >
                         <Users className="h-3.5 w-3.5 mr-1" />
                         Todos
@@ -329,7 +329,7 @@ export default function TurnosPage() {
                           variant={filtroMedico === m ? 'default' : 'outline'}
                           size="sm"
                           className="h-9 text-xs"
-                          onClick={() => setFiltroMedico(filtroMedico === m ? '' : m)}
+                          onClick={() => setFiltroMedico(filtroMedico === m ? '__all__' : m)}
                         >
                           {m}
                         </Button>
@@ -340,7 +340,7 @@ export default function TurnosPage() {
                   {/* Filtro por estado */}
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">Estado</Label>
-                    <Select value={filtroEstado} onValueChange={setFiltroEstado}>
+                    <Select value={filtroEstado === '__all__' ? '__all__' : filtroEstado} onValueChange={(v) => setFiltroEstado(v)}>
                       <SelectTrigger className="h-9">
                         <SelectValue placeholder="Todos los estados" />
                       </SelectTrigger>
@@ -348,7 +348,7 @@ export default function TurnosPage() {
                         {OPCIONES_ESTADO.map((op) => (
                           <SelectItem key={op.value} value={op.value}>
                             <span className="flex items-center gap-2">
-                              {op.value && (
+                              {op.value !== '__all__' && (
                                 <span
                                   className="h-2 w-2 rounded-full"
                                   style={{ backgroundColor: getTurnoColor(op.value) }}
@@ -365,12 +365,12 @@ export default function TurnosPage() {
                   {/* Filtro por tipo */}
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">Tipo de consulta</Label>
-                    <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+                    <Select value={filtroTipo === '__all__' ? '__all__' : filtroTipo} onValueChange={(v) => setFiltroTipo(v)}>
                       <SelectTrigger className="h-9">
                         <SelectValue placeholder="Todos los tipos" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todos los tipos</SelectItem>
+                        <SelectItem value="__all__">Todos los tipos</SelectItem>
                         {tipos.map((t) => (
                           <SelectItem key={t} value={t}>{t}</SelectItem>
                         ))}
@@ -390,23 +390,23 @@ export default function TurnosPage() {
                   {filtrosActivos > 0 && (
                     <>
                       <span>&middot;</span>
-                      {filtroMedico && (
+                      {filtroMedico && filtroMedico !== '__all__' && (
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-1">
                           <Users className="h-3 w-3" /> {filtroMedico}
-                          <button onClick={() => setFiltroMedico('')}><X className="h-2.5 w-2.5" /></button>
+                          <button onClick={() => setFiltroMedico('__all__')}><X className="h-2.5 w-2.5" /></button>
                         </Badge>
                       )}
-                      {filtroEstado && (
+                      {filtroEstado && filtroEstado !== '__all__' && (
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-1">
                           <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: getTurnoColor(filtroEstado) }} />
                           {getTurnoLabel(filtroEstado)}
-                          <button onClick={() => setFiltroEstado('')}><X className="h-2.5 w-2.5" /></button>
+                          <button onClick={() => setFiltroEstado('__all__')}><X className="h-2.5 w-2.5" /></button>
                         </Badge>
                       )}
-                      {filtroTipo && (
+                      {filtroTipo && filtroTipo !== '__all__' && (
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-1">
                           {filtroTipo}
-                          <button onClick={() => setFiltroTipo('')}><X className="h-2.5 w-2.5" /></button>
+                          <button onClick={() => setFiltroTipo('__all__')}><X className="h-2.5 w-2.5" /></button>
                         </Badge>
                       )}
                     </>
