@@ -320,50 +320,61 @@ export default function ReportesPage() {
                   Turnos por día de la semana
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex items-end justify-between gap-1.5 h-56 px-1">
-                  {datos.turnos.map((t, idx) => {
-                    const maxVal = MaxTurnos || 1;
-                    const altura = Math.max((t.cantidad / maxVal) * 100, t.cantidad > 0 ? 6 : 0);
-                    const grados = 180 + idx * 15;
-                    return (
-                      <div key={t.dia} className="flex flex-col items-center gap-1 flex-1 h-full justify-end group">
-                        <span className="text-xs font-semibold text-foreground/80 transition-all group-hover:scale-110">{t.cantidad}</span>
-                        <div
-                          className="w-full relative cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:shadow-lg"
-                          style={{
-                            height: `${altura}%`,
-                            minHeight: t.cantidad > 0 ? '16px' : 0,
-                            background: `linear-gradient(to top, hsl(221.2 83.2% 53.3%), hsl(${221.2 + idx * 5} ${70 + idx * 5}% ${55 + idx * 3}%))`,
-                            borderRadius: '4px 4px 2px 2px',
-                            boxShadow: '0 2px 8px hsl(221.2 83.2% 53.3% / 0.25)',
-                          }}
-                        >
-                          {/* Brillito en la parte superior */}
-                          <div className="absolute inset-x-[15%] top-0 h-1/3 rounded-full bg-white/20 blur-[1px]" />
-                          {/* Tooltip */}
-                          <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs rounded-lg px-2.5 py-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap shadow-lg border border-border/50 pointer-events-none z-10">
-                            <div className="font-medium">{t.cantidad} turnos</div>
-                            <div className="text-[10px] text-muted-foreground mt-0.5">
-                              ✅ {t.completados} · ❌ {t.cancelados} · ⏳ {t.ausentes} ausentes
+              <CardContent className="pb-3">
+                {/* Grilla de referencia */}
+                <div className="relative h-56 mb-2">
+                  {/* Líneas de referencia horizontales */}
+                  {[0, 25, 50, 75, 100].map((linea) => (
+                    <div
+                      key={linea}
+                      className="absolute left-0 right-0 border-t border-dashed border-muted-foreground/15"
+                      style={{ bottom: `${linea}%` }}
+                    >
+                      <span className="absolute -left-2 -top-2.5 text-[9px] text-muted-foreground/40 tabular-nums">
+                        {Math.round((MaxTurnos * linea) / 100)}
+                      </span>
+                    </div>
+                  ))}
+                  {/* Barras */}
+                  <div className="absolute inset-0 flex items-end justify-around gap-1.5 px-2">
+                    {datos.turnos.map((t, idx) => {
+                      const maxVal = MaxTurnos || 1;
+                      const altura = Math.max((t.cantidad / maxVal) * 100, 5);
+                      const tonos = ['#3b82f6', '#60a5fa', '#2563eb', '#1d4ed8', '#93c5fd', '#818cf8'];
+                      return (
+                        <div key={t.dia} className="flex flex-col items-center gap-1 flex-1 self-stretch justify-end group">
+                          <span className="text-xs font-bold tabular-nums text-foreground/90 group-hover:text-primary transition-colors">
+                            {t.cantidad}
+                          </span>
+                          <div
+                            className="w-full rounded-sm transition-all duration-200 ease-out cursor-pointer relative"
+                            style={{
+                              height: `${altura}%`,
+                              minHeight: t.cantidad > 0 ? '8px' : '2px',
+                              backgroundColor: tonos[idx % tonos.length],
+                            }}
+                          >
+                            {/* Hover detail */}
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-white/20 transition-opacity rounded-sm" />
+                            {/* Tooltip */}
+                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] rounded-md px-2.5 py-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap border border-border/50 pointer-events-none z-10 shadow-sm">
+                              <div className="font-semibold">{t.cantidad} turnos</div>
+                              <div className="opacity-80 mt-0.5">
+                                ✅ {t.completados} · ❌ {t.cancelados} · ⏳ {t.ausentes}
+                              </div>
+                              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rotate-45" />
                             </div>
                           </div>
+                          <span className="text-[9px] text-muted-foreground font-medium">{t.dia}</span>
                         </div>
-                        <span className="text-[10px] text-muted-foreground font-medium">{t.dia}</span>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="flex items-center justify-center gap-5 mt-4 text-xs text-muted-foreground border-t pt-3">
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" /> Completados
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-sm bg-amber-500" /> Cancelados
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-sm bg-red-500" /> Ausentes
-                  </span>
+                <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground border-t pt-2.5">
+                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-emerald-500" /> Completados</span>
+                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-amber-500" /> Cancelados</span>
+                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-red-500" /> Ausentes</span>
                 </div>
               </CardContent>
             </Card>
