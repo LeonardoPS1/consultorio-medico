@@ -1,0 +1,398 @@
+{
+  "name": "01 - WhatsApp Inbound + Triaje IA",
+  "nodes": [
+    {
+      "name": "Webhook - Twilio WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "consultorio-inbound",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "name": "Validar Mensaje",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [250, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.Body }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty",
+                "name": "filter.operator.isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Extraer Datos",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "name": "phone", "value": "={{ $json.body.From.replace('whatsapp:', '') }}", "type": "string" },
+            { "name": "message", "value": "={{ $json.body.Body }}", "type": "string" },
+            { "name": "profileName", "value": "={{ $json.body.ProfileName || 'Paciente' }}", "type": "string" },
+            { "name": "twilioSid", "value": "={{ $json.body.SmsSid }}", "type": "string" },
+            { "name": "toNumber", "value": "={{ $json.body.To }}", "type": "string" },
+            { "name": "fromNumber", "value": "={{ $json.body.From }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Obtener o Crear Paciente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [750, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO pacientes (telefono, nombre, apellido, fuente, consentimiento_whatsapp) VALUES ($1, $2, '', 'whatsapp', TRUE) ON CONFLICT (telefono) DO UPDATE SET updated_at = NOW() RETURNING id, telefono, nombre, apellido, email, tags, canal_preferido;",
+        "additionalFields": {
+          "queryParams": "={{ [$json.phone, $json.profileName] }}"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Obtener Conversacion",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1000, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT c.id, c.estado, c.contexto_ia, m.rol, m.contenido, m.intencion, m.created_at FROM conversaciones c LEFT JOIN mensajes m ON m.conversacion_id = c.id WHERE c.paciente_id = $1 AND c.estado = 'activa' ORDER BY m.created_at DESC LIMIT 10;",
+        "additionalFields": {
+          "queryParams": "={{ [$json.id] }}"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Clasificar Intencion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral\",\n  \"stream\": false,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Clasific\u00e1 este mensaje de paciente en UNA categor\u00eda:\\n\\n- TURNO_NUEVO: Quiere sacar un turno\\n- TURNO_CANCELAR: Quiere cancelar\\n- TURNO_CONFIRMAR: Confirmar asistencia\\n- CONSULTA: Pregunta general (horarios, precios, etc.)\\n- RECETA: Pide receta o renovaci\u00f3n\\n- URGENCIA: Dolor fuerte, emergencia, s\u00edntomas graves\\n- SALUDO: Saludo inicial (hola, buenos d\u00edas)\\n- OTRO: No aplica\\n\\nRespond\u00e9 SOLO con la categor\u00eda, sin explicaci\u00f3n.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Mensaje: {{ $('Extraer Datos').first().json.message }}\"\n    }\n  ]\n}",
+        "options": {}
+      }
+    },
+    {
+      "name": "Extraer Categoria",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1500, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "name": "intencion", "value": "={{ $json.message.content.trim() }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Enrutar por Intencion",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2.3,
+      "position": [1750, 300],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.intencion }}",
+        "rules": [
+          { "value2": "TURNO_NUEVO", "output": 0 },
+          { "value2": "TURNO_CANCELAR", "output": 1 },
+          { "value2": "TURNO_CONFIRMAR", "output": 2 },
+          { "value2": "URGENCIA", "output": 3 },
+          { "value2": "RECETA", "output": 4 },
+          { "value2": "SALUDO", "output": 5 }
+        ],
+        "fallbackOutput": 6
+      }
+    },
+    {
+      "name": "Notificar urgencia al medico",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
+      "position": [2000, 50],
+      "parameters": {
+        "resource": "message",
+        "operation": "create",
+        "to": "whatsapp:+5491155550000",
+        "from": "={{ $('Extraer Datos').first().json.toNumber }}",
+        "body": "=URGENCIA - {{ $('Extraer Datos').first().json.profileName }} ({{ $('Extraer Datos').first().json.phone }}): {{ $('Extraer Datos').first().json.message }}",
+        "options": {}
+      }
+    },
+    {
+      "name": "Ollama - Respuesta Urgencia",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2250, 50],
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral\",\n  \"stream\": false,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Sos el asistente virtual de un consultorio m\u00e9dico. El paciente report\u00f3 una URGENCIA. Respond\u00e9 de forma calmada pero seria, indicando que: 1) Ya se notific\u00f3 al m\u00e9dico de guardia, 2) Si es muy grave que vaya a la guardia, 3) Pronto se comunicar\u00e1n con \u00e9l/ella. NO minimices la situaci\u00f3n. S\u00e9 emp\u00e1tico. Respond\u00e9 en espa\u00f1ol argentino.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Paciente: {{ $('Extraer Datos').first().json.profileName }} - Mensaje: {{ $('Extraer Datos').first().json.message }}\"\n    }\n  ]\n}",
+        "options": {}
+      }
+    },
+    {
+      "name": "Extraer Respuesta Urgencia",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2500, 50],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "name": "responseText", "value": "={{ $json.message.content }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Ollama - Respuesta General",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 650],
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral\",\n  \"stream\": false,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Sos el asistente virtual del Consultorio M\u00e9dico. Respond\u00e9s mensajes de WhatsApp de forma amable, profesional y en espa\u00f1ol argentino. S\u00e9 breve y resolutivo. Reglas: NO inventes diagn\u00f3sticos, NO recetes medicamentos, SIEMPRE deriv\u00e1 urgencias al m\u00e9dico. Us\u00e1 un tono c\u00e1lido pero profesional.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Paciente {{ $('Extraer Datos').first().json.profileName }} dice: {{ $('Extraer Datos').first().json.message }}\"\n    }\n  ]\n}",
+        "options": {}
+      }
+    },
+    {
+      "name": "Extraer Respuesta General",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2250, 650],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "name": "responseText", "value": "={{ $json.message.content }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Respuesta Turno Nuevo",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2000, 180],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "name": "responseText", "value": "=Gracias por contactarnos {{ $('Extraer Datos').first().json.profileName }}. Para solicitar un turno, decime: Que dia y horario te gustaria? Con que medico preferis? Es para consulta general o un estudio en particular? Asi lo gestionamos.", "type": "string" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Respuesta Cancelar Turno",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2000, 280],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "name": "responseText", "value": "=Entendido {{ $('Extraer Datos').first().json.profileName }}. Para cancelar tu turno, me podrias decir el dia y hora que tenias agendado? Asi lo gestionamos.", "type": "string" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Respuesta Confirmar Turno",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2000, 380],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "name": "responseText", "value": "=Perfecto {{ $('Extraer Datos').first().json.profileName }}! Te confirmamos la asistencia. Te esperamos en el consultorio en la fecha y hora acordada. Si necesitas cambiar algo, avisanos.", "type": "string" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Respuesta Receta",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2000, 480],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "name": "responseText", "value": "=Hola {{ $('Extraer Datos').first().json.profileName }}. Para solicitar una receta o renovacion, necesito que me indiques: Que medicamento necesitas? Tenes alguna receta anterior como referencia? Esta solicitud la va a revisar el medico.", "type": "string" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Respuesta Saludo",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2000, 580],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "name": "responseText", "value": "=Hola {{ $('Extraer Datos').first().json.profileName }}! Bienvenido al Consultorio Medico. Soy el asistente virtual. En que puedo ayudarte? Podes consultarme sobre: Turnos disponibles, Profesionales, Recetas, Horarios. O simplemente escribime lo que necesites.", "type": "string" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Twilio - Enviar WhatsApp",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
+      "position": [2750, 300],
+      "parameters": {
+        "resource": "message",
+        "operation": "create",
+        "to": "={{ $('Extraer Datos').first().json.fromNumber }}",
+        "from": "={{ $('Extraer Datos').first().json.toNumber }}",
+        "body": "={{ $json.responseText }}",
+        "options": {}
+      }
+    },
+    {
+      "name": "Guardar Conversacion en DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [3000, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO mensajes (conversacion_id, rol, contenido, tipo, intencion, twilio_sid, n8n_execution_id) VALUES ( (SELECT id FROM conversaciones WHERE paciente_id = $1 AND estado = 'activa' LIMIT 1), 'paciente', $2, 'texto', $3, $4, $5 ); INSERT INTO mensajes (conversacion_id, rol, contenido, tipo, intencion, n8n_execution_id) VALUES ( (SELECT id FROM conversaciones WHERE paciente_id = $1 AND estado = 'activa' LIMIT 1), 'asistente', $6, 'texto', $3, $5 );",
+        "additionalFields": {
+          "queryParams": "={{ [$('Extraer Datos').first().json.phone, $('Extraer Datos').first().json.message, $json.intencion || 'otro', $('Extraer Datos').first().json.twilioSid, $json.executionId || $('Extraer Datos').first().json.twilioSid, $json.responseText] }}"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Log a PostgreSQL",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [3000, 500],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje) VALUES ($1, 'WhatsApp Inbound', $2, 'info', $3);",
+        "additionalFields": {
+          "queryParams": "={{ ['workflow-01', $json.executionId || $('Extraer Datos').first().json.twilioSid, 'Mensaje procesado de ' + $('Extraer Datos').first().json.phone + ': ' + $json.intencion] }}"
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Twilio WhatsApp": {
+      "main": [[{"node": "Validar Mensaje", "type": "main", "index": 0}]]
+    },
+    "Validar Mensaje": {
+      "main": [
+        [{"node": "Extraer Datos", "type": "main", "index": 0}],
+        [{"node": "Log a PostgreSQL", "type": "main", "index": 0}]
+      ]
+    },
+    "Extraer Datos": {
+      "main": [[{"node": "Obtener o Crear Paciente", "type": "main", "index": 0}]]
+    },
+    "Obtener o Crear Paciente": {
+      "main": [[{"node": "Obtener Conversacion", "type": "main", "index": 0}]]
+    },
+    "Obtener Conversacion": {
+      "main": [[{"node": "Clasificar Intencion", "type": "main", "index": 0}]]
+    },
+    "Clasificar Intencion": {
+      "main": [[{"node": "Extraer Categoria", "type": "main", "index": 0}]]
+    },
+    "Extraer Categoria": {
+      "main": [[{"node": "Enrutar por Intencion", "type": "main", "index": 0}]]
+    },
+    "Enrutar por Intencion": {
+      "main": [
+        [{"node": "Respuesta Turno Nuevo", "type": "main", "index": 0}],
+        [{"node": "Respuesta Cancelar Turno", "type": "main", "index": 0}],
+        [{"node": "Respuesta Confirmar Turno", "type": "main", "index": 0}],
+        [{"node": "Notificar urgencia al medico", "type": "main", "index": 0}],
+        [{"node": "Respuesta Receta", "type": "main", "index": 0}],
+        [{"node": "Respuesta Saludo", "type": "main", "index": 0}],
+        [{"node": "Ollama - Respuesta General", "type": "main", "index": 0}]
+      ]
+    },
+    "Notificar urgencia al medico": {
+      "main": [[{"node": "Ollama - Respuesta Urgencia", "type": "main", "index": 0}]]
+    },
+    "Ollama - Respuesta Urgencia": {
+      "main": [[{"node": "Extraer Respuesta Urgencia", "type": "main", "index": 0}]]
+    },
+    "Extraer Respuesta Urgencia": {
+      "main": [[{"node": "Twilio - Enviar WhatsApp", "type": "main", "index": 0}]]
+    },
+    "Ollama - Respuesta General": {
+      "main": [[{"node": "Extraer Respuesta General", "type": "main", "index": 0}]]
+    },
+    "Extraer Respuesta General": {
+      "main": [[{"node": "Twilio - Enviar WhatsApp", "type": "main", "index": 0}]]
+    },
+    "Respuesta Turno Nuevo": {
+      "main": [[{"node": "Twilio - Enviar WhatsApp", "type": "main", "index": 0}]]
+    },
+    "Respuesta Cancelar Turno": {
+      "main": [[{"node": "Twilio - Enviar WhatsApp", "type": "main", "index": 0}]]
+    },
+    "Respuesta Confirmar Turno": {
+      "main": [[{"node": "Twilio - Enviar WhatsApp", "type": "main", "index": 0}]]
+    },
+    "Respuesta Receta": {
+      "main": [[{"node": "Twilio - Enviar WhatsApp", "type": "main", "index": 0}]]
+    },
+    "Respuesta Saludo": {
+      "main": [[{"node": "Twilio - Enviar WhatsApp", "type": "main", "index": 0}]]
+    },
+    "Twilio - Enviar WhatsApp": {
+      "main": [[{"node": "Guardar Conversacion en DB", "type": "main", "index": 0}]]
+    },
+    "Guardar Conversacion en DB": {
+      "main": [[{"node": "Log a PostgreSQL", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
