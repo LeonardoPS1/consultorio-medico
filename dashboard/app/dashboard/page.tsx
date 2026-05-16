@@ -21,6 +21,7 @@ import {
   Syringe,
   BarChart3,
   Sparkles,
+  Play,
 } from 'lucide-react';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
 
@@ -89,21 +90,21 @@ const quickActions = [
 ];
 
 const proximosTurnos = [
-  { hora: '09:00', paciente: 'Juan P├®rez', tipo: 'Consulta M├®dica', estado: 'confirmada', medico: 'Dr. Garc├¡a' },
-  { hora: '10:30', paciente: 'Mar├¡a Garc├¡a', tipo: 'Control', estado: 'confirmada', medico: 'Dr. Garc├¡a' },
-  { hora: '11:00', paciente: 'Pedro S├ínchez', tipo: 'Resultados', estado: 'pendiente', medico: 'Dra. L├│pez' },
-  { hora: '12:00', paciente: 'Ana L├│pez', tipo: 'Consulta', estado: 'confirmada', medico: 'Dr. Garc├¡a' },
-  { hora: '15:30', paciente: 'Carlos Ruiz', tipo: 'Especialista', estado: 'pendiente', medico: 'Dra. L├│pez' },
-  { hora: '16:45', paciente: 'Laura Mart├¡nez', tipo: 'Control', estado: 'confirmada', medico: 'Dr. Garc├¡a' },
+  { hora: '09:00', paciente: 'Juan Pérez', tipo: 'Consulta Médica', estado: 'confirmada', medico: 'Dr. García' },
+  { hora: '10:30', paciente: 'María García', tipo: 'Control', estado: 'confirmada', medico: 'Dr. García' },
+  { hora: '11:00', paciente: 'Pedro Sánchez', tipo: 'Resultados', estado: 'pendiente', medico: 'Dra. López' },
+  { hora: '12:00', paciente: 'Ana López', tipo: 'Consulta', estado: 'confirmada', medico: 'Dr. García' },
+  { hora: '15:30', paciente: 'Carlos Ruiz', tipo: 'Especialista', estado: 'pendiente', medico: 'Dra. López' },
+  { hora: '16:45', paciente: 'Laura Martínez', tipo: 'Control', estado: 'confirmada', medico: 'Dr. García' },
 ];
 
 const actividadReciente = [
-  { hora: '08:15', texto: 'Ô£à Juan P├®rez confirm├│ turno para ma├▒ana', tipo: 'confirmacion' },
-  { hora: '08:02', texto: '­ƒôï Mar├¡a Garc├¡a pregunt├│ por resultados', tipo: 'consulta' },
-  { hora: '07:50', texto: '­ƒÜ¿ Carlos Ruiz reporta dolor en el pecho', tipo: 'urgencia' },
-  { hora: '07:30', texto: '­ƒô▒ Recordatorio enviado a Pedro S├ínchez', tipo: 'recordatorio' },
-  { hora: '07:15', texto: '­ƒåò Nuevo paciente registrado: Diego Torres', tipo: 'nuevo' },
-  { hora: '07:00', texto: '­ƒôè Resumen diario enviado al WhatsApp del Dr.', tipo: 'sistema' },
+  { hora: '08:15', texto: 'Juan Pérez confirmó turno para mañana', tipo: 'confirmacion' },
+  { hora: '08:02', texto: 'María García preguntó por resultados', tipo: 'consulta' },
+  { hora: '07:50', texto: 'Carlos Ruiz reporta dolor en el pecho', tipo: 'urgencia' },
+  { hora: '07:30', texto: 'Recordatorio enviado a Pedro Sánchez', tipo: 'recordatorio' },
+  { hora: '07:15', texto: 'Nuevo paciente registrado: Diego Torres', tipo: 'nuevo' },
+  { hora: '07:00', texto: 'Resumen diario enviado al WhatsApp del Dr.', tipo: 'sistema' },
 ];
 
 export default function DashboardPage() {
@@ -129,13 +130,13 @@ export default function DashboardPage() {
           </h2>
           <p className="text-muted-foreground flex items-center gap-1.5 mt-1">
             <Sparkles className="h-4 w-4 text-primary" />
-            Resumen de la actividad del consultorio ÔÇö {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            Resumen de la actividad del consultorio &mdash; {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
@@ -152,6 +153,19 @@ export default function DashboardPage() {
             </button>
           );
         })}
+        {/* Botón directo a Atención */}
+        <button
+          onClick={() => router.push('/dashboard/atencion')}
+          className="flex items-center gap-3 p-4 rounded-xl border-2 border-blue-200 bg-blue-50/50 dark:bg-blue-950/30 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 group"
+        >
+          <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-950/50 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Play className="h-5 w-5 text-blue-600" />
+          </div>
+          <span className="font-medium text-sm">Atención</span>
+          <Badge variant="secondary" className="ml-auto text-[10px] bg-blue-200 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+            En vivo
+          </Badge>
+        </button>
       </div>
 
       {/* KPIs */}
@@ -177,7 +191,7 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  vs d├¡a anterior
+                  vs día anterior
                 </p>
               </CardContent>
             </Card>
@@ -186,12 +200,12 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Pr├│ximos Turnos */}
+        {/* Próximos Turnos */}
         <Card className="hover-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
-              Pr├│ximos Turnos
+              Próximos Turnos
             </CardTitle>
             <Button
               variant="ghost"
@@ -216,7 +230,7 @@ export default function DashboardPage() {
                     <div>
                       <p className="font-medium text-sm">{turno.paciente}</p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        {turno.tipo} ┬À {turno.medico}
+                        {turno.tipo} &middot; {turno.medico}
                       </p>
                     </div>
                   </div>
@@ -228,7 +242,7 @@ export default function DashboardPage() {
                         : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                     }
                   >
-                    {turno.estado === 'confirmada' ? 'Ô£à Confirmada' : 'ÔÅ│ Pendiente'}
+                    {turno.estado === 'confirmada' ? 'Confirmada' : 'Pendiente'}
                   </Badge>
                 </div>
               ))}
@@ -289,7 +303,7 @@ export default function DashboardPage() {
             <div>
               <p className="text-sm font-medium">Sistema operativo y funcional</p>
               <p className="text-xs text-muted-foreground">
-                Dashboard listo ┬À Datos de ejemplo cargados ┬À 8 conversaciones activas
+                Dashboard listo &middot; Datos de ejemplo cargados &middot; 8 conversaciones activas
               </p>
             </div>
           </div>

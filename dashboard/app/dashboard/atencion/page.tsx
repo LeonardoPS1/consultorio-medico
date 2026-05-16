@@ -18,9 +18,7 @@ import {
   Activity,
   Clock,
   Users,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
+  GripVertical,
 } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
@@ -39,6 +37,18 @@ interface Turno {
   estado: TurnoEstado;
   atendidoAt?: string;
 }
+
+// ============================================================
+// Columnas del Kanban
+// ============================================================
+type ColumnaId = 'pendientes' | 'en_atencion' | 'atendidos' | 'cancelados';
+
+const COLUMNAS: { id: ColumnaId; titulo: string; estado: TurnoEstado; color: string }[] = [
+  { id: 'pendientes', titulo: 'Pendientes', estado: 'pendiente', color: '#F59E0B' },
+  { id: 'en_atencion', titulo: 'En Atención', estado: 'en_atencion', color: '#2563EB' },
+  { id: 'atendidos', titulo: 'Atendidos', estado: 'atendido', color: '#059669' },
+  { id: 'cancelados', titulo: 'Cancelados', estado: 'cancelada', color: '#EF4444' },
+];
 
 // ============================================================
 // Mock data de turnos para hoy
@@ -90,18 +100,20 @@ function AtencionTimer({ desde }: { desde: string }) {
 }
 
 // ============================================================
-// Componente: Tarjeta de turno
+// Componente: Tarjeta de turno (draggable)
 // ============================================================
 function TurnoCard({
   turno,
   onAtender,
   onFinalizar,
   onCancelar,
+  onDragStart,
 }: {
   turno: Turno;
   onAtender: (id: string) => void;
   onFinalizar: (id: string) => void;
   onCancelar: (id: string) => void;
+  onDragStart: (e: React.DragEvent, turno: Turno) => void;
 }) {
   const color = getTurnoColor(turno.estado);
   const isPending = turno.estado === 'pendiente' || turno.estado === 'confirmada';
@@ -109,11 +121,20 @@ function TurnoCard({
 
   return (
     <div
-      className={`group relative rounded-xl border bg-card p-3 transition-all duration-300
+      draggable
+      onDragStart={(e) => onDragStart(e, turno)}
+      className={`group relative rounded-xl border bg-card p-3 transition-all duration-200
         ${isInAttention ? 'ring-2 shadow-lg scale-[1.02]' : 'hover:shadow-md hover:-translate-y-0.5'}
+        cursor-grab active:cursor-grabbing active:shadow-xl active:scale-[1.02]
+        [&.dragging]:opacity-50 [&.dragging]:ring-2 [&.dragging]:ring-primary
       `}
       style={{ borderColor: isInAttention ? color : undefined }}
     >
+      {/* Grip indicator (arrastre) */}
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <GripVertical className="h-3.5 w-3.5 text-muted-foreground/40" />
+      </div>
+
       {/* Barra lateral de color */}
       <div
         className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
@@ -139,7 +160,7 @@ function TurnoCard({
           </div>
           <Badge
             variant="outline"
-            className="text-[10px] px-2 py-0 font-medium"
+            className="text-[10px] px-2 py-0 font-medium pointer-events-none"
             style={{
               backgroundColor: `${color}18`,
               color: color,
@@ -165,7 +186,7 @@ function TurnoCard({
 
         {/* Tipo + médico */}
         <p className="text-xs text-muted-foreground truncate mb-2">
-          {turno.tipo} · {turno.medico}
+          {turno.tipo} &middot; {turno.medico}
         </p>
 
         {/* Timer de atención */}
@@ -210,47 +231,72 @@ function TurnoCard({
             </Button>
           )}
         </div>
+
+        {/* Indicador de arrastre */}
+        <p className="text-[10px] text-muted-foreground/30 mt-1.5 text-center opacity-0 group-hover:opacity-100 transition-opacity select-none">
+          Arrastrá para cambiar estado
+        </p>
       </div>
     </div>
   );
 }
 
 // ============================================================
-// Componente: Columna del Kanban
+// Componente: Columna del Kanban (drop target)
 // ============================================================
 function KanbanColumn({
-  titulo,
-  icono: Icono,
+  columna,
   turnos,
-  color,
   onAtender,
   onFinalizar,
   onCancelar,
-  vacioMsg,
+  onDragStart,
+  onDropTurno,
+  isDragOver,
+  onDragOver,
+  onDragLeave,
 }: {
-  titulo: string;
-  icono: React.ElementType;
+  columna: typeof COLUMNAS[0];
   turnos: Turno[];
-  color: string;
   onAtender: (id: string) => void;
   onFinalizar: (id: string) => void;
   onCancelar: (id: string) => void;
-  vacioMsg: string;
+  onDragStart: (e: React.DragEvent, turno: Turno) => void;
+  onDropTurno: (e: React.DragEvent, columnaId: ColumnaId) => void;
+  isDragOver: boolean;
+  onDragOver: (e: React.DragEvent) => void;
+  onDragLeave: (e: React.DragEvent) => void;
 }) {
+  const Icono = columna.id === 'pendientes' ? Hourglass
+    : columna.id === 'en_atencion' ? Play
+    : columna.id === 'atendidos' ? CheckCircle2
+    : XCircle;
+
   return (
-    <div className="flex flex-col gap-2 min-h-[200px]">
+    <div
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => onDropTurno(e, columna.id)}
+      className={`flex flex-col gap-2 min-h-[250px] rounded-xl p-3 transition-all duration-200 border-2
+        ${isDragOver
+          ? 'border-primary bg-primary/5 shadow-lg scale-[1.01]'
+          : 'border-transparent'
+        }
+        ${turnos.length === 0 && !isDragOver ? 'bg-muted/10' : ''}
+      `}
+    >
       {/* Header de columna */}
-      <div className="flex items-center gap-2 px-1">
-        <div className="flex items-center justify-center h-7 w-7 rounded-lg" style={{ backgroundColor: `${color}18` }}>
-          <Icono className="h-4 w-4" style={{ color }} />
+      <div className="flex items-center gap-2 px-1 mb-1">
+        <div className="flex items-center justify-center h-7 w-7 rounded-lg" style={{ backgroundColor: `${columna.color}18` }}>
+          <Icono className="h-4 w-4" style={{ color: columna.color }} />
         </div>
-        <span className="text-sm font-semibold">{titulo}</span>
+        <span className="text-sm font-semibold">{columna.titulo}</span>
         <Badge
           variant="secondary"
           className="ml-auto text-xs font-mono"
           style={{
-            backgroundColor: `${color}12`,
-            color: color,
+            backgroundColor: `${columna.color}12`,
+            color: columna.color,
           }}
         >
           {turnos.length}
@@ -259,9 +305,13 @@ function KanbanColumn({
 
       {/* Cards */}
       {turnos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground/60 rounded-xl border-2 border-dashed border-muted-foreground/10 flex-1">
-          <Icono className="h-8 w-8 mb-2 opacity-30" />
-          <p className="text-xs">{vacioMsg}</p>
+        <div className={`flex flex-col items-center justify-center py-8 text-center rounded-xl border-2 border-dashed flex-1 transition-colors
+          ${isDragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/10'}
+        `}>
+          <Icono className="h-8 w-8 mb-2 opacity-30" style={{ color: columna.color }} />
+          <p className="text-xs text-muted-foreground/60">
+            {isDragOver ? 'Soltó acá' : 'Sin turnos'}
+          </p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -272,6 +322,7 @@ function KanbanColumn({
               onAtender={onAtender}
               onFinalizar={onFinalizar}
               onCancelar={onCancelar}
+              onDragStart={onDragStart}
             />
           ))}
         </div>
@@ -281,7 +332,7 @@ function KanbanColumn({
 }
 
 // ============================================================
-// Resumen de atención (barra superior)
+// Resumen de atención
 // ============================================================
 function ResumenBar({ total, enAtencion, atendidos, pendientes }: {
   total: number;
@@ -295,12 +346,12 @@ function ResumenBar({ total, enAtencion, atendidos, pendientes }: {
         <Calendar className="h-3.5 w-3.5 text-primary" />
         <strong className="text-foreground">{total}</strong> turnos hoy
       </span>
-      <span className="hidden sm:inline">·</span>
+      <span className="hidden sm:inline">&middot;</span>
       <span className="flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-amber-500" />
         <strong className="text-foreground">{pendientes}</strong> pendientes
       </span>
-      <span className="hidden sm:inline">·</span>
+      <span className="hidden sm:inline">&middot;</span>
       <span className="flex items-center gap-1.5">
         <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
@@ -308,7 +359,7 @@ function ResumenBar({ total, enAtencion, atendidos, pendientes }: {
         </span>
         <strong className="text-foreground">{enAtencion}</strong> en atención
       </span>
-      <span className="hidden sm:inline">·</span>
+      <span className="hidden sm:inline">&middot;</span>
       <span className="flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-emerald-500" />
         <strong className="text-foreground">{atendidos}</strong> atendidos
@@ -325,10 +376,14 @@ export default function AtencionPage() {
   const [turnos, setTurnos] = useState(TURNOS_INICIALES);
   const [mounted, setMounted] = useState(false);
   const [filtroMedico, setFiltroMedico] = useState<string | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<ColumnaId | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   useEffect(() => setMounted(true), []);
 
-  // Acciones
+  // ============================================================
+  // Acciones con botones
+  // ============================================================
   const atenderTurno = useCallback((id: string) => {
     setTurnos((prev) =>
       prev.map((t) =>
@@ -338,7 +393,7 @@ export default function AtencionPage() {
       )
     );
     const p = turnos.find((t) => t.id === id);
-    toast({ title: '🟦 En atención', description: `${p?.paciente} está siendo atendido` });
+    toast({ title: 'En atención', description: `${p?.paciente} está siendo atendido` });
   }, [turnos]);
 
   const finalizarTurno = useCallback((id: string) => {
@@ -350,7 +405,7 @@ export default function AtencionPage() {
       )
     );
     const p = turnos.find((t) => t.id === id);
-    toast({ title: '✅ Atendido', description: `${p?.paciente} fue atendido correctamente` });
+    toast({ title: 'Atendido', description: `${p?.paciente} fue atendido correctamente` });
   }, [turnos]);
 
   const cancelarTurno = useCallback((id: string) => {
@@ -360,24 +415,123 @@ export default function AtencionPage() {
       )
     );
     const p = turnos.find((t) => t.id === id);
-    toast({ title: '❌ Cancelado', description: `Turno de ${p?.paciente} cancelado` });
+    if (p) {
+      toast({ title: 'Cancelado', description: `Turno de ${p.paciente} cancelado` });
+    }
   }, [turnos]);
 
+  // ============================================================
+  // Drag & Drop handlers
+  // ============================================================
+  const handleDragStart = useCallback((e: React.DragEvent, turno: Turno) => {
+    e.dataTransfer.setData('text/plain', JSON.stringify({ id: turno.id, estado: turno.estado }));
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggingId(turno.id);
+    // Pequeño delay para que se vea el efecto visual
+    setTimeout(() => {
+      const el = e.currentTarget as HTMLElement;
+      el.classList.add('dragging');
+    }, 0);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const handleDragEnter = useCallback((e: React.DragEvent, columnaId: ColumnaId) => {
+    e.preventDefault();
+    setDragOverColumn(columnaId);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    // Solo cuando realmente salimos de la zona (no a hijos)
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    const currentTarget = e.currentTarget as HTMLElement;
+    if (!currentTarget.contains(relatedTarget)) {
+      setDragOverColumn(null);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, columnaId: ColumnaId) => {
+    e.preventDefault();
+    setDragOverColumn(null);
+    setDraggingId(null);
+
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      const { id: turnoId } = data;
+
+      // Mapa columna → estado
+      const estadoMap: Record<ColumnaId, TurnoEstado> = {
+        pendientes: 'pendiente',
+        en_atencion: 'en_atencion',
+        atendidos: 'atendido',
+        cancelados: 'cancelada',
+      };
+
+      const nuevoEstado = estadoMap[columnaId];
+      const turno = turnos.find((t) => t.id === turnoId);
+      if (!turno || turno.estado === nuevoEstado) return;
+
+      const now = new Date().toISOString();
+
+      setTurnos((prev) =>
+        prev.map((t) => {
+          if (t.id !== turnoId) return t;
+          const updated: Turno = { ...t, estado: nuevoEstado };
+          if (nuevoEstado === 'en_atencion' || nuevoEstado === 'atendido') {
+            updated.atendidoAt = now;
+          }
+          if (nuevoEstado === 'cancelada') {
+            delete updated.atendidoAt;
+          }
+          return updated;
+        })
+      );
+
+      // Toast según el destino
+      const label = COLUMNAS.find((c) => c.id === columnaId)?.titulo || nuevoEstado;
+      toast({
+        title: `Movido a ${label}`,
+        description: `${turno.paciente} → ${getTurnoLabel(nuevoEstado)}`,
+      });
+
+      // Remover clase dragging
+      document.querySelectorAll('.dragging').forEach((el) => el.classList.remove('dragging'));
+    } catch {
+      // Ignorar errores de parseo
+    }
+  }, [turnos]);
+
+  // Limpiar dragging state
+  useEffect(() => {
+    const handleDragEnd = () => {
+      setDragOverColumn(null);
+      setDraggingId(null);
+      document.querySelectorAll('.dragging').forEach((el) => el.classList.remove('dragging'));
+    };
+    document.addEventListener('dragend', handleDragEnd);
+    return () => document.removeEventListener('dragend', handleDragEnd);
+  }, []);
+
+  // ============================================================
   // Filtrar turnos
+  // ============================================================
   const turnosFiltrados = filtroMedico
     ? turnos.filter((t) => t.medico === filtroMedico)
     : turnos;
 
-  // Columnas
-  const pendientes = turnosFiltrados
-    .filter((t) => t.estado === 'pendiente' || t.estado === 'confirmada')
-    .sort((a, b) => a.hora.localeCompare(b.hora));
+  const agrupar = (estados: TurnoEstado[]) =>
+    turnosFiltrados
+      .filter((t) => estados.includes(t.estado))
+      .sort((a, b) => a.hora.localeCompare(b.hora));
 
-  const enAtencion = turnosFiltrados.filter((t) => t.estado === 'en_atencion');
-  const atendidos = turnosFiltrados.filter((t) => t.estado === 'atendido');
-  const cancelados = turnosFiltrados.filter((t) => t.estado === 'cancelada');
+  const pendientes = agrupar(['pendiente', 'confirmada']);
+  const enAtencion = agrupar(['en_atencion']);
+  const atendidos = agrupar(['atendido']);
+  const cancelados = agrupar(['cancelada']);
 
-  // Médicos únicos para filtro
   const medicos = Array.from(new Set(turnos.map((t) => t.medico)));
 
   return (
@@ -391,7 +545,7 @@ export default function AtencionPage() {
           </h2>
           <p className="text-muted-foreground flex items-center gap-1.5 mt-1">
             <Sparkles className="h-4 w-4 text-primary" />
-            Gestioná la atención en tiempo real —{' '}
+            Arrastrá turnos entre columnas o usá los botones &mdash;{' '}
             {new Date().toLocaleDateString('es-AR', {
               weekday: 'long',
               day: 'numeric',
@@ -444,7 +598,7 @@ export default function AtencionPage() {
         </CardContent>
       </Card>
 
-      {/* Tablero Kanban */}
+      {/* Tablero Kanban con drag & drop */}
       <Card className="overflow-hidden">
         <CardHeader className="pb-3 border-b bg-muted/20">
           <div className="flex items-center justify-between">
@@ -453,10 +607,17 @@ export default function AtencionPage() {
               Tablero de Atención
             </CardTitle>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" />
-                Actualizado en vivo
-              </span>
+              {draggingId ? (
+                <span className="flex items-center gap-1.5 text-primary font-medium">
+                  <span className="h-2 w-2 rounded-full bg-primary animate-pulse-soft" />
+                  Arrastrando...
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5">
+                  <GripVertical className="h-3.5 w-3.5" />
+                  Arrastrá turnos entre columnas
+                </span>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -466,58 +627,41 @@ export default function AtencionPage() {
               <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Columna Pendientes */}
-              <KanbanColumn
-                titulo="Pendientes"
-                icono={Hourglass}
-                turnos={pendientes}
-                color="#F59E0B"
-                onAtender={atenderTurno}
-                onFinalizar={finalizarTurno}
-                onCancelar={cancelarTurno}
-                vacioMsg="Sin turnos pendientes"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+              {COLUMNAS.map((col) => {
+                const turnosCol =
+                  col.id === 'pendientes' ? pendientes
+                  : col.id === 'en_atencion' ? enAtencion
+                  : col.id === 'atendidos' ? atendidos
+                  : cancelados;
 
-              {/* Columna En Atención */}
-              <KanbanColumn
-                titulo="En Atención"
-                icono={Play}
-                turnos={enAtencion}
-                color="#2563EB"
-                onAtender={atenderTurno}
-                onFinalizar={finalizarTurno}
-                onCancelar={cancelarTurno}
-                vacioMsg="Nadie en atención"
-              />
-
-              {/* Columna Atendidos */}
-              <KanbanColumn
-                titulo="Atendidos"
-                icono={CheckCircle2}
-                turnos={atendidos}
-                color="#059669"
-                onAtender={atenderTurno}
-                onFinalizar={finalizarTurno}
-                onCancelar={cancelarTurno}
-                vacioMsg="Sin atendidos hoy"
-              />
-
-              {/* Columna Cancelados */}
-              <KanbanColumn
-                titulo="Cancelados"
-                icono={XCircle}
-                turnos={cancelados}
-                color="#EF4444"
-                onAtender={atenderTurno}
-                onFinalizar={finalizarTurno}
-                onCancelar={cancelarTurno}
-                vacioMsg="Sin cancelados"
-              />
+                return (
+                  <KanbanColumn
+                    key={col.id}
+                    columna={col}
+                    turnos={turnosCol}
+                    onAtender={atenderTurno}
+                    onFinalizar={finalizarTurno}
+                    onCancelar={cancelarTurno}
+                    onDragStart={handleDragStart}
+                    onDropTurno={handleDrop}
+                    isDragOver={dragOverColumn === col.id}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                  />
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Indicador de drag activo */}
+      {draggingId && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-primary text-primary-foreground px-5 py-2.5 rounded-full shadow-xl text-sm font-medium animate-in slide-in-from-bottom-4">
+          Soltá el turno en la columna deseada
+        </div>
+      )}
 
       {/* Leyenda de estados */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
@@ -537,7 +681,7 @@ export default function AtencionPage() {
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('cancelada') }} /> Cancelada
         </span>
         <span className="flex items-center gap-1 text-muted-foreground/50 ml-auto">
-          <Timer className="h-3 w-3" /> Timer automático cada 30s
+          <GripVertical className="h-3 w-3" /> Drag &amp; drop activo
         </span>
       </div>
     </div>
