@@ -234,6 +234,26 @@ export const facturacion = pgTable('facturacion', {
 });
 
 // ============================================================
+// CREDENCIALES (Centralizadas)
+// ============================================================
+export const credenciales = pgTable('credenciales', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  servicio: varchar('servicio', { length: 50 }).notNull(),
+  clave: varchar('clave', { length: 100 }).notNull(),
+  valor: text('valor').notNull(),
+  encriptado: boolean('encriptado').notNull().default(true),
+  etiqueta: varchar('etiqueta', { length: 255 }),
+  n8nCredentialId: varchar('n8n_credential_id', { length: 255 }),
+  n8nCredentialType: varchar('n8n_credential_type', { length: 100 }),
+  orden: integer('orden').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  uniqueServicioClave: uniqueIndex('idx_credenciales_unique').on(table.servicio, table.clave),
+  idxServicio: index('idx_credenciales_servicio').on(table.servicio),
+}));
+
+// ============================================================
 // WORKFLOW LOGS
 // ============================================================
 export const workflowLogs = pgTable('workflow_logs', {

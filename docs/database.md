@@ -57,6 +57,7 @@ Las migraciones son **acumulativas** y deben ejecutarse en orden:
 | 004 | `004_historial_recetas.sql` | `historial_medico`, `recetas`, `facturacion` |
 | 005 | `005_logs.sql` | `workflow_logs`, `workflow_errors`, `twilio_logs`, `ia_logs`, `audit_log` |
 | 006 | `006_indices.sql` | Índices + vistas `turnos_del_dia`, `proximos_turnos`, `metricas_intenciones`, `pacientes_nuevos_por_mes` |
+| 007 | `007_credenciales.sql` | `credenciales` + vista `credenciales_activas` |
 
 ```bash
 # Ejecutar todas las migraciones
@@ -194,6 +195,7 @@ Registro de pagos (simple).
 
 | Tabla | Propósito |
 |-------|-----------|
+| `credenciales` | API keys y tokens encriptados (AES-256-GCM), con sync a n8n |
 | `workflow_logs` | Logs de ejecución de workflows n8n |
 | `workflow_errors` | Errores capturados en workflows |
 | `twilio_logs` | Status callbacks de Twilio (sent, delivered, failed) |

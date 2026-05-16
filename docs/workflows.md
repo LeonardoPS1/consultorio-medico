@@ -299,3 +299,36 @@ Los workflows están diseñados para correr 24/7:
 - **WF-05**: 7:00 AM, lunes a viernes
 
 > ⚠️ Después de importar, activar manualmente desde la UI de n8n.
+
+## 🔐 Sincronización de Credenciales
+
+El dashboard incluye un **módulo centralizado de credenciales** (solo accesible por administradores) que permite gestionar todas las API keys y tokens desde un solo lugar.
+
+### ¿Cómo funciona?
+
+1. **Admin** va a Configuración → Credenciales
+2. Completa los campos de cada servicio (Twilio, Ollama, n8n, SMTP, etc.)
+3. Al guardar, el sistema:
+   - **Encripta** los valores con AES-256-GCM usando `AUTH_SECRET`
+   - **Almacena** en PostgreSQL (o JSON local en desarrollo)
+   - **Sincroniza** automáticamente con n8n via su API REST
+
+### Servicios sincronizables con n8n
+
+| Servicio | Tipo n8n | ¿Se sincroniza? |
+|----------|----------|----------------|
+| Twilio | `twilioApi` | ✅ Sí |
+| Ollama | `ollamaApi` | ✅ Sí |
+| PostgreSQL | `postgres` | ✅ Sí |
+| SMTP | `smtp` | ✅ Sí |
+| IMAP | `imap` | ✅ Sí |
+| Google Calendar | `googleApi` | ✅ Sí |
+| n8n (API Key) | - | ❌ Usado para la sincronización |
+| Teléfono Doctor | - | ❌ Solo local |
+
+### Seguridad
+
+- Los valores se encriptan antes de guardar en la DB
+- Solo usuarios con rol `admin` pueden ver/editar credenciales
+- Los usuarios no-admin ven los valores enmascarados (`AC****f3a2`)
+- La clave de encriptación es `AUTH_SECRET` (misma que JWT)

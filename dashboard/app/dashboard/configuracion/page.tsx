@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -12,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
   Bot, Twitch as Twilio, Database, Globe, Bell, Shield,
-  CheckCircle2, XCircle, Edit3, Save, Plus, Trash2, ChevronRight,
+  CheckCircle2, XCircle, Edit3, Save, Plus, Trash2, ChevronRight, Key,
 } from 'lucide-react';
 import {
   Dialog,
@@ -23,6 +24,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { ImageUpload } from '@/components/ui/image-upload';
+import CredencialesTab from '@/components/configuracion/credenciales-tab';
 
 // ============================================================
 // Tipos
@@ -112,6 +114,9 @@ export default function ConfiguracionPage() {
 
 function ConfigContent() {
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
+  const userRole = (session?.user as any)?.role;
+  const isAdmin = userRole === 'admin';
   const tabFromUrl = searchParams.get('tab') || 'perfil';
   const [plantillas, setPlantillas] = useState(plantillasIniciales);
   const [showPlantillaModal, setShowPlantillaModal] = useState(false);
@@ -148,6 +153,12 @@ function ConfigContent() {
           <TabsTrigger value="plantillas">Plantillas WhatsApp</TabsTrigger>
           <TabsTrigger value="notificaciones">Notificaciones</TabsTrigger>
           <TabsTrigger value="equipo">Equipo</TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="credenciales" className="text-amber-600 dark:text-amber-400">
+              <Key className="h-4 w-4 mr-1" />
+              Credenciales
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* ======== PERFIL / ORGANIZACIÓN ======== */}
@@ -510,6 +521,13 @@ function ConfigContent() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ======== CREDENCIALES (solo admin) ======== */}
+        {isAdmin && (
+          <TabsContent value="credenciales" className="mt-4">
+            <CredencialesTab />
+          </TabsContent>
+        )}
 
         {/* ======== EQUIPO ======== */}
         <TabsContent value="equipo" className="mt-4">
