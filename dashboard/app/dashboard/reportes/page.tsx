@@ -136,17 +136,20 @@ export default function ReportesPage() {
   .kpi-card .val { font-size:16px; font-weight:700; color:#2563eb; }
   .kpi-card .lbl { font-size:8px; color:#888; text-transform:uppercase; letter-spacing:0.3px; }
   
-  .chart-row { display:flex; align-items:flex-end; justify-content:space-between; gap:6px; height:100px; margin-bottom:12px; }
-  .chart-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; justify-content:flex-end; }
-  .chart-bar { width:100%; border-radius:3px 3px 1px 1px; position:relative; min-height:4px; transition:all 0.3s; }
-  .chart-label { font-size:8px; color:#666; font-weight:500; }
-  .chart-num { font-size:9px; font-weight:700; color:#333; }
+  .chart-box { position:relative; height:130px; margin-bottom:10px; }
+  .chart-line { position:absolute; left:0; right:0; border-top:1px dashed #e0e0e0; }
+  .chart-line span { position:absolute; left:-24px; top:-6px; font-size:8px; color:#aaa; }
+  .chart-bars { position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:space-around; gap:6px; padding: 0 4px; }
+  .chart-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; height:100%; justify-content:flex-end; }
+  .chart-bar { width:100%; border-radius:2px; transition:none; }
+  .chart-num { font-size:9px; font-weight:700; color:#333; line-height:1; }
+  .chart-label { font-size:7px; color:#666; font-weight:500; }
   
-  .hc-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
-  .hc-bar-wrap { flex:1; background:#f0f0f0; border-radius:4px; height:14px; overflow:hidden; }
-  .hc-bar { height:100%; border-radius:4px; transition:width 0.5s; }
-  .hc-label { font-size:9px; min-width:80px; font-weight:500; }
-  .hc-pct { font-size:9px; min-width:30px; text-align:right; color:#666; }
+  .hc-row { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+  .hc-bar-wrap { flex:1; background:#f0f0f0; border-radius:3px; height:12px; overflow:hidden; }
+  .hc-bar { height:100%; border-radius:3px; }
+  .hc-label { font-size:9px; min-width:70px; font-weight:500; }
+  .hc-pct { font-size:9px; min-width:26px; text-align:right; color:#666; font-weight:600; }
 
   table { width:100%; border-collapse:collapse; margin-bottom:10px; }
   th, td { padding:4px 6px; text-align:left; border-bottom:1px solid #eee; font-size:10px; }
@@ -170,21 +173,21 @@ export default function ReportesPage() {
 
 <div class="section-title">📅 Turnos por Día</div>
 <div style="background:#fafafa;border-radius:6px;padding:10px;border:1px solid #eee;margin-bottom:10px">
-  <div style="display:flex;gap:10px;font-size:8px;color:#888;margin-bottom:4px">
-    <span style="flex:1;text-align:center">Días</span>
+  <div class="chart-box">
+    ${[0.25, 0.5, 0.75].map(f => `<div class="chart-line" style="bottom:${f * 100}%"><span>${Math.round(maxTurnos * f)}</span></div>`).join('')}
+    <div class="chart-bars">
+      ${datos.turnos.map((t, i) => {
+        const pct = Math.max((t.cantidad / maxTurnos) * 100, 5);
+        const colores = ['#3b82f6','#60a5fa','#2563eb','#1d4ed8','#93c5fd','#818cf8'];
+        return `<div class="chart-col">
+          <div class="chart-num">${t.cantidad}</div>
+          <div class="chart-bar" style="height:${pct}%;background-color:${colores[i % colores.length]}"></div>
+          <div class="chart-label">${t.dia}</div>
+        </div>`;
+      }).join('')}
+    </div>
   </div>
-  <div class="chart-row">
-    ${datos.turnos.map((t, i) => {
-      const pct = Math.max((t.cantidad / maxTurnos) * 100, 4);
-      const hue = 221 + i * 8;
-      return `<div class="chart-col">
-        <div class="chart-num">${t.cantidad}</div>
-        <div class="chart-bar" style="height:${pct}%;background:linear-gradient(to top,hsl(${hue},80%,50%),hsl(${hue + 5},75%,60%))"></div>
-        <div class="chart-label">${t.dia}</div>
-      </div>`;
-    }).join('')}
-  </div>
-  <div style="display:flex;gap:12px;font-size:8px;color:#888;margin-top:6px;justify-content:center">
+  <div style="display:flex;gap:10px;font-size:7px;color:#888;margin-top:4px;justify-content:center">
     <span>✅ Completados</span><span>❌ Cancelados</span><span>⏳ Ausentes</span>
   </div>
 </div>
@@ -195,7 +198,7 @@ export default function ReportesPage() {
     const colores = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#64748b'];
     return `<div class="hc-row">
       <div class="hc-label">${item.intencion}</div>
-      <div class="hc-bar-wrap"><div class="hc-bar" style="width:${(item.cantidad / maxIntencion) * 100}%;background:${colores[idx]}"></div></div>
+      <div class="hc-bar-wrap"><div class="hc-bar" style="width:${(item.cantidad / maxIntencion) * 100}%;background-color:${colores[idx]}"></div></div>
       <div class="hc-pct">${item.cantidad}</div>
     </div>`;
   }).join('')}
