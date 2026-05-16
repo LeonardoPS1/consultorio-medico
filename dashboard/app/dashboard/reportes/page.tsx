@@ -117,71 +117,108 @@ export default function ReportesPage() {
   const exportarReporte = () => {
     const periodoLabel = periodo === 'semana' ? 'Semanal' : periodo === 'mes' ? 'Mensual' : 'Anual';
     const fechaHoy = new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const maxTurnos = Math.max(...datos.turnos.map(t => t.cantidad)) || 1;
+    const maxIntencion = Math.max(...intencionesData.map(i => i.cantidad)) || 1;
 
     const html = `<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="UTF-8"><title>Reporte ${periodoLabel} - ${fechaHoy}</title>
 <style>
-  @page { margin: 15mm 20mm; }
+  @page { margin: 12mm 15mm; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: 'Helvetica', Arial, sans-serif; color:#1a1a1a; padding:0; font-size:12px; line-height:1.5; }
-  .header { text-align:center; padding-bottom:15px; border-bottom:3px solid #2563eb; margin-bottom:20px; }
-  .header h1 { font-size:20px; color:#2563eb; margin-bottom:4px; }
-  .header p { font-size:11px; color:#666; }
-  h2 { font-size:14px; color:#2563eb; margin:18px 0 8px; border-bottom:1px solid #ddd; padding-bottom:4px; }
-  table { width:100%; border-collapse:collapse; margin-bottom:12px; }
-  th, td { padding:6px 8px; text-align:left; border-bottom:1px solid #eee; font-size:11px; }
-  th { background:#f8f9fa; font-weight:600; color:#333; }
-  .kpi-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:16px; }
-  .kpi-card { background:#f8f9fa; border-radius:6px; padding:10px; text-align:center; }
-  .kpi-card .value { font-size:18px; font-weight:700; color:#2563eb; }
-  .kpi-card .label { font-size:9px; color:#666; text-transform:uppercase; letter-spacing:0.5px; }
-  .footer { margin-top:25px; padding-top:12px; border-top:1px solid #ddd; text-align:center; font-size:10px; color:#999; }
-  .print-btn { text-align:center; margin-top:20px; }
-  .print-btn button { padding:10px 28px; background:#2563eb; color:white; border:none; border-radius:6px; font-size:13px; cursor:pointer; }
+  body { font-family: 'Helvetica', Arial, sans-serif; color:#1a1a1a; font-size:11px; line-height:1.4; }
+  .header { text-align:center; padding-bottom:12px; border-bottom:3px solid #2563eb; margin-bottom:16px; }
+  .header h1 { font-size:22px; color:#2563eb; margin-bottom:2px; }
+  .header p { font-size:10px; color:#666; }
+  .section-title { font-size:13px; color:#2563eb; margin:16px 0 8px; border-bottom:1px solid #e5e5e5; padding-bottom:4px; font-weight:600; }
+  .kpi-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-bottom:14px; }
+  .kpi-card { background:linear-gradient(135deg,#f8f9fa,#fff); border:1px solid #e5e5e5; border-radius:6px; padding:8px; text-align:center; }
+  .kpi-card .val { font-size:16px; font-weight:700; color:#2563eb; }
+  .kpi-card .lbl { font-size:8px; color:#888; text-transform:uppercase; letter-spacing:0.3px; }
+  
+  .chart-row { display:flex; align-items:flex-end; justify-content:space-between; gap:6px; height:100px; margin-bottom:12px; }
+  .chart-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; justify-content:flex-end; }
+  .chart-bar { width:100%; border-radius:3px 3px 1px 1px; position:relative; min-height:4px; transition:all 0.3s; }
+  .chart-label { font-size:8px; color:#666; font-weight:500; }
+  .chart-num { font-size:9px; font-weight:700; color:#333; }
+  
+  .hc-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .hc-bar-wrap { flex:1; background:#f0f0f0; border-radius:4px; height:14px; overflow:hidden; }
+  .hc-bar { height:100%; border-radius:4px; transition:width 0.5s; }
+  .hc-label { font-size:9px; min-width:80px; font-weight:500; }
+  .hc-pct { font-size:9px; min-width:30px; text-align:right; color:#666; }
+
+  table { width:100%; border-collapse:collapse; margin-bottom:10px; }
+  th, td { padding:4px 6px; text-align:left; border-bottom:1px solid #eee; font-size:10px; }
+  th { background:#f5f6f8; font-weight:600; color:#444; font-size:9px; text-transform:uppercase; letter-spacing:0.3px; }
+
+  .footer { margin-top:20px; padding-top:10px; border-top:1px solid #ddd; text-align:center; font-size:9px; color:#999; }
+  .print-btn { text-align:center; margin-top:16px; }
+  .print-btn button { padding:8px 24px; background:linear-gradient(135deg,#2563eb,#1d4ed8); color:white; border:none; border-radius:6px; font-size:12px; cursor:pointer; box-shadow:0 2px 8px #2563eb40; }
   @media print { .print-btn { display:none; } }
 </style></head>
 <body>
 <div class="header">
-  <h1>Reporte ${periodoLabel}</h1>
-  <p>Generado el ${fechaHoy} · Consultorio Médico</p>
+  <h1>📊 Reporte ${periodoLabel}</h1>
+  <p>${fechaHoy} · Consultorio Médico · Sistema de Gestión</p>
 </div>
 
-<h2>Métricas Generales</h2>
+<div class="section-title">📈 Métricas Generales</div>
 <div class="kpi-grid">
-  ${datos.metricas.map(m => `<div class="kpi-card"><div class="value">${m.valor}</div><div class="label">${m.titulo}</div><div style="font-size:9px;color:${m.up ? '#10b981' : '#ef4444'}">${m.cambio}</div></div>`).join('')}
+  ${datos.metricas.map(m => `<div class="kpi-card"><div class="val">${m.valor}</div><div class="lbl">${m.titulo}</div><div style="font-size:8px;color:${m.up ? '#10b981' : '#ef4444'};margin-top:2px">${m.cambio}</div></div>`).join('')}
 </div>
 
-<h2>Turnos por Día</h2>
-<table>
-  <tr><th>Día</th><th>Total</th><th>Completados</th><th>Cancelados</th><th>Ausentes</th></tr>
-  ${datos.turnos.map(t => `<tr><td>${t.dia}</td><td>${t.cantidad}</td><td>${t.completados}</td><td>${t.cancelados}</td><td>${t.ausentes}</td></tr>`).join('')}
-</table>
+<div class="section-title">📅 Turnos por Día</div>
+<div style="background:#fafafa;border-radius:6px;padding:10px;border:1px solid #eee;margin-bottom:10px">
+  <div style="display:flex;gap:10px;font-size:8px;color:#888;margin-bottom:4px">
+    <span style="flex:1;text-align:center">Días</span>
+  </div>
+  <div class="chart-row">
+    ${datos.turnos.map((t, i) => {
+      const pct = Math.max((t.cantidad / maxTurnos) * 100, 4);
+      const hue = 221 + i * 8;
+      return `<div class="chart-col">
+        <div class="chart-num">${t.cantidad}</div>
+        <div class="chart-bar" style="height:${pct}%;background:linear-gradient(to top,hsl(${hue},80%,50%),hsl(${hue + 5},75%,60%))"></div>
+        <div class="chart-label">${t.dia}</div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div style="display:flex;gap:12px;font-size:8px;color:#888;margin-top:6px;justify-content:center">
+    <span>✅ Completados</span><span>❌ Cancelados</span><span>⏳ Ausentes</span>
+  </div>
+</div>
 
-<h2>WhatsApp</h2>
+<div class="section-title">💬 Intenciones de Mensajes</div>
+<div style="background:#fafafa;border-radius:6px;padding:10px;border:1px solid #eee;margin-bottom:10px">
+  ${intencionesData.map((item, idx) => {
+    const colores = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#64748b'];
+    return `<div class="hc-row">
+      <div class="hc-label">${item.intencion}</div>
+      <div class="hc-bar-wrap"><div class="hc-bar" style="width:${(item.cantidad / maxIntencion) * 100}%;background:${colores[idx]}"></div></div>
+      <div class="hc-pct">${item.cantidad}</div>
+    </div>`;
+  }).join('')}
+</div>
+
+<div class="section-title">📱 WhatsApp</div>
 <table>
   <tr><th>Métrica</th><th>Valor</th><th>Cambio</th></tr>
-  ${datos.whatsapp.map(w => `<tr><td>${w.titulo}</td><td>${w.valor}</td><td style="color:${w.up ? '#10b981' : '#ef4444'}">${w.cambio}</td></tr>`).join('')}
+  ${datos.whatsapp.map(w => `<tr><td>${w.titulo}</td><td style="font-weight:600">${w.valor}</td><td style="color:${w.up ? '#10b981' : '#ef4444'}">${w.cambio}</td></tr>`).join('')}
 </table>
 
-<h2>Intenciones de Mensajes</h2>
-<table>
-  <tr><th>Intención</th><th>Cantidad</th><th>Porcentaje</th></tr>
-  ${intencionesData.map(i => `<tr><td>${i.intencion}</td><td>${i.cantidad}</td><td>${i.porcentaje}%</td></tr>`).join('')}
-</table>
-
-<h2>Pacientes por Obra Social</h2>
+<div class="section-title">👥 Pacientes por Obra Social</div>
 <table>
   <tr><th>Obra Social</th><th>Cantidad</th></tr>
-  ${pacientesPorObraSocial.map(p => `<tr><td>${p.obra}</td><td>${p.cantidad}</td></tr>`).join('')}
+  ${pacientesPorObraSocial.map(p => `<tr><td>${p.obra}</td><td style="font-weight:600">${p.cantidad}</td></tr>`).join('')}
 </table>
 
 <div class="footer">
-  <strong>Consultorio Médico</strong> · Sistema de Gestión · Reporte generado automáticamente
+  <strong>Consultorio Médico</strong> · Reporte generado automáticamente el ${fechaHoy}
 </div>
 <div class="print-btn">
-  <button onclick="window.print()">🖨️ Guardar como PDF / Imprimir</button>
-  <p style="font-size:11px;color:#888;margin-top:6px">Seleccioná "Guardar como PDF" en el diálogo de impresión</p>
+  <button onclick="window.print()">🖨️ Guardar como PDF</button>
+  <p style="font-size:10px;color:#888;margin-top:4px">Seleccioná "Guardar como PDF" en el diálogo de impresión</p>
 </div>
 </body></html>`;
 
@@ -192,7 +229,7 @@ export default function ReportesPage() {
     } else {
       toast({ title: '❌ Error', description: 'Permití ventanas emergentes', variant: 'destructive' });
     }
-    toast({ title: '📊 Reporte generado', description: `Período ${periodoLabel} - ${fechaHoy}` });
+    toast({ title: '📊 Reporte generado', description: `Período ${periodoLabel} - Abrí la ventana para guardar como PDF` });
   };
 
   return (
@@ -284,35 +321,48 @@ export default function ReportesPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-end justify-between gap-2 h-48">
-                  {datos.turnos.map((t) => {
+                <div className="flex items-end justify-between gap-1.5 h-56 px-1">
+                  {datos.turnos.map((t, idx) => {
                     const maxVal = MaxTurnos || 1;
-                    const altura = Math.max((t.cantidad / maxVal) * 100, t.cantidad > 0 ? 4 : 0);
+                    const altura = Math.max((t.cantidad / maxVal) * 100, t.cantidad > 0 ? 6 : 0);
+                    const grados = 180 + idx * 15;
                     return (
-                      <div key={t.dia} className="flex flex-col items-center gap-1 flex-1 h-full justify-end">
-                        <span className="text-xs font-medium text-muted-foreground">{t.cantidad}</span>
+                      <div key={t.dia} className="flex flex-col items-center gap-1 flex-1 h-full justify-end group">
+                        <span className="text-xs font-semibold text-foreground/80 transition-all group-hover:scale-110">{t.cantidad}</span>
                         <div
-                          className="w-full rounded-md bg-primary/80 hover:bg-primary transition-colors relative group"
-                          style={{ height: `${altura}%`, minHeight: t.cantidad > 0 ? '12px' : 0 }}
+                          className="w-full relative cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:shadow-lg"
+                          style={{
+                            height: `${altura}%`,
+                            minHeight: t.cantidad > 0 ? '16px' : 0,
+                            background: `linear-gradient(to top, hsl(221.2 83.2% 53.3%), hsl(${221.2 + idx * 5} ${70 + idx * 5}% ${55 + idx * 3}%))`,
+                            borderRadius: '4px 4px 2px 2px',
+                            boxShadow: '0 2px 8px hsl(221.2 83.2% 53.3% / 0.25)',
+                          }}
                         >
-                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md pointer-events-none">
-                            {t.completados} completados · {t.cancelados} cancelados
+                          {/* Brillito en la parte superior */}
+                          <div className="absolute inset-x-[15%] top-0 h-1/3 rounded-full bg-white/20 blur-[1px]" />
+                          {/* Tooltip */}
+                          <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs rounded-lg px-2.5 py-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap shadow-lg border border-border/50 pointer-events-none z-10">
+                            <div className="font-medium">{t.cantidad} turnos</div>
+                            <div className="text-[10px] text-muted-foreground mt-0.5">
+                              ✅ {t.completados} · ❌ {t.cancelados} · ⏳ {t.ausentes} ausentes
+                            </div>
                           </div>
                         </div>
-                        <span className="text-xs text-muted-foreground">{t.dia}</span>
+                        <span className="text-[10px] text-muted-foreground font-medium">{t.dia}</span>
                       </div>
                     );
                   })}
                 </div>
-                <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" /> Completados
+                <div className="flex items-center justify-center gap-5 mt-4 text-xs text-muted-foreground border-t pt-3">
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" /> Completados
                   </span>
-                  <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-amber-500" /> Cancelados
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded-sm bg-amber-500" /> Cancelados
                   </span>
-                  <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-red-500" /> Ausentes
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded-sm bg-red-500" /> Ausentes
                   </span>
                 </div>
               </CardContent>
@@ -327,23 +377,33 @@ export default function ReportesPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {intencionesData.map((item) => {
+                <div className="space-y-5">
+                  {intencionesData.map((item, idx) => {
                     const Icon = item.icon;
+                    const colores = [
+                      'from-blue-500 to-blue-600', 'from-emerald-500 to-emerald-600',
+                      'from-amber-500 to-amber-600', 'from-purple-500 to-purple-600',
+                      'from-red-500 to-red-600', 'from-slate-500 to-slate-600',
+                    ];
                     return (
                       <div key={item.intencion}>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="flex items-center gap-2">
-                            <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                        <div className="flex justify-between text-sm mb-1.5">
+                          <span className="flex items-center gap-2 font-medium">
+                            <div className={`h-6 w-6 rounded-md bg-gradient-to-br ${colores[idx]} flex items-center justify-center`}>
+                              <Icon className="h-3 w-3 text-white" />
+                            </div>
                             {item.intencion}
                           </span>
-                          <span className="text-muted-foreground">
-                            {item.cantidad} ({item.porcentaje}%)
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">{item.cantidad}</span>
+                            <span className="text-[11px] font-mono px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
+                              {item.porcentaje}%
+                            </span>
+                          </div>
                         </div>
-                        <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                        <div className="h-3 bg-muted rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-primary rounded-full transition-all duration-500"
+                            className={`h-full rounded-full bg-gradient-to-r ${colores[idx]} transition-all duration-700 ease-out`}
                             style={{ width: `${item.porcentaje}%` }}
                           />
                         </div>
