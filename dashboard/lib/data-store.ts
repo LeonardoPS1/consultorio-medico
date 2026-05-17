@@ -262,7 +262,7 @@ export async function getConversaciones(
       .leftJoin(pacientes, eq(conversaciones.pacienteId, pacientes.id))
       .orderBy(desc(conversaciones.ultimaInteraccion));
 
-    const conditions = [];
+    const conditions: any[] = [];
     if (options?.estado) {
       conditions.push(eq(conversaciones.estado, options.estado));
     }
@@ -277,6 +277,11 @@ export async function getConversaciones(
           like(conversaciones.ultimoMensaje, `%${options.search}%`)
         )
       );
+    }
+
+    // Aplicar filtros a la query
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
     }
 
     if (options?.limit) {

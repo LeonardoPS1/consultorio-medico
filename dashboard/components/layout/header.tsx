@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -105,12 +105,16 @@ export function Header() {
   const router = useRouter();
   const [notificaciones, setNotificaciones] = useState(notificacionesMock);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [orgNombre, setOrgNombre] = useState('Consultorio Médico');
   const [orgFirma, setOrgFirma] = useState('Dr.');
 
+  // Evitar hydration mismatch del theme toggle
+  useEffect(() => { setMounted(true); }, []);
+
   // Cargar datos desde organización
-  useEffect(() => {
+  const cargarOrg = useCallback(() => {
     fetch('/api/organization')
       .then(r => r.json())
       .then(res => {
@@ -122,6 +126,12 @@ export function Header() {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    cargarOrg();
+    window.addEventListener('organization-updated', cargarOrg);
+    return () => window.removeEventListener('organization-updated', cargarOrg);
+  }, [cargarOrg]);
 
   const user = session?.user;
   const nombreCompleto = user?.name || 'Dr.';
@@ -165,20 +175,22 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Toggle tema */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          title="Cambiar tema"
-          className="h-9 w-9"
-        >
-          {theme === 'dark' ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
-          )}
-        </Button>
+        {/* Toggle tema (solo después de hidratación para evitar mismatch) */}
+        {mounted && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            title="Cambiar tema"
+            className="h-9 w-9"
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </Button>
+        )}
 
         {/* Notificaciones */}
         <DropdownMenu open={notifOpen} onOpenChange={setNotifOpen}>

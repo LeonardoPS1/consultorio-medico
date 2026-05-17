@@ -19,7 +19,7 @@ import {
   LogOut,
   Activity,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { signOut } from 'next-auth/react';
 
 interface NavItem {
@@ -43,6 +43,22 @@ const navItems: NavItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [orgNombre, setOrgNombre] = useState('Consultorio');
+
+  const cargarOrg = useCallback(() => {
+    fetch('/api/organization')
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.data?.nombre) setOrgNombre(res.data.nombre);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    cargarOrg();
+    window.addEventListener('organization-updated', cargarOrg);
+    return () => window.removeEventListener('organization-updated', cargarOrg);
+  }, [cargarOrg]);
 
   return (
     <aside
@@ -51,43 +67,27 @@ export function Sidebar() {
         collapsed ? 'w-16' : 'w-64'
       )}
     >
-      {/* Logo */}
-      <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-muted">
+      {/* Logo fijo */}
+      <div className="flex h-[172px] items-center justify-center px-2 border-b border-sidebar-muted">
         {!collapsed && (
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <svg
-                className="h-4 w-4 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 52.59 52.59 0 0 0-.49-6.347M5.207 7.562a3.375 3.375 0 1 1 5.586 0m0 0c.26.36.455.767.586 1.197m0 0a3.375 3.375 0 1 1 5.586 0M12 20.904V16.5"
-                />
-              </svg>
+          <div className="flex flex-col items-center">
+            <div className="h-40 w-40 shrink-0">
+              <img
+                src="/aicoremed_dark_1200.svg"
+                alt={orgNombre}
+                className="h-full w-full object-cover"
+              />
             </div>
-            <span className="font-semibold text-sm">Consultorio</span>
+            <span className="font-semibold text-sm text-center truncate max-w-[160px] leading-none -mt-1">{orgNombre}</span>
           </div>
         )}
         {collapsed && (
-          <div className="mx-auto h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <svg
-              className="h-4 w-4 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 52.59 52.59 0 0 0-.49-6.347M5.207 7.562a3.375 3.375 0 1 1 5.586 0m0 0c.26.36.455.767.586 1.197m0 0a3.375 3.375 0 1 1 5.586 0M12 20.904V16.5"
-              />
-            </svg>
+          <div className="mx-auto">
+            <img
+              src="/aicoremed_dark_1200.svg"
+              alt={orgNombre}
+              className="h-20 w-20 object-cover"
+            />
           </div>
         )}
       </div>
@@ -96,7 +96,9 @@ export function Sidebar() {
       <ScrollArea className="flex-1 py-4">
         <nav className="space-y-1 px-2">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            const isActive = item.href === '/dashboard'
+              ? pathname === '/dashboard'
+              : pathname === item.href || pathname.startsWith(item.href + '/');
             const Icon = item.icon;
 
             return (

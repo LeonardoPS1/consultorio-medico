@@ -115,8 +115,8 @@ Todo sin intervencion humana, todo en tu VPS, todo en espanol argentino.
 ```bash
 git clone https://github.com/tu-usuario/consultorio-medico.git
 cd consultorio-medico/dashboard
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 Abrir `http://localhost:3000` — **sin PostgreSQL, sin Ollama, sin Twilio**. Usa datos mock automaticamente.
@@ -137,7 +137,7 @@ for f in database/migrations/0*.sql; do
 done
 
 # 3. Dashboard
-cd dashboard && npm install && npm run build
+cd dashboard && pnpm install && pnpm run build
 
 # 4. n8n → Importar workflows de n8n-workflows/current/
 # 5. Ollama → docker exec -it ollama ollama pull mistral

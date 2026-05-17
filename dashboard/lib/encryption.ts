@@ -6,23 +6,17 @@
  * - decrypt(text) → texto original
  */
 
+import crypto from 'crypto';
+
 const ALGORITHM = 'aes-256-gcm';
-const KEY_LENGTH = 32; // 256 bits
+const DEV_FALLBACK_SALT = 'dev-fallback-key-consultorio-medico';
 
 /**
  * Obtiene la clave de encriptación desde AUTH_SECRET.
  * Si no está configurada, usa un fallback para desarrollo.
  */
 function getEncryptionKey(): Buffer {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) {
-    // En desarrollo, usar un hash determinístico
-    const crypto = require('crypto');
-    return crypto.createHash('sha256').update('dev-fallback-key-consultorio-medico').digest();
-  }
-
-  const crypto = require('crypto');
-  // AUTH_SECRET puede ser cualquier string, lo hasheamos a 256 bits
+  const secret = process.env.AUTH_SECRET || DEV_FALLBACK_SALT;
   return crypto.createHash('sha256').update(secret).digest();
 }
 
@@ -31,7 +25,6 @@ function getEncryptionKey(): Buffer {
  * Retorna: `base64(iv):base64(tag):base64(ciphertext)`
  */
 export function encrypt(text: string): string {
-  const crypto = require('crypto');
   const key = getEncryptionKey();
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
@@ -49,30 +42,24 @@ export function encrypt(text: string): string {
  */
 export function decrypt(encryptedText: string): string {
   try {
-    const crypto = require('crypto');
     const key = getEncryptionKey();
     const parts = encryptedText.split(':');
 
     if (parts.length !== 3) {
-      // Si no tiene el formato esperado, asumimos texto plano
-      // (útil para migraciones o datos legacy)
-      return encryptedText;
+      return encryptedText; // texto plano, migrations legacy
     }
 
     const iv = Buffer.from(parts[0], 'base64');
     const tag = Buffer.from(parts[1], 'base64');
-    const encrypted = parts[2];
 
     const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
     decipher.setAuthTag(tag);
 
-    let decrypted = decipher.update(encrypted, 'base64', 'utf8');
+    let decrypted = decipher.update(parts[2], 'base64', 'utf8');
     decrypted += decipher.final('utf8');
     return decrypted;
   } catch {
-    // Si falla la desencriptación, devolvemos el texto original
-    // (por ejemplo si es un valor legacy no encriptado)
-    return encryptedText;
+    return encryptedText; // valor legacy no encriptado
   }
 }
 

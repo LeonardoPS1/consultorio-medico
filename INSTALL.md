@@ -23,7 +23,7 @@ cd consultorio-medico
 
 # Dashboard
 cd dashboard
-npm install
+pnpm install
 cp .env.example .env.local
 # Editar .env.local con tus datos
 ```
@@ -46,7 +46,7 @@ done
 
 ```bash
 cd dashboard
-npm run dev
+pnpm run dev
 # Abrir http://localhost:3000
 ```
 
@@ -116,8 +116,8 @@ El dashboard funciona **sin PostgreSQL, sin Ollama y sin Twilio**:
 Solo necesitás:
 ```bash
 cd dashboard
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 ---
@@ -137,8 +137,8 @@ done
 
 # 3. Dashboard
 cd dashboard
-npm install
-npm run build
+pnpm install
+pnpm run build
 
 # 4. Configurar Dokploy para que ejecute:
 # node .next/standalone/server.js

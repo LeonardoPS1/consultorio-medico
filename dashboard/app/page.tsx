@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export default function LoginPage() {
   const router = useRouter();
+  const [orgNombre, setOrgNombre] = useState('Consultorio Médico');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/organization')
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.data?.nombre) setOrgNombre(res.data.nombre);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,22 +59,14 @@ export default function LoginPage() {
 
       <Card className="w-full max-w-md relative animate-in">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-primary flex items-center justify-center">
-            <svg
-              className="h-8 w-8 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 52.59 52.59 0 0 0-.49-6.347M5.207 7.562a3.375 3.375 0 1 1 5.586 0m0 0c.26.36.455.767.586 1.197m0 0a3.375 3.375 0 1 1 5.586 0M12 20.904V16.5"
-              />
-            </svg>
+          <div className="mx-auto h-[360px] w-[360px]">
+            <img
+              src="/aicoremed_dark_1200.svg"
+              alt={orgNombre}
+              className="h-full w-full object-cover"
+            />
           </div>
-          <CardTitle className="text-2xl font-bold">Consultorio Médico</CardTitle>
+          <CardTitle className="text-2xl font-bold">{orgNombre}</CardTitle>
           <CardDescription>Ingresá a tu panel de gestión</CardDescription>
         </CardHeader>
         <CardContent>
@@ -106,7 +108,7 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Consultorio Médico. Todos los derechos reservados.
+            © {new Date().getFullYear()} {orgNombre}. Todos los derechos reservados.
           </p>
         </CardContent>
       </Card>

@@ -219,7 +219,7 @@ async function checkPostgres(): Promise<boolean> {
   try {
     const { db } = await import('@/lib/db');
     const { sql } = await import('drizzle-orm');
-    await db.execute(sql`SELECT 1 FROM credenciales LIMIT 1`);
+    await db.execute(sql`SELECT 1`);
     pgAvailable = true;
     return true;
   } catch {
