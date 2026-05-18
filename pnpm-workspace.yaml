@@ -1,2 +1,4 @@
 packages:
-  - 'dashboard'
+  - dashboard
+
+onlyBuiltDependencies: sharp

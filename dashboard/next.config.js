@@ -11,10 +11,12 @@ const nextConfig = withBundleAnalyzer({
   output: 'standalone',
   // Variables de entorno que expone al cliente
   env: {
-    NEXT_PUBLIC_APP_NAME: 'Consultorio Médico',
-    NEXT_PUBLIC_APP_VERSION: '0.1.0',
+    NEXT_PUBLIC_APP_NAME: 'AiCoreMed',
+    NEXT_PUBLIC_APP_VERSION: '0.2.0',
+    NEXT_PUBLIC_TENANT_NAME: process.env.NEXT_PUBLIC_TENANT_NAME || 'Consultorio',
+    NEXT_PUBLIC_TENANT_PRIMARY: process.env.NEXT_PUBLIC_TENANT_PRIMARY || '#2563eb',
   },
-  // ─── Headers de seguridad (capa 2: build-time) ─────────
+  // ─── Headers de seguridad + Service Worker ─────────────
   async headers() {
     return [
       {
@@ -25,6 +27,14 @@ const nextConfig = withBundleAnalyzer({
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           { key: 'X-DNS-Prefetch-Control', value: 'off' },
+        ],
+      },
+      // Cache service worker para que siempre esté fresco
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Service-Worker-Allowed', value: '/' },
         ],
       },
     ];

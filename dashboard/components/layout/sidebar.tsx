@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { signOut } from 'next-auth/react';
+import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 
 interface NavItem {
   title: string;
@@ -43,13 +44,13 @@ const navItems: NavItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const [orgNombre, setOrgNombre] = useState('Consultorio');
+  const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
 
   const cargarOrg = useCallback(() => {
     fetch('/api/organization')
       .then((r) => r.json())
       .then((res) => {
-        if (res.data?.nombre) setOrgNombre(res.data.nombre);
+        setOrgNombre(resolveTenantName(res.data?.nombre));
       })
       .catch(() => console.warn('[Sidebar] Error al cargar organización'));
   }, []);

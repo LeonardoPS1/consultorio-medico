@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="32" fill="url(#bg)"/>
+  <!-- Cruz médica estilizada -->
+  <path d="M88 48h16v36h36v16h-36v36H88V100H52V84h36V48z" fill="#ffffff" opacity="0.95"/>
+  <!-- Check mark de IA -->
+  <circle cx="144" cy="48" r="22" fill="#10b981"/>
+  <path d="M134 48l7 7 13-13" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

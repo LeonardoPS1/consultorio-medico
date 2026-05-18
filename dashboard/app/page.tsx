@@ -8,10 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldAlert, Smartphone } from 'lucide-react';
+import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [orgNombre, setOrgNombre] = useState('Consultorio Médico');
+  const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [token2fa, setToken2fa] = useState('');
@@ -23,7 +24,7 @@ export default function LoginPage() {
     fetch('/api/organization')
       .then((r) => r.json())
       .then((res) => {
-        if (res.data?.nombre) setOrgNombre(res.data.nombre);
+        setOrgNombre(resolveTenantName(res.data?.nombre));
       })
       .catch(() => console.warn('[Login] Error al cargar organización'));
   }, []);

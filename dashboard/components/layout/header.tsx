@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Bell, Moon, Sun, Calendar, MessageSquare, Syringe, AlertTriangle, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getInitials, formatRelative } from '@/lib/utils';
+import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -107,7 +108,7 @@ export function Header() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [orgNombre, setOrgNombre] = useState('Consultorio Médico');
+  const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
   const [orgFirma, setOrgFirma] = useState('Dr.');
 
   // Evitar hydration mismatch del theme toggle
@@ -121,7 +122,7 @@ export function Header() {
         if (res.data) {
           if (res.data.avatarUrl) setAvatarUrl(res.data.avatarUrl);
           if (res.data.firmaNombre) setOrgFirma(res.data.firmaNombre);
-          if (res.data.nombre) setOrgNombre(res.data.nombre);
+          setOrgNombre(resolveTenantName(res.data?.nombre));
         }
       })
       .catch(() => console.warn('[Header] Error al cargar datos'));
