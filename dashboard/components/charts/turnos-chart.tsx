@@ -65,7 +65,7 @@ export default function TurnosChart({ data }: Props) {
             radius={[2, 2, 0, 0]}
             maxBarSize={40}
             animationBegin={0}
-            animationDuration={600}
+            animationDuration={300}
             animationEasing="ease-out"
           />
           <Bar
@@ -74,8 +74,8 @@ export default function TurnosChart({ data }: Props) {
             fill="#f59e0b"
             radius={[2, 2, 0, 0]}
             maxBarSize={40}
-            animationBegin={100}
-            animationDuration={600}
+            animationBegin={50}
+            animationDuration={300}
             animationEasing="ease-out"
           />
           <Bar
@@ -84,8 +84,8 @@ export default function TurnosChart({ data }: Props) {
             fill="#ef4444"
             radius={[2, 2, 0, 0]}
             maxBarSize={40}
-            animationBegin={200}
-            animationDuration={600}
+            animationBegin={100}
+            animationDuration={300}
             animationEasing="ease-out"
           />
         </BarChart>

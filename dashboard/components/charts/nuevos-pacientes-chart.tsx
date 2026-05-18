@@ -60,7 +60,7 @@ export default function NuevosPacientesChart({ data }: Props) {
             radius={[3, 3, 0, 0]}
             maxBarSize={48}
             animationBegin={0}
-            animationDuration={700}
+            animationDuration={300}
             animationEasing="ease-out"
           />
         </BarChart>

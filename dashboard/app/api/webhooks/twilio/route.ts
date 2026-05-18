@@ -10,17 +10,34 @@ import {
 
 /**
  * Valida la firma de Twilio para asegurar que el request es legítimo.
- * Si el header X-Twilio-Signature no está presente (dev/testing), se salta la validación.
+ *
+ - En producción: la validación es OBLIGATORIA. Si falta firma o token, se rechaza.
+ - En desarrollo: si no hay TWILIO_AUTH_TOKEN configurado, se salta (útil para testing local).
  */
 function validateTwilioRequest(
   request: NextRequest,
   params: Record<string, string>
 ): boolean {
+  const isProduction = process.env.NODE_ENV === 'production';
   const signature = request.headers.get('x-twilio-signature');
-  if (!signature) return true; // Skip en desarrollo/testing
+
+  // En producción, la firma es obligatoria
+  if (isProduction && !signature) {
+    console.error('[Twilio] ⚠️ Request sin firma en producción — rechazado');
+    return false;
+  }
+
+  // En desarrollo, si no hay firma ni token, skip
+  if (!isProduction && !signature) {
+    return true;
+  }
 
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   if (!authToken) {
+    if (isProduction) {
+      console.error('[Twilio] ⚠️ TWILIO_AUTH_TOKEN no configurado en producción');
+      return false;
+    }
     console.warn('[Twilio] TWILIO_AUTH_TOKEN no configurado — saltando validación');
     return true;
   }
@@ -30,7 +47,7 @@ function validateTwilioRequest(
   const proto = request.headers.get('x-forwarded-proto') || 'https';
   const url = `${proto}://${host}${request.nextUrl.pathname}`;
 
-  return validateRequest(authToken, signature, url, params);
+  return validateRequest(authToken, signature as string, url, params);
 }
 
 /**
@@ -67,6 +84,11 @@ export async function POST(request: NextRequest) {
       profileName = json.ProfileName || json.profileName || null;
       messageSid = json.MessageSid || json.messageSid || null;
       to = json.To || json.to || null;
+
+      // Recolectar params también para JSON (necesario para validación de firma)
+      Object.entries(json).forEach(([key, value]) => {
+        if (typeof value === 'string') params[key] = value;
+      });
     } else {
       const formData = await request.formData();
       from = (formData.get('From') as string) || '';
@@ -153,7 +175,7 @@ export async function POST(request: NextRequest) {
       twilioStatus: 'received',
     });
 
-    console.log(`[Twilio] Mensaje recibido de ${telefono}: "${body.substring(0, 80)}..."`);
+    console.log(`[Twilio] Mensaje recibido — ${conversacionId ? 'conversación existente' : 'nueva conversación'}`);
 
     // Responder con TwiML si es una request de Twilio real
     const acceptHeader = request.headers.get('accept') || '';
@@ -182,8 +204,12 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('[Twilio Webhook] Error:', error);
+    const isProduction = process.env.NODE_ENV === 'production';
     return NextResponse.json(
-      { error: 'Error al procesar mensaje entrante', details: (error as Error).message },
+      {
+        error: 'Error al procesar mensaje entrante',
+        ...(isProduction ? {} : { details: (error as Error).message }),
+      },
       { status: 500 }
     );
   }

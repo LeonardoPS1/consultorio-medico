@@ -73,18 +73,18 @@ export default function VolumenWhatsAppChart({ data }: Props) {
             radius={[3, 3, 0, 0]}
             maxBarSize={28}
             animationBegin={0}
-            animationDuration={600}
+            animationDuration={300}
             animationEasing="ease-out"
           />
           <Bar
             dataKey="enviados"
             name="Enviados"
-            fill="hsl(var(--primary))"
-            fillOpacity={0.4}
+            fill="hsl(142, 76%, 36%)"
+            fillOpacity={0.7}
             radius={[3, 3, 0, 0]}
             maxBarSize={28}
-            animationBegin={150}
-            animationDuration={600}
+            animationBegin={75}
+            animationDuration={300}
             animationEasing="ease-out"
           />
         </BarChart>

@@ -128,18 +128,18 @@ export default function ComparativaMensual({ data, periodo }: Props) {
                   radius={[3, 3, 0, 0]}
                   maxBarSize={32}
                   animationBegin={0}
-                  animationDuration={600}
+                  animationDuration={300}
                   animationEasing="ease-out"
                 />
                 <Bar
                   dataKey="anterior"
                   name={pALabel}
-                  fill="hsl(var(--primary))"
+                  fill="hsl(142, 76%, 36%)"
                   fillOpacity={0.3}
                   radius={[3, 3, 0, 0]}
                   maxBarSize={32}
-                  animationBegin={150}
-                  animationDuration={600}
+                  animationBegin={100}
+                  animationDuration={300}
                   animationEasing="ease-out"
                 />
               </BarChart>
@@ -210,7 +210,7 @@ export default function ComparativaMensual({ data, periodo }: Props) {
                     <TrendingDown className="h-4 w-4 text-red-500" />
                   )}
                   <span className={`text-sm font-semibold ${w.up ? 'text-emerald-600' : 'text-red-600'}`}>
-                    +{w.cambio}
+                    {w.cambio}
                   </span>
                 </div>
               </div>

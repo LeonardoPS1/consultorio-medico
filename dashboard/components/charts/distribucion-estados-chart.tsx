@@ -62,7 +62,7 @@ export default function DistribucionEstadosChart({ data }: Props) {
             radius={[4, 4, 0, 0]}
             maxBarSize={56}
             animationBegin={0}
-            animationDuration={700}
+            animationDuration={300}
             animationEasing="ease-out"
           >
             {chartData.map((entry, idx) => (

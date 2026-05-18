@@ -156,7 +156,7 @@
       "main": [[{ "node": "Ollama - Responder con Horarios", "type": "main", "index": 0 }]]
     },
     "Ollama - Responder con Horarios": {
-      "main": [[{ "node": "Twilio - Confirmación Turno", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "PG - Crear Turno", "type": "main", "index": 0 }]]
     },
     "PG - Crear Turno": {
       "main": [[{ "node": "Twilio - Confirmación Turno", "type": "main", "index": 0 }]]

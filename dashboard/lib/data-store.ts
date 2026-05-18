@@ -123,7 +123,11 @@ function readJSON<T>(filePath: string, defaultData: T): T {
 
 function writeJSON<T>(filePath: string, data: T): void {
   ensureDataDir();
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  // Atomic write: primero a archivo temporal, luego renombrar
+  // Esto previene corrupción si dos requests concurrentes escriben
+  const tmpPath = filePath + '.tmp.' + process.pid;
+  fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+  fs.renameSync(tmpPath, filePath);
 }
 
 // ============================================================

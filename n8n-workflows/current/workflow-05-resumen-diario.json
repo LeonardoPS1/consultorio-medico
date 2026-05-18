@@ -63,11 +63,33 @@
       }
     },
     {
+      "id": "merge-summary-data",
+      "name": "Merge - Combinar Datos",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [500, 300],
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      }
+    },
+    {
+      "id": "aggregate-summary",
+      "name": "Code - Agrupar Datos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 500],
+      "parameters": {
+        "code": "// Agrupar todos los items del merge en un solo objeto con arrays\nconst turnos = $('PG - Turnos de Hoy').all().map(i => i.json);\nconst pacientes = $('PG - Pacientes Nuevos (24h)').all().map(i => i.json);\nconst pendientes = $('PG - Mensajes sin Responder').all().map(i => i.json);\nconst recetas = $('PG - Recetas x Autorizar').all().map(i => i.json);\n\nreturn [{\n  turnos: turnos,\n  pacientes_nuevos: pacientes,\n  mensajes_pendientes: pendientes,\n  recetas_recientes: recetas,\n  total_turnos: turnos.length,\n  total_pacientes: pacientes.length,\n  total_pendientes: pendientes.length,\n  total_recetas: recetas.length\n}];"
+      }
+    },
+    {
       "id": "generate-summary",
       "name": "Ollama - Generar Resumen",
       "type": "n8n-nodes-base.ollama",
       "typeVersion": 2,
-      "position": [500, 400],
+      "position": [750, 400],
       "parameters": {
         "model": "mistral",
         "temperature": 0.3,
@@ -80,7 +102,7 @@
             },
             {
               "role": "user",
-              "content": "={{ 'Generá un resumen diario para el médico con esta información:\\n\\nTURNOS DE HOY:\\n' + JSON.stringify($json.turnos) + '\\n\\nPACIENTES NUEVOS:\\n' + JSON.stringify($json.nuevos) + '\\n\\nMENSAJES PENDIENTES:\\n' + JSON.stringify($json.pendientes) + '\\n\\nRECETAS RECIENTES:\\n' + JSON.stringify($json.recetas) + '\\n\\nFormatealo lindo para leer.' }}"
+              "content": "={{ 'Generá un resumen diario para el médico con esta información:\\n\\nTURNOS DE HOY (' + $json.total_turnos + '):\\n' + JSON.stringify($json.turnos) + '\\n\\nPACIENTES NUEVOS (' + $json.total_pacientes + '):\\n' + JSON.stringify($json.pacientes_nuevos) + '\\n\\nMENSAJES PENDIENTES (' + $json.total_pendientes + '):\\n' + JSON.stringify($json.mensajes_pendientes) + '\\n\\nRECETAS RECIENTES (' + $json.total_recetas + '):\\n' + JSON.stringify($json.recetas_recientes) + '\\n\\nFormatealo lindo para leer.' }}"
             }
           ]
         }
@@ -140,15 +162,21 @@
       ]
     },
     "PG - Turnos de Hoy": {
-      "main": [[{ "node": "Ollama - Generar Resumen", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Merge - Combinar Datos", "type": "main", "index": 0 }]]
     },
     "PG - Pacientes Nuevos (24h)": {
-      "main": [[{ "node": "Ollama - Generar Resumen", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Merge - Combinar Datos", "type": "main", "index": 0 }]]
     },
     "PG - Mensajes sin Responder": {
-      "main": [[{ "node": "Ollama - Generar Resumen", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Merge - Combinar Datos", "type": "main", "index": 0 }]]
     },
     "PG - Recetas x Autorizar": {
+      "main": [[{ "node": "Merge - Combinar Datos", "type": "main", "index": 0 }]]
+    },
+    "Merge - Combinar Datos": {
+      "main": [[{ "node": "Code - Agrupar Datos", "type": "main", "index": 0 }]]
+    },
+    "Code - Agrupar Datos": {
       "main": [[{ "node": "Ollama - Generar Resumen", "type": "main", "index": 0 }]]
     },
     "Ollama - Generar Resumen": {

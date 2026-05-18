@@ -250,7 +250,7 @@ export default function ReportesPage() {
             {datos.metricas.map((m) => {
               const Icon = m.icon;
               return (
-                <Card key={m.titulo} className="transition-all hoverable:hover:shadow-card-hover">
+                <Card key={m.titulo} className="transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-[1px] hoverable:hover:shadow-card-hover">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">{m.titulo}</CardTitle>
                     <Icon className="h-4 w-4 text-muted-foreground" />
@@ -322,8 +322,8 @@ export default function ReportesPage() {
                         </div>
                         <div className="h-3 bg-muted rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full bg-gradient-to-r ${colores[idx]} transition-all duration-700 ease-out`}
-                            style={{ width: `${item.porcentaje}%` }}
+                            className={`h-full rounded-full bg-gradient-to-r ${colores[idx]} origin-left transition-transform duration-300 ease-out`}
+                            style={{ transform: `scaleX(${item.porcentaje / 100})`, width: '100%' }}
                           />
                         </div>
                       </div>
@@ -460,8 +460,8 @@ export default function ReportesPage() {
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-primary rounded-full transition-[height] duration-500 ease-custom-out"
-                          style={{ width: `${(p.cantidad / MaxObraSocial) * 100}%` }}
+                          className="h-full bg-primary rounded-full origin-left transition-transform duration-300 ease-out"
+                          style={{ transform: `scaleX(${p.cantidad / MaxObraSocial})`, width: '100%' }}
                         />
                       </div>
                     </div>
@@ -539,7 +539,7 @@ export default function ReportesPage() {
                           <span className="font-medium">{item.porcentaje}%</span>
                         </div>
                         <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div className={`h-full ${coloresCanal[i]} rounded-full transition-[width] duration-500 ease-custom-out`} style={{ width: `${item.porcentaje}%` }} />
+                          <div className={`h-full ${coloresCanal[i]} rounded-full origin-left transition-transform duration-300 ease-out`} style={{ transform: `scaleX(${item.porcentaje / 100})`, width: '100%' }} />
                         </div>
                       </div>
                     );
