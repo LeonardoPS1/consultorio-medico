@@ -124,7 +124,8 @@ function TurnoCard({
       draggable
       onDragStart={(e) => onDragStart(e, turno)}
       className={`group relative rounded-xl border bg-card p-3 transition-[transform,box-shadow] duration-200
-        ${isInAttention ? 'ring-2 shadow-lg scale-[1.02]' : 'hoverable:hover:shadow-card-hover hoverable:hover:-translate-y-0.5'}
+        hoverable:hover:shadow-card-hover hoverable:hover:-translate-y-0.5
+        ${isInAttention ? 'ring-2 shadow-lg scale-[1.02]' : ''}
         cursor-grab active:cursor-grabbing active:shadow-xl active:scale-[0.97]
         [&.dragging]:opacity-50 [&.dragging]:ring-2 [&.dragging]:ring-primary
       `}
