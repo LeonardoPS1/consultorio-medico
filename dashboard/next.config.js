@@ -5,6 +5,9 @@ const withBundleAnalyzer = process.env.ANALYZE === 'true'
   : (config) => config;
 
 const nextConfig = withBundleAnalyzer({
+  // Aumenta timeout de generación de páginas estáticas (default 60s)
+  // Previene timeout en /_not-found durante build en VPS con recursos limitados
+  staticPageGenerationTimeout: 180,
   images: {
     domains: ['localhost'],
   },
