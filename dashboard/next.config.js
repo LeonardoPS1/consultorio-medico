@@ -29,6 +29,6 @@ const nextConfig = withBundleAnalyzer({
       },
     ];
   },
-};
+});
 
 module.exports = nextConfig;

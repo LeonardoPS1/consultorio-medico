@@ -1,5 +1,12 @@
 {
-	"dependencies": {
-		"pdfkit": "^0.18.0"
-	}
+  "name": "consultorio-medico",
+  "version": "0.4.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter ./dashboard dev",
+    "build": "pnpm --filter ./dashboard build",
+    "test": "pnpm --filter ./dashboard test",
+    "lint": "pnpm --filter ./dashboard lint",
+    "type-check": "pnpm --filter ./dashboard type-check"
+  }
 }
