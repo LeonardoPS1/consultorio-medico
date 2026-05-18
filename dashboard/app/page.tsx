@@ -68,6 +68,7 @@ const features = [
 const plans = [
   {
     name: 'Starter',
+    planId: 'starter',
     price: '$49',
     desc: 'Para consultorios individuales.',
     features: [
@@ -83,6 +84,7 @@ const plans = [
   },
   {
     name: 'Profesional',
+    planId: 'professional',
     price: '$99',
     desc: 'Para consultorios en crecimiento.',
     features: [
@@ -98,6 +100,7 @@ const plans = [
   },
   {
     name: 'Premium',
+    planId: 'premium',
     price: '$199',
     desc: 'Para clínicas medianas.',
     features: [
@@ -114,6 +117,7 @@ const plans = [
   },
   {
     name: 'Enterprise',
+    planId: 'enterprise',
     price: '$499',
     desc: 'Para grandes centros médicos.',
     features: [
@@ -376,7 +380,7 @@ export default function LandingPage() {
                     className="w-full"
                     asChild
                   >
-                  <Link href={`/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion%26plan%3D${plan.name.toLowerCase()}`}>
+                  <Link href={`/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion%26plan%3D${plan.planId}`}>
                     {plan.cta}
                   </Link>
                 </Button>
