@@ -15,6 +15,7 @@ const nextConfig = withBundleAnalyzer({
     NEXT_PUBLIC_APP_VERSION: '0.2.0',
     NEXT_PUBLIC_TENANT_NAME: process.env.NEXT_PUBLIC_TENANT_NAME || 'Consultorio',
     NEXT_PUBLIC_TENANT_PRIMARY: process.env.NEXT_PUBLIC_TENANT_PRIMARY || '#2563eb',
+    NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY: process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || '',
   },
   // ─── Headers de seguridad + Service Worker ─────────────
   async headers() {

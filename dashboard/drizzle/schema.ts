@@ -13,7 +13,7 @@ import {
   index,
   primaryKey,
 } from 'drizzle-orm/pg-core';
-import { relations, sql } from 'drizzle-orm';
+import { relations, sql, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 
 // ============================================================
 // USUARIOS
@@ -325,6 +325,28 @@ export const conversacionesRelations = relations(conversaciones, ({ one, many })
   }),
   mensajes: many(mensajes),
 }));
+
+// ============================================================
+// SUSCRIPCIONES (MercadoPago)
+// ============================================================
+export const suscripciones = pgTable('suscripciones', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizacionId: uuid('organizacion_id').notNull().default('00000000-0000-0000-0000-000000000000'),
+  plan: varchar('plan', { length: 50 }).notNull().default('free'),
+  estado: varchar('estado', { length: 50 }).notNull().default('free'),
+  mercadopagoPreferenceId: varchar('mercadopago_preference_id', { length: 255 }),
+  mercadopagoPaymentId: varchar('mercadopago_payment_id', { length: 255 }),
+  mercadopagoMerchantOrderId: varchar('mercadopago_merchant_order_id', { length: 255 }),
+  periodStart: timestamp('period_start', { withTimezone: true }),
+  periodEnd: timestamp('period_end', { withTimezone: true }),
+  trialEnd: timestamp('trial_end', { withTimezone: true }),
+  metadata: jsonb('metadata').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type Suscripcion = InferSelectModel<typeof suscripciones>;
+export type NewSuscripcion = InferInsertModel<typeof suscripciones>;
 
 export const mensajesRelations = relations(mensajes, ({ one }) => ({
   conversacion: one(conversaciones, {

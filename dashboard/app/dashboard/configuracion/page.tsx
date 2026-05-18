@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
-  Bot, Globe, Shield,
+  Bot, Globe, Shield, CreditCard,
   Edit3, Save, Plus, Trash2, Key,
 } from 'lucide-react';
 import {
@@ -27,6 +27,7 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import CredencialesTab from '@/components/configuracion/credenciales-tab';
 import IntegracionesDashboard from '@/components/configuracion/integraciones-dashboard';
 import Setup2FA from '@/components/configuracion/setup-2fa';
+import SuscripcionTab from '@/components/configuracion/suscripcion-tab';
 
 // ============================================================
 // Tipos
@@ -149,6 +150,10 @@ function ConfigContent() {
             <svg className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             Perfil
           </TabsTrigger>
+          <TabsTrigger value="suscripcion">
+            <CreditCard className="h-4 w-4 mr-1" />
+            Suscripción
+          </TabsTrigger>
           <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
           <TabsTrigger value="horarios">Horarios</TabsTrigger>
           <TabsTrigger value="ia">IA & Automatización</TabsTrigger>
@@ -167,6 +172,11 @@ function ConfigContent() {
         <TabsContent value="perfil" className="mt-4 space-y-4">
           <PerfilOrganizacion />
           <Setup2FA />
+        </TabsContent>
+
+        {/* ======== SUSCRIPCIÓN ======== */}
+        <TabsContent value="suscripcion" className="mt-4">
+          <SuscripcionTab />
         </TabsContent>
 
         {/* ======== INTEGRACIONES ======== */}
