@@ -109,14 +109,14 @@ export function middleware(request: NextRequest) {
   // ─── 3. Proteger rutas del dashboard ──────────────────
   if (pathname.startsWith('/dashboard')) {
     if (!hasSessionCookie(request)) {
-      const loginUrl = new URL('/', request.url);
+      const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(loginUrl);
     }
   }
 
   // ─── 4. Si ya tiene sesión y va al login, redirigir ──
-  if (pathname === '/' && request.method === 'GET' && hasSessionCookie(request)) {
+  if (pathname === '/login' && request.method === 'GET' && hasSessionCookie(request)) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

@@ -1,191 +1,418 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShieldAlert, Smartphone } from 'lucide-react';
-import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
+import {
+  Calendar,
+  MessageSquare,
+  Syringe,
+  BarChart3,
+  Bot,
+  Smartphone,
+  Shield,
+  Users,
+  Clock,
+  FileText,
+  ChevronRight,
+  CheckCircle2,
+  Menu,
+  X,
+} from 'lucide-react';
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [token2fa, setToken2fa] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [step2fa, setStep2fa] = useState(false);
+// ─── Features ─────────────────────────────────────────────────
+const features = [
+  {
+    icon: Calendar,
+    title: 'Gestión de Turnos',
+    desc: 'Calendario interactivo, filtros, y vista Kanban de atención. Programá, reprogramá y gestioná pacientes en tiempo real.',
+  },
+  {
+    icon: MessageSquare,
+    title: 'WhatsApp Integrado',
+    desc: 'Tus pacientes te escriben por WhatsApp y la IA responde al instante. Agendan turnos, consultan recetas y más.',
+  },
+  {
+    icon: Bot,
+    title: 'Asistente IA',
+    desc: 'Un asistente con IA local (Ollama + Mistral) que entiende el contexto del paciente. Sin costos de API externas.',
+  },
+  {
+    icon: Syringe,
+    title: 'Recetas Digitales',
+    desc: 'Creá, gestioná y enviá recetas por WhatsApp. Con historial de recetas activas y vencidas por paciente.',
+  },
+  {
+    icon: BarChart3,
+    title: 'Reportes Analíticos',
+    desc: 'Dashboard con KPIs, gráficos interactivos, comparativas mensuales y exportación a PDF o Excel.',
+  },
+  {
+    icon: Users,
+    title: 'Pacientes + Historial',
+    desc: 'Ficha completa con datos de contacto, obra social, notas médicas, historial clínico con CIE-10.',
+  },
+  {
+    icon: Shield,
+    title: 'Seguridad Total',
+    desc: '2FA, rate limiting, auditoría de accesos, contraseñas seguras y backup encriptado. Cumplimiento normativo.',
+  },
+  {
+    icon: Smartphone,
+    title: 'App Instalable (PWA)',
+    desc: 'Instalá AiCoreMed como app en tu celular o escritorio. Notificaciones push y funcionamiento offline parcial.',
+  },
+];
 
-  useEffect(() => {
-    fetch('/api/organization')
-      .then((r) => r.json())
-      .then((res) => {
-        setOrgNombre(resolveTenantName(res.data?.nombre));
-      })
-      .catch(() => console.warn('[Login] Error al cargar organización'));
-  }, []);
+// ─── Pricing ──────────────────────────────────────────────────
+const plans = [
+  {
+    name: 'Starter',
+    price: '$49',
+    desc: 'Para consultorios individuales que empiezan a digitalizarse.',
+    features: [
+      'Hasta 500 pacientes',
+      'Gestión de turnos',
+      'WhatsApp básico',
+      'Recetas digitales',
+      'Reportes esenciales',
+      'Soporte por email',
+    ],
+    cta: 'Comenzá gratis',
+    popular: false,
+  },
+  {
+    name: 'Profesional',
+    price: '$99',
+    desc: 'Para consultorios en crecimiento con 2-5 profesionales.',
+    features: [
+      'Hasta 2.000 pacientes',
+      'Todo lo de Starter',
+      'IA Assistant ilimitado',
+      'Múltiples profesionales',
+      'Reportes avanzados',
+      'Exportación Excel/PDF',
+      'Soporte prioritario',
+    ],
+    cta: 'Comenzá gratis',
+    popular: true,
+  },
+  {
+    name: 'Premium',
+    price: '$199',
+    desc: 'Para clínicas medianas con múltiples especialidades.',
+    features: [
+      'Pacientes ilimitados',
+      'Todo lo de Profesional',
+      'Integración n8n completa',
+      'Workflows personalizados',
+      'Google Calendar sync',
+      '2FA y auditoría',
+      'Backup encriptado',
+      'Soporte 24/7',
+    ],
+    cta: 'Comenzá gratis',
+    popular: false,
+  },
+  {
+    name: 'Enterprise',
+    price: '$499',
+    desc: 'Para grandes centros médicos con requirements específicos.',
+    features: [
+      'Todo lo de Premium',
+      'On-premise disponible',
+      'SLA garantizado',
+      'Capacitación del equipo',
+      'Integraciones custom',
+      'API dedicada',
+      'Gerente de cuenta',
+    ],
+    cta: 'Contactar',
+    popular: false,
+  },
+];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+export default function LandingPage() {
+  const [mobileMenu, setMobileMenu] = useState(false);
 
-    try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        token2fa: step2fa ? token2fa : '',
-        redirect: false,
-      });
-
-      if (result?.error) {
-        // Si requiere 2FA, mostrar el paso de código
-        if (result.error === '2FA_REQUIRED') {
-          setStep2fa(true);
-          setError('Ingresá el código de 6 dígitos de tu app autenticadora');
-          setLoading(false);
-          return;
-        }
-
-        // Mostrar error real
-        setError(result.error);
-      } else {
-        router.push('/dashboard');
-      }
-    } catch {
-      setError('Error al iniciar sesión. Intente nuevamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBackToLogin = () => {
-    setStep2fa(false);
-    setToken2fa('');
-    setError('');
+  const scrollTo = (id: string) => {
+    setMobileMenu(false);
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4">
-      {/* Fondo decorativo */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
-      </div>
-
-      <Card className="w-full max-w-md relative animate-in">
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto h-[360px] w-[360px]">
+    <div className="min-h-screen bg-background">
+      {/* ─── Navbar ─────────────────────────────────────────── */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+          <Link href="/" className="flex items-center gap-2">
             <img
               src="/aicoremed_dark_1200.svg"
-              alt={orgNombre}
-              className="h-full w-full object-cover"
+              alt="AiCoreMed"
+              className="h-10 w-auto"
             />
+          </Link>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+            <button onClick={() => scrollTo('features')} className="text-muted-foreground hover:text-foreground transition-colors">
+              Funcionalidades
+            </button>
+            <button onClick={() => scrollTo('pricing')} className="text-muted-foreground hover:text-foreground transition-colors">
+              Precios
+            </button>
+            <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors">
+              Iniciar sesión
+            </Link>
+            <Button size="sm" onClick={() => scrollTo('pricing')}>
+              Comenzar gratis
+            </Button>
+          </nav>
+
+          {/* Mobile menu button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setMobileMenu(!mobileMenu)}
+          >
+            {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
+
+        {/* Mobile nav */}
+        {mobileMenu && (
+          <div className="md:hidden border-t bg-background animate-in">
+            <nav className="container mx-auto flex flex-col gap-2 px-4 py-4">
+              <button
+                onClick={() => scrollTo('features')}
+                className="flex items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-muted transition-colors"
+              >
+                Funcionalidades <ChevronRight className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => scrollTo('pricing')}
+                className="flex items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-muted transition-colors"
+              >
+                Precios <ChevronRight className="h-4 w-4" />
+              </button>
+              <Link
+                href="/login"
+                className="flex items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-muted transition-colors"
+                onClick={() => setMobileMenu(false)}
+              >
+                Iniciar sesión <ChevronRight className="h-4 w-4" />
+              </Link>
+              <Button className="mt-2" onClick={() => { setMobileMenu(false); scrollTo('pricing'); }}>
+                Comenzar gratis
+              </Button>
+            </nav>
           </div>
-          <CardTitle className="text-2xl font-bold">{orgNombre}</CardTitle>
-          <CardDescription>
-            {step2fa
-              ? 'Verificación de dos factores'
-              : 'Ingresá a tu panel de gestión'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {step2fa ? (
-              <>
-                {/* Paso 2FA: solo mostrar input de código */}
-                <div className="flex justify-center mb-2">
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Smartphone className="h-6 w-6 text-primary" />
+        )}
+      </header>
+
+      {/* ─── Hero ───────────────────────────────────────────── */}
+      <section className="relative overflow-hidden">
+        {/* Fondo decorativo */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-primary/5 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-primary/5 blur-3xl" />
+        </div>
+
+        <div className="container mx-auto px-4 md:px-6 pt-20 pb-24 md:pt-28 md:pb-32">
+          <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 rounded-full border bg-muted/50 px-4 py-1.5 text-xs font-medium text-muted-foreground mb-8">
+              <Bot className="h-3.5 w-3.5 text-primary" />
+              IA local · Sin costos de API
+            </div>
+
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+              Gestioná tu consultorio{' '}
+              <span className="gradient-text">con IA</span>
+            </h1>
+
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10">
+              Turnos, WhatsApp, recetas, reportes y un asistente con IA local.
+              Todo en un solo panel. Sin mensualidades por IA, sin configuraciones complejas.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button size="lg" className="text-base h-12 px-8" onClick={() => scrollTo('pricing')}>
+                Ver planes
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+              <Button size="lg" variant="outline" className="text-base h-12 px-8" asChild>
+                <Link href="/login">
+                  Iniciar sesión
+                </Link>
+              </Button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-8 md:gap-16 mt-16">
+              <div className="text-center">
+                <div className="text-2xl md:text-3xl font-bold text-foreground">100%</div>
+                <div className="text-xs text-muted-foreground mt-1">Datos locales</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl md:text-3xl font-bold text-foreground">0$</div>
+                <div className="text-xs text-muted-foreground mt-1">Costo IA adicional</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl md:text-3xl font-bold text-foreground">24/7</div>
+                <div className="text-xs text-muted-foreground mt-1">Disponible siempre</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Features ────────────────────────────────────────── */}
+      <section id="features" className="border-t bg-muted/30">
+        <div className="container mx-auto px-4 md:px-6 py-20 md:py-28">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Todo lo que necesitás en un solo lugar
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Desde la gestión de turnos hasta reportes avanzados, pasando por WhatsApp integrado
+              con IA. Sin depender de servicios externos.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {features.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <div
+                  key={feature.title}
+                  className="group relative rounded-xl border bg-card p-6 hover-card"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                    <Icon className="h-5 w-5 text-primary" />
                   </div>
+                  <h3 className="font-semibold text-sm mb-2">{feature.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{feature.desc}</p>
                 </div>
-                <p className="text-sm text-muted-foreground text-center mb-4">
-                  Ingresá el código de 6 dígitos que aparece en tu app autenticadora
-                </p>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
-                <div className="space-y-2">
-                  <Label htmlFor="token2fa">Código de verificación</Label>
-                  <Input
-                    id="token2fa"
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="000000"
-                    maxLength={6}
-                    value={token2fa}
-                    onChange={(e) => setToken2fa(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    required
-                    autoFocus
-                    className="text-center text-2xl tracking-[0.5em] font-mono h-14"
-                  />
+      {/* ─── Pricing ─────────────────────────────────────────── */}
+      <section id="pricing" className="border-t">
+        <div className="container mx-auto px-4 md:px-6 py-20 md:py-28">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Planes simples, sin sorpresas
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Elegí el plan que mejor se adapte a tu consultorio. Todos incluyen IA local sin costos adicionales.
+              Cancelá cuando quieras.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {plans.map((plan) => (
+              <div
+                key={plan.name}
+                className={`relative rounded-xl border bg-card p-6 flex flex-col ${
+                  plan.popular ? 'ring-2 ring-primary shadow-lg scale-[1.02]' : ''
+                }`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
+                      Más elegido
+                    </span>
+                  </div>
+                )}
+
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold">{plan.name}</h3>
+                  <div className="mt-2">
+                    <span className="text-3xl font-bold">{plan.price}</span>
+                    <span className="text-sm text-muted-foreground">/mes</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">{plan.desc}</p>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading || token2fa.length < 6}>
-                  {loading ? 'Verificando...' : 'Verificar código'}
-                </Button>
+                <ul className="space-y-2.5 flex-1 mb-6">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-xs">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
 
                 <Button
-                  type="button"
-                  variant="link"
-                  size="sm"
-                  className="w-full text-muted-foreground"
-                  onClick={handleBackToLogin}
+                  variant={plan.popular ? 'default' : 'outline'}
+                  className="w-full"
+                  asChild
                 >
-                  Volver al inicio de sesión
+                  <Link href="/login">{plan.cta}</Link>
                 </Button>
-              </>
-            ) : (
-              <>
-                {/* Paso 1: email + password */}
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="tu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoFocus
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Ingresando...' : 'Ingresar'}
-                </Button>
-              </>
-            )}
-
-            {error && (
-              <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
-                {error === '2FA_REQUIRED' ? null : (
-                  <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
-                )}
-                <span>{error}</span>
               </div>
-            )}
-          </form>
+            ))}
+          </div>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} {orgNombre}. Todos los derechos reservados.
+          <p className="text-center text-xs text-muted-foreground mt-8">
+            Todos los planes incluyen 14 días de prueba gratis. Sin tarjeta de crédito.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
+
+      {/* ─── CTA Final ───────────────────────────────────────── */}
+      <section className="border-t bg-primary/5">
+        <div className="container mx-auto px-4 md:px-6 py-16 md:py-20 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">
+            ¿Listo para transformar tu consultorio?
+          </h2>
+          <p className="text-muted-foreground max-w-xl mx-auto mb-8">
+            Empezá hoy. En 5 minutos tenés todo configurado. Sin compromisos, sin tarjeta.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" className="text-base h-12 px-8" asChild>
+              <Link href="/login">
+                Comenzar prueba gratis
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="text-base h-12 px-8" onClick={() => scrollTo('features')}>
+              Ver funcionalidades
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Footer ──────────────────────────────────────────── */}
+      <footer className="border-t bg-card">
+        <div className="container mx-auto px-4 md:px-6 py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <img
+                src="/aicoremed_dark_1200.svg"
+                alt="AiCoreMed"
+                className="h-7 w-auto"
+              />
+              <span className="text-xs text-muted-foreground">
+                © {new Date().getFullYear()} AiCoreMed. Todos los derechos reservados.
+              </span>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <Link href="/login" className="hover:text-foreground transition-colors">
+                Iniciar sesión
+              </Link>
+              <span className="text-border">|</span>
+              <a href="https://aicorebots.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                by Aicore
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
