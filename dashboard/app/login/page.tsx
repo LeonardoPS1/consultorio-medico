@@ -82,7 +82,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md relative animate-in">
         <CardHeader className="text-center space-y-2">
           <Link href="/" className="mx-auto block">
-            <div className="mx-auto h-28 w-56 flex items-center justify-center">
+            <div className="mx-auto h-36 w-72 flex items-center justify-center">
               <img
                 src="/aicoremed_dark_1200.svg"
                 alt={orgNombre}

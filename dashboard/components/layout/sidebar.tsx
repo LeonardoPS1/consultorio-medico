@@ -18,9 +18,10 @@ import {
   Syringe,
   LogOut,
   Activity,
+  Building2,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 
 interface NavItem {
@@ -43,6 +44,7 @@ const navItems: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
   const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
 
@@ -128,6 +130,30 @@ export function Sidebar() {
               </Link>
             );
           })}
+
+          {/* Admin section */}
+          {session?.user?.role === 'admin' && (
+            <div className="mt-2 pt-2 border-t border-sidebar-muted">
+              {!collapsed && (
+                <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                  Admin
+                </p>
+              )}
+              <Link
+                href="/dashboard/admin/tenants"
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                  pathname === '/dashboard/admin/tenants'
+                    ? 'bg-sidebar-accent text-white'
+                    : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                )}
+                title={collapsed ? 'Tenants' : undefined}
+              >
+                <Building2 className="h-5 w-5 shrink-0" />
+                {!collapsed && <span className="flex-1 truncate">Tenants</span>}
+              </Link>
+            </div>
+          )}
         </nav>
       </ScrollArea>
 

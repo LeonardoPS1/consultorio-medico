@@ -53,12 +53,42 @@ function hasSessionCookie(request: NextRequest): boolean {
   return !!request.cookies.get(cookieName);
 }
 
+// ─── Helper: detectar tenant por subdominio ─────────────
+function detectTenant(hostname: string): string {
+  // localhost, 127.0.0.1, o IP → tenant por defecto
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+    return '00000000-0000-0000-0000-000000000000';
+  }
+
+  // Extraer subdominio (ej: demo.aicoremed.com → 'demo')
+  const parts = hostname.split('.');
+  if (parts.length >= 3) {
+    const subdomain = parts[0];
+    // Ignorar 'www'
+    if (subdomain !== 'www' && subdomain !== 'app') {
+      return subdomain;
+    }
+  }
+
+  // Sin subdominio → tenant por defecto
+  return '00000000-0000-0000-0000-000000000000';
+}
+
 // ─── Middleware principal ──────────────────────────────────
 export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
   const { pathname } = request.nextUrl;
 
-  // ─── 1. Headers de seguridad en TODAS las respuestas ──
+  // ─── 1. Detectar tenant y pasar a la request ──────────
+  const hostname = request.headers.get('host') || 'localhost';
+  const tenantId = detectTenant(hostname);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-tenant-id', tenantId);
+
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+
+  // Copiar security headers al nuevo response
   Object.entries(securityHeaders).forEach(([key, value]) => {
     response.headers.set(key, value);
   });

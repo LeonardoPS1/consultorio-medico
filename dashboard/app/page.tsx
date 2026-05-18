@@ -78,7 +78,7 @@ const plans = [
       'Reportes esenciales',
       'Soporte por email',
     ],
-    cta: 'Comenzá gratis',
+    cta: 'Comprar',
     popular: false,
   },
   {
@@ -94,7 +94,7 @@ const plans = [
       'Exportación Excel/PDF',
       'Soporte prioritario',
     ],
-    cta: 'Comenzá gratis',
+    cta: 'Comprar',
     popular: true,
   },
   {
@@ -111,7 +111,7 @@ const plans = [
       'Backup encriptado',
       'Soporte 24/7',
     ],
-    cta: 'Comenzá gratis',
+    cta: 'Comprar',
     popular: false,
   },
   {
@@ -164,9 +164,9 @@ export default function LandingPage() {
             <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors">
               Iniciar sesión
             </Link>
-            <Button size="sm" asChild>
+            <Button size="sm" variant="outline" asChild>
               <Link href="/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion">
-                Comenzar gratis
+                Prueba gratis
               </Link>
             </Button>
           </nav>
@@ -205,9 +205,9 @@ export default function LandingPage() {
               >
                 Iniciar sesión <ChevronRight className="h-4 w-4" />
               </Link>
-              <Button className="mt-2" asChild>
+              <Button className="mt-2" variant="outline" asChild>
                 <Link href="/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion" onClick={() => setMobileMenu(false)}>
-                  Comenzar gratis
+                  Prueba gratis
                 </Link>
               </Button>
             </nav>
@@ -225,6 +225,14 @@ export default function LandingPage() {
 
         <div className="container mx-auto px-4 md:px-6 pt-20 pb-24 md:pt-28 md:pb-32">
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
+            <div className="mb-8 flex justify-center">
+              <img
+                src="/aicoremed_dark_1200.svg"
+                alt="AiCoreMed"
+                className="h-20 md:h-28 w-auto"
+              />
+            </div>
+
             <div className="inline-flex items-center gap-2 rounded-full border bg-muted/50 px-4 py-1.5 text-xs font-medium text-muted-foreground mb-8">
               <Bot className="h-3.5 w-3.5 text-primary" />
               IA local · Sin costos de API

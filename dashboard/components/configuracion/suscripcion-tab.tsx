@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, CreditCard, Loader2, ArrowRight, AlertCircle } from 'lucide-react';
+import { CheckCircle2, CreditCard, Loader2, ArrowRight, AlertCircle, ExternalLink } from 'lucide-react';
 import { PLANES, type PlanInfo } from '@/lib/mercadopago';
 
 interface SuscripcionData {
@@ -44,7 +44,6 @@ export default function SuscripcionTab() {
     const planParam = new URLSearchParams(window.location.search).get('plan');
     if (planParam && PLANES[planParam]) {
       autoTriggerDone.current = true;
-      // Pequeño delay para que termine de cargar todo
       const timer = setTimeout(() => handleCheckout(planParam), 500);
       return () => clearTimeout(timer);
     }
@@ -53,6 +52,10 @@ export default function SuscripcionTab() {
   const handleCheckout = async (planId: string) => {
     setCheckoutLoading(planId);
     setError('');
+
+    // Abrir ventana ANTES del await para evitar que el browser
+    // bloquee el popup (requisito de Chrome/Safari/Firefox)
+    const mpWindow = window.open('', '_blank');
 
     try {
       const res = await fetch('/api/pagos/create-preference', {
@@ -64,18 +67,24 @@ export default function SuscripcionTab() {
       const json = await res.json();
 
       if (json.error) {
+        mpWindow?.close();
         setError(json.error);
         return;
       }
 
       // En modo TEST usar sandbox_init_point, en producción init_point
       const url = json.sandboxInitPoint || json.initPoint;
-      if (url) {
-        window.open(url, '_blank');
+      if (url && mpWindow) {
+        mpWindow.location.href = url;
+      } else if (url) {
+        // Fallback: redirigir la página actual
+        window.location.href = url;
       } else {
+        mpWindow?.close();
         setError('Error al obtener link de pago');
       }
     } catch {
+      mpWindow?.close();
       setError('Error al conectar con el procesador de pagos');
     } finally {
       setCheckoutLoading(null);
