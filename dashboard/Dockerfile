@@ -44,21 +44,21 @@ ENV PORT=3000
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# El build ocurre en /app/dashboard/ (monorepo workspace)
-# por lo que los outputs de Next.js están bajo /app/dashboard/
-
-# Copiar assets públicos (imágenes, SVGs, etc.)
-COPY --from=builder --chown=nextjs:nodejs /app/dashboard/public ./public
+# El standalone output de Next.js preserva la estructura del monorepo
+# /app/dashboard/.next/standalone/dashboard/ → server.js, .next, node_modules
+# Por eso copiamos a /app/ y server.js queda en /app/dashboard/server.js
 
 # Copiar standalone output de Next.js
-# Esto incluye server.js + .next + node_modules recortados por trace
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
 
-# Copiar static assets por separado (Next.js no los incluye en standalone)
-COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./.next/static
+# Copiar static assets (deben ir junto a server.js bajo dashboard/)
+COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./dashboard/.next/static
+
+# Copiar assets públicos (deben ir junto a server.js bajo dashboard/)
+COPY --from=builder --chown=nextjs:nodejs /app/dashboard/public ./dashboard/public
 
 # Crear directorio para cache de Next.js con permisos correctos
-RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
+RUN mkdir -p dashboard/.next/cache && chown -R nextjs:nodejs dashboard/.next
 
 USER nextjs
 
@@ -67,4 +67,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
-CMD ["node", "server.js"]
+CMD ["node", "dashboard/server.js"]
