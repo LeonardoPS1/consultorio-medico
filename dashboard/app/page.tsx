@@ -69,7 +69,7 @@ const plans = [
   {
     name: 'Starter',
     price: '$49',
-    desc: 'Para consultorios individuales que empiezan a digitalizarse.',
+    desc: 'Para consultorios individuales.',
     features: [
       'Hasta 500 pacientes',
       'Gestión de turnos',
@@ -84,10 +84,9 @@ const plans = [
   {
     name: 'Profesional',
     price: '$99',
-    desc: 'Para consultorios en crecimiento con 2-5 profesionales.',
+    desc: 'Para consultorios en crecimiento.',
     features: [
-      'Hasta 2.000 pacientes',
-      'Todo lo de Starter',
+      'Todo lo de Starter +',
       'IA Assistant ilimitado',
       'Múltiples profesionales',
       'Reportes avanzados',
@@ -100,10 +99,9 @@ const plans = [
   {
     name: 'Premium',
     price: '$199',
-    desc: 'Para clínicas medianas con múltiples especialidades.',
+    desc: 'Para clínicas medianas.',
     features: [
-      'Pacientes ilimitados',
-      'Todo lo de Profesional',
+      'Todo lo de Profesional +',
       'Integración n8n completa',
       'Workflows personalizados',
       'Google Calendar sync',
@@ -117,9 +115,9 @@ const plans = [
   {
     name: 'Enterprise',
     price: '$499',
-    desc: 'Para grandes centros médicos con requirements específicos.',
+    desc: 'Para grandes centros médicos.',
     features: [
-      'Todo lo de Premium',
+      'Todo lo de Premium +',
       'On-premise disponible',
       'SLA garantizado',
       'Capacitación del equipo',
@@ -329,7 +327,7 @@ export default function LandingPage() {
             {plans.map((plan) => (
               <div
                 key={plan.name}
-                className={`relative rounded-xl border bg-card p-6 flex flex-col h-full ${
+                className={`relative rounded-xl border bg-card p-6 grid grid-rows-[auto_1fr_auto] gap-6 ${
                   plan.popular ? 'ring-2 ring-primary shadow-lg scale-[1.02]' : ''
                 }`}
               >
@@ -341,7 +339,7 @@ export default function LandingPage() {
                   </div>
                 )}
 
-                <div className="mb-6">
+                <div>
                   <h3 className="text-lg font-semibold">{plan.name}</h3>
                   <div className="mt-2">
                     <span className="text-3xl font-bold">{plan.price}</span>
@@ -350,16 +348,29 @@ export default function LandingPage() {
                   <p className="text-xs text-muted-foreground mt-2">{plan.desc}</p>
                 </div>
 
-                <ul className="space-y-2.5 mb-6">
+                <ul className="space-y-2.5">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-xs">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-                      <span>{f}</span>
+                      {f.startsWith('Todo lo de') ? (
+                        <>
+                          <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-primary/10 text-primary text-[10px] font-bold shrink-0 mt-0.5">
+                            +
+                          </span>
+                          <span className="font-medium text-foreground/90">
+                            {f} <span className="text-primary text-[10px] font-bold">(incluido)</span>
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                          <span>{f}</span>
+                        </>
+                      )}
                     </li>
                   ))}
                 </ul>
 
-                <div className="mt-auto">
+                <div className="self-end">
                   <Button
                     variant={plan.popular ? 'default' : 'outline'}
                     className="w-full"
