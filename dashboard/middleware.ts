@@ -76,8 +76,8 @@ export function middleware(request: NextRequest) {
     || request.headers.get('x-real-ip')
     || '127.0.0.1';
 
-  // Rate limit más restrictivo para login (5 intentos por minuto por IP)
-  if (pathname === '/' && request.method === 'POST') {
+  // Rate limit para login (autenticación). NextAuth v5 POSTea a /api/auth/callback/credentials
+  if (pathname.startsWith('/api/auth/') && request.method === 'POST') {
     if (!rateLimit(`login:${ip}`, 5, 60_000)) {
       const headers = new Headers({
         'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Rate limit general para APIs (30 requests por minuto por IP)
-  if (pathname.startsWith('/api/')) {
+  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/')) {
     if (!rateLimit(`api:${ip}`, 30, 60_000)) {
       const headers = new Headers({
         'Content-Type': 'application/json',

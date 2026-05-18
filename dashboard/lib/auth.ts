@@ -2,7 +2,7 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 import { getUserByEmail, createAdminUserIfNotExists } from '@/lib/data-store';
-import { isAccountLocked, incrementFailedAttempts, resetFailedAttempts, getRemainingAttempts } from '@/lib/account-lockout';
+import { isAccountLocked, incrementFailedAttempts, resetFailedAttempts } from '@/lib/account-lockout';
 import { verify2faToken } from '@/lib/mfa';
 import { logAudit } from '@/lib/audit-log';
 
@@ -27,7 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const lockStatus = isAccountLocked(email);
           if (lockStatus.locked) {
             throw new Error(
-              `Cuenta bloqueada. Intentá de nuevo en ${lockStatus.remainingMinutes} minutos.`
+              'Demasiados intentos fallidos. Intentá de nuevo más tarde.'
             );
           }
 
@@ -45,16 +45,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const isValid = await compare(password, user.passwordHash);
 
           if (!isValid) {
-            const newStatus = incrementFailedAttempts(email);
-            if (newStatus.locked) {
+            incrementFailedAttempts(email);
+            const lockStatusAfter = isAccountLocked(email);
+            if (lockStatusAfter.locked) {
               throw new Error(
-                'Demasiados intentos fallidos. Cuenta bloqueada por 15 minutos.'
+                'Demasiados intentos fallidos. Intentá de nuevo más tarde.'
               );
             }
-            const remaining = getRemainingAttempts(email);
-            throw new Error(
-              `Contraseña incorrecta. Te quedan ${remaining} intento${remaining !== 1 ? 's' : ''}.`
-            );
+            throw new Error('Email o contraseña incorrectos');
           }
 
           // 2. Verificar 2FA si está activo
