@@ -7,7 +7,7 @@
 # =============================================================================
 
 # ─── Stage 1: Dependencias ───────────────────────────────────────────────────
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 
 # Corepack para pnpm
@@ -18,7 +18,7 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # ─── Stage 2: Build ──────────────────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Copiar dependencias desde stage anterior
@@ -32,7 +32,7 @@ ENV NODE_ENV=production
 RUN corepack enable && corepack prepare pnpm@latest --activate && pnpm build
 
 # ─── Stage 3: Runner (producción) ────────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
