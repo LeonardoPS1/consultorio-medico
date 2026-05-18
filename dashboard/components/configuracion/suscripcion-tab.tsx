@@ -168,7 +168,7 @@ export default function SuscripcionTab() {
                   <span className="text-xs text-muted-foreground">/mes</span>
                 </div>
               </CardHeader>
-              <CardContent className="flex flex-col flex-1">
+              <CardContent className="flex flex-col flex-1 gap-4">
                 <ul className="space-y-1.5 flex-1">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-1.5 text-xs text-muted-foreground">
