@@ -1,7 +1,7 @@
 packages:
   - dashboard
 
-onlyBuiltDependencies:
-  - sharp
-  - esbuild
-  - unrs-resolver
+allowBuilds:
+  sharp: true
+  esbuild: true
+  unrs-resolver: true
