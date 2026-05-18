@@ -44,15 +44,18 @@ ENV PORT=3000
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
+# El build ocurre en /app/dashboard/ (monorepo workspace)
+# por lo que los outputs de Next.js están bajo /app/dashboard/
+
 # Copiar assets públicos (imágenes, SVGs, etc.)
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/dashboard/public ./public
 
 # Copiar standalone output de Next.js
 # Esto incluye server.js + .next + node_modules recortados por trace
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
 
 # Copiar static assets por separado (Next.js no los incluye en standalone)
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./.next/static
 
 # Crear directorio para cache de Next.js con permisos correctos
 RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
