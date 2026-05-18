@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -18,15 +19,31 @@ import {
   pacientesPorObraSocial, MaxObraSocial,
   datosPorPeriodo, comparativaPorPeriodo,
 } from './reportes-data';
-import TurnosChart from '@/components/charts/turnos-chart';
-import NuevosPacientesChart from '@/components/charts/nuevos-pacientes-chart';
-import VolumenWhatsAppChart from '@/components/charts/volumen-whatsapp-chart';
-import DistribucionEstadosChart from '@/components/charts/distribucion-estados-chart';
-import ComparativaMensual from '@/components/reportes/comparativa-mensual';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { exportReporteExcel } from '@/lib/export-reporte-excel';
+
+const TurnosChart = dynamic(() => import('@/components/charts/turnos-chart'), {
+  ssr: false,
+  loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
+});
+const NuevosPacientesChart = dynamic(() => import('@/components/charts/nuevos-pacientes-chart'), {
+  ssr: false,
+  loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
+});
+const VolumenWhatsAppChart = dynamic(() => import('@/components/charts/volumen-whatsapp-chart'), {
+  ssr: false,
+  loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
+});
+const DistribucionEstadosChart = dynamic(() => import('@/components/charts/distribucion-estados-chart'), {
+  ssr: false,
+  loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
+});
+const ComparativaMensual = dynamic(() => import('@/components/reportes/comparativa-mensual'), {
+  ssr: false,
+  loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
+});
 
 const iconosIntencion = [
   MessageSquare, Calendar, XCircle, Activity, TrendingUp, MessageSquare,
