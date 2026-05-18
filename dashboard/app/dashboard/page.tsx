@@ -128,7 +128,7 @@ export default function DashboardPage() {
           <h2 className="text-3xl font-bold tracking-tight gradient-text">
             Panel Principal
           </h2>
-          <p className="text-muted-foreground flex items-center gap-1.5 mt-1">
+          <p className="text-muted-foreground flex items-center gap-2 mt-1">
             <Sparkles className="h-4 w-4 text-primary" />
             Resumen de la actividad del consultorio &mdash; {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
@@ -143,7 +143,7 @@ export default function DashboardPage() {
             <button
               key={action.label}
               onClick={() => handleQuickAction(action.action)}
-              className="flex items-center gap-3 p-4 rounded-xl border bg-card hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 group"
+              className="flex items-center gap-3 p-4 rounded-xl border bg-card hoverable:hover:shadow-card-hover transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-0.5 group"
             >
               <div className={`h-10 w-10 rounded-lg ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
                 <Icon className="h-5 w-5" />
@@ -156,7 +156,7 @@ export default function DashboardPage() {
         {/* Botón directo a Atención */}
         <button
           onClick={() => router.push('/dashboard/atencion')}
-          className="flex items-center gap-3 p-4 rounded-xl border-2 border-blue-200 bg-blue-50/50 dark:bg-blue-950/30 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 group"
+          className="flex items-center gap-3 p-4 rounded-xl border-2 border-blue-200 bg-blue-50/50 dark:bg-blue-950/30 hoverable:hover:shadow-card-hover transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-0.5 group"
         >
           <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-950/50 flex items-center justify-center group-hover:scale-110 transition-transform">
             <Play className="h-5 w-5 text-blue-600" />
@@ -218,10 +218,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {proximosTurnos.map((turno, i) => (
+              {proximosTurnos.map((turno) => (
                 <div
-                  key={i}
-                  className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors group cursor-pointer"
+                  key={`${turno.hora}-${turno.paciente}`}
+                  className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hoverable:hover:bg-muted/50 transition-colors group cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-primary/10 text-primary font-bold text-sm group-hover:scale-105 transition-transform">
@@ -268,10 +268,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-1">
-              {actividadReciente.map((act, i) => (
+              {actividadReciente.map((act) => (
                 <div
-                  key={i}
-                  className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-muted/50 transition-colors"
+                  key={`${act.hora}-${act.texto.substring(0, 20)}`}
+                  className="flex items-start gap-3 p-3 rounded-xl hoverable:hoverable:hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center gap-2 min-w-[70px]">
                     <Clock className="h-3 w-3 text-muted-foreground" />

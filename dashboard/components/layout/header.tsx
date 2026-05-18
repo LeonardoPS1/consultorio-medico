@@ -124,7 +124,7 @@ export function Header() {
           if (res.data.nombre) setOrgNombre(res.data.nombre);
         }
       })
-      .catch(() => {});
+      .catch(() => console.warn('[Header] Error al cargar datos'));
   }, []);
 
   useEffect(() => {

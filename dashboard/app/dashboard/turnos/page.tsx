@@ -275,7 +275,7 @@ export default function TurnosPage() {
             <Card className="border-primary/20 bg-muted/30">
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium flex items-center gap-1.5">
+                  <p className="text-sm font-medium flex items-center gap-2">
                     <Filter className="h-4 w-4 text-primary" />
                     Filtros
                   </p>
@@ -313,7 +313,7 @@ export default function TurnosPage() {
                   {/* Filtro por médico */}
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">Médico</Label>
-                    <div className="flex gap-1.5 flex-wrap">
+                    <div className="flex gap-2 flex-wrap">
                       <Button
                         variant={filtroMedico === '__all__' ? 'secondary' : 'outline'}
                         size="sm"
@@ -453,7 +453,7 @@ export default function TurnosPage() {
                   .map((turno) => (
                     <div
                       key={turno.id}
-                      className="flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors cursor-pointer border-l-4"
+                      className="flex items-center gap-4 p-4 hoverable:hover:bg-muted/50 transition-colors cursor-pointer border-l-4"
                       style={{ borderLeftColor: getTurnoColor(turno.estado) }}
                     >
                       {/* Hora */}

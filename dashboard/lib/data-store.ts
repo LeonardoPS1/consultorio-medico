@@ -27,11 +27,11 @@ export interface PacienteData {
   medicacionCronica?: string;
   notasMedicas?: string;
   canalPreferido: string;
-  consentimientoWhatsapp: boolean;
-  consentimientoEmail: boolean;
+  consentimientoWhatsapp?: boolean;
+  consentimientoEmail?: boolean;
   fuente: string;
-  tags: string[];
-  metadata: Record<string, unknown>;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,6 +44,8 @@ export interface UsuarioData {
   rol: string;
   activo: boolean;
   ultimoAcceso?: string;
+  secreto2fa?: string | null;
+  activo2fa?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -727,6 +729,45 @@ export async function createAdminUserIfNotExists(): Promise<boolean> {
   return true;
 }
 
+/**
+ * Actualiza la configuración 2FA de un usuario (JSON fallback)
+ */
+export async function updateUser2FA(
+  email: string,
+  data: { secreto2fa: string | null; activo2fa: boolean }
+): Promise<boolean> {
+  const pg = await checkPostgres();
+  if (pg) {
+    try {
+      const { db } = await import('@/lib/db');
+      const { usuarios } = await import('@/drizzle/schema');
+      const { eq } = await import('drizzle-orm');
+      await db
+        .update(usuarios)
+        .set({
+          secreto2fa: data.secreto2fa,
+          activo2fa: data.activo2fa,
+          updatedAt: new Date(),
+        })
+        .where(eq(usuarios.email, email));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // Fallback JSON
+  const usuarios = readJSON<UsuarioData[]>(USUARIOS_FILE, []);
+  const idx = usuarios.findIndex((u) => u.email === email);
+  if (idx === -1) return false;
+
+  usuarios[idx].secreto2fa = data.secreto2fa;
+  usuarios[idx].activo2fa = data.activo2fa;
+  usuarios[idx].updatedAt = new Date().toISOString();
+  writeJSON(USUARIOS_FILE, usuarios);
+  return true;
+}
+
 // ============================================================
 // SEED DATA (para desarrollo)
 // ============================================================
@@ -761,7 +802,7 @@ export async function seedDataIfEmpty(): Promise<boolean> {
 
   const pacientesList: PacienteData[] = [];
   for (const p of pacientesData) {
-    const creado = await createPaciente(p as any);
+    const creado = await createPaciente(p);
     pacientesList.push(creado);
   }
 

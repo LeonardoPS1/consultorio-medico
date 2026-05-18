@@ -123,9 +123,9 @@ function TurnoCard({
     <div
       draggable
       onDragStart={(e) => onDragStart(e, turno)}
-      className={`group relative rounded-xl border bg-card p-3 transition-all duration-200
-        ${isInAttention ? 'ring-2 shadow-lg scale-[1.02]' : 'hover:shadow-md hover:-translate-y-0.5'}
-        cursor-grab active:cursor-grabbing active:shadow-xl active:scale-[1.02]
+      className={`group relative rounded-xl border bg-card p-3 transition-[transform,box-shadow] duration-200
+        ${isInAttention ? 'ring-2 shadow-lg scale-[1.02]' : 'hoverable:hover:shadow-card-hover hoverable:hover:-translate-y-0.5'}
+        cursor-grab active:cursor-grabbing active:shadow-xl active:scale-[0.97]
         [&.dragging]:opacity-50 [&.dragging]:ring-2 [&.dragging]:ring-primary
       `}
       style={{ borderColor: isInAttention ? color : undefined }}
@@ -197,11 +197,11 @@ function TurnoCard({
         )}
 
         {/* Acciones */}
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           {isPending && (
             <Button
               size="sm"
-              className="flex-1 h-8 text-xs gap-1.5 font-semibold"
+              className="flex-1 h-8 text-xs gap-2 font-semibold"
               onClick={() => onAtender(turno.id)}
             >
               <Play className="h-3.5 w-3.5" />
@@ -212,7 +212,7 @@ function TurnoCard({
             <Button
               size="sm"
               variant="default"
-              className="flex-1 h-8 text-xs gap-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700"
+              className="flex-1 h-8 text-xs gap-2 font-semibold bg-emerald-600 hoverable:hover:bg-emerald-700"
               onClick={() => onFinalizar(turno.id)}
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
@@ -277,7 +277,7 @@ function KanbanColumn({
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={(e) => onDropTurno(e, columna.id)}
-      className={`flex flex-col gap-2 min-h-[250px] rounded-xl p-3 transition-all duration-200 border-2
+      className={`flex flex-col gap-2 min-h-[250px] rounded-xl p-3 transition-[transform,border-color,background-color,box-shadow] duration-200 border-2
         ${isDragOver
           ? 'border-primary bg-primary/5 shadow-lg scale-[1.01]'
           : 'border-transparent'
@@ -342,17 +342,17 @@ function ResumenBar({ total, enAtencion, atendidos, pendientes }: {
 }) {
   return (
     <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-      <span className="flex items-center gap-1.5">
+      <span className="flex items-center gap-2">
         <Calendar className="h-3.5 w-3.5 text-primary" />
         <strong className="text-foreground">{total}</strong> turnos hoy
       </span>
       <span className="hidden sm:inline">&middot;</span>
-      <span className="flex items-center gap-1.5">
+      <span className="flex items-center gap-2">
         <span className="h-2 w-2 rounded-full bg-amber-500" />
         <strong className="text-foreground">{pendientes}</strong> pendientes
       </span>
       <span className="hidden sm:inline">&middot;</span>
-      <span className="flex items-center gap-1.5">
+      <span className="flex items-center gap-2">
         <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
@@ -360,7 +360,7 @@ function ResumenBar({ total, enAtencion, atendidos, pendientes }: {
         <strong className="text-foreground">{enAtencion}</strong> en atención
       </span>
       <span className="hidden sm:inline">&middot;</span>
-      <span className="flex items-center gap-1.5">
+      <span className="flex items-center gap-2">
         <span className="h-2 w-2 rounded-full bg-emerald-500" />
         <strong className="text-foreground">{atendidos}</strong> atendidos
       </span>
@@ -543,7 +543,7 @@ export default function AtencionPage() {
             <Activity className="h-7 w-7 text-primary" />
             Atención de Turnos
           </h2>
-          <p className="text-muted-foreground flex items-center gap-1.5 mt-1">
+          <p className="text-muted-foreground flex items-center gap-2 mt-1">
             <Sparkles className="h-4 w-4 text-primary" />
             Arrastrá turnos entre columnas o usá los botones &mdash;{' '}
             {new Date().toLocaleDateString('es-AR', {
@@ -556,7 +556,7 @@ export default function AtencionPage() {
         </div>
         <div className="flex items-center gap-2">
           {/* Filtro por médico */}
-          <div className="flex items-center gap-1.5 rounded-lg border p-1">
+          <div className="flex items-center gap-2 rounded-lg border p-1">
             <Button
               variant={!filtroMedico ? 'secondary' : 'ghost'}
               size="sm"
@@ -608,12 +608,12 @@ export default function AtencionPage() {
             </CardTitle>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               {draggingId ? (
-                <span className="flex items-center gap-1.5 text-primary font-medium">
+                <span className="flex items-center gap-2 text-primary font-medium">
                   <span className="h-2 w-2 rounded-full bg-primary animate-pulse-soft" />
                   Arrastrando...
                 </span>
               ) : (
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-2">
                   <GripVertical className="h-3.5 w-3.5" />
                   Arrastrá turnos entre columnas
                 </span>

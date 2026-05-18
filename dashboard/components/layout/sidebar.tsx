@@ -51,7 +51,7 @@ export function Sidebar() {
       .then((res) => {
         if (res.data?.nombre) setOrgNombre(res.data.nombre);
       })
-      .catch(() => {});
+      .catch(() => console.warn('[Sidebar] Error al cargar organización'));
   }, []);
 
   useEffect(() => {
@@ -109,7 +109,7 @@ export function Sidebar() {
                   'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                   isActive
                     ? 'bg-sidebar-accent text-white'
-                    : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-white'
+                    : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
                 )}
                 title={collapsed ? item.title : undefined}
               >
@@ -136,7 +136,7 @@ export function Sidebar() {
           variant="ghost"
           size="sm"
           className={cn(
-            'w-full justify-start text-sidebar-foreground/70 hover:text-white hover:bg-sidebar-accent',
+            'w-full justify-start text-sidebar-foreground/70 hoverable:hover:text-white hoverable:hover:bg-sidebar-accent',
             collapsed && 'justify-center px-0'
           )}
           onClick={() => signOut({ callbackUrl: '/' })}
@@ -151,7 +151,7 @@ export function Sidebar() {
       <Button
         variant="ghost"
         size="icon"
-        className="absolute -right-3 top-20 h-6 w-6 rounded-full border bg-sidebar text-sidebar-foreground hover:bg-sidebar-accent"
+        className="absolute -right-3 top-20 h-6 w-6 rounded-full border bg-sidebar text-sidebar-foreground hoverable:hover:bg-sidebar-accent"
         onClick={() => setCollapsed(!collapsed)}
       >
         {collapsed ? (

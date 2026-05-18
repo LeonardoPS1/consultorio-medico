@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -39,12 +39,19 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit }: NuevoTurnoModa
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
   const [hora, setHora] = useState('09:00');
   const [loading, setLoading] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     // Simular creación
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       onSubmit({ paciente, tipo, medico, hora, fecha });
       setLoading(false);
       onOpenChange(false);

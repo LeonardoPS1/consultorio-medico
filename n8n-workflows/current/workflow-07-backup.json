@@ -1,0 +1,42 @@
+{
+  "name": "07 - Backup Automático Encriptado",
+  "nodes": [
+    {
+      "id": "cron-backup",
+      "name": "Cron - 3:00 AM",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            { "mode": "everyDay", "hour": 3, "minute": 0 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "execute-backup",
+      "name": "Ejecutar Backup",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [300, 300],
+      "parameters": {
+        "command": "bash",
+        "arguments": ["/opt/consultorio/scripts/backup-encriptado.sh"]
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "cron-backup": {
+      "main": [[ { "node": "execute-backup", "type": "main", "index": 0 } ]]
+    }
+  },
+  "settings": {
+    "callerPolicy": "workflowFromSameOwner",
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["seguridad", "mantenimiento"]
+}

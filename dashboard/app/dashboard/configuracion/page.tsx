@@ -26,6 +26,7 @@ import {
 import { ImageUpload } from '@/components/ui/image-upload';
 import CredencialesTab from '@/components/configuracion/credenciales-tab';
 import IntegracionesDashboard from '@/components/configuracion/integraciones-dashboard';
+import Setup2FA from '@/components/configuracion/setup-2fa';
 
 // ============================================================
 // Tipos
@@ -116,7 +117,7 @@ export default function ConfiguracionPage() {
 function ConfigContent() {
   const searchParams = useSearchParams();
   const { data: session } = useSession();
-  const userRole = (session?.user as any)?.role;
+  const userRole = session?.user?.role;
   const isAdmin = userRole === 'admin';
   const tabFromUrl = searchParams.get('tab') || 'perfil';
   const [plantillas, setPlantillas] = useState(plantillasIniciales);
@@ -163,8 +164,9 @@ function ConfigContent() {
         </TabsList>
 
         {/* ======== PERFIL / ORGANIZACIÓN ======== */}
-        <TabsContent value="perfil" className="mt-4">
+        <TabsContent value="perfil" className="mt-4 space-y-4">
           <PerfilOrganizacion />
+          <Setup2FA />
         </TabsContent>
 
         {/* ======== INTEGRACIONES ======== */}
@@ -630,7 +632,7 @@ function PerfilOrganizacion() {
           setPreviewColor(res.data.colorPrimario || '#2563eb');
         }
       })
-      .catch(() => {});
+      .catch(() => console.warn('[Config] Error al cargar organización'));
   }, []);
 
   const handleSave = async () => {

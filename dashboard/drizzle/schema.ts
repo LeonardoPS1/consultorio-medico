@@ -26,6 +26,8 @@ export const usuarios = pgTable('usuarios', {
   rol: varchar('rol', { length: 20 }).notNull().default('medico'),
   activo: boolean('activo').notNull().default(true),
   ultimoAcceso: timestamp('ultimo_acceso', { withTimezone: true }),
+  secreto2fa: varchar('secreto_2fa', { length: 255 }),
+  activo2fa: boolean('activo_2fa').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -266,6 +268,28 @@ export const workflowLogs = pgTable('workflow_logs', {
   metadata: jsonb('metadata').default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
+
+// ============================================================
+// AUDITORIA DE ACCESOS A DATOS MÉDICOS
+// ============================================================
+export const auditoriaAccesos = pgTable('auditoria_accesos', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  usuarioId: uuid('usuario_id').references(() => usuarios.id),
+  usuarioEmail: varchar('usuario_email', { length: 255 }),
+  usuarioNombre: varchar('usuario_nombre', { length: 255 }),
+  accion: varchar('accion', { length: 100 }).notNull(),
+  entidad: varchar('entidad', { length: 100 }).notNull(),
+  entidadId: varchar('entidad_id', { length: 255 }),
+  detalle: text('detalle'),
+  ip: varchar('ip', { length: 45 }),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  idxAccion: index('idx_auditoria_accion').on(table.accion),
+  idxEntidad: index('idx_auditoria_entidad').on(table.entidad),
+  idxCreatedAt: index('idx_auditoria_created_at').on(table.createdAt),
+  idxUsuario: index('idx_auditoria_usuario').on(table.usuarioId),
+}));
 
 // ============================================================
 // RELACIONES

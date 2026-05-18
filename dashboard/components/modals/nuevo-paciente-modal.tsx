@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -39,11 +39,18 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
   const [email, setEmail] = useState('');
   const [obraSocial, setObraSocial] = useState('Particular');
   const [loading, setLoading] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       onSubmit?.({ nombre, apellido, telefono, email, obraSocial });
       setLoading(false);
       onOpenChange(false);

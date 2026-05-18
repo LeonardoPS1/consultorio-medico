@@ -2,12 +2,24 @@
 
 ## Visión General
 
-El sistema integra cuatro capas principales que trabajan juntas para automatizar la comunicación y gestión de un consultorio médico:
+El sistema integra cinco capas principales que trabajan juntas para automatizar la comunicación y gestión de un consultorio médico:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    USUARIOS (Pacientes)                      │
 │         WhatsApp ─── Twilio ─── Email ─── Web               │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+┌─────────────────────────▼───────────────────────────────────┐
+│              CAPA DE SEGURIDAD (Middleware)                   │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │  Headers │ │   Rate   │ │ 2FA/MFA │ │  Cookie  │      │
+│  │  HTTP    │ │ Limiting │ │  Login   │ │  Verify  │      │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐                    │
+│  │  Twilio  │ │ Auditoría│ │ Password │                    │
+│  │ Signature│ │ Accesos  │ │ Lockout  │                    │
+│  └──────────┘ └──────────┘ └──────────┘                    │
 └─────────────────────────┬───────────────────────────────────┘
                           │
 ┌─────────────────────────▼───────────────────────────────────┐

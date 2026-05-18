@@ -10,6 +10,7 @@ import {
   SERVICIOS_CONFIG,
 } from '@/lib/credential-store';
 import { testCredentialConnection, getN8nCredentials } from '@/lib/n8n-sync';
+import { logAudit } from '@/lib/audit-log';
 
 /**
  * Verifica que el usuario sea admin.
@@ -20,7 +21,7 @@ async function checkAdmin(): Promise<{ isAdmin: boolean; error?: NextResponse }>
   if (!session?.user) {
     return { isAdmin: false, error: NextResponse.json({ error: 'No autenticado' }, { status: 401 }) };
   }
-  const role = (session.user as any)?.role;
+  const role = session.user?.role;
   if (role !== 'admin') {
     return { isAdmin: false, error: NextResponse.json({ error: 'Solo administradores' }, { status: 403 }) };
   }
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
     const raw = searchParams.get('raw') === 'true';
 
     const session = await auth();
-    const isAdmin = (session?.user as any)?.role === 'admin';
+    const isAdmin = session?.user?.role === 'admin';
 
     // Si pide raw y no es admin, denegar
     if (raw && !isAdmin) {
@@ -139,6 +140,21 @@ export async function POST(request: NextRequest) {
     // Guardar y sincronizar
     const result = await saveServicioCredenciales(servicio, credenciales, n8nCredentialId);
 
+    // Auditar cambio de credenciales
+    const session = await auth();
+    const campos = Object.keys(credenciales).join(', ');
+    logAudit({
+      usuarioId: session?.user?.id,
+      usuarioEmail: session?.user?.email || undefined,
+      usuarioNombre: session?.user?.name || undefined,
+      accion: 'config',
+      entidad: 'credencial',
+      entidadId: servicio,
+      detalle: `Credenciales actualizadas: ${campos}`,
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       servicio,
@@ -181,6 +197,20 @@ export async function DELETE(request: NextRequest) {
     } else {
       await deleteServicioCredenciales(servicio);
     }
+
+    // Auditar eliminación de credenciales
+    const session = await auth();
+    logAudit({
+      usuarioId: session?.user?.id,
+      usuarioEmail: session?.user?.email || undefined,
+      usuarioNombre: session?.user?.name || undefined,
+      accion: 'delete',
+      entidad: 'credencial',
+      entidadId: servicio,
+      detalle: clave ? `Clave eliminada: ${clave}` : `Servicio completo eliminado: ${servicio}`,
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

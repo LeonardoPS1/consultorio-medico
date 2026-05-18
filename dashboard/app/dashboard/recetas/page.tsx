@@ -449,7 +449,7 @@ export default function RecetasPage() {
     const isVencida = variant === 'vencida';
 
     return (
-      <div key={receta.id} className="flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors">
+      <div key={receta.id} className="flex items-center gap-4 p-4 hoverable:hover:bg-muted/50 transition-colors">
         <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${
           isActiva
             ? 'bg-emerald-100 dark:bg-emerald-900/30'

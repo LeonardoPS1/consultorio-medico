@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { validateRequest } from 'twilio';
 import {
   getPacienteByTelefono,
   createPaciente,
@@ -6,6 +7,31 @@ import {
   createConversacion,
   createMensaje,
 } from '@/lib/data-store';
+
+/**
+ * Valida la firma de Twilio para asegurar que el request es legítimo.
+ * Si el header X-Twilio-Signature no está presente (dev/testing), se salta la validación.
+ */
+function validateTwilioRequest(
+  request: NextRequest,
+  params: Record<string, string>
+): boolean {
+  const signature = request.headers.get('x-twilio-signature');
+  if (!signature) return true; // Skip en desarrollo/testing
+
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  if (!authToken) {
+    console.warn('[Twilio] TWILIO_AUTH_TOKEN no configurado — saltando validación');
+    return true;
+  }
+
+  // Reconstruir la URL exacta que Twilio llamó
+  const host = request.headers.get('host') || 'localhost:3000';
+  const proto = request.headers.get('x-forwarded-proto') || 'https';
+  const url = `${proto}://${host}${request.nextUrl.pathname}`;
+
+  return validateRequest(authToken, signature, url, params);
+}
 
 /**
  * POST /api/webhooks/twilio
@@ -30,6 +56,7 @@ export async function POST(request: NextRequest) {
     let profileName: string | null;
     let messageSid: string | null;
     let to: string | null;
+    let params: Record<string, string> = {};
 
     const contentType = request.headers.get('content-type') || '';
 
@@ -47,6 +74,17 @@ export async function POST(request: NextRequest) {
       profileName = (formData.get('ProfileName') as string) || null;
       messageSid = (formData.get('MessageSid') as string) || null;
       to = (formData.get('To') as string) || null;
+
+      // Recolectar todos los params para validación de firma
+      Array.from(formData.entries()).forEach(([key, value]) => {
+        params[key] = value.toString();
+      });
+    }
+
+    // Validar firma de Twilio
+    if (!validateTwilioRequest(request, params)) {
+      console.warn('[Twilio] ⚠️ Firma inválida — posible spoofing');
+      return NextResponse.json({ error: 'Firma inválida' }, { status: 403 });
     }
 
     if (!from || !body) {

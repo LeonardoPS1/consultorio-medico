@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import plugin from 'tailwindcss/plugin';
 
 const config: Config = {
   darkMode: ['class'],
@@ -89,9 +90,25 @@ const config: Config = {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      transitionTimingFunction: {
+        'custom-out': 'cubic-bezier(0.16, 1, 0.3, 1)',
+        'custom-in-out': 'cubic-bezier(0.77, 0, 0.175, 1)',
+        'drawer': 'cubic-bezier(0.32, 0.72, 0, 1)',
+      },
+      boxShadow: {
+        'card': '0 1px 2px rgba(0,0,0,0.04)',
+        'card-hover': '0 4px 12px rgba(0,0,0,0.06)',
+        'toast': '0 8px 24px rgba(0,0,0,0.12)',
+      },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require('tailwindcss-animate'),
+    plugin(({ addVariant }) => {
+      // Variant que solo aplica en dispositivos con hover (excluye touch)
+      addVariant('hoverable', '@media (hover: hover) and (pointer: fine)');
+    }),
+  ],
 };
 
 export default config;

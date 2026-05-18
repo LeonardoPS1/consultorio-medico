@@ -233,7 +233,7 @@ export default function ConversacionesPage() {
                     className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                       filterCanal === canal
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        : 'bg-muted text-muted-foreground hoverable:hover:bg-muted/80'
                     }`}
                   >
                     {canalIconos[canal] || '📋'} {canal || 'Todas'}
@@ -279,7 +279,7 @@ export default function ConversacionesPage() {
                 {conversaciones.map((conv) => (
                   <div
                     key={conv.id}
-                    className={`flex items-start gap-3 p-3 cursor-pointer transition-colors hover:bg-muted/50 ${
+                    className={`flex items-start gap-3 p-3 cursor-pointer transition-colors hoverable:hover:bg-muted/50 ${
                       selectedId === conv.id ? 'bg-muted' : ''
                     }`}
                     onClick={() => setSelectedId(conv.id)}

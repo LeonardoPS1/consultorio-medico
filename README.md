@@ -60,16 +60,26 @@ Todo sin intervencion humana, todo en tu VPS, todo en espanol argentino.
 - Gestion de turnos (vista lista + calendario FullCalendar)
 - Fichas de pacientes con historial clinico
 - Bandeja unificada de conversaciones (WhatsApp + Email)
-- Recetas, reportes con graficos, configuracion completa
+- Recetas, reportes con graficos (Recharts SVG), configuracion completa
+- Exportacion a Excel y PDF de reportes
+- Comparativa mensual de metricas
 - Modo oscuro/claro, responsive, autenticacion segura
 
 ### 🔐 Seguridad
 
-- IA local (Ollama) - nada sale de tu VPS
-- Contrasenas hasheadas con bcrypt
+- IA local (Ollama) — nada sale de tu VPS
+- **2FA / MFA** con TOTP (Google Authenticator / Authy)
+- **Rate limiting** por IP (5 intentos/min login, 30/min API)
+- **Bloqueo de cuenta** tras 5 intentos fallidos (15 min)
+- **Auto-logout** por inactividad (30 min)
+- **Password validator** (8+ chars, mayuscula, numero, simbolo)
+- Headers HTTP de seguridad (X-Frame-Options, HSTS, CSP parcial)
 - Sesiones JWT con expiracion
+- Verificacion de firmas en webhooks de Twilio
+- Logs de auditoria de accesos a datos medicos
 - Consentimiento explicito para WhatsApp/Email
-- Logs de auditoria de todas las acciones
+- Sanitizacion de prompts IA anti-jailbreak
+- Backup encriptado automatico (pg_dump + GPG)
 
 ---
 

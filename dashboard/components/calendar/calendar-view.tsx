@@ -154,7 +154,7 @@ export function CalendarView({ turnos, onDateChange, onTurnoClick }: CalendarVie
                 return (
                   <div
                     key={day}
-                    className={`bg-background p-1.5 min-h-[80px] cursor-pointer transition-colors hover:bg-muted/50 ${
+                    className={`bg-background p-1.5 min-h-[80px] cursor-pointer transition-colors hoverable:hover:bg-muted/50 ${
                       isSelected ? 'ring-2 ring-primary ring-inset' : ''
                     }`}
                     onClick={() => {
@@ -245,7 +245,7 @@ export function CalendarView({ turnos, onDateChange, onTurnoClick }: CalendarVie
                   .map((turno) => (
                     <div
                       key={turno.id}
-                      className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer border-l-4"
+                      className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 hoverable:hover:bg-muted/50 transition-colors cursor-pointer border-l-4"
                       style={{ borderLeftColor: getTurnoColor(turno.estado) }}
                       onClick={() => onTurnoClick?.(turno)}
                     >

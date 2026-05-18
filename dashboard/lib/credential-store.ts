@@ -12,6 +12,15 @@ import fs from 'fs';
 import path from 'path';
 import { encrypt, decrypt, maskValue } from '@/lib/encryption';
 
+/** Helper para extraer rows de un resultado SQL (Drizzle + postgres-js) */
+function extractRows<T>(result: unknown): T[] {
+  if (Array.isArray(result)) return result as T[];
+  if (result && typeof result === 'object' && 'rows' in result) {
+    return (result as { rows: T[] }).rows;
+  }
+  return result as T[];
+}
+
 // ============================================================
 // Tipos
 // ============================================================
@@ -243,20 +252,23 @@ export async function getAllCredenciales(): Promise<CredencialData[]> {
       FROM credenciales
       ORDER BY orden, servicio, clave
     `);
-    const rows = (result as any).rows || result;
-    return rows.map((r: any) => ({
-      id: r.id,
-      servicio: r.servicio,
-      clave: r.clave,
-      valor: r.encriptado ? decrypt(r.valor) : r.valor,
-      encriptado: r.encriptado,
-      etiqueta: r.etiqueta || undefined,
-      n8nCredentialId: r.n8n_credential_id || undefined,
-      n8nCredentialType: r.n8n_credential_type || undefined,
-      orden: r.orden,
-      createdAt: r.created_at?.toISOString?.() || r.created_at,
-      updatedAt: r.updated_at?.toISOString?.() || r.updated_at,
-    }));
+    const rows = extractRows<Record<string, unknown>>(result);
+    return rows.map((r) => {
+      const raw = r as Record<string, unknown>;
+      return {
+        id: raw.id as string,
+        servicio: raw.servicio as string,
+        clave: raw.clave as string,
+        valor: raw.encriptado ? decrypt(raw.valor as string) : String(raw.valor ?? ''),
+        encriptado: raw.encriptado as boolean,
+        etiqueta: (raw.etiqueta as string) || undefined,
+        n8nCredentialId: (raw.n8n_credential_id as string) || undefined,
+        n8nCredentialType: (raw.n8n_credential_type as string) || undefined,
+        orden: raw.orden as number,
+        createdAt: typeof raw.created_at === 'object' ? (raw.created_at as Date).toISOString() : String(raw.created_at ?? ''),
+        updatedAt: typeof raw.updated_at === 'object' ? (raw.updated_at as Date).toISOString() : String(raw.updated_at ?? ''),
+      };
+    });
   }
 
   // Fallback JSON
@@ -333,20 +345,20 @@ export async function saveCredencial(input: CredencialInput): Promise<Credencial
                 created_at, updated_at
     `);
 
-    const rows2 = (result as any).rows || result;
-    const r = rows2[0];
+    const rows2 = extractRows<Record<string, unknown>>(result);
+    const raw = rows2[0] as Record<string, unknown>;
     return {
-      id: r.id,
-      servicio: r.servicio,
-      clave: r.clave,
+      id: raw.id as string,
+      servicio: raw.servicio as string,
+      clave: raw.clave as string,
       valor: input.valor, // Devolvemos el valor original (no encriptado)
       encriptado: true,
-      etiqueta: r.etiqueta || undefined,
-      n8nCredentialId: r.n8n_credential_id || undefined,
-      n8nCredentialType: r.n8n_credential_type || undefined,
-      orden: r.orden,
-      createdAt: r.created_at?.toISOString?.() || r.created_at,
-      updatedAt: r.updated_at?.toISOString?.() || r.updated_at,
+      etiqueta: (raw.etiqueta as string) || undefined,
+      n8nCredentialId: (raw.n8n_credential_id as string) || undefined,
+      n8nCredentialType: (raw.n8n_credential_type as string) || undefined,
+      orden: raw.orden as number,
+      createdAt: typeof raw.created_at === 'object' ? (raw.created_at as Date).toISOString() : String(raw.created_at ?? ''),
+      updatedAt: typeof raw.updated_at === 'object' ? (raw.updated_at as Date).toISOString() : String(raw.updated_at ?? ''),
     };
   }
 

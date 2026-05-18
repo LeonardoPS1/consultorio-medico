@@ -117,7 +117,7 @@ export default function PacientesPage() {
               {filtered.map((paciente) => (
                 <div
                   key={paciente.id}
-                  className="flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                  className="flex items-center gap-4 p-4 hoverable:hover:bg-muted/50 transition-colors cursor-pointer"
                   onClick={() => router.push(`/dashboard/pacientes/${paciente.id}`)}
                 >
                   <Avatar className="h-10 w-10">

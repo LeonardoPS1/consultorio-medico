@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -33,11 +33,18 @@ export function NuevaRecetaModal({ open, onOpenChange, onSubmit }: NuevaRecetaMo
   const [duracion, setDuracion] = useState('');
   const [indicaciones, setIndicaciones] = useState('');
   const [loading, setLoading] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       onSubmit?.({ paciente, medicamento, dosis, duracion, indicaciones });
       setLoading(false);
       onOpenChange(false);

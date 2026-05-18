@@ -2,7 +2,7 @@
 
 ## Esquema General
 
-16 tablas, 5 vistas, 30+ índices, triggers de auditoría automáticos.
+18 tablas, 5 vistas, 35+ índices, triggers de auditoría automáticos.
 
 ### Diagrama de Relaciones
 
@@ -36,7 +36,8 @@
 ┌──────────────────┐  ┌──────────────┐
 │ workflow_logs    │  │   ia_logs    │
 │ workflow_errors  │  │  twilio_logs │
-│   audit_log      │  │              │
+│ auditoria_       │  │              │
+│   accesos        │  │              │
 └──────────────────┘  └──────────────┘
 
 ┌──────────────────┐  ┌──────────────────┐
@@ -58,6 +59,7 @@ Las migraciones son **acumulativas** y deben ejecutarse en orden:
 | 005 | `005_logs.sql` | `workflow_logs`, `workflow_errors`, `twilio_logs`, `ia_logs`, `audit_log` |
 | 006 | `006_indices.sql` | Índices + vistas `turnos_del_dia`, `proximos_turnos`, `metricas_intenciones`, `pacientes_nuevos_por_mes` |
 | 007 | `007_credenciales.sql` | `credenciales` + vista `credenciales_activas` |
+| 008 | `008_seguridad.sql` | `auditoria_accesos` + columnas 2FA en `usuarios` |
 
 ```bash
 # Ejecutar todas las migraciones
@@ -82,6 +84,8 @@ Acceso al dashboard del consultorio.
 | `rol` | ENUM | `admin`, `medico`, `secretaria`, `recepcionista` |
 | `activo` | BOOLEAN | Si puede iniciar sesión |
 | `ultimo_acceso` | TIMESTAMPTZ | Último login |
+| `secreto_2fa` | VARCHAR(255) | Secreto TOTP para 2FA |
+| `activo_2fa` | BOOLEAN(default false) | 2FA habilitado |
 | `deleted_at` | TIMESTAMPTZ | Soft delete |
 
 #### `medicos`
@@ -223,6 +227,28 @@ Cantidad de pacientes registrados agrupados por mes.
 - `idx_conversaciones_ultima`: Ordenar conversaciones por última interacción
 - `idx_recetas_activas`: Listar recetas vigentes rápidamente
 - `idx_mensajes_intencion`: Agrupar mensajes por intención para reportes
+- `idx_auditoria_accion`: Filtrar auditoría por tipo de acción
+- `idx_auditoria_entidad`: Filtrar auditoría por entidad afectada
+- `idx_auditoria_usuario`: Buscar acciones de un usuario específico
+- `idx_auditoria_created_at`: Ordenar auditoría por fecha
+
+## Tabla: `auditoria_accesos`
+
+Registro de todas las operaciones sobre datos sensibles (cumplimiento Ley 26.529).
+
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | UUID PK | Identificador único |
+| `usuario_id` | UUID FK | Usuario que realizó la acción |
+| `usuario_email` | VARCHAR(255) | Email del usuario (redundante para consultas rápidas) |
+| `usuario_nombre` | VARCHAR(255) | Nombre del usuario |
+| `accion` | VARCHAR(100) | Tipo: `login`, `logout`, `view`, `create`, `edit`, `delete`, `export`, `config` |
+| `entidad` | VARCHAR(100) | Recurso afectado: `paciente`, `turno`, `receta`, `credencial`, etc. |
+| `entidad_id` | VARCHAR(255) | ID del recurso afectado |
+| `detalle` | TEXT | Descripción de la operación |
+| `ip` | VARCHAR(45) | Dirección IP del cliente |
+| `user_agent` | TEXT | User-Agent del navegador |
+| `created_at` | TIMESTAMPTZ | Fecha del evento |
 
 ## Triggers
 

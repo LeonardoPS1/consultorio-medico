@@ -151,14 +151,14 @@ export default function PacienteDetailPage() {
           setMedCronica(res.data.medicacionCronica || '');
         }
       })
-      .catch(() => {});
+      .catch(() => console.warn('[Paciente] Error al cargar datos del paciente'));
 
     fetch(`/api/pacientes/${pid}/historial`)
       .then(r => r.json())
       .then(res => {
         if (res.data?.length > 0) setHistorial(res.data);
       })
-      .catch(() => {});
+      .catch(() => console.warn('[Paciente] Error al cargar historial'));
   }, [pid]);
 
   // Guardar datos del paciente

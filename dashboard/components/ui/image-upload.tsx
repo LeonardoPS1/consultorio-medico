@@ -105,8 +105,8 @@ export function ImageUpload({
           isDragging
             ? 'border-primary bg-primary/5 scale-105'
             : value
-            ? 'border-border hover:border-primary/50'
-            : 'border-muted-foreground/30 hover:border-primary/50 bg-muted/30',
+            ? 'border-border hoverable:hover:border-primary/50'
+            : 'border-muted-foreground/30 hoverable:hover:border-primary/50 bg-muted/30',
           loading && 'opacity-50 pointer-events-none'
         )}
         onDragOver={(e) => {
@@ -162,7 +162,7 @@ export function ImageUpload({
                   e.preventDefault();
                   onRemove();
                 }}
-                className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-destructive hover:bg-destructive/90 text-white flex items-center justify-center shadow-md z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-destructive hoverable:hover:bg-destructive/90 text-white flex items-center justify-center shadow-md z-20 opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <X className="h-3 w-3" />
               </button>

@@ -1,124 +1,49 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import {
-  TrendingUp, TrendingDown, Users, Calendar, MessageSquare, DollarSign,
-  Download, BarChart3, PieChart, Activity, Phone, Mail, CheckCircle2, XCircle,
-  Clock, ArrowUpRight, ArrowDownRight, FileSpreadsheet,
+  TrendingUp, TrendingDown, MessageSquare, Calendar, Activity,
+  Download, BarChart3, PieChart, Mail, CheckCircle2,
+  Clock, ArrowUpRight, Users, Phone, XCircle, FileSpreadsheet,
+  FileText,
 } from 'lucide-react';
+import {
+  Periodo,
+  intencionesPorPeriodo,
+  pacientesPorObraSocial, MaxObraSocial,
+  datosPorPeriodo, comparativaPorPeriodo,
+} from './reportes-data';
+import TurnosChart from '@/components/charts/turnos-chart';
+import NuevosPacientesChart from '@/components/charts/nuevos-pacientes-chart';
+import VolumenWhatsAppChart from '@/components/charts/volumen-whatsapp-chart';
+import DistribucionEstadosChart from '@/components/charts/distribucion-estados-chart';
+import ComparativaMensual from '@/components/reportes/comparativa-mensual';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { exportReporteExcel } from '@/lib/export-reporte-excel';
 
-// ============================================================
-// Tipos y datos
-// ============================================================
-
-type Periodo = 'semana' | 'mes' | 'año';
-
-interface Metricas { titulo: string; valor: string; cambio: string; icon?: any; up: boolean; }
-interface TurnoDia { dia: string; cantidad: number; completados: number; cancelados: number; ausentes: number; }
-interface WhatsAppM { titulo: string; valor: string; cambio: string; up: boolean; }
-
-const intencionesData = [
-  { intencion: 'Consulta', cantidad: 245, porcentaje: 38, icon: MessageSquare },
-  { intencion: 'Reserva turno', cantidad: 180, porcentaje: 28, icon: Calendar },
-  { intencion: 'Cancelación', cantidad: 65, porcentaje: 10, icon: XCircle },
-  { intencion: 'Receta', cantidad: 85, porcentaje: 13, icon: Activity },
-  { intencion: 'Urgencia', cantidad: 12, porcentaje: 2, icon: TrendingUp },
-  { intencion: 'Otros', cantidad: 58, porcentaje: 9, icon: MessageSquare },
+const iconosIntencion = [
+  MessageSquare, Calendar, XCircle, Activity, TrendingUp, MessageSquare,
 ];
-
-const pacientesPorObraSocial = [
-  { obra: 'OSDE', cantidad: 28 }, { obra: 'Swiss Medical', cantidad: 22 },
-  { obra: 'Galeno', cantidad: 15 }, { obra: 'Medicus', cantidad: 10 },
-  { obra: 'Particular', cantidad: 32 }, { obra: 'Otras', cantidad: 8 },
-];
-
-const MaxObraSocial = Math.max(...pacientesPorObraSocial.map(t => t.cantidad));
-
-const datosPorPeriodo: Record<Periodo, { metricas: Metricas[]; turnos: TurnoDia[]; whatsapp: WhatsAppM[]; nuevosPacientes: number[] }> = {
-  semana: {
-    metricas: [
-      { titulo: 'Turnos esta semana', valor: '34', cambio: '+5%', icon: Calendar, up: true },
-      { titulo: 'Pacientes nuevos', valor: '3', cambio: '+2', icon: Users, up: true },
-      { titulo: 'Tasa de ausentismo', valor: '4.1%', cambio: '-0.5%', icon: TrendingDown, up: false },
-      { titulo: 'Ingresos estimados', valor: '$98,000', cambio: '+7%', icon: DollarSign, up: true },
-    ],
-    turnos: [
-      { dia: 'Lun', cantidad: 7, completados: 6, cancelados: 1, ausentes: 0 },
-      { dia: 'Mar', cantidad: 8, completados: 7, cancelados: 0, ausentes: 1 },
-      { dia: 'Mié', cantidad: 6, completados: 5, cancelados: 1, ausentes: 0 },
-      { dia: 'Jue', cantidad: 8, completados: 8, cancelados: 0, ausentes: 0 },
-      { dia: 'Vie', cantidad: 5, completados: 4, cancelados: 0, ausentes: 1 },
-    ],
-    whatsapp: [
-      { titulo: 'Mensajes recibidos', valor: '287', cambio: '+8%', up: true },
-      { titulo: 'Mensajes enviados', valor: '245', cambio: '+5%', up: true },
-      { titulo: 'Tasa de respuesta', valor: '96%', cambio: '+2%', up: true },
-      { titulo: 'Opt-outs', valor: '2', cambio: '-1', up: false },
-    ],
-    nuevosPacientes: [2, 1, 3, 0, 2],
-  },
-  mes: {
-    metricas: [
-      { titulo: 'Turnos este mes', valor: '142', cambio: '+12%', icon: Calendar, up: true },
-      { titulo: 'Pacientes activos', valor: '89', cambio: '+8%', icon: Users, up: true },
-      { titulo: 'Tasa de ausentismo', valor: '6.3%', cambio: '-2.1%', icon: TrendingDown, up: false },
-      { titulo: 'Ingresos estimados', valor: '$425,000', cambio: '+18%', icon: DollarSign, up: true },
-    ],
-    turnos: [
-      { dia: 'Lun', cantidad: 28, completados: 24, cancelados: 2, ausentes: 2 },
-      { dia: 'Mar', cantidad: 32, completados: 30, cancelados: 1, ausentes: 1 },
-      { dia: 'Mié', cantidad: 25, completados: 22, cancelados: 2, ausentes: 1 },
-      { dia: 'Jue', cantidad: 35, completados: 32, cancelados: 1, ausentes: 2 },
-      { dia: 'Vie', cantidad: 30, completados: 28, cancelados: 1, ausentes: 1 },
-      { dia: 'Sáb', cantidad: 8, completados: 7, cancelados: 1, ausentes: 0 },
-    ],
-    whatsapp: [
-      { titulo: 'Mensajes recibidos', valor: '1,245', cambio: '+23%', up: true },
-      { titulo: 'Mensajes enviados', valor: '980', cambio: '+18%', up: true },
-      { titulo: 'Tasa de respuesta', valor: '94%', cambio: '+5%', up: true },
-      { titulo: 'Opt-outs', valor: '12', cambio: '-3%', up: false },
-    ],
-    nuevosPacientes: [5, 8, 12, 10, 8],
-  },
-  año: {
-    metricas: [
-      { titulo: 'Turnos este año', valor: '1,892', cambio: '+22%', icon: Calendar, up: true },
-      { titulo: 'Pacientes totales', valor: '245', cambio: '+35%', icon: Users, up: true },
-      { titulo: 'Tasa de ausentismo', valor: '5.8%', cambio: '-1.2%', icon: TrendingDown, up: false },
-      { titulo: 'Ingresos estimados', valor: '$5.2M', cambio: '+31%', icon: DollarSign, up: true },
-    ],
-    turnos: [
-      { dia: 'Ene', cantidad: 142, completados: 130, cancelados: 8, ausentes: 4 },
-      { dia: 'Feb', cantidad: 158, completados: 145, cancelados: 7, ausentes: 6 },
-      { dia: 'Mar', cantidad: 165, completados: 152, cancelados: 8, ausentes: 5 },
-      { dia: 'Abr', cantidad: 148, completados: 138, cancelados: 6, ausentes: 4 },
-      { dia: 'May', cantidad: 142, completados: 130, cancelados: 7, ausentes: 5 },
-    ],
-    whatsapp: [
-      { titulo: 'Mensajes recibidos', valor: '12,450', cambio: '+45%', up: true },
-      { titulo: 'Mensajes enviados', valor: '10,200', cambio: '+38%', up: true },
-      { titulo: 'Tasa de respuesta', valor: '92%', cambio: '+3%', up: true },
-      { titulo: 'Opt-outs', valor: '85', cambio: '-12%', up: false },
-    ],
-    nuevosPacientes: [12, 18, 22, 15, 20, 25, 28, 30, 22, 18, 15, 20],
-  },
-};
 
 export default function ReportesPage() {
   const [periodo, setPeriodo] = useState<Periodo>('mes');
   const datos = datosPorPeriodo[periodo];
-  const MaxTurnos = Math.max(...datos.turnos.map(t => t.cantidad));
+  const intencionesData = intencionesPorPeriodo[periodo];
+  const comparativa = comparativaPorPeriodo[periodo];
 
-  const exportarReporte = () => {
+  const exportarReporte = (formato: 'pdf' | 'excel') => {
     const periodoLabel = periodo === 'semana' ? 'Semanal' : periodo === 'mes' ? 'Mensual' : 'Anual';
     const fechaHoy = new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
     const maxTurnos = Math.max(...datos.turnos.map(t => t.cantidad)) || 1;
-    const maxIntencion = Math.max(...intencionesData.map(i => i.cantidad)) || 1;
+    const intencionesExport = intencionesPorPeriodo[periodo];
+    const maxIntencion = Math.max(...intencionesExport.map(i => i.cantidad)) || 1;
 
     const html = `<!DOCTYPE html>
 <html lang="es">
@@ -194,12 +119,12 @@ export default function ReportesPage() {
 
 <div class="section-title">💬 Intenciones de Mensajes</div>
 <div style="background:#fafafa;border-radius:6px;padding:10px;border:1px solid #eee;margin-bottom:10px">
-  ${intencionesData.map((item, idx) => {
+  ${intencionesExport.map((item, idx) => {
     const colores = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#64748b'];
-    return `<div class="hc-row">
-      <div class="hc-label">${item.intencion}</div>
-      <div class="hc-bar-wrap"><div class="hc-bar" style="width:${(item.cantidad / maxIntencion) * 100}%;background-color:${colores[idx]}"></div></div>
-      <div class="hc-pct">${item.cantidad}</div>
+    return `<div class=\"hc-row\">
+      <div class=\"hc-label\">${item.intencion}</div>
+      <div class=\"hc-bar-wrap\"><div class=\"hc-bar\" style=\"width:${(item.cantidad / maxIntencion) * 100}%;background-color:${colores[idx]}\"></div></div>
+      <div class=\"hc-pct\">${item.cantidad}</div>
     </div>`;
   }).join('')}
 </div>
@@ -224,6 +149,22 @@ export default function ReportesPage() {
   <p style="font-size:10px;color:#888;margin-top:4px">Seleccioná "Guardar como PDF" en el diálogo de impresión</p>
 </div>
 </body></html>`;
+
+    if (formato === 'excel') {
+      try {
+        exportReporteExcel({
+          periodo,
+          datos,
+          intenciones: intencionesData,
+          pacientesObraSocial: pacientesPorObraSocial,
+          fecha: fechaHoy,
+        });
+        toast({ title: '📊 Excel descargado', description: `Reporte ${periodoLabel} exportado correctamente` });
+      } catch {
+        toast({ title: '❌ Error', description: 'No se pudo generar el archivo Excel', variant: 'destructive' });
+      }
+      return;
+    }
 
     const ventana = window.open('', '_blank');
     if (ventana) {
@@ -257,10 +198,24 @@ export default function ReportesPage() {
               Año
             </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={exportarReporte}>
-            <Download className="h-4 w-4 mr-1" />
-            Exportar
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-1" />
+                Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[180px]">
+              <DropdownMenuItem onClick={() => exportarReporte('pdf')}>
+                <FileText className="h-4 w-4 mr-2" />
+                Exportar PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportarReporte('excel')}>
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Exportar Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -282,6 +237,10 @@ export default function ReportesPage() {
             <MessageSquare className="h-4 w-4 mr-1" />
             WhatsApp
           </TabsTrigger>
+          <TabsTrigger value="comparativa">
+            <Activity className="h-4 w-4 mr-1" />
+            Comparativa
+          </TabsTrigger>
         </TabsList>
 
         {/* ============ TAB GENERAL ============ */}
@@ -291,7 +250,7 @@ export default function ReportesPage() {
             {datos.metricas.map((m) => {
               const Icon = m.icon;
               return (
-                <Card key={m.titulo} className="transition-all hover:shadow-md">
+                <Card key={m.titulo} className="transition-all hoverable:hover:shadow-card-hover">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">{m.titulo}</CardTitle>
                     <Icon className="h-4 w-4 text-muted-foreground" />
@@ -320,65 +279,11 @@ export default function ReportesPage() {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-primary" />
-                  Turnos por día de la semana
+                  Turnos por día
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-3">
-                {/* Grilla de referencia */}
-                <div className="relative h-56 mb-2">
-                  {/* Líneas de referencia horizontales */}
-                  {[0, 25, 50, 75, 100].map((linea) => (
-                    <div
-                      key={linea}
-                      className="absolute left-0 right-0 border-t border-dashed border-muted-foreground/15"
-                      style={{ bottom: `${linea}%` }}
-                    >
-                      <span className="absolute -left-2 -top-2.5 text-[9px] text-muted-foreground/40 tabular-nums">
-                        {Math.round((MaxTurnos * linea) / 100)}
-                      </span>
-                    </div>
-                  ))}
-                  {/* Barras */}
-                  <div className="absolute inset-0 flex items-end justify-around gap-1.5 px-2">
-                    {datos.turnos.map((t, idx) => {
-                      const maxVal = MaxTurnos || 1;
-                      const altura = Math.max((t.cantidad / maxVal) * 100, 5);
-                      const tonos = ['#3b82f6', '#60a5fa', '#2563eb', '#1d4ed8', '#93c5fd', '#818cf8'];
-                      return (
-                        <div key={t.dia} className="flex flex-col items-center gap-1 flex-1 self-stretch justify-end group">
-                          <span className="text-xs font-bold tabular-nums text-foreground/90 group-hover:text-primary transition-colors">
-                            {t.cantidad}
-                          </span>
-                          <div
-                            className="w-full rounded-sm transition-all duration-200 ease-out cursor-pointer relative"
-                            style={{
-                              height: `${altura}%`,
-                              minHeight: t.cantidad > 0 ? '8px' : '2px',
-                              backgroundColor: tonos[idx % tonos.length],
-                            }}
-                          >
-                            {/* Hover detail */}
-                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-white/20 transition-opacity rounded-sm" />
-                            {/* Tooltip */}
-                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] rounded-md px-2.5 py-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap border border-border/50 pointer-events-none z-10 shadow-sm">
-                              <div className="font-semibold">{t.cantidad} turnos</div>
-                              <div className="opacity-80 mt-0.5">
-                                ✅ {t.completados} · ❌ {t.cancelados} · ⏳ {t.ausentes}
-                              </div>
-                              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rotate-45" />
-                            </div>
-                          </div>
-                          <span className="text-[9px] text-muted-foreground font-medium">{t.dia}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground border-t pt-2.5">
-                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-emerald-500" /> Completados</span>
-                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-amber-500" /> Cancelados</span>
-                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-red-500" /> Ausentes</span>
-                </div>
+                <TurnosChart data={datos.turnos} />
               </CardContent>
             </Card>
 
@@ -393,7 +298,7 @@ export default function ReportesPage() {
               <CardContent>
                 <div className="space-y-5">
                   {intencionesData.map((item, idx) => {
-                    const Icon = item.icon;
+                    const Icon = iconosIntencion[idx];
                     const colores = [
                       'from-blue-500 to-blue-600', 'from-emerald-500 to-emerald-600',
                       'from-amber-500 to-amber-600', 'from-purple-500 to-purple-600',
@@ -438,9 +343,9 @@ export default function ReportesPage() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Total Turnos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">158</div>
+                <div className="text-2xl font-bold">{datos.turnosKpis.total}</div>
                 <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
-                  <ArrowUpRight className="h-3 w-3" /> +12% este mes
+                  <ArrowUpRight className="h-3 w-3" /> {datos.turnosKpis.cambioTotal} este {periodo === 'año' ? 'año' : periodo === 'mes' ? 'mes' : 'período'}
                 </p>
               </CardContent>
             </Card>
@@ -449,9 +354,9 @@ export default function ReportesPage() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Tasa de Asistencia</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">93.7%</div>
+                <div className="text-2xl font-bold">{datos.turnosKpis.asistencia}</div>
                 <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
-                  <ArrowUpRight className="h-3 w-3" /> +2.1% vs mes anterior
+                  <ArrowUpRight className="h-3 w-3" /> vs período anterior
                 </p>
               </CardContent>
             </Card>
@@ -460,7 +365,7 @@ export default function ReportesPage() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Duración Promedio</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">28 min</div>
+                <div className="text-2xl font-bold">{datos.turnosKpis.duracion}</div>
                 <p className="text-xs text-muted-foreground mt-1">Por consulta</p>
               </CardContent>
             </Card>
@@ -471,53 +376,32 @@ export default function ReportesPage() {
               <CardTitle className="text-lg">Distribución por Estado</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-5 gap-4">
-                {[
-                  { estado: 'Completados', valor: 115, color: 'bg-emerald-500' },
-                  { estado: 'Pendientes', valor: 18, color: 'bg-amber-500' },
-                  { estado: 'Cancelados', valor: 15, color: 'bg-red-500' },
-                  { estado: 'Ausentes', valor: 8, color: 'bg-purple-500' },
-                  { estado: 'En consulta', valor: 2, color: 'bg-blue-500' },
-                ].map((item) => (
-                  <div key={item.estado} className="text-center">
-                    <div className="flex items-center justify-center h-20 mb-2">
-                      <div className={`w-full rounded-lg ${item.color} opacity-80`}
-                        style={{ height: `${(item.valor / 115) * 100}%`, maxHeight: '100%' }}
-                      />
-                    </div>
-                    <p className="text-lg font-bold">{item.valor}</p>
-                    <p className="text-xs text-muted-foreground">{item.estado}</p>
-                  </div>
-                ))}
-              </div>
+              <DistribucionEstadosChart data={datos.distribucionEstados} />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Próximos Pasos</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                Features disponibles
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/5 border border-amber-200/50">
-                  <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-amber-600" />
-                    <div>
-                      <p className="text-sm font-medium">Exportación a Excel</p>
-                      <p className="text-xs text-muted-foreground">Descargá reportes detallados en formato XLSX</p>
-                    </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-200/50">
+                  <Download className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Exportar a Excel</p>
+                    <p className="text-xs text-muted-foreground">Descargalo desde el botón Exportar</p>
                   </div>
-                  <Badge variant="outline" className="text-amber-600 border-amber-300">Próximamente</Badge>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/5 border border-blue-200/50">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-5 w-5 text-blue-600" />
-                    <div>
-                      <p className="text-sm font-medium">Comparativa mensual</p>
-                      <p className="text-xs text-muted-foreground">Compará métricas entre períodos seleccionables</p>
-                    </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-500/5 border border-blue-200/50">
+                  <Activity className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Comparativa mensual</p>
+                    <p className="text-xs text-muted-foreground">Analizala en la pestaña Comparativa</p>
                   </div>
-                  <Badge variant="outline" className="text-blue-600 border-blue-300">Próximamente</Badge>
                 </div>
               </div>
             </CardContent>
@@ -529,12 +413,14 @@ export default function ReportesPage() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Pacientes</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {periodo === 'año' ? 'Total Pacientes en el año' : periodo === 'mes' ? 'Pacientes Activos' : 'Pacientes en la semana'}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">89</div>
+                <div className="text-2xl font-bold">{datos.pacientesKpis.total}</div>
                 <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
-                  <ArrowUpRight className="h-3 w-3" /> +8 nuevos este mes
+                  <ArrowUpRight className="h-3 w-3" /> +{datos.pacientesKpis.nuevos} nuevos este {periodo === 'año' ? 'año' : periodo === 'mes' ? 'mes' : 'período'}
                 </p>
               </CardContent>
             </Card>
@@ -543,7 +429,7 @@ export default function ReportesPage() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Pacientes Frecuentes</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">42</div>
+                <div className="text-2xl font-bold">{datos.pacientesKpis.frecuentes}</div>
                 <p className="text-xs text-muted-foreground mt-1">+3 turnos en los últimos 6 meses</p>
               </CardContent>
             </Card>
@@ -552,7 +438,7 @@ export default function ReportesPage() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Edad Promedio</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">42</div>
+                <div className="text-2xl font-bold">{datos.pacientesKpis.edadPromedio}</div>
                 <p className="text-xs text-muted-foreground mt-1">Rango: 18-85 años</p>
               </CardContent>
             </Card>
@@ -564,43 +450,37 @@ export default function ReportesPage() {
                 <CardTitle className="text-lg">Distribución por Obra Social</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {pacientesPorObraSocial.map((p) => (
-                  <div key={p.obra}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>{p.obra}</span>
-                      <span className="text-muted-foreground">{p.cantidad} ({Math.round(p.cantidad / 115 * 100)}%)</span>
+                {pacientesPorObraSocial.map((p) => {
+                  const totalPac = pacientesPorObraSocial.reduce((sum, o) => sum + o.cantidad, 0);
+                  return (
+                    <div key={p.obra}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>{p.obra}</span>
+                        <span className="text-muted-foreground">{p.cantidad} ({Math.round(p.cantidad / totalPac * 100)}%)</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-[height] duration-500 ease-custom-out"
+                          style={{ width: `${(p.cantidad / MaxObraSocial) * 100}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full"
-                        style={{ width: `${(p.cantidad / MaxObraSocial) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Nuevos Pacientes por Mes</CardTitle>
+                <CardTitle className="text-lg">Nuevos Pacientes</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-end justify-between gap-2 h-40">
-                  {['Ene', 'Feb', 'Mar', 'Abr', 'May'].map((mes, i) => {
-                    const valores = [5, 8, 12, 10, 8];
-                    return (
-                      <div key={mes} className="flex flex-col items-center gap-2 flex-1">
-                        <span className="text-xs text-muted-foreground">{valores[i]}</span>
-                        <div
-                          className="w-full rounded-md bg-emerald-400/80 hover:bg-emerald-400 transition-colors"
-                          style={{ height: `${(valores[i] / 12) * 100}%` }}
-                        />
-                        <span className="text-xs text-muted-foreground">{mes}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                <NuevosPacientesChart
+                  data={datos.nuevosPacientes.map((val, i) => ({
+                    label: datos.nuevosPacientesLabels[i] || `#${i + 1}`,
+                    valor: val,
+                  }))}
+                />
               </CardContent>
             </Card>
           </div>
@@ -635,31 +515,7 @@ export default function ReportesPage() {
                 <CardTitle className="text-lg">Volumen de Mensajes</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-end justify-between gap-2 h-40">
-                  {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map((dia, i) => {
-                    const recibidos = [45, 52, 38, 55, 48, 12];
-                    const enviados = [35, 42, 30, 45, 38, 8];
-                    return (
-                      <div key={dia} className="flex flex-col items-center gap-1 flex-1">
-                        <div className="w-full flex flex-col-reverse gap-0.5 h-32">
-                          <div
-                            className="w-full rounded-sm bg-primary/60"
-                            style={{ height: `${(enviados[i] / 55) * 100}%` }}
-                          />
-                          <div
-                            className="w-full rounded-sm bg-primary"
-                            style={{ height: `${(recibidos[i] / 55) * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-muted-foreground">{dia}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" /> Recibidos</span>
-                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary/60" /> Enviados</span>
-                </div>
+                <VolumenWhatsAppChart data={datos.volumenWhatsApp} />
               </CardContent>
             </Card>
 
@@ -668,28 +524,27 @@ export default function ReportesPage() {
                 <CardTitle className="text-lg">Canales de Contacto</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {[
-                  { canal: 'WhatsApp', porcentaje: 78, icon: MessageSquare, color: 'bg-emerald-500' },
-                  { canal: 'Email', porcentaje: 15, icon: Mail, color: 'bg-blue-500' },
-                  { canal: 'SMS', porcentaje: 5, icon: Phone, color: 'bg-purple-500' },
-                  { canal: 'Web', porcentaje: 2, icon: GlobeIcon, color: 'bg-amber-500' },
-                ].map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div key={item.canal}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="flex items-center gap-2">
-                          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                          {item.canal}
-                        </span>
-                        <span className="font-medium">{item.porcentaje}%</span>
+                {(() => {
+                  const iconosCanal = [MessageSquare, Mail, Phone, GlobeIcon];
+                  const coloresCanal = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500'];
+                  return datos.canalesContacto.map((item, i) => {
+                    const Icon = iconosCanal[i];
+                    return (
+                      <div key={item.canal}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="flex items-center gap-2">
+                            <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                            {item.canal}
+                          </span>
+                          <span className="font-medium">{item.porcentaje}%</span>
+                        </div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div className={`h-full ${coloresCanal[i]} rounded-full transition-[width] duration-500 ease-custom-out`} style={{ width: `${item.porcentaje}%` }} />
+                        </div>
                       </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.porcentaje}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </CardContent>
             </Card>
           </div>
@@ -702,22 +557,27 @@ export default function ReportesPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 rounded-lg bg-emerald-500/5">
                   <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-emerald-600">94%</p>
+                  <p className="text-2xl font-bold text-emerald-600">{datos.calidadRespuesta.tasa}</p>
                   <p className="text-xs text-muted-foreground">Tasa de respuesta</p>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-blue-500/5">
                   <Clock className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-blue-600">&lt;5 min</p>
+                  <p className="text-2xl font-bold text-blue-600">&lt;{datos.calidadRespuesta.tiempo}</p>
                   <p className="text-xs text-muted-foreground">Tiempo promedio</p>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-purple-500/5">
                   <MessageSquare className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-purple-600">2.3</p>
+                  <p className="text-2xl font-bold text-purple-600">{datos.calidadRespuesta.msgsPorConv}</p>
                   <p className="text-xs text-muted-foreground">Mensajes por conv.</p>
                 </div>
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ============ TAB COMPARATIVA ============ */}
+        <TabsContent value="comparativa" className="mt-4 space-y-6">
+          <ComparativaMensual data={comparativa} periodo={periodo} />
         </TabsContent>
       </Tabs>
     </div>
