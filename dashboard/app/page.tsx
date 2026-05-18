@@ -280,7 +280,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── Features ────────────────────────────────────────── */}
-      <section id="features" className="border-t bg-muted/30">
+      <section id="features" className="border-t bg-muted/30 scroll-mt-20">
         <div className="container mx-auto px-4 md:px-6 py-20 md:py-28">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -313,7 +313,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── Pricing ─────────────────────────────────────────── */}
-      <section id="pricing" className="border-t">
+      <section id="pricing" className="border-t scroll-mt-20">
         <div className="container mx-auto px-4 md:px-6 py-20 md:py-28">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -329,7 +329,7 @@ export default function LandingPage() {
             {plans.map((plan) => (
               <div
                 key={plan.name}
-                className={`relative rounded-xl border bg-card p-6 flex flex-col ${
+                className={`relative rounded-xl border bg-card p-6 flex flex-col h-full ${
                   plan.popular ? 'ring-2 ring-primary shadow-lg scale-[1.02]' : ''
                 }`}
               >
@@ -350,7 +350,7 @@ export default function LandingPage() {
                   <p className="text-xs text-muted-foreground mt-2">{plan.desc}</p>
                 </div>
 
-                <ul className="space-y-2.5 flex-1">
+                <ul className="space-y-2.5 mb-6">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-xs">
                       <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
@@ -359,15 +359,17 @@ export default function LandingPage() {
                   ))}
                 </ul>
 
-                <Button
-                  variant={plan.popular ? 'default' : 'outline'}
-                  className="w-full mt-6"
-                  asChild
-                >
+                <div className="mt-auto">
+                  <Button
+                    variant={plan.popular ? 'default' : 'outline'}
+                    className="w-full"
+                    asChild
+                  >
                   <Link href={`/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion%26plan%3D${plan.name.toLowerCase()}`}>
                     {plan.cta}
                   </Link>
                 </Button>
+                </div>
               </div>
             ))}
           </div>
