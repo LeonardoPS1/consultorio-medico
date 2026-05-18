@@ -149,7 +149,7 @@ export default function LandingPage() {
             <img
               src="/aicoremed_dark_1200.svg"
               alt="AiCoreMed"
-              className="h-10 w-auto"
+              className="h-12 w-auto"
             />
           </Link>
 
@@ -164,8 +164,10 @@ export default function LandingPage() {
             <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors">
               Iniciar sesión
             </Link>
-            <Button size="sm" onClick={() => scrollTo('pricing')}>
-              Comenzar gratis
+            <Button size="sm" asChild>
+              <Link href="/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion">
+                Comenzar gratis
+              </Link>
             </Button>
           </nav>
 
@@ -203,8 +205,10 @@ export default function LandingPage() {
               >
                 Iniciar sesión <ChevronRight className="h-4 w-4" />
               </Link>
-              <Button className="mt-2" onClick={() => { setMobileMenu(false); scrollTo('pricing'); }}>
-                Comenzar gratis
+              <Button className="mt-2" asChild>
+                <Link href="/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion" onClick={() => setMobileMenu(false)}>
+                  Comenzar gratis
+                </Link>
               </Button>
             </nav>
           </div>
@@ -352,7 +356,9 @@ export default function LandingPage() {
                   className="w-full"
                   asChild
                 >
-                  <Link href="/login">{plan.cta}</Link>
+                  <Link href={`/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion%26plan%3D${plan.name.toLowerCase()}`}>
+                    {plan.cta}
+                  </Link>
                 </Button>
               </div>
             ))}
@@ -375,7 +381,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="text-base h-12 px-8" asChild>
-              <Link href="/login">
+              <Link href="/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion">
                 Comenzar prueba gratis
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Link>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +21,7 @@ export default function SuscripcionTab() {
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const autoTriggerDone = useRef(false);
 
   useEffect(() => {
     fetch('/api/pagos/status')
@@ -35,6 +36,19 @@ export default function SuscripcionTab() {
       .catch(() => setError('Error al cargar estado'))
       .finally(() => setLoading(false));
   }, []);
+
+  // Si llegó con un plan desde la landing → auto checkout
+  useEffect(() => {
+    if (autoTriggerDone.current) return;
+    if (loading) return;
+    const planParam = new URLSearchParams(window.location.search).get('plan');
+    if (planParam && PLANES[planParam]) {
+      autoTriggerDone.current = true;
+      // Pequeño delay para que termine de cargar todo
+      const timer = setTimeout(() => handleCheckout(planParam), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
 
   const handleCheckout = async (planId: string) => {
     setCheckoutLoading(planId);

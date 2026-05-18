@@ -82,15 +82,15 @@ export default function LoginPage() {
       <Card className="w-full max-w-md relative animate-in">
         <CardHeader className="text-center space-y-2">
           <Link href="/" className="mx-auto block">
-            <div className="mx-auto h-[360px] w-[360px]">
+            <div className="mx-auto h-28 w-56 flex items-center justify-center">
               <img
                 src="/aicoremed_dark_1200.svg"
                 alt={orgNombre}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
               />
             </div>
           </Link>
-          <CardTitle className="text-2xl font-bold">{orgNombre}</CardTitle>
+          <CardTitle className="text-xl font-bold">{orgNombre}</CardTitle>
           <CardDescription>
             {step2fa
               ? 'Verificación de dos factores'
