@@ -147,7 +147,8 @@ export function middleware(request: NextRequest) {
 
   // ─── 4. Si ya tiene sesión y va al login, redirigir ──
   if (pathname === '/login' && request.method === 'GET' && hasSessionCookie(request)) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const callbackUrl = request.nextUrl.searchParams.get('callbackUrl') || '/dashboard';
+    return NextResponse.redirect(new URL(callbackUrl, request.url));
   }
 
   return response;
