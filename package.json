@@ -8,5 +8,8 @@
     "test": "pnpm --filter ./dashboard test",
     "lint": "pnpm --filter ./dashboard lint",
     "type-check": "pnpm --filter ./dashboard type-check"
+  },
+  "dependencies": {
+    "pdfkit": "^0.18.0"
   }
 }
