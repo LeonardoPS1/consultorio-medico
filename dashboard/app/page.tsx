@@ -350,7 +350,7 @@ export default function LandingPage() {
                   <p className="text-xs text-muted-foreground mt-2">{plan.desc}</p>
                 </div>
 
-                <ul className="space-y-2.5 flex-1 mb-6">
+                <ul className="space-y-2.5 flex-1">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-xs">
                       <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
@@ -361,7 +361,7 @@ export default function LandingPage() {
 
                 <Button
                   variant={plan.popular ? 'default' : 'outline'}
-                  className="w-full"
+                  className="w-full mt-6"
                   asChild
                 >
                   <Link href={`/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion%26plan%3D${plan.name.toLowerCase()}`}>
