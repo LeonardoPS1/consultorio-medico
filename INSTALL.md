@@ -124,30 +124,85 @@ pnpm run dev
 
 ## Despliegue en Producción (VPS + Dokploy)
 
+### Opción A: Docker Compose (recomendado para VPS)
+
 ```bash
-# 1. En la VPS
+# 1. Clonar en la VPS
 git clone https://github.com/tu-usuario/consultorio-medico.git
 cd consultorio-medico
 
-# 2. Base de datos
-createdb consultorio_medico
-for f in database/migrations/0*.sql; do
-  psql -U postgres -d consultorio_medico -f "$f"
-done
+# 2. Configurar variables de entorno
+cp dashboard/.env.example dashboard/.env.local
+# Editar dashboard/.env.local con valores reales
+# (AUTH_SECRET, DATABASE_URL, TWILIO_*, etc.)
 
-# 3. Dashboard
+# 3. Generar AUTH_SECRET seguro
+openssl rand -base64 32
+
+# 4. Iniciar todos los servicios
+docker compose up -d
+
+# 5. Ejecutar migraciones de base de datos
+docker exec -i consultorio-medico-postgres psql -U postgres -d consultorio_medico < database/migrations/001_core.sql
+docker exec -i consultorio-medico-postgres psql -U postgres -d consultorio_medico < database/migrations/002_turnos.sql
+docker exec -i consultorio-medico-postgres psql -U postgres -d consultorio_medico < database/migrations/003_conversaciones.sql
+docker exec -i consultorio-medico-postgres psql -U postgres -d consultorio_medico < database/migrations/004_historial_recetas.sql
+docker exec -i consultorio-medico-postgres psql -U postgres -d consultorio_medico < database/migrations/005_logs.sql
+docker exec -i consultorio-medico-postgres psql -U postgres -d consultorio_medico < database/migrations/006_indices.sql
+docker exec -i consultorio-medico-postgres psql -U postgres -d consultorio_medico < database/migrations/007_credenciales.sql
+
+# 6. Verificar health check
+curl http://localhost:3000/api/health
+
+# 7. Importar workflows en n8n (http://localhost:5678)
+# Ir a Workflows → Add → Import from File
+# Seleccionar archivos de n8n-workflows/current/
+
+# 8. Descargar modelo de IA en Ollama
+docker exec consultorio-medico-ollama ollama pull mistral
+```
+
+### Opción B: Dokploy (dashboard individual)
+
+Si deployás solo el dashboard en Dokploy:
+
+1. **Crear servicio** en Dokploy:
+   - Tipo: Docker
+   - Puerto: 3000
+   - Build: Dockerfile (ubicado en `dashboard/Dockerfile`)
+   - Health check: `/api/health`
+
+2. **Variables de entorno** requeridas en Dokploy:
+   ```env
+   DATABASE_URL=postgresql://postgres:password@postgres-host:5432/consultorio_medico
+   AUTH_SECRET=<generar con: openssl rand -base64 32>
+   AUTH_URL=https://tudominio.com
+   NEXT_PUBLIC_APP_URL=https://tudominio.com
+   ```
+
+3. **Servicios adicionales** (PostgreSQL, n8n, Ollama):
+   - Pueden correr como servicios separados en Dokploy o externos
+   - Ver `docker-compose.yml` como referencia de configuración
+
+### Comandos útiles para Docker
+
+```bash
+# Build manual del dashboard
 cd dashboard
-pnpm install
-pnpm run build
+docker build -t consultorio-medico-dashboard .
 
-# 4. Configurar Dokploy para que ejecute:
-# node .next/standalone/server.js
+# Ejecutar contenedor
+docker run -d \
+  --name consultorio-dashboard \
+  -p 3000:3000 \
+  --env-file .env.local \
+  consultorio-medico-dashboard
 
-# 5. n8n (desde Dokploy)
-# Importar workflows de n8n-workflows/current/
+# Ver logs
+docker logs -f consultorio-dashboard
 
-# 6. Ollama
-docker exec -it ollama ollama pull mistral
+# Health check
+curl http://localhost:3000/api/health
 ```
 
 ---

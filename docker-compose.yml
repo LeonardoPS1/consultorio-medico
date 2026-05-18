@@ -1,0 +1,125 @@
+# =============================================================================
+# docker-compose.yml — Consultorio Médico (desarrollo local completo)
+#
+# Uso:   docker compose up -d
+#        docker compose down
+#
+# Servicios:
+#   dashboard  → Next.js 14 (puerto 3000)
+#   postgres   → PostgreSQL 16 (puerto 5432)
+#   n8n        → Workflow automation (puerto 5678)
+#   ollama     → IA local (puerto 11434, solo LAN)
+# =============================================================================
+
+version: '3.9'
+
+services:
+  # ─── Dashboard Web ─────────────────────────────────────────────────────────
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: consultorio-medico-dashboard
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/consultorio_medico
+      - AUTH_SECRET=${AUTH_SECRET:-changeme-in-production}
+      - AUTH_URL=http://localhost:3000
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_WHATSAPP_NUMBER=${TWILIO_WHATSAPP_NUMBER:-}
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=mistral
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - consultorio-net
+
+  # ─── PostgreSQL ────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: consultorio-medico-postgres
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: consultorio_medico
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - consultorio-net
+
+  # ─── n8n (Workflow Automation) ────────────────────────────────────────────
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: consultorio-medico-n8n
+    restart: unless-stopped
+    ports:
+      - '5678:5678'
+    environment:
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_HOST=localhost:5678
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-changeme-n8n-key-32chars!}
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=consultorio_medico
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=postgres
+      - N8N_METRICS=false
+      - N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN=true
+    volumes:
+      - n8n-data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - consultorio-net
+
+  # ─── Ollama (IA Local) ────────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: consultorio-medico-ollama
+    restart: unless-stopped
+    ports:
+      - '11434:11434'
+    volumes:
+      - ollama-data:/root/.ollama
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+    networks:
+      - consultorio-net
+
+volumes:
+  postgres-data:
+    driver: local
+  n8n-data:
+    driver: local
+  ollama-data:
+    driver: local
+
+networks:
+  consultorio-net:
+    driver: bridge

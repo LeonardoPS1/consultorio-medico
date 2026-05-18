@@ -3,7 +3,7 @@ const nextConfig = {
   images: {
     domains: ['localhost'],
   },
-  // output: 'standalone', // Activar solo en Linux/VPS
+  output: 'standalone',
   // Variables de entorno que expone al cliente
   env: {
     NEXT_PUBLIC_APP_NAME: 'Consultorio Médico',
