@@ -158,7 +158,7 @@ export default function SuscripcionTab() {
           const isLoading = checkoutLoading === id;
 
           return (
-            <Card key={id} className={`relative ${isCurrent ? 'ring-2 ring-primary' : ''}`}>
+            <Card key={id} className={`relative h-full flex flex-col ${isCurrent ? 'ring-2 ring-primary' : ''}`}>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">{plan.nombre}</CardTitle>
                 <div className="mt-1">
@@ -168,18 +168,31 @@ export default function SuscripcionTab() {
                   <span className="text-xs text-muted-foreground">/mes</span>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <ul className="space-y-1.5">
+              <CardContent className="flex flex-col flex-1">
+                <ul className="space-y-1.5 flex-1">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                      <CheckCircle2 className="h-3 w-3 text-primary shrink-0 mt-0.5" />
-                      <span>{f}</span>
+                      {f.startsWith('Todo lo de') ? (
+                        <>
+                          <span className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-primary/10 text-primary text-[9px] font-bold shrink-0 mt-0.5">
+                            +
+                          </span>
+                          <span className="font-medium text-foreground/80">
+                            {f} <span className="text-primary text-[9px] font-bold">(incluido)</span>
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-3 w-3 text-primary shrink-0 mt-0.5" />
+                          <span>{f}</span>
+                        </>
+                      )}
                     </li>
                   ))}
                 </ul>
 
                 <Button
-                  className="w-full mt-3"
+                  className="w-full"
                   variant={isCurrent ? 'outline' : 'default'}
                   disabled={isCurrent || isLoading}
                   onClick={() => handleCheckout(id)}
