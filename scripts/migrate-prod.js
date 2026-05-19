@@ -1,9 +1,13 @@
 /**
  * Script standalone para ejecutar migraciones en producción.
  * Uso: node scripts/migrate-prod.js
- * 
+ *
+ * ⚠️ IMPORTANTE: Cada archivo .sql se ejecuta COMPLETO como una sola query.
+ * No se divide por ";" — esto permite tener funciones PL/pgSQL ($$),
+ * DO blocks, y transacciones BEGIN/COMMIT sin problemas.
+ *
  * Requiere: puerto 5432 de PostgreSQL expuesto en la VPS.
- * 
+ *
  * Configuración vía variables de entorno:
  *   PG_HOST=51.222.207.250
  *   PG_PORT=5432
@@ -12,7 +16,7 @@
  *   PG_SUPERUSER_PASSWORD=...
  *   PG_APP_USER=dashboard_user
  *   PG_APP_PASSWORD=...
- * 
+ *
  * O crear un archivo .env en /scripts/ con esas variables.
  */
 
@@ -54,7 +58,7 @@ const MIGRATIONS_DIR = path.join(__dirname, '..', 'database', 'migrations');
 
 async function main() {
   const admin = new Client(PROD_CONFIG);
-  
+
   console.log('🔌 Conectando a PostgreSQL...');
   await admin.connect();
   console.log('✅ Conectado como superuser\n');
@@ -89,28 +93,27 @@ async function main() {
     const content = fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8').trim();
     if (!content) { results.push(`⏭️ ${file} - vacío`); continue; }
 
-    const statements = content.split(';').map(s => s.trim()).filter(s => s.length > 0);
-    let fileOk = true;
-
-    for (const stmt of statements) {
-      try {
-        await client.query(stmt + ';');
-      } catch (err) {
-        if (err.message?.includes('already exists') || err.message?.includes('duplicate')) {
-          continue; // Idempotente
-        }
-        if (stmt.toUpperCase().includes('DROP') && err.message?.includes('does not exist')) {
-          continue;
-        }
-        results.push(`❌ ${file}: ${err.message.split('\n')[0]}`);
-        fileOk = false;
-        fail++;
-        break;
-      }
-    }
-    if (fileOk) {
+    try {
+      // ⚠️ Ejecutamos el archivo COMPLETO como una sola query.
+      // Esto respeta $$ blocks, DO blocks y BEGIN/COMMIT.
+      await client.query(content);
       results.push(`✅ ${file}`);
       ok++;
+    } catch (err) {
+      // Errores idempotentes se pueden ignorar
+      const msg = err.message || '';
+      if (msg.includes('already exists') || msg.includes('duplicate')) {
+        results.push(`⚠️ ${file} - idempotente (${msg.split('\n')[0]})`);
+        ok++;
+        continue;
+      }
+      if (msg.includes('does not exist') && content.toUpperCase().includes('DROP')) {
+        results.push(`⚠️ ${file} - drop ignorado (${msg.split('\n')[0]})`);
+        ok++;
+        continue;
+      }
+      results.push(`❌ ${file}: ${msg.split('\n')[0]}`);
+      fail++;
     }
   }
 
@@ -118,10 +121,10 @@ async function main() {
   const res = await client.query(
     "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public' ORDER BY tablename"
   );
-  
+
   console.log('Resultados:');
   results.forEach(r => console.log(' ', r));
-  console.log(`\n📊 ${res.rows.length} tablas creadas (${ok} OK, ${fail} errores):`);
+  console.log(`\n📊 ${res.rows.length} tablas en public (${ok} OK, ${fail} errores):`);
   res.rows.forEach(r => console.log('  -', r.tablename));
 
   await client.end();
