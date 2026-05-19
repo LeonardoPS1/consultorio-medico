@@ -19,6 +19,7 @@ import {
   Menu,
   X,
 } from 'lucide-react';
+import { PLANES_ORDERED, USD_TO_CLP } from '@/lib/planes';
 
 // ─── Features ─────────────────────────────────────────────────
 const features = [
@@ -61,76 +62,6 @@ const features = [
     icon: Smartphone,
     title: 'App Instalable (PWA)',
     desc: 'Instalá AiCoreMed como app en tu celular o escritorio. Notificaciones push y funcionamiento offline parcial.',
-  },
-];
-
-// ─── Pricing ──────────────────────────────────────────────────
-const plans = [
-  {
-    name: 'Starter',
-    planId: 'starter',
-    price: '$49',
-    desc: 'Para consultorios individuales.',
-    features: [
-      'Hasta 500 pacientes',
-      'Gestión de turnos',
-      'WhatsApp básico',
-      'Recetas digitales',
-      'Reportes esenciales',
-      'Soporte por email',
-    ],
-    cta: 'Comprar',
-    popular: false,
-  },
-  {
-    name: 'Profesional',
-    planId: 'professional',
-    price: '$99',
-    desc: 'Para consultorios en crecimiento.',
-    features: [
-      'Todo lo de Starter +',
-      'IA Assistant ilimitado',
-      'Múltiples profesionales',
-      'Reportes avanzados',
-      'Exportación Excel/PDF',
-      'Soporte prioritario',
-    ],
-    cta: 'Comprar',
-    popular: true,
-  },
-  {
-    name: 'Premium',
-    planId: 'premium',
-    price: '$199',
-    desc: 'Para clínicas medianas.',
-    features: [
-      'Todo lo de Profesional +',
-      'Integración n8n completa',
-      'Workflows personalizados',
-      'Google Calendar sync',
-      '2FA y auditoría',
-      'Backup encriptado',
-      'Soporte 24/7',
-    ],
-    cta: 'Comprar',
-    popular: false,
-  },
-  {
-    name: 'Enterprise',
-    planId: 'enterprise',
-    price: '$499',
-    desc: 'Para grandes centros médicos.',
-    features: [
-      'Todo lo de Premium +',
-      'On-premise disponible',
-      'SLA garantizado',
-      'Capacitación del equipo',
-      'Integraciones custom',
-      'API dedicada',
-      'Gerente de cuenta',
-    ],
-    cta: 'Contactar',
-    popular: false,
   },
 ];
 
@@ -328,9 +259,9 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {plans.map((plan) => (
+            {PLANES_ORDERED.filter((p) => p.id !== 'free').map((plan) => (
               <div
-                key={plan.name}
+                key={plan.id}
                 className={`relative rounded-xl border bg-card p-6 grid grid-rows-[auto_1fr_auto] gap-6 ${
                   plan.popular ? 'ring-2 ring-primary shadow-lg scale-[1.02]' : ''
                 }`}
@@ -344,12 +275,15 @@ export default function LandingPage() {
                 )}
 
                 <div>
-                  <h3 className="text-lg font-semibold">{plan.name}</h3>
+                  <h3 className="text-lg font-semibold">{plan.nombre}</h3>
                   <div className="mt-2">
-                    <span className="text-3xl font-bold">{plan.price}</span>
-                    <span className="text-sm text-muted-foreground">/mes</span>
+                    <span className="text-3xl font-bold">${plan.precioUSD}</span>
+                    <span className="text-sm text-muted-foreground">/mes USD</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">{plan.desc}</p>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    ≈ ${plan.precioCLP.toLocaleString('es-CL')} CLP/mes
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">{plan.descripcion}</p>
                 </div>
 
                 <ul className="space-y-2.5">
@@ -380,7 +314,7 @@ export default function LandingPage() {
                     className="w-full"
                     asChild
                   >
-                  <Link href={`/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion%26plan%3D${plan.planId}`}>
+                  <Link href={`/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion%26plan%3D${plan.id}`}>
                     {plan.cta}
                   </Link>
                 </Button>

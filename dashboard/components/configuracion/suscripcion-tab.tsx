@@ -5,7 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, CreditCard, Loader2, ArrowRight, AlertCircle, ExternalLink } from 'lucide-react';
-import { PLANES, type PlanInfo } from '@/lib/mercadopago';
+import { PLANES, PLANES_ORDERED, type PlanInfo, type PlanId } from '@/lib/planes';
+
+const PAID_PLAN_IDS: PlanId[] = ['starter', 'professional', 'premium', 'enterprise'];
 
 interface SuscripcionData {
   plan: string;
@@ -42,7 +44,7 @@ export default function SuscripcionTab() {
     if (autoTriggerDone.current) return;
     if (loading) return;
     const planParam = new URLSearchParams(window.location.search).get('plan');
-    if (planParam && PLANES[planParam]) {
+    if (planParam && (PAID_PLAN_IDS as readonly string[]).includes(planParam)) {
       autoTriggerDone.current = true;
       const timer = setTimeout(() => handleCheckout(planParam), 500);
       return () => clearTimeout(timer);
@@ -153,19 +155,27 @@ export default function SuscripcionTab() {
 
       {/* Planes disponibles */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Object.entries(PLANES).map(([id, plan]) => {
-          const isCurrent = planActual === id && estado === 'active';
-          const isLoading = checkoutLoading === id;
+        {PLANES_ORDERED.filter((p) => p.id !== 'free').map((plan) => {
+          const isCurrent = planActual === plan.id && estado === 'active';
+          const isLoading = checkoutLoading === plan.id;
 
           return (
-            <Card key={id} className={`relative h-full flex flex-col ${isCurrent ? 'ring-2 ring-primary' : ''}`}>
+            <Card key={plan.id} className={`relative h-full flex flex-col ${isCurrent ? 'ring-2 ring-primary' : ''}`}>
               <CardHeader className="pb-3">
+                {plan.id === 'professional' && !isCurrent && (
+                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-semibold px-3 py-0.5 rounded-full">
+                    Más elegido
+                  </div>
+                )}
                 <CardTitle className="text-base">{plan.nombre}</CardTitle>
-                <div className="mt-1">
-                  <span className="text-2xl font-bold">
-                    ${(plan.precio / 100).toLocaleString('es-AR')}
-                  </span>
-                  <span className="text-xs text-muted-foreground">/mes</span>
+                <div className="mt-1 space-y-0.5">
+                  <div>
+                    <span className="text-2xl font-bold">${plan.precioUSD}</span>
+                    <span className="text-xs text-muted-foreground"> USD/mes</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    ≈ ${plan.precioCLP.toLocaleString('es-CL')} CLP/mes
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="flex flex-col flex-1 gap-4">
@@ -195,7 +205,7 @@ export default function SuscripcionTab() {
                   className="w-full"
                   variant={isCurrent ? 'outline' : 'default'}
                   disabled={isCurrent || isLoading}
-                  onClick={() => handleCheckout(id)}
+                  onClick={() => handleCheckout(plan.id)}
                 >
                   {isLoading ? (
                     <>
@@ -207,7 +217,7 @@ export default function SuscripcionTab() {
                   ) : (
                     <>
                       <CreditCard className="h-4 w-4 mr-2" />
-                      Suscribirse
+                      {plan.cta}
                       <ArrowRight className="h-3 w-3 ml-1" />
                     </>
                   )}
@@ -226,7 +236,8 @@ export default function SuscripcionTab() {
       )}
 
       <p className="text-xs text-muted-foreground text-center">
-        Pagos procesados por MercadoPago. Todos los montos están en pesos argentinos (ARS).
+        Pagos procesados por MercadoPago en pesos chilenos (CLP).
+        Precios en USD como referencia. Todos los montos incluyen IVA.
         {process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY?.startsWith('TEST-') && (
           <span className="block mt-1 text-amber-600">🔧 Modo de prueba — Usá credenciales de prueba de MercadoPago.</span>
         )}

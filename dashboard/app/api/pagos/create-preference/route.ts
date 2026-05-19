@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { createCheckoutPreference } from '@/lib/mercadopago';
+import { PAID_PLANS } from '@/lib/planes';
 
 // POST /api/pagos/create-preference
 // Crea una preferencia de pago en MercadoPago para el plan elegido
@@ -18,8 +19,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Falta planId' }, { status: 400 });
     }
 
-    const validPlans = ['starter', 'professional', 'premium', 'enterprise'];
-    if (!validPlans.includes(planId)) {
+    if (!PAID_PLANS.includes(planId as typeof PAID_PLANS[number])) {
       return NextResponse.json({ error: 'Plan no válido' }, { status: 400 });
     }
 

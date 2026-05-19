@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { suscripciones } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { PLANES } from '@/lib/mercadopago';
+import { PLANES, type PlanId } from '@/lib/planes';
 
 // GET /api/pagos/status
 // Devuelve el estado de la suscripción del usuario actual
@@ -32,7 +32,7 @@ export async function GET() {
       });
     }
 
-    const planInfo = PLANES[sub.plan] || null;
+    const planInfo = PLANES[sub.plan as PlanId] || null;
 
     return NextResponse.json({
       id: sub.id,

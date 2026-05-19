@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getPaymentById, getMerchantOrderById, PLANES } from '@/lib/mercadopago';
+import { getPaymentById, getMerchantOrderById } from '@/lib/mercadopago';
+import { PLANES, type PlanId } from '@/lib/planes';
 import { db } from '@/lib/db';
 import { suscripciones } from '@/drizzle/schema';
 import { eq, sql } from 'drizzle-orm';
@@ -65,7 +66,7 @@ async function handlePaymentNotification(paymentId: string) {
   }
 
   const planId = refData.plan || 'starter';
-  const plan = PLANES[planId];
+  const plan = PLANES[planId as PlanId];
 
   if (!plan) {
     console.warn('[MP Webhook] Plan no encontrado:', planId);

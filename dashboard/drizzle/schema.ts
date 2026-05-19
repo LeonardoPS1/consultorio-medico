@@ -28,6 +28,7 @@ export const usuarios = pgTable('usuarios', {
   ultimoAcceso: timestamp('ultimo_acceso', { withTimezone: true }),
   secreto2fa: varchar('secreto_2fa', { length: 255 }),
   activo2fa: boolean('activo_2fa').notNull().default(false),
+  plan: varchar('plan', { length: 50 }).notNull().default('free'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
