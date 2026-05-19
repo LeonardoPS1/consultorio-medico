@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { canAccess } from '@/lib/features';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -119,6 +120,7 @@ function ConfigContent() {
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const userRole = session?.user?.role;
+  const userPlan = session?.user?.plan ?? 'free';
   const isAdmin = userRole === 'admin';
   const tabFromUrl = searchParams.get('tab') || 'perfil';
   const [plantillas, setPlantillas] = useState(plantillasIniciales);
@@ -154,13 +156,19 @@ function ConfigContent() {
             <CreditCard className="h-4 w-4 mr-1" />
             Suscripción
           </TabsTrigger>
-          <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
+          {canAccess(userPlan, 'integraciones') && (
+            <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
+          )}
           <TabsTrigger value="horarios">Horarios</TabsTrigger>
-          <TabsTrigger value="ia">IA & Automatización</TabsTrigger>
+          {canAccess(userPlan, 'ia-assistant') && (
+            <TabsTrigger value="ia">IA & Automatización</TabsTrigger>
+          )}
           <TabsTrigger value="plantillas">Plantillas WhatsApp</TabsTrigger>
           <TabsTrigger value="notificaciones">Notificaciones</TabsTrigger>
-          <TabsTrigger value="equipo">Equipo</TabsTrigger>
-          {isAdmin && (
+          {canAccess(userPlan, 'equipo') && (
+            <TabsTrigger value="equipo">Equipo</TabsTrigger>
+          )}
+          {isAdmin && canAccess(userPlan, 'integraciones') && (
             <TabsTrigger value="credenciales" className="text-amber-600 dark:text-amber-400">
               <Key className="h-4 w-4 mr-1" />
               Credenciales

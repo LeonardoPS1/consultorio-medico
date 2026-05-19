@@ -43,6 +43,7 @@ export interface UsuarioData {
   nombre: string;
   rol: string;
   activo: boolean;
+  plan?: string;
   ultimoAcceso?: string;
   secreto2fa?: string | null;
   activo2fa?: boolean;
@@ -674,6 +675,7 @@ export async function getUserByEmail(email: string): Promise<UsuarioData | null>
       nombre: u.nombre,
       rol: u.rol,
       activo: u.activo,
+      plan: u.plan || 'free',
       ultimoAcceso: u.ultimoAcceso?.toISOString(),
       createdAt: u.createdAt.toISOString(),
       updatedAt: u.updatedAt.toISOString(),

@@ -23,22 +23,24 @@ import {
 import { useState, useEffect, useCallback } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
+import { canAccess, type FeatureId } from '@/lib/features';
 
 interface NavItem {
   title: string;
   href: string;
   icon: React.ElementType;
+  feature?: FeatureId;     // feature requerida (si no tiene, se oculta)
   badge?: string;
 }
 
 const navItems: NavItem[] = [
   { title: 'Panel Principal', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'Atención', href: '/dashboard/atencion', icon: Activity },
-  { title: 'Turnos', href: '/dashboard/turnos', icon: Calendar },
-  { title: 'Pacientes', href: '/dashboard/pacientes', icon: Users },
-  { title: 'Conversaciones', href: '/dashboard/conversaciones', icon: MessageSquare },
-  { title: 'Recetas', href: '/dashboard/recetas', icon: Syringe },
-  { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3 },
+  { title: 'Atención', href: '/dashboard/atencion', icon: Activity, feature: 'atencion' },
+  { title: 'Turnos', href: '/dashboard/turnos', icon: Calendar, feature: 'turnos' },
+  { title: 'Pacientes', href: '/dashboard/pacientes', icon: Users, feature: 'pacientes' },
+  { title: 'Conversaciones', href: '/dashboard/conversaciones', icon: MessageSquare, feature: 'conversaciones' },
+  { title: 'Recetas', href: '/dashboard/recetas', icon: Syringe, feature: 'recetas' },
+  { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3, feature: 'reportes' },
   { title: 'Configuración', href: '/dashboard/configuracion', icon: Settings },
 ];
 
@@ -98,7 +100,12 @@ export function Sidebar() {
       {/* Navegación */}
       <ScrollArea className="flex-1 py-4">
         <nav className="space-y-1 px-2">
-          {navItems.map((item) => {
+          {navItems
+            .filter((item) => {
+              if (!item.feature) return true;
+              return canAccess(session?.user?.plan ?? 'free', item.feature);
+            })
+            .map((item) => {
             const isActive = item.href === '/dashboard'
               ? pathname === '/dashboard'
               : pathname === item.href || pathname.startsWith(item.href + '/');

@@ -84,6 +84,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             email: user.email,
             name: user.nombre,
             role: user.rol,
+            plan: user.plan || 'free',
           };
         } catch (error) {
           if (error instanceof Error) {
@@ -100,13 +101,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.role = user.role;
         token.id = user.id;
+        token.plan = user.plan;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as { role?: string; id?: string }).role = token.role;
-        (session.user as { role?: string; id?: string }).id = token.id;
+        session.user.role = token.role;
+        if (token.id) session.user.id = token.id;
+        if (token.plan) session.user.plan = token.plan;
       }
       return session;
     },

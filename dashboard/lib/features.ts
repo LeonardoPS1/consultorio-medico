@@ -1,0 +1,117 @@
+/**
+ * Feature gating por plan de suscripción.
+ *
+ * Define qué funcionalidades están disponibles en cada plan.
+ * La fuente de verdad de los planes está en lib/planes.ts.
+ */
+
+import type { PlanId } from '@/lib/planes';
+import { useSession } from 'next-auth/react';
+
+// ============================================================
+// IDs de features — todas las funcionalidades del sistema
+// ============================================================
+
+export type FeatureId =
+  | 'panel-principal'
+  | 'atencion'
+  | 'turnos'
+  | 'pacientes'
+  | 'conversaciones'
+  | 'recetas'
+  | 'reportes'
+  | 'reportes-avanzados'
+  | 'ia-assistant'
+  | 'equipo'
+  | 'integraciones'
+  | '2fa'
+  | 'auditoria'
+  | 'portal-paciente'
+  | 'backup'
+  | 'facturacion'
+  | 'videoconsulta'
+  | 'api-publica'
+  | 'multi-sucursal';
+
+// ============================================================
+// Feature map: qué plan necesitás para cada feature
+// ============================================================
+
+export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
+  'panel-principal': 'free',
+  'atencion': 'starter',
+  'turnos': 'starter',
+  'pacientes': 'starter',
+  'conversaciones': 'starter',
+  'recetas': 'starter',
+  'reportes': 'starter',
+  'reportes-avanzados': 'professional',
+  'ia-assistant': 'professional',
+  'equipo': 'professional',
+  '2fa': 'professional',
+  'integraciones': 'premium',
+  'auditoria': 'premium',
+  'portal-paciente': 'premium',
+  'backup': 'premium',
+  'facturacion': 'premium',
+  'videoconsulta': 'premium',
+  'api-publica': 'enterprise',
+  'multi-sucursal': 'enterprise',
+};
+
+// ============================================================
+// Helper: ¿el plan X tiene acceso a la feature Y?
+// ============================================================
+
+/** Planes ordenados por nivel (jerarquía) */
+const PLAN_ORDER: Record<PlanId, number> = {
+  free: 0,
+  starter: 1,
+  professional: 2,
+  premium: 3,
+  enterprise: 4,
+};
+
+/**
+ * Verifica si un plan tiene acceso a una funcionalidad.
+ *
+ * @example canAccess('professional', 'turnos') → true
+ * @example canAccess('starter', 'ia-assistant') → false
+ */
+export function canAccess(plan: PlanId | string | undefined, feature: FeatureId): boolean {
+  if (!plan) return false;
+  const required = FEATURE_PLAN[feature];
+  if (!required) return false; // feature desconocida
+  const userLevel = PLAN_ORDER[plan as PlanId] ?? -1;
+  const requiredLevel = PLAN_ORDER[required];
+  return userLevel >= requiredLevel;
+}
+
+/**
+ * Dado un plan, devuelve la lista de features disponibles.
+ */
+export function getAvailableFeatures(plan: PlanId): FeatureId[] {
+  return (Object.keys(FEATURE_PLAN) as FeatureId[]).filter((f) => canAccess(plan, f));
+}
+
+// ============================================================
+// React Hook (cliente)
+// ============================================================
+
+/**
+ * Hook para components client. Usa la sesión de NextAuth.
+ * Si no hay sesión o no tiene plan, asume 'free'.
+ */
+export function useCanAccess(feature: FeatureId): boolean {
+  const { data: session } = useSession();
+  const plan = (session?.user as { plan?: string } | undefined)?.plan ?? 'free';
+  return canAccess(plan, feature);
+}
+
+/**
+ * Devuelve el plan del usuario desde la sesión.
+ */
+export function useUserPlan(): PlanId {
+  const { data: session } = useSession();
+  return ((session?.user as { plan?: string } | undefined)?.plan ?? 'free') as PlanId;
+}
