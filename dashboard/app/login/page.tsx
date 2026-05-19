@@ -167,7 +167,15 @@ export default function LoginPage() {
                   />
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors">
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5 rounded border-muted-foreground/30 text-primary focus:ring-primary/30"
+                      defaultChecked
+                    />
+                    Recordar contraseña
+                  </label>
                   <Link
                     href="/recuperar"
                     className="text-xs text-muted-foreground hover:text-primary transition-colors"

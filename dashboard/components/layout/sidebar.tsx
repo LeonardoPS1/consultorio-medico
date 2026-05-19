@@ -21,7 +21,7 @@ import {
   Building2,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import { canAccess, getFeatureRequiredPlan, type FeatureId } from '@/lib/features';
 import { LockKeyhole } from 'lucide-react';
@@ -200,14 +200,11 @@ export function Sidebar() {
             collapsed && 'justify-center px-0'
           )}
           onClick={async () => {
-            // POST manual a la API de signOut en vez de usar signOut()
-            // de next-auth/react para evitar bug "Failed to find Server Action"
-            // en Next.js 14.2.x (no tenemos Server Actions en el código)
-            try {
-              await fetch('/api/auth/signout', { method: 'POST' });
-            } catch {
-              // Ignorar errores, la sesión se limpia al recargar
-            }
+            // signOut con redirect:false para:
+            // 1) Que next-auth maneje el CSRF internamente (limpia la sesión de verdad)
+            // 2) Evitar el bug "Failed to find Server Action" de Next.js 14.2.x
+            //    (el redirect lo hacemos manual con window.location)
+            await signOut({ redirect: false });
             window.location.href = '/';
           }}
           title="Cerrar sesión"
