@@ -7,6 +7,7 @@ import { verify2faToken } from '@/lib/mfa';
 import { logAudit } from '@/lib/audit-log';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   providers: [
     Credentials({
       name: 'credentials',
