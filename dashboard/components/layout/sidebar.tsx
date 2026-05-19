@@ -173,7 +173,7 @@ export function Sidebar() {
             'w-full justify-start text-sidebar-foreground/70 hoverable:hover:text-white hoverable:hover:bg-sidebar-accent',
             collapsed && 'justify-center px-0'
           )}
-          onClick={() => signOut({ callbackUrl: '/' })}
+          onClick={() => signOut({ callbackUrl: window.location.origin + '/' })}
           title="Cerrar sesión"
         >
           <LogOut className="h-5 w-5 shrink-0" />
