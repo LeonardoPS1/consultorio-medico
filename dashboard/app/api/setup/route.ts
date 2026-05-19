@@ -5,18 +5,25 @@ import { seedDataIfEmpty, createAdminUserIfNotExists } from '@/lib/data-store';
  * POST /api/setup
  *
  * Inicializa los datos de ejemplo y crea el usuario admin.
- * Útil para desarrollo local o para resetear datos.
+ * SOLO disponible en desarrollo (NODE_ENV !== 'production').
  *
  * Body opcional:
  * { "force": true } - para forzar el reseteo
  */
 export async function POST(request: Request) {
+  // Seguridad: endpoint solo disponible en desarrollo
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Endpoint no disponible en producción' },
+      { status: 403 }
+    );
+  }
+
   try {
     const body = await request.json().catch(() => ({}));
     const force = body?.force === true;
 
     if (force) {
-      // Si force=true, eliminamos los datos existentes primero
       const fs = await import('fs');
       const path = await import('path');
       const dataDir = path.default.join(process.cwd(), '.data');
@@ -27,7 +34,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Seed data
     const seeded = await seedDataIfEmpty();
     const adminCreated = await createAdminUserIfNotExists();
 
@@ -35,16 +41,12 @@ export async function POST(request: Request) {
       status: 'ok',
       seeded,
       adminCreated,
-      adminEmail: seeded || adminCreated ? 'admin@consultorio.com' : undefined,
-      adminPassword: 'admin123',
-      medicoEmail: seeded || adminCreated ? 'medico@consultorio.com' : undefined,
-      medicoPassword: 'medico123',
       message: 'Sistema inicializado correctamente',
     });
   } catch (error) {
     console.error('[Setup] Error:', error);
     return NextResponse.json(
-      { error: 'Error al inicializar el sistema', details: (error as Error).message },
+      { error: 'Error al inicializar el sistema' },
       { status: 500 }
     );
   }
@@ -54,8 +56,16 @@ export async function POST(request: Request) {
  * GET /api/setup
  *
  * Retorna el estado actual de los datos.
+ * SOLO disponible en desarrollo.
  */
 export async function GET() {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Endpoint no disponible en producción' },
+      { status: 403 }
+    );
+  }
+
   try {
     const fs = await import('fs');
     const path = await import('path');
@@ -81,13 +91,8 @@ export async function GET() {
       dataDir: dataDir,
       initialized: exists,
       stats,
-      loginUrl: 'http://localhost:3000',
-      credentials: {
-        admin: { email: 'admin@consultorio.com', password: 'admin123' },
-        medico: { email: 'medico@consultorio.com', password: 'medico123' },
-      },
     });
   } catch (error) {
-    return NextResponse.json({ status: 'error', error: (error as Error).message }, { status: 500 });
+    return NextResponse.json({ status: 'error', error: 'Error al leer datos' }, { status: 500 });
   }
 }

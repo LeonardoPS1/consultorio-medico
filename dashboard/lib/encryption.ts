@@ -9,14 +9,30 @@
 import crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';
-const DEV_FALLBACK_SALT = 'dev-fallback-key-consultorio-medico';
 
 /**
  * Obtiene la clave de encriptación desde AUTH_SECRET.
- * Si no está configurada, usa un fallback para desarrollo.
+ * En producción, AUTH_SECRET es OBLIGATORIO. Sin él, las credenciales
+ * almacenadas no pueden desencriptarse.
+ * En desarrollo, si no está configurado, usa un fallback local.
  */
 function getEncryptionKey(): Buffer {
-  const secret = process.env.AUTH_SECRET || DEV_FALLBACK_SALT;
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'AUTH_SECRET es obligatorio en producción. ' +
+        'Configuralo en las variables de entorno del dashboard.'
+      );
+    }
+    // Fallback solo para desarrollo local
+    console.warn(
+      '[encryption] AUTH_SECRET no configurado. Usando fallback de desarrollo. ' +
+      'Las credenciales NO son seguras sin AUTH_SECRET.'
+    );
+    const devFallback = 'dev-fallback-only-not-for-production';
+    return crypto.createHash('sha256').update(devFallback).digest();
+  }
   return crypto.createHash('sha256').update(secret).digest();
 }
 

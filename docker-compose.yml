@@ -1,6 +1,12 @@
 # =============================================================================
 # docker-compose.yml — Consultorio Médico (desarrollo local completo)
 #
+# IMPORTANTE: Este archivo es para DESARROLLO LOCAL. Las contraseñas y
+# secretos aquí definidos son DÉBILES y no deben usarse en producción.
+#
+# Para producción, usar Dokploy con variables de entorno seguras.
+# Ver docs/security.md para el checklist de seguridad.
+#
 # Uso:   docker compose up -d
 #        docker compose down
 #
@@ -10,8 +16,6 @@
 #   n8n        → Workflow automation (puerto 5678)
 #   ollama     → IA local (puerto 11434, solo LAN)
 # =============================================================================
-
-version: '3.9'
 
 services:
   # ─── Dashboard Web ─────────────────────────────────────────────────────────
@@ -25,8 +29,10 @@ services:
       - '3000:3000'
     environment:
       - NODE_ENV=production
+      # ⚠️ REEMPLAZAR: usá una variable de entorno o .env para producción
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/consultorio_medico
-      - AUTH_SECRET=${AUTH_SECRET:-changeme-in-production}
+      # 🔴 OBLIGATORIO en producción: generar con `openssl rand -base64 32`
+      - AUTH_SECRET=${AUTH_SECRET:-}
       - AUTH_URL=http://localhost:3000
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
       - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
@@ -37,12 +43,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/api/health']
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
     networks:
       - consultorio-net
 
@@ -54,6 +54,7 @@ services:
     ports:
       - '5432:5432'
     environment:
+      # ⚠️ REEMPLAZAR para producción
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: consultorio_medico
@@ -79,7 +80,8 @@ services:
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
       - N8N_HOST=localhost:5678
-      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-changeme-n8n-key-32chars!}
+      # 🔴 OBLIGATORIO en producción
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-}
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=postgres
       - DB_POSTGRESDB_PORT=5432

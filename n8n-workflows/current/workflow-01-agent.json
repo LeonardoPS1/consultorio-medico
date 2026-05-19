@@ -198,7 +198,7 @@
     },
     {
       "parameters": {
-        "url": "https://api.twilio.com/2010-04-01/Accounts/TWILIO_ACCOUNT_SID_PLACEHOLDER/Messages.json",
+        "url": "https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBasicAuth",
         "sendBody": true,

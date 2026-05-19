@@ -3,19 +3,50 @@
  * Uso: node scripts/migrate-prod.js
  * 
  * Requiere: puerto 5432 de PostgreSQL expuesto en la VPS.
- * Variables de entorno o editar las credenciales abajo.
+ * 
+ * Configuración vía variables de entorno:
+ *   PG_HOST=51.222.207.250
+ *   PG_PORT=5432
+ *   PG_DATABASE=consultorio_medico
+ *   PG_SUPERUSER=postgres
+ *   PG_SUPERUSER_PASSWORD=...
+ *   PG_APP_USER=dashboard_user
+ *   PG_APP_PASSWORD=...
+ * 
+ * O crear un archivo .env en /scripts/ con esas variables.
  */
 
 const { Client } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
+// Cargar .env si existe
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  const lines = fs.readFileSync(envPath, 'utf8').split('\n');
+  for (const line of lines) {
+    const [key, ...rest] = line.split('=');
+    if (key && rest.length) {
+      process.env[key.trim()] = rest.join('=').trim().replace(/^["']|["']$/g, '');
+    }
+  }
+}
+
+const REQUIRED_VARS = ['PG_HOST', 'PG_PORT', 'PG_DATABASE', 'PG_SUPERUSER', 'PG_SUPERUSER_PASSWORD', 'PG_APP_USER', 'PG_APP_PASSWORD'];
+for (const v of REQUIRED_VARS) {
+  if (!process.env[v]) {
+    console.error(`❌ Variable de entorno faltante: ${v}`);
+    console.error('   Creá scripts/.env con las credenciales o pasalas como env vars.');
+    process.exit(1);
+  }
+}
+
 const PROD_CONFIG = {
-  host: '51.222.207.250',
-  port: 5432,
-  database: 'consultorio_medico',
-  user: 'postgres',
-  password: '***REMOVED***',
+  host: process.env.PG_HOST,
+  port: parseInt(process.env.PG_PORT || '5432'),
+  database: process.env.PG_DATABASE,
+  user: process.env.PG_SUPERUSER,
+  password: process.env.PG_SUPERUSER_PASSWORD,
   connectionTimeoutMillis: 10000,
 };
 
@@ -26,22 +57,22 @@ async function main() {
   
   console.log('🔌 Conectando a PostgreSQL...');
   await admin.connect();
-  console.log('✅ Conectado como postgres\n');
+  console.log('✅ Conectado como superuser\n');
 
   // Otorgar permisos
-  console.log('🔑 Otorgando permisos a dashboard_user...');
-  await admin.query('GRANT ALL ON SCHEMA public TO dashboard_user');
-  await admin.query('ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO dashboard_user');
-  await admin.query('ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO dashboard_user');
-  await admin.query('GRANT CREATE ON SCHEMA public TO dashboard_user');
+  console.log('🔑 Otorgando permisos al usuario de la app...');
+  await admin.query(`GRANT ALL ON SCHEMA public TO ${process.env.PG_APP_USER}`);
+  await admin.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${process.env.PG_APP_USER}`);
+  await admin.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${process.env.PG_APP_USER}`);
+  await admin.query(`GRANT CREATE ON SCHEMA public TO ${process.env.PG_APP_USER}`);
   console.log('✅ Permisos otorgados\n');
   await admin.end();
 
-  // Ejecutar migraciones como dashboard_user
+  // Ejecutar migraciones como usuario de la app
   const client = new Client({
     ...PROD_CONFIG,
-    user: 'dashboard_user',
-    password: '***REMOVED***',
+    user: process.env.PG_APP_USER,
+    password: process.env.PG_APP_PASSWORD,
   });
   await client.connect();
 
