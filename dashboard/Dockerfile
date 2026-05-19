@@ -57,6 +57,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./dashboar
 # Copiar assets públicos (deben ir junto a server.js bajo dashboard/)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/public ./dashboard/public
 
+# Copiar migraciones SQL para setup inicial en producción
+COPY --from=builder --chown=nextjs:nodejs /app/database ./database
+
 # Crear directorio para cache de Next.js con permisos correctos
 RUN mkdir -p dashboard/.next/cache && chown -R nextjs:nodejs dashboard/.next
 
