@@ -167,6 +167,15 @@ export default function LoginPage() {
                   />
                 </div>
 
+                <div className="flex justify-end">
+                  <Link
+                    href="/recuperar"
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    Olvidé mi contraseña
+                  </Link>
+                </div>
+
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Ingresando...' : 'Ingresar'}
                 </Button>

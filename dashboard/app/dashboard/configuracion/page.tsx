@@ -29,6 +29,7 @@ import CredencialesTab from '@/components/configuracion/credenciales-tab';
 import IntegracionesDashboard from '@/components/configuracion/integraciones-dashboard';
 import Setup2FA from '@/components/configuracion/setup-2fa';
 import SuscripcionTab from '@/components/configuracion/suscripcion-tab';
+import { ChangePasswordForm } from '@/components/configuracion/change-password-form';
 
 // ============================================================
 // Tipos
@@ -179,6 +180,7 @@ function ConfigContent() {
         {/* ======== PERFIL / ORGANIZACIÓN ======== */}
         <TabsContent value="perfil" className="mt-4 space-y-4">
           <PerfilOrganizacion />
+          <ChangePasswordForm />
           <Setup2FA />
         </TabsContent>
 

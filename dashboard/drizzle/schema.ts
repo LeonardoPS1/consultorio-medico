@@ -29,6 +29,8 @@ export const usuarios = pgTable('usuarios', {
   secreto2fa: varchar('secreto_2fa', { length: 255 }),
   activo2fa: boolean('activo_2fa').notNull().default(false),
   plan: varchar('plan', { length: 50 }).notNull().default('free'),
+  resetToken: varchar('reset_token', { length: 255 }),
+  resetTokenExpires: timestamp('reset_token_expires', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),

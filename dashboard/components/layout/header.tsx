@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -306,7 +306,10 @@ export function Header() {
               Configuración
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })}>
+            <DropdownMenuItem onClick={async () => {
+              try { await fetch('/api/auth/signout', { method: 'POST' }); } catch {}
+              window.location.href = '/';
+            }}>
               Cerrar sesión
             </DropdownMenuItem>
           </DropdownMenuContent>

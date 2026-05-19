@@ -21,15 +21,16 @@ import {
   Building2,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { signOut, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
-import { canAccess, type FeatureId } from '@/lib/features';
+import { canAccess, getFeatureRequiredPlan, type FeatureId } from '@/lib/features';
+import { LockKeyhole } from 'lucide-react';
 
 interface NavItem {
   title: string;
   href: string;
   icon: React.ElementType;
-  feature?: FeatureId;     // feature requerida (si no tiene, se oculta)
+  feature?: FeatureId;     // feature requerida (si no tiene, se muestra bloqueado)
   badge?: string;
 }
 
@@ -100,16 +101,42 @@ export function Sidebar() {
       {/* Navegación */}
       <ScrollArea className="flex-1 py-4">
         <nav className="space-y-1 px-2">
-          {navItems
-            .filter((item) => {
-              if (!item.feature) return true;
-              return canAccess(session?.user?.plan ?? 'free', item.feature);
-            })
-            .map((item) => {
+          {navItems.map((item) => {
+            const userPlan = session?.user?.plan ?? 'free';
+            const hasAccess = !item.feature || canAccess(userPlan, item.feature);
             const isActive = item.href === '/dashboard'
               ? pathname === '/dashboard'
               : pathname === item.href || pathname.startsWith(item.href + '/');
             const Icon = item.icon;
+
+            // Si no tiene acceso, mostrar bloqueado
+            if (!hasAccess) {
+              const requiredPlan = getFeatureRequiredPlan(item.feature!);
+              return (
+                <Link
+                  key={item.href}
+                  href="/dashboard/configuracion?tab=suscripcion"
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    'text-sidebar-foreground/40 hoverable:hover:bg-sidebar-accent/50 hoverable:hover:text-sidebar-foreground/60'
+                  )}
+                  title={collapsed ? `${item.title} (Plan ${requiredPlan})` : undefined}
+                >
+                  <div className="relative shrink-0">
+                    <Icon className="h-5 w-5" />
+                    <LockKeyhole className="h-2.5 w-2.5 absolute -top-1 -right-1 text-muted-foreground/60" />
+                  </div>
+                  {!collapsed && (
+                    <>
+                      <span className="flex-1 truncate text-sidebar-foreground/40">{item.title}</span>
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-amber-500 dark:text-amber-400 shrink-0">
+                        {requiredPlan}
+                      </span>
+                    </>
+                  )}
+                </Link>
+              );
+            }
 
             return (
               <Link
@@ -137,7 +164,6 @@ export function Sidebar() {
               </Link>
             );
           })}
-
           {/* Admin section */}
           {session?.user?.role === 'admin' && (
             <div className="mt-2 pt-2 border-t border-sidebar-muted">
@@ -173,7 +199,17 @@ export function Sidebar() {
             'w-full justify-start text-sidebar-foreground/70 hoverable:hover:text-white hoverable:hover:bg-sidebar-accent',
             collapsed && 'justify-center px-0'
           )}
-          onClick={() => signOut({ callbackUrl: window.location.origin + '/' })}
+          onClick={async () => {
+            // POST manual a la API de signOut en vez de usar signOut()
+            // de next-auth/react para evitar bug "Failed to find Server Action"
+            // en Next.js 14.2.x (no tenemos Server Actions en el código)
+            try {
+              await fetch('/api/auth/signout', { method: 'POST' });
+            } catch {
+              // Ignorar errores, la sesión se limpia al recargar
+            }
+            window.location.href = '/';
+          }}
           title="Cerrar sesión"
         >
           <LogOut className="h-5 w-5 shrink-0" />

@@ -6,6 +6,7 @@
  */
 
 import type { PlanId } from '@/lib/planes';
+import { PLANES } from '@/lib/planes';
 import { useSession } from 'next-auth/react';
 
 // ============================================================
@@ -92,6 +93,15 @@ export function canAccess(plan: PlanId | string | undefined, feature: FeatureId)
  */
 export function getAvailableFeatures(plan: PlanId): FeatureId[] {
   return (Object.keys(FEATURE_PLAN) as FeatureId[]).filter((f) => canAccess(plan, f));
+}
+
+/**
+ * Devuelve el nombre del plan requerido para una feature.
+ * Ej: getFeatureRequiredPlan('integraciones') → 'Premium'
+ */
+export function getFeatureRequiredPlan(feature: FeatureId): string {
+  const planId = FEATURE_PLAN[feature];
+  return PLANES[planId]?.nombre ?? planId;
 }
 
 // ============================================================
