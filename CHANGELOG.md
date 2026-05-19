@@ -1,5 +1,50 @@
 # Changelog
 
+## [0.4.0] - 2026-05-19
+
+### 🚀 Nuevas Funcionalidades
+
+#### Planes de Suscripción y Feature Gating
+- **Sistema de planes unificado** (`lib/planes.ts`): fuente única de verdad con 5 planes (free, starter, professional, premium, enterprise) con precios en USD y CLP
+- **Feature gating** (`lib/features.ts`): control de acceso granular por plan en sidebar, rutas y tabs de configuración
+- **Sidebar adaptativa**: items bloqueados se muestran con candado 🔒 + badge del plan requerido; al clickear redirigen a suscripción
+- **Dashboard protegido**: componente `GatedContent` que redirige al Panel Principal si se accede por URL directa a ruta no permitida
+- **Precios en CLP**: migración de ARS a CLP para el mercado chileno
+- **Landing page dinámica**: los precios se renderizan desde `planes.ts`, no desde datos hardcodeados
+
+#### Recuperación y Cambio de Contraseña
+- **Forgot Password** (`/recuperar`): formulario que envía email de recuperación (en modo dev devuelve el link por API)
+- **Reset Password** (`/reset-password?token=`): formulario para establecer nueva contraseña con token de un solo uso
+- **Change Password** (Configuración → Perfil): formulario para cambiar la contraseña actual requiriendo la anterior
+- **API endpoints**: `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`, `POST /api/auth/change-password`
+- **Link "Olvidé mi contraseña"** en el login
+- **Columnas en BD**: `reset_token` (VARCHAR 255), `reset_token_expires` (TIMESTAMPTZ) en tabla `usuarios`
+
+#### UX en Login
+- **Checkbox "Recordar contraseña"** en formulario de login (ayuda al navegador a identificar el formulario)
+
+### 🔧 Mejoras
+
+- **Planes en sesión JWT**: el plan del usuario viaja en el token JWT y está disponible en toda la sesión
+- **Tipos NextAuth extendidos**: `plan` tipado correctamente en User, Session y JWT
+- **Drizzle schema actualizado**: columnas `resetToken`, `resetTokenExpires` en tabla usuarios
+- **Página de Suscripción**: nuevo tab en Configuración con grid de planes, precios USD+CLP y botón de pago
+
+### 🐛 Fixes
+
+- **SignOut con CSRF token**: se usaba `fetch` manual sin CSRF → la sesión no se limpiaba. Fix: `signOut({ redirect: false })` + redirect manual con `window.location.href`
+- **Error "Failed to find Server Action"**: en Next.js 14.2.35, el redirect automático de `signOut()` activaba un bug interno. Solucionado con `redirect: false`
+- **Duplicate import `Link`** en login page
+- **Reset de sesión post-logout**: ahora se puede iniciar sesión con otro usuario sin que persista la sesión anterior
+
+### 📦 Build
+
+- ✅ TypeScript: 0 errores (strict mode)
+- ✅ 17 rutas generadas
+- ✅ Pruebas: login, logout, forgot/reset password, feature gating, change password
+
+---
+
 ## [0.3.0] - 2026-05-17
 
 ### 🚀 Nuevas Funcionalidades

@@ -38,9 +38,9 @@ Todo sin intervencion humana, todo en tu VPS, todo en espanol argentino.
 
 ## 🎯 Features
 
-### 🤖 Automatizacion Inteligente
+### 🤖 Automatización Inteligente
 
-| Feature | Descripcion |
+| Feature | Descripción |
 |---------|-------------|
 | **WhatsApp AI Agent** | Atiende mensajes, clasifica intenciones, responde y ejecuta acciones (turnos, recetas) |
 | **Correo Inteligente** | Clasifica emails entrantes (urgente/spam/responder) y redacta borradores |
@@ -51,7 +51,7 @@ Todo sin intervencion humana, todo en tu VPS, todo en espanol argentino.
 ### 🗄️ Datos
 
 - Datos **100% locales** en tu VPS (nada en la nube de terceros)
-- PostgreSQL con 16 tablas, 5 vistas optimizadas, 30+ indices
+- PostgreSQL con 20+ tablas, 5 vistas optimizadas, 35+ indices
 - Soft delete, auditoria, logs de IA y Twilio
 
 ### 📊 Dashboard Web
@@ -64,6 +64,9 @@ Todo sin intervencion humana, todo en tu VPS, todo en espanol argentino.
 - Exportacion a Excel y PDF de reportes
 - Comparativa mensual de metricas
 - Modo oscuro/claro, responsive, autenticacion segura
+- **Planes de suscripcion**: feature gating por plan (free/start/professional/premium/enterprise)
+- **Recuperacion de contrasena**: forgot/reset password con tokens seguros
+- **Cambio de contrasena** desde Configuracion → Perfil
 
 ### 🔐 Seguridad
 
@@ -73,6 +76,8 @@ Todo sin intervencion humana, todo en tu VPS, todo en espanol argentino.
 - **Bloqueo de cuenta** tras 5 intentos fallidos (15 min)
 - **Auto-logout** por inactividad (30 min)
 - **Password validator** (8+ chars, mayuscula, numero, simbolo)
+- **Recuperacion de contrasena** con token criptografico (expiracion 1h)
+- **Cambio de contrasena** desde el dashboard (requiere contrasena actual)
 - Headers HTTP de seguridad (X-Frame-Options, HSTS, CSP parcial)
 - Sesiones JWT con expiracion
 - Verificacion de firmas en webhooks de Twilio
@@ -192,6 +197,79 @@ graph LR
 
 ## 📁 Estructura del Repositorio
 
+```
+consultorio-medico/
+│
+├── README.md                    # Esta pagina
+├── INSTALL.md                   # Guia de inicio rapido
+├── CHANGELOG.md                 # Historial de cambios
+│
+├── dashboard/                   # Aplicacion web (Next.js 14)
+│   ├── app/                     # App Router
+│   │   ├── login/               # Pagina de inicio de sesion
+│   │   ├── recuperar/           # Recuperacion de contrasena
+│   │   ├── reset-password/      # Restablecer contrasena con token
+│   │   ├── dashboard/           # Paginas protegidas
+│   │   │   ├── page.tsx         # KPIs principal
+│   │   │   ├── atencion/        # Tablero Kanban de atencion
+│   │   │   ├── turnos/          # Gestion de turnos
+│   │   │   ├── pacientes/       # Fichas de pacientes
+│   │   │   ├── conversaciones/  # Bandeja de chats
+│   │   │   ├── recetas/         # Recetas medicas
+│   │   │   ├── reportes/        # Metricas y graficos
+│   │   │   ├── admin/           # Panel admin (tenants)
+│   │   │   └── configuracion/   # Perfil, suscripcion, integraciones, equipo
+│   │   └── api/                 # API Routes
+│   │       └── auth/            # Auth: login, 2FA, forgot/reset/change password
+│   │           ├── [...nextauth]/
+│   │           ├── 2fa/
+│   │           ├── forgot-password/
+│   │           ├── reset-password/
+│   │           └── change-password/
+│   ├── components/              # Componentes React
+│   │   ├── ui/                  # shadcn/ui (Radix)
+│   │   ├── layout/              # Sidebar, Header
+│   │   ├── calendar/            # FullCalendar
+│   │   ├── charts/              # Recharts (turnos, pacientes, WhatsApp)
+│   │   ├── modals/              # Modales CRUD
+│   │   ├── configuracion/       # Suscripcion, 2FA, credenciales, change-password
+│   │   └── gated-content.tsx    # Feature gating por plan
+│   ├── lib/                     # Logica compartida
+│   │   ├── auth.ts              # NextAuth config
+│   │   ├── planes.ts            # Planes de suscripcion (single source of truth)
+│   │   ├── features.ts          # Feature gating por plan
+│   │   ├── mercadopago.ts       # Integracion de pagos (CLP)
+│   │   ├── data-store.ts        # Almacenamiento dual (PG/JSON)
+│   │   ├── db.ts                # Conexion Drizzle
+│   │   ├── mfa.ts               # Autenticacion 2FA (TOTP)
+│   │   ├── audit-log.ts         # Auditoria de accesos
+│   │   ├── account-lockout.ts   # Bloqueo por intentos fallidos
+│   │   ├── password-validator.ts# Validador de fortaleza
+│   │   └── encryption.ts        # Encriptacion AES-256-GCM
+│   ├── drizzle/                 # Schema ORM
+│   ├── types/                   # Tipos TypeScript extendidos
+│   └── middleware.ts            # Seguridad: rate limiting, headers, auth
+│
+├── database/                    # Base de datos
+│   └── migrations/              # Migraciones SQL (001-011)
+│
+├── n8n-workflows/               # Automatizaciones
+│   ├── current/                 # Workflows activos (6)
+│   └── archive/                 # Versiones anteriores
+│
+├── scripts/                     # Utilidades
+│   ├── backup-encriptado.sh     # Backup automatico (pg_dump + GPG)
+│   ├── generate-pwa-icons.js    # Generacion de iconos PWA
+│   ├── generate-listado-pdf.js  # Generacion de PDF
+│   └── generate-aicoremed-pdf.js# PDF de producto
+│
+└── docs/                        # Documentacion
+    ├── architecture.md           # Arquitectura del sistema
+    ├── workflows.md              # Workflows detallados
+    ├── database.md               # Esquema de base de datos
+    └── prompts-seguridad.md      # Guia anti-jailbreak para prompts IA
+
+[Documentacion detallada de workflows →](docs/workflows.md)
 ```
 consultorio-medico/
 │

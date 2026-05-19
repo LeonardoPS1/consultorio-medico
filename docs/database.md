@@ -60,6 +60,8 @@ Las migraciones son **acumulativas** y deben ejecutarse en orden:
 | 006 | `006_indices.sql` | Índices + vistas `turnos_del_dia`, `proximos_turnos`, `metricas_intenciones`, `pacientes_nuevos_por_mes` |
 | 007 | `007_credenciales.sql` | `credenciales` + vista `credenciales_activas` |
 | 008 | `008_seguridad.sql` | `auditoria_accesos` + columnas 2FA en `usuarios` |
+| 010 | `010_suscripciones.sql` | `suscripciones` con integración MercadoPago |
+| 011 | `011_multitenant.sql` | Tabla `tenants` + columna `tenant_id` en 22 tablas |
 
 ```bash
 # Ejecutar todas las migraciones
@@ -86,6 +88,11 @@ Acceso al dashboard del consultorio.
 | `ultimo_acceso` | TIMESTAMPTZ | Último login |
 | `secreto_2fa` | VARCHAR(255) | Secreto TOTP para 2FA |
 | `activo_2fa` | BOOLEAN(default false) | 2FA habilitado |
+| `plan` | VARCHAR(50) | `free`, `starter`, `professional`, `premium`, `enterprise` |
+| `reset_token` | VARCHAR(255) | Token de recuperación de contraseña (hash) |
+| `reset_token_expires` | TIMESTAMPTZ | Fecha de expiración del token (1 hora) |
+| `created_at` | TIMESTAMPTZ | Fecha de creación |
+| `updated_at` | TIMESTAMPTZ | Última modificación |
 | `deleted_at` | TIMESTAMPTZ | Soft delete |
 
 #### `medicos`
@@ -194,6 +201,25 @@ Prescripciones médicas.
 
 #### `facturacion`
 Registro de pagos (simple).
+
+#### `suscripciones`
+Suscripciones a planes de MercadoPago.
+
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | UUID PK | Identificador único |
+| `organizacion_id` | UUID | ID del tenant/organización |
+| `plan` | VARCHAR(50) | `free`, `starter`, `professional`, `premium`, `enterprise` |
+| `estado` | VARCHAR(50) | `free`, `pending`, `approved`, `cancelled` |
+| `mercadopago_preference_id` | VARCHAR(255) | ID de preferencia en MP |
+| `mercadopago_payment_id` | VARCHAR(255) | ID de pago en MP |
+| `mercadopago_merchant_order_id` | VARCHAR(255) | ID de orden en MP |
+| `period_start` | TIMESTAMPTZ | Inicio del período de facturación |
+| `period_end` | TIMESTAMPTZ | Fin del período de facturación |
+| `trial_end` | TIMESTAMPTZ | Fin del período de prueba |
+| `metadata` | JSONB | Datos adicionales |
+| `created_at` | TIMESTAMPTZ | Fecha de creación |
+| `updated_at` | TIMESTAMPTZ | Última modificación |
 
 ### 005 - Logs y Auditoría
 
