@@ -65,7 +65,7 @@ export async function POST() {
     const tableResult = await db.execute(
       sql`SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public' ORDER BY tablename`
     );
-    const tables = (tableResult.rows as any[]).map(r => r.tablename);
+    const tables = [...tableResult].map((r: any) => r.tablename);
 
     return NextResponse.json({
       success: true,
