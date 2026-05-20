@@ -12,7 +12,7 @@
  *   DELETE /api/v1/credentials/{id}     → Eliminar
  */
 
-const N8N_BASE_URL = process.env.N8N_BASE_URL || 'https://n8n.aicorebots.com';
+const N8N_BASE_URL = process.env.N8N_BASE_URL || 'http://172.18.0.1:5678';
 const N8N_API_KEY = process.env.N8N_API_KEY || '';
 
 /**
@@ -89,6 +89,8 @@ export const N8N_CREDENTIAL_TYPES: Record<string, {
 export const SERVICIO_TO_N8N_TYPE: Record<string, {
   n8nType: string;
   fieldMapping: Record<string, string>; // dashboard_key → n8n_field
+  /** Valores fijos que n8n requiere por schema condicional (if/then en vacío) */
+  defaults?: Record<string, unknown>;
 }> = {
   twilio: {
     n8nType: 'twilioApi',
@@ -96,12 +98,16 @@ export const SERVICIO_TO_N8N_TYPE: Record<string, {
       account_sid: 'accountSid',
       auth_token: 'authToken',
     },
+    defaults: {
+      authType: 'authToken', // Necesario: sin este, el if vacío pide apiKeySid+apiKeySecret
+    },
   },
   ollama: {
     n8nType: 'ollamaApi',
     fieldMapping: {
       base_url: 'baseUrl',
     },
+    // ollama no tiene condicionales — no necesita defaults
   },
   postgres: {
     n8nType: 'postgres',
@@ -111,6 +117,10 @@ export const SERVICIO_TO_N8N_TYPE: Record<string, {
       database: 'database',
       user: 'user',
       password: 'password',
+    },
+    defaults: {
+      ssl: 'disable',       // Necesario: allowUnauthorizedCerts ausente → if vacío pide ssl
+      sshTunnel: false,     // Necesario: sshTunnel ausente → if vacío pide SSH fields
     },
   },
   smtp: {
@@ -167,6 +177,14 @@ function buildN8nData(
   if (!mapping) return null;
 
   const data: Record<string, any> = {};
+
+  // 1. Aplicar defaults primero (ssl, sshTunnel, authType, etc.)
+  //    Necesarios porque n8n usa if/then condicional que evalúa true en vacío.
+  if (mapping.defaults) {
+    Object.assign(data, mapping.defaults);
+  }
+
+  // 2. Mapear campos del dashboard → campos de n8n (sobrescriben defaults)
   for (const [dashboardKey, n8nField] of Object.entries(mapping.fieldMapping)) {
     const valor = credenciales[dashboardKey];
     if (valor !== undefined) {

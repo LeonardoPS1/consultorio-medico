@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Bot, Globe, Database, Mail, Phone, Calendar,
   CheckCircle2, XCircle, AlertCircle, Eye, EyeOff,
-  Save, Wifi, RefreshCw, Shield, Key,
+  Save, Wifi, RefreshCw, Shield, Key, Trash2, RotateCcw,
 } from 'lucide-react';
 
 // ============================================================
@@ -254,6 +254,70 @@ export default function CredencialesTab() {
     }
   };
 
+  // Eliminar credenciales de un servicio (BORRA de DB)
+  const eliminar = async (servicio: string) => {
+    const s = serviciosState[servicio];
+    if (!s) return;
+
+    setServiciosState((prev) => ({
+      ...prev,
+      [servicio]: { ...prev[servicio], guardando: true, mensaje: '🔄 Eliminando...', mensajeTipo: 'info' },
+    }));
+
+    try {
+      const res = await fetch(`/api/credenciales?servicio=${encodeURIComponent(servicio)}`, { method: 'DELETE' });
+      if (res.ok) {
+        const valoresVacios: CredencialesState = {};
+        for (const campo of (servicios.find(sv => sv.servicio === servicio)?.campos || [])) {
+          valoresVacios[campo.clave] = '';
+        }
+        setServiciosState((prev) => ({
+          ...prev,
+          [servicio]: {
+            ...prev[servicio],
+            guardando: false,
+            valores: { ...valoresVacios },
+            valoresOriginales: { ...valoresVacios },
+            modificado: false,
+            n8nId: undefined,
+            mensaje: '✅ Credenciales eliminadas. Podés reingresarlas ahora.',
+            mensajeTipo: 'success',
+          },
+        }));
+      } else {
+        const data = await res.json();
+        setServiciosState((prev) => ({
+          ...prev,
+          [servicio]: { ...prev[servicio], guardando: false, mensaje: `❌ ${data.error || 'Error al eliminar'}`, mensajeTipo: 'error' },
+        }));
+      }
+    } catch (err) {
+      setServiciosState((prev) => ({
+        ...prev,
+        [servicio]: { ...prev[servicio], guardando: false, mensaje: '❌ Error de conexión', mensajeTipo: 'error' },
+      }));
+    }
+  };
+
+  // Limpiar campos localmente (no borra de DB hasta que se guarde)
+  const limpiarCampos = (servicio: string) => {
+    const valoresVacios: CredencialesState = {};
+    for (const campo of (servicios.find(sv => sv.servicio === servicio)?.campos || [])) {
+      valoresVacios[campo.clave] = '';
+    }
+    const s = serviciosState[servicio];
+    setServiciosState((prev) => ({
+      ...prev,
+      [servicio]: {
+        ...prev[servicio],
+        valores: { ...valoresVacios },
+        modificado: JSON.stringify(valoresVacios) !== JSON.stringify(s?.valoresOriginales || {}),
+        mensaje: '',
+        mensajeTipo: '',
+      },
+    }));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -342,6 +406,8 @@ export default function CredencialesTab() {
           onUpdateValor={(clave, valor) => updateValor(activeServicio, clave, valor)}
           onGuardar={() => guardar(activeServicio)}
           onProbar={() => probar(activeServicio)}
+          onEliminar={() => eliminar(activeServicio)}
+          onLimpiarCampos={() => limpiarCampos(activeServicio)}
           onTogglePasswords={() =>
             setServiciosState((prev) => ({
               ...prev,
@@ -367,6 +433,8 @@ function ServicioForm({
   onUpdateValor,
   onGuardar,
   onProbar,
+  onEliminar,
+  onLimpiarCampos,
   onTogglePasswords,
 }: {
   config: ServicioConfig;
@@ -374,6 +442,8 @@ function ServicioForm({
   onUpdateValor: (clave: string, valor: string) => void;
   onGuardar: () => void;
   onProbar: () => void;
+  onEliminar: () => void;
+  onLimpiarCampos: () => void;
   onTogglePasswords: () => void;
 }) {
   const mensajeColors: Record<string, string> = {
@@ -481,7 +551,7 @@ function ServicioForm({
         )}
 
         {/* Botones de acción */}
-        <div className="flex flex-wrap gap-2 pt-2">
+        <div className="flex flex-wrap items-center gap-2 pt-2">
           <Button onClick={onGuardar} disabled={state.guardando || !state.modificado}>
             {state.guardando ? (
               <>
@@ -515,16 +585,28 @@ function ServicioForm({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              // Restaurar valores originales
-              for (const [k, v] of Object.entries(state.valoresOriginales)) {
-                onUpdateValor(k, v);
-              }
-            }}
-            disabled={!state.modificado}
+            onClick={onLimpiarCampos}
+            title="Borra los campos del formulario sin eliminar de la base de datos"
             className="text-xs"
           >
-            Restablecer
+            <RotateCcw className="h-3 w-3 mr-1" />
+            Limpiar campos
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (window.confirm(`¿Estás seguro de eliminar TODAS las credenciales de ${config.displayName}?\n\nEsta acción borra los datos de la base de datos y también intenta eliminarlos de n8n.`)) {
+                onEliminar();
+              }
+            }}
+            disabled={state.guardando}
+            className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+            title="Elimina todas las credenciales de la base de datos para este servicio"
+          >
+            <Trash2 className="h-3 w-3 mr-1" />
+            Eliminar credenciales
           </Button>
         </div>
 

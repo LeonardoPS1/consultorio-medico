@@ -1,5 +1,6 @@
-# 🔐 Acceso Completo — Consultorio Médico (Aicore)
+# 🔐 ACCESO COMPLETO — Consultorio Médico (Aicore)
 
+> ⚠️ ESTE ARCHIVO CONTIENE CREDENCIALES REALES — NO SUBIR A GIT
 > Última actualización: 20/05/2026
 
 ---
@@ -9,17 +10,16 @@
 | Campo | Valor |
 |-------|-------|
 | **IP** | `51.222.207.250` |
-| **SSH Usuario** | `ubuntu` |
-| **SSH Password** | `********` (ver `.env` local o VPS) |
-| **Puerto SSH** | `22` |
+| **SSH** | `ubuntu` / `Cool220479..@` |
+| **Puerto** | `22` |
 | **Conectar** | `ssh ubuntu@51.222.207.250` |
 
-### Conectar desde Python (cuando SSH directo falla):
+### Conectar desde Python (si SSH falla):
 ```python
 import paramiko
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('51.222.207.250', username='ubuntu', password='********')
+ssh.connect('51.222.207.250', username='ubuntu', password='Cool220479..@')
 ```
 
 ---
@@ -28,24 +28,42 @@ ssh.connect('51.222.207.250', username='ubuntu', password='********')
 
 | Campo | Valor |
 |-------|-------|
-| **URL** | `https://51.222.207.250:3000` (admin UI) |
-| **Apps** | 2 aplicaciones + 1 compose stack |
+| **URL Admin** | `https://51.222.207.250:3000` |
+| **Dashboard App ID** | `app-hack-back-end-sensor-jd2eu3` |
+| **Dashboard App Dir** | `/etc/dokploy/applications/app-hack-back-end-sensor-jd2eu3/code/` |
+| **Backend Compose ID** | `aicore-n8nrunnerpostgresollama-a715gi` |
+| **Backend Compose Dir** | `/etc/dokploy/compose/aicore-n8nrunnerpostgresollama-a715gi/code/` |
 
-### App 1: AicoreMed-dashboard
-| Campo | Valor |
-|-------|-------|
-| **ID** | `app-hack-back-end-sensor-jd2eu3` |
-| **Directorio** | `/etc/dokploy/applications/app-hack-back-end-sensor-jd2eu3/code/` |
-| **URL** | `https://med.aicorebots.com` |
-| **Build** | Automático desde GitHub (branch `main`) |
-| **Contenedor** | `consul-dash` (manual), `app-hack-back-end-sensor-...` (Dokploy) |
+### Contenedores activos:
+| Nombre | Rol | Red |
+|--------|-----|-----|
+| `med-dashboard` | Dashboard Next.js | `dokploy-network` |
+| `aicore-n8n...-n8n-1` | n8n | `aicore-...` |
+| `aicore-n8n...-postgres-1` | PostgreSQL | `aicore-...` |
+| `aicore-n8n...-ollama-1` | Ollama | `aicore-...` |
+| `dokploy-traefik` | Reverse Proxy | `dokploy-network` |
 
-### App 2: Backend (n8n + PostgreSQL + Ollama + Redis)
-| Campo | Valor |
-|-------|-------|
-| **ID** | `aicore-n8nrunnerpostgresollama-a715gi` |
-| **Directorio** | `/etc/dokploy/compose/aicore-n8nrunnerpostgresollama-a715gi/code/` |
-| **URL n8n** | `https://n8n.aicorebots.com` |
+### Comando para levantar el dashboard (si se cae):
+```bash
+sudo docker rm -f med-dashboard 2>/dev/null
+sudo docker run -d --name med-dashboard \
+  --network dokploy-network --restart unless-stopped \
+  -e NODE_ENV=production \
+  -e DATABASE_URL=postgresql://dashboard_user:****@172.18.0.1:5432/consultorio_medico \
+  -e AUTH_SECRET=**** \
+  -e TWILIO_ACCOUNT_SID=**** \
+  -e TWILIO_AUTH_TOKEN=**** \
+  -e TWILIO_WHATSAPP_NUMBER=whatsapp:+18453735358 \
+  -e N8N_BASE_URL=http://172.18.0.1:5678 \
+  -e N8N_API_KEY=**** \
+  -e N8N_WEBHOOK_INBOUND_URL=http://172.18.0.1:5678/webhook/consultorio-inbound \
+  -l "traefik.enable=true" \
+  -l "traefik.http.routers.med-dash.rule=Host(\`med.aicorebots.com\`)" \
+  -l "traefik.http.routers.med-dash.entrypoints=websecure" \
+  -l "traefik.http.routers.med-dash.tls.certresolver=letsencrypt" \
+  -l "traefik.http.services.med-dash.loadbalancer.server.port=3000" \
+  code-dashboard
+```
 
 ---
 
@@ -53,49 +71,18 @@ ssh.connect('51.222.207.250', username='ubuntu', password='********')
 
 | Campo | Valor |
 |-------|-------|
-| **Host** | `172.18.0.1:5432` (interno Docker) |
+| **Host interno** | `172.18.0.1:5432` |
 | **Base de datos** | `consultorio_medico` |
 | **App User** | `dashboard_user` |
-| **App Password** | `********` |
-| **Superuser** | `********` |
-| **Superuser Pass** | `********` (Dokploy) |
+| **App Password** | `****` |
+| **Superuser** | `reece.schmeler67` |
 | **Contenedor** | `aicore-n8nrunnerpostgresollama-a715gi-postgres-1` |
 
 ### Conectar via CLI:
 ```bash
-sudo docker exec -e PGPASSWORD='********' \
+sudo docker exec -e PGPASSWORD='****' \
   aicore-n8nrunnerpostgresollama-a715gi-postgres-1 \
-  psql -U dashboard_user -d consultorio_medico
-```
-
----
-
-## 🤖 n8n
-
-| Campo | Valor |
-|-------|-------|
-| **URL** | `https://n8n.aicorebots.com` |
-| **API Key (JWT)** | `eyJh... (JWT, ver .env)` |
-| **Red Docker** | `aicore-n8nrunnerpostgresollama-a715gi` |
-| **Contenedor** | `aicore-n8nrunnerpostgresollama-a715gi-n8n-1` |
-
-### Workflows (7 importados):
-| # | Nombre | Estado |
-|---|--------|:------:|
-| 01 | WhatsApp Inbound + Triaje IA | 📦 |
-| 02 | Gestión de Turnos | 📦 |
-| 03 | Recordatorios Automáticos | 📦 |
-| 04 | Correo Inteligente | 📦 |
-| 05 | Resumen Diario del Médico | 📦 |
-| 06 | Recetas y Renovaciones | 📦 |
-| 07 | Backup Automático Encriptado | 📦 |
-
-### Llamar API n8n desde VPS:
-```bash
-sudo docker run --rm --network aicore-n8nrunnerpostgresollama-a715gi \
-  curlimages/curl:latest -s \
-  -H "X-N8N-API-KEY: eyJhbGci..." \
-  http://aicore-n8nrunnerpostgresollama-a715gi-n8n-1:5678/api/v1/workflows
+  psql -U dashboard_user -d consultorio_medico -c "SELECT COUNT(*) FROM pacientes"
 ```
 
 ---
@@ -104,14 +91,39 @@ sudo docker run --rm --network aicore-n8nrunnerpostgresollama-a715gi \
 
 | Campo | Valor |
 |-------|-------|
-| **Account SID** | `AC****` |
-| **Auth Token** | `********` |
-| **WhatsApp Number** | `+18453735358` (Sandbox) |
-| **Doctor WhatsApp** | `+18453735358` (usar nro real del médico) |
+| **Account SID** | `****` |
+| **Auth Token** | `****` |
+| **WhatsApp Sandbox** | `+18453735358` |
+| **Webhook URL** | `https://med.aicorebots.com/api/webhooks/twilio` |
 
-### Webhook URL (configurar en Twilio Console):
-- URL: `https://med.aicorebots.com/api/webhooks/twilio`
-- Método: `POST`
+---
+
+## 🤖 n8n
+
+| Campo | Valor |
+|-------|-------|
+| **URL** | `https://n8n.aicorebots.com` |
+| **API interna** | `http://172.18.0.1:5678` (sin Cloudflare) |
+| **API Key** | `eyJhbGciOiJIUzI1NiIs...oaF3o` (JWT completo en .env) |
+| **Red Docker** | `aicore-n8nrunnerpostgresollama-a715gi` |
+| **Contenedor** | `aicore-n8nrunnerpostgresollama-a715gi-n8n-1` |
+
+### Workflows importados (7):
+01 - WhatsApp Inbound + Triaje IA
+02 - Gestión de Turnos
+03 - Recordatorios Automáticos
+04 - Correo Inteligente
+05 - Resumen Diario del Médico
+06 - Recetas y Renovaciones
+07 - Backup Automático Encriptado
+
+### Activar workflow via API:
+```bash
+sudo docker run --rm --network aicore-n8nrunnerpostgresollama-a715gi \
+  curlimages/curl -s -X POST \
+  -H "X-N8N-API-KEY: eyJhbGci..." \
+  http://aicore-n8nrunnerpostgresollama-a715gi-n8n-1:5678/api/v1/workflows/{ID}/activate
+```
 
 ---
 
@@ -119,21 +131,25 @@ sudo docker run --rm --network aicore-n8nrunnerpostgresollama-a715gi \
 
 | Campo | Valor |
 |-------|-------|
-| **URL** | `http://172.18.0.1:11434` (interno) |
+| **URL interna** | `http://172.18.0.1:11434` |
 | **Modelo** | `mistral` |
 | **Contenedor** | `aicore-n8nrunnerpostgresollama-a715gi-ollama-1` |
 
 ---
 
-## 🌐 Dashboard
+## 🌐 URLs
 
-| Campo | Valor |
-|-------|-------|
-| **URL** | `https://med.aicorebots.com` |
-| **Login** | `admin@consultorio.com` |
-| **Password** | `admin123` |
-| **Médico** | `medico@consultorio.com` / `medico123` |
-| **Health Check** | `GET /api/health` |
+| Servicio | URL |
+|----------|-----|
+| **Dashboard** | `https://med.aicorebots.com` |
+| **n8n** | `https://n8n.aicorebots.com` |
+| **Dokploy** | `https://51.222.207.250:3000` |
+
+### Credenciales Dashboard:
+| Usuario | Password | Rol |
+|---------|----------|-----|
+| `admin@consultorio.com` | `admin123` | admin |
+| `medico@consultorio.com` | `medico123` | medico |
 
 ---
 
@@ -143,52 +159,27 @@ sudo docker run --rm --network aicore-n8nrunnerpostgresollama-a715gi \
 |-------|-------|
 | **Repo** | `https://github.com/LeonardoPS1/consultorio-medico` |
 | **Branch** | `main` |
-| **Flujo deploy** | `git push origin main` → Dokploy auto-redeploy |
+| **Flujo** | `git push origin main` → Dokploy auto-redeploy |
 
 ---
 
-## 🔑 Cómo configurar credenciales (1 clic)
-
-1. Entrar a `https://med.aicorebots.com/login`
-2. Login: `admin@consultorio.com` / `admin123`
-3. Ir a **Configuración → Credenciales**
-4. Click en cada servicio y **Guardar**:
-   - **Twilio**: Ya tiene SID y Token de `.env`
-   - **PostgreSQL**: Ya tiene host, user, password
-   - **Ollama**: `http://ollama:11434`, modelo `mistral`
-   - **SMTP/IMAP**: Configurar cuando tengas email
-5. Se sincronizan automáticamente a n8n ✅
-
----
-
-## 🚀 Deploy rápido
+## 🔧 Comandos útiles
 
 ```bash
-# En local:
-git add -A && git commit -m "cambios" && git push origin main
+# Ver todos los contenedores
+sudo docker ps --format 'table {{.Names}}\t{{.Status}}'
 
-# En VPS (si Dokploy no auto-redeployea):
-ssh ubuntu@51.222.207.250
-cd /etc/dokploy/applications/app-hack-back-end-sensor-jd2eu3/code
-sudo git pull origin main
-sudo docker compose up -d --build
-```
+# Logs dashboard
+sudo docker logs med-dashboard --tail 50
 
----
+# Logs n8n
+sudo docker logs aicore-n8nrunnerpostgresollama-a715gi-n8n-1 --tail 50
 
-## 🩺 Health Checks
+# Health checks
+curl -s https://med.aicorebots.com/api/health
+curl -s https://n8n.aicorebots.com/healthz
+curl -s http://51.222.207.250:11434/api/tags
 
-```bash
-# Dashboard
-curl http://51.222.207.250:3001/api/health
-
-# n8n
-sudo docker run --rm --network aicore-n8nrunnerpostgresollama-a715gi \
-  curlimages/curl -s http://aicore-n8nrunnerpostgresollama-a715gi-n8n-1:5678/healthz
-
-# PostgreSQL
-sudo docker exec aicore-n8nrunnerpostgresollama-a715gi-postgres-1 pg_isready -U dashboard_user -d consultorio_medico
-
-# Ollama
-curl http://51.222.207.250:11434/api/tags
+# Reiniciar dashboard
+sudo docker restart med-dashboard
 ```
