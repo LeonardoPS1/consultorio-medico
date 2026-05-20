@@ -33,14 +33,6 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
       "position": [250, 350],
-      }
-    },
-    {
-      "id": "query-pacientes-nuevos",
-      "name": "PG - Pacientes Nuevos (24h)",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2,
-      "position": [250, 350],
       "parameters": {
         "operation": "executeQuery",
         "query": "SELECT nombre, apellido, telefono, obra_social\nFROM pacientes\nWHERE created_at >= NOW() - INTERVAL '24 hours'\n  AND deleted_at IS NULL\nORDER BY created_at DESC;"
