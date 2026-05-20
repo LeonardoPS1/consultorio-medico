@@ -357,3 +357,57 @@ export const mensajesRelations = relations(mensajes, ({ one }) => ({
     references: [conversaciones.id],
   }),
 }));
+
+// ============================================================
+// HORARIOS DE ATENCIÓN
+// ============================================================
+export const horariosAtencion = pgTable('horarios_atencion', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  dia: varchar('dia', { length: 20 }).notNull().unique(),
+  activo: boolean('activo').notNull().default(true),
+  inicio: varchar('inicio', { length: 5 }).notNull().default('09:00'),
+  fin: varchar('fin', { length: 5 }).notNull().default('18:00'),
+  tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type HorarioAtencion = InferSelectModel<typeof horariosAtencion>;
+
+// ============================================================
+// PREFERENCIAS DE NOTIFICACIONES
+// ============================================================
+export const preferenciasNotificaciones = pgTable('preferencias_notificaciones', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  usuarioId: uuid('usuario_id').notNull(),
+  urgenciasWhatsapp: boolean('urgencias_whatsapp').notNull().default(true),
+  resumenDiarioEmail: boolean('resumen_diario_email').notNull().default(true),
+  alertasAusentismo: boolean('alertas_ausentismo').notNull().default(true),
+  nuevosPacientes: boolean('nuevos_pacientes').notNull().default(false),
+  whatsappPersonal: varchar('whatsapp_personal', { length: 20 }).default(''),
+  tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type PreferenciasNotificacion = InferSelectModel<typeof preferenciasNotificaciones>;
+export type NewPreferenciasNotificacion = InferInsertModel<typeof preferenciasNotificaciones>;
+
+// ============================================================
+// PLANTILLAS DE MENSAJES (internas)
+// ============================================================
+export const plantillasMensajes = pgTable('plantillas_mensajes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  nombre: varchar('nombre', { length: 255 }).notNull(),
+  contenido: text('contenido').notNull(),
+  categoria: varchar('categoria', { length: 50 }).notNull().default('recordatorios'),
+  variables: text('variables').array().default(sql`'{}'`),
+  activa: boolean('activa').notNull().default(true),
+  tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+});
+
+export type PlantillaMensajeDB = InferSelectModel<typeof plantillasMensajes>;
+export type NewPlantillaMensaje = InferInsertModel<typeof plantillasMensajes>;

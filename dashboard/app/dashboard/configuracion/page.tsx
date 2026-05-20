@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { toast } from '@/components/ui/use-toast';
 import {
   Bot, Globe, Shield, CreditCard,
   Edit3, Save, Plus, Trash2, Key,
@@ -44,66 +45,32 @@ interface PlantillaWhatsApp {
 }
 
 interface MiembroEquipo {
+  id?: string;
   nombre: string;
   email: string;
   rol: string;
   ultimo: string;
 }
 
-// ============================================================
-// Mock Data
-// ============================================================
+interface HorarioData {
+  id?: string;
+  dia: string;
+  activo: boolean;
+  inicio: string;
+  fin: string;
+}
 
-const plantillasIniciales: PlantillaWhatsApp[] = [
-  {
-    id: '1',
-    nombre: 'Recordatorio 24hs',
-    contenido: 'Hola {{paciente}}, te recordamos que tenés un turno con el Dr. {{medico}} mañana a las {{hora}}. Respondé "CONFIRMAR" para confirmar asistencia o "CANCELAR" si necesitás reprogramar.',
-    categoria: 'recordatorios',
-    variables: ['paciente', 'medico', 'hora'],
-  },
-  {
-    id: '2',
-    nombre: 'Recordatorio 1h',
-    contenido: 'Recordatorio: {{paciente}}, tu turno con el Dr. {{medico}} es en 1 hora ({{hora}}). Te esperamos!',
-    categoria: 'recordatorios',
-    variables: ['paciente', 'medico', 'hora'],
-  },
-  {
-    id: '3',
-    nombre: 'Confirmación turno',
-    contenido: '¡Gracias {{paciente}}! Tu turno con el Dr. {{medico}} el día {{fecha}} a las {{hora}} fue confirmado. Cualquier cambio nos avisás.',
-    categoria: 'turnos',
-    variables: ['paciente', 'medico', 'fecha', 'hora'],
-  },
-  {
-    id: '4',
-    nombre: 'Cancelación turno',
-    contenido: 'Hola {{paciente}}, te confirmamos que tu turno del {{fecha}} a las {{hora}} fue cancelado. Si querés agendar un nuevo turno, escribinos.',
-    categoria: 'turnos',
-    variables: ['paciente', 'fecha', 'hora'],
-  },
-  {
-    id: '5',
-    nombre: 'Receta lista',
-    contenido: '{{paciente}}, tu receta de {{medicamento}} ya está lista. Pasá a retirarla por el consultorio o decinos si querés que te la enviemos por WhatsApp.',
-    categoria: 'recetas',
-    variables: ['paciente', 'medicamento'],
-  },
-  {
-    id: '6',
-    nombre: 'Urgencia detectada',
-    contenido: '⚠️ Alerta de urgencia: {{paciente}} reportó: "{{mensaje}}". Comunicarse a la brevedad.',
-    categoria: 'alertas',
-    variables: ['paciente', 'mensaje'],
-  },
-];
+interface NotifData {
+  urgenciasWhatsapp: boolean;
+  resumenDiarioEmail: boolean;
+  alertasAusentismo: boolean;
+  nuevosPacientes: boolean;
+  whatsappPersonal: string;
+}
 
-const miembrosEquipo: MiembroEquipo[] = [
-  { nombre: 'Dr. García', email: 'dr.garcia@consultorio.com', rol: 'Médico', ultimo: 'Hace 5 min' },
-  { nombre: 'Dra. López', email: 'dra.lopez@consultorio.com', rol: 'Médico', ultimo: 'Hace 2 hs' },
-  { nombre: 'Marcela Ruiz', email: 'marcela@consultorio.com', rol: 'Secretaria', ultimo: 'Hace 15 min' },
-];
+// ============================================================
+// Los datos se cargan desde las APIs (/api/horarios, /api/notificaciones, /api/equipo, /api/plantillas)
+// ============================================================
 
 // ============================================================
 // Componente principal
@@ -124,11 +91,15 @@ function ConfigContent() {
   const userPlan = session?.user?.plan ?? 'free';
   const isAdmin = userRole === 'admin';
   const tabFromUrl = searchParams.get('tab') || 'perfil';
-  const [plantillas, setPlantillas] = useState(plantillasIniciales);
+  const [plantillas, setPlantillas] = useState<PlantillaWhatsApp[]>([]);
   const [showPlantillaModal, setShowPlantillaModal] = useState(false);
   const [editingPlantilla, setEditingPlantilla] = useState<PlantillaWhatsApp | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [activeTab, setActiveTab] = useState(tabFromUrl);
+  const [horarios, setHorarios] = useState<HorarioData[]>([]);
+  const [notificaciones, setNotificaciones] = useState<NotifData | null>(null);
+  const [miembrosEquipo, setMiembrosEquipo] = useState<MiembroEquipo[]>([]);
+  const [loading, setLoading] = useState({ horarios: true, notificaciones: true, equipo: true, plantillas: true });
 
   // Sincronizar tabs con la URL
   useEffect(() => {
@@ -137,6 +108,33 @@ function ConfigContent() {
       setActiveTab(urlTab);
     }
   }, [searchParams, activeTab]);
+
+  // Cargar datos desde APIs
+  useEffect(() => {
+    fetch('/api/horarios')
+      .then(r => r.json())
+      .then(res => { if (res.data) setHorarios(res.data); })
+      .catch(() => {})
+      .finally(() => setLoading(h => ({ ...h, horarios: false })));
+
+    fetch('/api/notificaciones')
+      .then(r => r.json())
+      .then(res => { if (res.data) setNotificaciones(res.data); })
+      .catch(() => {})
+      .finally(() => setLoading(h => ({ ...h, notificaciones: false })));
+
+    fetch('/api/equipo')
+      .then(r => r.json())
+      .then(res => { if (res.data) setMiembrosEquipo(res.data); })
+      .catch(() => {})
+      .finally(() => setLoading(h => ({ ...h, equipo: false })));
+
+    fetch('/api/plantillas')
+      .then(r => r.json())
+      .then(res => { if (res.data) setPlantillas(res.data); })
+      .catch(() => {})
+      .finally(() => setLoading(h => ({ ...h, plantillas: false })));
+  }, []);
 
   return (
     <div className="space-y-6 animate-in">
@@ -204,23 +202,36 @@ function ConfigContent() {
               <CardDescription>Configurá la disponibilidad del consultorio</CardDescription>
             </CardHeader>
             <CardContent>
+              {loading.horarios ? (
+                <div className="space-y-3">
+                  {[1,2,3,4,5,6].map(i => <div key={i} className="h-12 skeleton rounded-lg" />)}
+                </div>
+              ) : (
               <div className="space-y-4">
-                {[
-                  { dia: 'Lunes', activo: true, inicio: '09:00', fin: '18:00' },
-                  { dia: 'Martes', activo: true, inicio: '09:00', fin: '18:00' },
-                  { dia: 'Miércoles', activo: true, inicio: '09:00', fin: '18:00' },
-                  { dia: 'Jueves', activo: true, inicio: '09:00', fin: '18:00' },
-                  { dia: 'Viernes', activo: true, inicio: '09:00', fin: '18:00' },
-                  { dia: 'Sábado', activo: false, inicio: '09:00', fin: '13:00' },
-                ].map((dia) => (
+                {horarios.map((dia, idx) => (
                   <div key={dia.dia} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30">
                     <div className="w-24 font-medium text-sm">{dia.dia}</div>
-                    <Switch defaultChecked={dia.activo} />
+                    <Switch
+                      checked={dia.activo}
+                      onCheckedChange={(checked) => {
+                        const nuevos = [...horarios];
+                        nuevos[idx] = { ...nuevos[idx], activo: checked };
+                        setHorarios(nuevos);
+                      }}
+                    />
                     {dia.activo ? (
                       <div className="flex items-center gap-2">
-                        <Input type="time" defaultValue={dia.inicio} className="w-24 h-8 text-sm" />
+                        <Input type="time" value={dia.inicio} onChange={e => {
+                          const nuevos = [...horarios];
+                          nuevos[idx] = { ...nuevos[idx], inicio: e.target.value };
+                          setHorarios(nuevos);
+                        }} className="w-24 h-8 text-sm" />
                         <span className="text-muted-foreground">a</span>
-                        <Input type="time" defaultValue={dia.fin} className="w-24 h-8 text-sm" />
+                        <Input type="time" value={dia.fin} onChange={e => {
+                          const nuevos = [...horarios];
+                          nuevos[idx] = { ...nuevos[idx], fin: e.target.value };
+                          setHorarios(nuevos);
+                        }} className="w-24 h-8 text-sm" />
                       </div>
                     ) : (
                       <span className="text-sm text-muted-foreground">Cerrado</span>
@@ -228,10 +239,30 @@ function ConfigContent() {
                   </div>
                 ))}
                 <div className="flex gap-2">
-                  <Button>Guardar Horarios</Button>
-                  <Button variant="outline">Restablecer</Button>
+                  <Button onClick={async () => {
+                    try {
+                      const res = await fetch('/api/horarios', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ horarios }),
+                      });
+                      if (res.ok) toast({ title: 'Horarios guardados' });
+                      else toast({ title: 'Error al guardar', variant: 'destructive' });
+                    } catch { toast({ title: 'Error de conexión', variant: 'destructive' }); }
+                  }}>
+                    <Save className="h-4 w-4 mr-1" />
+                    Guardar Horarios
+                  </Button>
+                  <Button variant="outline" onClick={() => {
+                    fetch('/api/horarios').then(r => r.json()).then(res => {
+                      if (res.data) setHorarios(res.data);
+                    });
+                  }}>
+                    Restablecer
+                  </Button>
                 </div>
               </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -376,7 +407,13 @@ function ConfigContent() {
                               >
                                 <Edit3 className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={async () => {
+                                if (confirm('¿Eliminar plantilla?')) {
+                                  await fetch('/api/plantillas', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: plantilla.id }) });
+                                  setPlantillas((prev) => prev.filter((p) => p.id !== plantilla.id));
+                                  toast({ title: 'Plantilla eliminada' });
+                                }
+                              }}>
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
@@ -395,13 +432,22 @@ function ConfigContent() {
             open={showPlantillaModal}
             onOpenChange={setShowPlantillaModal}
             plantilla={editingPlantilla}
-            onSave={(data) => {
-              if (editingPlantilla) {
-                setPlantillas((prev) => prev.map((p) => p.id === editingPlantilla.id ? { ...p, ...data } : p));
-              } else {
-                setPlantillas((prev) => [...prev, { id: String(Date.now()), ...data }]);
+            onSave={async (data) => {
+              try {
+                if (editingPlantilla) {
+                  await fetch('/api/plantillas', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingPlantilla.id, ...data }) });
+                  setPlantillas((prev) => prev.map((p) => p.id === editingPlantilla.id ? { ...p, ...data } : p));
+                } else {
+                  const res = await fetch('/api/plantillas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                  const result = await res.json();
+                  if (result.data) setPlantillas((prev) => [...prev, result.data]);
+                }
+                setShowPlantillaModal(false);
+                setEditingPlantilla(null);
+                toast({ title: editingPlantilla ? 'Plantilla actualizada' : 'Plantilla creada' });
+              } catch {
+                toast({ title: 'Error al guardar', variant: 'destructive' });
               }
-              setShowPlantillaModal(false);
             }}
           />
         </TabsContent>
@@ -414,36 +460,61 @@ function ConfigContent() {
               <CardDescription>Configurá cómo y cuándo recibir alertas</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {loading.notificaciones ? (
+                <div className="space-y-4">
+                  {[1,2,3,4].map(i => <div key={i} className="h-12 skeleton rounded-lg" />)}
+                </div>
+              ) : notificaciones ? (
+                <>
               <SwitchRow
                 label="Urgencias por WhatsApp"
                 description="Recibir notificación al WhatsApp personal cuando se detecte una urgencia"
-                defaultChecked
+                checked={notificaciones.urgenciasWhatsapp}
+                onCheckedChange={(v) => setNotificaciones({...notificaciones, urgenciasWhatsapp: v})}
               />
               <SwitchRow
                 label="Resumen diario por email"
                 description="Cada mañana con los turnos del día, nuevos pacientes y pendientes"
-                defaultChecked
+                checked={notificaciones.resumenDiarioEmail}
+                onCheckedChange={(v) => setNotificaciones({...notificaciones, resumenDiarioEmail: v})}
               />
               <SwitchRow
                 label="Alertas de ausentismo"
                 description="Cuando un paciente no confirma el turno después del recordatorio"
-                defaultChecked
+                checked={notificaciones.alertasAusentismo}
+                onCheckedChange={(v) => setNotificaciones({...notificaciones, alertasAusentismo: v})}
               />
               <SwitchRow
                 label="Nuevos pacientes"
                 description="Notificar cuando un nuevo paciente se registra vía WhatsApp"
+                checked={notificaciones.nuevosPacientes}
+                onCheckedChange={(v) => setNotificaciones({...notificaciones, nuevosPacientes: v})}
               />
               <div className="pt-3">
                 <Label>WhatsApp personal para urgencias</Label>
-                <Input defaultValue="+5491155550000" className="mt-1" />
+                <Input value={notificaciones.whatsappPersonal} onChange={e => setNotificaciones({...notificaciones, whatsappPersonal: e.target.value})} className="mt-1" />
                 <p className="text-xs text-muted-foreground mt-1">
                   Número donde recibirás las alertas de urgencia
                 </p>
               </div>
-              <Button>
+              <Button onClick={async () => {
+                try {
+                  const res = await fetch('/api/notificaciones', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(notificaciones),
+                  });
+                  if (res.ok) toast({ title: 'Preferencias guardadas' });
+                  else toast({ title: 'Error al guardar', variant: 'destructive' });
+                } catch { toast({ title: 'Error de conexión', variant: 'destructive' }); }
+              }}>
                 <Save className="h-4 w-4 mr-1" />
                 Guardar preferencias
               </Button>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">No se pudieron cargar las preferencias.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -470,7 +541,11 @@ function ConfigContent() {
               </Button>
             </CardHeader>
             <CardContent>
-              {miembrosEquipo.length === 0 ? (
+              {loading.equipo ? (
+                <div className="space-y-3">
+                  {[1,2,3].map(i => <div key={i} className="h-16 skeleton rounded-lg" />)}
+                </div>
+              ) : miembrosEquipo.length === 0 ? (
                 <div className="text-center py-12">
                   <Shield className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
                   <p className="text-sm text-muted-foreground">Sin miembros en el equipo</p>
@@ -515,14 +590,22 @@ function ConfigContent() {
 // Subcomponentes
 // ============================================================
 
-function SwitchRow({ label, description, defaultChecked }: { label: string; description: string; defaultChecked?: boolean }) {
+function SwitchRow({ label, description, checked, onCheckedChange, defaultChecked }: {
+  label: string; description: string;
+  checked?: boolean; onCheckedChange?: (v: boolean) => void;
+  defaultChecked?: boolean;
+}) {
   return (
     <div className="flex items-center justify-between">
       <div>
         <Label>{label}</Label>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
-      <Switch defaultChecked={defaultChecked} />
+      <Switch
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        defaultChecked={defaultChecked}
+      />
     </div>
   );
 }
