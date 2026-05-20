@@ -1,0 +1,7 @@
+packages:
+  - dashboard
+
+allowBuilds:
+  sharp: true
+  esbuild: true
+  unrs-resolver: true
