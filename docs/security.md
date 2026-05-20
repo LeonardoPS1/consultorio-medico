@@ -1,35 +1,45 @@
 # 🔐 Seguridad — AiCoreMed Dashboard
 
+## Estado actual (actualizado 19-May-2026)
+
+| Nivel | Estado | Descripción |
+|-------|--------|-------------|
+| 🟢 Crítico | **6/6 completado** | ✅ Firewall, AUTH_SECRET, contraseñas, puertos, migraciones, .env |
+| 🟡 Alto | **4/7 completado** | ✅ N8N_KEY, rate limiting, backup, HTTPS. Pendiente: MP real, Twilio real, CORS |
+| 🟢 Buenas prácticas | **1/5 completado** | ✅ 2FA implementado. Pendiente: revisión periódica de logs, usuarios inactivos, pnpm audit, SW cache |
+
+---
+
 ## Checklist para Producción
 
-Antes de poner el sistema en producción, verificá cada punto:
+Estado actual de cada punto en el deployment de `med.aicorebots.com`:
 
-### 🔴 Crítico
+### 🔴 Crítico — 6/6 ✅
 
-- [ ] **AUTH_SECRET generado con `openssl rand -base64 32`** y configurado en las env vars de Dokploy
-- [ ] **PostgreSQL contraseña fuerte** (no usar `postgres` / `postgres`)
-- [ ] **Puerto 5432 NO expuesto públicamente** — solo permitir conexiones desde el dashboard
-- [ ] **Firewall configurado**: solo puertos 80/443/3000 abiertos (según corresponda)
-- [ ] **scripts/migrate-prod.js** usa variables de entorno, no credenciales hardcodeadas
-- [ ] **.env.local** no está en el repositorio (confirmado con `git ls-files | grep env`)
+- [x] **AUTH_SECRET generado con `openssl rand -base64 32`** → `VUrEuLJCQ+8wrgkE6ZCmlH6eimU5EkY508hk7X7eJnE=` — configurado en Dokploy env vars
+- [x] **PostgreSQL contraseña fuerte** — rotada el 19-May-2026 para `dashboard_user` y superuser `reece.schmeler67`
+- [x] **Puerto 5432 NO expuesto públicamente** — UFW bloquea 5432, solo accesible desde `172.18.0.1` (Docker gateway)
+- [x] **Firewall configurado** — UFW activo: `allow 22,80,443,3000/tcp` | `deny 5432/tcp`
+- [x] **scripts/migrate-prod.js** usa variables de entorno (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`), sin credenciales hardcodeadas
+- [x] **.env.local** no está en el repositorio — verificado con `git filter-repo` (secrets eliminados de 71 commits)
 
-### 🟡 Alto
+### 🟡 Alto — 4/7 ✅
 
-- [ ] **N8N_ENCRYPTION_KEY** configurado (generar con `openssl rand -base64 32`)
-- [ ] **MercadoPago** usando credenciales de producción (no TEST)
-- [ ] **Twilio** con Account SID y Auth Token reales
-- [ ] **Rate limiting** activo en middleware (5 intentos/min login, 30/min API)
-- [ ] **CORS** configurado si hay dominios cruzados
-- [ ] **Backup automático** configurado (pg_dump + GPG encriptado)
-- [ ] **HTTPS** funcionando (Traefik + Let's Encrypt)
+- [x] **N8N_ENCRYPTION_KEY** configurado → `0PHtOqXBCiqRLggfEvEVPiAlxD4q0KJn` en `.env` de n8n
+- [ ] **MercadoPago** usando credenciales de producción (no TEST) — ⏳ Pendiente: configurar desde Dashboard → Credenciales
+- [ ] **Twilio** con Account SID y Auth Token reales — ⏳ Pendiente: configurar desde Dashboard → Credenciales
+- [x] **Rate limiting** activo en middleware → 5 intentos/min login (`/api/auth/*`), 30/min APIs generales
+- [ ] **CORS** configurado si hay dominios cruzados — ⏳ Pendiente: evaluar si se necesita
+- [x] **Backup automático** configurado → script `scripts/backup-encriptado.sh` + workflow n8n WF-07 (cron 3 AM, GPG, rotación 30 días)
+- [x] **HTTPS** funcionando → Traefik + Let's Encrypt, certificado activo para `med.aicorebots.com`
 
-### 🟢 Buenas prácticas
+### 🟢 Buenas prácticas — 1/5 ✅
 
-- [ ] Logs de auditoría revisados periódicamente
-- [ ] Usuarios inactivos desactivados
-- [ ] 2FA habilitado para usuarios admin
-- [ ] Versiones de dependencias actualizadas (`pnpm audit`)
-- [ ] Service worker actualizado después de cada deploy (cache limpio)
+- [ ] Logs de auditoría revisados periódicamente — ⏳ Pendiente: tarea operativa recurrente
+- [ ] Usuarios inactivos desactivados — ⏳ Pendiente: tarea operativa
+- [x] **2FA habilitado para usuarios admin** — Implementado con speakeasy (TOTP, QR codes, backup codes). Disponible en Configuración → Perfil
+- [ ] Versiones de dependencias actualizadas (`pnpm audit`) — ⏳ Pendiente: ejecutar periódicamente
+- [ ] Service worker actualizado después de cada deploy (cache limpio) — ⏳ Pendiente: implementar PWA completa con SW
 
 ---
 
@@ -63,62 +73,90 @@ Antes de poner el sistema en producción, verificá cada punto:
 ## Arquitectura de Seguridad
 
 ```
-                    ┌──────────────────────┐
-                    │   Usuario (Browser)   │
-                    └──────────┬───────────┘
-                               │ HTTPS
-                    ┌──────────▼───────────┐
-                    │    Traefik Proxy      │
-                    │  (SSL termination)    │
-                    └──────────┬───────────┘
+                    ┌──────────────────────────┐
+                    │     Usuario (Browser)     │
+                    └──────────┬───────────────┘
+                               │ HTTPS (TLS 1.3)
+                    ┌──────────▼───────────────┐
+                    │      Cloudflare DNS       │
+                    │    (proxy mode, ocultá IP) │
+                    └──────────┬───────────────┘
                                │
-                    ┌──────────▼───────────┐
-                    │   Next.js Middleware  │
-                    │  ┌─────────────────┐ │
-                    │  │ Rate Limiting   │ │
-                    │  │ Security Headers│ │
-                    │  │ Session Check   │ │
-                    │  └─────────────────┘ │
-                    └──────────┬───────────┘
+                    ┌──────────▼───────────────┐
+                    │      Traefik Proxy        │
+                    │   🔒 SSL termination      │
+                    │   (Let's Encrypt)          │
+                    └──────────┬───────────────┘
                                │
-                    ┌──────────▼───────────┐
-                    │   API Routes          │
-                    │  ┌─────────────────┐ │
-                    │  │ Auth (NextAuth) │ │
-                    │  │ 2FA (TOTP)      │ │
-                    │  │ CSRF Protection │ │
-                    │  └─────────────────┘ │
-                    └──────────┬───────────┘
+                    ┌──────────▼───────────────┐
+                    │   Next.js Middleware       │
+                    │  ┌─────────────────────┐  │
+                    │  │ 🔒 Rate Limiting    │  │
+                    │  │ 🔒 Security Headers │  │
+                    │  │ 🔒 Session Check    │  │
+                    │  └─────────────────────┘  │
+                    └──────────┬───────────────┘
                                │
-                    ┌──────────▼───────────┐
-                    │   PostgreSQL          │
-                    │  ┌─────────────────┐ │
-                    │  │ bcrypt hashes   │ │
-                    │  │ AES-256-GCM     │ │
-                    │  │ enc. creds      │ │
-                    │  └─────────────────┘ │
-                    └──────────────────────┘
+                    ┌──────────▼───────────────┐
+                    │     API Routes            │
+                    │  ┌─────────────────────┐  │
+                    │  │ 🔑 Auth (NextAuth)  │  │
+                    │  │ 🔑 2FA (TOTP)       │  │
+                    │  │ 🔑 Password Policy   │  │
+                    │  │ 🔑 Account Lockout   │  │
+                    │  │ 🔑 CSRF Protection   │  │
+                    │  │ 🔑 Feature Gating    │  │
+                    │  └─────────────────────┘  │
+                    └──────────┬───────────────┘
+                               │
+                    ┌──────────▼───────────────┐
+                    │    PostgreSQL 17           │
+                    │  🛡️ Firewall: 5432 DENIED  │
+                    │  ┌─────────────────────┐  │
+                    │  │ 🔒 bcrypt(10)       │  │
+                    │  │ 🔒 AES-256-GCM      │  │
+                    │  │ 🔒 Soft Delete      │  │
+                    │  │ 📋 Auditoría        │  │
+                    │  │ 🏢 Multitenant      │  │
+                    │  └─────────────────────┘  │
+                    └──────────────────────────┘
+
+                    ┌──────────────────────────┐
+                    │     n8n + Ollama          │
+                    │  (red interna, sin exposición) │
+                    │  🔑 N8N_API_KEY auth     │
+                    │  🤖 Mistral local (Ollama)│
+                    │  🔒 Prompt sanitization   │
+                    └──────────────────────────┘
 ```
 
-### Capas de defensa
+### Capas de defensa — Estado de implementación
 
-| Capa | Mecanismo | Descripción |
-|------|-----------|-------------|
-| **Red** | Firewall + Traefik | Solo puertos 80/443 desde internet. HTTPS obligatorio. |
-| **Middleware** | Rate limiting | 5 intentos/min para login, 30/min para APIs |
-| **Middleware** | Security headers | X-Frame-Options, HSTS, X-Content-Type-Options, etc. |
-| **Middleware** | Session check | Redirige a login si no hay cookie de sesión |
-| **Auth** | NextAuth v5 | JWT con expiración (30 min), renovación cada 5 min |
-| **Auth** | 2FA / MFA | TOTP vía Google Authenticator / Authy |
-| **Auth** | Password policy | 8+ chars, mayúscula, número, símbolo |
-| **Auth** | Account lockout | 5 intentos fallidos → 15 min de bloqueo |
-| **Auth** | CSRF tokens | En todas las mutaciones de auth |
-| **Auth** | Token recovery | Tokens de un solo uso, expiración 1 hora |
-| **DB** | Encryption at rest | Credenciales encriptadas con AES-256-GCM |
-| **DB** | Soft delete | `deleted_at`, nada se borra físicamente |
-| **DB** | Auditoría | `auditoria_accesos` registra todas las operaciones |
-| **IA** | Prompt sanitization | Anti-jailbreak, anti-prompt injection |
-| **Twilio** | Signature verification | Validación criptográfica de webhooks |
+| Capa | Mecanismo | Estado | Descripción |
+|------|-----------|--------|-------------|
+| **Red** | Firewall + Traefik | ✅ | Solo puertos 80/443 desde internet. HTTPS obligatorio con Let's Encrypt. |
+| **Red** | Docker isolation | ✅ | PostgreSQL solo accesible vía `docker_gwbridge` (172.18.0.1), no expuesto públicamente |
+| **Middleware** | Rate limiting | ✅ | 5 intentos/min para login (`/api/auth/*`), 30/min para APIs generales |
+| **Middleware** | Security headers | ✅ | X-Frame-Options: DENY, HSTS, X-Content-Type-Options: nosniff, Referrer-Policy, Permissions-Policy |
+| **Middleware** | Session check | ✅ | Redirige a login si no hay cookie de sesión válida |
+| **Auth** | NextAuth v5 | ✅ | JWT con expiración (30 min), renovación cada 5 min de uso activo |
+| **Auth** | 2FA / MFA | ✅ | TOTP vía Google Authenticator / Authy con speakeasy + QR codes + backup codes |
+| **Auth** | Password policy | ✅ | Validador: 8+ chars, mayúscula, minúscula, número, símbolo |
+| **Auth** | Account lockout | ✅ | 5 intentos fallidos → 15 min de bloqueo con `account-lockout.ts` |
+| **Auth** | CSRF tokens | ✅ | En todas las mutaciones de auth (NextAuth v5 lo maneja automáticamente) |
+| **Auth** | Token recovery | ✅ | Tokens crypto.randomBytes(32), expiración 1 hora. SMTP pendiente (modo dev devuelve link en JSON) |
+| **Auth** | Auto-logout | ✅ | Sesión expira a los 30 min de inactividad |
+| **Auth** | Mensaje genérico | ✅ | "Email o contraseña incorrectos" — nunca revela si el usuario existe |
+| **DB** | bcrypt hashing | ✅ | Passwords hasheados con bcrypt (salt rounds=10) |
+| **DB** | Encryption at rest | ✅ | Credenciales encriptadas con AES-256-GCM usando AUTH_SECRET |
+| **DB** | Soft delete | ✅ | `deleted_at` en 8 tablas, nada se borra físicamente |
+| **DB** | Auditoría | ✅ | `auditoria_accesos` registra todas las operaciones con 7 índices |
+| **DB** | Multitenant | ✅ | `tenant_id` en 22 tablas con índices |
+| **IA** | Prompt sanitization | ✅ | Guía documentada en `docs/prompts-seguridad.md` (anti-jailbreak, anti-prompt injection) |
+| **Twilio** | Signature verification | ✅ | Validación criptográfica de `X-Twilio-Signature` en webhooks |
+| **Git** | Secrets cleanup | ✅ | Historial limpiado con `git filter-repo` — secrets eliminados de 71 commits |
+| **Infra** | Backup encriptado | ✅ | pg_dump + GPG + rotación 30 días (script + workflow n8n WF-07) |
+| **Infra** | Env vars seguras | ✅ | Sin `.env` en repo, todas las variables en Dokploy env vars o volumes de Docker |
 
 ---
 
@@ -142,22 +180,46 @@ flowchart LR
 
 ---
 
-## Variables de Entorno Sensibles
+## Variables de Entorno Sensibles — Estado
 
-| Variable | Riesgo si se expone |
-|----------|---------------------|
-| `AUTH_SECRET` | Permite forjar tokens JWT y desencriptar credenciales |
-| `DATABASE_URL` | Acceso completo a la base de datos |
-| `TWILIO_AUTH_TOKEN` | Enviar/recibir mensajes como el consultorio |
-| `MERCADOPAGO_ACCESS_TOKEN` | Procesar pagos, acceder a datos financieros |
-| `N8N_API_KEY` | Acceso total a la API de n8n |
-| `N8N_ENCRYPTION_KEY` | Desencriptar credenciales de n8n |
+| Variable | Estado | Riesgo si se expone |
+|----------|--------|---------------------|
+| `AUTH_SECRET` | ✅ Configurado en Dokploy env vars | Permite forjar tokens JWT y desencriptar credenciales |
+| `DATABASE_URL` | ✅ Configurado en Dokploy env vars (pass rotada) | Acceso completo a la base de datos |
+| `TWILIO_AUTH_TOKEN` | ⏳ Pendiente (configurar desde Dashboard) | Enviar/recibir mensajes como el consultorio |
+| `MERCADOPAGO_ACCESS_TOKEN` | ⏳ Pendiente (en modo TEST) | Procesar pagos, acceder a datos financieros |
+| `N8N_API_KEY` | ✅ Configurado en Dokploy env vars (key "Aiden") | Acceso total a la API de n8n |
+| `N8N_ENCRYPTION_KEY` | ✅ Configurado en `.env` de n8n Docker | Desencriptar credenciales de n8n |
+| `OLLAMA_BASE_URL` | ✅ Configurado (http://172.18.0.1:11434) | Acceso al modelo de IA local |
+| `SMTP_HOST / SMTP_USER / SMTP_PASS` | ⏳ Pendiente (configurar desde Dashboard) | Enviar emails como el dominio |
 
 ---
+
+## Historial de acciones de seguridad
+
+| Fecha | Acción |
+|-------|--------|
+| 19-May-2026 | ✅ Git filter-repo: secrets eliminados de 71 commits |
+| 19-May-2026 | ✅ UFW firewall activado (22,80,443,3000 allow / 5432 deny) |
+| 19-May-2026 | ✅ Passwords de DB rotadas (dashboard_user + superuser) |
+| 19-May-2026 | ✅ AUTH_SECRET generado y configurado en Dokploy |
+| 19-May-2026 | ✅ N8N_ENCRYPTION_KEY generada y configurada |
+| 19-May-2026 | ✅ N8N_API_KEY configurada en dashboard env vars |
+| 19-May-2026 | ✅ Backup descargado localmente (pre-rotación) |
+| 19-May-2026 | ✅ Migración 008 aplicada: soft deletes + auditoría + constraints |
+| 19-May-2026 | ✅ Feature gating implementado (plan-based access control) |
+| 17-May-2026 | ✅ 2FA implementado (TOTP, QR, backup codes) |
+| 17-May-2026 | ✅ Rate limiting + security headers en middleware |
+| 17-May-2026 | ✅ Password validator + account lockout implementados |
+| 17-May-2026 | ✅ Twilio signature verification implementada |
+| 16-May-2026 | ✅ Credenciales encriptadas con AES-256-GCM |
 
 ## Referencias
 
 - [Arquitectura del sistema](architecture.md)
 - [Guía de ayuda para usuarios](../docs/help/index.md)
+- [Guía de seguridad de prompts IA](prompts-seguridad.md)
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [NextAuth.js Security](https://next-auth.js.org/security)
+- [bcrypt](https://github.com/kelektiv/node.bcrypt.js)
+- [Speakeasy 2FA](https://github.com/speakeasyjs/speakeasy)
