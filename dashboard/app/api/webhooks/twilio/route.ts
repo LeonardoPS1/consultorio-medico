@@ -9,6 +9,28 @@ import {
 } from '@/lib/data-store';
 
 /**
+ * Forwardea el webhook a n8n para procesamiento con IA.
+ * Fire-and-forget: no bloquea la respuesta a Twilio.
+ */
+async function forwardToN8n(params: Record<string, string>) {
+  const n8nWebhookUrl = process.env.N8N_WEBHOOK_INBOUND_URL;
+  if (!n8nWebhookUrl) return;
+
+  const body = new URLSearchParams(params).toString();
+  try {
+    await fetch(n8nWebhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+      signal: AbortSignal.timeout(5000),
+    });
+    console.log('[Twilio] ➡️ Forwardeado a n8n');
+  } catch (e) {
+    console.warn('[Twilio] ⚠️ No se pudo forwardear a n8n:', (e as Error).message);
+  }
+}
+
+/**
  * Valida la firma de Twilio para asegurar que el request es legítimo.
  *
  - En producción: la validación es OBLIGATORIA. Si falta firma o token, se rechaza.
@@ -176,6 +198,9 @@ export async function POST(request: NextRequest) {
     });
 
     console.log(`[Twilio] Mensaje recibido — ${conversacionId ? 'conversación existente' : 'nueva conversación'}`);
+
+    // Forward a n8n para procesamiento con IA (fire-and-forget)
+    forwardToN8n(params).catch(() => {});
 
     // Responder con TwiML si es una request de Twilio real
     const acceptHeader = request.headers.get('accept') || '';

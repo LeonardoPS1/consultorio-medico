@@ -44,9 +44,9 @@
       "position": [500, 300],
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT t.fecha_hora, t.duracion_minutos\nFROM turnos t\nWHERE t.medico_id = $1\n  AND t.estado IN ('pendiente', 'confirmada')\n  AND DATE(t.fecha_hora) = $2\nORDER BY t.fecha_hora;",
+        "query": "SELECT t.fecha_hora, t.duracion_minutos\nFROM turnos t\nWHERE t.medico_id = (SELECT id FROM medicos WHERE activo = true ORDER BY created_at ASC LIMIT 1)\n  AND t.estado IN ('pendiente', 'confirmada')\n  AND DATE(t.fecha_hora) = $1\nORDER BY t.fecha_hora;",
         "additionalFields": {
-          "queryParams": "={{ ['00000000-0000-0000-0000-000000000001', $json.fecha_preferida || $json.Fecha] }}"
+          "queryParams": "={{ [NULLIF($json.fecha_preferida, 'null') || $json.Fecha] }}"
         }
       }
     },
@@ -92,9 +92,9 @@
       "position": [500, 600],
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO turnos (paciente_id, medico_id, fecha_hora, duracion_minutos, motivo, estado, tipo_consulta, fuente, notas_paciente)\nVALUES ($1, $2, $3, 30, $4, 'pendiente', $5, 'whatsapp', $6)\nRETURNING id, fecha_hora;",
+        "query": "INSERT INTO turnos (paciente_id, medico_id, fecha_hora, duracion_minutos, motivo, estado, tipo_consulta, fuente, notas_paciente)\nVALUES ($1, (SELECT id FROM medicos WHERE activo = true ORDER BY created_at ASC LIMIT 1), $2, 30, $3, 'pendiente', $4, 'whatsapp', $5)\nRETURNING id, fecha_hora;",
         "additionalFields": {
-          "queryParams": "={{ [$json.paciente_id, '00000000-0000-0000-0000-000000000001', $json.fecha_hora, $json.motivo, $json.tipo_consulta || 'presencial', $json.notas || ''] }}"
+          "queryParams": "={{ [$json.paciente_id, $json.fecha_hora, $json.motivo, $json.tipo_consulta || 'presencial', $json.notas || ''] }}"
         }
       }
     },

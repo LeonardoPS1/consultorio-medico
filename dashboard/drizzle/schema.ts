@@ -28,6 +28,7 @@ export const usuarios = pgTable('usuarios', {
   ultimoAcceso: timestamp('ultimo_acceso', { withTimezone: true }),
   secreto2fa: varchar('secreto_2fa', { length: 255 }),
   activo2fa: boolean('activo_2fa').notNull().default(false),
+  tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000').references(() => tenants.id),
   plan: varchar('plan', { length: 50 }).notNull().default('free'),
   resetToken: varchar('reset_token', { length: 255 }),
   resetTokenExpires: timestamp('reset_token_expires', { withTimezone: true }),
@@ -86,6 +87,18 @@ export const pacientes = pgTable('pacientes', {
 });
 
 // ============================================================
+// PACIENTE EVENTOS (historial de contacto)
+// ============================================================
+export const pacienteEventos = pgTable('paciente_eventos', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pacienteId: uuid('paciente_id').notNull().references(() => pacientes.id),
+  tipo: varchar('tipo', { length: 30 }).notNull(),
+  descripcion: text('descripcion'),
+  metadata: jsonb('metadata').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ============================================================
 // TURNOS
 // ============================================================
 export const turnos = pgTable('turnos', {
@@ -114,6 +127,7 @@ export const turnos = pgTable('turnos', {
   metadata: jsonb('metadata').default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
 
 // ============================================================
@@ -129,6 +143,21 @@ export const servicios = pgTable('servicios', {
   activo: boolean('activo').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+});
+
+// ============================================================
+// BLOQUEOS DE AGENDA (vacaciones, feriados, capacitaciones)
+// ============================================================
+export const bloqueosAgenda = pgTable('bloqueos_agenda', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  medicoId: uuid('medico_id').notNull().references(() => medicos.id),
+  titulo: varchar('titulo', { length: 255 }).notNull(),
+  fechaInicio: timestamp('fecha_inicio', { withTimezone: true }).notNull(),
+  fechaFin: timestamp('fecha_fin', { withTimezone: true }).notNull(),
+  tipo: varchar('tipo', { length: 20 }).notNull().default('bloqueo'),
+  motivo: text('motivo'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
 // ============================================================
@@ -146,8 +175,28 @@ export const conversaciones = pgTable('conversaciones', {
   ultimoMensajeRol: varchar('ultimo_mensaje_rol', { length: 20 }),
   ultimaIntencion: varchar('ultima_intencion', { length: 30 }),
   ultimaInteraccion: timestamp('ultima_interaccion', { withTimezone: true }).defaultNow().notNull(),
+  proximoRecordatorio: timestamp('proximo_recordatorio', { withTimezone: true }),
   contextoIa: jsonb('contexto_ia').default({}),
   metadata: jsonb('metadata').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (table) => ({
+  idxEstado: index('idx_conversaciones_estado').on(table.estado),
+}));
+
+// ============================================================
+// PLANTILLAS WHATSAPP (templates aprobados por Twilio)
+// ============================================================
+export const plantillasWhatsapp = pgTable('plantillas_whatsapp', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  nombre: varchar('nombre', { length: 255 }).notNull(),
+  idioma: varchar('idioma', { length: 10 }).notNull().default('es'),
+  categoria: varchar('categoria', { length: 30 }).notNull(),
+  contenido: text('contenido').notNull(),
+  variables: text('variables').array().default(sql`'{}'`),
+  estado: varchar('estado', { length: 20 }).notNull().default('pendiente'),
+  twilioTemplateSid: varchar('twilio_template_sid', { length: 255 }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
@@ -166,9 +215,30 @@ export const mensajes = pgTable('mensajes', {
   confianzaIntencion: decimal('confianza_intencion', { precision: 4, scale: 3 }),
   twilioSid: varchar('twilio_sid', { length: 255 }),
   twilioStatus: varchar('twilio_status', { length: 50 }),
+  templateName: varchar('template_name', { length: 100 }),
+  templateParams: jsonb('template_params').default({}),
+  costo: decimal('costo', { precision: 10, scale: 6 }),
   n8nExecutionId: varchar('n8n_execution_id', { length: 255 }),
   metadata: jsonb('metadata').default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ============================================================
+// TAREAS PENDIENTES (seguimiento)
+// ============================================================
+export const tareasPendientes = pgTable('tareas_pendientes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pacienteId: uuid('paciente_id').notNull().references(() => pacientes.id),
+  medicoId: uuid('medico_id').references(() => medicos.id),
+  tipo: varchar('tipo', { length: 30 }).notNull(),
+  descripcion: text('descripcion').notNull(),
+  estado: varchar('estado', { length: 20 }).notNull().default('pendiente'),
+  prioridad: varchar('prioridad', { length: 10 }).notNull().default('normal'),
+  asignadoA: uuid('asignado_a').references(() => usuarios.id),
+  fechaLimite: timestamp('fecha_limite', { withTimezone: true }),
+  completadaAt: timestamp('completada_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
 // ============================================================
@@ -236,6 +306,7 @@ export const facturacion = pgTable('facturacion', {
   metadata: jsonb('metadata').default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
 
 // ============================================================
@@ -273,6 +344,20 @@ export const workflowLogs = pgTable('workflow_logs', {
 });
 
 // ============================================================
+// WORKFLOW ERRORS (n8n)
+// ============================================================
+export const workflowErrors = pgTable('workflow_errors', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workflowId: varchar('workflow_id', { length: 255 }).notNull(),
+  executionId: varchar('execution_id', { length: 255 }),
+  nodo: varchar('nodo', { length: 255 }),
+  codigo: varchar('codigo', { length: 50 }),
+  mensajeError: text('mensaje_error'),
+  detalle: jsonb('detalle'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ============================================================
 // AUDITORIA DE ACCESOS A DATOS MÉDICOS
 // ============================================================
 export const auditoriaAccesos = pgTable('auditoria_accesos', {
@@ -297,17 +382,27 @@ export const auditoriaAccesos = pgTable('auditoria_accesos', {
 // ============================================================
 // RELACIONES
 // ============================================================
+export const usuariosRelations = relations(usuarios, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [usuarios.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
 export const pacientesRelations = relations(pacientes, ({ many }) => ({
   turnos: many(turnos),
   conversaciones: many(conversaciones),
   historialMedico: many(historialMedico),
   recetas: many(recetas),
+  pacienteEventos: many(pacienteEventos),
+  tareasPendientes: many(tareasPendientes),
 }));
 
 export const medicosRelations = relations(medicos, ({ many }) => ({
   turnos: many(turnos),
   servicios: many(servicios),
   conversaciones: many(conversaciones),
+  bloqueosAgenda: many(bloqueosAgenda),
 }));
 
 export const turnosRelations = relations(turnos, ({ one }) => ({
@@ -329,12 +424,55 @@ export const conversacionesRelations = relations(conversaciones, ({ one, many })
   mensajes: many(mensajes),
 }));
 
+export const pacienteEventosRelations = relations(pacienteEventos, ({ one }) => ({
+  paciente: one(pacientes, {
+    fields: [pacienteEventos.pacienteId],
+    references: [pacientes.id],
+  }),
+}));
+
+export const bloqueosAgendaRelations = relations(bloqueosAgenda, ({ one }) => ({
+  medico: one(medicos, {
+    fields: [bloqueosAgenda.medicoId],
+    references: [medicos.id],
+  }),
+}));
+
+export const tareasPendientesRelations = relations(tareasPendientes, ({ one }) => ({
+  paciente: one(pacientes, {
+    fields: [tareasPendientes.pacienteId],
+    references: [pacientes.id],
+  }),
+  medico: one(medicos, {
+    fields: [tareasPendientes.medicoId],
+    references: [medicos.id],
+  }),
+  asignadoA: one(usuarios, {
+    fields: [tareasPendientes.asignadoA],
+    references: [usuarios.id],
+  }),
+}));
+
+// ============================================================
+// TENANTS (multi-tenant)
+// ============================================================
+export const tenants = pgTable('tenants', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  nombre: varchar('nombre', { length: 255 }).notNull(),
+  subdomain: varchar('subdomain', { length: 100 }).unique().notNull(),
+  logoUrl: text('logo_url').default('/aicoremed_dark_1200.svg'),
+  colores: jsonb('colores').default({ primary: '#2563eb' }),
+  activo: boolean('activo').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
 // ============================================================
 // SUSCRIPCIONES (MercadoPago)
 // ============================================================
 export const suscripciones = pgTable('suscripciones', {
   id: uuid('id').defaultRandom().primaryKey(),
-  organizacionId: uuid('organizacion_id').notNull().default('00000000-0000-0000-0000-000000000000'),
+  organizacionId: uuid('organizacion_id').notNull().default('00000000-0000-0000-0000-000000000000').references(() => tenants.id),
   plan: varchar('plan', { length: 50 }).notNull().default('free'),
   estado: varchar('estado', { length: 50 }).notNull().default('free'),
   mercadopagoPreferenceId: varchar('mercadopago_preference_id', { length: 255 }),
@@ -351,11 +489,28 @@ export const suscripciones = pgTable('suscripciones', {
 export type Suscripcion = InferSelectModel<typeof suscripciones>;
 export type NewSuscripcion = InferInsertModel<typeof suscripciones>;
 
+export type PlantillaWhatsapp = InferSelectModel<typeof plantillasWhatsapp>;
+export type TareaPendiente = InferSelectModel<typeof tareasPendientes>;
+export type WorkflowError = InferSelectModel<typeof workflowErrors>;
+export type Tenant = InferSelectModel<typeof tenants>;
+
 export const mensajesRelations = relations(mensajes, ({ one }) => ({
   conversacion: one(conversaciones, {
     fields: [mensajes.conversacionId],
     references: [conversaciones.id],
   }),
+}));
+
+export const suscripcionesRelations = relations(suscripciones, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [suscripciones.organizacionId],
+    references: [tenants.id],
+  }),
+}));
+
+export const tenantsRelations = relations(tenants, ({ many }) => ({
+  suscripciones: many(suscripciones),
+  usuarios: many(usuarios),
 }));
 
 // ============================================================

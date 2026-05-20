@@ -64,8 +64,9 @@ USER nextjs
 
 EXPOSE 3000
 
-# HEALTHCHECK desactivado temporalmente - Docker Swarm DNS no resuelve
-# con health check activo en esta configuración de red.
-# El dashboard tiene su propio endpoint /api/health para monitoreo externo.
+# Health check: usa Node.js fetch nativo (no requiere curl/wget).
+# Usa 127.0.0.1 en vez de localhost para evitar problemas de DNS en Docker Swarm.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:3000/api/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"
 
 CMD ["node", "dashboard/server.js"]

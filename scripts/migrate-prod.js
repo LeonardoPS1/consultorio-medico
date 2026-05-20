@@ -6,6 +6,10 @@
  * No se divide por ";" — esto permite tener funciones PL/pgSQL ($$),
  * DO blocks, y transacciones BEGIN/COMMIT sin problemas.
  *
+ * Las migraciones son generadas por Drizzle Kit (`drizzle-kit generate`)
+ * en dashboard/drizzle/migrations/. Para generar nuevas migraciones:
+ *   cd dashboard && pnpm db:generate
+ *
  * Requiere: puerto 5432 de PostgreSQL expuesto en la VPS.
  *
  * Configuración vía variables de entorno:
@@ -54,7 +58,7 @@ const PROD_CONFIG = {
   connectionTimeoutMillis: 10000,
 };
 
-const MIGRATIONS_DIR = path.join(__dirname, '..', 'database', 'migrations');
+const MIGRATIONS_DIR = path.join(__dirname, '..', 'dashboard', 'drizzle', 'migrations');
 
 async function main() {
   const admin = new Client(PROD_CONFIG);

@@ -690,8 +690,59 @@ export async function getUserByEmail(email: string): Promise<UsuarioData | null>
 export async function createAdminUserIfNotExists(): Promise<boolean> {
   const pg = await checkPostgres();
   if (pg) {
-    // En producción se crea con el seed SQL
-    return false;
+    try {
+      const { db } = await import('@/lib/db');
+      const { usuarios, medicos, tenants } = await import('@/drizzle/schema');
+      const { eq, sql } = await import('drizzle-orm');
+      const bcrypt = await import('bcryptjs');
+
+      // Verificar si ya existe el admin
+      const existing = await db.select().from(usuarios).where(eq(usuarios.email, 'admin@consultorio.com')).limit(1);
+      if (existing.length > 0) return false;
+
+      // Asegurar tenant por defecto
+      const tenantExists = await db.select().from(tenants).where(eq(tenants.id, '00000000-0000-0000-0000-000000000000')).limit(1);
+      if (tenantExists.length === 0) {
+        await db.insert(tenants).values({
+          id: '00000000-0000-0000-0000-000000000000',
+          nombre: 'Consultorio Médico',
+          subdomain: 'demo',
+          logoUrl: '/aicoremed_dark_1200.svg',
+          colores: { primary: '#2563eb' },
+          activo: true,
+        });
+      }
+
+      const hash = await bcrypt.hash('admin123', 10);
+      const adminId = crypto.randomUUID();
+
+      await db.insert(usuarios).values({
+        id: adminId,
+        email: 'admin@consultorio.com',
+        passwordHash: hash,
+        nombre: 'Administrador',
+        rol: 'admin',
+        activo: true,
+        tenantId: '00000000-0000-0000-0000-000000000000',
+        plan: 'professional',
+      });
+
+      // Crear médico asociado
+      await db.insert(medicos).values({
+        id: crypto.randomUUID(),
+        usuarioId: adminId,
+        nombre: 'Administrador',
+        especialidad: 'Dirección Médica',
+        email: 'admin@consultorio.com',
+        activo: true,
+      });
+
+      console.log('[DataStore] ✅ Admin creado en PostgreSQL: admin@consultorio.com / admin123');
+      return true;
+    } catch (err) {
+      console.error('[DataStore] Error creando admin en PostgreSQL:', err);
+      return false;
+    }
   }
 
   const usuarios = readJSON<UsuarioData[]>(USUARIOS_FILE, []);

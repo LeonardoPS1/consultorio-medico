@@ -23,10 +23,16 @@
       "position": [250, 150],
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT t.fecha_hora, t.estado, t.motivo, t.tipo_consulta,\n  p.nombre || ' ' || p.apellido as paciente_nombre,\n  p.telefono as paciente_telefono,\n  p.obra_social\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nWHERE DATE(t.fecha_hora AT TIME ZONE 'America/Argentina/Buenos_Aires') = CURRENT_DATE\n  AND t.medico_id = $1\nORDER BY t.fecha_hora;",
-        "additionalFields": {
-          "queryParams": "={{ ['00000000-0000-0000-0000-000000000001'] }}"
-        }
+        "query": "SELECT t.fecha_hora, t.estado, t.motivo, t.tipo_consulta,\n  p.nombre || ' ' || p.apellido as paciente_nombre,\n  p.telefono as paciente_telefono,\n  p.obra_social\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nWHERE DATE(t.fecha_hora AT TIME ZONE 'America/Argentina/Buenos_Aires') = CURRENT_DATE\n  AND t.medico_id = (SELECT id FROM medicos WHERE activo = true ORDER BY created_at ASC LIMIT 1)\nORDER BY t.fecha_hora;",
+        "additionalFields": {}
+      }
+    },
+    {
+      "id": "query-pacientes-nuevos",
+      "name": "PG - Pacientes Nuevos (24h)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [250, 350],
       }
     },
     {

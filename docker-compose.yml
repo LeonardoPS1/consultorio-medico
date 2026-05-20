@@ -38,13 +38,22 @@ services:
       - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
       - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
       - TWILIO_WHATSAPP_NUMBER=${TWILIO_WHATSAPP_NUMBER:-}
+      - TWILIO_DOCTOR_NUMBER=${TWILIO_DOCTOR_NUMBER:-}
       - OLLAMA_BASE_URL=http://ollama:11434
       - OLLAMA_MODEL=mistral
+      - N8N_BASE_URL=${N8N_BASE_URL:-http://n8n:5678}
+      - N8N_API_KEY=${N8N_API_KEY:-}
+      - N8N_WEBHOOK_INBOUND_URL=${N8N_WEBHOOK_INBOUND_URL:-http://n8n:5678/webhook/consultorio-inbound}
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - consultorio-net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
   # ─── PostgreSQL ────────────────────────────────────────────────────────────
   postgres:
@@ -60,7 +69,6 @@ services:
       POSTGRES_DB: consultorio_medico
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./database/migrations:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s

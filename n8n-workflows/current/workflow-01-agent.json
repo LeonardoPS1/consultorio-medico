@@ -99,7 +99,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT t.id, t.fecha, t.hora_inicio, t.hora_fin, t.motivo, t.estado, m.nombre AS medico_nombre, m.especialidad FROM turnos t JOIN medicos m ON t.medico_id = m.id WHERE t.paciente_id = $1 AND t.fecha >= CURRENT_DATE ORDER BY t.fecha, t.hora_inicio LIMIT 5",
+        "query": "SELECT t.id, t.fecha_hora, t.motivo, t.estado, t.tipo_consulta, m.nombre AS medico_nombre, m.especialidad FROM turnos t JOIN medicos m ON t.medico_id = m.id WHERE t.paciente_id = $1 AND t.fecha_hora >= CURRENT_DATE ORDER BY t.fecha_hora LIMIT 5",
         "additionalFields": {
           "queryParams": "={{ [$(\"Obtener o Crear Paciente\").first().json.id] }}"
         },
@@ -113,7 +113,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT r.id, r.medicamento, r.dosis, r.indicaciones, r.fecha_emision, r.fecha_vencimiento, r.estado FROM recetas r WHERE r.paciente_id = $1 ORDER BY r.fecha_emision DESC LIMIT 10",
+        "query": "SELECT r.id, r.medicamento, r.dosis, r.indicaciones, r.created_at, r.estado FROM recetas r WHERE r.paciente_id = $1 ORDER BY r.fecha_emision DESC LIMIT 10",
         "additionalFields": {
           "queryParams": "={{ [$(\"Obtener o Crear Paciente\").first().json.id] }}"
         },
@@ -126,7 +126,7 @@
     },
     {
       "parameters": {
-        "code": "// Obtener datos del paciente\nconst paciente = $(\"Obtener o Crear Paciente\").first().json;\nconst turnos = $(\"Consultar Turnos del Paciente\").all().map(i => i.json);\nconst recetas = $(\"Consultar Recetas Activas\").all().map(i => i.json).filter(r => r.estado === 'activa' || r.estado === 'pendiente');\nconst extraer = $(\"Extraer Datos\").first().json;\n\n// Helper para escapar strings SQL\nconst esc = (s) => (s || '').replace(/'/g, \"''\");\n\n// Formatear turnos y recetas para el prompt\nconst turnosTexto = turnos.length > 0\n  ? turnos.map(t => `- ${t.fecha} a las ${(t.hora_inicio || '').substring(0,5)} con Dr. ${t.medico_nombre} (${t.motivo || 'consulta'})`).join('\\n')\n  : 'No tiene turnos pr\u00f3ximos.';\n\nconst recetasTexto = recetas.length > 0\n  ? recetas.map(r => `- ${r.medicamento} ${r.dosis || ''} (vence: ${(r.fecha_vencimiento || '').substring(0,10) || 'N/A'})`).join('\\n')\n  : 'No tiene recetas activas.';\n\nconst fechaActual = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });\n\n// System prompt completo para el AI Agent\nconst systemPrompt = `Sos el asistente virtual del Consultorio M\u00e9dico. Atend\u00e9s pacientes por WhatsApp.\nFecha actual: ${fechaActual}\n\n=== DATOS DEL PACIENTE ===\nNombre: ${paciente.nombre || extraer.profileName}\nTel\u00e9fono: ${paciente.telefono}\n\n=== TURNOS PR\u00d3XIMOS ===\n${turnosTexto}\n\n=== RECETAS ACTIVAS ===\n${recetasTexto}\n\n=== INSTRUCCIONES ===\nRespond\u00e9 en espa\u00f1ol argentino, con tono c\u00e1lido y profesional. S\u00e9 breve y resolutivo.\n\nREGLAS:\n- NO inventes diagn\u00f3sticos\n- NO recetes medicamentos ni recomiendes tratamientos\n- SIEMPRE deriv\u00e1 urgencias al m\u00e9dico\n- Horarios: \"Lunes a viernes de 8 a 20hs, s\u00e1bados de 9 a 13hs\"\n- Urgencias: \"Si es una emergencia, dirigite a la guardia o llam\u00e1 al 107\"\n\nCUANDO EL PACIENTE PIDA UNA ACCI\u00d3N (crear/cancelar turno, renovar receta):\nRespond\u00e9 de forma natural, y al final agreg\u00e1 SOLAMENTE:\n###ACCION###\n{\"tipo\": \"crear_turno\", \"data\": {\"fecha\": \"YYYY-MM-DD\", \"hora\": \"HH:MM\", \"motivo\": \"...\"}}\n###FIN###\n\nTipos: crear_turno | cancelar_turno | solicitar_receta | notificar_urgencia\nNO incluyas ###ACCION### si solo respond\u00e9s una consulta o saludo.`;\n\nconst contexto = {\n  paciente: {\n    id: paciente.id,\n    telefono: paciente.telefono,\n    nombre: paciente.nombre || extraer.profileName,\n    apellido: paciente.apellido\n  },\n  turnosProximos: turnos.map(t => ({\n    id: t.id, fecha: t.fecha, hora: (t.hora_inicio || '').substring(0,5),\n    medico: t.medico_nombre, especialidad: t.especialidad,\n    motivo: t.motivo, estado: t.estado\n  })),\n  recetasActivas: recetas.map(r => ({\n    id: r.id, medicamento: r.medicamento, dosis: r.dosis,\n    indicaciones: r.indicaciones, estado: r.estado\n  })),\n  systemPrompt: systemPrompt,\n  phone: extraer.phone,\n  message: extraer.message,\n  profileName: extraer.profileName,\n  twilioSid: extraer.twilioSid,\n  toNumber: extraer.toNumber,\n  fromNumber: extraer.fromNumber\n};\n\nreturn [contexto];",
+        "code": "// Obtener datos del paciente\nconst paciente = $(\"Obtener o Crear Paciente\").first().json;\nconst turnos = $(\"Consultar Turnos del Paciente\").all().map(i => i.json);\nconst recetas = $(\"Consultar Recetas Activas\").all().map(i => i.json).filter(r => r.estado === 'activa' || r.estado === 'pendiente');\nconst extraer = $(\"Extraer Datos\").first().json;\n\n// Helper para escapar strings SQL\nconst esc = (s) => (s || '').replace(/'/g, \"''\");\n\n// Formatear turnos y recetas para el prompt\nconst turnosTexto = turnos.length > 0\n  ? turnos.map(t => `- ${new Date(t.fecha_hora).toLocaleDateString(\"es-AR\", {weekday: \"long\", day: \"numeric\", month: \"long\"})} a las ${(t.hora_inicio || '').substring(0,5)} con Dr. ${t.medico_nombre} (${t.motivo || 'consulta'})`).join('\\n')\n  : 'No tiene turnos pr\u00f3ximos.';\n\nconst recetasTexto = recetas.length > 0\n  ? recetas.map(r => `- ${r.medicamento} ${r.dosis || ''} (vence: ${(r.created_at || \"\", 0, 10) || 'N/A'})`).join('\\n')\n  : 'No tiene recetas activas.';\n\nconst fechaActual = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });\n\n// System prompt completo para el AI Agent\nconst systemPrompt = `Sos el asistente virtual del Consultorio M\u00e9dico. Atend\u00e9s pacientes por WhatsApp.\nFecha actual: ${fechaActual}\n\n=== DATOS DEL PACIENTE ===\nNombre: ${paciente.nombre || extraer.profileName}\nTel\u00e9fono: ${paciente.telefono}\n\n=== TURNOS PR\u00d3XIMOS ===\n${turnosTexto}\n\n=== RECETAS ACTIVAS ===\n${recetasTexto}\n\n=== INSTRUCCIONES ===\nRespond\u00e9 en espa\u00f1ol argentino, con tono c\u00e1lido y profesional. S\u00e9 breve y resolutivo.\n\nREGLAS:\n- NO inventes diagn\u00f3sticos\n- NO recetes medicamentos ni recomiendes tratamientos\n- SIEMPRE deriv\u00e1 urgencias al m\u00e9dico\n- Horarios: \"Lunes a viernes de 8 a 20hs, s\u00e1bados de 9 a 13hs\"\n- Urgencias: \"Si es una emergencia, dirigite a la guardia o llam\u00e1 al 107\"\n\nCUANDO EL PACIENTE PIDA UNA ACCI\u00d3N (crear/cancelar turno, renovar receta):\nRespond\u00e9 de forma natural, y al final agreg\u00e1 SOLAMENTE:\n###ACCION###\n{\"tipo\": \"crear_turno\", \"data\": {\"fecha\": \"YYYY-MM-DD\", \"hora\": \"HH:MM\", \"motivo\": \"...\"}}\n###FIN###\n\nTipos: crear_turno | cancelar_turno | solicitar_receta | notificar_urgencia\nNO incluyas ###ACCION### si solo respond\u00e9s una consulta o saludo.`;\n\nconst contexto = {\n  paciente: {\n    id: paciente.id,\n    telefono: paciente.telefono,\n    nombre: paciente.nombre || extraer.profileName,\n    apellido: paciente.apellido\n  },\n  turnosProximos: turnos.map(t => ({\n    id: t.id, fecha: t.fecha_hora, hora: (t.hora_inicio || '').substring(0,5),\n    medico: t.medico_nombre, especialidad: t.especialidad,\n    motivo: t.motivo, estado: t.estado\n  })),\n  recetasActivas: recetas.map(r => ({\n    id: r.id, medicamento: r.medicamento, dosis: r.dosis,\n    indicaciones: r.indicaciones, estado: r.estado\n  })),\n  systemPrompt: systemPrompt,\n  phone: extraer.phone,\n  message: extraer.message,\n  profileName: extraer.profileName,\n  twilioSid: extraer.twilioSid,\n  toNumber: extraer.toNumber,\n  fromNumber: extraer.fromNumber\n};\n\nreturn [contexto];",
         "options": {}
       },
       "name": "Construir Contexto Paciente",
@@ -208,12 +208,10 @@
         "queryParameters": {
           "parameters": [
             {
-              "name": "From",
-              "value": "={{ $json.toNumber }}"
+              "name": "From", "value": "={{ $json.fromNumber }}"
             },
             {
-              "name": "To",
-              "value": "={{ $json.fromNumber }}"
+              "name": "To", "value": "={{ $json.phone }}"
             },
             {
               "name": "Body",

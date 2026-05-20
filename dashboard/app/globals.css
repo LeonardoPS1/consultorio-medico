@@ -134,11 +134,11 @@
 
 /* Animaciones */
 .animate-in {
-  animation: fadeIn 0.3s var(--ease-out);
+  animation: fadeIn 0.2s var(--ease-out);
 }
 
 .animate-in-fast {
-  animation: fadeIn 0.15s var(--ease-out);
+  animation: fadeIn 0.12s var(--ease-out);
 }
 
 @keyframes fadeIn {
