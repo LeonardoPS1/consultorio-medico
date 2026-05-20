@@ -795,7 +795,7 @@ function PerfilOrganizacion() {
             label="Fondo"
             className="absolute bottom-2 right-2"
             fallback={
-              <span className="text-white text-[9px] flex items-center gap-1 bg-black/30 rounded-md px-2 py-1">
+              <span className="text-foreground text-[9px] flex items-center gap-1 bg-background/60 backdrop-blur-sm rounded-md px-2 py-1">
                 <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                 Fondo
               </span>

@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Bell, Moon, Sun, Calendar, MessageSquare, Syringe, AlertTriangle, X } from 'lucide-react';
+import { Bell, Moon, Sun, Monitor, Calendar, MessageSquare, Syringe, AlertTriangle, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getInitials, formatRelative } from '@/lib/utils';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
@@ -176,21 +176,34 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Toggle tema (solo después de hidratación para evitar mismatch) */}
+        {/* Toggle tema con dropdown (Light / Dark / System) */}
         {mounted && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            title="Cambiar tema"
-            className="h-9 w-9"
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9" title="Cambiar tema">
+                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Cambiar tema</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-36">
+              <DropdownMenuItem onClick={() => setTheme('light')} className="gap-2">
+                <Sun className="h-4 w-4" />
+                <span>Claro</span>
+                {theme === 'light' && <span className="ml-auto text-xs text-primary">✓</span>}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme('dark')} className="gap-2">
+                <Moon className="h-4 w-4" />
+                <span>Oscuro</span>
+                {theme === 'dark' && <span className="ml-auto text-xs text-primary">✓</span>}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme('system')} className="gap-2">
+                <Monitor className="h-4 w-4" />
+                <span>Sistema</span>
+                {theme === 'system' && <span className="ml-auto text-xs text-primary">✓</span>}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
 
         {/* Notificaciones */}
