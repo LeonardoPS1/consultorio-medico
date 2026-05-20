@@ -190,9 +190,11 @@ function ConfigContent() {
         </TabsContent>
 
         {/* ======== INTEGRACIONES ======== */}
-        <TabsContent value="integraciones" className="mt-4 space-y-4">
-          <IntegracionesDashboard isAdmin={isAdmin} />
-        </TabsContent>
+        {canAccess(userPlan, 'integraciones') && (
+          <TabsContent value="integraciones" className="mt-4 space-y-4">
+            <IntegracionesDashboard isAdmin={isAdmin} />
+          </TabsContent>
+        )}
 
         {/* ======== HORARIOS ======== */}
         <TabsContent value="horarios" className="mt-4">
@@ -235,6 +237,7 @@ function ConfigContent() {
         </TabsContent>
 
         {/* ======== IA & AUTOMATIZACIÓN ======== */}
+        {canAccess(userPlan, 'ia-assistant') && (
         <TabsContent value="ia" className="mt-4 space-y-4">
           <Card>
             <CardHeader>
@@ -310,6 +313,7 @@ function ConfigContent() {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
 
         {/* ======== PLANTILLAS WHATSAPP ======== */}
         <TabsContent value="plantillas" className="mt-4 space-y-4">
@@ -452,6 +456,7 @@ function ConfigContent() {
         )}
 
         {/* ======== EQUIPO ======== */}
+        {canAccess(userPlan, 'equipo') && (
         <TabsContent value="equipo" className="mt-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -500,6 +505,7 @@ function ConfigContent() {
           {/* Modal Invitar */}
           <InviteModal open={showInviteModal} onOpenChange={setShowInviteModal} />
         </TabsContent>
+        )}
       </Tabs>
     </div>
   );

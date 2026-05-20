@@ -34,6 +34,13 @@ COMMENT ON TABLE auditoria_accesos IS 'Pista de auditoría para cumplimiento Ley
 COMMENT ON COLUMN auditoria_accesos.accion IS 'login, logout, view, create, edit, delete, export, config';
 COMMENT ON COLUMN auditoria_accesos.entidad IS 'paciente, turno, receta, credencial, usuario, conversacion, etc.';
 
+-- Índices para consultas de auditoría
+CREATE INDEX IF NOT EXISTS idx_auditoria_created_at ON auditoria_accesos(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_auditoria_usuario ON auditoria_accesos(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_auditoria_accion ON auditoria_accesos(accion);
+CREATE INDEX IF NOT EXISTS idx_auditoria_entidad ON auditoria_accesos(entidad);
+CREATE INDEX IF NOT EXISTS idx_auditoria_entidad_id ON auditoria_accesos(entidad_id);
+
 -- ─── 2. Columnas 2FA en usuarios (idempotente) ─────────────────────────────
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS secreto_2fa VARCHAR(255);
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS activo_2fa BOOLEAN DEFAULT FALSE;

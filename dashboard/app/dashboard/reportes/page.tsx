@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useSession } from 'next-auth/react';
+import { canAccess } from '@/lib/features';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -50,6 +52,10 @@ const iconosIntencion = [
 ];
 
 export default function ReportesPage() {
+  const { data: session } = useSession();
+  const userPlan = session?.user?.plan ?? 'free';
+  const isAdvancedReports = canAccess(userPlan, 'reportes-avanzados');
+
   const [periodo, setPeriodo] = useState<Periodo>('mes');
   const datos = datosPorPeriodo[periodo];
   const intencionesData = intencionesPorPeriodo[periodo];
@@ -215,6 +221,7 @@ export default function ReportesPage() {
               Año
             </Button>
           </div>
+          {isAdvancedReports && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -233,6 +240,7 @@ export default function ReportesPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          )}
         </div>
       </div>
 
@@ -254,10 +262,12 @@ export default function ReportesPage() {
             <MessageSquare className="h-4 w-4 mr-1" />
             WhatsApp
           </TabsTrigger>
+          {isAdvancedReports && (
           <TabsTrigger value="comparativa">
             <Activity className="h-4 w-4 mr-1" />
             Comparativa
           </TabsTrigger>
+          )}
         </TabsList>
 
         {/* ============ TAB GENERAL ============ */}
@@ -593,9 +603,11 @@ export default function ReportesPage() {
         </TabsContent>
 
         {/* ============ TAB COMPARATIVA ============ */}
+        {isAdvancedReports && (
         <TabsContent value="comparativa" className="mt-4 space-y-6">
           <ComparativaMensual data={comparativa} periodo={periodo} />
         </TabsContent>
+        )}
       </Tabs>
     </div>
   );
