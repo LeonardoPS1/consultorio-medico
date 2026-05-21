@@ -1,0 +1,588 @@
+{
+  "name": "02 - Gestion de Turnos",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "turno-solicitar",
+        "options": {}
+      },
+      "name": "Webhook - Solicitud Turno",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        304
+      ],
+      "id": "912d0143-fc59-432a-ba03-3472f570a329",
+      "webhookId": "e84aba8b-373e-4d37-ad45-293aba94e5d6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.phone || $json.body.From }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty",
+                "name": "filter.operator.isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Validar Datos",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        256,
+        304
+      ],
+      "id": "016b1333-6da4-42af-bf42-71c47d4f3736"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "phone",
+              "value": "={{ $json.body.phone || $json.body.From.replace('whatsapp:', '') }}",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.body.message || $json.body.Body }}",
+              "type": "string"
+            },
+            {
+              "name": "profileName",
+              "value": "={{ $json.body.profileName || $json.body.ProfileName || 'Paciente' }}",
+              "type": "string"
+            },
+            {
+              "name": "pacienteId",
+              "value": "={{ $json.body.pacienteId || '' }}",
+              "type": "string"
+            },
+            {
+              "name": "toNumber",
+              "value": "={{ $json.body.toNumber || $json.body.To }}",
+              "type": "string"
+            },
+            {
+              "name": "fromNumber",
+              "value": "={{ $json.body.fromNumber || $json.body.From }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Extraer Datos Entrada",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        304
+      ],
+      "id": "7354b08e-e899-4e78-b2c7-9a6e644e9521"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral\",\n  \"stream\": false,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Extraé la información del pedido de turno del paciente. Respondé SOLO con JSON válido, sin explicación:\n\n{\n  \"motivo\": \"motivo de la consulta\",\n  \"fecha_preferida\": \"fecha que menciona o null\",\n  \"horario_preferido\": \"horario o null\",\n  \"medico_preferido\": \"médico o null\",\n  \"tipo_consulta\": \"presencial o virtual o domicilio\"\n}\n\nSi no hay suficiente información, poné null en los campos que faltan.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Mensaje del paciente: {{ $('Extraer Datos Entrada').first().json.message }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "name": "Ollama - Extraer Info Turno",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        752,
+        304
+      ],
+      "id": "2755dcaa-0a00-4799-98f0-8cb1bd006c31"
+    },
+    {
+      "parameters": {
+        "jsCode": "const ollamaResponse = $input.first().json.message.content;\n\nlet turnoData;\ntry {\n  // Intentar parsear JSON directamente\nturnoData = JSON.parse(ollamaResponse);\n} catch (e) {\n  // Buscar JSON entre llaves\nconst match = ollamaResponse.match(/\\{[\\s\\S]*\\}/);\nif (match) {\n  try {\nturnoData = JSON.parse(match[0]);\n} catch (e2) {\nturnoData = { motivo: ollamaResponse, fecha_preferida: null, horario_preferido: null, medico_preferido: null, tipo_consulta: 'presencial' };\n}\n  } else {\nturnoData = { motivo: ollamaResponse, fecha_preferida: null, horario_preferido: null, medico_preferido: null, tipo_consulta: 'presencial' };\n}\n}\n\nreturn [{\n  json: {\n    motivo: turnoData.motivo || 'consulta',\n    fecha_preferida: turnoData.fecha_preferida || null,\n    horario_preferido: turnoData.horario_preferido || null,\n    medico_preferido: turnoData.medico_preferido || null,\n    tipo_consulta: turnoData.tipo_consulta || 'presencial',\n    phone: $('Extraer Datos Entrada').first().json.phone,\n    profileName: $('Extraer Datos Entrada').first().json.profileName,\n    pacienteId: $('Extraer Datos Entrada').first().json.pacienteId\n  }\n}];"
+      },
+      "name": "Extraer JSON Turno",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        304
+      ],
+      "id": "92b8ce9a-a912-424a-95e9-08c550cea87e"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT fecha_hora, duracion_minutos FROM turnos WHERE medico_id = $1 AND estado IN ('pendiente', 'confirmada') AND DATE(fecha_hora) = $2 ORDER BY fecha_hora;",
+        "options": {}
+      },
+      "name": "Verificar Disponibilidad",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1264,
+        304
+      ],
+      "id": "bbc7ac64-bc64-4494-a6b9-d6528532a8ea",
+      "credentials": {
+        "postgres": {
+          "id": "LndsAFMcQsVltuyi",
+          "name": "Consultorio - PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Extraer JSON Turno').first().json.fecha_preferida }}",
+              "rightValue": "null",
+              "operator": {
+                "type": "string",
+                "operation": "notEqual",
+                "name": "filter.operator.notEqual"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Tiene Fecha Elegida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1504,
+        304
+      ],
+      "id": "d5d390d7-b43a-45bb-8f83-4217aa81bcd2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const slotsOcupados = $input.all();\nconst occupiedTimes = slotsOcupados.map(s => {\n  const d = new Date(s.json.fecha_hora);\n  return d.getHours() * 60 + d.getMinutes();\n});\n\nconst slotsDisponibles = [];\n// Franjas de 9:00 a 17:00, turnos de 30 min\nfor (let h = 9; h < 17; h++) {\n  for (let m = 0; m < 60; m += 30) {\n    const minutos = h * 60 + m;\n    if (!occupiedTimes.includes(minutos)) {\n      slotsDisponibles.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);\n    }\n  }\n}\n\nreturn [{\n  json: {\n    slots: slotsDisponibles.slice(0, 6),\n    fecha: $('Extraer JSON Turno').first().json.fecha_preferida,\n    motivo: $('Extraer JSON Turno').first().json.motivo,\n    tipo_consulta: $('Extraer JSON Turno').first().json.tipo_consulta\n  }\n}];"
+      },
+      "name": "Generar Franjas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        208
+      ],
+      "id": "7db9b028-34b4-449a-a1bb-ecbf820633a8"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral\",\n  \"stream\": false,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Sos el asistente virtual del Consultorio Médico. Te van a pasar horarios disponibles y tenés que ofrecerlos al paciente de forma amable, pidiendo que elija uno. Sé breve y clara. Respondé en español argentino.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Horarios disponibles para el {{ $('Generar Franjas').first().json.fecha }}: {{ $('Generar Franjas').first().json.slots.join(', ') }}. Ofrecé estas opciones al paciente.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "name": "Ollama - Ofrecer Horarios",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        208
+      ],
+      "id": "b98d4549-9e48-40e4-a460-a666d362f05a"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "responseText",
+              "value": "={{ $json.message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Extraer Respuesta Horarios",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2256,
+        208
+      ],
+      "id": "cf89c6f0-a042-48d9-b22e-bdda3d46a120"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO turnos (paciente_id, medico_id, fecha_hora, duracion_minutos, motivo, estado, tipo_consulta, fuente, notas_paciente) VALUES ($1, $2, $3, 30, $4, 'pendiente', $5, 'whatsapp', $6) RETURNING id, fecha_hora;",
+        "options": {}
+      },
+      "name": "Crear Turno en DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1760,
+        656
+      ],
+      "id": "b47291b5-14e4-49c0-bb68-b7d50e3764d0",
+      "credentials": {
+        "postgres": {
+          "id": "LndsAFMcQsVltuyi",
+          "name": "Consultorio - PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twilio.com/2010-04-01/Accounts/TWILIO_ACCOUNT_SID_PLACEHOLDER/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $('Extraer Datos Entrada').first().json.fromNumber || 'whatsapp:' + $('Extraer Datos Entrada').first().json.phone }}"
+            },
+            {
+              "name": "From",
+              "value": "={{ $('Extraer Datos Entrada').first().json.toNumber }}"
+            },
+            {
+              "name": "Body",
+              "value": "=Confirmamos tu turno para {{ $('Extraer JSON Turno').first().json.fecha_preferida }} a las {{ $('Extraer JSON Turno').first().json.horario_preferido }}. Te enviamos un recordatorio 24hs antes. Si necesitas cancelar o modificar, responde a este mensaje."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Twilio - Confirmacion Turno",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2032,
+        656
+      ],
+      "id": "10241f80-35b8-46f4-89c7-b73c41d117ce",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "cWihp3akRY6cYwIM",
+          "name": "Consultorio - Twilio Basic Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral\",\n  \"stream\": false,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Sos el asistente virtual del Consultorio Médico. El paciente quiere un turno pero no dijo fecha. Preguntale amablemente qué día y horario le gustaría. Sé breve, respondé en español argentino.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"El paciente {{ $('Extraer Datos Entrada').first().json.profileName }} dijo: {{ $('Extraer Datos Entrada').first().json.message }}. Preguntale qué fecha y horario prefiere.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "name": "Sin Fecha - Preguntar Disponibilidad",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        432
+      ],
+      "id": "41de74d9-a8ef-40e4-b877-012f587b7308"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "responseText",
+              "value": "={{ $json.message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Extraer Pregunta Fecha",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2000,
+        432
+      ],
+      "id": "89efa512-ca65-4fbd-be72-c55816dde435"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twilio.com/2010-04-01/Accounts/TWILIO_ACCOUNT_SID_PLACEHOLDER/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $('Extraer Datos Entrada').first().json.fromNumber || 'whatsapp:' + $('Extraer Datos Entrada').first().json.phone }}"
+            },
+            {
+              "name": "From",
+              "value": "={{ $('Extraer Datos Entrada').first().json.toNumber }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.responseText }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Twilio - Enviar WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2560,
+        224
+      ],
+      "id": "19c4cd53-d70c-40a6-b7d3-f6a883379227",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "cWihp3akRY6cYwIM",
+          "name": "Consultorio - Twilio Basic Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje) VALUES ($1, 'Gestion Turnos', $2, 'info', $3);",
+        "options": {}
+      },
+      "name": "Guardar Log",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2864,
+        336
+      ],
+      "id": "78ef180f-a702-4148-8015-7d6496b3a70c",
+      "credentials": {
+        "postgres": {
+          "id": "LndsAFMcQsVltuyi",
+          "name": "Consultorio - PostgreSQL"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Solicitud Turno": {
+      "main": [
+        [
+          {
+            "node": "Validar Datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Datos": {
+      "main": [
+        [
+          {
+            "node": "Extraer Datos Entrada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Guardar Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer Datos Entrada": {
+      "main": [
+        [
+          {
+            "node": "Ollama - Extraer Info Turno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama - Extraer Info Turno": {
+      "main": [
+        [
+          {
+            "node": "Extraer JSON Turno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer JSON Turno": {
+      "main": [
+        [
+          {
+            "node": "Verificar Disponibilidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Disponibilidad": {
+      "main": [
+        [
+          {
+            "node": "Tiene Fecha Elegida?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tiene Fecha Elegida?": {
+      "main": [
+        [
+          {
+            "node": "Generar Franjas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sin Fecha - Preguntar Disponibilidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar Franjas": {
+      "main": [
+        [
+          {
+            "node": "Ollama - Ofrecer Horarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama - Ofrecer Horarios": {
+      "main": [
+        [
+          {
+            "node": "Extraer Respuesta Horarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer Respuesta Horarios": {
+      "main": [
+        [
+          {
+            "node": "Twilio - Enviar WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sin Fecha - Preguntar Disponibilidad": {
+      "main": [
+        [
+          {
+            "node": "Extraer Pregunta Fecha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer Pregunta Fecha": {
+      "main": [
+        [
+          {
+            "node": "Twilio - Enviar WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear Turno en DB": {
+      "main": [
+        [
+          {
+            "node": "Twilio - Confirmacion Turno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - Confirmacion Turno": {
+      "main": [
+        [
+          {
+            "node": "Guardar Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - Enviar WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Guardar Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "active": true,
+  "versionId": "9dede87d-f41b-48cd-9a98-8cc786cfb3b3"
+}
