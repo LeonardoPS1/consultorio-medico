@@ -1,72 +1,69 @@
 {
-  "name": "03 - Recordatorios Automaticos",
+  "name": "03 - Recordatorios Automáticos",
   "nodes": [
     {
+      "id": "cron-trigger",
       "name": "Cron - Cada Hora",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 2,
       "position": [
         0,
         300
       ],
       "parameters": {
-        "rule": {
-          "interval": [
+        "triggerTimes": {
+          "item": [
             {
-              "field": "hours",
-              "hoursInterval": 1
+              "mode": "everyHour",
+              "hour": 0,
+              "minute": 0
             }
           ]
         }
-      },
-      "id": "2756b9fa-e17f-4508-8768-751649e1793d",
-      "disabled": false
+      }
     },
     {
-      "name": "PG - Turnos Proximas 24hs",
+      "id": "query-reminders-24h",
+      "name": "PG - Turnos Próximas 24hs",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
+      "typeVersion": 2,
       "position": [
         250,
         200
       ],
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT t.id, t.fecha_hora, t.estado, p.id as paciente_id, p.nombre, p.apellido, p.telefono, m.nombre as medico_nombre, '24h' as tipo FROM turnos t JOIN pacientes p ON p.id = t.paciente_id JOIN medicos m ON m.id = t.medico_id WHERE t.estado IN ('pendiente', 'confirmada') AND t.recordatorio_24h_enviado = FALSE AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '24 hours' ORDER BY t.fecha_hora;",
-        "options": {}
+        "query": "SELECT t.id, t.fecha_hora, t.estado,\n  p.id as paciente_id, p.nombre, p.apellido, p.telefono,\n  m.nombre as medico_nombre\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nJOIN medicos m ON m.id = t.medico_id\nWHERE t.estado IN ('pendiente', 'confirmada')\n  AND t.recordatorio_24h_enviado = FALSE\n  AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '24 hours'\nORDER BY t.fecha_hora;"
       },
-      "id": "ddb5de92-011b-4e1b-84d9-9ff787547c5a",
       "credentials": {
         "postgres": {
           "id": "LndsAFMcQsVltuyi",
           "name": "Consultorio - PostgreSQL"
         }
-      },
-      "disabled": true
+      }
     },
     {
-      "name": "PG - Turnos Proxima 1h",
+      "id": "query-reminders-1h",
+      "name": "PG - Turnos Próxima 1h",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
+      "typeVersion": 2,
       "position": [
         250,
         400
       ],
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT t.id, t.fecha_hora, t.estado, p.id as paciente_id, p.nombre, p.apellido, p.telefono, m.nombre as medico_nombre, '1h' as tipo FROM turnos t JOIN pacientes p ON p.id = t.paciente_id JOIN medicos m ON m.id = t.medico_id WHERE t.estado IN ('pendiente', 'confirmada') AND t.recordatorio_1h_enviado = FALSE AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '1 hour' ORDER BY t.fecha_hora;",
-        "options": {}
+        "query": "SELECT t.id, t.fecha_hora, t.estado,\n  p.id as paciente_id, p.nombre, p.apellido, p.telefono,\n  m.nombre as medico_nombre\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nJOIN medicos m ON m.id = t.medico_id\nWHERE t.estado IN ('pendiente', 'confirmada')\n  AND t.recordatorio_1h_enviado = FALSE\n  AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '1 hour'\nORDER BY t.fecha_hora;"
       },
-      "id": "464f3f0f-3e79-4c18-9f04-1d3987db811c",
       "credentials": {
         "postgres": {
           "id": "LndsAFMcQsVltuyi",
           "name": "Consultorio - PostgreSQL"
         }
-      },
-      "disabled": true
+      }
     },
     {
+      "id": "merge-reminders",
       "name": "Combinar Recordatorios",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2,
@@ -76,140 +73,82 @@
       ],
       "parameters": {
         "mode": "append"
-      },
-      "id": "d7e88610-5cfd-4dfe-a596-ba79df6a8957",
-      "disabled": true
+      }
     },
     {
-      "name": "Hay Turnos?",
+      "id": "is-empty-check",
+      "name": "¿Hay turnos?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
+      "typeVersion": 2,
       "position": [
         750,
         300
       ],
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
+          "number": [
             {
-              "leftValue": "={{ $items().length }}",
-              "rightValue": "0",
-              "operator": {
-                "type": "number",
-                "operation": "larger",
-                "name": "filter.operator.larger"
-              }
+              "value1": "={{ $items().length }}",
+              "operation": "larger",
+              "value2": 0
             }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "9e123e35-dc81-43c0-bec4-f0081198d331",
-      "disabled": true
+          ]
+        }
+      }
     },
     {
-      "name": "Enrutar por Tipo",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 2.3,
+      "id": "send-24h-reminder",
+      "name": "Twilio - Recordatorio 24h",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
       "position": [
         1000,
-        300
+        150
       ],
       "parameters": {
-        "dataType": "string",
-        "value1": "={{ $json.tipo }}",
-        "rules": [
-          {
-            "value2": "24h",
-            "output": 0
-          },
-          {
-            "value2": "1h",
-            "output": 1
-          }
-        ],
-        "fallbackOutput": 2
+        "resource": "message",
+        "operation": "create",
+        "to": "={{ 'whatsapp:+549' + $json.telefono }}",
+        "from": "{{ $env.TWILIO_WHATSAPP_NUMBER }}",
+        "body": "={{ '👋 Hola ' + $json.nombre + '! Te recordamos que tenés un turno mañana ' + $json.fecha_hora + ' con ' + $json.medico_nombre + '. Respondé CONFIRMAR para confirmar tu asistencia. ¡Gracias! 😊' }}"
       },
-      "id": "cf889b44-0e56-46d7-a13c-a0867cf28ff3",
-      "disabled": true
+      "credentials": {
+        "twilioApi": {
+          "id": "aE31QgQsM9spWb5a",
+          "name": "Consultorio - Twilio API"
+        }
+      }
     },
     {
-      "name": "Generar Msg 24h",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "id": "send-1h-reminder",
+      "name": "Twilio - Recordatorio 1h",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        450
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "create",
+        "to": "={{ 'whatsapp:+549' + $json.telefono }}",
+        "from": "{{ $env.TWILIO_WHATSAPP_NUMBER }}",
+        "body": "={{ '⏰ Recordatorio: en 1 hora tenés turno con ' + $json.medico_nombre + '. Te esperamos! 🏥' }}"
+      },
+      "credentials": {
+        "twilioApi": {
+          "id": "aE31QgQsM9spWb5a",
+          "name": "Consultorio - Twilio API"
+        }
+      }
+    },
+    {
+      "id": "update-24h-flag",
+      "name": "PG - Marcar Recordatorio 24h",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
       "position": [
         1250,
-        150
-      ],
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "name": "recordatorioMensaje",
-              "value": "=Hola {{ $json.nombre }}! Te recordamos que tenes un turno manana {{ $json.fecha_hora }} con {{ $json.medico_nombre }}. Responde CONFIRMAR para confirmar tu asistencia. Gracias!",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "735a36bf-a9ba-4d85-9785-63017a38bab6",
-      "disabled": true
-    },
-    {
-      "name": "Twilio 24h",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1500,
-        150
-      ],
-      "parameters": {
-        "options": {},
-        "url": "https://api.twilio.com/2010-04-01/Accounts/TWILIO_ACCOUNT_SID_PLACEHOLDER/Messages.json",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "To",
-              "value": "=whatsapp:+549{{ $json.telefono }}"
-            },
-            {
-              "name": "From",
-              "value": ""
-            },
-            {
-              "name": "Body",
-              "value": "={{ $json.recordatorioMensaje }}"
-            }
-          ]
-        },
-        "method": "POST",
-        "authentication": "genericCredentialType",
-        "sendBody": true,
-        "genericAuthType": "httpBasicAuth"
-      },
-      "id": "9e2f832b-e845-47f4-8463-5f6c85f03db5",
-      "credentials": {
-        "httpBasicAuth": {
-          "id": "cWihp3akRY6cYwIM",
-          "name": "Consultorio - Twilio Basic Auth"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "name": "PG Update 24h",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [
-        1750,
         150
       ],
       "parameters": {
@@ -217,226 +156,172 @@
         "query": "UPDATE turnos SET recordatorio_24h_enviado = TRUE, updated_at = NOW() WHERE id = $1;",
         "additionalFields": {
           "queryParams": "={{ [$json.id] }}"
-        },
-        "options": {}
+        }
       },
-      "id": "e151b39e-3ff7-4d54-a3bf-b5e0c5fe6242",
       "credentials": {
         "postgres": {
           "id": "LndsAFMcQsVltuyi",
           "name": "Consultorio - PostgreSQL"
         }
-      },
-      "disabled": true
+      }
     },
     {
-      "name": "Generar Msg 1h",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "id": "update-1h-flag",
+      "name": "PG - Marcar Recordatorio 1h",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
       "position": [
         1250,
-        400
-      ],
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "name": "recordatorioMensaje",
-              "value": "=Recordatorio: en 1 hora tenes turno con {{ $json.medico_nombre }}. Te esperamos!",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "d7cbc407-b42c-437a-8553-9d691f8d1ff7",
-      "disabled": true
-    },
-    {
-      "name": "Twilio 1h",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1500,
-        400
-      ],
-      "parameters": {
-        "options": {},
-        "url": "https://api.twilio.com/2010-04-01/Accounts/TWILIO_ACCOUNT_SID_PLACEHOLDER/Messages.json",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "To",
-              "value": "=whatsapp:+549{{ $json.telefono }}"
-            },
-            {
-              "name": "From",
-              "value": ""
-            },
-            {
-              "name": "Body",
-              "value": "={{ $json.recordatorioMensaje }}"
-            }
-          ]
-        },
-        "method": "POST",
-        "authentication": "genericCredentialType",
-        "sendBody": true,
-        "genericAuthType": "httpBasicAuth"
-      },
-      "id": "8761f950-f86f-41c2-b936-340d43a9e220",
-      "credentials": {
-        "httpBasicAuth": {
-          "id": "cWihp3akRY6cYwIM",
-          "name": "Consultorio - Twilio Basic Auth"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "name": "PG Update 1h",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [
-        1750,
-        400
+        450
       ],
       "parameters": {
         "operation": "executeQuery",
         "query": "UPDATE turnos SET recordatorio_1h_enviado = TRUE, updated_at = NOW() WHERE id = $1;",
         "additionalFields": {
           "queryParams": "={{ [$json.id] }}"
-        },
-        "options": {}
+        }
       },
-      "id": "d11ca1b7-b530-4021-b726-ca0a28a7b3fe",
       "credentials": {
         "postgres": {
           "id": "LndsAFMcQsVltuyi",
           "name": "Consultorio - PostgreSQL"
         }
-      },
-      "disabled": true
+      }
     },
     {
-      "name": "Generar Msg Default",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "id": "log-recordatorios",
+      "name": "PG - Log de Envío",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
       "position": [
         1250,
-        550
-      ],
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "name": "recordatorioMensaje",
-              "value": "=Recordatorio: tenes turno proximamente con {{ $json.medico_nombre }}.",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "c0e44ae1-d2f6-48cf-b7f9-417620633156",
-      "disabled": true
-    },
-    {
-      "name": "Twilio Default",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1500,
-        550
-      ],
-      "parameters": {
-        "options": {},
-        "url": "https://api.twilio.com/2010-04-01/Accounts/TWILIO_ACCOUNT_SID_PLACEHOLDER/Messages.json",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "To",
-              "value": "=whatsapp:+549{{ $json.telefono }}"
-            },
-            {
-              "name": "From",
-              "value": ""
-            },
-            {
-              "name": "Body",
-              "value": "={{ $json.recordatorioMensaje }}"
-            }
-          ]
-        },
-        "method": "POST",
-        "authentication": "genericCredentialType",
-        "sendBody": true,
-        "genericAuthType": "httpBasicAuth"
-      },
-      "id": "545470f5-4c2a-4856-86bf-799ae3a5f378",
-      "credentials": {
-        "httpBasicAuth": {
-          "id": "cWihp3akRY6cYwIM",
-          "name": "Consultorio - Twilio Basic Auth"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "name": "PG Update Default",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [
-        1750,
-        550
+        700
       ],
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE turnos SET recordatorio_24h_enviado = TRUE, updated_at = NOW() WHERE id = $1;",
+        "query": "INSERT INTO workflow_logs (workflow_id, execution_id, nivel, mensaje, metadata)\nVALUES ('workflow-03', $1, 'info', $2, $3);",
         "additionalFields": {
-          "queryParams": "={{ [$json.id] }}"
-        },
-        "options": {}
+          "queryParams": "={{ [$json.executionId, 'Recordatorios procesados: ' + $items().length + ' turnos', JSON.stringify({turnos: $items().length})] }}"
+        }
       },
-      "id": "0331c653-e724-4a90-aa0b-11043049f049",
       "credentials": {
         "postgres": {
           "id": "LndsAFMcQsVltuyi",
           "name": "Consultorio - PostgreSQL"
         }
-      },
-      "disabled": true
-    },
-    {
-      "name": "Log a PostgreSQL",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [
-        2000,
-        300
-      ],
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje) VALUES ($1, 'Recordatorios', $2, 'info', $3);",
-        "additionalFields": {
-          "queryParams": "={{ ['workflow-03', $json.executionId || '', 'Recordatorio ' + $json.tipo + ' enviado a ' + $json.nombre] }}"
-        },
-        "options": {}
-      },
-      "id": "23e42316-a39d-46c5-80c2-ca4ead4ca0f9",
-      "credentials": {
-        "postgres": {
-          "id": "LndsAFMcQsVltuyi",
-          "name": "Consultorio - PostgreSQL"
-        }
-      },
-      "disabled": true
+      }
     }
   ],
-  "connections": {},
+  "connections": {
+    "Cron - Cada Hora": {
+      "main": [
+        [
+          {
+            "node": "PG - Turnos Próximas 24hs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "PG - Turnos Próxima 1h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG - Turnos Próximas 24hs": {
+      "main": [
+        [
+          {
+            "node": "Combinar Recordatorios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG - Turnos Próxima 1h": {
+      "main": [
+        [
+          {
+            "node": "Combinar Recordatorios",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Combinar Recordatorios": {
+      "main": [
+        [
+          {
+            "node": "¿Hay turnos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay turnos?": {
+      "main": [
+        [
+          {
+            "node": "Twilio - Recordatorio 24h",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Twilio - Recordatorio 24h": {
+      "main": [
+        [
+          {
+            "node": "PG - Marcar Recordatorio 24h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - Recordatorio 1h": {
+      "main": [
+        [
+          {
+            "node": "PG - Marcar Recordatorio 1h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG - Marcar Recordatorio 24h": {
+      "main": [
+        [
+          {
+            "node": "PG - Log de Envío",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG - Marcar Recordatorio 1h": {
+      "main": [
+        [
+          {
+            "node": "PG - Log de Envío",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
   "settings": {
     "executionOrder": "v1"
   },
-  "active": false,
-  "versionId": "6398e548-6e3c-448b-8940-7cad8a8028ec"
+  "active": true,
+  "versionId": "3f1a54c4-a3c4-4fb7-88c5-c5af16e224fb"
 }
