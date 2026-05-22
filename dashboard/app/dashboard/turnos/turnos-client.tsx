@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -112,6 +112,7 @@ export function TurnosClient({
   const [filtroEstado, setFiltroEstado] = useState('__all__');
   const [filtroTipo, setFiltroTipo] = useState('__all__');
   const [searchText, setSearchText] = useState('');
+  const [savingStates, setSavingStates] = useState<Set<string>>(new Set());
 
   // Valores únicos para filtros
   const medicos = useMemo(
@@ -127,6 +128,27 @@ export function TurnosClient({
   const filtrosActivos = [filtroMedico, filtroEstado, filtroTipo, searchText].filter(
     (v) => v && v !== '__all__',
   ).length;
+
+  // ─── Keyboard shortcuts ──────────────────────────────
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowFilters(true);
+        setTimeout(() => {
+          const input = document.querySelector<HTMLInputElement>('[placeholder="Nombre del paciente..."]');
+          input?.focus();
+        }, 100);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        setShowNewTurno(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   // ─── Fetch turnos para una fecha ───────────────────────
 
@@ -272,7 +294,8 @@ export function TurnosClient({
   };
 
   const actualizarEstado = async (id: string, nuevoEstado: TurnoEstado, descripcion: string) => {
-    // Optimistic update
+    // Optimistic update + pulsing badge
+    setSavingStates(prev => new Set(prev).add(id));
     setTurnos((prev) =>
       prev.map((t) => (t.id === id ? { ...t, estado: nuevoEstado } : t)),
     );
@@ -285,11 +308,12 @@ export function TurnosClient({
         body: JSON.stringify({ estado: nuevoEstado }),
       });
     } catch {
-      // Revert on error
       setTurnos((prev) =>
         prev.map((t) => (t.id === id ? { ...t, estado: 'pendiente' } : t)),
       );
-      toast({ title: 'Error', description: 'No se pudo actualizar el estado', variant: 'destructive' });
+      toast({ title: 'Error', description: 'No se pudo actualizar', variant: 'destructive' });
+    } finally {
+      setSavingStates(prev => { const next = new Set(prev); next.delete(id); return next; });
     }
   };
 
@@ -298,7 +322,7 @@ export function TurnosClient({
   return (
     <>
       {/* Botones de acción + toggle vista (fuera del condicional de lista) */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <div className="flex items-center rounded-lg border p-1">
             <Button
@@ -306,22 +330,23 @@ export function TurnosClient({
               size="sm"
               onClick={() => setView('lista')}
             >
-              <List className="h-4 w-4 mr-1" />
-              Lista
+              <List className="h-4 w-4 md:mr-1" />
+              <span className="hidden md:inline">Lista</span>
             </Button>
             <Button
               variant={view === 'calendario' ? 'secondary' : 'ghost'}
               size="sm"
               onClick={() => setView('calendario')}
             >
-              <Calendar className="h-4 w-4 mr-1" />
-              Calendario
+              <Calendar className="h-4 w-4 md:mr-1" />
+              <span className="hidden md:inline">Calendario</span>
             </Button>
           </div>
         </div>
-        <Button onClick={() => setShowNewTurno(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nuevo Turno
+        <Button onClick={() => setShowNewTurno(true)} size="sm" className="text-xs md:text-sm">
+          <Plus className="h-4 w-4 md:mr-2" />
+          <span className="hidden md:inline">Nuevo Turno</span>
+          <kbd className="hidden md:inline ml-2 text-[10px] opacity-50">Ctrl+N</kbd>
         </Button>
       </div>
 
@@ -377,7 +402,8 @@ export function TurnosClient({
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <Filter className="h-4 w-4 mr-1" />
-                Filtros
+                <span className="hidden md:inline">Filtros</span>
+                <kbd className="hidden md:inline ml-1.5 text-[9px] opacity-40">Ctrl+K</kbd>
                 {filtrosActivos > 0 && (
                   <span className="ml-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                     {filtrosActivos}
@@ -575,8 +601,21 @@ export function TurnosClient({
           <Card>
             <CardContent className="p-0">
               {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+                <div className="space-y-2 p-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex items-center gap-4 p-4 rounded-lg bg-muted/20 animate-pulse">
+                      <div className="h-14 w-14 rounded-xl bg-muted" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-48 bg-muted rounded" />
+                        <div className="h-3 w-32 bg-muted rounded" />
+                      </div>
+                      <div className="h-6 w-20 bg-muted rounded-full" />
+                      <div className="flex gap-1">
+                        <div className="h-8 w-16 bg-muted rounded" />
+                        <div className="h-8 w-14 bg-muted rounded" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : turnosFiltrados.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -611,23 +650,26 @@ export function TurnosClient({
                     .map((turno) => (
                       <div
                         key={turno.id}
-                        className="flex items-center gap-4 p-4 hoverable:hover:bg-muted/50 transition-colors cursor-pointer border-l-4"
+                        className="flex items-center gap-2 md:gap-4 p-3 md:p-4 hoverable:hover:bg-muted/50 transition-colors cursor-pointer border-l-4"
                         style={{
                           borderLeftColor: getTurnoColor(turno.estado),
                         }}
                       >
                         {/* Hora */}
-                        <div className="flex items-center justify-center h-14 w-14 rounded-xl bg-primary/10 text-primary font-bold text-sm">
+                        <div className="flex items-center justify-center h-10 w-10 md:h-14 md:w-14 rounded-xl bg-primary/10 text-primary font-bold text-xs md:text-sm shrink-0">
                           {turno.hora}
                         </div>
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">
+                          <p className="font-medium text-sm truncate">
                             {turno.paciente}
                           </p>
-                          <p className="text-sm text-muted-foreground truncate">
+                          <p className="text-xs text-muted-foreground truncate hidden md:block">
                             {turno.tipo} &middot; {turno.medico}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate md:hidden">
+                            {turno.tipo}
                           </p>
                         </div>
 
@@ -639,12 +681,13 @@ export function TurnosClient({
                             borderColor: `${getTurnoColor(turno.estado)}40`,
                           }}
                           variant="outline"
+                          className={`text-xs ${savingStates.has(turno.id) ? 'animate-pulse opacity-70' : ''}`}
                         >
                           {getTurnoLabel(turno.estado)}
                         </Badge>
 
                         {/* Acciones */}
-                        <div className="flex gap-1">
+                        <div className="hidden md:flex gap-1">
                           {(turno.estado === 'pendiente' ||
                             turno.estado === 'confirmada') && (
                             <Button
