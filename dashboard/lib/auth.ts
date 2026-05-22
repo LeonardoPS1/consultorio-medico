@@ -103,6 +103,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.plan = user.plan;
       }
+      // Refrescar plan desde DB para que cambios post-pago apliquen sin re-login
+      if (token.email && !user) {
+        try {
+          const dbUser = await getUserByEmail(token.email);
+          if (dbUser && dbUser.plan) {
+            token.plan = dbUser.plan;
+          }
+        } catch {
+          // Si falla la consulta, mantenemos el plan actual del token
+        }
+      }
       return token;
     },
     async session({ session, token }) {

@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { suscripciones } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { suscripciones, usuarios } from '@/drizzle/schema';
+import { eq, and, desc } from 'drizzle-orm';
 import { PLANES, type PlanId } from '@/lib/planes';
 
 // GET /api/pagos/status
-// Devuelve el estado de la suscripción del usuario actual
+// Devuelve el estado de la suscripción del usuario logueado
 export async function GET() {
   try {
     const session = await auth();
@@ -14,12 +14,22 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    // Buscar suscripción activa para esta organización/usuario
+    // Buscar el tenant del usuario logueado
+    const [userRow] = await db
+      .select({ id: usuarios.id, tenantId: usuarios.tenantId, plan: usuarios.plan })
+      .from(usuarios)
+      .where(eq(usuarios.email, session.user.email))
+      .limit(1);
+
+    const tenantId = userRow?.tenantId || '00000000-0000-0000-0000-000000000000';
+
+    // Buscar suscripción activa para el tenant del usuario
     const subs = await db
       .select()
       .from(suscripciones)
+      .where(eq(suscripciones.organizacionId, tenantId))
       .limit(1)
-      .orderBy(suscripciones.createdAt);
+      .orderBy(desc(suscripciones.createdAt));
 
     const sub = subs[0] ?? null;
 

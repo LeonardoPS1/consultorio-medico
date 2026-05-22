@@ -4,11 +4,24 @@ import { PLANES, type PlanId } from '@/lib/planes';
 import { db } from '@/lib/db';
 import { suscripciones } from '@/drizzle/schema';
 import { eq, sql } from 'drizzle-orm';
+import { usuarios } from '@/drizzle/schema';
+import { getUserByEmail } from '@/lib/data-store';
 
 // POST /api/pagos/webhook
 // Webhook de MercadoPago (IPN) - notificaciones de pago
 export async function POST(request: Request) {
   try {
+    // Validar webhook secret (si está configurado)
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      const url = new URL(request.url);
+      const secret = url.searchParams.get('secret');
+      if (secret !== webhookSecret) {
+        console.warn('[MP Webhook] Secret inválido');
+        return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
     const body = await request.json();
     const { type, data } = body;
 
@@ -108,9 +121,28 @@ async function handlePaymentNotification(paymentId: string) {
         mercadopagoMerchantOrderId: merchantOrderId ? String(merchantOrderId) : null,
         periodStart: now,
         periodEnd,
-        metadata: { payerEmail, externalRef },
+        metadata: { payerEmail, externalRef, userId: refData.userId },
       });
     }
+
+    // ACTUALIZAR el plan del usuario para que tenga efecto inmediato en features
+    const userId = refData.userId;
+    const userEmail = refData.email || payerEmail;
+    if (userId || userEmail) {
+      try {
+        const user = await getUserByEmail(userEmail || '');
+        if (user && user.id) {
+          await db
+            .update(usuarios)
+            .set({ plan: planId, updatedAt: now })
+            .where(eq(usuarios.id, user.id));
+          console.log(`[MP Webhook] ✅ Plan actualizado a ${planId} para usuario ${user.email}`);
+        }
+      } catch (err) {
+        console.error('[MP Webhook] Error actualizando usuario.plan:', err);
+      }
+    }
+
     console.log(`[MP Webhook] ✅ Suscripción ${planId} activada para ${payerEmail}`);
   } else if (['cancelled', 'rejected', 'refunded'].includes(status ?? '')) {
     if (existing.length > 0) {
