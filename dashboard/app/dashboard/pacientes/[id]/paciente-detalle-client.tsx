@@ -25,9 +25,12 @@ import {
   Shield,
   Cake,
   MapPin,
+  FilePlus2,
 } from 'lucide-react';
 import { formatPhone, getInitials, formatDate, getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -133,6 +136,13 @@ export function PacienteDetalleClient({
 }: Props) {
   const router = useRouter();
   const [turnosList, setTurnosList] = useState(turnos);
+  const [recetasList, setRecetasList] = useState(recetas);
+  const [showNewReceta, setShowNewReceta] = useState(false);
+  const [savingReceta, setSavingReceta] = useState(false);
+  const [medicamento, setMedicamento] = useState('');
+  const [dosis, setDosis] = useState('');
+  const [frecuencia, setFrecuencia] = useState('');
+  const [indicaciones, setIndicaciones] = useState('');
 
   const handleEstadoTurno = async (id: string, nuevoEstado: string) => {
     setTurnosList((prev) =>
@@ -146,6 +156,51 @@ export function PacienteDetalleClient({
       });
     } catch {
       toast({ title: 'Error', description: 'No se pudo actualizar', variant: 'destructive' });
+    }
+  };
+
+  const handleCreateReceta = async () => {
+    if (!medicamento.trim() || !dosis.trim()) return;
+    setSavingReceta(true);
+    try {
+      const res = await fetch('/api/recetas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pacienteId: paciente.id,
+          medicamento: medicamento.trim(),
+          dosis: dosis.trim(),
+          frecuencia: frecuencia.trim() || undefined,
+          indicaciones: indicaciones.trim() || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      const { data } = await res.json();
+      setRecetasList((prev) => [
+        {
+          id: data.id,
+          medicamento: data.medicamento,
+          dosis: data.dosis,
+          frecuencia: data.frecuencia,
+          duracion: data.duracion,
+          indicaciones: data.indicaciones,
+          estado: data.estado,
+          fechaInicio: data.fechaInicio,
+          fechaFin: data.fechaFin,
+          medicoNombre: null,
+        },
+        ...prev,
+      ]);
+      toast({ title: 'Receta creada', description: `${medicamento}` });
+      setShowNewReceta(false);
+      setMedicamento('');
+      setDosis('');
+      setFrecuencia('');
+      setIndicaciones('');
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo crear la receta', variant: 'destructive' });
+    } finally {
+      setSavingReceta(false);
     }
   };
 
@@ -293,7 +348,7 @@ export function PacienteDetalleClient({
             <Calendar className="h-4 w-4 mr-1" /> Turnos ({turnosList.length})
           </TabsTrigger>
           <TabsTrigger value="recetas">
-            <Syringe className="h-4 w-4 mr-1" /> Recetas ({recetas.length})
+            <Syringe className="h-4 w-4 mr-1" /> Recetas ({recetasList.length})
           </TabsTrigger>
           <TabsTrigger value="historial">
             <Activity className="h-4 w-4 mr-1" /> Historial ({historial.length})
@@ -378,7 +433,89 @@ export function PacienteDetalleClient({
 
         {/* Recetas */}
         <TabsContent value="recetas" className="mt-4">
-          {recetas.length === 0 ? (
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-muted-foreground">{recetasList.length} recetas</p>
+            {!showNewReceta && (
+              <Button variant="outline" size="sm" onClick={() => setShowNewReceta(true)}>
+                <FilePlus2 className="h-4 w-4 mr-1" /> Nueva Receta
+              </Button>
+            )}
+          </div>
+
+          {/* Form nueva receta */}
+          {showNewReceta && (
+            <Card className="border-dashed border-primary/40 mb-3">
+              <CardContent className="p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Medicamento *</Label>
+                    <Input
+                      className="h-8 text-xs"
+                      placeholder="ej: Amoxicilina 500mg"
+                      value={medicamento}
+                      onChange={(e) => setMedicamento(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Dosis *</Label>
+                    <Input
+                      className="h-8 text-xs"
+                      placeholder="ej: 1 comprimido cada 8hs"
+                      value={dosis}
+                      onChange={(e) => setDosis(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Frecuencia</Label>
+                    <Input
+                      className="h-8 text-xs"
+                      placeholder="ej: Cada 8 horas"
+                      value={frecuencia}
+                      onChange={(e) => setFrecuencia(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Indicaciones</Label>
+                    <Input
+                      className="h-8 text-xs"
+                      placeholder="ej: Con las comidas"
+                      value={indicaciones}
+                      onChange={(e) => setIndicaciones(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      setShowNewReceta(false);
+                      setMedicamento('');
+                      setDosis('');
+                      setFrecuencia('');
+                      setIndicaciones('');
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={handleCreateReceta}
+                    disabled={savingReceta || !medicamento.trim() || !dosis.trim()}
+                  >
+                    {savingReceta ? 'Creando...' : 'Crear Receta'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {recetasList.length === 0 && !showNewReceta ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <Syringe className="h-10 w-10 text-muted-foreground/30 mb-3" />
@@ -387,7 +524,7 @@ export function PacienteDetalleClient({
             </Card>
           ) : (
             <div className="space-y-2">
-              {recetas.map((r) => (
+              {recetasList.map((r) => (
                 <Card key={r.id} className="hoverable:hover:bg-muted/30 transition-colors">
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">

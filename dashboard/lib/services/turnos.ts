@@ -50,8 +50,24 @@ export const turnosService = {
     if (!pac) notFound('Paciente no encontrado');
 
     // Validar médico
-    const [med] = await db.select({ id: medicos.id }).from(medicos).where(and(eq(medicos.id, input.medicoId), sql`${medicos.deletedAt} IS NULL`)).limit(1);
+    const [med] = await db.select({ id: medicos.id, horarios: medicos.horarios, nombre: medicos.nombre }).from(medicos).where(and(eq(medicos.id, input.medicoId), sql`${medicos.deletedAt} IS NULL`)).limit(1);
     if (!med) notFound('Medico no encontrado');
+
+    // Validar que el médico atiende en ese día/horario
+    const dias = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
+    const diaNombre = dias[fechaHora.getUTCDay()];
+    const horaTurno = `${String(fechaHora.getUTCHours()).padStart(2, '0')}:${String(fechaHora.getUTCMinutes()).padStart(2, '0')}`;
+    const horariosMedico = (med.horarios || {}) as Record<string, { activo?: boolean; inicio?: string; fin?: string }>;
+    const horarioDia = horariosMedico[diaNombre];
+
+    if (!horarioDia || !horarioDia.activo) {
+      conflict(`El medico ${med.nombre} no atiende los ${diaNombre}.`);
+    }
+    if (horarioDia.inicio && horarioDia.fin) {
+      if (horaTurno < horarioDia.inicio || horaTurno >= horarioDia.fin) {
+        conflict(`El medico ${med.nombre} atiende los ${diaNombre} de ${horarioDia.inicio} a ${horarioDia.fin}. El turno solicitado (${horaTurno}) esta fuera del horario.`);
+      }
+    }
 
     // Validar bloqueos
     const bloqueo = await db.select({ titulo: bloqueosAgenda.titulo, tipo: bloqueosAgenda.tipo }).from(bloqueosAgenda).where(and(eq(bloqueosAgenda.medicoId, input.medicoId), sql`${bloqueosAgenda.fechaInicio} <= ${fechaHora.toISOString()}::timestamptz`, sql`${bloqueosAgenda.fechaFin} >= ${fechaHora.toISOString()}::timestamptz`)).limit(1);

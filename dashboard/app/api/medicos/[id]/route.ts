@@ -29,6 +29,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (body.matricula !== undefined) updateData.matricula = body.matricula;
     if (body.duracionTurnoMinutos !== undefined) updateData.duracionTurnoMinutos = body.duracionTurnoMinutos;
     if (body.activo !== undefined) updateData.activo = body.activo;
+    if (body.horarios !== undefined) updateData.horarios = body.horarios;
 
     const [actualizado] = await db.update(medicos).set(updateData).where(eq(medicos.id, params.id)).returning();
     if (!actualizado) return NextResponse.json({ error: 'Medico no encontrado' }, { status: 404 });

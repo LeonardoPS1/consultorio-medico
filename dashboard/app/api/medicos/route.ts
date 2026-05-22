@@ -36,7 +36,7 @@ export async function GET(_request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { nombre, especialidad, email, telefono, whatsapp, matricula, duracionTurnoMinutos } = body;
+    const { nombre, especialidad, email, telefono, whatsapp, matricula, duracionTurnoMinutos, horarios } = body;
 
     if (!nombre?.trim() || !especialidad?.trim()) {
       return NextResponse.json({ error: 'nombre y especialidad son obligatorios' }, { status: 400 });
@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
         whatsapp: whatsapp?.trim() || null,
         matricula: matricula?.trim() || null,
         duracionTurnoMinutos: duracionTurnoMinutos || 30,
+        horarios: horarios || {},
         activo: true,
       })
       .returning();

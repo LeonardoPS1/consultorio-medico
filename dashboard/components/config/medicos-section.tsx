@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Stethoscope, Pencil, X, CalendarX } from 'lucide-react';
+import { Plus, Stethoscope, Pencil, X, CalendarX, Clock, ChevronDown } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { BloqueosDialog } from '@/components/config/bloqueos-dialog';
+import { Switch } from '@/components/ui/switch';
 
 interface Medico {
   id: string;
@@ -27,6 +28,18 @@ interface Props {
   plan: string;
 }
 
+const DIAS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
+
+const DEFAULT_HORARIOS: Record<string, { activo: boolean; inicio: string; fin: string }> = {
+  Lunes: { activo: true, inicio: '09:00', fin: '18:00' },
+  Martes: { activo: true, inicio: '09:00', fin: '18:00' },
+  Miercoles: { activo: true, inicio: '09:00', fin: '18:00' },
+  Jueves: { activo: true, inicio: '09:00', fin: '18:00' },
+  Viernes: { activo: true, inicio: '09:00', fin: '18:00' },
+  Sabado: { activo: true, inicio: '09:00', fin: '13:00' },
+  Domingo: { activo: false, inicio: '09:00', fin: '18:00' },
+};
+
 export function MedicosSection({ plan }: Props) {
   const [medicos, setMedicos] = useState<Medico[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +55,8 @@ export function MedicosSection({ plan }: Props) {
   const [duracion, setDuracion] = useState(30);
   const [saving, setSaving] = useState(false);
   const [bloqueosMedicoId, setBloqueosMedicoId] = useState<string | null>(null);
+  const [showHorarios, setShowHorarios] = useState(false);
+  const [horarios, setHorarios] = useState<Record<string, { activo: boolean; inicio: string; fin: string }>>({ ...DEFAULT_HORARIOS });
 
   const fetchMedicos = () => {
     fetch('/api/medicos')
@@ -56,9 +71,10 @@ export function MedicosSection({ plan }: Props) {
   const resetForm = () => {
     setNombre(''); setEspecialidad(''); setMatricula('');
     setWhatsapp(''); setEmail(''); setDuracion(30);
-  };
+    setShowHorarios(false); setHorarios({ ...DEFAULT_HORARIOS });
+  }; 
 
-  const openEdit = (m: Medico) => {
+  const openEdit = (m: Medico & { horarios?: any }) => {
     setEditMedico(m);
     setNombre(m.nombre);
     setEspecialidad(m.especialidad);
@@ -66,6 +82,19 @@ export function MedicosSection({ plan }: Props) {
     setWhatsapp(m.whatsapp || '');
     setEmail(m.email || '');
     setDuracion(m.duracionTurnoMinutos);
+    // Cargar horarios si existen, sino defaults
+    if (m.horarios && typeof m.horarios === 'object' && Object.keys(m.horarios).length > 0) {
+      const merged = { ...DEFAULT_HORARIOS };
+      for (const dia of DIAS) {
+        if (m.horarios[dia]) {
+          merged[dia] = { ...merged[dia], ...m.horarios[dia] };
+        }
+      }
+      setHorarios(merged);
+    } else {
+      setHorarios({ ...DEFAULT_HORARIOS });
+    }
+    setShowHorarios(Object.keys(m.horarios || {}).length > 0);
   };
 
   const handleSave = async () => {
@@ -77,7 +106,7 @@ export function MedicosSection({ plan }: Props) {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, especialidad, matricula: matricula || null, whatsapp: whatsapp || null, email: email || null, duracionTurnoMinutos: duracion }),
+        body: JSON.stringify({ nombre, especialidad, matricula: matricula || null, whatsapp: whatsapp || null, email: email || null, duracionTurnoMinutos: duracion, horarios }),
       });
       if (!res.ok) throw new Error();
       toast({ title: editMedico ? 'Médico actualizado' : 'Médico creado' });
@@ -192,8 +221,51 @@ export function MedicosSection({ plan }: Props) {
               <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="doctor@consultorio.com" />
             </div>
             <div className="space-y-1">
-              <Label>Duración turno (min)</Label>
+              <Label>Duracion turno (min)</Label>
               <Input type="number" value={duracion} onChange={e => setDuracion(Number(e.target.value))} min={10} max={120} />
+            </div>
+
+            {/* Horarios */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium hover:bg-muted/50 transition-colors"
+                onClick={() => setShowHorarios(!showHorarios)}
+              >
+                <span className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  Horarios de atencion
+                </span>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${showHorarios ? 'rotate-180' : ''}`} />
+              </button>
+              {showHorarios && (
+                <div className="px-3 pb-3 space-y-1">
+                  {DIAS.map((dia) => (
+                    <div key={dia} className="flex items-center gap-2 py-0.5">
+                      <Switch
+                        checked={horarios[dia]?.activo ?? false}
+                        onCheckedChange={(v) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], activo: v } }))}
+                      />
+                      <span className="text-xs w-20 shrink-0">{dia}</span>
+                      <Input
+                        type="time"
+                        className="h-7 w-24 text-xs"
+                        value={horarios[dia]?.inicio || '09:00'}
+                        onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], inicio: e.target.value } }))}
+                        disabled={!horarios[dia]?.activo}
+                      />
+                      <span className="text-xs text-muted-foreground">a</span>
+                      <Input
+                        type="time"
+                        className="h-7 w-24 text-xs"
+                        value={horarios[dia]?.fin || '18:00'}
+                        onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], fin: e.target.value } }))}
+                        disabled={!horarios[dia]?.activo}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
