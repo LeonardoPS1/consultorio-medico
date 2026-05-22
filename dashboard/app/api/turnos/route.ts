@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
     // ─── Filtros ───────────────────────────────────────
 
     const whereConditions = and(
-      gte(turnos.fechaHora, fechaBaseIso),
-      lt(turnos.fechaHora, fechaFinIso),
+      sql`${turnos.fechaHora} >= ${fechaBaseIso}::timestamptz`,
+      sql`${turnos.fechaHora} < ${fechaFinIso}::timestamptz`,
       sql`${turnos.deletedAt} IS NULL`,
       estado ? eq(turnos.estado, estado) : undefined,
       tipo ? eq(turnos.tipoConsulta, tipo) : undefined,
@@ -66,8 +66,8 @@ export async function GET(request: NextRequest) {
       .from(turnos)
       .where(
         and(
-          gte(turnos.fechaHora, fechaBaseIso),
-          lt(turnos.fechaHora, fechaFinIso),
+          sql`${turnos.fechaHora} >= ${fechaBaseIso}::timestamptz`,
+          sql`${turnos.fechaHora} < ${fechaFinIso}::timestamptz`,
           sql`${turnos.deletedAt} IS NULL`,
         ),
       )
@@ -99,8 +99,8 @@ export async function GET(request: NextRequest) {
       .from(turnos)
       .where(
         and(
-          gte(turnos.fechaHora, fechaBaseIso),
-          lt(turnos.fechaHora, fechaFinIso),
+          sql`${turnos.fechaHora} >= ${fechaBaseIso}::timestamptz`,
+          sql`${turnos.fechaHora} < ${fechaFinIso}::timestamptz`,
           sql`${turnos.deletedAt} IS NULL`,
         ),
       )
