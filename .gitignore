@@ -56,3 +56,6 @@ dashboard/conversaciones
 
 # Backups locales
 backups/
+
+# Credenciales (NO subir a git)
+docs/ACCESS.md
