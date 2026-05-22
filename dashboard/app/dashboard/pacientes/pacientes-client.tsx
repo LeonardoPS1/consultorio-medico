@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { formatPhone, getInitials, formatDate } from '@/lib/utils';
 import { NuevoPacienteModal } from '@/components/modals/nuevo-paciente-modal';
+import { toast } from '@/components/ui/use-toast';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -56,26 +57,50 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
     [pacientesList, search],
   );
 
-  const handleNuevoPaciente = (data: {
+  const handleNuevoPaciente = async (data: {
     nombre: string;
     apellido: string;
     telefono: string;
     email: string;
     obraSocial: string;
   }) => {
-    const newPaciente: Paciente = {
-      id: String(Date.now()),
-      nombre: data.nombre,
-      apellido: data.apellido,
-      telefono: data.telefono,
-      email: data.email,
-      ultimoTurno: null,
-      totalTurnos: 0,
-      obraSocial:
-        data.obraSocial === 'Particular' ? null : data.obraSocial,
-      tags: [data.obraSocial === 'Particular' ? 'Particular' : 'Obra Social'],
-    };
-    setPacientesList((prev) => [newPaciente, ...prev]);
+    try {
+      const res = await fetch('/api/pacientes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast({
+          title: 'Error',
+          description: err.error || 'No se pudo crear el paciente',
+          variant: 'destructive',
+        });
+        return;
+      }
+      const json = await res.json();
+      const created = json.data;
+      const newPaciente: Paciente = {
+        id: created.id,
+        nombre: created.nombre,
+        apellido: created.apellido,
+        telefono: created.telefono,
+        email: created.email,
+        ultimoTurno: null,
+        totalTurnos: 0,
+        obraSocial: created.obraSocial,
+        tags: Array.isArray(created.tags) ? created.tags : [],
+      };
+      setPacientesList((prev) => [newPaciente, ...prev]);
+      toast({ title: 'Paciente creado', description: `${created.nombre} ${created.apellido}` });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Error de red al crear paciente',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (

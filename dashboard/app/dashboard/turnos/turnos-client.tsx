@@ -202,38 +202,92 @@ export function TurnosClient({
     setSearchText('');
   };
 
-  // ─── CRUD ──────────────────────────────────────────────
+  // ─── CRUD con API ─────────────────────────────────────
 
-  const handleNuevoTurno = (data: {
+  const handleNuevoTurno = async (data: {
     paciente: string;
     tipo: string;
     medico: string;
     hora: string;
     fecha: string;
   }) => {
-    const newTurno: TurnoData = {
-      id: String(Date.now()),
-      hora: data.hora,
-      paciente: data.paciente,
-      tipo: data.tipo,
-      medico: data.medico,
-      estado: 'pendiente',
-      fecha: data.fecha || selectedDate.toISOString().split('T')[0],
-      medicoId: '',
-      pacienteId: '',
-    };
-    setTurnos((prev) => [newTurno, ...prev]);
-    toast({
-      title: 'Turno creado',
-      description: `${data.paciente} - ${data.hora}`,
-    });
+    try {
+      // Buscar paciente que coincida
+      const busquedaPaciente = await fetch(`/api/pacientes?search=${encodeURIComponent(data.paciente)}&limit=5`);
+      const pacientesJson = await busquedaPaciente.json();
+      const pacienteEncontrado = pacientesJson.data?.[0];
+
+      // Buscar médico
+      const turnosRes = await fetch(`/api/turnos?fecha=${data.fecha}&limit=1`);
+      const turnosJson = await turnosRes.json();
+      const medicosDisponibles = turnosJson.medicos || [];
+      const medicoNombre = data.medico;
+
+      if (!pacienteEncontrado) {
+        toast({ title: 'Error', description: 'Paciente no encontrado. Creá el paciente primero.', variant: 'destructive' });
+        return;
+      }
+
+      // Crear turno vía API
+      const res = await fetch('/api/turnos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pacienteId: pacienteEncontrado.id,
+          medicoId: '',
+          fecha: data.fecha,
+          hora: data.hora,
+          tipoConsulta: data.tipo || 'presencial',
+          motivo: data.tipo,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        toast({ title: 'Error', description: err.error || 'No se pudo crear el turno', variant: 'destructive' });
+        return;
+      }
+
+      const json = await res.json();
+      const created = json.data;
+      const newTurno: TurnoData = {
+        id: created.id,
+        hora: data.hora,
+        paciente: data.paciente,
+        tipo: data.tipo,
+        medico: data.medico,
+        estado: created.estado || 'pendiente',
+        fecha: data.fecha || selectedDate.toISOString().split('T')[0],
+        medicoId: created.medicoId || '',
+        pacienteId: created.pacienteId || '',
+      };
+      setTurnos((prev) => [newTurno, ...prev]);
+      toast({ title: 'Turno creado', description: `${data.paciente} - ${data.hora}` });
+    } catch {
+      toast({ title: 'Error', description: 'Error de red al crear turno', variant: 'destructive' });
+    }
   };
 
-  const actualizarEstado = (id: string, nuevoEstado: TurnoEstado, descripcion: string) => {
+  const actualizarEstado = async (id: string, nuevoEstado: TurnoEstado, descripcion: string) => {
+    // Optimistic update
     setTurnos((prev) =>
       prev.map((t) => (t.id === id ? { ...t, estado: nuevoEstado } : t)),
     );
     toast({ title: descripcion });
+
+    try {
+      await fetch(`/api/turnos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      });
+    } catch {
+      // Revert on error
+      setTurnos((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, estado: 'pendiente' } : t)),
+      );
+      toast({ title: 'Error', description: 'No se pudo actualizar el estado', variant: 'destructive' });
+    }
   };
 
   // ─── Render ────────────────────────────────────────────
@@ -720,16 +774,16 @@ export function TurnosClient({
             <div className="space-y-4 py-2">
               <div className="space-y-1">
                 <Label>Paciente</Label>
-                <Input defaultValue={editTurno.paciente} />
+                <Input id="edit-paciente" defaultValue={editTurno.paciente} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label>Fecha</Label>
-                  <Input type="date" defaultValue={editTurno.fecha} />
+                  <Input id="edit-fecha" type="date" defaultValue={editTurno.fecha} />
                 </div>
                 <div className="space-y-1">
                   <Label>Hora</Label>
-                  <Input type="time" defaultValue={editTurno.hora} />
+                  <Input id="edit-hora" type="time" defaultValue={editTurno.hora} />
                 </div>
               </div>
               <div className="space-y-1">
@@ -757,9 +811,31 @@ export function TurnosClient({
               Cancelar
             </Button>
             <Button
-              onClick={() => {
+              onClick={async () => {
+                if (!editTurno) return;
+                const fechaEl = document.getElementById('edit-fecha') as HTMLInputElement;
+                const horaEl = document.getElementById('edit-hora') as HTMLInputElement;
+                const fecha = fechaEl?.value;
+                const hora = horaEl?.value;
+
+                try {
+                  await fetch(`/api/turnos/${editTurno.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fecha, hora }),
+                  });
+                  setTurnos((prev) =>
+                    prev.map((t) =>
+                      t.id === editTurno.id
+                        ? { ...t, fecha: fecha || t.fecha, hora: hora || t.hora }
+                        : t,
+                    ),
+                  );
+                  toast({ title: 'Turno actualizado' });
+                } catch {
+                  toast({ title: 'Error', description: 'No se pudo actualizar el turno', variant: 'destructive' });
+                }
                 setEditTurno(null);
-                toast({ title: 'Turno actualizado' });
               }}
             >
               Guardar
@@ -784,7 +860,10 @@ export function TurnosClient({
           </DialogHeader>
           <div className="space-y-2">
             <Label>Motivo de cancelación</Label>
-            <Input placeholder="Ej: El paciente solicitó cancelación" />
+            <Input
+              id="motivoCancelacion"
+              placeholder="Ej: El paciente solicitó cancelación"
+            />
           </div>
           <DialogFooter>
             <Button
@@ -795,8 +874,10 @@ export function TurnosClient({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
+              onClick={async () => {
                 if (showCancelDialog) {
+                  const motivo = (document.getElementById('motivoCancelacion') as HTMLInputElement)?.value || '';
+                  // Optimistic update
                   setTurnos((prev) =>
                     prev.map((t) =>
                       t.id === showCancelDialog
@@ -804,12 +885,25 @@ export function TurnosClient({
                         : t,
                     ),
                   );
+                  setShowCancelDialog(null);
                   toast({
                     title: 'Turno cancelado',
-                    description:
-                      'El turno fue cancelado correctamente',
+                    description: 'El turno fue cancelado correctamente',
                   });
-                  setShowCancelDialog(null);
+
+                  try {
+                    await fetch(`/api/turnos/${showCancelDialog}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ estado: 'cancelada', motivoCancelacion: motivo }),
+                    });
+                  } catch {
+                    toast({
+                      title: 'Error',
+                      description: 'No se pudo persistir la cancelación',
+                      variant: 'destructive',
+                    });
+                  }
                 }
               }}
             >

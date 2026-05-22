@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { turnos, pacientes, medicos } from '@/drizzle/schema';
+import type { InferInsertModel } from 'drizzle-orm';
 import { eq, and, gte, lt, sql, count, like, or } from 'drizzle-orm';
 
 /**
@@ -159,6 +160,124 @@ export async function GET(request: NextRequest) {
     console.error('[API] Error GET /api/turnos:', error);
     return NextResponse.json(
       { error: 'Error al obtener turnos' },
+      { status: 500 },
+    );
+  }
+}
+
+/**
+ * POST /api/turnos
+ *
+ * Crea un nuevo turno.
+ *
+ * Body (JSON):
+ * - pacienteId: string (obligatorio)
+ * - medicoId: string (obligatorio)
+ * - fecha: string (YYYY-MM-DD, obligatorio)
+ * - hora: string (HH:MM, obligatorio)
+ * - tipoConsulta: string (opcional, default 'presencial')
+ * - motivo: string (opcional)
+ * - duracionMinutos: number (opcional, default 30)
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const {
+      pacienteId,
+      medicoId,
+      fecha,
+      hora,
+      tipoConsulta,
+      motivo,
+      duracionMinutos,
+    } = body;
+
+    // Validación
+    if (!pacienteId || !medicoId || !fecha || !hora) {
+      return NextResponse.json(
+        { error: 'pacienteId, medicoId, fecha y hora son obligatorios' },
+        { status: 400 },
+      );
+    }
+
+    // Construir fechaHora completa
+    const fechaHora = new Date(`${fecha}T${hora}:00.000Z`);
+    if (isNaN(fechaHora.getTime())) {
+      return NextResponse.json(
+        { error: 'fecha u hora inválida' },
+        { status: 400 },
+      );
+    }
+
+    // Verificar que el paciente existe
+    const paciente = await db
+      .select({ id: pacientes.id })
+      .from(pacientes)
+      .where(and(eq(pacientes.id, pacienteId), sql`${pacientes.deletedAt} IS NULL`))
+      .limit(1);
+
+    if (paciente.length === 0) {
+      return NextResponse.json(
+        { error: 'Paciente no encontrado' },
+        { status: 404 },
+      );
+    }
+
+    // Verificar que el médico existe
+    const medico = await db
+      .select({ id: medicos.id })
+      .from(medicos)
+      .where(and(eq(medicos.id, medicoId), sql`${medicos.deletedAt} IS NULL`))
+      .limit(1);
+
+    if (medico.length === 0) {
+      return NextResponse.json(
+        { error: 'Médico no encontrado' },
+        { status: 404 },
+      );
+    }
+
+    // Verificar disponibilidad (sin turno en el mismo horario para el mismo médico)
+    const conflicto = await db
+      .select({ id: turnos.id })
+      .from(turnos)
+      .where(
+        and(
+          eq(turnos.medicoId, medicoId),
+          eq(turnos.fechaHora, fechaHora),
+          sql`${turnos.deletedAt} IS NULL`,
+          sql`${turnos.estado} NOT IN ('cancelada', 'no_asistio')`,
+        ),
+      )
+      .limit(1);
+
+    if (conflicto.length > 0) {
+      return NextResponse.json(
+        { error: 'El médico ya tiene un turno en ese horario' },
+        { status: 409 },
+      );
+    }
+
+    // Crear turno
+    const [nuevo] = await db
+      .insert(turnos)
+      .values({
+        pacienteId,
+        medicoId,
+        fechaHora,
+        duracionMinutos: duracionMinutos || 30,
+        motivo: motivo || null,
+        tipoConsulta: tipoConsulta || 'presencial',
+        estado: 'pendiente',
+        fuente: 'dashboard',
+      })
+      .returning();
+
+    return NextResponse.json({ data: nuevo }, { status: 201 });
+  } catch (error) {
+    console.error('[API] Error POST /api/turnos:', error);
+    return NextResponse.json(
+      { error: 'Error al crear turno' },
       { status: 500 },
     );
   }

@@ -330,48 +330,98 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
   const [recetas, setRecetas] = useState<Receta[]>(initialRecetas);
   const [showNewReceta, setShowNewReceta] = useState(false);
 
-  const handleNuevaReceta = (data: {
+  const handleNuevaReceta = async (data: {
     paciente: string;
     medicamento: string;
     dosis: string;
     duracion: string;
     indicaciones: string;
   }) => {
-    const newReceta: Receta = {
-      id: String(Date.now()),
-      paciente: data.paciente,
-      medicamento: data.medicamento,
-      dosis: data.dosis,
-      duracion: data.duracion || 'Según indicación',
-      estado: 'activa',
-      vence: new Date(Date.now() + 30 * 86400000)
-        .toISOString()
-        .split('T')[0],
-      renovable: true,
-      fechaCreacion: new Date().toISOString().split('T')[0],
-      indicaciones: data.indicaciones,
-    };
-    setRecetas((prev) => [newReceta, ...prev]);
+    try {
+      // Buscar paciente
+      const busqueda = await fetch(`/api/pacientes?search=${encodeURIComponent(data.paciente)}&limit=5`);
+      const pacientesJson = await busqueda.json();
+      const paciente = pacientesJson.data?.[0];
+
+      if (!paciente) {
+        toast({ title: 'Error', description: 'Paciente no encontrado. Creá el paciente primero.', variant: 'destructive' });
+        return;
+      }
+
+      const res = await fetch('/api/recetas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pacienteId: paciente.id,
+          medicamento: data.medicamento,
+          dosis: data.dosis,
+          duracion: data.duracion,
+          indicaciones: data.indicaciones,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        toast({ title: 'Error', description: err.error || 'No se pudo crear la receta', variant: 'destructive' });
+        return;
+      }
+
+      const json = await res.json();
+      const created = json.data;
+      const newReceta: Receta = {
+        id: created.id,
+        paciente: data.paciente,
+        medicamento: created.medicamento,
+        dosis: created.dosis,
+        duracion: created.duracion || 'Según indicación',
+        estado: 'activa',
+        vence: created.fechaFin || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+        renovable: true,
+        fechaCreacion: new Date().toISOString().split('T')[0],
+        indicaciones: created.indicaciones,
+      };
+      setRecetas((prev) => [newReceta, ...prev]);
+      toast({ title: 'Receta creada', description: `${created.medicamento} para ${data.paciente}` });
+    } catch {
+      toast({ title: 'Error', description: 'Error de red al crear receta', variant: 'destructive' });
+    }
   };
 
-  const handleRenovar = (receta: Receta) => {
-    const nuevaVence = new Date();
-    nuevaVence.setDate(nuevaVence.getDate() + 30);
+  const handleRenovar = async (receta: Receta) => {
+    try {
+      const res = await fetch(`/api/recetas/${receta.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'activa' }),
+      });
 
-    const renovada: Receta = {
-      ...receta,
-      id: String(Date.now()),
-      estado: 'activa',
-      fechaCreacion: new Date().toISOString().split('T')[0],
-      vence: nuevaVence.toISOString().split('T')[0],
-      renovable: true,
-    };
+      if (!res.ok) {
+        toast({ title: 'Error', description: 'No se pudo renovar la receta', variant: 'destructive' });
+        return;
+      }
 
-    setRecetas((prev) => [renovada, ...prev]);
-    toast({
-      title: '🔄 Receta renovada',
-      description: `${receta.medicamento} para ${receta.paciente} - Vence ${formatDate(renovada.vence, 'dd/MM/yyyy')}`,
-    });
+      const json = await res.json();
+      const updated = json.data;
+      const nuevaVence = new Date();
+      nuevaVence.setDate(nuevaVence.getDate() + 30);
+
+      const renovada: Receta = {
+        ...receta,
+        id: String(Date.now()),
+        estado: 'activa',
+        fechaCreacion: new Date().toISOString().split('T')[0],
+        vence: nuevaVence.toISOString().split('T')[0],
+        renovable: true,
+      };
+
+      setRecetas((prev) => [renovada, ...prev]);
+      toast({
+        title: '🔄 Receta renovada',
+        description: `${receta.medicamento} para ${receta.paciente} - Vence ${formatDate(renovada.vence, 'dd/MM/yyyy')}`,
+      });
+    } catch {
+      toast({ title: 'Error', description: 'Error de red al renovar receta', variant: 'destructive' });
+    }
   };
 
   const renderRecetaCard = (

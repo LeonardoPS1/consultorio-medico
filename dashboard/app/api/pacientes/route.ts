@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { pacientes, turnos } from '@/drizzle/schema';
+import { pacientes, turnos, pacienteEventos } from '@/drizzle/schema';
 import { eq, and, sql, count, gt, gte, or, like } from 'drizzle-orm';
 
 /**
@@ -115,6 +115,79 @@ export async function GET(request: NextRequest) {
     console.error('[API] Error GET /api/pacientes:', error);
     return NextResponse.json(
       { error: 'Error al obtener pacientes' },
+      { status: 500 },
+    );
+  }
+}
+
+/**
+ * POST /api/pacientes
+ *
+ * Crea un nuevo paciente.
+ *
+ * Body (JSON):
+ * - nombre: string (obligatorio)
+ * - apellido: string (obligatorio)
+ * - telefono: string (obligatorio, único)
+ * - email: string (opcional)
+ * - obraSocial: string (opcional)
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { nombre, apellido, telefono, email, obraSocial } = body;
+
+    // Validación
+    if (!nombre?.trim() || !apellido?.trim() || !telefono?.trim()) {
+      return NextResponse.json(
+        { error: 'nombre, apellido y telefono son obligatorios' },
+        { status: 400 },
+      );
+    }
+
+    // Verificar si ya existe un paciente con ese teléfono
+    const existente = await db
+      .select({ id: pacientes.id })
+      .from(pacientes)
+      .where(and(eq(pacientes.telefono, telefono), sql`${pacientes.deletedAt} IS NULL`))
+      .limit(1);
+
+    if (existente.length > 0) {
+      return NextResponse.json(
+        { error: 'Ya existe un paciente con ese teléfono' },
+        { status: 409 },
+      );
+    }
+
+    // Crear paciente
+    const [nuevo] = await db
+      .insert(pacientes)
+      .values({
+        nombre: nombre.trim(),
+        apellido: apellido.trim(),
+        telefono: telefono.trim(),
+        email: email?.trim() || null,
+        obraSocial: obraSocial || null,
+        tags: obraSocial === 'Particular' ? ['Particular'] : ['Obra Social'],
+        consentimientoWhatsapp: true,
+        canalPreferido: 'whatsapp',
+        fuente: 'dashboard',
+      })
+      .returning();
+
+    // Registrar evento de creación
+    await db.insert(pacienteEventos).values({
+      pacienteId: nuevo.id,
+      tipo: 'creado',
+      descripcion: 'Paciente registrado desde el dashboard',
+      metadata: { source: 'dashboard', creadoPor: 'admin' },
+    });
+
+    return NextResponse.json({ data: nuevo }, { status: 201 });
+  } catch (error) {
+    console.error('[API] Error POST /api/pacientes:', error);
+    return NextResponse.json(
+      { error: 'Error al crear paciente' },
       { status: 500 },
     );
   }
