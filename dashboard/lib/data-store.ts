@@ -728,6 +728,171 @@ export async function updateMensajeByTwilioSid(
 }
 
 // ============================================================
+// GET MENSAJES (para Webhook Logs Dashboard)
+// ============================================================
+
+export interface GetMensajesOptions {
+  twilioStatus?: string;
+  desde?: string;
+  hasta?: string;
+  limit?: number;
+  offset?: number;
+  search?: string;
+}
+
+export interface MensajeWithPaciente extends MensajeData {
+  pacienteNombre: string;
+  pacienteApellido: string;
+  pacienteTelefono: string;
+  conversacionEstado: string;
+  conversacionCanal: string;
+}
+
+export async function getMensajes(
+  options: GetMensajesOptions = {}
+): Promise<{ mensajes: MensajeWithPaciente[]; total: number; porEstado: Record<string, number> }> {
+  const pg = await checkPostgres();
+  if (pg) {
+    const { db } = await import('@/lib/db');
+    const { mensajes, conversaciones, pacientes } = await import('@/drizzle/schema');
+    const { eq, and, like, gte, lte, desc, sql, count } = await import('drizzle-orm');
+
+    const conditions: any[] = [];
+
+    if (options.twilioStatus) {
+      conditions.push(eq(mensajes.twilioStatus, options.twilioStatus));
+    }
+    if (options.desde) {
+      conditions.push(gte(mensajes.createdAt, new Date(options.desde)));
+    }
+    if (options.hasta) {
+      conditions.push(lte(mensajes.createdAt, new Date(options.hasta)));
+    }
+    if (options.search) {
+      conditions.push(
+        sql`(LOWER(${mensajes.contenido}) LIKE LOWER(${'%' + options.search + '%'}) OR LOWER(${pacientes.nombre}) LIKE LOWER(${'%' + options.search + '%'}) OR LOWER(${pacientes.apellido}) LIKE LOWER(${'%' + options.search + '%'}))`
+      );
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    // Get total count
+    const countResult = await db
+      .select({ total: count() })
+      .from(mensajes)
+      .leftJoin(conversaciones, eq(mensajes.conversacionId, conversaciones.id))
+      .leftJoin(pacientes, eq(conversaciones.pacienteId, pacientes.id))
+      .where(whereClause);
+
+    const total = Number(countResult[0]?.total || 0);
+
+    // Get messages with pagination
+    const limit = options.limit || 50;
+    const offset = options.offset || 0;
+
+    const rows = await db
+      .select({
+        id: mensajes.id,
+        conversacionId: mensajes.conversacionId,
+        rol: mensajes.rol,
+        contenido: mensajes.contenido,
+        contenidoProcesado: mensajes.contenidoProcesado,
+        tipo: mensajes.tipo,
+        intencion: mensajes.intencion,
+        confianzaIntencion: mensajes.confianzaIntencion,
+        twilioSid: mensajes.twilioSid,
+        twilioStatus: mensajes.twilioStatus,
+        costo: mensajes.costo,
+        n8nExecutionId: mensajes.n8nExecutionId,
+        metadata: mensajes.metadata,
+        createdAt: mensajes.createdAt,
+        pacienteNombre: pacientes.nombre,
+        pacienteApellido: pacientes.apellido,
+        pacienteTelefono: pacientes.telefono,
+        conversacionEstado: conversaciones.estado,
+        conversacionCanal: conversaciones.canal,
+      })
+      .from(mensajes)
+      .leftJoin(conversaciones, eq(mensajes.conversacionId, conversaciones.id))
+      .leftJoin(pacientes, eq(conversaciones.pacienteId, pacientes.id))
+      .where(whereClause)
+      .orderBy(desc(mensajes.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    // Count by status
+    const statusCounts = await db
+      .select({
+        status: mensajes.twilioStatus,
+        total: count(),
+      })
+      .from(mensajes)
+      .groupBy(mensajes.twilioStatus);
+
+    const porEstado: Record<string, number> = {};
+    for (const s of statusCounts) {
+      if (s.status) porEstado[s.status] = Number(s.total);
+    }
+
+    return {
+      mensajes: rows.map((r) => ({
+        id: r.id,
+        conversacionId: r.conversacionId,
+        rol: r.rol,
+        contenido: r.contenido,
+        contenidoProcesado: r.contenidoProcesado || undefined,
+        tipo: r.tipo,
+        intencion: r.intencion || undefined,
+        confianzaIntencion: r.confianzaIntencion ? Number(r.confianzaIntencion) : undefined,
+        twilioSid: r.twilioSid || undefined,
+        twilioStatus: r.twilioStatus || undefined,
+        n8nExecutionId: r.n8nExecutionId || undefined,
+        metadata: asRecord(r.metadata),
+        createdAt: r.createdAt.toISOString(),
+        pacienteNombre: r.pacienteNombre || '',
+        pacienteApellido: r.pacienteApellido || '',
+        pacienteTelefono: r.pacienteTelefono || '',
+        conversacionEstado: r.conversacionEstado || '',
+        conversacionCanal: r.conversacionCanal || '',
+      })),
+      total,
+      porEstado,
+    };
+  }
+
+  // Fallback JSON
+  const allMensajes = readJSON<MensajeWithPaciente[]>(MENSAJES_FILE, []);
+  const filtered = allMensajes.filter((m) => {
+    if (options.twilioStatus && m.twilioStatus !== options.twilioStatus) return false;
+    if (options.desde && new Date(m.createdAt) < new Date(options.desde)) return false;
+    if (options.hasta && new Date(m.createdAt) > new Date(options.hasta)) return false;
+    if (options.search) {
+      const s = options.search.toLowerCase();
+      if (!m.contenido.toLowerCase().includes(s) && !m.pacienteNombre.toLowerCase().includes(s)) return false;
+    }
+    return true;
+  });
+
+  const sorted = filtered.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  const limit = options.limit || 50;
+  const offset = options.offset || 0;
+
+  const porEstado: Record<string, number> = {};
+  for (const m of allMensajes) {
+    if (m.twilioStatus) porEstado[m.twilioStatus] = (porEstado[m.twilioStatus] || 0) + 1;
+  }
+
+  return {
+    mensajes: sorted.slice(offset, offset + limit),
+    total: filtered.length,
+    porEstado,
+  };
+}
+
+// ============================================================
 // USUARIOS (para auth sin PostgreSQL)
 // ============================================================
 

@@ -40,6 +40,7 @@ const navItems: NavItem[] = [
   { title: 'Turnos', href: '/dashboard/turnos', icon: Calendar, feature: 'turnos' },
   { title: 'Pacientes', href: '/dashboard/pacientes', icon: Users, feature: 'pacientes' },
   { title: 'Conversaciones', href: '/dashboard/conversaciones', icon: MessageSquare, feature: 'conversaciones' },
+  { title: 'Registro Webhooks', href: '/dashboard/webhooks', icon: MessageSquare, feature: 'conversaciones' },
   { title: 'Recetas', href: '/dashboard/recetas', icon: Syringe, feature: 'recetas' },
   { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3, feature: 'reportes' },
   { title: 'Configuración', href: '/dashboard/configuracion', icon: Settings },
