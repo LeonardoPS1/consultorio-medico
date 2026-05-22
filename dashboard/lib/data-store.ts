@@ -650,6 +650,83 @@ export async function createMensaje(data: {
   return nuevo;
 }
 
+/**
+ * Actualiza el estado de un mensaje usando su Twilio SID.
+ * Sirve para procesar los Status Callbacks de Twilio.
+ */
+export async function updateMensajeByTwilioSid(
+  twilioSid: string,
+  updates: {
+    twilioStatus?: string;
+    costo?: number;
+    metadata?: Record<string, unknown>;
+  }
+): Promise<MensajeData | null> {
+  const pg = await checkPostgres();
+  if (pg) {
+    const { db } = await import('@/lib/db');
+    const { mensajes } = await import('@/drizzle/schema');
+    const { eq } = await import('drizzle-orm');
+
+    const existing = await db
+      .select()
+      .from(mensajes)
+      .where(eq(mensajes.twilioSid, twilioSid))
+      .limit(1);
+
+    if (existing.length === 0) return null;
+
+    const updateFields: Record<string, unknown> = {};
+    if (updates.twilioStatus !== undefined) updateFields.twilioStatus = updates.twilioStatus;
+    if (updates.costo !== undefined) updateFields.costo = String(updates.costo);
+    if (updates.metadata !== undefined) updateFields.metadata = updates.metadata;
+
+    await db
+      .update(mensajes)
+      .set(updateFields)
+      .where(eq(mensajes.twilioSid, twilioSid));
+
+    const updated = await db
+      .select()
+      .from(mensajes)
+      .where(eq(mensajes.twilioSid, twilioSid))
+      .limit(1);
+
+    if (updated.length === 0) return null;
+    const m = updated[0];
+    return {
+      id: m.id,
+      conversacionId: m.conversacionId,
+      rol: m.rol,
+      contenido: m.contenido,
+      contenidoProcesado: m.contenidoProcesado || undefined,
+      tipo: m.tipo,
+      intencion: m.intencion || undefined,
+      confianzaIntencion: m.confianzaIntencion ? Number(m.confianzaIntencion) : undefined,
+      twilioSid: m.twilioSid || undefined,
+      twilioStatus: m.twilioStatus || undefined,
+      n8nExecutionId: m.n8nExecutionId || undefined,
+      metadata: asRecord(m.metadata),
+      createdAt: m.createdAt.toISOString(),
+    };
+  }
+
+  // Fallback JSON
+  const mensajes = readJSON<MensajeData[]>(MENSAJES_FILE, []);
+  const idx = mensajes.findIndex((m) => m.twilioSid === twilioSid);
+  if (idx === -1) return null;
+
+  if (updates.twilioStatus !== undefined) mensajes[idx].twilioStatus = updates.twilioStatus;
+  if (updates.costo !== undefined) {
+    mensajes[idx].metadata = { ...mensajes[idx].metadata, costo: updates.costo };
+  }
+  if (updates.metadata !== undefined) {
+    mensajes[idx].metadata = { ...mensajes[idx].metadata, ...updates.metadata };
+  }
+  writeJSON(MENSAJES_FILE, mensajes);
+  return mensajes[idx];
+}
+
 // ============================================================
 // USUARIOS (para auth sin PostgreSQL)
 // ============================================================

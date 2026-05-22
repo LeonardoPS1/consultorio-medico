@@ -6,6 +6,7 @@ import {
   getConversaciones,
   createConversacion,
   createMensaje,
+  updateMensajeByTwilioSid,
 } from '@/lib/data-store';
 
 /**
@@ -129,6 +130,46 @@ export async function POST(request: NextRequest) {
     if (!validateTwilioRequest(request, params)) {
       console.warn('[Twilio] ⚠️ Firma inválida — posible spoofing');
       return NextResponse.json({ error: 'Firma inválida' }, { status: 403 });
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // STATUS CALLBACK: Twilio nos avisa el estado de un mensaje
+    // enviado (entregado, leído, falló, etc.)
+    // ─────────────────────────────────────────────────────────────
+    const messageStatus = params.MessageStatus;
+    const callbackMessageSid = params.MessageSid;
+
+    if (messageStatus && callbackMessageSid) {
+      const errorCode = params.ErrorCode || null;
+      const errorMessage = params.ErrorMessage || null;
+
+      console.log(
+        `[Twilio] Status Callback — SID: ${callbackMessageSid}, Estado: ${messageStatus}` +
+          (errorCode ? `, Error: ${errorCode} — ${errorMessage}` : '')
+      );
+
+      // Actualizar el mensaje en DB
+      const updated = await updateMensajeByTwilioSid(callbackMessageSid, {
+        twilioStatus: messageStatus,
+        metadata: errorCode ? { errorCode, errorMessage } : undefined,
+      });
+
+      if (updated) {
+        console.log(`[Twilio] Mensaje ${callbackMessageSid} actualizado → ${messageStatus}`);
+
+        // Si el mensaje falló, loguear con más detalle
+        if (messageStatus === 'failed' || messageStatus === 'undelivered') {
+          console.error(
+            `[Twilio] ⚠️ Mensaje fallido SID: ${callbackMessageSid}` +
+              `, Error: ${errorCode} — ${errorMessage || 'sin detalle'}`
+          );
+        }
+      } else {
+        console.warn(`[Twilio] Mensaje ${callbackMessageSid} no encontrado en DB (puede ser de antes del tracking)`);
+      }
+
+      // Twilio espera un 200 vacío para status callbacks
+      return new NextResponse(null, { status: 200 });
     }
 
     if (!from || !body) {
