@@ -5,8 +5,8 @@
  * Refactorizado con: apiHandler + Zod + service layer
  */
 
-import { NextRequest } from 'next/server';
-import { apiHandler, success, created } from '@/lib/api-handler';
+import { NextRequest, NextResponse } from 'next/server';
+import { apiHandler, created } from '@/lib/api-handler';
 import { parseBody } from '@/lib/validations';
 import { createTurnoSchema } from '@/lib/validations';
 import { turnosService } from '@/lib/services/turnos';
@@ -22,7 +22,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0;
 
   const result = await turnosService.list(fechaStr, estado, medico, tipo, search, limit, offset);
-  return success(result);
+  return NextResponse.json(result);
 });
 
 export const POST = apiHandler(async (request: NextRequest) => {
