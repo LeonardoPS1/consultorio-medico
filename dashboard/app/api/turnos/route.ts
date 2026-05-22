@@ -269,7 +269,7 @@ export async function POST(request: NextRequest) {
         motivo: motivo || null,
         tipoConsulta: tipoConsulta || 'presencial',
         estado: 'pendiente',
-        fuente: 'dashboard',
+        fuente: 'web',
       })
       .returning();
 
