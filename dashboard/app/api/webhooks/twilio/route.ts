@@ -18,10 +18,14 @@ async function forwardToN8n(params: Record<string, string>) {
   if (!n8nWebhookUrl) return;
 
   const body = new URLSearchParams(params).toString();
+  const webhookSecret = process.env.N8N_WEBHOOK_SECRET || 'aicoremed-secret-key-2026';
   try {
     await fetch(n8nWebhookUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'x-webhook-secret': webhookSecret,
+      },
       body,
       signal: AbortSignal.timeout(5000),
     });
