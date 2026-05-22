@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
     const fechaStr =
       searchParams.get('fecha') ||
       new Date().toISOString().split('T')[0];
-    const fechaBase = new Date(fechaStr + 'T00:00:00.000Z');
-    const fechaFin = new Date(fechaBase.getTime() + 24 * 60 * 60 * 1000);
+    const fechaBaseIso = fechaStr + 'T00:00:00.000Z';
+    const fechaFinIso = new Date(new Date(fechaBaseIso).getTime() + 24 * 60 * 60 * 1000).toISOString();
 
     const estado = searchParams.get('estado') || undefined;
     const medico = searchParams.get('medico') || undefined;
@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
     // ─── Filtros ───────────────────────────────────────
 
     const whereConditions = and(
-      gte(turnos.fechaHora, fechaBase),
-      lt(turnos.fechaHora, fechaFin),
+      gte(turnos.fechaHora, fechaBaseIso),
+      lt(turnos.fechaHora, fechaFinIso),
       sql`${turnos.deletedAt} IS NULL`,
       estado ? eq(turnos.estado, estado) : undefined,
       tipo ? eq(turnos.tipoConsulta, tipo) : undefined,
@@ -66,8 +66,8 @@ export async function GET(request: NextRequest) {
       .from(turnos)
       .where(
         and(
-          gte(turnos.fechaHora, fechaBase),
-          lt(turnos.fechaHora, fechaFin),
+          gte(turnos.fechaHora, fechaBaseIso),
+          lt(turnos.fechaHora, fechaFinIso),
           sql`${turnos.deletedAt} IS NULL`,
         ),
       )
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
       .from(medicos)
       .where(
         and(
-          sql`EXISTS (SELECT 1 FROM ${turnos} WHERE ${turnos.medicoId} = ${medicos.id} AND ${turnos.deletedAt} IS NULL AND ${turnos.fechaHora} >= ${fechaBase} AND ${turnos.fechaHora} < ${fechaFin})`,
+          sql`EXISTS (SELECT 1 FROM ${turnos} WHERE ${turnos.medicoId} = ${medicos.id} AND ${turnos.deletedAt} IS NULL AND ${turnos.fechaHora} >= ${fechaBaseIso} AND ${turnos.fechaHora} < ${fechaFinIso})`,
           sql`${medicos.deletedAt} IS NULL`,
         ),
       );
@@ -99,8 +99,8 @@ export async function GET(request: NextRequest) {
       .from(turnos)
       .where(
         and(
-          gte(turnos.fechaHora, fechaBase),
-          lt(turnos.fechaHora, fechaFin),
+          gte(turnos.fechaHora, fechaBaseIso),
+          lt(turnos.fechaHora, fechaFinIso),
           sql`${turnos.deletedAt} IS NULL`,
         ),
       )
