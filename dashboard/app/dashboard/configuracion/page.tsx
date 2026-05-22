@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { canAccess } from '@/lib/features';
+import { MedicosSection } from '@/components/config/medicos-section';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -595,6 +596,11 @@ function ConfigContent() {
 
           {/* Modal Invitar */}
           <InviteModal open={showInviteModal} onOpenChange={setShowInviteModal} />
+
+          {/* Sección Médicos */}
+          <div className="mt-4">
+            <MedicosSection plan={userPlan} />
+          </div>
         </TabsContent>
         )}
       </Tabs>

@@ -18,10 +18,13 @@ import {
   X,
   Users,
   RotateCcw,
+  CalendarPlus,
+  MessageSquare,
 } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { CalendarView } from '@/components/calendar/calendar-view';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
+import { descargarICS } from '@/lib/ics';
 import { toast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -689,19 +692,55 @@ export function TurnosClient({
                           </Button>
                           {turno.estado !== 'atendido' &&
                             turno.estado !== 'cancelada' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setShowCancelDialog(turno.id);
-                                }}
-                              >
-                                <XCircle className="h-3.5 w-3.5 mr-1" />
-                                Cancelar
-                              </Button>
-                            )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowCancelDialog(turno.id);
+                            }}
+                          >
+                            <XCircle className="h-3.5 w-3.5 mr-1" />
+                            Cancelar
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hoverable:hover:text-primary"
+                          title="Agregar a calendario"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            descargarICS({
+                              id: turno.id,
+                              fechaHora: `${turno.fecha}T${turno.hora}:00.000Z`,
+                              duracionMinutos: 30,
+                              paciente: turno.paciente,
+                              medico: turno.medico,
+                              motivo: turno.tipo,
+                            });
+                          }}
+                        >
+                          <CalendarPlus className="h-4 w-4" />
+                        </Button>
+                        {turno.estado === 'atendido' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-emerald-600 hoverable:hover:text-emerald-700"
+                            title="Enviar encuesta de satisfaccion"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const msg = encodeURIComponent(
+                                `📋 *Encuesta de Satisfaccion*%0A%0AHola ${turno.paciente}, ¿como calificarias tu consulta del ${turno.fecha}?%0A%0AResponde con un numero del 1 al 5:%0A1 😞 Muy mala%0A2 😕 Regular%0A3 😐 Normal%0A4 🙂 Buena%0A5 😍 Excelente%0A%0A¡Gracias por tu tiempo!`
+                              );
+                              window.open(`https://wa.me/?text=${msg}`, '_blank');
+                            }}
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                        )}
                         </div>
                       </div>
                     ))}
