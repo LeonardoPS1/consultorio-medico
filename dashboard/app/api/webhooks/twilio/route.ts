@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateRequest } from 'twilio';
+import { withRateLimit } from '@/lib/rate-limit';
 import {
   getPacienteByTelefono,
   createPaciente,
@@ -150,7 +151,7 @@ function validateTwilioRequest(
  *
  * Responde con TwiML para que Twilio procese la respuesta.
  */
-export async function POST(request: NextRequest) {
+export const POST = withRateLimit(async function POST(request: NextRequest) {
   try {
     // Twilio envía form-data, pero también aceptamos JSON para testing
     let from: string;
@@ -345,7 +346,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}, { maxRequests: 60, windowMs: 60_000 }); // 60 requests/min para Twilio
 
 /**
  * GET /api/webhooks/twilio
