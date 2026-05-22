@@ -16,43 +16,39 @@
       }
     },
     {
-      "id": "query-reminders-24h",
+      "id": "query-24h",
       "name": "PG - Turnos Próximas 24hs",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
-      "position": [250, 200],
+      "position": [250, 150],
+      "credentials": {
+        "postgres": { "id": "fersBxOXicK7tW99", "name": "Consultorio - postgres" }
+      },
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT t.id, t.fecha_hora, t.estado,\n  p.id as paciente_id, p.nombre, p.apellido, p.telefono,\n  m.nombre as medico_nombre\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nJOIN medicos m ON m.id = t.medico_id\nWHERE t.estado IN ('pendiente', 'confirmada')\n  AND t.recordatorio_24h_enviado = FALSE\n  AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '24 hours'\nORDER BY t.fecha_hora;"
+        "query": "SELECT t.id, t.fecha_hora, t.estado,\n  p.id as paciente_id, p.nombre, p.apellido, p.telefono,\n  m.nombre as medico_nombre\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nJOIN medicos m ON m.id = t.medico_id\nWHERE t.estado IN ('pendiente', 'confirmada')\n  AND t.recordatorio_24h_enviado = FALSE\n  AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '24 hours'\n  AND t.fecha_hora > NOW() + INTERVAL '1 hour' -- no overlap with 1h reminders\n  AND p.consentimiento_whatsapp = TRUE\n  AND EXTRACT(HOUR FROM NOW()) BETWEEN 8 AND 20 -- solo horario diurno\nORDER BY t.fecha_hora;"
       }
     },
     {
-      "id": "query-reminders-1h",
+      "id": "query-1h",
       "name": "PG - Turnos Próxima 1h",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
-      "position": [250, 400],
+      "position": [250, 450],
+      "credentials": {
+        "postgres": { "id": "fersBxOXicK7tW99", "name": "Consultorio - postgres" }
+      },
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT t.id, t.fecha_hora, t.estado,\n  p.id as paciente_id, p.nombre, p.apellido, p.telefono,\n  m.nombre as medico_nombre\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nJOIN medicos m ON m.id = t.medico_id\nWHERE t.estado IN ('pendiente', 'confirmada')\n  AND t.recordatorio_1h_enviado = FALSE\n  AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '1 hour'\nORDER BY t.fecha_hora;"
+        "query": "SELECT t.id, t.fecha_hora, t.estado,\n  p.id as paciente_id, p.nombre, p.apellido, p.telefono,\n  m.nombre as medico_nombre\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nJOIN medicos m ON m.id = t.medico_id\nWHERE t.estado IN ('pendiente', 'confirmada')\n  AND t.recordatorio_1h_enviado = FALSE\n  AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '1 hour'\n  AND p.consentimiento_whatsapp = TRUE\n  AND EXTRACT(HOUR FROM NOW()) BETWEEN 8 AND 20 -- solo horario diurno\nORDER BY t.fecha_hora;"
       }
     },
     {
-      "id": "merge-reminders",
-      "name": "Combinar Recordatorios",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 2,
-      "position": [500, 300],
-      "parameters": {
-        "mode": "append"
-      }
-    },
-    {
-      "id": "is-empty-check",
-      "name": "¿Hay turnos?",
+      "id": "if-24h",
+      "name": "¿Hay turnos 24h?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [750, 300],
+      "position": [500, 150],
       "parameters": {
         "conditions": {
           "number": [
@@ -62,39 +58,84 @@
       }
     },
     {
-      "id": "send-24h-reminder",
+      "id": "if-1h",
+      "name": "¿Hay turnos 1h?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [500, 450],
+      "parameters": {
+        "conditions": {
+          "number": [
+            { "value1": "={{ $items().length }}", "operation": "larger", "value2": 0 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "template-24h",
+      "name": "Plantilla 24h: Armar Mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 100],
+      "parameters": {
+        "language": "javaScript",
+        "code": "// Template: Recordatorio 24h\n// Editá este contenido desde el Dashboard en Configuración → Plantillas WhatsApp\nconst TEMPLATE = `👋 Hola {{nombre}}! Te recordamos que tenés un turno mañana {{fecha_hora}} con {{medico_nombre}}. Respondé CONFIRMAR para confirmar tu asistencia. ¡Gracias! 😊`;\n\nreturn items.map(item => {\n  let body = TEMPLATE;\n  const vars = item.json;\n  // Reemplazar {{variables}} con los valores del turno\n  body = body.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (match, key) => {\n    return vars[key] !== undefined ? String(vars[key]) : match;\n  });\n  return { json: { ...vars, body } };\n});"
+      }
+    },
+    {
+      "id": "template-1h",
+      "name": "Plantilla 1h: Armar Mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 400],
+      "parameters": {
+        "language": "javaScript",
+        "code": "// Template: Recordatorio 1h\n// Editá este contenido desde el Dashboard en Configuración → Plantillas WhatsApp\nconst TEMPLATE = `⏰ Recordatorio: en 1 hora tenés turno con {{medico_nombre}}. Te esperamos! 🏥`;\n\nreturn items.map(item => {\n  let body = TEMPLATE;\n  const vars = item.json;\n  body = body.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (match, key) => {\n    return vars[key] !== undefined ? String(vars[key]) : match;\n  });\n  return { json: { ...vars, body } };\n});"
+      }
+    },
+    {
+      "id": "twilio-24h",
       "name": "Twilio - Recordatorio 24h",
       "type": "n8n-nodes-base.twilio",
       "typeVersion": 2,
-      "position": [1000, 150],
+      "position": [1000, 100],
+      "credentials": {
+        "twilioApi": { "id": "aE31QgQsM9spWb5a", "name": "Consultorio - Twilio API" }
+      },
       "parameters": {
         "resource": "message",
         "operation": "create",
         "to": "={{ 'whatsapp:+549' + $json.telefono }}",
-        "from": "{{ $env.TWILIO_WHATSAPP_NUMBER }}",
-        "body": "={{ '👋 Hola ' + $json.nombre + '! Te recordamos que tenés un turno mañana ' + $json.fecha_hora + ' con ' + $json.medico_nombre + '. Respondé CONFIRMAR para confirmar tu asistencia. ¡Gracias! 😊' }}"
+        "from": "={{ $env.TWILIO_WHATSAPP_NUMBER }}",
+        "body": "={{ $json.body }}"
       }
     },
     {
-      "id": "send-1h-reminder",
+      "id": "twilio-1h",
       "name": "Twilio - Recordatorio 1h",
       "type": "n8n-nodes-base.twilio",
       "typeVersion": 2,
-      "position": [1000, 450],
+      "position": [1000, 400],
+      "credentials": {
+        "twilioApi": { "id": "aE31QgQsM9spWb5a", "name": "Consultorio - Twilio API" }
+      },
       "parameters": {
         "resource": "message",
         "operation": "create",
         "to": "={{ 'whatsapp:+549' + $json.telefono }}",
-        "from": "{{ $env.TWILIO_WHATSAPP_NUMBER }}",
-        "body": "={{ '⏰ Recordatorio: en 1 hora tenés turno con ' + $json.medico_nombre + '. Te esperamos! 🏥' }}"
+        "from": "={{ $env.TWILIO_WHATSAPP_NUMBER }}",
+        "body": "={{ $json.body }}"
       }
     },
     {
-      "id": "update-24h-flag",
+      "id": "mark-24h",
       "name": "PG - Marcar Recordatorio 24h",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
-      "position": [1250, 150],
+      "position": [1250, 100],
+      "credentials": {
+        "postgres": { "id": "fersBxOXicK7tW99", "name": "Consultorio - postgres" }
+      },
       "parameters": {
         "operation": "executeQuery",
         "query": "UPDATE turnos SET recordatorio_24h_enviado = TRUE, updated_at = NOW() WHERE id = $1;",
@@ -104,11 +145,14 @@
       }
     },
     {
-      "id": "update-1h-flag",
+      "id": "mark-1h",
       "name": "PG - Marcar Recordatorio 1h",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
-      "position": [1250, 450],
+      "position": [1250, 400],
+      "credentials": {
+        "postgres": { "id": "fersBxOXicK7tW99", "name": "Consultorio - postgres" }
+      },
       "parameters": {
         "operation": "executeQuery",
         "query": "UPDATE turnos SET recordatorio_1h_enviado = TRUE, updated_at = NOW() WHERE id = $1;",
@@ -118,16 +162,19 @@
       }
     },
     {
-      "id": "log-recordatorios",
+      "id": "log",
       "name": "PG - Log de Envío",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
-      "position": [1250, 700],
+      "position": [1500, 250],
+      "credentials": {
+        "postgres": { "id": "fersBxOXicK7tW99", "name": "Consultorio - postgres" }
+      },
       "parameters": {
         "operation": "executeQuery",
         "query": "INSERT INTO workflow_logs (workflow_id, execution_id, nivel, mensaje, metadata)\nVALUES ('workflow-03', $1, 'info', $2, $3);",
         "additionalFields": {
-          "queryParams": "={{ [$json.executionId, 'Recordatorios procesados: ' + $items().length + ' turnos', JSON.stringify({turnos: $items().length})] }}"
+          "queryParams": "={{ [$json.executionId, 'Recordatorio enviado - turno: ' + $json.id, JSON.stringify({turno_id: $json.id, paciente: $json.nombre + ' ' + $json.apellido})] }}"
         }
       }
     }
@@ -142,19 +189,28 @@
       ]
     },
     "PG - Turnos Próximas 24hs": {
-      "main": [[{ "node": "Combinar Recordatorios", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "¿Hay turnos 24h?", "type": "main", "index": 0 }]]
     },
     "PG - Turnos Próxima 1h": {
-      "main": [[{ "node": "Combinar Recordatorios", "type": "main", "index": 1 }]]
+      "main": [[{ "node": "¿Hay turnos 1h?", "type": "main", "index": 0 }]]
     },
-    "Combinar Recordatorios": {
-      "main": [[{ "node": "¿Hay turnos?", "type": "main", "index": 0 }]]
-    },
-    "¿Hay turnos?": {
+    "¿Hay turnos 24h?": {
       "main": [
-        [{ "node": "Twilio - Recordatorio 24h", "type": "main", "index": 0 }],
+        [{ "node": "Plantilla 24h: Armar Mensaje", "type": "main", "index": 0 }],
         []
       ]
+    },
+    "¿Hay turnos 1h?": {
+      "main": [
+        [{ "node": "Plantilla 1h: Armar Mensaje", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Plantilla 24h: Armar Mensaje": {
+      "main": [[{ "node": "Twilio - Recordatorio 24h", "type": "main", "index": 0 }]]
+    },
+    "Plantilla 1h: Armar Mensaje": {
+      "main": [[{ "node": "Twilio - Recordatorio 1h", "type": "main", "index": 0 }]]
     },
     "Twilio - Recordatorio 24h": {
       "main": [[{ "node": "PG - Marcar Recordatorio 24h", "type": "main", "index": 0 }]]

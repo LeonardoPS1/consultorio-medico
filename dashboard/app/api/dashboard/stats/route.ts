@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { turnos, pacientes, conversaciones, pacienteEventos, mensajes } from '@/drizzle/schema';
-import { eq, and, gte, lte, lt, desc, sql, count } from 'drizzle-orm';
+import { eq, and, gte, lte, lt, desc, sql, count, avg, ne, isNotNull } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/dashboard/stats
  *
  * Devuelve los datos necesarios para el panel principal del dashboard:
- * - KPIs (turnos hoy, pacientes nuevos, mensajes pendientes, alertas)
+ * - KPIs (turnos hoy, pacientes nuevos, mensajes pendientes, alertas, tasa respuesta, mensajes hoy)
  * - Próximos turnos del día
  * - Actividad reciente
  */
@@ -19,6 +19,7 @@ export async function GET() {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     // ─── KPIs ────────────────────────────────────────────────
 
@@ -94,6 +95,124 @@ export async function GET() {
         )
       );
 
+    // ─── NUEVOS KPIs ───────────────────────────────────────────
+
+    // 6. Mensajes de pacientes hoy
+    const mensajesHoy = await db
+      .select({ total: count() })
+      .from(mensajes)
+      .where(
+        and(
+          eq(mensajes.rol, 'paciente'),
+          gte(mensajes.createdAt, todayStart)
+        )
+      );
+
+    // 7. Tasa de respuesta: mensajes de IA respondidos / total mensajes paciente (últimos 30 días)
+    const mensajesPaciente30d = await db
+      .select({ total: count() })
+      .from(mensajes)
+      .where(
+        and(
+          eq(mensajes.rol, 'paciente'),
+          gte(mensajes.createdAt, thirtyDaysAgo)
+        )
+      );
+
+    const mensajesIA30d = await db
+      .select({ total: count() })
+      .from(mensajes)
+      .where(
+        and(
+          eq(mensajes.rol, 'asistente_ia'),
+          gte(mensajes.createdAt, thirtyDaysAgo)
+        )
+      );
+
+    const msgPacienteCount = Number(mensajesPaciente30d[0]?.total ?? 0);
+    const msgIACount = Number(mensajesIA30d[0]?.total ?? 0);
+    const tasaRespuesta = msgPacienteCount > 0
+      ? Math.min(100, Math.round((msgIACount / msgPacienteCount) * 100))
+      : 0;
+
+    // 8. Tiempo promedio de respuesta (diferencia en minutos entre msg paciente y respuesta IA)
+    let tiempoPromedioMinutos = 0;
+    try {
+      // Para cada conversación con al menos un mensaje de IA,
+      // calcular diferencia entre el primer msg paciente y la primera respuesta IA
+      const tiempos = await db
+        .select({
+          diff: sql<string>`EXTRACT(EPOCH FROM (
+            (SELECT MIN(m2.createdAt) FROM ${mensajes} m2 WHERE m2.conversacion_id = ${mensajes.conversacionId} AND m2.rol = 'asistente_ia')
+            -
+            (SELECT MIN(m1.createdAt) FROM ${mensajes} m1 WHERE m1.conversacion_id = ${mensajes.conversacionId} AND m1.rol = 'paciente')
+          )) / 60`,
+        })
+        .from(mensajes)
+        .where(
+          and(
+            gte(mensajes.createdAt, thirtyDaysAgo),
+            sql`EXISTS (SELECT 1 FROM ${mensajes} m3 WHERE m3.conversacion_id = ${mensajes.conversacionId} AND m3.rol = 'asistente_ia')`
+          )
+        )
+        .limit(1);
+
+      if (tiempos.length > 0 && tiempos[0].diff) {
+        const diff = parseFloat(tiempos[0].diff);
+        tiempoPromedioMinutos = diff > 0 && diff < 1440 ? Math.round(diff) : 0;
+      }
+    } catch {
+      // Si la query falla (schema complejo), calcular con JS
+      try {
+        const todasConv = await db
+          .select({ id: conversaciones.id })
+          .from(conversaciones)
+          .limit(20);
+
+        let totalDiff = 0;
+        let countConv = 0;
+        for (const conv of todasConv) {
+          const msgs = await db
+            .select({ rol: mensajes.rol, createdAt: mensajes.createdAt })
+            .from(mensajes)
+            .where(eq(mensajes.conversacionId, conv.id))
+            .orderBy(mensajes.createdAt);
+
+          let primerPaciente: Date | null = null;
+          let primerIA: Date | null = null;
+          for (const m of msgs) {
+            if (m.rol === 'paciente' && !primerPaciente) primerPaciente = m.createdAt;
+            if (m.rol === 'asistente_ia' && !primerIA) primerIA = m.createdAt;
+          }
+          if (primerPaciente && primerIA) {
+            totalDiff += (primerIA.getTime() - primerPaciente.getTime()) / 60000;
+            countConv++;
+          }
+        }
+        tiempoPromedioMinutos = countConv > 0 ? Math.round(totalDiff / countConv) : 0;
+      } catch {
+        tiempoPromedioMinutos = 0;
+      }
+    }
+
+    // 9. Pacientes recurrentes (% que ya tenían conversaciones previas)
+    let pacientesRecurrentes = 0;
+    let totalPacientesActivos = 0;
+    try {
+      const convCounts = await db
+        .select({
+          pacienteId: conversaciones.pacienteId,
+          total: count(),
+        })
+        .from(conversaciones)
+        .groupBy(conversaciones.pacienteId);
+
+      totalPacientesActivos = convCounts.length;
+      pacientesRecurrentes = convCounts.filter(c => Number(c.total) > 1).length;
+    } catch {
+      // No hay datos
+    }
+
     // Calcular cambios vs período anterior
     const turnosHoyCount = Number(turnosHoy[0]?.total ?? 0);
     const turnosAyerCount = Number(turnosAyer[0]?.total ?? 0);
@@ -108,6 +227,7 @@ export async function GET() {
 
     const pendientesCount = Number(mensajesPendientes[0]?.total ?? 0);
     const alertasCount = Number(alertas[0]?.total ?? 0);
+    const mensajesHoyCount = Number(mensajesHoy[0]?.total ?? 0);
 
     // ─── PRÓXIMOS TURNOS ──────────────────────────────────────
 
@@ -211,7 +331,7 @@ export async function GET() {
       for (const m of ultimosMensajes) {
         const nombre = `${m.pacienteNombre || ''} ${m.pacienteApellido || ''}`.trim() || 'Paciente';
         const textoCorto = m.contenido.length > 60
-          ? m.contenido.substring(0, 60) + '…'
+          ? m.contenido.substring(0, 60) + '...'
           : m.contenido;
 
         actividadReciente.push({
@@ -272,6 +392,18 @@ export async function GET() {
           change: alertasCount > 0 ? 'Urgente' : 'Sin novedades',
           type: 'alert',
           urgent: alertasCount > 0,
+        },
+        {
+          title: 'Tasa Respuesta',
+          value: `${tasaRespuesta}%`,
+          change: msgPacienteCount > 0 ? `${msgIACount} respuestas` : 'Sin datos',
+          type: 'response',
+        },
+        {
+          title: 'Mensajes Hoy',
+          value: String(mensajesHoyCount),
+          change: tiempoPromedioMinutos > 0 ? `Prom. ${tiempoPromedioMinutos} min` : 'Sin métrica',
+          type: 'today',
         },
       ],
       proximosTurnos,

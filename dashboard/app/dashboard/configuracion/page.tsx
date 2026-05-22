@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import {
   Bot, Globe, Shield, CreditCard,
-  Edit3, Save, Plus, Trash2, Key,
+  Edit3, Save, Plus, Trash2, Key, Eye, Send,
 } from 'lucide-react';
 import {
   Dialog,
@@ -94,6 +94,7 @@ function ConfigContent() {
   const [plantillas, setPlantillas] = useState<PlantillaWhatsApp[]>([]);
   const [showPlantillaModal, setShowPlantillaModal] = useState(false);
   const [editingPlantilla, setEditingPlantilla] = useState<PlantillaWhatsApp | null>(null);
+  const [previewPlantilla, setPreviewPlantilla] = useState<PlantillaWhatsApp | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [activeTab, setActiveTab] = useState(tabFromUrl);
   const [horarios, setHorarios] = useState<HorarioData[]>([]);
@@ -400,6 +401,15 @@ function ConfigContent() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
+                                title="Vista previa"
+                                onClick={() => setPreviewPlantilla(plantilla)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
                                 onClick={() => {
                                   setEditingPlantilla(plantilla);
                                   setShowPlantillaModal(true);
@@ -449,6 +459,12 @@ function ConfigContent() {
                 toast({ title: 'Error al guardar', variant: 'destructive' });
               }
             }}
+          />
+
+          {/* Preview Plantilla */}
+          <PreviewPlantillaModal
+            plantilla={previewPlantilla}
+            onClose={() => setPreviewPlantilla(null)}
           />
         </TabsContent>
 
@@ -692,6 +708,106 @@ function PlantillaModal({
             </Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============================================================
+// Preview Plantilla WhatsApp
+// ============================================================
+
+const SAMPLE_DATA: Record<string, Record<string, string>> = {
+  recordatorios: { nombre: 'María', fecha_hora: 'lunes 25/05 a las 10:30', medico_nombre: 'Dr. García' },
+  turnos: { paciente_nombre: 'María', fecha_hora: '25/05/2026 10:30', medico_nombre: 'Dr. García', motivo: 'control general' },
+  recetas: { paciente_nombre: 'María', medicamento: 'Amoxicilina 500mg', dosis: '1 comprimido cada 8hs', frecuencia: '7 días' },
+  alertas: { paciente_nombre: 'María', motivo: 'Presión arterial elevada', medico_nombre: 'Dr. García' },
+};
+
+function PreviewPlantillaModal({
+  plantilla,
+  onClose,
+}: {
+  plantilla: PlantillaWhatsApp | null;
+  onClose: () => void;
+}) {
+  const [datosEdit, setDatosEdit] = useState<Record<string, string>>({});
+  const [preview, setPreview] = useState('');
+
+  useEffect(() => {
+    if (!plantilla) return;
+    // Pre-fill con datos de muestra según categoría
+    const sample = SAMPLE_DATA[plantilla.categoria] || {};
+    const initial: Record<string, string> = {};
+    for (const v of plantilla.variables) {
+      initial[v] = sample[v] || `[${v}]`;
+    }
+    setDatosEdit(initial);
+  }, [plantilla]);
+
+  useEffect(() => {
+    if (!plantilla) return;
+    let result = plantilla.contenido;
+    for (const [key, value] of Object.entries(datosEdit)) {
+      result = result.replace(new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'gi'), value || '');
+    }
+    setPreview(result);
+  }, [plantilla, datosEdit]);
+
+  if (!plantilla) return null;
+
+  return (
+    <Dialog open={!!plantilla} onOpenChange={() => onClose()}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Vista previa: {plantilla.nombre}</DialogTitle>
+          <DialogDescription>
+            Completá las variables para ver el mensaje final
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          {/* Variables editables */}
+          {plantilla.variables.length > 0 && (
+            <div className="space-y-2">
+              <Label>Variables</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {plantilla.variables.map((v) => (
+                  <div key={v} className="space-y-1">
+                    <span className="text-xs font-mono text-muted-foreground">{`{{${v}}}`}</span>
+                    <Input
+                      size={1}
+                      value={datosEdit[v] || ''}
+                      onChange={(e) => setDatosEdit((prev) => ({ ...prev, [v]: e.target.value }))}
+                      placeholder={v}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Preview del mensaje */}
+          <div className="space-y-2">
+            <Label>Vista previa</Label>
+            <div className="p-4 rounded-lg bg-muted/50 border min-h-[80px] whitespace-pre-wrap text-sm">
+              {preview || plantilla.contenido}
+            </div>
+          </div>
+
+          {/* Variables detectadas */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground">Variables:</span>
+            {plantilla.variables.map((v) => (
+              <Badge key={v} variant="outline" className="text-[10px] font-mono">
+                {'{{'}{v}{'}}'}
+              </Badge>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose}>Cerrar</Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
