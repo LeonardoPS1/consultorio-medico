@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crear paciente
+    // Crear paciente (solo campos core, para evitar errores con columnas no migradas)
     const [nuevo] = await db
       .insert(pacientes)
       .values({
@@ -169,19 +169,20 @@ export async function POST(request: NextRequest) {
         email: email?.trim() || null,
         obraSocial: obraSocial || null,
         tags: obraSocial === 'Particular' ? ['Particular'] : ['Obra Social'],
-        consentimientoWhatsapp: true,
-        canalPreferido: 'whatsapp',
-        fuente: 'dashboard',
       })
       .returning();
 
-    // Registrar evento de creación
-    await db.insert(pacienteEventos).values({
-      pacienteId: nuevo.id,
-      tipo: 'creado',
-      descripcion: 'Paciente registrado desde el dashboard',
-      metadata: { source: 'dashboard', creadoPor: 'admin' },
-    });
+    // Registrar evento de creación (si la tabla existe)
+    try {
+      await db.insert(pacienteEventos).values({
+        pacienteId: nuevo.id,
+        tipo: 'creado',
+        descripcion: 'Paciente registrado desde el dashboard',
+        metadata: { source: 'dashboard', creadoPor: 'admin' },
+      });
+    } catch (eventError) {
+      console.warn('[API] No se pudo registrar evento de creación:', eventError);
+    }
 
     return NextResponse.json({ data: nuevo }, { status: 201 });
   } catch (error) {
