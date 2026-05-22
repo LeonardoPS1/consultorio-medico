@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { PacienteDetalleClient } from './paciente-detalle-client';
+import { PortalDashboardClient } from './portal-dashboard-client';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -11,7 +11,6 @@ interface TurnoRow {
   motivo: string | null;
   medicoNombre: string | null;
   duracionMinutos: number;
-  notasMedico: string | null;
 }
 
 interface RecetaRow {
@@ -27,56 +26,28 @@ interface RecetaRow {
   medicoNombre: string | null;
 }
 
-interface HistorialRow {
-  id: string;
-  tipo: string;
-  titulo: string;
-  descripcion: string | null;
-  diagnosticoCodigo: string | null;
-  diagnosticoDescripcion: string | null;
-  fecha: string;
-}
-
-interface PacienteDetalle {
+interface PortalData {
   paciente: {
     id: string;
     nombre: string;
     apellido: string;
     telefono: string;
     email: string | null;
-    dni: string | null;
-    fechaNacimiento: string | null;
-    direccion: string | null;
     obraSocial: string | null;
-    numeroAfiliado: string | null;
-    alergias: string | null;
-    medicacionCronica: string | null;
-    notasMedicas: string | null;
-    tags: string[];
-    consentimientoWhatsapp: boolean;
-    createdAt: string;
   };
   turnos: TurnoRow[];
   recetas: RecetaRow[];
-  historial: HistorialRow[];
-  ultimaConversacion: { id: string; estado: string } | null;
-  stats: {
-    totalTurnos: number;
-    totalRecetas: number;
-    totalHistorial: number;
-    turnosPorEstado: Record<string, number>;
-    recetasPorEstado: Record<string, number>;
-  };
+  stats: { totalTurnos: number; totalRecetas: number };
 }
 
 // ─── Data fetching ─────────────────────────────────────────
 
 export const dynamic = 'force-dynamic';
 
-async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
+async function getPortalData(telefono: string): Promise<PortalData | null> {
   try {
     const res = await fetch(
-      `http://localhost:3000/api/pacientes/${id}/detalle`,
+      `http://localhost:3000/api/portal/paciente?telefono=${encodeURIComponent(telefono)}`,
       { cache: 'no-store' },
     );
     if (!res.ok) return null;
@@ -89,22 +60,14 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
 
 // ─── Page ──────────────────────────────────────────────────
 
-export default async function PacienteDetallePage({
+export default async function PortalDashboardPage({
   params,
 }: {
-  params: { id: string };
+  params: { telefono: string };
 }) {
-  const data = await getPacienteDetalle(params.id);
+  const telefono = decodeURIComponent(params.telefono);
+  const data = await getPortalData(telefono);
   if (!data) notFound();
 
-  const { paciente, turnos, recetas, historial, ultimaConversacion, stats } = data;
-
-  return <PacienteDetalleClient
-    paciente={paciente}
-    turnos={turnos}
-    recetas={recetas}
-    historial={historial}
-    ultimaConversacion={ultimaConversacion}
-    stats={stats}
-  />;
+  return <PortalDashboardClient data={data} />;
 }

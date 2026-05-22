@@ -42,14 +42,27 @@ interface RecetasClientProps {
 function descargarReceta(receta: Receta) {
   fetch('/api/organization')
     .then((r) => r.json())
-    .then((resp) => {
+    .then(async (resp) => {
       const org = resp.data || {};
-      generarPDFReceta(receta, org);
+      await generarPDFReceta(receta, org);
     })
     .catch(() => generarPDFReceta(receta, {}));
 }
 
-function generarPDFReceta(receta: Receta, org: Record<string, string>) {
+async function generarPDFReceta(receta: Receta, org: Record<string, string>) {
+  // Generar QR code de verificacion
+  let qrDataUrl = '';
+  try {
+    const QRCode = await import('qrcode');
+    const verificationUrl = `https://med.aicorebots.com/api/verificar-receta/${receta.id}`;
+    qrDataUrl = await QRCode.toDataURL(verificationUrl, {
+      width: 120,
+      margin: 2,
+      color: { dark: '#1a1a1a', light: '#ffffff' },
+    });
+  } catch {
+    // QR fallback: sin QR si la lib no carga
+  }
   const nombreOrg = org.nombre || 'Consultorio Médico';
   const direccion = org.direccion || '';
   const ciudad = org.ciudad || '';
@@ -75,6 +88,7 @@ function generarPDFReceta(receta: Receta, org: Record<string, string>) {
     hoy,
     vence,
     receta,
+    qrDataUrl,
   });
 
   const ventana = window.open('', '_blank');
@@ -142,62 +156,71 @@ function enviarRecetaWhatsApp(receta: Receta) {
     });
 }
 
-function imprimirReceta(receta: Receta) {
+async function imprimirReceta(receta: Receta) {
   fetch('/api/organization')
     .then((r) => r.json())
-    .then((resp) => {
+    .then(async (resp) => {
       const org = resp.data || {};
-      const html = generarHTMLReceta(receta, org, true);
+      let qrDataUrl = '';
+      try {
+        const QRCode = await import('qrcode');
+        qrDataUrl = await QRCode.toDataURL(`https://med.aicorebots.com/api/verificar-receta/${receta.id}`, { width: 120, margin: 2, color: { dark: '#1a1a1a', light: '#ffffff' } });
+      } catch {}
+      const html = generarHTMLRecetaCompletaConBoton({ ...org, receta, qrDataUrl } as any);
       const ventana = window.open('', '_blank');
-      if (ventana) {
-        ventana.document.write(html);
-        ventana.document.close();
-      }
+      if (ventana) { ventana.document.write(html); ventana.document.close(); }
     })
-    .catch(() => {
-      const html = generarHTMLReceta(receta, {}, true);
+    .catch(async () => {
+      let qrDataUrl = '';
+      try {
+        const QRCode = await import('qrcode');
+        qrDataUrl = await QRCode.toDataURL(`https://med.aicorebots.com/api/verificar-receta/${receta.id}`, { width: 120, margin: 2, color: { dark: '#1a1a1a', light: '#ffffff' } });
+      } catch {}
+      const html = generarHTMLRecetaCompletaConBoton({ receta, qrDataUrl } as any);
       const ventana = window.open('', '_blank');
-      if (ventana) {
-        ventana.document.write(html);
-        ventana.document.close();
-      }
+      if (ventana) { ventana.document.write(html); ventana.document.close(); }
     });
 }
 
-function generarHTMLReceta(
-  receta: Receta,
-  org: Record<string, string>,
-  autoPrint: boolean = false,
-): string {
-  const nombreOrg = org.nombre || 'Consultorio Médico';
-  const direccion = org.direccion || '';
-  const ciudad = org.ciudad || '';
-  const telefono = org.telefono || '';
-  const email = org.email || '';
-  const logoUrl = org.logoUrl || '';
-  const colorPrimario = org.colorPrimario || '#2563eb';
-  const hoy = formatDate(
-    new Date().toISOString(),
-    "dd 'de' MMMM 'de' yyyy",
-  );
-  const vence = formatDate(receta.vence, "dd 'de' MMMM 'de' yyyy");
+function generarHTMLRecetaCompletaConBoton(params: {
+  nombreOrg?: string;
+  direccion?: string;
+  ciudad?: string;
+  telefono?: string;
+  email?: string;
+  logoUrl?: string;
+  colorPrimario?: string;
+  hoy?: string;
+  vence?: string;
+  receta: Receta;
+  qrDataUrl?: string;
+}) {
+  const nombreOrg = params.nombreOrg || 'Consultorio Medico';
+  const hoy = params.hoy || formatDate(new Date().toISOString(), "dd 'de' MMMM 'de' yyyy");
+  const vence = params.vence || formatDate(params.receta.vence, "dd 'de' MMMM 'de' yyyy");
+  const colorPrimario = params.colorPrimario || '#2563eb';
 
-  const params = {
+  const base = generarHTMLRecetaCompleta({
     nombreOrg,
-    direccion,
-    ciudad,
-    telefono,
-    email,
-    logoUrl,
+    direccion: params.direccion || '',
+    ciudad: params.ciudad || '',
+    telefono: params.telefono || '',
+    email: params.email || '',
+    logoUrl: params.logoUrl || '',
     colorPrimario,
     hoy,
     vence,
-    receta,
-  };
-
-  return autoPrint
-    ? generarHTMLRecetaCompletaConBoton(params)
-    : generarHTMLRecetaCompleta(params);
+    receta: params.receta,
+    qrDataUrl: params.qrDataUrl,
+  });
+  return base.replace(
+    '</body>',
+    `<div class="no-print" style="text-align:center;margin-top:30px;padding-top:20px;border-top:2px dashed #ddd">
+    <button onclick="window.print()" style="padding:10px 30px;background:${colorPrimario};color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">🖨️ Imprimir / Guardar PDF</button>
+    <p style="font-size:12px;color:#888;margin-top:8px">Selecciona "Guardar como PDF" en el dialogo de impresion</p>
+  </div>
+</body>`,
+  );
 }
 
 function generarHTMLRecetaCompleta(params: {
@@ -211,6 +234,7 @@ function generarHTMLRecetaCompleta(params: {
   hoy: string;
   vence: string;
   receta: Receta;
+  qrDataUrl?: string;
 }) {
   const {
     nombreOrg,
@@ -223,6 +247,7 @@ function generarHTMLRecetaCompleta(params: {
     hoy,
     vence,
     receta,
+    qrDataUrl,
   } = params;
 
   return `<!DOCTYPE html>
@@ -290,6 +315,9 @@ function generarHTMLRecetaCompleta(params: {
     </div>
   </div>
   <div class="firma-area">
+    <div class="qr-container">
+      ${qrDataUrl ? `<img src="${qrDataUrl}" alt="QR Verificacion" style="width:80px;height:80px;" /><p style="font-size:8px;color:#999;text-align:center;margin-top:3px;">Verificar autenticidad</p>` : '<p style="font-size:9px;color:#ccc;">QR no disponible</p>'}
+    </div>
     <div></div>
     <div class="firma">
       <div class="firma-line"></div>
@@ -299,29 +327,6 @@ function generarHTMLRecetaCompleta(params: {
   <div class="footer"><strong>${nombreOrg}</strong> &nbsp;·&nbsp; Documento generado electrónicamente el ${hoy}</div>
 </body>
 </html>`;
-}
-
-function generarHTMLRecetaCompletaConBoton(params: {
-  nombreOrg: string;
-  direccion: string;
-  ciudad: string;
-  telefono: string;
-  email: string;
-  logoUrl: string;
-  colorPrimario: string;
-  hoy: string;
-  vence: string;
-  receta: Receta;
-}) {
-  const base = generarHTMLRecetaCompleta(params);
-  return base.replace(
-    '</body>',
-    `<div class="no-print" style="text-align:center;margin-top:30px;padding-top:20px;border-top:2px dashed #ddd">
-    <button onclick="window.print()" style="padding:10px 30px;background:${params.colorPrimario};color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">🖨️ Imprimir / Guardar PDF</button>
-    <p style="font-size:12px;color:#888;margin-top:8px">Seleccioná "Guardar como PDF" en el diálogo de impresión</p>
-  </div>
-</body>`,
-  );
 }
 
 // ─── Component ─────────────────────────────────────────────
