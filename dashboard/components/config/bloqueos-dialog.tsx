@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/select';
-import { Plus, Trash2, CalendarX, Calendar, Umbrella, Ban } from 'lucide-react';
+import { Plus, Trash2, CalendarX, Calendar, Umbrella, Ban, Pencil } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 interface Bloqueo {
@@ -54,6 +54,7 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
   const [fechaFin, setFechaFin] = useState('');
   const [tipo, setTipo] = useState('vacaciones');
   const [saving, setSaving] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const fetchBloqueos = () => {
     setLoading(true);
@@ -92,6 +93,32 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
     } catch {
       toast({ title: 'Error', variant: 'destructive' });
     }
+  };
+
+  const handleUpdate = async (bloqueoId: string) => {
+    if (!titulo.trim() || !fechaInicio || !fechaFin) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/medicos/${medicoId}/bloqueos/${bloqueoId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titulo, fechaInicio, fechaFin, tipo }),
+      });
+      if (!res.ok) { const err = await res.json(); toast({ title: err.error || 'Error', variant: 'destructive' }); return; }
+      toast({ title: 'Bloqueo actualizado' });
+      setEditId(null); setTitulo(''); setFechaInicio(''); setFechaFin('');
+      fetchBloqueos();
+    } catch {
+      toast({ title: 'Error', variant: 'destructive' });
+    } finally { setSaving(false); }
+  };
+
+  const startEdit = (b: Bloqueo) => {
+    setEditId(b.id);
+    setTitulo(b.titulo);
+    setFechaInicio(b.fechaInicio.split('T')[0]);
+    setFechaFin(b.fechaFin.split('T')[0]);
+    setTipo(b.tipo);
   };
 
   const getTipoInfo = (t: string) => TIPOS_BLOQUEO.find(x => x.value === t) || TIPOS_BLOQUEO[3];
@@ -172,6 +199,46 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
                 const info = getTipoInfo(b.tipo);
                 const Icon = info.icon;
                 const activo = new Date(b.fechaFin) >= new Date();
+                const isEditing = editId === b.id;
+
+                if (isEditing) {
+                  return (
+                    <Card key={b.id} className="border-primary/30 bg-primary/5">
+                      <CardContent className="p-3 space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Tipo</Label>
+                            <Select value={tipo} onValueChange={setTipo}>
+                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {TIPOS_BLOQUEO.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Titulo</Label>
+                            <Input className="h-8 text-xs" value={titulo} onChange={e => setTitulo(e.target.value)} />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Desde</Label>
+                            <Input className="h-8 text-xs" type="date" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Hasta</Label>
+                            <Input className="h-8 text-xs" type="date" value={fechaFin} onChange={e => setFechaFin(e.target.value)} />
+                          </div>
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setEditId(null)}>Cancelar</Button>
+                          <Button size="sm" className="h-7 text-xs" onClick={() => handleUpdate(b.id)} disabled={saving}>Guardar</Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+
                 return (
                   <div key={b.id} className={`flex items-center justify-between p-3 rounded-lg ${activo ? 'bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800' : 'bg-muted/30 opacity-60'}`}>
                     <div className="flex items-center gap-3">
@@ -188,8 +255,11 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
                       <Badge variant={activo ? 'default' : 'secondary'} className={`text-xs ${activo ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : ''}`}>
                         {info.label}
                       </Badge>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(b.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(b)} title="Editar bloqueo">
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(b.id)}>
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
