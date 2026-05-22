@@ -32,6 +32,64 @@ async function forwardToN8n(params: Record<string, string>) {
 }
 
 /**
+ * Envía una notificación WhatsApp al médico cuando un paciente escribe.
+ * Fire-and-forget: si falla, solo se loguea el error.
+ */
+async function notifyDoctor(patientName: string, messagePreview: string, telefono: string) {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const doctorNumber = process.env.TWILIO_DOCTOR_NUMBER;
+  const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
+
+  if (!accountSid || !authToken || !doctorNumber || !fromNumber) {
+    console.warn('[Twilio] ⚠️ notifyDoctor: faltan env vars (TWILIO_ACCOUNT_SID, AUTH_TOKEN, DOCTOR_NUMBER, WHATSAPP_NUMBER)');
+    return;
+  }
+
+  // No notificar si el que escribe es el propio médico
+  const doctorPhone = doctorNumber.replace(/^(whatsapp:|sms:)/, '').trim();
+  const senderPhone = telefono.replace(/^(whatsapp:|sms:)/, '').trim();
+  if (doctorPhone === senderPhone) return;
+
+  // Truncar mensaje largo para preview
+  const preview = messagePreview.length > 80
+    ? messagePreview.substring(0, 77) + '...'
+    : messagePreview;
+
+  const now = new Date().toLocaleString('es-CL', {
+    timeZone: 'America/Santiago',
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+  });
+
+  const body = `🔔 Nuevo mensaje de ${patientName}\n📱 ${telefono}\n💬 "${preview}"\n⏰ ${now}`;
+
+  try {
+    const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
+    const formData = new URLSearchParams({
+      From: fromNumber,
+      To: doctorNumber,
+      Body: body,
+    });
+
+    await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData.toString(),
+      signal: AbortSignal.timeout(8000),
+    });
+    console.log('[Twilio] ➡️ Notificación enviada al médico');
+  } catch (e) {
+    console.warn('[Twilio] ⚠️ No se pudo notificar al médico:', (e as Error).message);
+  }
+}
+
+/**
  * Valida la firma de Twilio para asegurar que el request es legítimo.
  *
  - En producción: la validación es OBLIGATORIA. Si falta firma o token, se rechaza.
@@ -242,6 +300,10 @@ export async function POST(request: NextRequest) {
 
     // Forward a n8n para procesamiento con IA (fire-and-forget)
     forwardToN8n(params).catch(() => {});
+
+    // Notificar al médico (fire-and-forget)
+    const nombrePaciente = `${paciente.nombre} ${paciente.apellido}`.trim();
+    notifyDoctor(nombrePaciente, body, telefono).catch(() => {});
 
     // Responder con TwiML si es una request de Twilio real
     const acceptHeader = request.headers.get('accept') || '';
