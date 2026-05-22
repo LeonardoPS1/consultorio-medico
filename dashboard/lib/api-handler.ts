@@ -13,7 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-export function apiHandler(fn: Function): Function {
+export function apiHandler(fn: (...args: any[]) => any): (...args: any[]) => any {
   return async (...args: any[]) => {
     const request = args[0] as NextRequest;
     try {
