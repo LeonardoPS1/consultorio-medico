@@ -26,7 +26,7 @@ export const DELETE = apiHandler(async (request: NextRequest, { params }) => {
   const { searchParams } = new URL(request.url);
   const entryId = searchParams.get('entryId');
   if (!entryId) notFound('entryId requerido');
-  const ok = deleteHistorialEntry(entryId);
+  const ok = deleteHistorialEntry(entryId!);
   return ok ? success({ success: true }) : notFound('No encontrado');
 });
 
@@ -35,6 +35,6 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
   const entryId = searchParams.get('entryId');
   if (!entryId) notFound('entryId requerido');
   const body = await request.json();
-  const updated = updateHistorialEntry(entryId, body);
+  const updated = updateHistorialEntry(entryId!, body);
   return updated ? success(updated) : notFound('No encontrado');
 });
