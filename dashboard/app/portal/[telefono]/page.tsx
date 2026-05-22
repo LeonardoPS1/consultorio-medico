@@ -47,7 +47,7 @@ export const dynamic = 'force-dynamic';
 async function getPortalData(telefono: string): Promise<PortalData | null> {
   try {
     const res = await fetch(
-      `http://localhost:3000/api/portal/paciente?telefono=${encodeURIComponent(telefono)}`,
+      `http://localhost:3000/api/portal?telefono=${encodeURIComponent(telefono)}`,
       { cache: 'no-store' },
     );
     if (!res.ok) return null;

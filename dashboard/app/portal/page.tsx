@@ -20,7 +20,7 @@ export default function PortalLoginPage() {
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/portal/paciente?telefono=${encodeURIComponent(telefono.trim())}`);
+      const res = await fetch(`/api/portal?telefono=${encodeURIComponent(telefono.trim())}`);
       if (!res.ok) {
         toast({
           title: 'Paciente no encontrado',
