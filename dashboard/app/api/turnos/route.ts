@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { turnos, pacientes, medicos } from '@/drizzle/schema';
+import { turnos, pacientes, medicos, bloqueosAgenda } from '@/drizzle/schema';
 import type { InferInsertModel } from 'drizzle-orm';
 import { eq, and, gte, lt, sql, count, like, or } from 'drizzle-orm';
 
@@ -234,6 +234,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Médico no encontrado' },
         { status: 404 },
+      );
+    }
+
+    // Verificar bloqueos de agenda (vacaciones, feriados, etc.)
+    const bloqueo = await db
+      .select({ id: bloqueosAgenda.id, titulo: bloqueosAgenda.titulo, tipo: bloqueosAgenda.tipo })
+      .from(bloqueosAgenda)
+      .where(
+        and(
+          eq(bloqueosAgenda.medicoId, medicoId),
+          sql`${bloqueosAgenda.fechaInicio} <= ${fechaHora.toISOString()}::timestamptz`,
+          sql`${bloqueosAgenda.fechaFin} >= ${fechaHora.toISOString()}::timestamptz`,
+        ),
+      )
+      .limit(1);
+
+    if (bloqueo.length > 0) {
+      const tipo = bloqueo[0].tipo === 'vacaciones' ? 'de vacaciones' :
+                   bloqueo[0].tipo === 'feriado' ? 'feriado' : 'no disponible';
+      return NextResponse.json(
+        { error: `El médico está ${tipo}: "${bloqueo[0].titulo}". No se pueden agendar turnos en esta fecha.` },
+        { status: 409 },
       );
     }
 

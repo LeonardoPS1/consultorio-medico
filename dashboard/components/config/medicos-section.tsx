@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Stethoscope, Pencil, X } from 'lucide-react';
+import { Plus, Stethoscope, Pencil, X, CalendarX } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { BloqueosDialog } from '@/components/config/bloqueos-dialog';
 
 interface Medico {
   id: string;
@@ -40,6 +41,7 @@ export function MedicosSection({ plan }: Props) {
   const [email, setEmail] = useState('');
   const [duracion, setDuracion] = useState(30);
   const [saving, setSaving] = useState(false);
+  const [bloqueosMedicoId, setBloqueosMedicoId] = useState<string | null>(null);
 
   const fetchMedicos = () => {
     fetch('/api/medicos')
@@ -147,6 +149,9 @@ export function MedicosSection({ plan }: Props) {
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(m)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600 hoverable:hover:text-amber-700" title="Gestionar bloqueos" onClick={() => setBloqueosMedicoId(m.id)}>
+                      <CalendarX className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -199,6 +204,16 @@ export function MedicosSection({ plan }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de bloqueos */}
+      {bloqueosMedicoId && (
+        <BloqueosDialog
+          medicoId={bloqueosMedicoId}
+          medicoNombre={medicos.find(m => m.id === bloqueosMedicoId)?.nombre || 'Médico'}
+          open={!!bloqueosMedicoId}
+          onOpenChange={(v) => { if (!v) setBloqueosMedicoId(null); }}
+        />
+      )}
     </>
   );
 }
