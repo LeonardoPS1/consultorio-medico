@@ -39,8 +39,30 @@ const TIPOS_BLOQUEO = [
   { value: 'bloqueo', label: 'Otro', icon: Ban, color: 'text-gray-600' },
 ];
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+function formatBloqueoFecha(isoInicio: string, isoFin: string): string {
+  const inicio = new Date(isoInicio);
+  const fin = new Date(isoFin);
+  const esHorario = inicio.getUTCHours() !== 0 || inicio.getUTCMinutes() !== 0
+    || fin.getUTCHours() !== 0 || fin.getUTCMinutes() !== 0
+    || (fin.getTime() - inicio.getTime()) < 86400000;
+
+  const fechaIni = inicio.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  const fechaFinStr = fin.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+  if (esHorario) {
+    const horaIni = inicio.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    const horaFin = fin.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+    if (fechaIni === fechaFinStr) {
+      // Mismo día, solo mostrar horario
+      return `${fechaIni} · ${horaIni} a ${horaFin}`;
+    }
+    // Distintos días con hora
+    return `${fechaIni} ${horaIni} → ${fechaFinStr} ${horaFin}`;
+  }
+
+  if (fechaIni === fechaFinStr) return fechaIni;
+  return `${fechaIni} → ${fechaFinStr}`;
 }
 
 export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: Props & { open: boolean; onOpenChange: (v: boolean) => void }) {
@@ -52,9 +74,12 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
   const [titulo, setTitulo] = useState('');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
+  const [horaInicio, setHoraInicio] = useState('');
+  const [horaFin, setHoraFin] = useState('');
   const [tipo, setTipo] = useState('vacaciones');
   const [saving, setSaving] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [bloqueoHorario, setBloqueoHorario] = useState(false); // true = bloqueo por horas, false = día completo
 
   const fetchBloqueos = () => {
     setLoading(true);
@@ -71,14 +96,16 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
     if (!titulo.trim() || !fechaInicio || !fechaFin) return;
     setSaving(true);
     try {
+      const inicio = bloqueoHorario && horaInicio ? `${fechaInicio}T${horaInicio}:00.000Z` : fechaInicio;
+      const fin = bloqueoHorario && horaFin ? `${fechaFin}T${horaFin}:00.000Z` : fechaFin;
       const res = await fetch(`/api/medicos/${medicoId}/bloqueos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ titulo, fechaInicio, fechaFin, tipo }),
+        body: JSON.stringify({ titulo, fechaInicio: inicio, fechaFin: fin, tipo }),
       });
       if (!res.ok) { const err = await res.json(); toast({ title: err.error || 'Error', variant: 'destructive' }); return; }
       toast({ title: 'Bloqueo creado' });
-      setShowNew(false); setTitulo(''); setFechaInicio(''); setFechaFin('');
+      setShowNew(false); setTitulo(''); setFechaInicio(''); setFechaFin(''); setHoraInicio(''); setHoraFin(''); setBloqueoHorario(false);
       fetchBloqueos();
     } catch {
       toast({ title: 'Error', variant: 'destructive' });
@@ -99,14 +126,16 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
     if (!titulo.trim() || !fechaInicio || !fechaFin) return;
     setSaving(true);
     try {
+      const inicio = bloqueoHorario && horaInicio ? `${fechaInicio}T${horaInicio}:00.000Z` : fechaInicio;
+      const fin = bloqueoHorario && horaFin ? `${fechaFin}T${horaFin}:00.000Z` : fechaFin;
       const res = await fetch(`/api/medicos/${medicoId}/bloqueos/${bloqueoId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ titulo, fechaInicio, fechaFin, tipo }),
+        body: JSON.stringify({ titulo, fechaInicio: inicio, fechaFin: fin, tipo }),
       });
       if (!res.ok) { const err = await res.json(); toast({ title: err.error || 'Error', variant: 'destructive' }); return; }
       toast({ title: 'Bloqueo actualizado' });
-      setEditId(null); setTitulo(''); setFechaInicio(''); setFechaFin('');
+      setEditId(null); setTitulo(''); setFechaInicio(''); setFechaFin(''); setHoraInicio(''); setHoraFin(''); setBloqueoHorario(false);
       fetchBloqueos();
     } catch {
       toast({ title: 'Error', variant: 'destructive' });
@@ -116,9 +145,24 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
   const startEdit = (b: Bloqueo) => {
     setEditId(b.id);
     setTitulo(b.titulo);
+    // Detectar si es bloqueo horario (tiene hora != 00:00)
+    const inicio = new Date(b.fechaInicio);
+    const fin = new Date(b.fechaFin);
+    const esHorario = inicio.getUTCHours() !== 0 || inicio.getUTCMinutes() !== 0
+      || fin.getUTCHours() !== 0 || fin.getUTCMinutes() !== 0
+      || (fin.getTime() - inicio.getTime()) < 86400000; // menos de 24hs
+    setBloqueoHorario(esHorario);
     setFechaInicio(b.fechaInicio.split('T')[0]);
     setFechaFin(b.fechaFin.split('T')[0]);
+    if (esHorario) {
+      setHoraInicio(inicio.toISOString().split('T')[1].substring(0, 5));
+      setHoraFin(fin.toISOString().split('T')[1].substring(0, 5));
+    } else {
+      setHoraInicio('');
+      setHoraFin('');
+    }
     setTipo(b.tipo);
+    setShowNew(false);
   };
 
   const getTipoInfo = (t: string) => TIPOS_BLOQUEO.find(x => x.value === t) || TIPOS_BLOQUEO[3];
@@ -166,6 +210,33 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
                     <Input type="date" value={fechaFin} onChange={e => setFechaFin(e.target.value)} />
                   </div>
                 </div>
+
+                {/* Toggle horario específico */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="bloqueo-horario"
+                    checked={bloqueoHorario}
+                    onChange={e => setBloqueoHorario(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="bloqueo-horario" className="text-xs cursor-pointer">
+                    Bloquear solo un horario específico
+                  </Label>
+                </div>
+
+                {bloqueoHorario && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Hora inicio</Label>
+                      <Input type="time" value={horaInicio} onChange={e => setHoraInicio(e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Hora fin</Label>
+                      <Input type="time" value={horaFin} onChange={e => setHoraFin(e.target.value)} />
+                    </div>
+                  </div>
+                )}
                 <div className="flex gap-2 justify-end">
                   <Button variant="outline" size="sm" onClick={() => setShowNew(false)}>Cancelar</Button>
                   <Button size="sm" onClick={handleCreate} disabled={saving || !titulo.trim() || !fechaInicio || !fechaFin}>
@@ -230,6 +301,22 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
                             <Input className="h-8 text-xs" type="date" value={fechaFin} onChange={e => setFechaFin(e.target.value)} />
                           </div>
                         </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="edit-horario" checked={bloqueoHorario} onChange={e => setBloqueoHorario(e.target.checked)} className="h-3 w-3" />
+                          <Label htmlFor="edit-horario" className="text-[10px] cursor-pointer">Horario especifico</Label>
+                        </div>
+                        {bloqueoHorario && (
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-[10px]">Hora inicio</Label>
+                              <Input className="h-7 text-xs" type="time" value={horaInicio} onChange={e => setHoraInicio(e.target.value)} />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px]">Hora fin</Label>
+                              <Input className="h-7 text-xs" type="time" value={horaFin} onChange={e => setHoraFin(e.target.value)} />
+                            </div>
+                          </div>
+                        )}
                         <div className="flex gap-2 justify-end">
                           <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setEditId(null)}>Cancelar</Button>
                           <Button size="sm" className="h-7 text-xs" onClick={() => handleUpdate(b.id)} disabled={saving}>Guardar</Button>
@@ -246,7 +333,7 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
                       <div>
                         <p className="text-sm font-medium">{b.titulo}</p>
                         <p className="text-xs text-muted-foreground">
-                          {formatDate(b.fechaInicio)} → {formatDate(b.fechaFin)}
+                          {formatBloqueoFecha(b.fechaInicio, b.fechaFin)}
                           {!activo && <span className="ml-2 text-muted-foreground/50">(finalizado)</span>}
                         </p>
                       </div>
