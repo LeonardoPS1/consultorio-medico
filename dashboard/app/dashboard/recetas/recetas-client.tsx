@@ -54,7 +54,7 @@ async function generarPDFReceta(receta: Receta, org: Record<string, string>) {
   let qrDataUrl = '';
   try {
     const QRCode = await import('qrcode');
-    const verificationUrl = `https://med.aicorebots.com/api/verificar-receta/${receta.id}`;
+    const verificationUrl = `https://med.aicorebots.com/verificar-receta/${receta.id}`;
     qrDataUrl = await QRCode.toDataURL(verificationUrl, {
       width: 120,
       margin: 2,
