@@ -27,7 +27,7 @@ export interface CreatePreferenceResult {
 
 /**
  * Crea una preferencia de pago en MercadoPago.
- * El precio se cobra en CLP (pesos chilenos).
+ * La moneda se configura via MERCADOPAGO_CURRENCY (default ARS para Argentina).
  */
 export async function createCheckoutPreference(
   planId: string,
@@ -38,9 +38,11 @@ export async function createCheckoutPreference(
   if (!client) return null;
 
   const plan = PLANES[planId as PlanId];
-  if (!plan) throw new Error(`Plan no válido: ${planId}`);
+  if (!plan) throw new Error(`Plan no valido: ${planId}`);
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const currency = process.env.MERCADOPAGO_CURRENCY || 'ARS';
+  const price = currency === 'CLP' ? plan.precioCLP : plan.precioARS;
 
   const preference = new Preference(client);
 
@@ -52,8 +54,8 @@ export async function createCheckoutPreference(
         title: `AiCoreMed - Plan ${plan.nombre}`,
         description: plan.descripcion,
         quantity: 1,
-        currency_id: 'CLP',
-        unit_price: plan.precioCLP,
+        currency_id: currency,
+        unit_price: price,
       },
     ],
     payer: payerEmail ? { email: payerEmail } : undefined,

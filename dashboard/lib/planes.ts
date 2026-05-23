@@ -17,6 +17,7 @@ export interface PlanInfo {
   nombre: string;
   precioUSD: number;
   precioCLP: number;
+  precioARS: number;
   descripcion: string;
   popular: boolean;
   features: string[];
@@ -24,10 +25,11 @@ export interface PlanInfo {
 }
 
 // ============================================================
-// Tipo de cambio referencial (1 USD → ? CLP)
+// Tipo de cambio referencial (1 USD → ?)
 // ============================================================
 
 export const USD_TO_CLP = 950;
+export const USD_TO_ARS = 1100;
 
 // ============================================================
 // Planes
@@ -39,6 +41,7 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     nombre: 'Free',
     precioUSD: 0,
     precioCLP: 0,
+    precioARS: 0,
     descripcion: 'Para probar la plataforma',
     popular: false,
     features: [
@@ -53,15 +56,16 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     nombre: 'Starter',
     precioUSD: 49,
     precioCLP: 49 * USD_TO_CLP,
+    precioARS: 49 * USD_TO_ARS,
     descripcion: 'Para consultorios individuales',
     popular: false,
     features: [
       'Pacientes ilimitados',
       'Turnos ilimitados + recordatorios WhatsApp',
-      'Historia clínica digital',
+      'Historia clinica digital',
       'Recetas digitales',
       'Conversaciones WhatsApp',
-      'Reportes básicos',
+      'Reportes basicos',
       '1 profesional',
     ],
     cta: 'Suscribirse',
@@ -71,14 +75,15 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     nombre: 'Profesional',
     precioUSD: 99,
     precioCLP: 99 * USD_TO_CLP,
+    precioARS: 99 * USD_TO_ARS,
     descripcion: 'Para consultorios en crecimiento',
     popular: true,
     features: [
       'Todo lo de Starter +',
-      'IA Assistant (triaje + respuestas automáticas)',
+      'IA Assistant (triaje + respuestas automaticas)',
       'Hasta 5 profesionales',
-      'Reportes avanzados + Exportación Excel/PDF',
-      'Encuestas post-consulta automáticas',
+      'Reportes avanzados + Exportacion Excel/PDF',
+      'Encuestas post-consulta automaticas',
       '2FA / Seguridad avanzada',
       'Recordatorios personalizables',
     ],
@@ -89,16 +94,17 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     nombre: 'Premium',
     precioUSD: 199,
     precioCLP: 199 * USD_TO_CLP,
-    descripcion: 'Para clínicas y centros médicos',
+    precioARS: 199 * USD_TO_ARS,
+    descripcion: 'Para clinicas y centros medicos',
     popular: false,
     features: [
       'Todo lo de Profesional +',
       'Profesionales ilimitados',
-      'Integración n8n + Google Calendar',
+      'Integracion n8n + Google Calendar',
       'Portal del paciente',
-      'Backup encriptado automático',
-      'Auditoría completa',
-      'Facturación electrónica',
+      'Backup encriptado automatico',
+      'Auditoria completa',
+      'Facturacion electronica',
       'Video consultas',
       'Soporte prioritario 24/7',
     ],
@@ -109,16 +115,17 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     nombre: 'Enterprise',
     precioUSD: 499,
     precioCLP: 499 * USD_TO_CLP,
-    descripcion: 'Para grandes centros y redes médicas',
+    precioARS: 499 * USD_TO_ARS,
+    descripcion: 'Para grandes centros y redes medicas',
     popular: false,
     features: [
       'Todo lo de Premium +',
-      'API pública (REST)',
+      'API publica (REST)',
       'Dashboard multi-sucursal',
       'On-premise / nube privada',
       'SLA garantizado',
       'Onboarding asistido por IA',
-      'Capacitación del equipo',
+      'Capacitacion del equipo',
       'Integraciones custom',
       'Gerente de cuenta dedicado',
     ],
