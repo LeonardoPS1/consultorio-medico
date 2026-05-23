@@ -6,23 +6,72 @@ import { suscripciones } from '@/drizzle/schema';
 import { eq, sql } from 'drizzle-orm';
 import { usuarios } from '@/drizzle/schema';
 import { getUserByEmail } from '@/lib/data-store';
+import { createHmac, timingSafeEqual } from 'crypto';
+
+// ─── Verificar firma de MercadoPago ──────────────────────────
+function verifySignature(
+  signatureHeader: string | null,
+  body: { data?: { id?: string | number } },
+  querySecret: string | null,
+  secret: string
+): boolean {
+  // Método 1: Firma HMAC en header x-signature (recomendado por MP)
+  if (signatureHeader) {
+    const parts: Record<string, string> = {};
+    for (const part of signatureHeader.split(',')) {
+      const [k, v] = part.trim().split('=');
+      if (k && v) parts[k] = v;
+    }
+    const ts = parts['ts'];
+    const v1 = parts['v1'];
+
+    if (ts && v1) {
+      // MP firma: HMAC-SHA256(secreto, "ts.{data_id}")
+      const dataId = String(body.data?.id || '');
+      const signedPayload = `ts.${dataId}`;
+      const expected = createHmac('sha256', secret).update(signedPayload).digest('hex');
+
+      try {
+        return timingSafeEqual(Buffer.from(v1), Buffer.from(expected));
+      } catch {
+        return false;
+      }
+    }
+  }
+
+  // Método 2: Query param ?secret= (fallback para testing manual)
+  if (querySecret && querySecret === secret) {
+    return true;
+  }
+
+  return false;
+}
 
 // POST /api/pagos/webhook
 // Webhook de MercadoPago (IPN) - notificaciones de pago
 export async function POST(request: Request) {
   try {
-    // Validar webhook secret (si está configurado)
+    // Leer body crudo una sola vez
+    const rawBody = await request.text();
+    let body: { type?: string; data?: { id?: string | number } };
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ ok: false, error: 'JSON inválido' }, { status: 400 });
+    }
+
+    // Validar firma de MercadoPago (x-signature con HMAC-SHA256)
     const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
     if (webhookSecret) {
+      const signatureHeader = request.headers.get('x-signature');
       const url = new URL(request.url);
-      const secret = url.searchParams.get('secret');
-      if (secret !== webhookSecret) {
-        console.warn('[MP Webhook] Secret inválido');
+      const querySecret = url.searchParams.get('secret');
+      const isValid = verifySignature(signatureHeader, body, querySecret, webhookSecret);
+      if (!isValid) {
+        console.warn('[MP Webhook] Firma inválida');
         return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
       }
     }
-
-    const body = await request.json();
     const { type, data } = body;
 
     console.log('[MP Webhook] Recibido:', { type, data });
