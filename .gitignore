@@ -57,6 +57,10 @@ dashboard/conversaciones
 # Backups locales
 backups/
 
+# Deploy scripts (contienen credenciales VPS)
+deploy_vps.py
+deploy_vps.sh
+
 # Credenciales (NO subir a git)
 docs/ACCESS.md
 docs/update.pdf
