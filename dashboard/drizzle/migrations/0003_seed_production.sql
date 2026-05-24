@@ -113,26 +113,29 @@ END $$;
 -- ─── 4. Horarios de atención por defecto (si tabla vacía) ───
 INSERT INTO horarios_atencion (dia, activo, inicio, fin, tenant_id)
 SELECT * FROM (VALUES
-    ('Lunes', true, '09:00', '18:00', '00000000-0000-0000-0000-000000000000'),
-    ('Martes', true, '09:00', '18:00', '00000000-0000-0000-0000-000000000000'),
-    ('Miércoles', true, '09:00', '18:00', '00000000-0000-0000-0000-000000000000'),
-    ('Jueves', true, '09:00', '18:00', '00000000-0000-0000-0000-000000000000'),
-    ('Viernes', true, '09:00', '18:00', '00000000-0000-0000-0000-000000000000'),
-    ('Sábado', false, '09:00', '13:00', '00000000-0000-0000-0000-000000000000'),
-    ('Domingo', false, '09:00', '13:00', '00000000-0000-0000-0000-000000000000')
+    ('Lunes', true, '09:00', '18:00', '00000000-0000-0000-0000-000000000000'::uuid),
+    ('Martes', true, '09:00', '18:00', '00000000-0000-0000-0000-000000000000'::uuid),
+    ('Miércoles', true, '09:00', '18:00', '00000000-0000-0000-0000-000000000000'::uuid),
+    ('Jueves', true, '09:00', '18:00', '00000000-0000-0000-0000-000000000000'::uuid),
+    ('Viernes', true, '09:00', '18:00', '00000000-0000-0000-0000-000000000000'::uuid),
+    ('Sábado', false, '09:00', '13:00', '00000000-0000-0000-0000-000000000000'::uuid),
+    ('Domingo', false, '09:00', '13:00', '00000000-0000-0000-0000-000000000000'::uuid)
 ) AS v(dia, activo, inicio, fin, tenant_id)
 WHERE NOT EXISTS (SELECT 1 FROM horarios_atencion LIMIT 1);
 
 -- ─── 5. Plantillas de mensajes por defecto ──────────────────
 INSERT INTO plantillas_mensajes (nombre, contenido, categoria, variables, activa, tenant_id)
 SELECT * FROM (VALUES
-    ('Recordatorio 24hs', 'Hola {{paciente}}, te recordamos que tenés un turno con el Dr. {{medico}} mañana a las {{hora}}. Respondé "CONFIRMAR" para confirmar asistencia o "CANCELAR" si necesitás reprogramar.', 'recordatorios', ARRAY['paciente', 'medico', 'hora'], true, '00000000-0000-0000-0000-000000000000'),
-    ('Recordatorio 1h', 'Recordatorio: {{paciente}}, tu turno con el Dr. {{medico}} es en 1 hora ({{hora}}). Te esperamos!', 'recordatorios', ARRAY['paciente', 'medico', 'hora'], true, '00000000-0000-0000-0000-000000000000'),
-    ('Confirmación turno', '¡Gracias {{paciente}}! Tu turno con el Dr. {{medico}} el día {{fecha}} a las {{hora}} fue confirmado.', 'turnos', ARRAY['paciente', 'medico', 'fecha', 'hora'], true, '00000000-0000-0000-0000-000000000000'),
-    ('Cancelación turno', 'Hola {{paciente}}, te confirmamos que tu turno del {{fecha}} a las {{hora}} fue cancelado.', 'turnos', ARRAY['paciente', 'fecha', 'hora'], true, '00000000-0000-0000-0000-000000000000'),
-    ('Receta lista', '{{paciente}}, tu receta de {{medicamento}} ya está lista. Pasá a retirarla por el consultorio.', 'recetas', ARRAY['paciente', 'medicamento'], true, '00000000-0000-0000-0000-000000000000'),
-    ('Urgencia detectada', '⚠️ Alerta de urgencia: {{paciente}} reportó: "{{mensaje}}". Comunicarse a la brevedad.', 'alertas', ARRAY['paciente', 'mensaje'], true, '00000000-0000-0000-0000-000000000000')
+    ('Recordatorio 24hs', 'Hola {{paciente}}, te recordamos que tenés un turno con el Dr. {{medico}} manana a las {{hora}}. Respondé "CONFIRMAR" para confirmar asistencia o "CANCELAR" si necesitás reprogramar.', 'recordatorios', ARRAY['paciente', 'medico', 'hora'], true, '00000000-0000-0000-0000-000000000000'::uuid),
+    ('Recordatorio 1h', 'Recordatorio: {{paciente}}, tu turno con el Dr. {{medico}} es en 1 hora ({{hora}}). Te esperamos!', 'recordatorios', ARRAY['paciente', 'medico', 'hora'], true, '00000000-0000-0000-0000-000000000000'::uuid),
+    ('Confirmacion turno', 'Gracias {{paciente}}! Tu turno con el Dr. {{medico}} el dia {{fecha}} a las {{hora}} fue confirmado.', 'turnos', ARRAY['paciente', 'medico', 'fecha', 'hora'], true, '00000000-0000-0000-0000-000000000000'::uuid),
+    ('Cancelacion turno', 'Hola {{paciente}}, te confirmamos que tu turno del {{fecha}} a las {{hora}} fue cancelado.', 'turnos', ARRAY['paciente', 'fecha', 'hora'], true, '00000000-0000-0000-0000-000000000000'::uuid),
+    ('Receta lista', '{{paciente}}, tu receta de {{medicamento}} ya esta lista. Pasa a retirarla por el consultorio.', 'recetas', ARRAY['paciente', 'medicamento'], true, '00000000-0000-0000-0000-000000000000'::uuid),
+    ('Urgencia detectada', 'Alerta de urgencia: {{paciente}} reporto: "{{mensaje}}". Comunicarse a la brevedad.', 'alertas', ARRAY['paciente', 'mensaje'], true, '00000000-0000-0000-0000-000000000000'::uuid)
 ) AS v(nombre, contenido, categoria, variables, activa, tenant_id)
 WHERE NOT EXISTS (SELECT 1 FROM plantillas_mensajes LIMIT 1);
 
-RAISE NOTICE '✅ Seed de producción completado';
+DO $$
+BEGIN
+  RAISE NOTICE 'Seed de produccion completado';
+END $$;
