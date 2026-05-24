@@ -31,6 +31,7 @@ import CredencialesTab from '@/components/configuracion/credenciales-tab';
 import IntegracionesDashboard from '@/components/configuracion/integraciones-dashboard';
 import Setup2FA from '@/components/configuracion/setup-2fa';
 import SuscripcionTab from '@/components/configuracion/suscripcion-tab';
+import ApiKeysTab from '@/components/configuracion/api-keys-tab';
 import { ChangePasswordForm } from '@/components/configuracion/change-password-form';
 
 // ============================================================
@@ -179,6 +180,12 @@ function ConfigContent() {
             <TabsTrigger value="credenciales" className="px-2 sm:px-3 shrink-0 text-amber-600 dark:text-amber-400">
               <Key className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Credenciales</span>
+            </TabsTrigger>
+          )}
+          {canAccess(userPlan, 'api-publica') && (
+            <TabsTrigger value="api-keys" className="px-2 sm:px-3 shrink-0">
+              <Key className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">API Keys</span>
             </TabsTrigger>
           )}
         </TabsList>
@@ -556,6 +563,13 @@ function ConfigContent() {
         {isAdmin && (
           <TabsContent value="credenciales" className="mt-4">
             <CredencialesTab />
+          </TabsContent>
+        )}
+
+        {/* ======== API KEYS (pública) ======== */}
+        {canAccess(userPlan, 'api-publica') && (
+          <TabsContent value="api-keys" className="mt-4">
+            <ApiKeysTab />
           </TabsContent>
         )}
 

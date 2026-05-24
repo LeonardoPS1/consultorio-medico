@@ -33,6 +33,7 @@ export type FeatureId =
   | 'backup-encriptado'
   | 'webhooks-log'
   | 'credenciales'
+  | 'api-publica'
   | 'multi-sucursal';
 
 // ============================================================
@@ -59,6 +60,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'backup-encriptado': 'premium',
   'webhooks-log': 'premium',
   'credenciales': 'premium',
+  'api-publica': 'professional',
   'multi-sucursal': 'enterprise',
 };
 

@@ -122,7 +122,8 @@ export function middleware(request: NextRequest) {
   }
 
   // Rate limit general para APIs (30 requests por minuto por IP)
-  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/')) {
+  // Excluir /api/v1/ — tienen su propio rate limit por API key
+  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/') && !pathname.startsWith('/api/v1/')) {
     if (!rateLimit(`api:${ip}`, 30, 60_000)) {
       const headers = new Headers({
         'Content-Type': 'application/json',

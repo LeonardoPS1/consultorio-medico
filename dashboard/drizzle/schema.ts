@@ -566,3 +566,24 @@ export const plantillasMensajes = pgTable('plantillas_mensajes', {
 
 export type PlantillaMensajeDB = InferSelectModel<typeof plantillasMensajes>;
 export type NewPlantillaMensaje = InferInsertModel<typeof plantillasMensajes>;
+
+// ============================================================
+// API KEYS (públicas)
+// ============================================================
+export const apiKeys = pgTable('api_keys', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000').notNull(),
+  nombre: varchar('nombre', { length: 255 }).notNull(),
+  keyHash: varchar('key_hash', { length: 255 }).notNull(),
+  keyPrefix: varchar('key_prefix', { length: 8 }).notNull(),
+  scopes: text('scopes').array().default(sql`'{}'`),
+  activa: boolean('activa').notNull().default(true),
+  ultimoUso: timestamp('ultimo_uso', { withTimezone: true }),
+  expiresAt: timestamp('expires_at', { withTimezone: true }),
+  createdBy: uuid('created_by').references(() => usuarios.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type ApiKey = InferSelectModel<typeof apiKeys>;
+export type NewApiKey = InferInsertModel<typeof apiKeys>;
