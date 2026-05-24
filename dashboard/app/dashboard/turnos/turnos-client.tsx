@@ -32,6 +32,7 @@ import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { CalendarView } from '@/components/calendar/calendar-view';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
 import { descargarICS } from '@/lib/ics';
+import { generateGCalUrl, formatGCalEventText } from '@/lib/google-calendar';
 import { toast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -797,11 +798,35 @@ export function TurnosClient({
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
+                        {/* Google Calendar link */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hoverable:hover:text-[#4285F4]"
+                          title="Agregar a Google Calendar"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const url = generateGCalUrl({
+                              text: formatGCalEventText(turno.paciente, turno.tipo),
+                              fechaHora: `${turno.fecha}T${turno.hora}:00.000Z`,
+                              duracionMinutos: 30,
+                              medico: turno.medico,
+                              motivo: turno.tipo,
+                            });
+                            window.open(url, '_blank', 'noopener,noreferrer');
+                          }}
+                        >
+                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z" fill="currentColor"/>
+                          </svg>
+                        </Button>
+
+                        {/* ICS download */}
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-muted-foreground hoverable:hover:text-primary"
-                          title="Agregar a calendario"
+                          title="Descargar .ics (Outlook, Apple)"
                           onClick={(e) => {
                             e.stopPropagation();
                             descargarICS({

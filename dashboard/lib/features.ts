@@ -21,17 +21,18 @@ export type FeatureId =
   | 'conversaciones'
   | 'recetas'
   | 'reportes'
+  | 'horarios'
+  | 'notificaciones'
   | 'reportes-avanzados'
   | 'ia-assistant'
+  | 'plantillas'
+  | '2fa'
   | 'equipo'
   | 'integraciones'
-  | '2fa'
   | 'auditoria'
-  | 'portal-paciente'
-  | 'backup'
-  | 'facturacion'
-  | 'videoconsulta'
-  | 'api-publica'
+  | 'backup-encriptado'
+  | 'webhooks-log'
+  | 'credenciales'
   | 'multi-sucursal';
 
 // ============================================================
@@ -46,17 +47,18 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'conversaciones': 'starter',
   'recetas': 'starter',
   'reportes': 'starter',
+  'horarios': 'starter',
+  'notificaciones': 'starter',
   'reportes-avanzados': 'professional',
   'ia-assistant': 'professional',
-  'equipo': 'professional',
+  'plantillas': 'professional',
   '2fa': 'professional',
+  'equipo': 'professional',
   'integraciones': 'premium',
   'auditoria': 'premium',
-  'portal-paciente': 'premium',
-  'backup': 'premium',
-  'facturacion': 'premium',
-  'videoconsulta': 'premium',
-  'api-publica': 'enterprise',
+  'backup-encriptado': 'premium',
+  'webhooks-log': 'premium',
+  'credenciales': 'premium',
   'multi-sucursal': 'enterprise',
 };
 

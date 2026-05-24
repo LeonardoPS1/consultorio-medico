@@ -160,12 +160,18 @@ function ConfigContent() {
           {canAccess(userPlan, 'integraciones') && (
             <TabsTrigger value="integraciones" className="px-2 sm:px-3 shrink-0">Integraciones</TabsTrigger>
           )}
-          <TabsTrigger value="horarios" className="px-2 sm:px-3 shrink-0">Horarios</TabsTrigger>
+          {canAccess(userPlan, 'horarios') && (
+            <TabsTrigger value="horarios" className="px-2 sm:px-3 shrink-0">Horarios</TabsTrigger>
+          )}
           {canAccess(userPlan, 'ia-assistant') && (
             <TabsTrigger value="ia" className="px-2 sm:px-3 shrink-0">IA</TabsTrigger>
           )}
-          <TabsTrigger value="plantillas" className="px-2 sm:px-3 shrink-0">Plantillas</TabsTrigger>
-          <TabsTrigger value="notificaciones" className="px-2 sm:px-3 shrink-0">Notificaciones</TabsTrigger>
+          {canAccess(userPlan, 'plantillas') && (
+            <TabsTrigger value="plantillas" className="px-2 sm:px-3 shrink-0">Plantillas</TabsTrigger>
+          )}
+          {canAccess(userPlan, 'notificaciones') && (
+            <TabsTrigger value="notificaciones" className="px-2 sm:px-3 shrink-0">Notificaciones</TabsTrigger>
+          )}
           {canAccess(userPlan, 'equipo') && (
             <TabsTrigger value="equipo" className="px-2 sm:px-3 shrink-0">Equipo</TabsTrigger>
           )}
@@ -197,6 +203,7 @@ function ConfigContent() {
         )}
 
         {/* ======== HORARIOS ======== */}
+        {canAccess(userPlan, 'horarios') && (
         <TabsContent value="horarios" className="mt-4">
           <Card>
             <CardHeader>
@@ -272,6 +279,7 @@ function ConfigContent() {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
 
         {/* ======== IA & AUTOMATIZACIÓN ======== */}
         {canAccess(userPlan, 'ia-assistant') && (
@@ -353,6 +361,7 @@ function ConfigContent() {
         )}
 
         {/* ======== PLANTILLAS WHATSAPP ======== */}
+        {canAccess(userPlan, 'plantillas') && (
         <TabsContent value="plantillas" className="mt-4 space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -472,8 +481,10 @@ function ConfigContent() {
             onClose={() => setPreviewPlantilla(null)}
           />
         </TabsContent>
+        )}
 
         {/* ======== NOTIFICACIONES ======== */}
+        {canAccess(userPlan, 'notificaciones') && (
         <TabsContent value="notificaciones" className="mt-4">
           <Card>
             <CardHeader>
@@ -539,6 +550,7 @@ function ConfigContent() {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
 
         {/* ======== CREDENCIALES (solo admin) ======== */}
         {isAdmin && (

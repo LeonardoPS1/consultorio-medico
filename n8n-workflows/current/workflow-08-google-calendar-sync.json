@@ -1,0 +1,177 @@
+{
+  "name": "08 - Google Calendar Sync",
+  "nodes": [
+    {
+      "id": "webhook-receive",
+      "name": "Webhook - Recibir Sync",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "parameters": {
+        "path": "google-calendar-sync",
+        "method": "POST",
+        "options": {
+          "ignoreHttpBody": false
+        }
+      }
+    },
+    {
+      "id": "router-action",
+      "name": "Router - Acción",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "operation": "equal",
+              "value2": "delete"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "delete-event",
+      "name": "Google Calendar - Eliminar Evento",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 2,
+      "position": [500, 100],
+      "parameters": {
+        "operation": "delete",
+        "calendarId": "primary",
+        "eventId": "={{ $json.googleCalendarEventId }}"
+      }
+    },
+    {
+      "id": "create-event",
+      "name": "Google Calendar - Crear Evento",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 2,
+      "position": [500, 400],
+      "parameters": {
+        "operation": "create",
+        "calendarId": "primary",
+        "summary": "={{ 'Consulta: ' + $json.pacienteNombre }}",
+        "start": {
+          "dateTime": "={{ DateTime.fromISO($json.fechaHora).toFormat('yyyy-MM-dd\\'T\\'HH:mm:ss') }}",
+          "timeZone": "America/Argentina/Buenos_Aires"
+        },
+        "end": {
+          "dateTime": "={{ DateTime.fromISO($json.fechaHora).plus({ minutes: $json.duracionMinutos || 30 }).toFormat('yyyy-MM-dd\\'T\\'HH:mm:ss') }}",
+          "timeZone": "America/Argentina/Buenos_Aires"
+        },
+        "description": "={{ 'Paciente: ' + $json.pacienteNombre + ($json.medicoNombre ? '\\nMédico: ' + $json.medicoNombre : '') + ($json.motivo ? '\\nMotivo: ' + $json.motivo : '') + '\\nTeléfono: ' + ($json.pacienteTelefono || '') }}",
+        "options": {
+          "sendUpdates": "none"
+        }
+      }
+    },
+    {
+      "id": "update-event",
+      "name": "Google Calendar - Actualizar Evento",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 2,
+      "position": [500, 550],
+      "parameters": {
+        "operation": "update",
+        "calendarId": "primary",
+        "eventId": "={{ $json.googleCalendarEventId }}",
+        "summary": "={{ 'Consulta: ' + $json.pacienteNombre }}",
+        "start": {
+          "dateTime": "={{ DateTime.fromISO($json.fechaHora).toFormat('yyyy-MM-dd\\'T\\'HH:mm:ss') }}",
+          "timeZone": "America/Argentina/Buenos_Aires"
+        },
+        "end": {
+          "dateTime": "={{ DateTime.fromISO($json.fechaHora).plus({ minutes: $json.duracionMinutos || 30 }).toFormat('yyyy-MM-dd\\'T\\'HH:mm:ss') }}",
+          "timeZone": "America/Argentina/Buenos_Aires"
+        },
+        "description": "={{ 'Paciente: ' + $json.pacienteNombre + ($json.medicoNombre ? '\\nMédico: ' + $json.medicoNombre : '') + ($json.motivo ? '\\nMotivo: ' + $json.motivo : '') + '\\nTeléfono: ' + ($json.pacienteTelefono || '') }}",
+        "options": {
+          "sendUpdates": "none"
+        }
+      }
+    },
+    {
+      "id": "router-create-or-update",
+      "name": "Router - Create vs Update",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [750, 400],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "operation": "equal",
+              "value2": "create"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "store-event-id",
+      "name": "PG - Guardar Event ID",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [250, 650],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE turnos SET google_calendar_event_id = $1 WHERE id = $2",
+        "additionalFields": {
+          "queryParams": "={{ [$json.id, $json.eventId, $json.turnoId] }}"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "log-result",
+      "name": "PG - Log Sync",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [500, 700],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, execution_id, nivel, mensaje, created_at)\nVALUES ('workflow-08', $1, 'info', $2, NOW())",
+        "additionalFields": {
+          "queryParams": "={{ ['gcal-' + Date.now(), 'Google Calendar sync: ' + $json.action + ' | turno ' + ($json.turnoId || $json.id) ] }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Recibir Sync": {
+      "main": [[{ "node": "Router - Acción", "type": "main", "index": 0 }]]
+    },
+    "Router - Acción": {
+      "main": [
+        [{ "node": "Google Calendar - Eliminar Evento", "type": "main", "index": 0 }],
+        [{ "node": "Google Calendar - Crear Evento", "type": "main", "index": 0 }]
+      ]
+    },
+    "Google Calendar - Crear Evento": {
+      "main": [[{ "node": "Router - Create vs Update", "type": "main", "index": 0 }]]
+    },
+    "Google Calendar - Eliminar Evento": {
+      "main": [[{ "node": "PG - Log Sync", "type": "main", "index": 0 }]]
+    },
+    "Router - Create vs Update": {
+      "main": [
+        [{ "node": "PG - Guardar Event ID", "type": "main", "index": 0 }],
+        [{ "node": "PG - Log Sync", "type": "main", "index": 0 }]
+      ]
+    },
+    "Google Calendar - Actualizar Evento": {
+      "main": [[{ "node": "PG - Log Sync", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Argentina/Buenos_Aires"
+  },
+  "tags": ["calendario", "google", "sync"],
+  "active": false
+}

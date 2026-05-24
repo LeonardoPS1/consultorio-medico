@@ -9,6 +9,7 @@ import {
   createMensaje,
   updateMensajeByTwilioSid,
 } from '@/lib/data-store';
+import { detectSurveyResponse, storeSurveyResponse } from '@/lib/encuestas';
 
 /**
  * Forwardea el webhook a n8n para procesamiento con IA.
@@ -302,6 +303,16 @@ export const POST = withRateLimit(async function POST(request: NextRequest) {
     });
 
     console.log(`[Twilio] Mensaje recibido — ${conversacionId ? 'conversación existente' : 'nueva conversación'}`);
+
+    // Detectar si es respuesta de encuesta (número 1-5)
+    const survey = detectSurveyResponse(body);
+    if (survey.esEncuesta && paciente) {
+      storeSurveyResponse({
+        pacienteId: paciente.id,
+        puntaje: survey.puntaje!,
+        comentario: body,
+      }).catch(() => {});
+    }
 
     // Forward a n8n para procesamiento con IA (fire-and-forget)
     forwardToN8n(params).catch(() => {});

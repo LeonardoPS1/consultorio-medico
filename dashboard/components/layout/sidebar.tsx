@@ -21,6 +21,8 @@ import {
   Building2,
   Webhook,
   X,
+  Star,
+  Rocket,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
@@ -38,12 +40,14 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: 'Panel Principal', href: '/dashboard', icon: LayoutDashboard },
+  { title: 'Configurar', href: '/dashboard/onboarding', icon: Rocket, badge: 'Nuevo' },
   { title: 'Atención', href: '/dashboard/atencion', icon: Activity, feature: 'atencion' },
   { title: 'Turnos', href: '/dashboard/turnos', icon: Calendar, feature: 'turnos' },
   { title: 'Pacientes', href: '/dashboard/pacientes', icon: Users, feature: 'pacientes' },
   { title: 'Conversaciones', href: '/dashboard/conversaciones', icon: MessageSquare, feature: 'conversaciones' },
   { title: 'Recetas', href: '/dashboard/recetas', icon: Syringe, feature: 'recetas' },
   { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3, feature: 'reportes' },
+  { title: 'Encuestas', href: '/dashboard/encuestas', icon: Star, feature: 'reportes' },
   { title: 'Configuración', href: '/dashboard/configuracion', icon: Settings },
 ];
 
