@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Loader2, Lightbulb, ExternalLink, MessageSquare, Stethoscope, Clock, UserPlus, Bell, Sparkles } from 'lucide-react';
-import { ONBOARDING_STEPS, type OnboardingStep } from '@/lib/onboarding';
+import { ONBOARDING_STEPS, type OnboardingStep } from '@/lib/onboarding-types';
 
 // ─── Props ──────────────────────────────────────────────────
 
