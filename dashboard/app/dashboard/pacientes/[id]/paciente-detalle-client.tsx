@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,11 +26,32 @@ import {
   Cake,
   MapPin,
   FilePlus2,
+  Trash2,
+  Save,
+  RotateCcw,
 } from 'lucide-react';
 import { formatPhone, getInitials, formatDate, getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -144,6 +165,27 @@ export function PacienteDetalleClient({
   const [frecuencia, setFrecuencia] = useState('');
   const [indicaciones, setIndicaciones] = useState('');
 
+  // ─── Historial state ──────────────────────────────
+  const [historialList, setHistorialList] = useState(historial);
+  const [showNewHistorial, setShowNewHistorial] = useState(false);
+  const [editHistorialDialog, setEditHistorialDialog] = useState<HistorialRow | null>(null);
+  const [deleteHistorialId, setDeleteHistorialId] = useState<string | null>(null);
+  const [historialForm, setHistorialForm] = useState({
+    tipo: 'consulta',
+    titulo: '',
+    descripcion: '',
+    codigo: '',
+  });
+  const [savingHistorial, setSavingHistorial] = useState(false);
+
+  // ─── Notas / Alergias / Medicacion editables ──────
+  const [editandoNotas, setEditandoNotas] = useState(false);
+  const [notasEdit, setNotasEdit] = useState(paciente.notasMedicas || '');
+  const [editandoAlergias, setEditandoAlergias] = useState(false);
+  const [alergiasEdit, setAlergiasEdit] = useState(paciente.alergias || '');
+  const [editandoMedicacion, setEditandoMedicacion] = useState(false);
+  const [medicacionEdit, setMedicacionEdit] = useState(paciente.medicacionCronica || '');
+
   const handleEstadoTurno = async (id: string, nuevoEstado: string) => {
     setTurnosList((prev) =>
       prev.map((t) => (t.id === id ? { ...t, estado: nuevoEstado } : t)),
@@ -201,6 +243,147 @@ export function PacienteDetalleClient({
       toast({ title: 'Error', description: 'No se pudo crear la receta', variant: 'destructive' });
     } finally {
       setSavingReceta(false);
+    }
+  };
+
+  // ─── Historial CRUD handlers ──────────────────────
+
+  const handleCreateHistorial = async () => {
+    if (!historialForm.titulo.trim()) return;
+    setSavingHistorial(true);
+    try {
+      const res = await fetch(`/api/pacientes/${paciente.id}/historial`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(historialForm),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const newEntry: HistorialRow = {
+        id: data.id,
+        tipo: data.tipo,
+        titulo: data.titulo,
+        descripcion: data.descripcion,
+        diagnosticoCodigo: data.diagnosticoCodigo,
+        diagnosticoDescripcion: data.diagnosticoDescripcion,
+        fecha: data.createdAt,
+      };
+      setHistorialList((prev) => [newEntry, ...prev]);
+      toast({ title: 'Entrada agregada', description: data.titulo });
+      setShowNewHistorial(false);
+      setHistorialForm({ tipo: 'consulta', titulo: '', descripcion: '', codigo: '' });
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo crear la entrada', variant: 'destructive' });
+    } finally {
+      setSavingHistorial(false);
+    }
+  };
+
+  const handleUpdateHistorial = async () => {
+    if (!editHistorialDialog || !editHistorialDialog.titulo.trim()) return;
+    setSavingHistorial(true);
+    try {
+      const res = await fetch(
+        `/api/pacientes/${paciente.id}/historial?entryId=${editHistorialDialog.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipo: editHistorialDialog.tipo,
+            titulo: editHistorialDialog.titulo,
+            descripcion: editHistorialDialog.descripcion,
+            codigo: editHistorialDialog.diagnosticoCodigo,
+          }),
+        },
+      );
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setHistorialList((prev) =>
+        prev.map((h) =>
+          h.id === data.id
+            ? {
+                ...h,
+                tipo: data.tipo,
+                titulo: data.titulo,
+                descripcion: data.descripcion,
+                diagnosticoCodigo: data.diagnosticoCodigo,
+                diagnosticoDescripcion: data.diagnosticoDescripcion,
+              }
+            : h,
+        ),
+      );
+      toast({ title: 'Entrada actualizada' });
+      setEditHistorialDialog(null);
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo actualizar', variant: 'destructive' });
+    } finally {
+      setSavingHistorial(false);
+    }
+  };
+
+  const handleDeleteHistorial = async () => {
+    if (!deleteHistorialId) return;
+    try {
+      const res = await fetch(
+        `/api/pacientes/${paciente.id}/historial?entryId=${deleteHistorialId}`,
+        { method: 'DELETE' },
+      );
+      if (!res.ok) throw new Error();
+      setHistorialList((prev) => prev.filter((h) => h.id !== deleteHistorialId));
+      toast({ title: 'Entrada eliminada' });
+      setDeleteHistorialId(null);
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo eliminar', variant: 'destructive' });
+    }
+  };
+
+  // ─── Editar notas / alergias / medicacion ──────────
+
+  const handleSaveNotas = async () => {
+    try {
+      const res = await fetch(`/api/pacientes/${paciente.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notasMedicas: notasEdit }),
+      });
+      if (!res.ok) throw new Error();
+      paciente.notasMedicas = notasEdit;
+      toast({ title: 'Notas actualizadas' });
+      setEditandoNotas(false);
+    } catch {
+      toast({ title: 'Error', description: 'No se pudieron guardar las notas', variant: 'destructive' });
+    }
+  };
+
+  const handleSaveAlergias = async () => {
+    try {
+      const res = await fetch(`/api/pacientes/${paciente.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alergias: alergiasEdit || null }),
+      });
+      if (!res.ok) throw new Error();
+      paciente.alergias = alergiasEdit || null;
+      toast({ title: 'Alergias actualizadas' });
+      setEditandoAlergias(false);
+    } catch {
+      toast({ title: 'Error', description: 'No se pudieron actualizar las alergias', variant: 'destructive' });
+    }
+  };
+
+  const handleSaveMedicacion = async () => {
+    try {
+      const res = await fetch(`/api/pacientes/${paciente.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ medicacionCronica: medicacionEdit || null }),
+      });
+      if (!res.ok) throw new Error();
+      paciente.medicacionCronica = medicacionEdit || null;
+      toast({ title: 'Medicación actualizada' });
+      setEditandoMedicacion(false);
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo actualizar la medicación', variant: 'destructive' });
     }
   };
 
@@ -285,29 +468,113 @@ export function PacienteDetalleClient({
             </div>
           </div>
 
-          {/* Alergias / Medicacion */}
-          {(paciente.alergias || paciente.medicacionCronica) && (
-            <div className="flex gap-4 mt-4 pt-4 border-t">
-              {paciente.alergias && (
-                <div className="flex items-start gap-2 text-sm">
-                  <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="font-medium text-red-600">Alergias</p>
-                    <p className="text-muted-foreground">{paciente.alergias}</p>
-                  </div>
+          {/* Alergias / Medicacion (editables) */}
+          <div className="flex gap-4 mt-4 pt-4 border-t flex-wrap">
+            <div className="flex items-start gap-2 text-sm flex-1 min-w-[200px]">
+              <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-red-600">Alergias</p>
+                  {!editandoAlergias && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      onClick={() => {
+                        setAlergiasEdit(paciente.alergias || '');
+                        setEditandoAlergias(true);
+                      }}
+                    >
+                      <Edit3 className="h-3 w-3" />
+                    </Button>
+                  )}
                 </div>
-              )}
-              {paciente.medicacionCronica && (
-                <div className="flex items-start gap-2 text-sm">
-                  <Syringe className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="font-medium text-amber-600">Medicacion cronica</p>
-                    <p className="text-muted-foreground">{paciente.medicacionCronica}</p>
+                {editandoAlergias ? (
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      className="h-7 text-xs flex-1"
+                      value={alergiasEdit}
+                      onChange={(e) => setAlergiasEdit(e.target.value)}
+                      placeholder="Sin alergias registradas"
+                      autoFocus
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      onClick={() => setEditandoAlergias(false)}
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      onClick={handleSaveAlergias}
+                    >
+                      <Save className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-muted-foreground">
+                    {paciente.alergias || 'Sin alergias registradas'}
+                  </p>
+                )}
+              </div>
             </div>
-          )}
+            <div className="flex items-start gap-2 text-sm flex-1 min-w-[200px]">
+              <Syringe className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-amber-600">Medicacion cronica</p>
+                  {!editandoMedicacion && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      onClick={() => {
+                        setMedicacionEdit(paciente.medicacionCronica || '');
+                        setEditandoMedicacion(true);
+                      }}
+                    >
+                      <Edit3 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                {editandoMedicacion ? (
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      className="h-7 text-xs flex-1"
+                      value={medicacionEdit}
+                      onChange={(e) => setMedicacionEdit(e.target.value)}
+                      placeholder="Sin medicación registrada"
+                      autoFocus
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      onClick={() => setEditandoMedicacion(false)}
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      onClick={handleSaveMedicacion}
+                    >
+                      <Save className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    {paciente.medicacionCronica || 'Sin medicación registrada'}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -353,11 +620,9 @@ export function PacienteDetalleClient({
           <TabsTrigger value="historial">
             <Activity className="h-4 w-4 mr-1" /> Historial ({historial.length})
           </TabsTrigger>
-          {paciente.notasMedicas && (
-            <TabsTrigger value="notas">
-              <FileText className="h-4 w-4 mr-1" /> Notas
-            </TabsTrigger>
-          )}
+          <TabsTrigger value="notas">
+            <FileText className="h-4 w-4 mr-1" /> Notas
+          </TabsTrigger>
         </TabsList>
 
         {/* Turnos */}
@@ -560,7 +825,90 @@ export function PacienteDetalleClient({
 
         {/* Historial */}
         <TabsContent value="historial" className="mt-4">
-          {historial.length === 0 ? (
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-muted-foreground">{historialList.length} entradas</p>
+            {!showNewHistorial && (
+              <Button variant="outline" size="sm" onClick={() => setShowNewHistorial(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Nueva entrada
+              </Button>
+            )}
+          </div>
+
+          {/* Form nueva entrada */}
+          {showNewHistorial && (
+            <Card className="border-dashed border-primary/40 mb-3">
+              <CardContent className="p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Tipo</Label>
+                    <select
+                      className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-xs"
+                      value={historialForm.tipo}
+                      onChange={(e) => setHistorialForm((f) => ({ ...f, tipo: e.target.value }))}
+                    >
+                      <option value="consulta">Consulta</option>
+                      <option value="diagnostico">Diagnóstico</option>
+                      <option value="procedimiento">Procedimiento</option>
+                      <option value="estudio">Estudio</option>
+                      <option value="nota">Nota de evolución</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Código CIE-10</Label>
+                    <Input
+                      className="h-8 text-xs"
+                      placeholder="ej: J02.9"
+                      value={historialForm.codigo}
+                      onChange={(e) => setHistorialForm((f) => ({ ...f, codigo: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Título *</Label>
+                  <Input
+                    className="h-8 text-xs"
+                    placeholder="ej: Control de rutina"
+                    value={historialForm.titulo}
+                    onChange={(e) => setHistorialForm((f) => ({ ...f, titulo: e.target.value }))}
+                    autoFocus
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Descripción</Label>
+                  <Textarea
+                    className="min-h-[60px] text-xs"
+                    placeholder="Detalles de la entrada..."
+                    value={historialForm.descripcion}
+                    onChange={(e) => setHistorialForm((f) => ({ ...f, descripcion: e.target.value }))}
+                  />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      setShowNewHistorial(false);
+                      setHistorialForm({ tipo: 'consulta', titulo: '', descripcion: '', codigo: '' });
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={handleCreateHistorial}
+                    disabled={savingHistorial || !historialForm.titulo.trim()}
+                  >
+                    {savingHistorial ? 'Creando...' : 'Guardar'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {historialList.length === 0 && !showNewHistorial ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <Activity className="h-10 w-10 text-muted-foreground/30 mb-3" />
@@ -569,10 +917,10 @@ export function PacienteDetalleClient({
             </Card>
           ) : (
             <div className="space-y-2">
-              {historial.map((h) => {
+              {historialList.map((h) => {
                 const Icon = getHistorialIcon(h.tipo);
                 return (
-                  <Card key={h.id} className="hoverable:hover:bg-muted/30 transition-colors">
+                  <Card key={h.id} className="hoverable:hover:bg-muted/30 transition-colors group">
                     <CardContent className="p-4 flex items-start gap-4">
                       <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
                         <Icon className="h-5 w-5 text-muted-foreground" />
@@ -591,9 +939,31 @@ export function PacienteDetalleClient({
                           </p>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground shrink-0">
-                        {formatDate(h.fecha, 'dd/MM/yy')}
-                      </p>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(h.fecha, 'dd/MM/yy')}
+                        </p>
+                        <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => setEditHistorialDialog(h)}
+                            title="Editar"
+                          >
+                            <Edit3 className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-destructive"
+                            onClick={() => setDeleteHistorialId(h.id)}
+                            title="Eliminar"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 );
@@ -602,24 +972,68 @@ export function PacienteDetalleClient({
           )}
         </TabsContent>
 
-        {/* Notas médicas */}
-        {paciente.notasMedicas && (
-          <TabsContent value="notas" className="mt-4">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-start gap-3">
-                  <Edit3 className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
-                  <div>
-                    <p className="font-medium mb-2">Notas del medico</p>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {paciente.notasMedicas}
-                    </p>
+        {/* Notas médicas (siempre visible, editable) */}
+        <TabsContent value="notas" className="mt-4">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start gap-3">
+                <Edit3 className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-medium">Notas del medico</p>
+                    {!editandoNotas && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => {
+                          setNotasEdit(paciente.notasMedicas || '');
+                          setEditandoNotas(true);
+                        }}
+                      >
+                        <Edit3 className="h-3.5 w-3.5 mr-1" />
+                        {paciente.notasMedicas ? 'Editar' : 'Agregar notas'}
+                      </Button>
+                    )}
                   </div>
+                  {editandoNotas ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        className="min-h-[120px] text-sm"
+                        placeholder="Escribí notas médicas sobre el paciente..."
+                        value={notasEdit}
+                        onChange={(e) => setNotasEdit(e.target.value)}
+                        autoFocus
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => setEditandoNotas(false)}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={handleSaveNotas}
+                        >
+                          <Save className="h-3.5 w-3.5 mr-1" />
+                          Guardar notas
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {paciente.notasMedicas || 'Sin notas registradas'}
+                    </p>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Info extra */}
@@ -645,6 +1059,95 @@ export function PacienteDetalleClient({
           </CardContent>
         </Card>
       )}
+
+      {/* ─── Historial Edit Dialog ──────────────── */}
+      <Dialog open={!!editHistorialDialog} onOpenChange={(open) => !open && setEditHistorialDialog(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Editar entrada de historial</DialogTitle>
+          </DialogHeader>
+          {editHistorialDialog && (
+            <div className="space-y-3 py-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Tipo</Label>
+                  <select
+                    className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-xs"
+                    value={editHistorialDialog.tipo}
+                    onChange={(e) =>
+                      setEditHistorialDialog({ ...editHistorialDialog, tipo: e.target.value })
+                    }
+                  >
+                    <option value="consulta">Consulta</option>
+                    <option value="diagnostico">Diagnóstico</option>
+                    <option value="procedimiento">Procedimiento</option>
+                    <option value="estudio">Estudio</option>
+                    <option value="nota">Nota de evolución</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Código CIE-10</Label>
+                  <Input
+                    className="h-8 text-xs"
+                    placeholder="ej: J02.9"
+                    value={editHistorialDialog.diagnosticoCodigo || ''}
+                    onChange={(e) =>
+                      setEditHistorialDialog({ ...editHistorialDialog, diagnosticoCodigo: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Título</Label>
+                <Input
+                  className="h-8 text-xs"
+                  value={editHistorialDialog.titulo}
+                  onChange={(e) =>
+                    setEditHistorialDialog({ ...editHistorialDialog, titulo: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Descripción</Label>
+                <Textarea
+                  className="min-h-[80px] text-xs"
+                  value={editHistorialDialog.descripcion || ''}
+                  onChange={(e) =>
+                    setEditHistorialDialog({ ...editHistorialDialog, descripcion: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setEditHistorialDialog(null)}>
+              Cancelar
+            </Button>
+            <Button size="sm" onClick={handleUpdateHistorial} disabled={savingHistorial}>
+              {savingHistorial ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Delete Confirmation ──────────────── */}
+      <AlertDialog open={!!deleteHistorialId} onOpenChange={(open) => !open && setDeleteHistorialId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar entrada?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. La entrada de historial se eliminará permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteHistorial} className="bg-destructive text-destructive-foreground">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
