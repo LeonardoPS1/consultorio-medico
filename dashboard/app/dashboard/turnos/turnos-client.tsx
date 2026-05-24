@@ -20,7 +20,14 @@ import {
   RotateCcw,
   CalendarPlus,
   MessageSquare,
+  MoreHorizontal,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { CalendarView } from '@/components/calendar/calendar-view';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
@@ -363,13 +370,22 @@ export function TurnosClient({
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <h3 className="text-lg font-semibold min-w-[200px] text-center">
-                {selectedDate.toLocaleDateString('es-AR', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
+              <h3 className="text-sm sm:text-lg font-semibold min-w-[120px] sm:min-w-[200px] text-center truncate">
+                <span className="hidden sm:inline">
+                  {selectedDate.toLocaleDateString('es-AR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </span>
+                <span className="sm:hidden">
+                  {selectedDate.toLocaleDateString('es-AR', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                  })}
+                </span>
               </h3>
               <Button
                 variant="outline"
@@ -686,68 +702,101 @@ export function TurnosClient({
                           {getTurnoLabel(turno.estado)}
                         </Badge>
 
-                        {/* Acciones */}
-                        <div className="hidden md:flex gap-1">
-                          {(turno.estado === 'pendiente' ||
-                            turno.estado === 'confirmada') && (
+                        {/* Acciones — desktop: inline, mobile: dropdown */}
+                        <div className="flex gap-1">
+                          <div className="hidden md:flex gap-1">
+                            {(turno.estado === 'pendiente' ||
+                              turno.estado === 'confirmada') && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-8 gap-1"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  actualizarEstado(
+                                    turno.id,
+                                    'en_atencion',
+                                    `En atención`,
+                                  );
+                                }}
+                              >
+                                <Play className="h-3 w-3" /> Atender
+                              </Button>
+                            )}
+                            {turno.estado === 'en_atencion' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-8 gap-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  actualizarEstado(
+                                    turno.id,
+                                    'atendido',
+                                    `${turno.paciente} fue atendido`,
+                                  );
+                                }}
+                              >
+                                <CheckCircle2 className="h-3 w-3" /> Finalizar
+                              </Button>
+                            )}
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
-                              className="text-xs h-8 gap-1"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                actualizarEstado(
-                                  turno.id,
-                                  'en_atencion',
-                                  `En atención`,
-                                );
+                                setEditTurno(turno);
                               }}
                             >
-                              <Play className="h-3 w-3" /> Atender
+                              Editar
                             </Button>
-                          )}
-                          {turno.estado === 'en_atencion' && (
+                            {turno.estado !== 'atendido' &&
+                              turno.estado !== 'cancelada' && (
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
-                              className="text-xs h-8 gap-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                              className="text-destructive"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                actualizarEstado(
-                                  turno.id,
-                                  'atendido',
-                                  `${turno.paciente} fue atendido`,
-                                );
+                                setShowCancelDialog(turno.id);
                               }}
                             >
-                              <CheckCircle2 className="h-3 w-3" /> Finalizar
+                              <XCircle className="h-3.5 w-3.5 mr-1" />
+                              Cancelar
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditTurno(turno);
-                            }}
-                          >
-                            Editar
-                          </Button>
-                          {turno.estado !== 'atendido' &&
-                            turno.estado !== 'cancelada' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowCancelDialog(turno.id);
-                            }}
-                          >
-                            <XCircle className="h-3.5 w-3.5 mr-1" />
-                            Cancelar
-                          </Button>
-                        )}
+                          </div>
+
+                          {/* Mobile dropdown */}
+                          <div className="md:hidden">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-44">
+                                {(turno.estado === 'pendiente' || turno.estado === 'confirmada') && (
+                                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); actualizarEstado(turno.id, 'en_atencion', 'En atención'); }}>
+                                    <Play className="h-4 w-4 mr-2" /> Atender
+                                  </DropdownMenuItem>
+                                )}
+                                {turno.estado === 'en_atencion' && (
+                                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); actualizarEstado(turno.id, 'atendido', `${turno.paciente} fue atendido`); }}>
+                                    <CheckCircle2 className="h-4 w-4 mr-2" /> Finalizar
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditTurno(turno); }}>
+                                  Editar
+                                </DropdownMenuItem>
+                                {turno.estado !== 'atendido' && turno.estado !== 'cancelada' && (
+                                  <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); setShowCancelDialog(turno.id); }}>
+                                    <XCircle className="h-4 w-4 mr-2" /> Cancelar
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         <Button
                           variant="ghost"
                           size="icon"

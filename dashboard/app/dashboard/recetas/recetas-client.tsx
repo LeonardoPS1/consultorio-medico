@@ -12,7 +12,14 @@ import {
   RotateCcw,
   FileText,
   Printer,
+  MoreHorizontal,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { formatDate } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NuevaRecetaModal } from '@/components/modals/nueva-receta-modal';
@@ -489,54 +496,85 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
             )}
           </p>
         </div>
+        {/* Acciones — desktop: inline, mobile: dropdown */}
         <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            title="Descargar"
-            onClick={(e) => {
-              e.stopPropagation();
-              descargarReceta(receta);
-            }}
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            title="Enviar por WhatsApp"
-            onClick={(e) => {
-              e.stopPropagation();
-              enviarRecetaWhatsApp(receta);
-            }}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            title="Imprimir"
-            onClick={(e) => {
-              e.stopPropagation();
-              imprimirReceta(receta);
-            }}
-          >
-            <Printer className="h-4 w-4" />
-          </Button>
-          {(isActiva || isVencida) && receta.renovable && (
+          {/* Desktop inline */}
+          <div className="hidden sm:flex gap-1">
             <Button
-              variant="outline"
-              size="sm"
-              className="text-xs"
+              variant="ghost"
+              size="icon"
+              title="Descargar"
               onClick={(e) => {
                 e.stopPropagation();
-                handleRenovar(receta);
+                descargarReceta(receta);
               }}
             >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              Renovar
+              <Download className="h-4 w-4" />
             </Button>
-          )}
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Enviar por WhatsApp"
+              onClick={(e) => {
+                e.stopPropagation();
+                enviarRecetaWhatsApp(receta);
+              }}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Imprimir"
+              onClick={(e) => {
+                e.stopPropagation();
+                imprimirReceta(receta);
+              }}
+            >
+              <Printer className="h-4 w-4" />
+            </Button>
+            {(isActiva || isVencida) && receta.renovable && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRenovar(receta);
+                }}
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Renovar
+              </Button>
+            )}
+          </div>
+
+          {/* Mobile dropdown */}
+          <div className="sm:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); descargarReceta(receta); }}>
+                  <Download className="h-4 w-4 mr-2" /> Descargar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); enviarRecetaWhatsApp(receta); }}>
+                  <Send className="h-4 w-4 mr-2" /> WhatsApp
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); imprimirReceta(receta); }}>
+                  <Printer className="h-4 w-4 mr-2" /> Imprimir
+                </DropdownMenuItem>
+                {(isActiva || isVencida) && receta.renovable && (
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleRenovar(receta); }}>
+                    <RotateCcw className="h-4 w-4 mr-2" /> Renovar
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
     );
@@ -546,15 +584,16 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
     <>
       {/* Tabs */}
       <Tabs defaultValue="activas">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <TabsList>
             <TabsTrigger value="activas">Activas</TabsTrigger>
             <TabsTrigger value="vencidas">Vencidas</TabsTrigger>
             <TabsTrigger value="historial">Historial</TabsTrigger>
           </TabsList>
-          <Button onClick={() => setShowNewReceta(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Receta
+          <Button onClick={() => setShowNewReceta(true)} className="shrink-0">
+            <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Nueva Receta</span>
+            <span className="sm:hidden">Nueva</span>
           </Button>
         </div>
 

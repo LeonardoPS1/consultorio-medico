@@ -336,7 +336,7 @@ export default function ConversacionesPage() {
         {/* --- PANEL DE CONVERSACIÓN --- */}
         <Card>
           {selectedId && selectedConv ? (
-            <CardContent className="p-0 flex flex-col h-[calc(100vh-12rem)]">
+            <CardContent className="p-0 flex flex-col h-[50vh] sm:h-[60vh] lg:h-[calc(100vh-12rem)]">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b">
                 <div className="flex items-center gap-3">
@@ -496,7 +496,7 @@ export default function ConversacionesPage() {
             </CardContent>
           ) : (
             /* Estado vacío: sin conversación seleccionada */
-            <CardContent className="flex items-center justify-center h-[calc(100vh-12rem)]">
+            <CardContent className="flex items-center justify-center h-[50vh] sm:h-[60vh] lg:h-[calc(100vh-12rem)]">
               <div className="text-center">
                 <MessageSquare className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
                 <p className="text-lg font-medium text-muted-foreground">

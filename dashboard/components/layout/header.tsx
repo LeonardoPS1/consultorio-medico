@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Bell, Moon, Sun, Monitor, Calendar, MessageSquare, Syringe, AlertTriangle, X } from 'lucide-react';
+import { Bell, Moon, Sun, Monitor, Calendar, MessageSquare, Syringe, AlertTriangle, X, Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getInitials, formatRelative } from '@/lib/utils';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
@@ -154,9 +154,20 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
-      <div className="flex items-center gap-3">
-        <Avatar className="h-9 w-9 ring-2 ring-border">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
+      <div className="flex items-center gap-2 lg:gap-3 min-w-0">
+        {/* Hamburger — mobile only */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden h-9 w-9 shrink-0"
+          onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
+          title="Menú"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+
+        <Avatar className="h-8 w-8 lg:h-9 lg:w-9 ring-2 ring-border shrink-0">
           {avatarUrl ? (
             <img src={avatarUrl} alt="Avatar" className="h-full w-full rounded-full object-cover" />
           ) : (
@@ -165,11 +176,11 @@ export function Header() {
             </AvatarFallback>
           )}
         </Avatar>
-        <div>
-          <h1 className="text-base font-semibold text-foreground">
+        <div className="min-w-0">
+          <h1 className="text-sm lg:text-base font-semibold text-foreground truncate">
             {orgFirma || 'Dr.'}
           </h1>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[11px] lg:text-xs text-muted-foreground truncate hidden sm:block">
             {orgNombre} · {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>

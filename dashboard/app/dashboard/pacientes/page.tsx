@@ -61,20 +61,20 @@ export default async function PacientesPage() {
       </div>
 
       {/* Estadísticas (server-rendered) */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-lg bg-primary/5 p-3 text-center">
-          <p className="text-2xl font-bold text-primary">{total}</p>
-          <p className="text-xs text-muted-foreground">Total pacientes</p>
-        </div>
-        <div className="rounded-lg bg-emerald-500/5 p-3 text-center">
-          <p className="text-2xl font-bold text-emerald-600">{conTurnos}</p>
-          <p className="text-xs text-muted-foreground">Con turnos</p>
-        </div>
-        <div className="rounded-lg bg-amber-500/5 p-3 text-center">
-          <p className="text-2xl font-bold text-amber-600">{nuevos}</p>
-          <p className="text-xs text-muted-foreground">Nuevos</p>
-        </div>
-      </div>
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  <div className="rounded-lg bg-primary/5 p-3 text-center">
+    <p className="text-xl sm:text-2xl font-bold text-primary">{total}</p>
+    <p className="text-xs text-muted-foreground">Total pacientes</p>
+  </div>
+  <div className="rounded-lg bg-emerald-500/5 p-3 text-center">
+    <p className="text-xl sm:text-2xl font-bold text-emerald-600">{conTurnos}</p>
+    <p className="text-xs text-muted-foreground">Con turnos</p>
+  </div>
+  <div className="rounded-lg bg-amber-500/5 p-3 text-center">
+    <p className="text-xl sm:text-2xl font-bold text-amber-600">{nuevos}</p>
+    <p className="text-xs text-muted-foreground">Nuevos</p>
+  </div>
+</div>
 
       {/* Lista + búsqueda + modal (client) */}
       <PacientesClient initialPacientes={pacientes} />

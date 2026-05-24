@@ -63,20 +63,20 @@ export default async function RecetasPage() {
       </div>
 
       {/* Estadísticas (server-rendered) */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-lg bg-emerald-500/5 p-3 text-center">
-          <p className="text-2xl font-bold text-emerald-600">{activas}</p>
-          <p className="text-xs text-muted-foreground">Activas</p>
-        </div>
-        <div className="rounded-lg bg-red-500/5 p-3 text-center">
-          <p className="text-2xl font-bold text-red-600">{vencidas}</p>
-          <p className="text-xs text-muted-foreground">Vencidas</p>
-        </div>
-        <div className="rounded-lg bg-blue-500/5 p-3 text-center">
-          <p className="text-2xl font-bold text-blue-600">{historial}</p>
-          <p className="text-xs text-muted-foreground">Historial</p>
-        </div>
-      </div>
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  <div className="rounded-lg bg-emerald-500/5 p-3 text-center">
+    <p className="text-xl sm:text-2xl font-bold text-emerald-600">{activas}</p>
+    <p className="text-xs text-muted-foreground">Activas</p>
+  </div>
+  <div className="rounded-lg bg-red-500/5 p-3 text-center">
+    <p className="text-xl sm:text-2xl font-bold text-red-600">{vencidas}</p>
+    <p className="text-xs text-muted-foreground">Vencidas</p>
+  </div>
+  <div className="rounded-lg bg-blue-500/5 p-3 text-center">
+    <p className="text-xl sm:text-2xl font-bold text-blue-600">{historial}</p>
+    <p className="text-xs text-muted-foreground">Historial</p>
+  </div>
+</div>
 
       {/* Tabs + lista + acciones + modal (client) */}
       <RecetasClient initialRecetas={recetas} />

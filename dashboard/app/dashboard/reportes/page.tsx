@@ -581,20 +581,20 @@ export default function ReportesPage() {
               <CardTitle className="text-lg">Calidad de Respuesta</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-4 rounded-lg bg-emerald-500/5">
-                  <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-emerald-600">{datos.calidadRespuesta.tasa}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="text-center p-3 sm:p-4 rounded-lg bg-emerald-500/5">
+                  <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-500 mx-auto mb-1 sm:mb-2" />
+                  <p className="text-xl sm:text-2xl font-bold text-emerald-600">{datos.calidadRespuesta.tasa}</p>
                   <p className="text-xs text-muted-foreground">Tasa de respuesta</p>
                 </div>
-                <div className="text-center p-4 rounded-lg bg-blue-500/5">
-                  <Clock className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-blue-600">&lt;{datos.calidadRespuesta.tiempo}</p>
+                <div className="text-center p-3 sm:p-4 rounded-lg bg-blue-500/5">
+                  <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 mx-auto mb-1 sm:mb-2" />
+                  <p className="text-xl sm:text-2xl font-bold text-blue-600">&lt;{datos.calidadRespuesta.tiempo}</p>
                   <p className="text-xs text-muted-foreground">Tiempo promedio</p>
                 </div>
-                <div className="text-center p-4 rounded-lg bg-purple-500/5">
-                  <MessageSquare className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-purple-600">{datos.calidadRespuesta.msgsPorConv}</p>
+                <div className="text-center p-3 sm:p-4 rounded-lg bg-purple-500/5">
+                  <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500 mx-auto mb-1 sm:mb-2" />
+                  <p className="text-xl sm:text-2xl font-bold text-purple-600">{datos.calidadRespuesta.msgsPorConv}</p>
                   <p className="text-xs text-muted-foreground">Mensajes por conv.</p>
                 </div>
               </div>
