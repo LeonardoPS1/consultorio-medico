@@ -202,9 +202,9 @@ export default function ReportesPage() {
   return (
     <div className="space-y-6 animate-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Reportes</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Reportes</h2>
           <p className="text-muted-foreground">
             Métricas y estadísticas del consultorio
           </p>
@@ -245,27 +245,27 @@ export default function ReportesPage() {
       </div>
 
       <Tabs defaultValue="general">
-        <TabsList>
-          <TabsTrigger value="general">
-            <BarChart3 className="h-4 w-4 mr-1" />
-            General
+        <TabsList className="overflow-x-auto flex-nowrap w-full">
+          <TabsTrigger value="general" className="px-2 sm:px-3">
+            <BarChart3 className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">General</span>
           </TabsTrigger>
-          <TabsTrigger value="turnos">
-            <Calendar className="h-4 w-4 mr-1" />
-            Turnos
+          <TabsTrigger value="turnos" className="px-2 sm:px-3">
+            <Calendar className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Turnos</span>
           </TabsTrigger>
-          <TabsTrigger value="pacientes">
-            <Users className="h-4 w-4 mr-1" />
-            Pacientes
+          <TabsTrigger value="pacientes" className="px-2 sm:px-3">
+            <Users className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Pacientes</span>
           </TabsTrigger>
-          <TabsTrigger value="whatsapp">
-            <MessageSquare className="h-4 w-4 mr-1" />
-            WhatsApp
+          <TabsTrigger value="whatsapp" className="px-2 sm:px-3">
+            <MessageSquare className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">WhatsApp</span>
           </TabsTrigger>
           {isAdvancedReports && (
-          <TabsTrigger value="comparativa">
-            <Activity className="h-4 w-4 mr-1" />
-            Comparativa
+          <TabsTrigger value="comparativa" className="px-2 sm:px-3">
+            <Activity className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Comparativa</span>
           </TabsTrigger>
           )}
         </TabsList>
@@ -415,7 +415,7 @@ export default function ReportesPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-200/50">
                   <Download className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
                   <div>

@@ -123,17 +123,17 @@ export function Sidebar() {
         )}
       >
         {/* Logo */}
-        <div className="flex h-[172px] items-center justify-center px-2 border-b border-sidebar-muted relative">
+        <div className="flex h-32 lg:h-[172px] items-center justify-center px-2 border-b border-sidebar-muted relative">
           {!collapsed && (
             <div className="flex flex-col items-center">
-              <div className="h-40 w-40 shrink-0">
+              <div className="h-28 w-28 lg:h-40 lg:w-40 shrink-0">
                 <img
                   src="/aicoremed_dark_1200.svg"
                   alt={orgNombre}
                   className="h-full w-full object-cover"
                 />
               </div>
-              <span className="font-semibold text-sm text-center truncate max-w-[160px] leading-none -mt-1">{orgNombre}</span>
+              <span className="font-semibold text-xs lg:text-sm text-center truncate max-w-[120px] lg:max-w-[160px] leading-none -mt-1">{orgNombre}</span>
             </div>
           )}
           {collapsed && (

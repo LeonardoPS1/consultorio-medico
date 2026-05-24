@@ -579,7 +579,7 @@ export function PacienteDetalleClient({
       </Card>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card className="bg-primary/5 border-0">
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-primary">{stats.totalTurnos}</p>

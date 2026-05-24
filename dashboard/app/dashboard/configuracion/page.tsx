@@ -141,38 +141,38 @@ function ConfigContent() {
   return (
     <div className="space-y-6 animate-in">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Configuración</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Configuración</h2>
         <p className="text-muted-foreground">
           Gestioná las integraciones y preferencias del sistema
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="perfil">
-            <svg className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Perfil
+        <TabsList className="overflow-x-auto flex-nowrap w-full gap-1">
+          <TabsTrigger value="perfil" className="px-2 sm:px-3 shrink-0">
+            <svg className="h-4 w-4 sm:mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span className="hidden sm:inline">Perfil</span>
           </TabsTrigger>
-          <TabsTrigger value="suscripcion">
-            <CreditCard className="h-4 w-4 mr-1" />
-            Suscripción
+          <TabsTrigger value="suscripcion" className="px-2 sm:px-3 shrink-0">
+            <CreditCard className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Suscripción</span>
           </TabsTrigger>
           {canAccess(userPlan, 'integraciones') && (
-            <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
+            <TabsTrigger value="integraciones" className="px-2 sm:px-3 shrink-0">Integraciones</TabsTrigger>
           )}
-          <TabsTrigger value="horarios">Horarios</TabsTrigger>
+          <TabsTrigger value="horarios" className="px-2 sm:px-3 shrink-0">Horarios</TabsTrigger>
           {canAccess(userPlan, 'ia-assistant') && (
-            <TabsTrigger value="ia">IA & Automatización</TabsTrigger>
+            <TabsTrigger value="ia" className="px-2 sm:px-3 shrink-0">IA</TabsTrigger>
           )}
-          <TabsTrigger value="plantillas">Plantillas WhatsApp</TabsTrigger>
-          <TabsTrigger value="notificaciones">Notificaciones</TabsTrigger>
+          <TabsTrigger value="plantillas" className="px-2 sm:px-3 shrink-0">Plantillas</TabsTrigger>
+          <TabsTrigger value="notificaciones" className="px-2 sm:px-3 shrink-0">Notificaciones</TabsTrigger>
           {canAccess(userPlan, 'equipo') && (
-            <TabsTrigger value="equipo">Equipo</TabsTrigger>
+            <TabsTrigger value="equipo" className="px-2 sm:px-3 shrink-0">Equipo</TabsTrigger>
           )}
           {isAdmin && canAccess(userPlan, 'integraciones') && (
-            <TabsTrigger value="credenciales" className="text-amber-600 dark:text-amber-400">
-              <Key className="h-4 w-4 mr-1" />
-              Credenciales
+            <TabsTrigger value="credenciales" className="px-2 sm:px-3 shrink-0 text-amber-600 dark:text-amber-400">
+              <Key className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Credenciales</span>
             </TabsTrigger>
           )}
         </TabsList>
@@ -211,8 +211,8 @@ function ConfigContent() {
               ) : (
               <div className="space-y-4">
                 {horarios.map((dia, idx) => (
-                  <div key={dia.dia} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30">
-                    <div className="w-24 font-medium text-sm">{dia.dia}</div>
+                  <div key={dia.dia} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 rounded-lg bg-muted/30">
+                    <div className="w-16 sm:w-24 font-medium text-sm">{dia.dia}</div>
                     <Switch
                       checked={dia.activo}
                       onCheckedChange={(checked) => {
@@ -226,8 +226,12 @@ function ConfigContent() {
                         <Input type="time" value={dia.inicio} onChange={e => {
                           const nuevos = [...horarios];
                           nuevos[idx] = { ...nuevos[idx], inicio: e.target.value };
-                          setHorarios(nuevos);
-                        }} className="w-24 h-8 text-sm" />
+                        }} className="w-[5.5rem] sm:w-24 h-8 text-sm" />
+                        <span className="text-muted-foreground text-sm">a</span>
+                        <Input type="time" value={dia.fin} onChange={e => {
+                          const nuevos = [...horarios];
+                          nuevos[idx] = { ...nuevos[idx], fin: e.target.value };
+                        }} className="w-[5.5rem] sm:w-24 h-8 text-sm" />
                         <span className="text-muted-foreground">a</span>
                         <Input type="time" value={dia.fin} onChange={e => {
                           const nuevos = [...horarios];
@@ -373,7 +377,7 @@ function ConfigContent() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {['recordatorios', 'turnos', 'recetas', 'alertas'].map((cat) => {
                 const plantillasCat = plantillas.filter((p) => p.categoria === cat);
                 if (plantillasCat.length === 0) return null;
@@ -570,20 +574,20 @@ function ConfigContent() {
               ) : (
                 <div className="space-y-3">
                   {miembrosEquipo.map((miembro) => (
-                    <div key={miembro.email} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-sm">
+                    <div key={miembro.email} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg bg-muted/30">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-sm shrink-0">
                           {miembro.nombre.split(' ').map(p => p[0]).join('')}
                         </div>
-                        <div>
-                          <p className="text-sm font-medium">{miembro.nombre}</p>
-                          <p className="text-xs text-muted-foreground">{miembro.email}</p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{miembro.nombre}</p>
+                          <p className="text-xs text-muted-foreground truncate">{miembro.email}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Badge variant="outline" className="text-xs">{miembro.rol}</Badge>
-                        <span className="text-xs text-muted-foreground">{miembro.ultimo}</span>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Badge variant="outline" className="text-xs shrink-0">{miembro.rol}</Badge>
+                        <span className="text-xs text-muted-foreground hidden sm:inline">{miembro.ultimo}</span>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

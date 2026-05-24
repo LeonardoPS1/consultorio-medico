@@ -200,22 +200,22 @@ export function WebhooksClient({
                 <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
                   Paciente
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
+                <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider hidden sm:table-cell">
                   Teléfono
                 </th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
                   Mensaje
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
+                <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider hidden md:table-cell">
                   Rol
                 </th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
+                <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider hidden md:table-cell">
                   Canal
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
+                <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider hidden lg:table-cell">
                   Twilio SID
                 </th>
               </tr>
@@ -266,13 +266,13 @@ export function WebhooksClient({
                     <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">
                       {msg.pacienteNombre} {msg.pacienteApellido}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap font-mono">
+                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap font-mono hidden sm:table-cell">
                       {msg.pacienteTelefono}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-[250px] truncate">
                       {msg.contenido}
                     </td>
-                    <td className="px-4 py-3 text-xs">
+                    <td className="px-4 py-3 text-xs hidden md:table-cell">
                       <span
                         className={`capitalize ${
                           msg.rol === 'paciente'
@@ -288,11 +288,11 @@ export function WebhooksClient({
                     <td className="px-4 py-3">
                       <StatusBadge status={msg.twilioStatus} />
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 capitalize">
+                    <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 capitalize hidden md:table-cell">
                       {msg.conversacionCanal || '-'}
                     </td>
                     <td
-                      className="px-4 py-3 text-xs font-mono text-gray-400 max-w-[120px] truncate"
+                      className="px-4 py-3 text-xs font-mono text-gray-400 max-w-[120px] truncate hidden lg:table-cell"
                       title={msg.twilioSid}
                     >
                       {msg.twilioSid || '-'}

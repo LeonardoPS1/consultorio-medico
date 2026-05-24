@@ -191,7 +191,7 @@ export default async function DashboardPage() {
                 </CardHeader>
                 <CardContent className="relative">
                   <div className="flex items-baseline gap-2">
-                    <div className="text-3xl font-bold">{kpi.value}</div>
+                    <div className="text-2xl sm:text-3xl font-bold">{kpi.value}</div>
                     <span
                       className={`text-sm font-medium ${kpi.urgent ? 'text-red-500' : 'text-emerald-500'}`}
                     >
