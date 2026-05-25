@@ -70,6 +70,7 @@ export const PLANES: Record<PlanId, PlanInfo> = {
       'Reportes y estadísticas',
       'Horarios de atención configurables',
       'Notificaciones personalizables',
+      'Portal del paciente (acceso seguro)',
       '1 profesional',
     ],
     cta: 'Suscribirse',

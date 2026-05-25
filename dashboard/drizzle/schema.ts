@@ -81,6 +81,8 @@ export const pacientes = pgTable('pacientes', {
   fuente: varchar('fuente', { length: 50 }).default('whatsapp'),
   tags: text('tags').array().default([]),
   metadata: jsonb('metadata').default({}),
+  portalToken: varchar('portal_token', { length: 255 }),
+  portalTokenExpires: timestamp('portal_token_expires', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),

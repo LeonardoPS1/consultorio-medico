@@ -34,6 +34,7 @@ export type FeatureId =
   | 'webhooks-log'
   | 'credenciales'
   | 'api-publica'
+  | 'portal-paciente'
   | 'multi-sucursal';
 
 // ============================================================
@@ -61,6 +62,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'webhooks-log': 'premium',
   'credenciales': 'premium',
   'api-publica': 'professional',
+  'portal-paciente': 'starter',
   'multi-sucursal': 'enterprise',
 };
 
