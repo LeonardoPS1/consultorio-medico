@@ -146,7 +146,15 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // ─── 4. Si ya tiene sesión y va al login, redirigir ──
+  // ─── 4. Proteger rutas del portal (rutas autenticadas) ──
+  const PORTAL_AUTH_ROUTES = ['/portal/dashboard', '/portal/turnos', '/portal/recetas', '/portal/historial', '/portal/perfil'];
+  if (PORTAL_AUTH_ROUTES.some(route => pathname.startsWith(route))) {
+    if (!request.cookies.get('portal_session')) {
+      return NextResponse.redirect(new URL('/portal', request.url));
+    }
+  }
+
+  // ─── 5. Si ya tiene sesión y va al login, redirigir ──
   if (pathname === '/login' && request.method === 'GET' && hasSessionCookie(request)) {
     const callbackUrl = request.nextUrl.searchParams.get('callbackUrl') || '/dashboard';
     return NextResponse.redirect(new URL(callbackUrl, request.url));
