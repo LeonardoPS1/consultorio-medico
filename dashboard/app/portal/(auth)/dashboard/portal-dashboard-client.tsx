@@ -4,8 +4,9 @@
 
 'use client';
 
-import { Calendar, FileText, Clock, ChevronRight } from 'lucide-react';
+import { Calendar, FileText, Clock, ChevronRight, Phone } from 'lucide-react';
 import Link from 'next/link';
+import { formatPhone } from '@/lib/utils';
 
 interface Props {
   paciente: {
@@ -47,7 +48,9 @@ export default function PortalDashboardClient({
         <h1 className="text-2xl font-bold text-gray-900">
           Hola, {paciente.nombre}
         </h1>
-        <p className="text-gray-500">{paciente.telefono}</p>
+        <p className="text-gray-500 flex items-center gap-1">
+          <Phone className="h-3 w-3" /> {formatPhone(paciente.telefono)}
+        </p>
       </div>
 
       {/* Stats */}

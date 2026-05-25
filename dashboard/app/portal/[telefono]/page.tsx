@@ -1,73 +1,94 @@
-import { notFound } from 'next/navigation';
+/**
+ * Portal Dashboard — Página dinámica con [telefono]
+ * Server component: verifica sesión, obtiene datos completos y pasa al client.
+ */
+
+import { getPortalSession } from '@/lib/portal-auth';
+import { redirect } from 'next/navigation';
+import { db } from '@/lib/db';
+import { pacientes, turnos, recetas, medicos } from '@/drizzle/schema';
+import { eq, desc, sql } from 'drizzle-orm';
 import { PortalDashboardClient } from './portal-dashboard-client';
 
-// ─── Types ────────────────────────────────────────────────
-
-interface TurnoRow {
-  id: string;
-  fechaHora: string;
-  estado: string;
-  tipoConsulta: string;
-  motivo: string | null;
-  medicoNombre: string | null;
-  duracionMinutos: number;
-}
-
-interface RecetaRow {
-  id: string;
-  medicamento: string;
-  dosis: string;
-  frecuencia: string;
-  duracion: string | null;
-  indicaciones: string | null;
-  estado: string;
-  fechaInicio: string;
-  fechaFin: string | null;
-  medicoNombre: string | null;
-}
-
-interface PortalData {
-  paciente: {
-    id: string;
-    nombre: string;
-    apellido: string;
-    telefono: string;
-    email: string | null;
-    obraSocial: string | null;
-  };
-  turnos: TurnoRow[];
-  recetas: RecetaRow[];
-  stats: { totalTurnos: number; totalRecetas: number };
-}
-
-// ─── Data fetching ─────────────────────────────────────────
-
 export const dynamic = 'force-dynamic';
-
-async function getPortalData(telefono: string): Promise<PortalData | null> {
-  try {
-    const res = await fetch(
-      `http://localhost:3000/api/portal?telefono=${encodeURIComponent(telefono)}`,
-      { cache: 'no-store' },
-    );
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.data;
-  } catch {
-    return null;
-  }
-}
-
-// ─── Page ──────────────────────────────────────────────────
 
 export default async function PortalDashboardPage({
   params,
 }: {
   params: { telefono: string };
 }) {
-  const telefono = decodeURIComponent(params.telefono);
-  const data = await getPortalData(telefono);
-  if (!data) notFound();
+  const session = await getPortalSession();
+  if (!session) {
+    redirect('/portal');
+  }
 
-  return <PortalDashboardClient data={data} />;
+  // Validar que el telefono del URL coincida con la sesión
+  const cleanParam = params.telefono.replace(/[\s\-()]/g, '');
+  const cleanSession = session.telefono.replace(/[\s\-()]/g, '');
+  if (cleanParam !== cleanSession) {
+    redirect('/portal');
+  }
+
+  // Obtener datos completos del paciente
+  const [paciente] = await db
+    .select({
+      id: pacientes.id,
+      nombre: pacientes.nombre,
+      apellido: pacientes.apellido,
+      telefono: pacientes.telefono,
+      email: pacientes.email,
+      obraSocial: pacientes.obraSocial,
+    })
+    .from(pacientes)
+    .where(eq(pacientes.id, session.pacienteId))
+    .limit(1);
+
+  if (!paciente) redirect('/portal');
+
+  // Obtener turnos del paciente con nombre del médico
+  const turnosData = await db
+    .select({
+      id: turnos.id,
+      fechaHora: sql<string>`${turnos.fechaHora}::text`,
+      estado: turnos.estado,
+      tipoConsulta: turnos.tipoConsulta,
+      motivo: turnos.motivo,
+      medicoNombre: medicos.nombre,
+      duracionMinutos: turnos.duracionMinutos,
+    })
+    .from(turnos)
+    .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
+    .where(eq(turnos.pacienteId, session.pacienteId))
+    .orderBy(desc(turnos.fechaHora));
+
+  // Obtener recetas del paciente con nombre del médico
+  const recetasData = await db
+    .select({
+      id: recetas.id,
+      medicamento: recetas.medicamento,
+      dosis: recetas.dosis,
+      frecuencia: recetas.frecuencia,
+      duracion: recetas.duracion,
+      indicaciones: recetas.indicaciones,
+      estado: recetas.estado,
+      fechaInicio: recetas.fechaInicio,
+      fechaFin: recetas.fechaFin,
+      medicoNombre: medicos.nombre,
+    })
+    .from(recetas)
+    .leftJoin(medicos, eq(recetas.medicoId, medicos.id))
+    .where(eq(recetas.pacienteId, session.pacienteId))
+    .orderBy(desc(recetas.fechaInicio));
+
+  const portalData = {
+    paciente,
+    turnos: turnosData,
+    recetas: recetasData,
+    stats: {
+      totalTurnos: turnosData.length,
+      totalRecetas: recetasData.length,
+    },
+  };
+
+  return <PortalDashboardClient data={portalData} />;
 }

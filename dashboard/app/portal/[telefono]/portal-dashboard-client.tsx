@@ -16,7 +16,7 @@ import {
   AlertCircle,
   User,
 } from 'lucide-react';
-import { formatDate, getTurnoColor, getTurnoLabel } from '@/lib/utils';
+import { formatDate, formatPhone, getTurnoColor, getTurnoLabel } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -110,7 +110,7 @@ export function PortalDashboardClient({ data }: { data: PortalData }) {
                 Hola, {paciente.nombre}
               </h1>
               <p className="text-sm text-muted-foreground flex items-center gap-1">
-                <Phone className="h-3 w-3" /> {paciente.telefono}
+                <Phone className="h-3 w-3" /> {formatPhone(paciente.telefono)}
               </p>
             </div>
           </div>
@@ -148,7 +148,7 @@ export function PortalDashboardClient({ data }: { data: PortalData }) {
               </div>
               <div>
                 <p className="text-muted-foreground text-xs">Telefono</p>
-                <p className="font-medium">{paciente.telefono}</p>
+                <p className="font-medium">{formatPhone(paciente.telefono)}</p>
               </div>
               {paciente.email && (
                 <div>

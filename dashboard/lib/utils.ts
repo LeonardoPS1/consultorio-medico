@@ -92,12 +92,15 @@ export function getTurnoLabel(estado: string) {
  */
 export function formatPhone(phone: string) {
   if (!phone) return '';
-  // +5491155551234 → 11 5555-1234
+  // Chilean numbers: +569XXXXXXX → 9 XXX XXX XXX
   const cleaned = phone.replace(/\D/g, '');
-  if (cleaned.startsWith('549')) {
-    const area = cleaned.slice(3, 5);
-    const number = cleaned.slice(5);
-    return `${area} ${number.slice(0, 4)}-${number.slice(4)}`;
+  if (cleaned.startsWith('569') && cleaned.length === 12) {
+    const number = cleaned.slice(3);
+    return `${number.slice(0, 1)} ${number.slice(1, 4)} ${number.slice(4, 7)} ${number.slice(7, 10)}`;
+  }
+  // Also handle numbers starting with 9 (without country code)
+  if (cleaned.startsWith('9') && cleaned.length === 9) {
+    return `${cleaned.slice(0, 1)} ${cleaned.slice(1, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7, 9)}`;
   }
   return phone;
 }

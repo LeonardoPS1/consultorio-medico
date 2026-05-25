@@ -19,8 +19,9 @@ export default function PortalLogin() {
     setError('');
 
     const cleanPhone = telefono.replace(/[\s\-()]/g, '');
-    if (cleanPhone.length < 10) {
-      setError('Ingresá un número de teléfono válido');
+    // Validar número chileno: +569XXXXXXX (12 dígitos) o 9XXXXXXX (8 dígitos)
+    if (!/^(\+569?|569?|9)?\d{8,9}$/.test(cleanPhone)) {
+      setError('Ingresá un número de teléfono chileno válido (ej: +56 9 1234 5678)');
       return;
     }
 
