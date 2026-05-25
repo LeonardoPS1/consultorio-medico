@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { canAccess } from '@/lib/features';
@@ -15,8 +16,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import {
-  Bot, Globe, Shield, CreditCard, Settings,
-  Edit3, Save, Plus, Trash2, Key, Eye, Send,
+  Bot, Globe, Shield, CreditCard,
+  Edit3, Save, Plus, Trash2, Key, Eye, Send, Sparkles,
 } from 'lucide-react';
 import {
   Dialog,
@@ -29,7 +30,6 @@ import {
 import { ImageUpload } from '@/components/ui/image-upload';
 import Setup2FA from '@/components/configuracion/setup-2fa';
 import SuscripcionTab from '@/components/configuracion/suscripcion-tab';
-import SistemaTab from '@/components/configuracion/sistema-tab';
 import { ChangePasswordForm } from '@/components/configuracion/change-password-form';
 
 // ============================================================
@@ -171,12 +171,7 @@ function ConfigContent() {
           {canAccess(userPlan, 'equipo') && (
             <TabsTrigger value="equipo" className="px-2 sm:px-3 shrink-0">Equipo</TabsTrigger>
           )}
-          {isAdmin && (
-            <TabsTrigger value="sistema" className="px-2 sm:px-3 shrink-0 text-amber-600 dark:text-amber-400">
-              <Settings className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">Sistema</span>
-            </TabsTrigger>
-          )}
+
         </TabsList>
 
         {/* ======== PERFIL / ORGANIZACIÓN ======== */}
@@ -184,6 +179,27 @@ function ConfigContent() {
           <PerfilOrganizacion />
           <ChangePasswordForm />
           <Setup2FA />
+
+          {/* Asistente de configuración IA */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Bot className="h-5 w-5 text-primary" />
+                  Asistente de Configuración IA
+                </CardTitle>
+                <CardDescription>
+                  Guía paso a paso para conectar WhatsApp, agregar médicos, configurar horarios y más
+                </CardDescription>
+              </div>
+              <Button asChild>
+                <Link href="/dashboard/onboarding">
+                  <Sparkles className="h-4 w-4 mr-1" />
+                  Abrir asistente
+                </Link>
+              </Button>
+            </CardHeader>
+          </Card>
         </TabsContent>
 
         {/* ======== SUSCRIPCIÓN ======== */}
@@ -459,13 +475,6 @@ function ConfigContent() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-        )}
-
-        {/* ======== SISTEMA (solo admin) ======== */}
-        {isAdmin && (
-        <TabsContent value="sistema" className="mt-4">
-          <SistemaTab isAdmin={isAdmin} />
         </TabsContent>
         )}
 

@@ -46,12 +46,18 @@ export function OnboardingClient({ initialCompleted, isComplete }: OnboardingCli
             Todos los pasos están completos. Ya podés gestionar turnos, pacientes y comunicarte con tus pacientes.
           </p>
         </div>
-        <div className="flex gap-3 justify-center">
+        <div className="flex gap-3 justify-center flex-wrap">
           <Button asChild>
             <Link href="/dashboard">Ir al Panel Principal</Link>
           </Button>
           <Button variant="outline" asChild>
             <Link href="/dashboard/turnos">Gestionar Turnos</Link>
+          </Button>
+          <Button variant="ghost" asChild>
+            <Link href="/dashboard/onboarding">
+              <Sparkles className="h-4 w-4 mr-1" />
+              Re-ejecutar asistente IA
+            </Link>
           </Button>
         </div>
       </div>

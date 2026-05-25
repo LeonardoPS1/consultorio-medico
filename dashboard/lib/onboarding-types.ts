@@ -42,7 +42,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Conectá WhatsApp',
     description: 'Vinculá tu número de WhatsApp para que los pacientes puedan comunicarse.',
     icon: 'MessageSquare',
-    actionLink: '/dashboard/configuracion?tab=credenciales',
+    actionLink: '/dashboard/admin/sistema',
     actionLabel: 'Configurar WhatsApp',
   },
   {

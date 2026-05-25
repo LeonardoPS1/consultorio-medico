@@ -30,6 +30,7 @@ import { Save, Loader2, Settings, Brain, Link, Key, Shield } from 'lucide-react'
 import IntegracionesDashboard from '@/components/configuracion/integraciones-dashboard';
 import CredencialesTab from '@/components/configuracion/credenciales-tab';
 import ApiKeysTab from '@/components/configuracion/api-keys-tab';
+import { useFeatureFlags } from '@/lib/feature-flags-context';
 import type { FeatureId } from '@/lib/features';
 import { FEATURE_PLAN, getFeatureRequiredPlan } from '@/lib/features';
 
@@ -66,6 +67,7 @@ interface SistemaTabProps {
 
 export default function SistemaTab({ isAdmin }: SistemaTabProps) {
   const { toast } = useToast();
+  const { refresh: refreshFeatureFlags } = useFeatureFlags();
   const [toggles, setToggles] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -111,7 +113,8 @@ export default function SistemaTab({ isAdmin }: SistemaTabProps) {
         body: JSON.stringify(toggles),
       });
       if (res.ok) {
-        toast({ title: 'Toggles actualizados', description: 'Los cambios se aplicarán en la próxima recarga.' });
+        toast({ title: 'Toggles actualizados', description: 'Los cambios ya están activos.' });
+        await refreshFeatureFlags();
       } else {
         toast({ title: 'Error al guardar', variant: 'destructive' });
       }

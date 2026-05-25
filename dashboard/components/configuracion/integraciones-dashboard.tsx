@@ -247,7 +247,7 @@ export default function IntegracionesDashboard({ isAdmin }: IntegracionesDashboa
             )}
           </div>
           {isAdmin && (
-            <Button size="sm" onClick={() => router.push('/dashboard/configuracion?tab=credenciales')}>
+            <Button size="sm" onClick={() => router.push('/dashboard/admin/sistema')}>
               <Key className="h-4 w-4 mr-1" />
               Ir a Credenciales
             </Button>

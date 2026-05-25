@@ -28,6 +28,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import { canAccess, getFeatureRequiredPlan, type FeatureId } from '@/lib/features';
+import { useFeatureFlags } from '@/lib/feature-flags-context';
 import { LockKeyhole } from 'lucide-react';
 
 interface NavItem {
@@ -48,12 +49,13 @@ const navItems: NavItem[] = [
   { title: 'Recetas', href: '/dashboard/recetas', icon: Syringe, feature: 'recetas' },
   { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3, feature: 'reportes' },
   { title: 'Encuestas', href: '/dashboard/encuestas', icon: Star, feature: 'reportes' },
-  { title: 'Configuración', href: '/dashboard/configuracion', icon: Settings },
+  { title: 'Ajustes', href: '/dashboard/configuracion', icon: Settings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { isFeatureEnabled } = useFeatureFlags();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
@@ -166,7 +168,7 @@ export function Sidebar() {
           <nav className="space-y-1 px-2">
             {navItems.map((item) => {
               const userPlan = session?.user?.plan ?? 'free';
-              const hasAccess = !item.feature || canAccess(userPlan, item.feature);
+              const hasAccess = !item.feature || (canAccess(userPlan, item.feature) && isFeatureEnabled(item.feature));
               const isActive = item.href === '/dashboard'
                 ? pathname === '/dashboard'
                 : pathname === item.href || pathname.startsWith(item.href + '/');
@@ -236,6 +238,20 @@ export function Sidebar() {
                     Admin
                   </p>
                 )}
+                <Link
+                  href="/dashboard/admin/sistema"
+                  onClick={closeMobile}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    pathname === '/dashboard/admin/sistema' || pathname.startsWith('/dashboard/admin/sistema/')
+                      ? 'bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                  )}
+                  title={collapsed ? 'Sistema' : undefined}
+                >
+                  <Settings className="h-5 w-5 shrink-0" />
+                  {!collapsed && <span className="flex-1 truncate">Sistema</span>}
+                </Link>
                 <Link
                   href="/dashboard/admin/tenants"
                   onClick={closeMobile}
