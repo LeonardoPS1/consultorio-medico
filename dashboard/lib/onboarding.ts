@@ -69,66 +69,53 @@ export async function getOnboardingState(): Promise<OnboardingState> {
  * Genera un prompt contextual para Ollama basado en el paso actual
  * y el estado del consultorio.
  */
-export function buildOnboardingPrompt(stepId: string, state: OnboardingState): string {
+export function buildOnboardingPrompt(stepId: string, state: OnboardingState, orgName?: string): string {
   const step = ONBOARDING_STEPS.find((s) => s.id === stepId);
   if (!step) return '';
 
+  const consultorio = orgName || 'tu consultorio';
   const completedCount = state.completedSteps.length;
-  const totalSteps = ONBOARDING_STEPS.length;
 
   const prompts: Record<string, string> = {
-    whatsapp: `Sos un asistente de configuración para un consultorio médico digital. El usuario está configurando WhatsApp.
+    whatsapp: `Estás ayudando al equipo de "${consultorio}" a conectar WhatsApp (paso ${completedCount + 1} de 5).
 
-CONSEJOS ÚTILES:
-1. Necesitás un número de Twilio con capacidades de WhatsApp (Sandbox o número aprobado).
-2. El webhook debe apuntar a: https://med.aicorebots.com/api/webhooks/twilio
-3. Configurá el Status Callback para trackear entregas.
-4. Usá el mismo número configurado en la variable TWILIO_WHATSAPP_NUMBER.
+CONTEXTO REAL DEL USUARIO:
+- Consultorio: ${consultorio}
+- Pasos completados: ${completedCount} de 5
+- Próximo paso pendiente después de este: ${state.nextStep?.title || 'ninguno, sería el último'}
 
-Dá el consejo en 2-3 oraciones cálidas y prácticas. NO saludes.`,
+DALE UN CONSEJO CÁLIDO Y PERSONALIZADO para conectar WhatsApp. Mencioná el nombre "${consultorio}" si aplica. Máximo 3 oraciones.`, 
+    medico: `Estás ayudando al equipo de "${consultorio}" a registrar su primer médico (paso ${completedCount + 1} de 5).
 
-    medico: `Sos un asistente de configuración para un consultorio médico digital. El usuario está agregando un médico.
+CONTEXTO REAL:
+- Consultorio: ${consultorio}
+- Pasos completados: ${completedCount} de 5
 
-CONSEJOS ÚTILES:
-1. Completá nombre, especialidad, email, teléfono y matrícula.
-2. Cada médico puede tener su propio color en el calendario de turnos.
-3. Podés definir la duración predeterminada de los turnos por médico.
-4. Los horarios de cada médico se pueden personalizar después.
+DALE UN CONSEJO sobre agregar un médico. Mencioná que los horarios se personalizan después y que pueden tener colores en el calendario. Máximo 3 oraciones.`,
+    horarios: `Estás ayudando al equipo de "${consultorio}" a configurar horarios de atención (paso ${completedCount + 1} de 5).
 
-Dá el consejo en 2-3 oraciones cálidas y prácticas. NO saludes.`,
+CONTEXTO REAL:
+- Consultorio: ${consultorio}
+- Pasos completados: ${completedCount} de 5
 
-    horarios: `Sos un asistente de configuración para un consultorio médico digital. El usuario está configurando horarios de atención.
+DALE UN CONSEJO sobre horarios recomendados para un consultorio. Mencioná Lunes a Viernes 9-18 como sugerencia. Máximo 3 oraciones.`,
+    paciente: `Estás ayudando al equipo de "${consultorio}" a agregar su primer paciente (paso ${completedCount + 1} de 5).
 
-CONSEJOS ÚTILES:
-1. Configurá los días y horarios en que el consultorio está abierto.
-2. Podés marcar días como feriados o inactivos.
-3. Recomendación: Lunes a Viernes 9:00-18:00, Sábados 9:00-13:00.
-4. Los horarios se usan para validar que los turnos se agenden correctamente.
+CONTEXTO REAL:
+- Consultorio: ${consultorio}
+- Pasos completados: ${completedCount} de 5
 
-Dá el consejo en 2-3 oraciones cálidas y prácticas. NO saludes.`,
+DALE UN CONSEJO sobre qué datos cargar (nombre, teléfono, obra social). Máximo 3 oraciones.`,
+    notificaciones: `Estás ayudando al equipo de "${consultorio}" a configurar notificaciones (paso ${completedCount + 1} de 5).
 
-    paciente: `Sos un asistente de configuración para un consultorio médico digital. El usuario está agregando su primer paciente.
+CONTEXTO REAL:
+- Consultorio: ${consultorio}
+- Pasos completados: ${completedCount} de 5
 
-CONSEJOS ÚTILES:
-1. Completá nombre, apellido y teléfono como mínimo.
-2. La obra social y número de afiliado ayudan a agilizar la facturación.
-3. Podés registrar alergias y medicación crónica desde el perfil del paciente.
-4. Pacientes con WhatsApp habilitado pueden recibir recordatorios automáticos.
-
-Dá el consejo en 2-3 oraciones cálidas y prácticas. NO saludes.`,
-
-    notificaciones: `Sos un asistente de configuración para un consultorio médico digital. El usuario está configurando notificaciones.
-
-CONSEJOS ÚTILES:
-1. Activá urgencias por WhatsApp para no perder emergencias.
-2. El resumen diario por email ayuda a planificar el día.
-3. Las alertas de ausentismo avisan cuando un paciente no confirma.
-4. Los recordatorios automáticos reducen las inasistencias hasta un 40%.
-
-Dá el consejo en 2-3 oraciones cálidas y prácticas. NO saludes.`,
+DALE UN CONSEJO sobre notificaciones (urgencias WhatsApp, recordatorios para reducir ausentismo). Máximo 3 oraciones.`,
   };
 
-  return prompts[stepId] || `El usuario está completando el paso "${step.title}" del onboarding (${completedCount}/${totalSteps}). Dá un consejo práctico y alentador en 2-3 oraciones.`;
+  return prompts[stepId] || `El usuario de "${consultorio}" está completando el paso "${step.title}" (${completedCount}/5). Dá un consejo práctico para este paso. Máximo 3 oraciones.`;
 }
 
 // ─── Llamar a Ollama para tips ──────────────────────────────
@@ -140,7 +127,20 @@ Dá el consejo en 2-3 oraciones cálidas y prácticas. NO saludes.`,
 export async function getAiOnboardingTip(stepId: string): Promise<AiTipResult> {
   try {
     const state = await getOnboardingState();
-    const prompt = buildOnboardingPrompt(stepId, state);
+
+    // Obtener nombre del consultorio para personalizar el prompt
+    let orgName = 'tu consultorio';
+    try {
+      const [tenant] = await db.execute(
+        sql`SELECT nombre FROM tenants WHERE id = '00000000-0000-0000-0000-000000000000' LIMIT 1`,
+      );
+      const raw = tenant as Record<string, unknown> | undefined;
+      if (raw?.nombre && typeof raw.nombre === 'string') orgName = raw.nombre;
+    } catch {
+      // ignorar, usar default
+    }
+
+    const prompt = buildOnboardingPrompt(stepId, state, orgName);
 
     const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
     const model = process.env.OLLAMA_MODEL || 'mistral';
@@ -160,7 +160,7 @@ export async function getAiOnboardingTip(stepId: string): Promise<AiTipResult> {
         temperature: 0.7,
         max_tokens: 150,
       }),
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(25000),
     });
 
     if (!res.ok) throw new Error(`Ollama responded ${res.status}`);

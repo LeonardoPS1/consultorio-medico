@@ -33,6 +33,7 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   const [activeStep, setActiveStep] = useState<string | null>(null);
   const [tips, setTips] = useState<Record<string, string>>({});
   const [loadingTips, setLoadingTips] = useState<Set<string>>(new Set());
+  const [failedTips, setFailedTips] = useState<Set<string>>(new Set());
 
   // Si ya está completo, mostrar pantalla de éxito
   if (isComplete) {
@@ -67,9 +68,10 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
 
   // Cargar tip de IA para un paso
   const loadTip = async (stepId: string) => {
-    if (tips[stepId] || loadingTips.has(stepId)) return;
+    if (loadingTips.has(stepId)) return;
 
     setLoadingTips((prev) => new Set(prev).add(stepId));
+    setFailedTips((prev) => { const next = new Set(prev); next.delete(stepId); return next; });
     try {
       const res = await fetch('/api/onboarding', {
         method: 'POST',
@@ -79,9 +81,11 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
       const data = await res.json();
       if (data.tip) {
         setTips((prev) => ({ ...prev, [stepId]: data.tip }));
+      } else {
+        setFailedTips((prev) => new Set(prev).add(stepId));
       }
     } catch {
-      // Si falla, no mostrar tip
+      setFailedTips((prev) => new Set(prev).add(stepId));
     } finally {
       setLoadingTips((prev) => {
         const next = new Set(prev);
@@ -191,7 +195,7 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
                 <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/30 p-3">
                   <div className="flex items-start gap-2">
                     <Sparkles className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mb-0.5">
                         Sugerencia IA
                       </p>
@@ -199,6 +203,18 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
                         <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
                           <Loader2 className="h-3 w-3 animate-spin" />
                           Pensando...
+                        </div>
+                      ) : failedTips.has(step.id) ? (
+                        <div className="flex flex-col gap-2">
+                          <p className="text-sm text-amber-800/80 dark:text-amber-300/80">
+                            No se pudo cargar la sugerencia.
+                          </p>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); loadTip(step.id); }}
+                            className="text-xs text-amber-700 dark:text-amber-400 underline hover:no-underline self-start"
+                          >
+                            Reintentar
+                          </button>
                         </div>
                       ) : (
                         <p className="text-sm text-amber-800/80 dark:text-amber-300/80">

@@ -9,7 +9,7 @@
  * inmediatamente para que todos los componentes reaccionen sin recargar.
  */
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 
 interface FeatureFlagsContextValue {
   /** ¿Está habilitado un feature? Por defecto true si no hay configuración */
@@ -67,10 +67,13 @@ export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
     [toggles],
   );
 
+  const contextValue = useMemo(
+    () => ({ isFeatureEnabled, refresh: fetchToggles, loading }),
+    [isFeatureEnabled, fetchToggles, loading],
+  );
+
   return (
-    <FeatureFlagsContext.Provider
-      value={{ isFeatureEnabled, refresh: fetchToggles, loading }}
-    >
+    <FeatureFlagsContext.Provider value={contextValue}>
       {children}
     </FeatureFlagsContext.Provider>
   );
