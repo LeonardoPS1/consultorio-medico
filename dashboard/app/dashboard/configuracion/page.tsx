@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import {
-  Bot, Globe, Shield, CreditCard,
+  Bot, Globe, Shield, CreditCard, Settings,
   Edit3, Save, Plus, Trash2, Key, Eye, Send,
 } from 'lucide-react';
 import {
@@ -27,11 +27,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { ImageUpload } from '@/components/ui/image-upload';
-import CredencialesTab from '@/components/configuracion/credenciales-tab';
-import IntegracionesDashboard from '@/components/configuracion/integraciones-dashboard';
 import Setup2FA from '@/components/configuracion/setup-2fa';
 import SuscripcionTab from '@/components/configuracion/suscripcion-tab';
-import ApiKeysTab from '@/components/configuracion/api-keys-tab';
+import SistemaTab from '@/components/configuracion/sistema-tab';
 import { ChangePasswordForm } from '@/components/configuracion/change-password-form';
 
 // ============================================================
@@ -164,9 +162,6 @@ function ConfigContent() {
           {canAccess(userPlan, 'horarios') && (
             <TabsTrigger value="horarios" className="px-2 sm:px-3 shrink-0">Horarios</TabsTrigger>
           )}
-          {canAccess(userPlan, 'ia-assistant') && (
-            <TabsTrigger value="ia" className="px-2 sm:px-3 shrink-0">IA</TabsTrigger>
-          )}
           {canAccess(userPlan, 'plantillas') && (
             <TabsTrigger value="plantillas" className="px-2 sm:px-3 shrink-0">Plantillas</TabsTrigger>
           )}
@@ -176,16 +171,10 @@ function ConfigContent() {
           {canAccess(userPlan, 'equipo') && (
             <TabsTrigger value="equipo" className="px-2 sm:px-3 shrink-0">Equipo</TabsTrigger>
           )}
-          {isAdmin && canAccess(userPlan, 'integraciones') && (
-            <TabsTrigger value="credenciales" className="px-2 sm:px-3 shrink-0 text-amber-600 dark:text-amber-400">
-              <Key className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">Credenciales</span>
-            </TabsTrigger>
-          )}
-          {canAccess(userPlan, 'api-publica') && (
-            <TabsTrigger value="api-keys" className="px-2 sm:px-3 shrink-0">
-              <Key className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">API Keys</span>
+          {isAdmin && (
+            <TabsTrigger value="sistema" className="px-2 sm:px-3 shrink-0 text-amber-600 dark:text-amber-400">
+              <Settings className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Sistema</span>
             </TabsTrigger>
           )}
         </TabsList>
@@ -201,13 +190,6 @@ function ConfigContent() {
         <TabsContent value="suscripcion" className="mt-4">
           <SuscripcionTab />
         </TabsContent>
-
-        {/* ======== INTEGRACIONES ======== */}
-        {canAccess(userPlan, 'integraciones') && (
-          <TabsContent value="integraciones" className="mt-4 space-y-4">
-            <IntegracionesDashboard isAdmin={isAdmin} />
-          </TabsContent>
-        )}
 
         {/* ======== HORARIOS ======== */}
         {canAccess(userPlan, 'horarios') && (
@@ -283,85 +265,6 @@ function ConfigContent() {
                 </div>
               </div>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        )}
-
-        {/* ======== IA & AUTOMATIZACIÓN ======== */}
-        {canAccess(userPlan, 'ia-assistant') && (
-        <TabsContent value="ia" className="mt-4 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Asistente IA</CardTitle>
-              <CardDescription>Configuración del comportamiento del asistente virtual</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <SwitchRow
-                label="Respuestas automáticas"
-                description="La IA responde automáticamente mensajes de WhatsApp"
-                defaultChecked
-              />
-              <SwitchRow
-                label="Triaje de urgencias"
-                description="Detectar y notificar mensajes urgentes automáticamente"
-                defaultChecked
-              />
-              <SwitchRow
-                label="Renovación de recetas automática"
-                description="Permitir renovar recetas sin intervención del médico"
-              />
-              <div className="space-y-2">
-                <Label>Prompt del sistema</Label>
-                <Textarea
-                  defaultValue={`Sos el asistente virtual del Dr. García, un médico clínico. Respondés mensajes de WhatsApp de forma amable y profesional en español argentino. Si detectás una urgencia, priorizala y notificá al médico.`}
-                  rows={4}
-                  className="font-mono text-sm"
-                />
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="space-y-1">
-                  <Label>Máx. tokens por respuesta</Label>
-                  <Input type="number" defaultValue={300} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Temperatura (0-1)</Label>
-                  <Input type="number" defaultValue={0.3} step={0.1} min={0} max={1} />
-                </div>
-              </div>
-              <Button>
-                <Save className="h-4 w-4 mr-1" />
-                Guardar configuración de IA
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* n8n Webhook URLs */}
-          <Card>
-            <CardHeader>
-              <CardTitle>URLs de Webhook (n8n)</CardTitle>
-              <CardDescription>Endpoints para conectar los workflows de automatización</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-1">
-                <Label>WhatsApp Inbound</Label>
-                <Input value="https://n8n.tudominio.com/webhook/whatsapp-inbound" readOnly />
-              </div>
-              <div className="space-y-1">
-                <Label>Gestión de Turnos</Label>
-                <Input value="https://n8n.tudominio.com/webhook/gestion-turnos" readOnly />
-              </div>
-              <div className="space-y-1">
-                <Label>Recetas</Label>
-                <Input value="https://n8n.tudominio.com/webhook/recetas" readOnly />
-              </div>
-              <div className="space-y-1">
-                <Label>Status Callback (Twilio)</Label>
-                <Input value="https://n8n.tudominio.com/webhook/twilio-status" readOnly />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Reemplazá &quot;n8n.tudominio.com&quot; por la URL real de tu VPS cuando configures el dominio.
-              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -559,18 +462,11 @@ function ConfigContent() {
         </TabsContent>
         )}
 
-        {/* ======== CREDENCIALES (solo admin) ======== */}
+        {/* ======== SISTEMA (solo admin) ======== */}
         {isAdmin && (
-          <TabsContent value="credenciales" className="mt-4">
-            <CredencialesTab />
-          </TabsContent>
-        )}
-
-        {/* ======== API KEYS (pública) ======== */}
-        {canAccess(userPlan, 'api-publica') && (
-          <TabsContent value="api-keys" className="mt-4">
-            <ApiKeysTab />
-          </TabsContent>
+        <TabsContent value="sistema" className="mt-4">
+          <SistemaTab isAdmin={isAdmin} />
+        </TabsContent>
         )}
 
         {/* ======== EQUIPO ======== */}

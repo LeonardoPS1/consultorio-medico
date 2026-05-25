@@ -111,6 +111,56 @@ export function getFeatureRequiredPlan(feature: FeatureId): string {
 }
 
 // ============================================================
+// Feature Toggles (tenant-level enable/disable)
+// ============================================================
+
+/**
+ * Verifica si un feature está habilitado a nivel tenant.
+ * Combina plan gating + tenant toggles.
+ *
+ * @param plan - Plan del usuario
+ * @param feature - Feature a verificar
+ * @param disabledFeatures - Set de features deshabilitados a nivel tenant (opcional)
+ *
+ * Si no se pasan disabledFeatures, solo se verifica el plan.
+ */
+export function canAccessWithToggles(
+  plan: PlanId | string | undefined,
+  feature: FeatureId,
+  disabledFeatures?: Set<string>,
+): boolean {
+  // Primero, verificar plan gating
+  if (!canAccess(plan, feature)) return false;
+
+  // Si no hay toggles configurados, acceso concedido
+  if (!disabledFeatures || disabledFeatures.size === 0) return true;
+
+  // Si el feature está explícitamente deshabilitado, denegar
+  return !disabledFeatures.has(feature);
+}
+
+/**
+ * Dado un record de features_enabled del tenant, devuelve
+ * el Set de features que están explícitamente deshabilitados.
+ *
+ * Los features que no aparecen en el record se consideran habilitados
+ * (por defecto, todo lo que el plan permite está activo).
+ */
+export function getDisabledFeatures(
+  featuresEnabled: Record<string, boolean> | null | undefined,
+): Set<string> {
+  if (!featuresEnabled) return new Set();
+
+  const disabled = new Set<string>();
+  for (const [key, value] of Object.entries(featuresEnabled)) {
+    if (value === false) {
+      disabled.add(key);
+    }
+  }
+  return disabled;
+}
+
+// ============================================================
 // React Hook (cliente)
 // ============================================================
 

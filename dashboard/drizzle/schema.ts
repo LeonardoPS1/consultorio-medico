@@ -465,6 +465,7 @@ export const tenants = pgTable('tenants', {
   logoUrl: text('logo_url').default('/aicoremed_dark_1200.svg'),
   colores: jsonb('colores').default({ primary: '#2563eb' }),
   activo: boolean('activo').notNull().default(true),
+  featuresEnabled: jsonb('features_enabled').default({} as Record<string, boolean>),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
