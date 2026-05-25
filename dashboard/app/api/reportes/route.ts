@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     let startDate: Date;
-    let labelFormat = { day: '2-digit', month: '2-digit' } as const;
+    let labelFormat: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit' };
 
     switch (periodo) {
       case 'semana':
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         break;
       case 'año':
         startDate = new Date(now.getFullYear(), 0, 1);
-        labelFormat = { month: 'short', year: '2-digit' } as const;
+        labelFormat = { month: 'short', year: '2-digit' };
         break;
       default: // mes
         startDate = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
