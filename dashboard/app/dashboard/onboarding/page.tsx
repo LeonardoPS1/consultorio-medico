@@ -14,39 +14,53 @@ import { OnboardingClient } from './onboarding-client';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams?: { reiniciar?: string };
+}) {
   const state = await getOnboardingState();
+  const isForceRestart = searchParams?.reiniciar === 'true';
+  const showComplete = state.isComplete && !isForceRestart;
 
   return (
     <div className="space-y-6 animate-in max-w-3xl mx-auto">
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">
-          {state.isComplete ? '🎉 ¡Todo listo!' : 'Configuración inicial'}
+          {showComplete ? '🎉 ¡Todo listo!' : 'Configuración inicial'}
         </h2>
         <p className="text-muted-foreground">
-          {state.isComplete
+          {showComplete
             ? 'Tu consultorio está completamente configurado. ¡Empezá a gestionar!'
-            : 'Completá estos pasos para dejar todo listo'}
+            : isForceRestart
+              ? 'Repasá los pasos de configuración. Los tips de IA te ayudarán.'
+              : 'Completá estos pasos para dejar todo listo'}
         </p>
       </div>
 
-      {/* Progress bar */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Progreso</span>
-          <span className="font-semibold">{state.progress}%</span>
+      {/* Progress bar (oculta si es reinicio forzado) */}
+      {!isForceRestart && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Progreso</span>
+            <span className="font-semibold">{state.progress}%</span>
+          </div>
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
+              style={{ width: `${state.progress}%` }}
+            />
+          </div>
         </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
-          <div
-            className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
-            style={{ width: `${state.progress}%` }}
-          />
-        </div>
-      </div>
+      )}
 
       {/* Client component con pasos interactivos */}
-      <OnboardingClient initialCompleted={state.completedSteps} isComplete={state.isComplete} />
+      <OnboardingClient
+        initialCompleted={isForceRestart ? [] : state.completedSteps}
+        isComplete={showComplete}
+        isForceRestart={isForceRestart}
+      />
     </div>
   );
 }

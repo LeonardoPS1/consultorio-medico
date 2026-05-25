@@ -60,6 +60,26 @@ export const medicos = pgTable('medicos', {
 });
 
 // ============================================================
+// REGIONES DE CHILE
+// ============================================================
+export const regiones = pgTable('regiones', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  nombre: varchar('nombre', { length: 100 }).notNull().unique(),
+  numeroRomano: varchar('numero_romano', { length: 10 }), // ej: 'XV', 'I', 'RM'
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ============================================================
+// COMUNAS DE CHILE
+// ============================================================
+export const comunas = pgTable('comunas', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  nombre: varchar('nombre', { length: 100 }).notNull(),
+  regionId: uuid('region_id').notNull().references(() => regiones.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ============================================================
 // PACIENTES
 // ============================================================
 export const pacientes = pgTable('pacientes', {
@@ -74,6 +94,8 @@ export const pacientes = pgTable('pacientes', {
   direccion: text('direccion'),
   comuna: varchar('comuna', { length: 100 }),
   region: varchar('region', { length: 100 }),
+  regionId: uuid('region_id').references(() => regiones.id),
+  comunaId: uuid('comuna_id').references(() => comunas.id),
   obraSocial: varchar('obra_social', { length: 255 }),
   sistemaSalud: varchar('sistema_salud', { length: 20 }),
   numeroAfiliado: varchar('numero_afiliado', { length: 100 }),
@@ -396,13 +418,32 @@ export const usuariosRelations = relations(usuarios, ({ one }) => ({
   }),
 }));
 
-export const pacientesRelations = relations(pacientes, ({ many }) => ({
+export const pacientesRelations = relations(pacientes, ({ many, one }) => ({
   turnos: many(turnos),
   conversaciones: many(conversaciones),
   historialMedico: many(historialMedico),
   recetas: many(recetas),
   pacienteEventos: many(pacienteEventos),
   tareasPendientes: many(tareasPendientes),
+  region: one(regiones, {
+    fields: [pacientes.regionId],
+    references: [regiones.id],
+  }),
+  comuna: one(comunas, {
+    fields: [pacientes.comunaId],
+    references: [comunas.id],
+  }),
+}));
+
+export const regionesRelations = relations(regiones, ({ many }) => ({
+  comunas: many(comunas),
+}));
+
+export const comunasRelations = relations(comunas, ({ one }) => ({
+  region: one(regiones, {
+    fields: [comunas.regionId],
+    references: [regiones.id],
+  }),
 }));
 
 export const medicosRelations = relations(medicos, ({ many }) => ({

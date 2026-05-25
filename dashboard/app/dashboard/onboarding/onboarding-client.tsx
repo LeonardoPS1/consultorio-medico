@@ -13,6 +13,7 @@ import { ONBOARDING_STEPS, type OnboardingStep } from '@/lib/onboarding-types';
 interface OnboardingClientProps {
   initialCompleted: string[];
   isComplete: boolean;
+  isForceRestart?: boolean;
 }
 
 // ─── Map icon string → component ────────────────────────────
@@ -27,7 +28,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 // ─── Component ──────────────────────────────────────────────
 
-export function OnboardingClient({ initialCompleted, isComplete }: OnboardingClientProps) {
+export function OnboardingClient({ initialCompleted, isComplete, isForceRestart }: OnboardingClientProps) {
   const [completed, setCompleted] = useState<string[]>(initialCompleted);
   const [activeStep, setActiveStep] = useState<string | null>(null);
   const [tips, setTips] = useState<Record<string, string>>({});
@@ -54,7 +55,7 @@ export function OnboardingClient({ initialCompleted, isComplete }: OnboardingCli
             <Link href="/dashboard/turnos">Gestionar Turnos</Link>
           </Button>
           <Button variant="ghost" asChild>
-            <Link href="/dashboard/onboarding">
+            <Link href="/dashboard/onboarding?reiniciar=true">
               <Sparkles className="h-4 w-4 mr-1" />
               Re-ejecutar asistente IA
             </Link>
@@ -99,7 +100,9 @@ export function OnboardingClient({ initialCompleted, isComplete }: OnboardingCli
 
   const isStepCompleted = (id: string) => completed.includes(id);
   const isStepActive = (id: string) => activeStep === id;
+  // En modo reinicio, todos los pasos están disponibles sin bloqueo
   const isStepPending = (id: string) => {
+    if (isForceRestart) return false;
     const idx = ONBOARDING_STEPS.findIndex((s) => s.id === id);
     return idx > 0 && !isStepCompleted(ONBOARDING_STEPS[idx - 1].id);
   };
@@ -218,6 +221,17 @@ export function OnboardingClient({ initialCompleted, isComplete }: OnboardingCli
           </Card>
         );
       })}
+
+      {/* Botón para salir del modo reinicio */}
+      {isForceRestart && (
+        <div className="text-center pt-4">
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/onboarding">
+              Volver a configuración normal
+            </Link>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

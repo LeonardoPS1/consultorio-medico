@@ -190,9 +190,9 @@ function ConfigContent() {
                 </CardDescription>
               </div>
               <Button asChild>
-                <Link href="/dashboard/onboarding">
+                <Link href="/dashboard/onboarding?reiniciar=true">
                   <Sparkles className="h-4 w-4 mr-1" />
-                  Abrir asistente
+                  Re-ejecutar asistente
                 </Link>
               </Button>
             </CardHeader>

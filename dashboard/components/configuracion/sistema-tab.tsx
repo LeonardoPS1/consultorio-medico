@@ -40,21 +40,35 @@ interface ToggleFeature {
   id: FeatureId;
   label: string;
   description: string;
-  category: 'core' | 'avanzado' | 'sistema';
+  category: 'modulos' | 'avanzado' | 'sistema';
 }
 
 const TOGGLEABLE_FEATURES: ToggleFeature[] = [
-  { id: 'horarios', label: 'Horarios configurables', description: 'Médicos pueden configurar sus horarios de atención', category: 'core' },
-  { id: 'notificaciones', label: 'Notificaciones', description: 'Alertas por WhatsApp y email', category: 'core' },
-  { id: 'portal-paciente', label: 'Portal del Paciente', description: 'Acceso web para que pacientes vean turnos y recetas', category: 'core' },
+  // ─── Módulos principales (sidebar) ───────────────────────
+  { id: 'panel-principal', label: 'Panel Principal', description: 'Dashboard principal con KPIs y actividad reciente', category: 'modulos' },
+  { id: 'atencion', label: 'Atención', description: 'Kanban de atención diaria', category: 'modulos' },
+  { id: 'turnos', label: 'Turnos', description: 'Gestión de turnos y agenda', category: 'modulos' },
+  { id: 'pacientes', label: 'Pacientes', description: 'Ficha de pacientes y datos de contacto', category: 'modulos' },
+  { id: 'conversaciones', label: 'Conversaciones', description: 'Bandeja de mensajes de WhatsApp', category: 'modulos' },
+  { id: 'recetas', label: 'Recetas', description: 'Prescripciones y recetas digitales', category: 'modulos' },
+  { id: 'reportes', label: 'Reportes', description: 'Estadísticas y reportes del consultorio', category: 'modulos' },
+  { id: 'horarios', label: 'Horarios', description: 'Configuración de horarios de atención', category: 'modulos' },
+  { id: 'notificaciones', label: 'Notificaciones', description: 'Alertas por WhatsApp y email', category: 'modulos' },
+  { id: 'portal-paciente', label: 'Portal del Paciente', description: 'Acceso web para que pacientes vean turnos y recetas', category: 'modulos' },
+
+  // ─── Funcionalidades avanzadas ──────────────────────────
   { id: 'reportes-avanzados', label: 'Reportes Avanzados', description: 'Gráficos, exportación Excel y PDF', category: 'avanzado' },
   { id: 'ia-assistant', label: 'Asistente IA', description: 'Respuestas automáticas y triaje con IA', category: 'avanzado' },
   { id: 'plantillas', label: 'Plantillas WhatsApp', description: 'Mensajes predefinidos para recordatorios', category: 'avanzado' },
   { id: '2fa', label: 'Autenticación 2FA', description: 'Segundo factor de autenticación para médicos', category: 'avanzado' },
   { id: 'equipo', label: 'Gestión de Equipo', description: 'Múltiples médicos y profesionales', category: 'avanzado' },
+  { id: 'credenciales', label: 'Credenciales', description: 'Gestión de credenciales de servicios externos', category: 'avanzado' },
+  { id: 'multi-sucursal', label: 'Multi-sucursal', description: 'Múltiples sucursales o consultorios', category: 'avanzado' },
+
+  // ─── Sistema ────────────────────────────────────────────
   { id: 'integraciones', label: 'Integraciones n8n', description: 'Workflows de automatización avanzados', category: 'sistema' },
   { id: 'api-publica', label: 'API Pública', description: 'Endpoints para integraciones externas', category: 'sistema' },
-  { id: 'auditoria', label: 'Auditoría', description: 'Registro de accesos y acciones', category: 'sistema' },
+  { id: 'auditoria', label: 'Auditoría', description: 'Registro de accesos y acciones del sistema', category: 'sistema' },
   { id: 'backup-encriptado', label: 'Backup Encriptado', description: 'Respaldo automático encriptado de la BD', category: 'sistema' },
   { id: 'webhooks-log', label: 'Log de Webhooks', description: 'Registro de llamadas webhook entrantes', category: 'sistema' },
 ];
@@ -126,7 +140,7 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
     }
   };
 
-  const coreFeatures = TOGGLEABLE_FEATURES.filter(f => f.category === 'core');
+  const modulosFeatures = TOGGLEABLE_FEATURES.filter(f => f.category === 'modulos');
   const advancedFeatures = TOGGLEABLE_FEATURES.filter(f => f.category === 'avanzado');
   const systemFeatures = TOGGLEABLE_FEATURES.filter(f => f.category === 'sistema');
 
@@ -153,10 +167,10 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
             </div>
           ) : (
             <>
-              {/* Funcionalidades principales */}
-              <SectionLabel label="Principales" />
+              {/* Módulos principales (sidebar) */}
+              <SectionLabel label="Módulos" />
               <div className="space-y-2">
-                {coreFeatures.map(f => (
+                {modulosFeatures.map(f => (
                   <ToggleRow
                     key={f.id}
                     label={f.label}
