@@ -156,9 +156,6 @@ function ConfigContent() {
             <CreditCard className="h-4 w-4 sm:mr-1" />
             <span className="hidden sm:inline">Suscripción</span>
           </TabsTrigger>
-          {canAccess(userPlan, 'integraciones') && (
-            <TabsTrigger value="integraciones" className="px-2 sm:px-3 shrink-0">Integraciones</TabsTrigger>
-          )}
           {canAccess(userPlan, 'horarios') && (
             <TabsTrigger value="horarios" className="px-2 sm:px-3 shrink-0">Horarios</TabsTrigger>
           )}
