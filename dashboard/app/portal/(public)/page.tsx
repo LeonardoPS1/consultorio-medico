@@ -8,6 +8,10 @@
 import { useState } from 'react';
 import { Phone, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
 
+function isValidPhone(cleanPhone: string): boolean {
+  return /^(\+569?|569?|9)?\d{8,9}$/.test(cleanPhone);
+}
+
 export default function PortalLogin() {
   const [telefono, setTelefono] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,8 +23,7 @@ export default function PortalLogin() {
     setError('');
 
     const cleanPhone = telefono.replace(/[\s\-()]/g, '');
-    // Validar número chileno: +569XXXXXXX (12 dígitos) o 9XXXXXXX (8 dígitos)
-    if (!/^(\+569?|569?|9)?\d{8,9}$/.test(cleanPhone)) {
+    if (!isValidPhone(cleanPhone)) {
       setError('Ingresá un número de teléfono chileno válido (ej: +56 9 1234 5678)');
       return;
     }
@@ -95,7 +98,7 @@ export default function PortalLogin() {
               type="tel"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
-              placeholder="+54 11 5555-0101"
+              placeholder="+56 9 1234 5678"
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
               autoFocus
               disabled={loading}
@@ -104,7 +107,7 @@ export default function PortalLogin() {
 
           <button
             type="submit"
-            disabled={loading || telefono.length < 10}
+            disabled={loading || !isValidPhone(telefono.replace(/[\s\-()]/g, ''))}
             className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? (

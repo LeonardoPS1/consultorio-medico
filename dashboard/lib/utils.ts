@@ -94,7 +94,8 @@ export function formatPhone(phone: string) {
   if (!phone) return '';
   // Chilean numbers: +569XXXXXXX → 9 XXX XXX XXX
   const cleaned = phone.replace(/\D/g, '');
-  if (cleaned.startsWith('569') && cleaned.length === 12) {
+  // +569XXXXXXXX → cleaned 569XXXXXXXX (11 dígitos)
+  if (cleaned.startsWith('569') && cleaned.length === 11) {
     const number = cleaned.slice(3);
     return `${number.slice(0, 1)} ${number.slice(1, 4)} ${number.slice(4, 7)} ${number.slice(7, 10)}`;
   }
