@@ -63,9 +63,10 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
 
 interface SistemaTabProps {
   isAdmin: boolean;
+  section?: 'toggles' | 'ia' | 'integraciones' | 'credenciales' | 'apikeys';
 }
 
-export default function SistemaTab({ isAdmin }: SistemaTabProps) {
+export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
   const { toast } = useToast();
   const { refresh: refreshFeatureFlags } = useFeatureFlags();
   const [toggles, setToggles] = useState<Record<string, boolean>>({});
@@ -129,10 +130,12 @@ export default function SistemaTab({ isAdmin }: SistemaTabProps) {
   const advancedFeatures = TOGGLEABLE_FEATURES.filter(f => f.category === 'avanzado');
   const systemFeatures = TOGGLEABLE_FEATURES.filter(f => f.category === 'sistema');
 
+  const showAll = !section;
+
   return (
     <div className="space-y-6">
       {/* ─── Feature Toggles ───────────────────────────────── */}
-      <Card>
+      {(showAll || section === 'toggles') && <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
@@ -208,10 +211,10 @@ export default function SistemaTab({ isAdmin }: SistemaTabProps) {
             </>
           )}
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* ─── IA ────────────────────────────────────────────── */}
-      <Card>
+      {(showAll || section === 'ia') && <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5" />
@@ -267,10 +270,10 @@ export default function SistemaTab({ isAdmin }: SistemaTabProps) {
             Guardar configuración de IA
           </Button>
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* ─── Integraciones ─────────────────────────────────── */}
-      <Card>
+      {(showAll || section === 'integraciones') && <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Link className="h-5 w-5" />
@@ -281,10 +284,10 @@ export default function SistemaTab({ isAdmin }: SistemaTabProps) {
         <CardContent>
           <IntegracionesDashboard isAdmin={isAdmin} />
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* ─── Credenciales ──────────────────────────────────── */}
-      <Card>
+      {(showAll || section === 'credenciales') && <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
@@ -295,10 +298,10 @@ export default function SistemaTab({ isAdmin }: SistemaTabProps) {
         <CardContent>
           <CredencialesTab />
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* ─── API Keys ──────────────────────────────────────── */}
-      <Card>
+      {(showAll || section === 'apikeys') && <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Key className="h-5 w-5" />
@@ -309,7 +312,7 @@ export default function SistemaTab({ isAdmin }: SistemaTabProps) {
         <CardContent>
           <ApiKeysTab />
         </CardContent>
-      </Card>
+      </Card>}
     </div>
   );
 }

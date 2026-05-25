@@ -13,6 +13,7 @@ import {
   FileText,
   BarChart3,
   Settings,
+  Sliders,
   ChevronLeft,
   ChevronRight,
   Syringe,
@@ -49,7 +50,7 @@ const navItems: NavItem[] = [
   { title: 'Recetas', href: '/dashboard/recetas', icon: Syringe, feature: 'recetas' },
   { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3, feature: 'reportes' },
   { title: 'Encuestas', href: '/dashboard/encuestas', icon: Star, feature: 'reportes' },
-  { title: 'Ajustes', href: '/dashboard/configuracion', icon: Settings },
+  { title: 'Ajustes', href: '/dashboard/configuracion', icon: Sliders },
 ];
 
 export function Sidebar() {

@@ -7,10 +7,7 @@
 
 import { useState } from 'react';
 import { Phone, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
-
-function isValidPhone(cleanPhone: string): boolean {
-  return /^(\+569?|569?|9)?\d{8,9}$/.test(cleanPhone);
-}
+import { isValidPhone } from '@/lib/utils';
 
 export default function PortalLogin() {
   const [telefono, setTelefono] = useState('');

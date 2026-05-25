@@ -88,22 +88,78 @@ export function getTurnoLabel(estado: string) {
 }
 
 /**
- * Formatea un número de teléfono para mostrar
+ * Valida un número de teléfono chileno (+569 o 9)
+ */
+export function isValidPhone(phone: string): boolean {
+  const cleaned = phone.replace(/[\s\-()]/g, '');
+  return /^(\+56?9|9)\d{8}$/.test(cleaned);
+}
+
+/**
+ * Formatea un número de teléfono chileno para mostrar
+ * +569XXXXXXXX → +56 9 XXXX XXXX
  */
 export function formatPhone(phone: string) {
   if (!phone) return '';
-  // Chilean numbers: +569XXXXXXX → 9 XXX XXX XXX
   const cleaned = phone.replace(/\D/g, '');
-  // +569XXXXXXXX → cleaned 569XXXXXXXX (11 dígitos)
+  // +569XXXXXXXX (11 dígitos después de limpiar)
   if (cleaned.startsWith('569') && cleaned.length === 11) {
-    const number = cleaned.slice(3);
-    return `${number.slice(0, 1)} ${number.slice(1, 4)} ${number.slice(4, 7)} ${number.slice(7, 10)}`;
+    const n = cleaned.slice(3);
+    return `+56 9 ${n.slice(0, 4)} ${n.slice(4, 7)} ${n.slice(7)}`;
   }
-  // Also handle numbers starting with 9 (without country code)
+  // 9XXXXXXXX (9 dígitos, sin código país)
   if (cleaned.startsWith('9') && cleaned.length === 9) {
-    return `${cleaned.slice(0, 1)} ${cleaned.slice(1, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7, 9)}`;
+    return `+56 9 ${cleaned.slice(1, 5)} ${cleaned.slice(5, 7)} ${cleaned.slice(7)}`;
   }
   return phone;
+}
+
+/**
+ * Limpia un RUT: elimina puntos, guión y espacios
+ * "12.345.678-5" → "123456785"
+ */
+export function cleanRut(rut: string): string {
+  return rut.replace(/[.\\-]/g, '').trim();
+}
+
+/**
+ * Formatea un RUT chileno para mostrar
+ * "123456785" → "12.345.678-5"
+ */
+export function formatRut(rut: string): string {
+  const cleaned = cleanRut(rut);
+  if (cleaned.length < 2) return rut;
+  const cuerpo = cleaned.slice(0, -1);
+  const dv = cleaned.slice(-1).toUpperCase();
+  const formateado = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${formateado}-${dv}`;
+}
+
+/**
+ * Valida un RUT chileno (dígito verificador)
+ * Retorna true si el RUT es válido
+ */
+export function validateRut(rut: string): boolean {
+  const cleaned = cleanRut(rut);
+  if (cleaned.length < 2) return false;
+
+  const cuerpo = cleaned.slice(0, -1);
+  const dv = cleaned.slice(-1).toUpperCase();
+
+  // Calcular dígito verificador
+  let suma = 0;
+  let multiplo = 2;
+  for (let i = cuerpo.length - 1; i >= 0; i--) {
+    suma += parseInt(cuerpo[i], 10) * multiplo;
+    multiplo = multiplo === 7 ? 2 : multiplo + 1;
+  }
+  const dvEsperado = 11 - (suma % 11);
+  const dvCalculado =
+    dvEsperado === 11 ? '0' :
+    dvEsperado === 10 ? 'K' :
+    dvEsperado.toString();
+
+  return dv === dvCalculado;
 }
 
 /**
