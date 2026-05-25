@@ -156,13 +156,15 @@ export function detectSurveyResponse(body: string): { esEncuesta: boolean; punta
   }
 
   // Caso 2: número seguido de texto (ej: "5 excelente atención")
-  const match = trimmed.match(/^([1-5])\s*[.,]?\s*(.+)$/);
+  // La \b evita falsos positivos como "10" (detectado como puntaje 1)
+  const match = trimmed.match(/^([1-5])\b\s*[.,]?\s*(.+)$/);
   if (match) {
     return { esEncuesta: true, puntaje: parseInt(match[1], 10) };
   }
 
   // Caso 3: texto que empieza con "un" o "una" y un número (ej: "un 4", "una 5")
-  const matchConArticulo = trimmed.match(/^(?:un|una|un\s*)?([1-5])\s*$/i);
+  // \s+ requiere al menos un espacio entre el artículo y el número
+  const matchConArticulo = trimmed.match(/^(?:un|una)\s+([1-5])\s*$/i);
   if (matchConArticulo) {
     return { esEncuesta: true, puntaje: parseInt(matchConArticulo[1], 10) };
   }
