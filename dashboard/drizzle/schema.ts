@@ -54,6 +54,7 @@ export const medicos = pgTable('medicos', {
   duracionTurnoMinutos: integer('duracion_turno_minutos').notNull().default(30),
   activo: boolean('activo').notNull().default(true),
   colorEvento: varchar('color_evento', { length: 7 }).default('#3B82F6'),
+  sucursalId: uuid('sucursal_id').references(() => sucursales.id),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -98,6 +99,7 @@ export const pacientes = pgTable('pacientes', {
   comunaId: uuid('comuna_id').references(() => comunas.id),
   obraSocial: varchar('obra_social', { length: 255 }),
   sistemaSalud: varchar('sistema_salud', { length: 20 }),
+  sucursalId: uuid('sucursal_id').references(() => sucursales.id),
   numeroAfiliado: varchar('numero_afiliado', { length: 100 }),
   alergias: text('alergias'),
   medicacionCronica: text('medicacion_cronica'),
@@ -148,6 +150,7 @@ export const turnos = pgTable('turnos', {
   recordatorio1hLeido: boolean('recordatorio_1h_leido').default(false),
   confirmoAsistencia: boolean('confirmo_asistencia').default(false),
   fuente: varchar('fuente', { length: 20 }).default('whatsapp'),
+  sucursalId: uuid('sucursal_id').references(() => sucursales.id),
   creadoPor: uuid('creado_por').references(() => usuarios.id),
   canceladoPor: varchar('cancelado_por', { length: 20 }),
   motivoCancelacion: text('motivo_cancelacion'),
@@ -425,13 +428,9 @@ export const pacientesRelations = relations(pacientes, ({ many, one }) => ({
   recetas: many(recetas),
   pacienteEventos: many(pacienteEventos),
   tareasPendientes: many(tareasPendientes),
-  region: one(regiones, {
-    fields: [pacientes.regionId],
-    references: [regiones.id],
-  }),
-  comuna: one(comunas, {
-    fields: [pacientes.comunaId],
-    references: [comunas.id],
+  sucursal: one(sucursales, {
+    fields: [pacientes.sucursalId],
+    references: [sucursales.id],
   }),
 }));
 
@@ -446,11 +445,14 @@ export const comunasRelations = relations(comunas, ({ one }) => ({
   }),
 }));
 
-export const medicosRelations = relations(medicos, ({ many }) => ({
+export const medicosRelations = relations(medicos, ({ many, one }) => ({
   turnos: many(turnos),
+  recetas: many(recetas),
   servicios: many(servicios),
-  conversaciones: many(conversaciones),
-  bloqueosAgenda: many(bloqueosAgenda),
+  sucursal: one(sucursales, {
+    fields: [medicos.sucursalId],
+    references: [sucursales.id],
+  }),
 }));
 
 export const turnosRelations = relations(turnos, ({ one }) => ({
@@ -461,6 +463,10 @@ export const turnosRelations = relations(turnos, ({ one }) => ({
   medico: one(medicos, {
     fields: [turnos.medicoId],
     references: [medicos.id],
+  }),
+  sucursal: one(sucursales, {
+    fields: [turnos.sucursalId],
+    references: [sucursales.id],
   }),
 }));
 
@@ -517,6 +523,24 @@ export const tenants = pgTable('tenants', {
 });
 
 // ============================================================
+// SUCURSALES (multi-sucursal)
+// ============================================================
+export const sucursales = pgTable('sucursales', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenantId: uuid('tenant_id').notNull().default('00000000-0000-0000-0000-000000000000').references(() => tenants.id),
+  nombre: varchar('nombre', { length: 255 }).notNull(),
+  direccion: text('direccion'),
+  telefono: varchar('telefono', { length: 20 }),
+  email: varchar('email', { length: 255 }),
+  activo: boolean('activo').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type Sucursal = InferSelectModel<typeof sucursales>;
+export type NewSucursal = InferInsertModel<typeof sucursales>;
+
+// ============================================================
 // SUSCRIPCIONES (MercadoPago)
 // ============================================================
 export const suscripciones = pgTable('suscripciones', {
@@ -560,6 +584,18 @@ export const suscripcionesRelations = relations(suscripciones, ({ one }) => ({
 export const tenantsRelations = relations(tenants, ({ many }) => ({
   suscripciones: many(suscripciones),
   usuarios: many(usuarios),
+  sucursales: many(sucursales),
+}));
+
+export const sucursalesRelations = relations(sucursales, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [sucursales.tenantId],
+    references: [tenants.id],
+  }),
+  medicos: many(medicos),
+  pacientes: many(pacientes),
+  turnos: many(turnos),
+  horariosAtencion: many(horariosAtencion),
 }));
 
 // ============================================================
@@ -569,6 +605,7 @@ export const horariosAtencion = pgTable('horarios_atencion', {
   id: uuid('id').defaultRandom().primaryKey(),
   dia: varchar('dia', { length: 20 }).notNull().unique(),
   activo: boolean('activo').notNull().default(true),
+  sucursalId: uuid('sucursal_id').references(() => sucursales.id),
   inicio: varchar('inicio', { length: 5 }).notNull().default('09:00'),
   fin: varchar('fin', { length: 5 }).notNull().default('18:00'),
   tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
@@ -577,6 +614,13 @@ export const horariosAtencion = pgTable('horarios_atencion', {
 });
 
 export type HorarioAtencion = InferSelectModel<typeof horariosAtencion>;
+
+export const horariosAtencionRelations = relations(horariosAtencion, ({ one }) => ({
+  sucursal: one(sucursales, {
+    fields: [horariosAtencion.sucursalId],
+    references: [sucursales.id],
+  }),
+}));
 
 // ============================================================
 // PREFERENCIAS DE NOTIFICACIONES
