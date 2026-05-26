@@ -125,6 +125,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
+  events: {
+    async signOut(message) {
+      const token = 'token' in message ? message.token : null;
+      if (token?.sub) {
+        logAudit({
+          usuarioId: token.sub,
+          accion: 'logout',
+          entidad: 'usuario',
+          entidadId: token.sub,
+        }).catch(() => {});
+      }
+    },
+  },
   pages: {
     signIn: '/',
   },

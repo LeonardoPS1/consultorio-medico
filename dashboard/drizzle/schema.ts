@@ -394,6 +394,7 @@ export const workflowErrors = pgTable('workflow_errors', {
 // ============================================================
 export const auditoriaAccesos = pgTable('auditoria_accesos', {
   id: uuid('id').defaultRandom().primaryKey(),
+  tenantId: uuid('tenant_id').references(() => tenants.id),
   usuarioId: uuid('usuario_id').references(() => usuarios.id),
   usuarioEmail: varchar('usuario_email', { length: 255 }),
   usuarioNombre: varchar('usuario_nombre', { length: 255 }),
@@ -409,6 +410,7 @@ export const auditoriaAccesos = pgTable('auditoria_accesos', {
   idxEntidad: index('idx_auditoria_entidad').on(table.entidad),
   idxCreatedAt: index('idx_auditoria_created_at').on(table.createdAt),
   idxUsuario: index('idx_auditoria_usuario').on(table.usuarioId),
+  idxTenant: index('idx_auditoria_tenant').on(table.tenantId),
 }));
 
 // ============================================================
@@ -418,6 +420,17 @@ export const usuariosRelations = relations(usuarios, ({ one }) => ({
   tenant: one(tenants, {
     fields: [usuarios.tenantId],
     references: [tenants.id],
+  }),
+}));
+
+export const auditoriaAccesosRelations = relations(auditoriaAccesos, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [auditoriaAccesos.tenantId],
+    references: [tenants.id],
+  }),
+  usuario: one(usuarios, {
+    fields: [auditoriaAccesos.usuarioId],
+    references: [usuarios.id],
   }),
 }));
 

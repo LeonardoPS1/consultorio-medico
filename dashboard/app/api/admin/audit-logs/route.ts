@@ -1,18 +1,13 @@
 /**
  * GET /api/admin/audit-logs — Listar logs de auditoría
- * Admin only — requiere sesión con rol admin
+ * DELETE /api/admin/audit-logs — Limpiar logs de auditoría
  *
- * Query params:
- *   - limit: número máximo de registros (default 100)
- *   - offset: desplazamiento (default 0)
- *   - entidad: filtrar por entidad (opcional)
- *   - accion: filtrar por acción (opcional)
- *   - usuarioId: filtrar por usuario (opcional)
+ * Admin only — requiere sesión con rol admin
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { getAuditLogs } from '@/lib/audit-log';
+import { getAuditLogs, cleanAuditLogs } from '@/lib/audit-log';
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -34,6 +29,21 @@ export async function GET(request: NextRequest) {
     accion: accion as any,
     usuarioId,
   });
+
+  return NextResponse.json(result);
+}
+
+export async function DELETE(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== 'admin') {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const beforeDays = parseInt(searchParams.get('beforeDays') || '90', 10);
+  const all = searchParams.get('all') === 'true';
+
+  const result = await cleanAuditLogs({ beforeDays, all });
 
   return NextResponse.json(result);
 }

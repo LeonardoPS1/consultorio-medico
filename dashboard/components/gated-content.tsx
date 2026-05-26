@@ -16,6 +16,7 @@ const ROUTE_FEATURE_MAP: Record<string, FeatureId> = {
   '/dashboard/recetas': 'recetas',
   '/dashboard/reportes': 'reportes',
   '/dashboard/admin/tenants': 'multi-sucursal',
+  '/dashboard/admin/auditoria': 'auditoria',
 };
 
 /** Rutas hijas que heredan el feature de la ruta padre */
