@@ -12,9 +12,14 @@ export const dynamic = 'force-dynamic';
  * - KPIs (turnos hoy, pacientes nuevos, mensajes pendientes, alertas, tasa respuesta, mensajes hoy)
  * - Próximos turnos del día
  * - Actividad reciente
+ *
+ * Query params:
+ *   sucursalId  - opcional, filtra por sucursal
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const sucursalId = searchParams.get('sucursalId') || undefined;
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
@@ -22,6 +27,10 @@ export async function GET() {
     const thirtyDaysAgo = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     // ─── KPIs ────────────────────────────────────────────────
+
+    // Helper para filtro sucursal
+    const sucFiltro = sucursalId ? [eq(turnos.sucursalId, sucursalId)] : [];
+    const sucFiltroPac = sucursalId ? [eq(pacientes.sucursalId, sucursalId)] : [];
 
     // 1. Turnos de hoy
     const turnosHoy = await db
@@ -31,7 +40,8 @@ export async function GET() {
         and(
           gte(turnos.fechaHora, todayStart),
           lt(turnos.fechaHora, todayEnd),
-          sql`${turnos.deletedAt} IS NULL`
+          sql`${turnos.deletedAt} IS NULL`,
+          ...sucFiltro,
         )
       );
 
@@ -44,7 +54,8 @@ export async function GET() {
         and(
           gte(turnos.fechaHora, yesterdayStart),
           lt(turnos.fechaHora, todayStart),
-          sql`${turnos.deletedAt} IS NULL`
+          sql`${turnos.deletedAt} IS NULL`,
+          ...sucFiltro,
         )
       );
 
@@ -55,7 +66,8 @@ export async function GET() {
       .where(
         and(
           gte(pacientes.createdAt, sevenDaysAgo),
-          sql`${pacientes.deletedAt} IS NULL`
+          sql`${pacientes.deletedAt} IS NULL`,
+          ...sucFiltroPac,
         )
       );
 
@@ -68,7 +80,8 @@ export async function GET() {
         and(
           gte(pacientes.createdAt, twoWeeksAgo),
           lt(pacientes.createdAt, sevenDaysAgo),
-          sql`${pacientes.deletedAt} IS NULL`
+          sql`${pacientes.deletedAt} IS NULL`,
+          ...sucFiltroPac,
         )
       );
 
@@ -258,7 +271,8 @@ export async function GET() {
           and(
             gte(turnos.fechaHora, todayStart),
             lt(turnos.fechaHora, todayEnd),
-            sql`${turnos.deletedAt} IS NULL`
+            sql`${turnos.deletedAt} IS NULL`,
+            ...sucFiltro,
           )
         )
         .orderBy(turnos.fechaHora)

@@ -5,7 +5,7 @@ import type { CreateTurno, UpdateTurno } from '@/lib/validations';
 import { conflict, notFound, fail } from '@/lib/api-handler';
 
 export const turnosService = {
-  async list(fechaStr: string, estado?: string, medico?: string, tipo?: string, search?: string, limit = 100, offset = 0) {
+  async list(fechaStr: string, estado?: string, medico?: string, tipo?: string, search?: string, limit = 100, offset = 0, sucursalId?: string) {
     const fechaBaseIso = fechaStr + 'T00:00:00.000Z';
     const fechaFinIso = new Date(new Date(fechaBaseIso).getTime() + 86400000).toISOString();
 
@@ -17,9 +17,16 @@ export const turnosService = {
       tipo ? eq(turnos.tipoConsulta, tipo) : undefined,
       medico ? sql`EXISTS (SELECT 1 FROM ${medicos} WHERE ${medicos.id} = ${turnos.medicoId} AND ${medicos.nombre} ILIKE ${'%' + medico + '%'})` : undefined,
       search ? sql`EXISTS (SELECT 1 FROM ${pacientes} WHERE ${pacientes.id} = ${turnos.pacienteId} AND (${pacientes.nombre} ILIKE ${'%' + search + '%'} OR ${pacientes.apellido} ILIKE ${'%' + search + '%'}))` : undefined,
+      sucursalId ? eq(turnos.sucursalId, sucursalId) : undefined,
     );
 
-    const statsRows = await db.select({ estado: turnos.estado, total: count() }).from(turnos).where(and(sql`${turnos.fechaHora} >= ${fechaBaseIso}::timestamptz`, sql`${turnos.fechaHora} < ${fechaFinIso}::timestamptz`, sql`${turnos.deletedAt} IS NULL`)).groupBy(turnos.estado);
+    const statsWhere = and(
+      sql`${turnos.fechaHora} >= ${fechaBaseIso}::timestamptz`,
+      sql`${turnos.fechaHora} < ${fechaFinIso}::timestamptz`,
+      sql`${turnos.deletedAt} IS NULL`,
+      sucursalId ? eq(turnos.sucursalId, sucursalId) : undefined,
+    );
+    const statsRows = await db.select({ estado: turnos.estado, total: count() }).from(turnos).where(statsWhere).groupBy(turnos.estado);
     const statsPorEstado: Record<string, number> = {};
     let statsTotal = 0;
     for (const r of statsRows) { statsPorEstado[r.estado] = Number(r.total); statsTotal += Number(r.total); }
@@ -84,6 +91,7 @@ export const turnosService = {
       pacienteId: input.pacienteId, medicoId: input.medicoId, fechaHora,
       duracionMinutos: input.duracionMinutos, motivo: input.motivo || null,
       tipoConsulta: input.tipoConsulta, estado: 'pendiente', fuente: 'web',
+      sucursalId: (input as any).sucursalId || null,
     }).returning();
 
     return nuevo;

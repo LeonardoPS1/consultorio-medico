@@ -7,19 +7,29 @@ import { eq, and, sql, count } from 'drizzle-orm';
  * GET /api/medicos
  *
  * Lista todos los medicos activos.
+ * Query params:
+ *   sucursalId  - opcional, filtra por sucursal
  */
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const sucursalId = searchParams.get('sucursalId') || undefined;
+
+    const whereConditions = and(
+      sql`${medicos.deletedAt} IS NULL`,
+      sucursalId ? eq(medicos.sucursalId, sucursalId) : undefined,
+    );
+
     const lista = await db
       .select()
       .from(medicos)
-      .where(sql`${medicos.deletedAt} IS NULL`)
+      .where(whereConditions)
       .orderBy(medicos.nombre);
 
     const [{ total }] = await db
       .select({ total: count() })
       .from(medicos)
-      .where(sql`${medicos.deletedAt} IS NULL`);
+      .where(whereConditions);
 
     return NextResponse.json({ data: lista, total: Number(total) });
   } catch (error) {

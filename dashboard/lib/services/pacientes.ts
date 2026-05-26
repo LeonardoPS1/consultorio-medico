@@ -12,7 +12,7 @@ import { conflict, notFound } from '@/lib/api-handler';
 
 export const pacientesService = {
   /** Listar pacientes con búsqueda y stats */
-  async list(search?: string, limit = 100, offset = 0) {
+  async list(search?: string, limit = 100, offset = 0, sucursalId?: string) {
     const whereConditions = and(
       sql`${pacientes.deletedAt} IS NULL`,
       search
@@ -22,6 +22,7 @@ export const pacientesService = {
             like(pacientes.telefono, `%${search}%`),
           )
         : undefined,
+      sucursalId ? eq(pacientes.sucursalId, sucursalId) : undefined,
     );
 
     const [{ total }] = await db.select({ total: count() }).from(pacientes).where(whereConditions);
@@ -32,6 +33,7 @@ export const pacientesService = {
       .where(and(
         sql`${pacientes.deletedAt} IS NULL`,
         sql`EXISTS (SELECT 1 FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.deletedAt} IS NULL)`,
+        sucursalId ? eq(pacientes.sucursalId, sucursalId) : undefined,
       ));
 
     const [{ nuevos }] = await db
@@ -40,6 +42,7 @@ export const pacientesService = {
       .where(and(
         sql`${pacientes.deletedAt} IS NULL`,
         sql`NOT EXISTS (SELECT 1 FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.deletedAt} IS NULL)`,
+        sucursalId ? eq(pacientes.sucursalId, sucursalId) : undefined,
       ));
 
     const lista = await db.select({
@@ -67,6 +70,7 @@ export const pacientesService = {
       alergias: input.alergias || null, medicacionCronica: input.medicacionCronica || null,
       notasMedicas: input.notasMedicas || null,
       tags: input.obraSocial === 'Particular' ? ['Particular'] : ['Obra Social'],
+      sucursalId: (input as any).sucursalId || null,
     }).returning();
 
     try { await db.insert(pacienteEventos).values({ pacienteId: nuevo.id, tipo: 'opt_in', descripcion: 'Paciente registrado desde el dashboard', metadata: { source: 'dashboard' } }); } catch {}

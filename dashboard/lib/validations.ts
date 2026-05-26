@@ -56,6 +56,7 @@ export const createPacienteSchema = z.object({
   alergias: z.string().optional().nullable(),
   medicacionCronica: z.string().optional().nullable(),
   notasMedicas: z.string().optional().nullable(),
+  sucursalId: z.string().uuid().optional().nullable(),
 });
 
 export const updatePacienteSchema = createPacienteSchema.partial();
@@ -68,6 +69,7 @@ export const createTurnoSchema = z.object({
   tipoConsulta: z.enum(['presencial', 'virtual', 'telefonica']).optional().default('presencial'),
   motivo: z.string().optional().nullable(),
   duracionMinutos: z.number().min(10).max(120).optional().default(30),
+  sucursalId: z.string().uuid().optional().nullable(),
 });
 
 export const updateTurnoSchema = z.object({
@@ -80,6 +82,7 @@ export const updateTurnoSchema = z.object({
   duracionMinutos: z.number().min(10).max(120).optional(),
   pacienteId: z.string().uuid().optional(),
   medicoId: z.string().uuid().optional(),
+  sucursalId: z.string().uuid().optional().nullable(),
 });
 
 export const createRecetaSchema = z.object({

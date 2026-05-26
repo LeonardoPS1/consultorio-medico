@@ -16,8 +16,9 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const search = searchParams.get('search') || undefined;
   const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 100;
   const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0;
+  const sucursalId = searchParams.get('sucursalId') || undefined;
 
-  const result = await pacientesService.list(search, limit, offset);
+  const result = await pacientesService.list(search, limit, offset, sucursalId);
   return NextResponse.json(result);
 });
 

@@ -24,6 +24,7 @@ export async function GET() {
         inicio: '09:00',
         fin: i < 5 ? '18:00' : '13:00',
         tenantId: '00000000-0000-0000-0000-000000000000',
+        sucursalId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       }));

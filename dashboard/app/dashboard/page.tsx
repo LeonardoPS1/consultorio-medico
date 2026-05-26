@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardClient } from './dashboard-client';
+import { DashboardKpisClient } from '@/components/dashboard/dashboard-kpis-client';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -130,9 +132,11 @@ function ActividadDot({ tipo }: { tipo: string }) {
 /** Forzar renderizado dinámico (no pre-renderizar en build) */
 export const dynamic = 'force-dynamic';
 
-async function getDashboardData(): Promise<DashboardData | null> {
+async function getDashboardData(sucursalId?: string): Promise<DashboardData | null> {
   try {
-    const res = await fetch('http://localhost:3000/api/dashboard/stats', {
+    const params = new URLSearchParams();
+    if (sucursalId) params.set('sucursalId', sucursalId);
+    const res = await fetch(`http://localhost:3000/api/dashboard/stats?${params.toString()}`, {
       cache: 'no-store',
     });
     if (!res.ok) return null;
@@ -145,7 +149,9 @@ async function getDashboardData(): Promise<DashboardData | null> {
 // ─── Page ──────────────────────────────────────────────────
 
 export default async function DashboardPage() {
-  const data = await getDashboardData();
+  const cookieStore = cookies();
+  const sucursalId = cookieStore.get('sucursal_activa')?.value;
+  const data = await getDashboardData(sucursalId);
 
   const dateStr = new Date().toLocaleDateString('es-AR', {
     weekday: 'long',
@@ -164,53 +170,8 @@ export default async function DashboardPage() {
        */}
       <DashboardClient dateStr={dateStr} />
 
-      {/* ─── KPIs ──────────────────────────────────────── */}
-      {data && data.kpis.length > 0 ? (
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6 stagger-children">
-          {data.kpis.map((kpi) => {
-            const Icon = getKpiIcon(kpi.type);
-            const gradient = getKpiGradient(kpi.type);
-            const bg = getKpiBg(kpi.type);
-            return (
-              <Card
-                key={kpi.title}
-                className="hover-card overflow-hidden relative"
-              >
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-[0.03] dark:opacity-[0.08]`}
-                />
-                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {kpi.title}
-                  </CardTitle>
-                  <div className={`rounded-lg ${bg} p-2`}>
-                    <Icon
-                      className={`h-4 w-4 ${kpi.urgent ? 'text-red-500 animate-pulse-soft' : ''}`}
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent className="relative">
-                  <div className="flex items-baseline gap-2">
-                    <div className="text-2xl sm:text-3xl font-bold">{kpi.value}</div>
-                    <span
-                      className={`text-sm font-medium ${kpi.urgent ? 'text-red-500' : 'text-emerald-500'}`}
-                    >
-                      {kpi.change}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {kpi.type === 'calendar'
-                      ? 'vs día anterior'
-                      : kpi.type === 'users'
-                        ? 'vs semana anterior'
-                        : 'últimas 24 hs'}
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      ) : null}
+      {/* ─── KPIs (server-rendered + client re-fetch on sucursal change) ─── */}
+      <DashboardKpisClient initialKpis={data?.kpis ?? []} />
 
       {/* ─── Turnos + Actividad ────────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-2">

@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useSucursal } from '@/lib/sucursal-context';
 import {
   Calendar,
   Plus,
@@ -106,6 +107,7 @@ export function TurnosClient({
   initialTipos,
   initialFecha,
 }: TurnosClientProps) {
+  const { sucursalId } = useSucursal();
   const [view, setView] = useState<'lista' | 'calendario'>('lista');
   const [selectedDate, setSelectedDate] = useState(() => new Date(initialFecha + 'T12:00:00'));
   const [showNewTurno, setShowNewTurno] = useState(false);
@@ -167,6 +169,7 @@ export function TurnosClient({
       const params = new URLSearchParams();
       params.set('fecha', fechaStr);
       params.set('limit', '200');
+      if (sucursalId) params.set('sucursalId', sucursalId);
 
       const res = await fetch(`/api/turnos?${params.toString()}`);
       if (!res.ok) throw new Error('Error al cargar turnos');
@@ -181,7 +184,7 @@ export function TurnosClient({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sucursalId]);
 
   // ─── Navegación de fecha ───────────────────────────────
 
@@ -272,6 +275,7 @@ export function TurnosClient({
           hora: data.hora,
           tipoConsulta: data.tipo || 'presencial',
           motivo: data.tipo,
+          sucursalId,
         }),
       });
 

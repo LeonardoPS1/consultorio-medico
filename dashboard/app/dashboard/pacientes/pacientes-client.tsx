@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { useSucursal } from '@/lib/sucursal-context';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Search,
@@ -41,6 +42,7 @@ interface PacientesClientProps {
 
 export function PacientesClient({ initialPacientes }: PacientesClientProps) {
   const router = useRouter();
+  const { sucursalId } = useSucursal();
   const [search, setSearch] = useState('');
   const [showNewPaciente, setShowNewPaciente] = useState(false);
   const [pacientesList, setPacientesList] =
@@ -68,7 +70,7 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
       const res = await fetch('/api/pacientes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, sucursalId }),
       });
       if (!res.ok) {
         const err = await res.json();

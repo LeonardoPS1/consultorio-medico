@@ -9,6 +9,7 @@ import { Bell, Moon, Sun, Monitor, Calendar, MessageSquare, Syringe, AlertTriang
 import { useTheme } from 'next-themes';
 import { getInitials, formatRelative } from '@/lib/utils';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
+import { useSucursal } from '@/lib/sucursal-context';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -104,36 +105,13 @@ export function Header() {
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
+  const { sucursalId: activeSucursalId, sucursales, setSucursalId, hasMultiple } = useSucursal();
   const [notificaciones, setNotificaciones] = useState(notificacionesMock);
   const [notifOpen, setNotifOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
   const [orgFirma, setOrgFirma] = useState('Dr.');
-  const [sucursales, setSucursales] = useState<{ id: string; nombre: string }[]>([]);
-  const [activeSucursalId, setActiveSucursalId] = useState<string | null>(null);
-
-  // Cargar sucursales desde la API
-  const cargarSucursales = useCallback(() => {
-    fetch('/api/sucursales')
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setSucursales(data);
-          // Si no hay sucursal activa, usar la primera
-          if (!activeSucursalId && data.length > 0) {
-            const stored = localStorage.getItem('sucursal_activa');
-            const found = stored ? data.find((s: { id: string }) => s.id === stored) : null;
-            setActiveSucursalId(found ? found.id : data[0].id);
-          }
-        }
-      })
-      .catch(() => {}); // Silencioso — sin sucursales no es crítico
-  }, [activeSucursalId]);
-
-  useEffect(() => {
-    cargarSucursales();
-  }, []);
 
   // Evitar hydration mismatch del theme toggle
   useEffect(() => { setMounted(true); }, []);
@@ -209,7 +187,7 @@ export function Header() {
           </p>
         </div>
         {/* Selector de sucursal */}
-        {sucursales.length > 1 && (
+        {hasMultiple && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs text-muted-foreground hover:text-foreground ml-1 shrink-0">
@@ -226,11 +204,7 @@ export function Header() {
               {sucursales.map(s => (
                 <DropdownMenuItem
                   key={s.id}
-                  onClick={() => {
-                    setActiveSucursalId(s.id);
-                    localStorage.setItem('sucursal_activa', s.id);
-                    window.dispatchEvent(new CustomEvent('sucursal-cambiada', { detail: { sucursalId: s.id } }));
-                  }}
+                  onClick={() => setSucursalId(s.id)}
                   className={s.id === activeSucursalId ? 'bg-accent font-medium' : ''}
                 >
                   <Store className="h-3.5 w-3.5 mr-2" />
