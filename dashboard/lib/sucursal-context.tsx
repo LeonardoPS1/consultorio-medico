@@ -66,6 +66,12 @@ export function SucursalProvider({ children }: { children: ReactNode }) {
   const cargarSucursales = useCallback(async () => {
     try {
       const res = await fetch('/api/sucursales');
+      // Si no autorizado (página pública), silenciosamente asumir sin sucursales
+      if (!res.ok) {
+        setSucursales([]);
+        setIsLoading(false);
+        return;
+      }
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         setSucursales(data);
@@ -83,7 +89,7 @@ export function SucursalProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(STORAGE_KEY, activa);
         setSucursalCookie(activa);
       } else {
-        setSucursales(data);
+        setSucursales(Array.isArray(data) ? data : []);
       }
     } catch {
       // Sin sucursales no es crítico

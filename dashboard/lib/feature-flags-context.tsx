@@ -43,6 +43,10 @@ export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
   const fetchToggles = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/features');
+      if (!res.ok) {
+        setLoading(false);
+        return;
+      }
       const data = await res.json();
       if (data.features) {
         setToggles(data.features);
