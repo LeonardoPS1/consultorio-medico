@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Bell, Moon, Sun, Monitor, Calendar, MessageSquare, Syringe, AlertTriangle, X, Menu } from 'lucide-react';
+import { Bell, Moon, Sun, Monitor, Calendar, MessageSquare, Syringe, AlertTriangle, X, Menu, Store, ChevronDown } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getInitials, formatRelative } from '@/lib/utils';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
@@ -110,6 +110,30 @@ export function Header() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
   const [orgFirma, setOrgFirma] = useState('Dr.');
+  const [sucursales, setSucursales] = useState<{ id: string; nombre: string }[]>([]);
+  const [activeSucursalId, setActiveSucursalId] = useState<string | null>(null);
+
+  // Cargar sucursales desde la API
+  const cargarSucursales = useCallback(() => {
+    fetch('/api/sucursales')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setSucursales(data);
+          // Si no hay sucursal activa, usar la primera
+          if (!activeSucursalId && data.length > 0) {
+            const stored = localStorage.getItem('sucursal_activa');
+            const found = stored ? data.find((s: { id: string }) => s.id === stored) : null;
+            setActiveSucursalId(found ? found.id : data[0].id);
+          }
+        }
+      })
+      .catch(() => {}); // Silencioso — sin sucursales no es crítico
+  }, [activeSucursalId]);
+
+  useEffect(() => {
+    cargarSucursales();
+  }, []);
 
   // Evitar hydration mismatch del theme toggle
   useEffect(() => { setMounted(true); }, []);
@@ -184,6 +208,39 @@ export function Header() {
             {orgNombre} · {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
+        {/* Selector de sucursal */}
+        {sucursales.length > 1 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs text-muted-foreground hover:text-foreground ml-1 shrink-0">
+                <Store className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline max-w-[100px] truncate">
+                  {sucursales.find(s => s.id === activeSucursalId)?.nombre || 'Sucursal'}
+                </span>
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Cambiar sucursal</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {sucursales.map(s => (
+                <DropdownMenuItem
+                  key={s.id}
+                  onClick={() => {
+                    setActiveSucursalId(s.id);
+                    localStorage.setItem('sucursal_activa', s.id);
+                    window.dispatchEvent(new CustomEvent('sucursal-cambiada', { detail: { sucursalId: s.id } }));
+                  }}
+                  className={s.id === activeSucursalId ? 'bg-accent font-medium' : ''}
+                >
+                  <Store className="h-3.5 w-3.5 mr-2" />
+                  {s.nombre}
+                  {s.id === activeSucursalId && <span className="ml-auto text-[10px] text-primary">Activa</span>}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <div className="flex items-center gap-2">

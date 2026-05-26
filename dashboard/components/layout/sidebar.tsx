@@ -20,6 +20,7 @@ import {
   LogOut,
   Activity,
   Building2,
+  Store,
   Webhook,
   ScrollText,
   HardDrive,
@@ -270,6 +271,20 @@ export function Sidebar() {
                 >
                   <Building2 className="h-5 w-5 shrink-0" />
                   {!collapsed && <span className="flex-1 truncate">Tenants</span>}
+                </Link>
+                <Link
+                  href="/dashboard/admin/sucursales"
+                  onClick={closeMobile}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    pathname === '/dashboard/admin/sucursales'
+                      ? 'bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                  )}
+                  title={collapsed ? 'Sucursales' : undefined}
+                >
+                  <Store className="h-5 w-5 shrink-0" />
+                  {!collapsed && <span className="flex-1 truncate">Sucursales</span>}
                 </Link>
                 <Link
                   href="/dashboard/admin/auditoria"

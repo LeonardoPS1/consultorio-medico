@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Stethoscope, Pencil, X, CalendarX, Clock, ChevronDown } from 'lucide-react';
+import { Plus, Stethoscope, Pencil, X, CalendarX, Clock, ChevronDown, Store } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { BloqueosDialog } from '@/components/config/bloqueos-dialog';
 import { Switch } from '@/components/ui/switch';
@@ -57,6 +57,15 @@ export function MedicosSection({ plan }: Props) {
   const [bloqueosMedicoId, setBloqueosMedicoId] = useState<string | null>(null);
   const [showHorarios, setShowHorarios] = useState(false);
   const [horarios, setHorarios] = useState<Record<string, { activo: boolean; inicio: string; fin: string }>>({ ...DEFAULT_HORARIOS });
+  const [sucursales, setSucursales] = useState<{ id: string; nombre: string }[]>([]);
+  const [sucursalId, setSucursalId] = useState('');
+
+  useEffect(() => {
+    fetch('/api/sucursales')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setSucursales(data); })
+      .catch(() => {});
+  }, []);
 
   const fetchMedicos = () => {
     fetch('/api/medicos')
@@ -72,9 +81,10 @@ export function MedicosSection({ plan }: Props) {
     setNombre(''); setEspecialidad(''); setMatricula('');
     setWhatsapp(''); setEmail(''); setDuracion(30);
     setShowHorarios(false); setHorarios({ ...DEFAULT_HORARIOS });
+    setSucursalId('');
   }; 
 
-  const openEdit = (m: Medico & { horarios?: any }) => {
+  const openEdit = (m: Medico & { horarios?: any; sucursal_id?: string }) => {
     setEditMedico(m);
     setNombre(m.nombre);
     setEspecialidad(m.especialidad);
@@ -82,6 +92,7 @@ export function MedicosSection({ plan }: Props) {
     setWhatsapp(m.whatsapp || '');
     setEmail(m.email || '');
     setDuracion(m.duracionTurnoMinutos);
+    setSucursalId((m as any).sucursal_id || '');
     // Cargar horarios si existen, sino defaults
     if (m.horarios && typeof m.horarios === 'object' && Object.keys(m.horarios).length > 0) {
       const merged = { ...DEFAULT_HORARIOS };
@@ -106,7 +117,7 @@ export function MedicosSection({ plan }: Props) {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, especialidad, matricula: matricula || null, whatsapp: whatsapp || null, email: email || null, duracionTurnoMinutos: duracion, horarios }),
+        body: JSON.stringify({ nombre, especialidad, matricula: matricula || null, whatsapp: whatsapp || null, email: email || null, duracionTurnoMinutos: duracion, horarios, sucursalId: sucursalId || null }),
       });
       if (!res.ok) throw new Error();
       toast({ title: editMedico ? 'Médico actualizado' : 'Médico creado' });
@@ -224,6 +235,22 @@ export function MedicosSection({ plan }: Props) {
               <Label>Duracion turno (min)</Label>
               <Input type="number" value={duracion} onChange={e => setDuracion(Number(e.target.value))} min={10} max={120} />
             </div>
+            {/* Sucursal */}
+            {sucursales.length > 0 && (
+              <div className="space-y-1">
+                <Label>Sucursal</Label>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  value={sucursalId}
+                  onChange={e => setSucursalId(e.target.value)}
+                >
+                  <option value="">Sin sucursal</option>
+                  {sucursales.map(s => (
+                    <option key={s.id} value={s.id}>{s.nombre}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Horarios */}
             <div className="border rounded-lg">
