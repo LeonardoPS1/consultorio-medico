@@ -107,10 +107,29 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   const isStepCompleted = (id: string) => completed.includes(id);
   const isStepActive = (id: string) => activeStep === id;
   // En modo reinicio, todos los pasos están disponibles sin bloqueo
+  // En modo reinicio, los pasos se habilitan progresivamente
   const isStepPending = (id: string) => {
-    if (isForceRestart) return false;
+    if (isForceRestart) {
+      const idx = ONBOARDING_STEPS.findIndex((s) => s.id === id);
+      return idx > 0 && !isStepCompleted(ONBOARDING_STEPS[idx - 1].id);
+    }
     const idx = ONBOARDING_STEPS.findIndex((s) => s.id === id);
     return idx > 0 && !isStepCompleted(ONBOARDING_STEPS[idx - 1].id);
+  };
+
+  // Marcar paso como completado manualmente (modo reinicio)
+  const marcarCompletado = (stepId: string) => {
+    setCompleted((prev) => {
+      if (prev.includes(stepId)) return prev;
+      const next = [...prev, stepId];
+      // Auto-abrir el siguiente paso
+      const currentIdx = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
+      const nextStep = ONBOARDING_STEPS[currentIdx + 1];
+      if (nextStep) {
+        setActiveStep(nextStep.id);
+      }
+      return next;
+    });
   };
 
   return (
@@ -233,6 +252,21 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
                     {step.actionLabel}
                   </Link>
                 </Button>
+
+                {/* Botón "Ya lo configuré" — solo en modo reinicio */}
+                {isForceRestart && (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      marcarCompletado(step.id);
+                    }}
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    Ya lo configuré, siguiente paso →
+                  </Button>
+                )}
               </CardContent>
             )}
           </Card>

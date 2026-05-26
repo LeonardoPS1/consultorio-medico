@@ -39,9 +39,8 @@ export default async function OnboardingPage({
         </p>
       </div>
 
-      {/* Progress bar (oculta si es reinicio forzado) */}
-      {!isForceRestart && (
-        <div className="space-y-2">
+      {/* Progress bar */}
+      <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Progreso</span>
             <span className="font-semibold">{state.progress}%</span>
@@ -52,8 +51,7 @@ export default async function OnboardingPage({
               style={{ width: `${state.progress}%` }}
             />
           </div>
-        </div>
-      )}
+      </div>
 
       {/* Client component con pasos interactivos */}
       <OnboardingClient

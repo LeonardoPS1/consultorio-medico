@@ -24,6 +24,7 @@ import {
   X,
   Star,
   Rocket,
+  BookOpen,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
@@ -51,6 +52,7 @@ const navItems: NavItem[] = [
   { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3, feature: 'reportes' },
   { title: 'Encuestas', href: '/dashboard/encuestas', icon: Star, feature: 'reportes' },
   { title: 'Ajustes', href: '/dashboard/configuracion', icon: Sliders },
+  { title: 'Ayuda', href: '/dashboard/ayuda', icon: BookOpen },
 ];
 
 export function Sidebar() {
