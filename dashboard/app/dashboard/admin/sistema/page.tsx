@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { redirect } from 'next/navigation';
+import { useSearchParams, useRouter, redirect } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Brain, Link, Shield, Key } from 'lucide-react';
 import SistemaTab from '@/components/configuracion/sistema-tab';
@@ -15,9 +15,33 @@ const SYSTEM_TABS = [
   { id: 'apikeys', label: 'API Keys', icon: Key },
 ] as const;
 
+const VALID_TABS = SYSTEM_TABS.map(t => t.id);
+const DEFAULT_TAB = 'toggles';
+
 export default function AdminSistemaPage() {
   const { data: session } = useSession();
-  const [tab, setTab] = useState('toggles');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Leer tab desde URL o usar default
+  const tabFromUrl = searchParams.get('tab');
+  type TabId = typeof VALID_TABS[number];
+  const initialTab = tabFromUrl && VALID_TABS.includes(tabFromUrl as TabId) ? (tabFromUrl as TabId) : DEFAULT_TAB;
+  const [tab, setTab] = useState(initialTab);
+
+  // Sincronizar URL con el estado del tab
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === DEFAULT_TAB) {
+      params.delete('tab');
+    } else {
+      params.set('tab', tab);
+    }
+    const newUrl = params.toString()
+      ? `/dashboard/admin/sistema?${params.toString()}`
+      : '/dashboard/admin/sistema';
+    router.replace(newUrl, { scroll: false });
+  }, [tab, router, searchParams]);
 
   if (session?.user?.role !== 'admin') {
     redirect('/dashboard');
@@ -32,7 +56,7 @@ export default function AdminSistemaPage() {
         </p>
       </div>
 
-      <Tabs value={tab} onValueChange={setTab}>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)}>
         <TabsList className="flex-wrap">
           {SYSTEM_TABS.map(t => (
             <TabsTrigger key={t.id} value={t.id} className="gap-2">
