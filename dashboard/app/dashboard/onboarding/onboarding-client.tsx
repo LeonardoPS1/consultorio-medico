@@ -35,6 +35,44 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   const [loadingTips, setLoadingTips] = useState<Set<string>>(new Set());
   const [failedTips, setFailedTips] = useState<Set<string>>(new Set());
 
+  // Cargar tip de IA para un paso (definir ANTES del early return)
+  const loadTip = async (stepId: string) => {
+    if (loadingTips.has(stepId)) return;
+
+    setLoadingTips((prev) => new Set(prev).add(stepId));
+    setFailedTips((prev) => { const next = new Set(prev); next.delete(stepId); return next; });
+    try {
+      const res = await fetch('/api/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stepId }),
+      });
+      const data = await res.json();
+      if (data.tip) {
+        setTips((prev) => ({ ...prev, [stepId]: data.tip }));
+      } else {
+        setFailedTips((prev) => new Set(prev).add(stepId));
+      }
+    } catch {
+      setFailedTips((prev) => new Set(prev).add(stepId));
+    } finally {
+      setLoadingTips((prev) => {
+        const next = new Set(prev);
+        next.delete(stepId);
+        return next;
+      });
+    }
+  };
+
+  // useEffect ANTES del early return para mantener hooks consistentes
+  useEffect(() => {
+    if (isComplete) return;
+    if (activeStep && !tips[activeStep]) {
+      loadTip(activeStep);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeStep, isComplete]);
+
   // Si ya está completo, mostrar pantalla de éxito
   if (isComplete) {
     return (
@@ -65,42 +103,6 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
       </div>
     );
   }
-
-  // Cargar tip de IA para un paso
-  const loadTip = async (stepId: string) => {
-    if (loadingTips.has(stepId)) return;
-
-    setLoadingTips((prev) => new Set(prev).add(stepId));
-    setFailedTips((prev) => { const next = new Set(prev); next.delete(stepId); return next; });
-    try {
-      const res = await fetch('/api/onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stepId }),
-      });
-      const data = await res.json();
-      if (data.tip) {
-        setTips((prev) => ({ ...prev, [stepId]: data.tip }));
-      } else {
-        setFailedTips((prev) => new Set(prev).add(stepId));
-      }
-    } catch {
-      setFailedTips((prev) => new Set(prev).add(stepId));
-    } finally {
-      setLoadingTips((prev) => {
-        const next = new Set(prev);
-        next.delete(stepId);
-        return next;
-      });
-    }
-  };
-
-  // Cargar tip al expandir un paso
-  useEffect(() => {
-    if (activeStep && !tips[activeStep]) {
-      loadTip(activeStep);
-    }
-  }, [activeStep]);
 
   const isStepCompleted = (id: string) => completed.includes(id);
   const isStepActive = (id: string) => activeStep === id;
@@ -137,7 +139,6 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
               onClick={() => {
                 if (done) return;
                 setActiveStep(active ? null : step.id);
-                if (!active) loadTip(step.id);
               }}
               disabled={pending}
             >
