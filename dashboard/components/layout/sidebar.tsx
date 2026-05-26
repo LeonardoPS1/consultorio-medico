@@ -22,6 +22,7 @@ import {
   Building2,
   Webhook,
   ScrollText,
+  HardDrive,
   X,
   Star,
   Rocket,
@@ -283,6 +284,20 @@ export function Sidebar() {
                 >
                   <ScrollText className="h-5 w-5 shrink-0" />
                   {!collapsed && <span className="flex-1 truncate">Auditoría</span>}
+                </Link>
+                <Link
+                  href="/dashboard/admin/backups"
+                  onClick={closeMobile}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    pathname === '/dashboard/admin/backups'
+                      ? 'bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                  )}
+                  title={collapsed ? 'Backups' : undefined}
+                >
+                  <HardDrive className="h-5 w-5 shrink-0" />
+                  {!collapsed && <span className="flex-1 truncate">Backups</span>}
                 </Link>
                 <Link
                   href="/dashboard/webhooks"
