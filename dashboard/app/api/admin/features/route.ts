@@ -23,7 +23,7 @@ const ALL_FEATURES = [
   'recetas','reportes','horarios','notificaciones','reportes-avanzados',
   'ia-assistant','plantillas','2fa','equipo','integraciones',
   'auditoria','backup-encriptado','webhooks-log','credenciales',
-  'api-publica','portal-paciente','multi-sucursal',
+  'api-publica','portal-paciente','multi-sucursal','encuestas',
 ];
 
 // ─── GET ─────────────────────────────────────────────────────

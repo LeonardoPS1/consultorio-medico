@@ -35,7 +35,8 @@ export type FeatureId =
   | 'credenciales'
   | 'api-publica'
   | 'portal-paciente'
-  | 'multi-sucursal';
+  | 'multi-sucursal'
+  | 'encuestas';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -64,6 +65,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'api-publica': 'professional',
   'portal-paciente': 'starter',
   'multi-sucursal': 'enterprise',
+  'encuestas': 'starter',
 };
 
 // ============================================================

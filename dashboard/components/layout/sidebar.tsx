@@ -50,7 +50,7 @@ const navItems: NavItem[] = [
   { title: 'Conversaciones', href: '/dashboard/conversaciones', icon: MessageSquare, feature: 'conversaciones' },
   { title: 'Recetas', href: '/dashboard/recetas', icon: Syringe, feature: 'recetas' },
   { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3, feature: 'reportes' },
-  { title: 'Encuestas', href: '/dashboard/encuestas', icon: Star, feature: 'reportes' },
+  { title: 'Encuestas', href: '/dashboard/encuestas', icon: Star, feature: 'encuestas' },
   { title: 'Ajustes', href: '/dashboard/configuracion', icon: Sliders },
   { title: 'Ayuda', href: '/dashboard/ayuda', icon: BookOpen },
 ];

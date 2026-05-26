@@ -55,6 +55,7 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
   { id: 'horarios', label: 'Horarios', description: 'Configuración de horarios de atención', category: 'modulos' },
   { id: 'notificaciones', label: 'Notificaciones', description: 'Alertas por WhatsApp y email', category: 'modulos' },
   { id: 'portal-paciente', label: 'Portal del Paciente', description: 'Acceso web para que pacientes vean turnos y recetas', category: 'modulos' },
+  { id: 'encuestas', label: 'Encuestas Post-Consulta', description: 'Encuestas de satisfacción automáticas por WhatsApp', category: 'modulos' },
 
   // ─── Funcionalidades avanzadas ──────────────────────────
   { id: 'reportes-avanzados', label: 'Reportes Avanzados', description: 'Gráficos, exportación Excel y PDF', category: 'avanzado' },
