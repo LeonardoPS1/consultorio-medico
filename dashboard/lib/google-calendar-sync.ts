@@ -2,6 +2,9 @@
  * Google Calendar Sync — Dispara la sincronización de turnos a Google Calendar
  * via webhook hacia n8n.
  *
+ * 🛡️ Privacidad: Los nombres de pacientes se anonimizan antes de enviarse
+ * a Google Calendar para proteger la identidad del paciente en servicios externos.
+ *
  * Fire-and-forget: no bloquea la respuesta de la API.
  *
  * Requisitos:
@@ -9,6 +12,8 @@
  * - n8n debe tener credenciales OAuth2 de Google Calendar configuradas
  * - La env var N8N_BASE_URL debe apuntar al n8n interno
  */
+
+import { anonymizeNombreGCal, anonymizeTelefono } from '@/lib/anonymize';
 
 // ─── Tipos ─────────────────────────────────────────────────
 
@@ -80,8 +85,9 @@ export function buildGCalPayload(params: {
     googleCalendarEventId: params.googleCalendarEventId,
     fechaHora: params.fechaHora,
     duracionMinutos: params.duracionMinutos || 30,
-    pacienteNombre: params.pacienteNombre,
-    pacienteTelefono: params.pacienteTelefono,
+    // 🛡️ Anonimizar datos del paciente antes de enviar a Google Calendar
+    pacienteNombre: anonymizeNombreGCal(params.pacienteNombre),
+    pacienteTelefono: anonymizeTelefono(params.pacienteTelefono) ?? params.pacienteTelefono,
     medicoNombre: params.medicoNombre,
     motivo: params.motivo,
   };

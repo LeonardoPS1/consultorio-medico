@@ -12,6 +12,7 @@ import {
   uniqueIndex,
   index,
   primaryKey,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { relations, sql, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 
@@ -693,3 +694,31 @@ export const apiKeys = pgTable('api_keys', {
 
 export type ApiKey = InferSelectModel<typeof apiKeys>;
 export type NewApiKey = InferInsertModel<typeof apiKeys>;
+
+// ============================================================
+// CONSENTIMIENTO LOG (historial de cambios de consentimiento)
+// ============================================================
+export const consentimientoLog = pgTable('consentimiento_log', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pacienteId: uuid('paciente_id').notNull().references(() => pacientes.id),
+  tipo: varchar('tipo', { length: 30 }).notNull(), // 'whatsapp' | 'email' | 'datos' | 'terminos'
+  accion: varchar('accion', { length: 20 }).notNull(), // 'grant' | 'revoke' | 'accept'
+  aceptado: boolean('aceptado').notNull(),
+  ip: varchar('ip', { length: 45 }),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  idxConsentimientoPaciente: index('idx_consentimiento_paciente').on(table.pacienteId),
+  idxConsentimientoTipo: index('idx_consentimiento_tipo').on(table.tipo),
+  idxConsentimientoCreatedAt: index('idx_consentimiento_created_at').on(table.createdAt),
+}));
+
+export type ConsentimientoLog = InferSelectModel<typeof consentimientoLog>;
+export type NewConsentimientoLog = InferInsertModel<typeof consentimientoLog>;
+
+export const consentimientoLogRelations = relations(consentimientoLog, ({ one }) => ({
+  paciente: one(pacientes, {
+    fields: [consentimientoLog.pacienteId],
+    references: [pacientes.id],
+  }),
+}));

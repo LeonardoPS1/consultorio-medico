@@ -1,10 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import Link from 'next/link';
 import { CheckCircle2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PLANES_ORDERED } from '@/lib/planes';
+import { RegistroExpressModal } from '@/components/landing/registro-modal';
 
 const containerVariants = {
   hidden: {},
@@ -25,6 +26,14 @@ const cardVariants = {
 const floatClasses = ['animate-gentle-float', 'animate-gentle-float-2', 'animate-gentle-float-3', 'animate-gentle-float-4'];
 
 export function Pricing() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | undefined>();
+
+  const handleSubscribe = (planId: string) => {
+    setSelectedPlan(planId);
+    setModalOpen(true);
+  };
+
   return (
     <section id="pricing" className="relative overflow-hidden scroll-mt-20 border-t">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-transparent pointer-events-none" />
@@ -46,12 +55,91 @@ export function Pricing() {
           </p>
         </motion.div>
 
+        {/* Mobile: horizontal swipeable cards */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-60px' }}
-          className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto"
+          className="space-y-4 md:hidden"
+        >
+          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 scrollbar-none">
+            {PLANES_ORDERED.filter((p) => p.id !== 'free').map((plan, index) => (
+              <motion.div
+                key={plan.id}
+                variants={cardVariants}
+                className={`snap-center shrink-0 w-[85vw] max-w-[320px] relative rounded-xl border bg-card p-5 flex flex-col gap-5 ${
+                  plan.popular
+                    ? 'popular-border-shine popular-ring-pulse z-10 border-primary/30 shadow-lg shadow-primary/10'
+                    : 'shadow-sm'
+                } ${floatClasses[index]}`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                    <span className="inline-flex items-center rounded-full bg-primary px-3 py-0.5 text-[11px] font-medium text-primary-foreground shadow-lg shadow-primary/30 whitespace-nowrap">
+                      ★ Más elegido
+                    </span>
+                  </div>
+                )}
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-semibold">{plan.nombre}</h3>
+                  </div>
+                  <div className="mt-2">
+                    <span className="text-2xl font-bold">${plan.precioUSD}</span>
+                    <span className="text-xs text-muted-foreground">/mes USD</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{plan.descripcion}</p>
+                </div>
+
+                <ul className="space-y-2">
+                  {plan.features.slice(0, 4).map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-xs">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                      <span className="text-foreground/80">{f.length > 45 ? f.slice(0, 42) + '...' : f}</span>
+                    </li>
+                  ))}
+                  {plan.features.length > 4 && (
+                    <li className="text-[11px] text-muted-foreground font-medium">
+                      +{plan.features.length - 4} funcionalidades más
+                    </li>
+                  )}
+                </ul>
+
+                <div className="mt-auto">
+                  <Button
+                    variant={plan.popular ? 'default' : 'outline'}
+                    className={`w-full gap-1.5 btn-press min-h-[48px] text-sm ${
+                      plan.popular ? 'shadow-lg shadow-primary/20' : ''
+                    }`}
+                    onClick={() => handleSubscribe(plan.id)}
+                  >
+                    {plan.cta}
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          {/* Scroll indicator dots */}
+          <div className="flex justify-center gap-1.5">
+            {PLANES_ORDERED.filter((p) => p.id !== 'free').map((_, i) => (
+              <div
+                key={i}
+                className="h-1.5 w-1.5 rounded-full bg-primary/30"
+              />
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Desktop grid */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto"
         >
           {PLANES_ORDERED.filter((p) => p.id !== 'free').map((plan, index) => (
             <motion.div
@@ -109,12 +197,10 @@ export function Pricing() {
                 <Button
                   variant={plan.popular ? 'default' : 'outline'}
                   className={`w-full gap-2 btn-press ${plan.popular ? 'shadow-lg shadow-primary/20' : ''}`}
-                  asChild
+                  onClick={() => handleSubscribe(plan.id)}
                 >
-                  <Link href={`/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion%26plan%3D${plan.id}`}>
-                    {plan.cta}
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Link>
+                  {plan.cta}
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </motion.div>
@@ -130,6 +216,13 @@ export function Pricing() {
           Todos los planes incluyen 14 días de prueba gratis. Sin tarjeta de crédito.
         </motion.p>
       </div>
+
+      {/* Registro exprés modal */}
+      <RegistroExpressModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        planId={selectedPlan}
+      />
     </section>
   );
 }

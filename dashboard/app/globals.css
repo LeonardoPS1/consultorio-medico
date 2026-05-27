@@ -470,6 +470,15 @@ html {
   color: hsl(var(--foreground));
 }
 
+/* Hide scrollbar (for horizontal swipe sections) */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* Image loading placeholder for gallery */
 .gallery-img-loading {
   @apply bg-muted shimmer;

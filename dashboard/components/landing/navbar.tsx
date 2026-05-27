@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Menu, X, ChevronRight, MessageCircle } from 'lucide-react';
+import { RegistroExpressModal } from '@/components/landing/registro-modal';
 
 const NAV_ITEMS = [
   { label: 'Funcionalidades', href: '#features' },
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
 export function Navbar() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [registroOpen, setRegistroOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -71,11 +73,9 @@ export function Navbar() {
           >
             Iniciar sesión
           </Link>
-          <Button size="sm" className="ml-2 gap-1.5 btn-press" asChild>
-            <Link href="/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion">
-              <MessageCircle className="h-3.5 w-3.5" />
-              Prueba gratis
-            </Link>
+          <Button size="sm" className="ml-2 gap-1.5 btn-press" onClick={() => setRegistroOpen(true)}>
+            <MessageCircle className="h-3.5 w-3.5" />
+            Prueba gratis
           </Button>
         </nav>
 
@@ -98,40 +98,51 @@ export function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="md:hidden border-t bg-background overflow-hidden"
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="md:hidden border-t bg-background/95 backdrop-blur-xl overflow-hidden"
           >
-            <nav className="container mx-auto flex flex-col gap-1 px-4 py-4">
+            <nav className="container mx-auto flex flex-col gap-0.5 px-4 py-5">
               {NAV_ITEMS.map((item, i) => (
                 <motion.button
                   key={item.href}
-                  initial={{ opacity: 0, x: -8 }}
+                  initial={{ opacity: 0, x: -12 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
                   onClick={() => scrollTo(item.href.slice(1))}
-                  className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm hover:bg-muted transition-colors"
+                  className="flex items-center justify-between rounded-lg px-4 py-3 text-sm hover:bg-muted active:bg-muted/80 transition-colors min-h-[48px]"
                 >
-                  {item.label} <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <span>{item.label}</span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
                 </motion.button>
               ))}
-              <div className="border-t my-2" />
+              <div className="border-t my-3" />
               <Link
                 href="/login"
-                className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm hover:bg-muted transition-colors"
+                className="flex items-center justify-between rounded-lg px-4 py-3 text-sm hover:bg-muted active:bg-muted/80 transition-colors min-h-[48px]"
                 onClick={() => setMobileMenu(false)}
               >
-                Iniciar sesión <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <span>Iniciar sesión</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
               </Link>
-              <Button className="mt-2 gap-1.5" asChild>
-                <Link href="/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion" onClick={() => setMobileMenu(false)}>
-                  <MessageCircle className="h-4 w-4" />
-                  Prueba gratis
-                </Link>
+              <div className="mt-2 px-0">
+              <Button className="w-full gap-2 min-h-[48px] text-sm" onClick={() => { setMobileMenu(false); setRegistroOpen(true); }}>
+                <MessageCircle className="h-4 w-4" />
+                Prueba gratis
               </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground/60 text-center mt-3">
+                Sin tarjeta de crédito · 14 días gratis
+              </p>
             </nav>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Registro exprés modal */}
+      <RegistroExpressModal
+        open={registroOpen}
+        onOpenChange={setRegistroOpen}
+      />
     </header>
   );
 }

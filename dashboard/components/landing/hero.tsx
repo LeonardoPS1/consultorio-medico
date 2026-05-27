@@ -1,9 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Bot, Play, MessageCircle } from 'lucide-react';
+import { RegistroExpressModal } from '@/components/landing/registro-modal';
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -23,6 +24,7 @@ const springTransition = {
 };
 
 export function Hero() {
+  const [registroOpen, setRegistroOpen] = useState(false);
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
   const rotateX = useSpring(mouseX, { stiffness: 100, damping: 30 });
@@ -90,12 +92,10 @@ export function Hero() {
               transition={{ ...springTransition, delay: 0.2 }}
               className="flex flex-col sm:flex-row gap-3"
             >
-              <Button size="lg" className="text-base h-12 px-8 gap-2 shadow-lg shadow-primary/20 shine-effect btn-press" asChild>
-                <Link href="/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion">
-                  <MessageCircle className="h-4 w-4" />
-                  Probar gratis
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
+              <Button size="lg" className="text-base h-12 px-8 gap-2 shadow-lg shadow-primary/20 shine-effect btn-press" onClick={() => setRegistroOpen(true)}>
+                <MessageCircle className="h-4 w-4" />
+                Probar gratis
+                <ChevronRight className="h-4 w-4" />
               </Button>
               <Button size="lg" variant="outline" className="text-base h-12 px-8 gap-2 btn-press" onClick={() => {
                 document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
@@ -196,6 +196,12 @@ export function Hero() {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Registro exprés modal */}
+      <RegistroExpressModal
+        open={registroOpen}
+        onOpenChange={setRegistroOpen}
+      />
     </section>
   );
 }
