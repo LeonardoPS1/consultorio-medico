@@ -130,16 +130,16 @@ export function maskPII<T extends Record<string, unknown>>(obj: T): T {
 
     if (typeof value === 'string') {
       if (lowerKey === 'nombre' || lowerKey === 'name' || lowerKey === 'apellido') {
-        result[key] = anonymizeNombre(value) as unknown as T[Extract<keyof T, string>];
+        (result as Record<string, unknown>)[key] = anonymizeNombre(value);
       } else if (lowerKey === 'email') {
-        result[key] = anonymizeEmail(value) as unknown as T[Extract<keyof T, string>];
+        (result as Record<string, unknown>)[key] = anonymizeEmail(value);
       } else if (lowerKey === 'telefono' || lowerKey === 'phone' || lowerKey === 'whatsapp') {
-        result[key] = anonymizeTelefono(value) as unknown as T[Extract<keyof T, string>];
+        (result as Record<string, unknown>)[key] = anonymizeTelefono(value);
       } else if (lowerKey === 'dni' || lowerKey === 'rut' || lowerKey === 'documento' || lowerKey === 'document') {
-        result[key] = anonymizeDocumento(value) as unknown as T[Extract<keyof T, string>];
+        (result as Record<string, unknown>)[key] = anonymizeDocumento(value);
       }
     } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      result[key] = maskPII(value as Record<string, unknown>) as unknown as T[Extract<keyof T, string>];
+      (result as Record<string, unknown>)[key] = maskPII(value as Record<string, unknown>);
     }
   }
 
