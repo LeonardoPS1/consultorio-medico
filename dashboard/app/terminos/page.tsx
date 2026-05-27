@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ShieldCheck } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Términos del Servicio — AiCoreMed',
@@ -25,9 +26,29 @@ export default function TerminosPage() {
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
           Términos del Servicio
         </h1>
-        <p className="text-sm text-muted-foreground mb-8">
+        <p className="text-sm text-muted-foreground mb-4">
           Última actualización: 27 de mayo de 2026
         </p>
+
+        {/* Security banner */}
+        <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 md:p-5 mb-8">
+          <div className="flex flex-col sm:flex-row items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-foreground text-sm mb-0.5">
+                Plataforma 100% segura y conforme a la ley
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                AiCoreMed cumple con la Ley 25.326 de Argentina y la Ley 19.628 de Chile sobre
+                protección de datos personales. Todos los datos de salud se tratan bajo estrictas
+                medidas de seguridad: cifrado AES-256, autenticación con 2FA, IA local sin acceso
+                externo, y backup encriptado diario. Tus pacientes están protegidos.
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-muted-foreground">
           <section>
@@ -152,7 +173,7 @@ export default function TerminosPage() {
           <section>
             <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">10. Modificaciones</h2>
             <p>
-              Nos reservamos el derecho de modificar estos términos en任何 momento. Los cambios serán notificados
+              Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios serán notificados
               a través de la Plataforma con al menos 15 días de anticipación. El uso continuado de la Plataforma
               después de los cambios constituye la aceptación de los nuevos términos.
             </p>

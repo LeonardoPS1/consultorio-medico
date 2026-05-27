@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, MessageCircle, Sparkles } from 'lucide-react';
+import { ChevronRight, MessageCircle, Sparkles, ShieldCheck } from 'lucide-react';
 import { RegistroExpressModal } from '@/components/landing/registro-modal';
 
 export function CTASection() {
@@ -16,6 +16,24 @@ export function CTASection() {
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -right-40 w-[400px] h-[400px] rounded-full bg-primary/5 blur-3xl animate-orb" />
         <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] rounded-full bg-primary/5 blur-3xl animate-orb-2" />
+      </div>
+
+      {/* Security badge */}
+      <div className="absolute inset-x-0 top-16 flex justify-center pointer-events-none">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="flex items-center gap-4 text-primary/80 text-sm"
+        >
+          <ShieldCheck className="h-5 w-5" />
+          <span>Datos 100% protegidos</span>
+          <Lock className="h-5 w-5" />
+          <span>IA 100% local</span>
+          <Server className="h-5 w-5" />
+          <span>Servidor propio en Chile</span>
+        </motion.div>
       </div>
 
       <div className="container mx-auto px-4 md:px-6 py-16 md:py-24 text-center relative">

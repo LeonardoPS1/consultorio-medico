@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ShieldCheck } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Política de Privacidad — AiCoreMed',
@@ -25,9 +26,28 @@ export default function PrivacidadPage() {
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
           Política de Privacidad
         </h1>
-        <p className="text-sm text-muted-foreground mb-8">
+        <p className="text-sm text-muted-foreground mb-4">
           Última actualización: 27 de mayo de 2026
         </p>
+
+        {/* Security banner */}
+        <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 md:p-5 mb-8">
+          <div className="flex flex-col sm:flex-row items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-foreground text-sm mb-0.5">
+                Tus datos están 100% protegidos
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                En AiCoreMed la seguridad es nuestra prioridad. Todos los datos de salud se almacenan
+                en infraestructura propia en Chile con cifrado AES-256, autenticación reforzada (2FA),
+                y un asistente de IA que corre 100% local — tus datos nunca salen de tu servidor.
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-muted-foreground">
           <section>

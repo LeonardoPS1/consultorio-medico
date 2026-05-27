@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, Bot, Play, MessageCircle } from 'lucide-react';
+import { ChevronRight, Bot, Play, MessageCircle, ShieldCheck, Lock, Server } from 'lucide-react';
 import { RegistroExpressModal } from '@/components/landing/registro-modal';
 
 const fadeUp = {

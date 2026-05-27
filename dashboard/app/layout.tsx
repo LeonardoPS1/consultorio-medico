@@ -5,6 +5,7 @@ import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/toaster';
 import { PWARegister } from '@/components/pwa-register';
 import { TenantTheme } from '@/components/tenant-theme';
+import { ScrollToTopButton } from '@/components/ui/scroll-to-top';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -65,6 +66,7 @@ export default function RootLayout({
         </Providers>
         <PWARegister />
         <TenantTheme />
+        <ScrollToTopButton />
       </body>
     </html>
   );
