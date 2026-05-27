@@ -187,7 +187,38 @@ También desde Configuración → Perfil:
   │     └─ Actualiza en BD
 ```
 
-### 6. Feature Gating por Plan
+### 6. Multi-Sucursal Scoping
+
+```
+Usuario selecciona sucursal en el Header
+        │
+        ▼
+SucursalContext (lib/sucursal-context.tsx)
+  ├─ Persiste en localStorage + cookie (sucursal_activa)
+  ├─ Emite evento 'sucursal-cambiada' para re-fetcheo
+  └─ Disponible via useSucursal() hook en toda la app
+        │
+        ▼
+Server Components leen cookie sucursal_activa
+        │
+        ▼
+Client Components pasan sucursalId del context a APIs
+        │
+        ▼
+Service Layer (lib/services/*.ts)
+  ├─ turnosService.list(sucursalId?) → filtra por sucursal
+  ├─ pacientesService.list(sucursalId?) → filtra por sucursal
+  └─ dashboard/stats → KPIs scoped a sucursal
+        │
+        ▼
+API Routes (app/api/*)
+  ├─ /api/turnos?sucursalId=
+  ├─ /api/pacientes?sucursalId=
+  ├─ /api/medicos?sucursalId=
+  └─ /api/dashboard/stats?sucursalId=
+```
+
+### 7. Feature Gating por Plan
 
 ```
 Usuario accede al dashboard
@@ -292,7 +323,9 @@ En lugar de una tabla separada, se agregaron columnas `reset_token` y `reset_tok
 - Auto-logout por inactividad
 - Password validator (8+ chars, mayúscula, número, símbolo)
 - Soft delete en todas las tablas (nada se borra físicamente)
-- Logs de auditoría de todas las acciones
+- Logs de auditoría de todas las acciones (multi-tenant con tenantId)
+- Logout tracking via events.signOut()
+- Cleanup de auditoría (API DELETE con antigüedad o total)
 - Verificación de firmas Twilio
 - Sanitización de prompts IA anti-jailbreak
 - Consentimiento explícito para comunicación por WhatsApp/email

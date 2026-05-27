@@ -95,4 +95,11 @@ export const pacientesService = {
     const [updated] = await db.update(pacientes).set(data).where(eq(pacientes.id, id)).returning();
     return updated;
   },
+
+  /** Soft-delete paciente */
+  async delete(id: string) {
+    await this.getById(id);
+    await db.update(pacientes).set({ deletedAt: new Date() }).where(eq(pacientes.id, id));
+    return { deleted: true };
+  },
 };

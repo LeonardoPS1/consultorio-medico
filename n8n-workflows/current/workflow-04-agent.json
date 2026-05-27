@@ -128,7 +128,7 @@
           "parameters": [
             {
               "name": "To",
-              "value": "whatsapp:+5491155550000"
+              "value": "whatsapp:{{ $env.TWILIO_DOCTOR_NUMBER }}"
             },
             {
               "name": "From",

@@ -1,1 +1,240 @@
-{"updatedAt":"2026-05-21T00:15:01.864Z","createdAt":"2026-05-21T00:15:01.864Z","id":"drS8JeUpm1laKFhN","name":"04 - Correo Inteligente","description":null,"active":true,"isArchived":false,"nodes":[{"id":"schedule-trigger","name":"Schedule - Cada 5 Min","type":"n8n-nodes-base.scheduleTrigger","typeVersion":1,"position":[0,0],"parameters":{"rule":{"interval":[{"field":"minutes","minutesInterval":5}]}}},{"id":"pg-log","name":"Log - Correo Procesado","type":"n8n-nodes-base.postgres","typeVersion":2.5,"position":[250,0],"parameters":{"operation":"executeQuery","query":"INSERT INTO workflow_logs (workflow_name, event_type, details) VALUES ('04-correo', 'check', 'revision de correos') ON CONFLICT DO NOTHING;"},"credentials":{"postgres":{"id":"LndsAFMcQsVltuyi","name":"Consultorio - PostgreSQL"}}}],"connections":{"Schedule - Cada 5 Min":{"main":[[{"node":"Log - Correo Procesado","type":"main","index":0}]]}},"settings":{},"staticData":{"node:Schedule - Cada 5 Min":{"recurrenceRules":[]}},"meta":null,"pinData":null,"versionId":"e03032cd-71ad-4a71-9ed0-c422857c7b10","activeVersionId":"e03032cd-71ad-4a71-9ed0-c422857c7b10","versionCounter":6,"triggerCount":1,"shared":[{"updatedAt":"2026-05-21T00:15:01.864Z","createdAt":"2026-05-21T00:15:01.864Z","role":"workflow:owner","workflowId":"drS8JeUpm1laKFhN","projectId":"jiaWx4AaJK5LGZ9r","project":{"updatedAt":"2026-04-26T02:53:48.312Z","createdAt":"2026-04-26T02:49:56.388Z","id":"jiaWx4AaJK5LGZ9r","name":"Leonardo Spedaletti <spedalettileonardo@gmail.com>","type":"personal","icon":null,"description":null,"creatorId":"8274b19f-2f1f-4df7-be3d-d02d67d238d1"}}],"tags":[],"activeVersion":{"updatedAt":"2026-05-21T00:15:01.864Z","createdAt":"2026-05-21T00:15:01.864Z","versionId":"e03032cd-71ad-4a71-9ed0-c422857c7b10","workflowId":"drS8JeUpm1laKFhN","nodes":[{"id":"schedule-trigger","name":"Schedule - Cada 5 Min","type":"n8n-nodes-base.scheduleTrigger","typeVersion":1,"position":[0,0],"parameters":{"rule":{"interval":[{"field":"minutes","minutesInterval":5}]}}},{"id":"pg-log","name":"Log - Correo Procesado","type":"n8n-nodes-base.postgres","typeVersion":2.5,"position":[250,0],"parameters":{"operation":"executeQuery","query":"INSERT INTO workflow_logs (workflow_name, event_type, details) VALUES ('04-correo', 'check', 'revision de correos') ON CONFLICT DO NOTHING;"},"credentials":{"postgres":{"id":"LndsAFMcQsVltuyi","name":"Consultorio - PostgreSQL"}}}],"connections":{"Schedule - Cada 5 Min":{"main":[[{"node":"Log - Correo Procesado","type":"main","index":0}]]}},"authors":"Leonardo Spedaletti","name":null,"description":null,"autosaved":false,"workflowPublishHistory":[{"createdAt":"2026-05-21T00:15:01.965Z","id":10,"workflowId":"drS8JeUpm1laKFhN","versionId":"e03032cd-71ad-4a71-9ed0-c422857c7b10","event":"activated","userId":"8274b19f-2f1f-4df7-be3d-d02d67d238d1"}]}}
+{
+  "name": "04 - Correo Inteligente",
+  "nodes": [
+    {
+      "parameters": {
+        "criteria": "UNSEEN",
+        "options": {
+          "format": "text",
+          "downloadAttachments": false
+        }
+      },
+      "name": "IMAP - Email Entrante",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "emailFrom",
+              "value": "={{ $json.from }}",
+              "type": "string"
+            },
+            {
+              "name": "emailSubject",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            },
+            {
+              "name": "emailBody",
+              "value": "={{ $json.textPlain }}",
+              "type": "string"
+            },
+            {
+              "name": "emailId",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Extraer Datos Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "model": "mistral",
+        "baseUrl": "http://ollama:11434",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "name": "Ollama Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [500, 80]
+    },
+    {
+      "parameters": {
+        "agentType": "conversational",
+        "systemMessage": "={{ 'Sos el asistente de gesti\u00f3n de correo del Consultorio M\u00e9dico.\n\n=== EMAIL RECIBIDO ===\nDe: ' + $json.emailFrom + '\nAsunto: ' + $json.emailSubject + '\nFecha: ' + ($json.emailDate || '') + '\nCuerpo: ' + ($json.emailBody || '').substring(0, 2000) + '\n\n=== INSTRUCCIONES ===\nClasific\u00e1 el email y determin\u00e1 la acci\u00f3n. Respond\u00e9 en espa\u00f1ol argentino, tono profesional.\n\nAl final de tu respuesta, agreg\u00e1 SOLAMENTE este bloque JSON:\n###EMAIL_ACTION###\n{\"clasificacion\": \"GENERAL\", \"accion\": \"responder\", \"borrador\": \"...\", \"motivo\": \"...\"}\n###FIN###\n\nCLASIFICACION:\n- URGENTE: emergencia, dolor fuerte, s\u00edntomas graves\n- SPAM: publicidad, newsletter, no relacionado\n- RECETA: solicitud de receta o renovaci\u00f3n\n- CONSULTA_TURNO: pregunta sobre turnos, horarios\n- CONSULTA_GENERAL: otra consulta m\u00e9dica o administrativa\n- OTRO: no aplica\n\nACCION:\n- notificar_whatsapp: para URGENTE \u2192 se notifica al m\u00e9dico v\u00eda WhatsApp\n- mover_spam: para SPAM \u2192 se mueve a spam\n- redactar_borrador: para todo lo dem\u00e1s \u2192 se guarda borrador de respuesta\n\nBORRADOR: (solo si accion=redactar_borrador)\nRedact\u00e1 una respuesta profesional en espa\u00f1ol argentino. Salud\u00e1 cordialmente, respond\u00e9 a la consulta y despedite.\nNo uses el borrador si acci\u00f3n es notificar_whatsapp o mover_spam.' }}",
+        "options": {}
+      },
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "agentOutput",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Extraer Output del Agente",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "code": "// Obtener la respuesta del agente\nconst rawText = $input.first().json.agentOutput || $input.first().json.output || '';\nconst extraer = $(\"Extraer Datos Email\").first().json;\n\n// Helper para escapar SQL\nconst esc = (s) => (s || '').replace(/'/g, \"''\");\n\n// Buscar acci\u00f3n estructurada\nconst actionMatch = rawText.match(/###EMAIL_ACTION###\\n([\\s\\S]*?)\\n###FIN###/);\nlet accion = null;\nlet textoLimpio = rawText;\nlet clasificacion = 'GENERAL';\nlet accionTipo = 'redactar_borrador';\nlet borradorTexto = '';\n\nif (actionMatch) {\n  try {\n    accion = JSON.parse(actionMatch[1].trim());\n    clasificacion = accion.clasificacion || 'GENERAL';\n    accionTipo = accion.accion || 'redactar_borrador';\n    borradorTexto = accion.borrador || '';\n    textoLimpio = rawText.replace(/###EMAIL_ACTION###[\\s\\S]*?###FIN###/, '').trim();\n  } catch (e) {\n    console.error('Error parseando acci\u00f3n:', e);\n  }\n}\n\n// Construir SQLs\nconst sqlLog = `INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje) VALUES ('workflow-04', 'Correo Inteligente', '${$execution.id}', '${esc(clasificacion)}', '${esc('Email clasificado como ' + clasificacion + ': ' + (extraer.emailSubject || '').substring(0, 100))}');`;\n\nconst sqlAccion = `INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje) VALUES ('workflow-04', 'Correo Inteligente', '${$execution.id}', '${esc(accionTipo)}', '${esc('ACCION: ' + accionTipo + ' | ' + JSON.stringify({clasificacion, accionTipo, motivo: accion?.motivo || ''}))}');`;\n\nreturn [{\n  clasificacion: clasificacion,\n  accionTipo: accionTipo,\n  borradorRespuesta: borradorTexto,\n  textoLimpio: textoLimpio,\n  sqlLog: sqlLog,\n  sqlAccion: sqlAccion,\n  // Preservar datos del email\n  emailFrom: extraer.emailFrom,\n  emailSubject: extraer.emailSubject,\n  emailBody: extraer.emailBody,\n  emailId: extraer.emailId\n}];",
+        "options": {}
+      },
+      "name": "Parsear Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.accionTipo }}",
+        "rules": [
+          {
+            "value2": "notificar_whatsapp",
+            "output": 0
+          },
+          {
+            "value2": "mover_spam",
+            "output": 1
+          }
+        ],
+        "fallbackOutput": 2
+      },
+      "name": "Enrutar por Accion",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2.3,
+      "position": [1500, 300]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "url": "https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "whatsapp:{{ $env.TWILIO_DOCTOR_NUMBER }}"
+            },
+            {
+              "name": "From",
+              "value": ""
+            },
+            {
+              "name": "Body",
+              "value": "={{ 'URGENTE - Email de ' + $('Parsear Email').first().json.emailFrom + ': ' + $('Parsear Email').first().json.emailSubject + '. Revis\u00e1 la bandeja de entrada.' }}"
+            }
+          ]
+        },
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "sendBody": true,
+        "genericAuthType": "httpBasicAuth"
+      },
+      "name": "Twilio - Notificar Urgente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1750, 60]
+    },
+    {
+      "parameters": {
+        "options": {
+          "moveToSpam": true
+        }
+      },
+      "name": "Mover a Spam",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1750, 300]
+    },
+    {
+      "parameters": {
+        "options": {
+          "saveToDrafts": true,
+          "draftSubject": "={{ 'Re: ' + $('Extraer Datos Email').first().json.emailSubject }}",
+          "draftBody": "={{ $json.borradorRespuesta }}"
+        }
+      },
+      "name": "Guardar Borrador Respuesta",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1750, 540]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sqlLog }}",
+        "options": {}
+      },
+      "name": "Log Clasificacion",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [2000, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sqlAccion }}",
+        "options": {}
+      },
+      "name": "Log Accion",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [2000, 550]
+    }
+  ],
+  "connections": {
+    "IMAP - Email Entrante": {
+      "main": [[{"node": "Extraer Datos Email", "type": "main", "index": 0}]]
+    },
+    "Extraer Datos Email": {
+      "main": [[{"node": "AI Agent", "type": "main", "index": 0}]]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [[{"node": "AI Agent", "type": "ai_languageModel", "index": 0}]]
+    },
+    "AI Agent": {
+      "main": [[{"node": "Extraer Output del Agente", "type": "main", "index": 0}]]
+    },
+    "Extraer Output del Agente": {
+      "main": [[{"node": "Parsear Email", "type": "main", "index": 0}]]
+    },
+    "Parsear Email": {
+      "main": [[{"node": "Enrutar por Accion", "type": "main", "index": 0}]]
+    },
+    "Enrutar por Accion": {
+      "main": [
+        [{"node": "Twilio - Notificar Urgente", "type": "main", "index": 0}],
+        [{"node": "Mover a Spam", "type": "main", "index": 0}],
+        [{"node": "Guardar Borrador Respuesta", "type": "main", "index": 0}]
+      ]
+    },
+    "Twilio - Notificar Urgente": {
+      "main": [[{"node": "Log Clasificacion", "type": "main", "index": 0}]]
+    },
+    "Mover a Spam": {
+      "main": [[{"node": "Log Clasificacion", "type": "main", "index": 0}]]
+    },
+    "Guardar Borrador Respuesta": {
+      "main": [[{"node": "Log Clasificacion", "type": "main", "index": 0}]]
+    },
+    "Log Clasificacion": {
+      "main": [[{"node": "Log Accion", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {}
+}

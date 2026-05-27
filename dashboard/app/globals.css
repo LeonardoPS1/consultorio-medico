@@ -322,3 +322,79 @@ a, button, input, select, textarea {
 .stagger-children > *:nth-child(6) { animation-delay: 250ms; }
 .stagger-children > *:nth-child(7) { animation-delay: 300ms; }
 .stagger-children > *:nth-child(8) { animation-delay: 350ms; }
+
+/* === Landing Page Styles === */
+
+/* Smooth scroll for the entire page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Float keyframe for floating badges */
+@keyframes softFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-soft-float {
+  animation: softFloat 4s ease-in-out infinite;
+}
+
+.animate-soft-float-delayed {
+  animation: softFloat 4s ease-in-out 1s infinite;
+}
+
+/* Scroll reveal glass card */
+.glass-card-landing {
+  @apply bg-card/70 backdrop-blur-xl border border-border/40 shadow-sm;
+}
+
+/* Input focus style for landing forms */
+.landing-input:focus {
+  @apply ring-2 ring-primary/30 border-primary/50;
+}
+
+/* Gradient border effect for popular plan */
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.4), hsl(var(--primary) / 0.1));
+  z-index: -1;
+}
+
+/* Shimmer loading placeholder */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted-foreground) / 0.1) 50%, hsl(var(--muted)) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Button press effect (Emil Kowalski) */
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* Ensure mobile menu doesn't overflow */
+@media (max-width: 767px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Image loading placeholder for gallery */
+.gallery-img-loading {
+  @apply bg-muted shimmer;
+  min-height: 200px;
+}

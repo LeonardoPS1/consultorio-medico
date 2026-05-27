@@ -1,5 +1,77 @@
 # Changelog
 
+## [0.6.0] - 2026-05-25
+
+### 🚀 Nuevas Funcionalidades
+
+#### Sucursal Scoping Completo
+- **SucursalContext** (`lib/sucursal-context.tsx`): Provider global + hook `useSucursal()` con persistencia en localStorage + cookie (para server components)
+- **Selector de sucursal en Header**: Refactorizado para usar contexto global en vez de estado local
+- **Service layer**: Filtro `sucursalId` opcional en `turnosService.list()`, `turnosService.create()`, `pacientesService.list()`, `pacientesService.create()`
+- **API routes**: Turnos, pacientes, médicos y dashboard/stats aceptan query param `sucursalId`
+- **Server pages**: Leen cookie `sucursal_activa` para pre-renderizar con filtro
+- **Client pages**: Pasan `sucursalId` desde contexto a las APIs
+- **Dashboard**: `DashboardKpisClient` re-fetchea KPIs al cambiar sucursal
+- **Horarios**: Incluye `sucursalId: null` en defaults
+- **Validations**: Campo `sucursalId` opcional en todos los schemas Zod (create/update paciente, turno)
+- **Admin CRUD**: Página `/dashboard/admin/sucursales` completa con API GET/POST/PATCH
+
+#### Auditoría de Accesos Mejorada
+- **Multi-tenant**: `tenant_id` agregado a tabla `auditoria_accesos` (FK + índice)
+- **Cleanup de logs**: API `DELETE /api/admin/audit-logs` con query params `beforeDays` / `all`
+- **Logout tracking**: Auditoría de cierre de sesión via `events.signOut()` de NextAuth
+- **Refactor**: `audit-log.ts` con imports estáticos (drizzle-orm, db, schema) en vez de dinámicos
+- **Feature gating**: Página de auditoría protegida por feature `auditoria` (plan premium)
+- **UI de limpieza**: Botón "Limpiar registros" con diálogo de confirmación (antiguos 90d / todos)
+- **Select UI**: Reemplazo de `<select>` nativo por componente `Select` de Radix UI
+
+### 🔧 Mejoras
+
+- **Fix 401 en landing pública**: `SucursalProvider` y `FeatureFlagsProvider` verifican `res.ok` antes de procesar JSON en páginas sin sesión
+- **11 tests nuevos para multi-sucursal** (service layer, validaciones, sucursales)
+- **Full suite**: 9/10 tests pasando (1 pre-existing failure en utils.test.ts)
+
+### 📦 Build
+
+- ✅ TypeScript: 0 errores (strict mode)
+- ✅ 77 rutas generadas
+- ✅ next build exitoso sin errores
+
+---
+
+## [0.5.0] - 2026-05-23
+
+### 🚀 Nuevas Funcionalidades
+
+#### Historial Médico CRUD
+- **Página de historial médico** por paciente con códigos CIE-10
+- CRUD completo de entradas de historial (diagnóstico, tratamiento, observaciones)
+- Integración con el detalle de paciente
+
+#### Ajustes y Configuración
+- **Admin/Sistema**: Feature toggles, IA, Integraciones, Credenciales, API Keys
+- **Portal Chile**: Rut, regiones, comunas, sistema de salud
+- **Multi-tenant F1**: tenantId presente en 22 tablas del schema
+
+#### Responsive
+- Sidebar colapsable en mobile
+- Tablas con scroll horizontal
+- Grillas adaptativas
+- Navegación táctil amigable
+
+### 🔧 Mejoras
+
+- Optimización de queries Drizzle con índices compuestos
+- Server Components para páginas principales (turnos, pacientes)
+- GatedContent para protección de rutas por plan
+
+### 📦 Build
+
+- ✅ TypeScript: 0 errores (strict mode)
+- ✅ Build exitoso
+
+---
+
 ## [0.4.0] - 2026-05-19
 
 ### 🚀 Nuevas Funcionalidades

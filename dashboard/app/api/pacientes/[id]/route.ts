@@ -38,3 +38,8 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
   const updated = await pacientesService.update(params.id, body);
   return success(updated);
 });
+
+export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
+  const result = await pacientesService.delete(params.id);
+  return success(result);
+});

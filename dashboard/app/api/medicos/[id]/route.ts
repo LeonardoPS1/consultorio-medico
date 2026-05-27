@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { medicos } from '@/drizzle/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
+import { apiHandler, success, notFound } from '@/lib/api-handler';
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -40,3 +41,17 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     return NextResponse.json({ error: 'Error al actualizar medico' }, { status: 500 });
   }
 }
+
+/** DELETE /api/medicos/[id] - Soft-delete de médico */
+export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
+  const [medico] = await db
+    .select({ id: medicos.id })
+    .from(medicos)
+    .where(and(eq(medicos.id, params.id), sql`${medicos.deletedAt} IS NULL`))
+    .limit(1);
+
+  if (!medico) notFound('Medico no encontrado');
+
+  await db.update(medicos).set({ deletedAt: new Date() }).where(eq(medicos.id, params.id));
+  return success({ deleted: true });
+});
