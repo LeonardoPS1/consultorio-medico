@@ -385,12 +385,62 @@ html {
   transform: scale(0.97);
 }
 
-/* Ensure mobile menu doesn't overflow */
+/* Responsive improvements */
 @media (max-width: 767px) {
   .container {
     padding-left: 1rem;
     padding-right: 1rem;
   }
+}
+
+/* Reduce animation intensity on mobile for performance */
+@media (max-width: 767px) {
+  .animate-orb, .animate-orb-2, .animate-orb-3,
+  .animate-gentle-float, .animate-gentle-float-2,
+  .animate-gentle-float-3, .animate-gentle-float-4,
+  .animate-soft-float, .animate-soft-float-delayed,
+  .popular-ring-pulse, .gallery-img-hover:hover {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transform: none !important;
+  }
+
+  .hero-dashboard-hover:hover {
+    transform: none !important;
+  }
+
+  .shine-effect {
+    animation: none !important;
+  }
+
+  .feature-icon-morph {
+    transition: none !important;
+  }
+
+  .group:hover .feature-icon-morph {
+    transform: none !important;
+  }
+}
+
+/* Better mobile touch targets */
+@media (max-width: 767px) {
+  button, a, [role="button"] {
+    min-height: 44px;
+  }
+
+  input, select {
+    font-size: 16px !important; /* Prevent iOS zoom on focus */
+  }
+}
+
+/* Smooth responsive transitions for all landing sections */
+section[id] {
+  scroll-margin-top: 80px;
+}
+
+/* Prevent layout shift from scrollbar */
+html {
+  scrollbar-gutter: stable;
 }
 
 /* Footer link hover underline animation */
@@ -428,27 +478,26 @@ html {
 
 /* === ENHANCED LANDING ANIMATIONS === */
 
-/* Gentle floating for pricing cards */
+/* Gentle floating for pricing cards — versión más suave */
 @keyframes gentleFloat {
   0%, 100% { transform: translateY(0px); }
-  33% { transform: translateY(-4px); }
-  66% { transform: translateY(-2px); }
+  50% { transform: translateY(-3px); }
 }
 
 .animate-gentle-float {
-  animation: gentleFloat 5s ease-in-out infinite;
+  animation: gentleFloat 7s ease-in-out infinite;
 }
 
 .animate-gentle-float-2 {
-  animation: gentleFloat 5s ease-in-out 0.5s infinite;
+  animation: gentleFloat 7s ease-in-out 1s infinite;
 }
 
 .animate-gentle-float-3 {
-  animation: gentleFloat 5s ease-in-out 1s infinite;
+  animation: gentleFloat 7s ease-in-out 2s infinite;
 }
 
 .animate-gentle-float-4 {
-  animation: gentleFloat 5s ease-in-out 1.5s infinite;
+  animation: gentleFloat 7s ease-in-out 3s infinite;
 }
 
 /* Pulsing glow for WhatsApp button */
@@ -465,7 +514,7 @@ html {
   animation: pulseGlow 2.5s ease-out infinite;
 }
 
-/* Shine sweep for CTAs */
+/* Shine sweep for CTAs — más rápido y sutil */
 @keyframes shine {
   0% {
     background-position: 200% center;
@@ -479,11 +528,18 @@ html {
   background: linear-gradient(
     110deg,
     hsl(var(--primary)) 25%,
-    hsl(var(--primary-foreground) / 0.9) 50%,
+    hsl(var(--primary-foreground) / 0.85) 50%,
     hsl(var(--primary)) 75%
   );
   background-size: 200% auto;
-  animation: shine 3s ease-in-out infinite;
+  animation: shine 2s ease-in-out infinite;
+}
+
+/* Disable shine animation on mobile to prevent performance issues */
+@media (max-width: 767px) {
+  .shine-effect {
+    animation: none;
+  }
 }
 
 /* Card glow on hover — subtle primary border */
@@ -558,7 +614,7 @@ html {
   }
 }
 
-/* Gallery image hover zoom */
+/* Gallery image hover zoom + glow */
 .gallery-img-hover {
   @apply transition-all duration-500;
   transition-timing-function: var(--ease-out);
@@ -566,6 +622,19 @@ html {
 
 .gallery-img-hover:hover {
   transform: scale(1.03);
+  box-shadow: 0 0 30px hsl(var(--primary) / 0.12),
+              0 0 60px hsl(var(--primary) / 0.06);
+}
+
+/* Gallery image glow on hover for container */
+.gallery-img-container {
+  @apply transition-all duration-300;
+  transition-timing-function: var(--ease-out);
+}
+
+.gallery-img-container:hover {
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.15),
+              0 16px 48px hsl(var(--primary) / 0.08);
 }
 
 /* Feature card icon morph */
@@ -636,31 +705,9 @@ html {
   animation: orbDrift 30s ease-in-out 5s infinite;
 }
 
-/* Active tab underline slide — for gallery tabs */
+/* Active tab indicator — softer dot instead of underline */
 .gallery-tab-active {
   position: relative;
-}
-
-.gallery-tab-active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: hsl(var(--primary));
-  border-radius: 1px;
-  animation: tabUnderline 0.2s var(--ease-out) forwards;
-  transform-origin: left;
-}
-
-@keyframes tabUnderline {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
 }
 
 /* CTA button double glow */

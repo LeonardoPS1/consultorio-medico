@@ -37,7 +37,7 @@ export function Hero() {
   };
 
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-16">
+    <section className="relative min-h-[85vh] md:min-h-[90vh] flex items-center overflow-hidden pt-16">
       {/* Animated background orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-primary/5 blur-3xl animate-orb" />
@@ -67,7 +67,7 @@ export function Hero() {
             <motion.h1
               variants={fadeUp}
               transition={springTransition}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
+              className="text-[1.75rem] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
             >
               Gestioná tu consultorio{' '}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/60">

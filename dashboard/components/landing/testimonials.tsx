@@ -53,7 +53,7 @@ function Stars({ delay }: { delay: number }) {
           viewport={{ once: true }}
           transition={{ delay: delay + i * 0.06, type: 'spring', duration: 0.4, bounce: 0.3 }}
         >
-          <Star className="h-3.5 w-3.5 fill-primary/20 text-primary/30" />
+          <Star className="h-3.5 w-3.5 fill-emerald-200/80 text-emerald-400/60" />
         </motion.div>
       ))}
     </div>

@@ -49,7 +49,7 @@ export function Gallery() {
               onClick={() => setActive(s.id)}
               className={`px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 btn-press ${
                 active === s.id
-                  ? 'bg-primary text-primary-foreground shadow-sm gallery-tab-active'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
               }`}
             >
@@ -64,7 +64,7 @@ export function Gallery() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2, duration: 0.4 }}
-          className="relative rounded-xl border bg-card shadow-xl overflow-hidden max-w-5xl mx-auto"
+          className="relative rounded-xl border bg-card shadow-xl overflow-hidden max-w-5xl mx-auto gallery-img-container"
         >
           {/* Mac-style window controls */}
           <div className="absolute top-0 left-0 right-0 h-8 bg-muted/80 border-b flex items-center px-4 gap-2 z-10">

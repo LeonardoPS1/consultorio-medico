@@ -49,7 +49,7 @@ export function Navbar() {
           <img
             src="/aicoremed_dark_1200.svg"
             alt="AiCoreMed"
-            className="h-11 w-auto"
+            className="h-9 md:h-11 w-auto"
           />
         </Link>
 
@@ -59,7 +59,7 @@ export function Navbar() {
             <button
               key={item.href}
               onClick={() => scrollTo(item.href.slice(1))}
-              className="relative px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:rounded-full after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-200"
+              className="relative px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
             >
               {item.label}
             </button>
