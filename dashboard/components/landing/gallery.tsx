@@ -47,9 +47,9 @@ export function Gallery() {
             <button
               key={s.id}
               onClick={() => setActive(s.id)}
-              className={`px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+              className={`px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 btn-press ${
                 active === s.id
-                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  ? 'bg-primary text-primary-foreground shadow-sm gallery-tab-active'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
               }`}
             >
@@ -66,22 +66,28 @@ export function Gallery() {
           transition={{ delay: 0.2, duration: 0.4 }}
           className="relative rounded-xl border bg-card shadow-xl overflow-hidden max-w-5xl mx-auto"
         >
-          <div className="absolute top-0 left-0 right-0 h-7 bg-muted/80 border-b flex items-center px-3 gap-1.5 z-10">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
-            <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
-            <span className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
+          {/* Mac-style window controls */}
+          <div className="absolute top-0 left-0 right-0 h-8 bg-muted/80 border-b flex items-center px-4 gap-2 z-10">
+            <span className="w-3 h-3 rounded-full bg-red-400/80" />
+            <span className="w-3 h-3 rounded-full bg-yellow-400/80" />
+            <span className="w-3 h-3 rounded-full bg-green-400/80" />
           </div>
+
           <AnimatePresence mode="wait">
-            <motion.img
+            <motion.div
               key={active}
-              src={SCREENSHOTS.find((s) => s.id === active)!.src}
-              alt={`Captura de ${SCREENSHOTS.find((s) => s.id === active)!.label}`}
-              className="w-full h-auto pt-7"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-            />
+              initial={{ filter: 'blur(4px)', opacity: 0, scale: 0.97 }}
+              animate={{ filter: 'blur(0px)', opacity: 1, scale: 1 }}
+              exit={{ filter: 'blur(2px)', opacity: 0, scale: 1.03 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="pt-8 gallery-img-hover"
+            >
+              <img
+                src={SCREENSHOTS.find((s) => s.id === active)!.src}
+                alt={`Captura de ${SCREENSHOTS.find((s) => s.id === active)!.label}`}
+                className="w-full h-auto"
+              />
+            </motion.div>
           </AnimatePresence>
         </motion.div>
       </div>

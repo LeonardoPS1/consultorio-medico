@@ -9,7 +9,7 @@ import { PLANES_ORDERED } from '@/lib/planes';
 const containerVariants = {
   hidden: {},
   visible: {
-    transition: { staggerChildren: 0.1 },
+    transition: { staggerChildren: 0.08 },
   },
 };
 
@@ -22,9 +22,13 @@ const cardVariants = {
   },
 };
 
+const floatClasses = ['animate-gentle-float', 'animate-gentle-float-2', 'animate-gentle-float-3', 'animate-gentle-float-4'];
+
 export function Pricing() {
   return (
     <section id="pricing" className="relative overflow-hidden scroll-mt-20 border-t">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-transparent pointer-events-none" />
+
       <div className="container mx-auto px-4 md:px-6 py-20 md:py-28">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -49,20 +53,20 @@ export function Pricing() {
           viewport={{ once: true, margin: '-60px' }}
           className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto"
         >
-          {PLANES_ORDERED.filter((p) => p.id !== 'free').map((plan) => (
+          {PLANES_ORDERED.filter((p) => p.id !== 'free').map((plan, index) => (
             <motion.div
               key={plan.id}
               variants={cardVariants}
-              className={`relative rounded-xl border bg-card p-6 grid grid-rows-[auto_1fr_auto] gap-6 ${
+              className={`relative rounded-xl border bg-card p-6 grid grid-rows-[auto_1fr_auto] gap-6 card-lift-hover ${
                 plan.popular
-                  ? 'ring-2 ring-primary shadow-xl scale-[1.02] z-10'
+                  ? 'popular-border-shine popular-ring-pulse z-10'
                   : 'shadow-sm'
-              }`}
+              } ${floatClasses[index]}`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground shadow-sm">
-                    Más elegido
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20">
+                  <span className="inline-flex items-center rounded-full bg-primary px-4 py-1 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/30">
+                    ★ Más elegido
                   </span>
                 </div>
               )}
@@ -104,7 +108,7 @@ export function Pricing() {
               <div className="self-end">
                 <Button
                   variant={plan.popular ? 'default' : 'outline'}
-                  className="w-full gap-2"
+                  className={`w-full gap-2 btn-press ${plan.popular ? 'shadow-lg shadow-primary/20' : ''}`}
                   asChild
                 >
                   <Link href={`/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion%26plan%3D${plan.id}`}>
@@ -117,9 +121,14 @@ export function Pricing() {
           ))}
         </motion.div>
 
-        <p className="text-center text-xs text-muted-foreground mt-8">
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-center text-xs text-muted-foreground mt-8"
+        >
           Todos los planes incluyen 14 días de prueba gratis. Sin tarjeta de crédito.
-        </p>
+        </motion.p>
       </div>
     </section>
   );

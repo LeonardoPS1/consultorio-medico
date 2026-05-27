@@ -3,14 +3,20 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, MessageCircle } from 'lucide-react';
+import { ChevronRight, MessageCircle, Sparkles } from 'lucide-react';
 
 export function CTASection() {
   return (
     <section className="relative overflow-hidden border-t">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent pointer-events-none" />
 
-      <div className="container mx-auto px-4 md:px-6 py-16 md:py-24 text-center">
+      {/* Animated background orbs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-[400px] h-[400px] rounded-full bg-primary/5 blur-3xl animate-orb" />
+        <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] rounded-full bg-primary/5 blur-3xl animate-orb-2" />
+      </div>
+
+      <div className="container mx-auto px-4 md:px-6 py-16 md:py-24 text-center relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -18,6 +24,17 @@ export function CTASection() {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="max-w-2xl mx-auto"
         >
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1, type: 'spring', duration: 0.5, bounce: 0.2 }}
+            className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-4 py-1.5 text-xs font-medium mb-6"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Sin tarjeta de crédito · Sin compromisos
+          </motion.div>
+
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             ¿Listo para transformar tu consultorio?
           </h2>
@@ -26,21 +43,27 @@ export function CTASection() {
             <br />
             <span className="font-medium text-foreground">14 días de prueba gratis.</span>
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-base h-12 px-8 gap-2 shadow-lg shadow-primary/20" asChild>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
+            <Button size="lg" className="text-base h-12 px-8 gap-2 shadow-lg shadow-primary/20 shine-effect btn-press cta-glow-hover" asChild>
               <Link href="/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion">
                 <MessageCircle className="h-4 w-4" />
                 Comenzar prueba gratis
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="text-base h-12 px-8 gap-2" asChild>
+            <Button size="lg" variant="outline" className="text-base h-12 px-8 gap-2 btn-press" asChild>
               <a href="https://wa.me/56975680702?text=Hola%20quiero%20m%C3%A1s%20informaci%C3%B3n" target="_blank" rel="noopener noreferrer">
                 <MessageCircle className="h-4 w-4" />
                 Hablar con ventas
               </a>
             </Button>
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     </section>

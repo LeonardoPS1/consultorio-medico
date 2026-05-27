@@ -131,13 +131,19 @@ export function Specialties() {
             <button
               key={s.id}
               onClick={() => setActive(s.id)}
-              className={`relative px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
+              className={`relative px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 btn-press ${
                 active === s.id
-                  ? 'bg-primary text-primary-foreground shadow-md'
-                  : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted'
+                  ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-105'
+                  : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted hover:scale-105'
               }`}
             >
-              <span className="mr-1.5">{s.icon}</span>
+              <motion.span
+                className="inline-block mr-1.5"
+                animate={{ scale: active === s.id ? [1, 1.3, 1] : 1 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {s.icon}
+              </motion.span>
               {s.label}
             </button>
           ))}
@@ -176,10 +182,14 @@ export function Specialties() {
             </div>
 
             {/* Case use card */}
-            <div className="relative rounded-xl border bg-card/60 backdrop-blur-sm overflow-hidden">
+            <div className="relative rounded-xl border bg-card/60 backdrop-blur-sm overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300">
               <div className="bg-muted/50 px-5 py-3 border-b flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <motion.span
+                    className="w-2 h-2 rounded-full bg-green-500"
+                    animate={{ opacity: [1, 0.4, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                  />
                   Simulación de Caso Real
                 </div>
                 <span className="text-xs text-muted-foreground">{current.caseUse.clinic}</span>

@@ -42,6 +42,24 @@ const cardVariants = {
   },
 };
 
+function Stars({ delay }: { delay: number }) {
+  return (
+    <div className="flex gap-0.5 mb-4">
+      {[...Array(5)].map((_, i) => (
+        <motion.div
+          key={i}
+          initial={{ scale: 0, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: delay + i * 0.06, type: 'spring', duration: 0.4, bounce: 0.3 }}
+        >
+          <Star className="h-3.5 w-3.5 fill-primary/20 text-primary/30" />
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 export function Testimonials() {
   return (
     <section className="relative overflow-hidden border-t">
@@ -71,18 +89,14 @@ export function Testimonials() {
           viewport={{ once: true, margin: '-60px' }}
           className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
         >
-          {TESTIMONIALS.map((t) => (
+          {TESTIMONIALS.map((t, idx) => (
             <motion.div
               key={t.author}
               variants={cardVariants}
-              className="relative rounded-xl border bg-card p-6 hover-card flex flex-col"
+              className="relative rounded-xl border bg-card p-6 testimonial-hover flex flex-col"
             >
-              {/* Stars */}
-              <div className="flex gap-0.5 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-primary/30 text-primary/30" />
-                ))}
-              </div>
+              {/* Animated Stars */}
+              <Stars delay={0.3 + idx * 0.1} />
 
               <p className="text-sm text-muted-foreground leading-relaxed flex-1">
                 &ldquo;{t.text}&rdquo;

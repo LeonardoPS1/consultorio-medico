@@ -56,7 +56,7 @@ const containerVariants = {
 };
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
@@ -99,12 +99,15 @@ export function Features() {
               <motion.div
                 key={feature.title}
                 variants={cardVariants}
-                className="group relative rounded-xl border bg-card p-6 hover-card"
+                className="group relative rounded-xl border bg-card p-6 card-glow-hover"
               >
-                <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/15 group-hover:scale-105 transition-all duration-200">
+                {/* Gradient overlay on hover */}
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4 feature-icon-morph">
                   <Icon className="h-5.5 w-5.5 text-primary" />
                 </div>
-                <h3 className="font-semibold text-sm mb-2">{feature.title}</h3>
+                <h3 className="font-semibold text-sm mb-2 group-hover:text-primary transition-colors duration-200">{feature.title}</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">{feature.desc}</p>
               </motion.div>
             );
@@ -118,7 +121,7 @@ export function Features() {
           transition={{ delay: 0.3, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mt-10"
         >
-          <Button variant="outline" className="gap-2" asChild>
+          <Button variant="outline" className="gap-2 btn-press" asChild>
             <Link href="/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion">
               Ver todas las funcionalidades
               <ChevronRight className="h-4 w-4" />

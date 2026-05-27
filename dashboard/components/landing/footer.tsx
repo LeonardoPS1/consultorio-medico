@@ -1,7 +1,27 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { MessageCircle, Mail, ExternalLink } from 'lucide-react';
+
+const footerLinks = {
+  product: [
+    { label: 'Funcionalidades', href: '#features' },
+    { label: 'Especialidades', href: '#specialties' },
+    { label: 'Precios', href: '#pricing' },
+    { label: 'FAQ', href: '#faq' },
+  ],
+  company: [
+    { label: 'Aicore', href: 'https://aicorebots.com', external: true },
+    { label: 'Iniciar sesión', href: '/login' },
+    { label: 'Solicitar demo', href: '#contact' },
+  ],
+  contact: [
+    { label: 'WhatsApp', href: 'https://wa.me/56975680702', icon: MessageCircle, external: true },
+    { label: 'info@aicorebots.com', href: 'mailto:info@aicorebots.com', icon: Mail },
+    { label: 'aicorebots.com', href: 'https://aicorebots.com', icon: ExternalLink, external: true },
+  ],
+};
 
 export function Footer() {
   return (
@@ -9,7 +29,12 @@ export function Footer() {
       <div className="container mx-auto px-4 md:px-6 py-12">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
-          <div className="sm:col-span-2 lg:col-span-1">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="sm:col-span-2 lg:col-span-1"
+          >
             <Link href="/" className="inline-flex items-center gap-2 mb-3">
               <img
                 src="/aicoremed_dark_1200.svg"
@@ -21,88 +46,86 @@ export function Footer() {
               Sistema de gestión para consultorios médicos con IA local, WhatsApp integrado
               y automatizaciones inteligentes.
             </p>
-          </div>
+          </motion.div>
 
           {/* Product */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.05 }}
+          >
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
               Producto
             </h4>
             <ul className="space-y-2 text-xs">
-              <li>
-                <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Funcionalidades
-                </a>
-              </li>
-              <li>
-                <a href="#specialties" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Especialidades
-                </a>
-              </li>
-              <li>
-                <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Precios
-                </a>
-              </li>
-              <li>
-                <a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors">
-                  FAQ
-                </a>
-              </li>
+              {footerLinks.product.map((link) => (
+                <li key={link.label}>
+                  <a href={link.href} className="footer-link text-muted-foreground transition-colors">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Company */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+          >
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
               Compañía
             </h4>
             <ul className="space-y-2 text-xs">
-              <li>
-                <a href="https://aicorebots.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
-                  Aicore
-                  <ExternalLink className="h-2.5 w-2.5" />
-                </a>
-              </li>
-              <li>
-                <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Iniciar sesión
-                </Link>
-              </li>
-              <li>
-                <a href="#contact" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Solicitar demo
-                </a>
-              </li>
+              {footerLinks.company.map((link) => (
+                <li key={link.label}>
+                  {link.external ? (
+                    <a href={link.href} target="_blank" rel="noopener noreferrer" className="footer-link text-muted-foreground transition-colors inline-flex items-center gap-1">
+                      {link.label}
+                      <ExternalLink className="h-2.5 w-2.5" />
+                    </a>
+                  ) : (
+                    <Link href={link.href} className="footer-link text-muted-foreground transition-colors">
+                      {link.label}
+                    </Link>
+                  )}
+                </li>
+              ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Contact */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.15 }}
+          >
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
               Contacto
             </h4>
             <ul className="space-y-2 text-xs">
-              <li>
-                <a href="https://wa.me/56975680702" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5">
-                  <MessageCircle className="h-3 w-3" />
-                  WhatsApp
-                </a>
-              </li>
-              <li>
-                <a href="mailto:info@aicorebots.com" className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5">
-                  <Mail className="h-3 w-3" />
-                  info@aicorebots.com
-                </a>
-              </li>
-              <li>
-                <a href="https://aicorebots.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5">
-                  <ExternalLink className="h-3 w-3" />
-                  aicorebots.com
-                </a>
-              </li>
+              {footerLinks.contact.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <li key={link.label}>
+                    <a
+                      href={link.href}
+                      target={link.external ? '_blank' : undefined}
+                      rel={link.external ? 'noopener noreferrer' : undefined}
+                      className="footer-link text-muted-foreground transition-colors inline-flex items-center gap-1.5"
+                    >
+                      {Icon && <Icon className="h-3 w-3" />}
+                      {link.label}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
-          </div>
+          </motion.div>
         </div>
 
         {/* Bottom */}

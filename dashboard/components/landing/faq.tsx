@@ -63,21 +63,28 @@ export function FAQ() {
           className="max-w-3xl mx-auto space-y-2"
         >
           {FAQS.map((faq, i) => (
-            <div
+            <motion.div
               key={i}
-              className="rounded-xl border bg-card overflow-hidden transition-shadow duration-200 hover:shadow-sm"
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.04, duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
+              className={`rounded-xl border bg-card overflow-hidden transition-all duration-300 card-glow-hover ${
+                openIndex === i ? 'shadow-sm border-primary/20' : ''
+              }`}
             >
               <button
                 onClick={() => toggle(i)}
-                className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium"
+                className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium transition-colors duration-200 hover:bg-muted/30"
                 aria-expanded={openIndex === i}
               >
-                <span>{faq.q}</span>
-                <ChevronDown
-                  className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${
-                    openIndex === i ? 'rotate-180' : ''
-                  }`}
-                />
+                <span className={openIndex === i ? 'text-foreground' : ''}>{faq.q}</span>
+                <motion.div
+                  animate={{ rotate: openIndex === i ? 180 : 0 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </motion.div>
               </button>
               <AnimatePresence>
                 {openIndex === i && (
@@ -94,7 +101,7 @@ export function FAQ() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
           ))}
         </motion.div>
       </div>
