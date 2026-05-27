@@ -50,7 +50,7 @@ export function CTASection() {
             transition={{ delay: 0.2, duration: 0.4 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <Button size="lg" className="text-base h-12 px-8 gap-2 shadow-lg shadow-primary/20 shine-effect btn-press cta-glow-hover" asChild>
+            <Button size="lg" className="text-base h-12 px-8 gap-2 shadow-lg shadow-primary/20 btn-press cta-glow-hover" asChild>
               <Link href="/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion">
                 <MessageCircle className="h-4 w-4" />
                 Comenzar prueba gratis
