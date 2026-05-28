@@ -1,0 +1,185 @@
+{
+  "name": "WF-09: Anonimización Post-Retención",
+  "nodes": [
+    {
+      "id": "cron-trigger",
+      "name": "Cron (Diario 4:00 AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 4 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-request",
+      "name": "POST /api/privacidad/anonimizar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://med.aicorebots.com/api/privacidad/anonimizar",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-webhook-secret",
+              "value": "={{ $credentials.httpHeaderAuth.password }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "dias",
+              "value": 90
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "Dashboard Webhook Secret"
+        }
+      }
+    },
+    {
+      "id": "if-procesados",
+      "name": "¿Hay pacientes?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [760, 300],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.data.anonimizados }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "log-pg",
+      "name": "Log en PostgreSQL",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1020, 200],
+      "parameters": {
+        "operation": "insert",
+        "table": "workflow_logs",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow_id": "='WF-09'",
+            "workflow_name": "='Anonimización Post-Retención'",
+            "nivel": "='info'",
+            "mensaje": "={{ $json.data.mensaje }}",
+            "metadata": "={ anonimizados: $json.data.anonimizados, fechaLimite: $json.data.fechaLimite }"
+          }
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "Consultorio - PostgreSQL"
+        }
+      }
+    },
+    {
+      "id": "log-sin-pacientes",
+      "name": "Log sin pacientes",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1020, 400],
+      "parameters": {
+        "operation": "insert",
+        "table": "workflow_logs",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow_id": "='WF-09'",
+            "workflow_name": "='Anonimización Post-Retención'",
+            "nivel": "='debug'",
+            "mensaje": "='Sin pacientes pendientes de anonimización'",
+            "metadata": "={ anonimizados: 0 }"
+          }
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "Consultorio - PostgreSQL"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cron (Diario 4:00 AM)": {
+      "main": [
+        [
+          {
+            "node": "POST /api/privacidad/anonimizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /api/privacidad/anonimizar": {
+      "main": [
+        [
+          {
+            "node": "¿Hay pacientes?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay pacientes?": {
+      "main": [
+        [
+          {
+            "node": "Log en PostgreSQL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log sin pacientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["privacidad", "cron"],
+  "createdAt": "2026-05-27T20:00:00.000Z",
+  "updatedAt": "2026-05-27T20:00:00.000Z"
+}

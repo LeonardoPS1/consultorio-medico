@@ -3,6 +3,7 @@ import { turnos, pacientes, medicos, bloqueosAgenda } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, gte, lt } from 'drizzle-orm';
 import type { CreateTurno, UpdateTurno } from '@/lib/validations';
 import { conflict, notFound, fail } from '@/lib/api-handler';
+import { buildGCalPayload, syncTurnoToGCal } from '@/lib/google-calendar-sync';
 
 export const turnosService = {
   async list(fechaStr: string, estado?: string, medico?: string, tipo?: string, search?: string, limit = 100, offset = 0, sucursalId?: string) {
@@ -87,14 +88,46 @@ export const turnosService = {
     const conflicto = await db.select({ id: turnos.id }).from(turnos).where(and(eq(turnos.medicoId, input.medicoId), eq(turnos.fechaHora, fechaHora), sql`${turnos.deletedAt} IS NULL`, sql`${turnos.estado} NOT IN ('cancelada', 'no_asistio')`)).limit(1);
     if (conflicto.length > 0) conflict('El medico ya tiene un turno en ese horario');
 
-    const [nuevo] = await db.insert(turnos).values({
-      pacienteId: input.pacienteId, medicoId: input.medicoId, fechaHora,
-      duracionMinutos: input.duracionMinutos, motivo: input.motivo || null,
-      tipoConsulta: input.tipoConsulta, estado: 'pendiente', fuente: 'web',
-      sucursalId: (input as any).sucursalId || null,
-    }).returning();
+     const [nuevo] = await db.insert(turnos).values({
+       pacienteId: input.pacienteId, medicoId: input.medicoId, fechaHora,
+       duracionMinutos: input.duracionMinutos, motivo: input.motivo || null,
+       tipoConsulta: input.tipoConsulta, estado: 'pendiente', fuente: 'web',
+       sucursalId: (input as any).sucursalId || null,
+     }).returning();
 
-    return nuevo;
+     // Disparar sync a Google Calendar (fire-and-forget)
+     try {
+       const [paciente] = await db
+         .select({ nombre: pacientes.nombre, apellido: pacientes.apellido, telefono: pacientes.telefono })
+         .from(pacientes)
+         .where(and(eq(pacientes.id, input.pacienteId), sql`${pacientes.deletedAt} IS NULL`))
+         .limit(1);
+
+       const [medico] = await db
+         .select({ nombre: medicos.nombre })
+         .from(medicos)
+         .where(and(eq(medicos.id, input.medicoId), sql`${medicos.deletedAt} IS NULL`))
+         .limit(1);
+
+       const fechaHoraStr = fechaHora.toISOString();
+       const pacienteNombre = paciente ? `${paciente.nombre} ${paciente.apellido}`.trim() : 'Paciente';
+
+       const payload = buildGCalPayload({
+         action: 'create',
+         turnoId: nuevo.id,
+         fechaHora: fechaHoraStr,
+         duracionMinutos: input.duracionMinutos,
+         pacienteNombre,
+         pacienteTelefono: paciente?.telefono,
+         medicoNombre: medico?.nombre,
+         motivo: input.motivo,
+       });
+       syncTurnoToGCal(payload).catch(() => {});
+     } catch {
+       // No bloquear la creación si el sync falla
+     }
+
+     return nuevo;
   },
 
   async update(id: string, input: UpdateTurno) {
@@ -112,6 +145,106 @@ export const turnosService = {
     if (input.tipoConsulta !== undefined) data.tipoConsulta = input.tipoConsulta;
     if (input.duracionMinutos) data.duracionMinutos = input.duracionMinutos;
 
-    return (await db.update(turnos).set(data).where(eq(turnos.id, id)).returning())[0];
+     const turnoActualizado = (await db.update(turnos).set(data).where(eq(turnos.id, id)).returning())[0];
+
+     // Disparar sync a Google Calendar si hubo cambios relevantes (fire-and-forget)
+     try {
+        // Solo sync si cambió fechaHora, estado, o si se está cancelando
+        const camposRelevantes = ['fecha', 'hora', 'estado'];
+        const hayCambiosRelevantes = camposRelevantes.some(campo => (input as any)[campo] !== undefined);
+       
+       if (hayCambiosRelevantes) {
+         const [paciente] = await db
+           .select({ nombre: pacientes.nombre, apellido: pacientes.apellido, telefono: pacientes.telefono })
+           .from(pacientes)
+           .where(and(eq(pacientes.id, turnoActualizado.pacienteId), sql`${pacientes.deletedAt} IS NULL`))
+           .limit(1);
+
+         const [medico] = await db
+           .select({ nombre: medicos.nombre })
+           .from(medicos)
+           .where(and(eq(medicos.id, turnoActualizado.medicoId), sql`${medicos.deletedAt} IS NULL`))
+           .limit(1);
+
+         const fechaHoraStr = turnoActualizado.fechaHora instanceof Date
+           ? turnoActualizado.fechaHora.toISOString()
+           : new Date(turnoActualizado.fechaHora).toISOString();
+
+         const pacienteNombre = paciente ? `${paciente.nombre} ${paciente.apellido}`.trim() : 'Paciente';
+         const medicoNombre = medico?.nombre;
+
+         // Determinar la acción según el estado
+         const gcalAction = turnoActualizado.estado === 'cancelada'
+           ? 'delete' as const
+           : turnoActualizado.googleCalendarEventId
+             ? 'update' as const
+             : 'create' as const;
+
+         const payload = buildGCalPayload({
+           action: gcalAction,
+           turnoId: turnoActualizado.id,
+           googleCalendarEventId: turnoActualizado.googleCalendarEventId,
+           fechaHora: fechaHoraStr,
+           duracionMinutos: turnoActualizado.duracionMinutos,
+           pacienteNombre,
+           pacienteTelefono: paciente?.telefono,
+           medicoNombre,
+           motivo: turnoActualizado.motivo,
+         });
+         syncTurnoToGCal(payload).catch(() => {});
+       }
+     } catch {
+       // No bloquear la actualización si el sync falla
+     }
+
+      return turnoActualizado;
+  },
+
+  async delete(id: string) {
+    const [existe] = await db
+      .select()
+      .from(turnos)
+      .where(and(eq(turnos.id, id), sql`${turnos.deletedAt} IS NULL`))
+      .limit(1);
+
+    if (!existe) notFound('Turno no encontrado');
+
+    // Disparar sync a Google Calendar (fire-and-forget) para eliminar el evento
+    try {
+      const [paciente] = await db
+        .select({ nombre: pacientes.nombre, apellido: pacientes.apellido, telefono: pacientes.telefono })
+        .from(pacientes)
+        .where(and(eq(pacientes.id, existe.pacienteId), sql`${pacientes.deletedAt} IS NULL`))
+        .limit(1);
+
+      const [medico] = await db
+        .select({ nombre: medicos.nombre })
+        .from(medicos)
+        .where(and(eq(medicos.id, existe.medicoId), sql`${medicos.deletedAt} IS NULL`))
+        .limit(1);
+
+      const fechaHoraStr = existe.fechaHora instanceof Date
+        ? existe.fechaHora.toISOString()
+        : new Date(existe.fechaHora).toISOString();
+
+      const pacienteNombre = paciente ? `${paciente.nombre} ${paciente.apellido}`.trim() : 'Paciente';
+
+      const payload = buildGCalPayload({
+        action: 'delete',
+        turnoId: existe.id,
+        googleCalendarEventId: existe.googleCalendarEventId,
+        fechaHora: fechaHoraStr,
+        pacienteNombre,
+        pacienteTelefono: paciente?.telefono,
+        medicoNombre: medico?.nombre,
+      });
+      syncTurnoToGCal(payload).catch(() => {});
+    } catch {
+      // No bloquear el soft-delete si el sync falla
+    }
+
+    // Soft delete
+    await db.update(turnos).set({ deletedAt: new Date() }).where(eq(turnos.id, id));
+    return { deleted: true };
   },
 };

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, MessageCircle, Sparkles, ShieldCheck } from 'lucide-react';
+import { ChevronRight, MessageCircle, Sparkles, ShieldCheck, Lock, Server } from 'lucide-react';
 import { RegistroExpressModal } from '@/components/landing/registro-modal';
 
 export function CTASection() {

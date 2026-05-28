@@ -9,6 +9,7 @@ import { pacientes, turnos, pacienteEventos } from '@/drizzle/schema';
 import { eq, and, sql, count, or, like, desc } from 'drizzle-orm';
 import type { CreatePaciente, UpdatePaciente } from '@/lib/validations';
 import { conflict, notFound } from '@/lib/api-handler';
+import { privacidadService } from '@/lib/services/privacidad';
 
 export const pacientesService = {
   /** Listar pacientes con búsqueda y stats */
@@ -96,10 +97,12 @@ export const pacientesService = {
     return updated;
   },
 
-  /** Soft-delete paciente */
+  /** Soft-delete paciente con cascada de datos relacionados (ARCO) */
   async delete(id: string) {
-    await this.getById(id);
-    await db.update(pacientes).set({ deletedAt: new Date() }).where(eq(pacientes.id, id));
-    return { deleted: true };
+    // Delega en privacidadService que maneja la cascada completa:
+    // soft-delete de turnos, conversaciones, mensajes, recetas,
+    // historial médico, eventos, tareas, facturación,
+    // anonimización PII y notificación a n8n
+    return privacidadService.confirmarBaja(id);
   },
 };

@@ -2,7 +2,7 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 27/05/2026
+**Última actualización:** 28/05/2026
 **Proyecto:** Consultorio Médico — Aicore (aicorebots.com)
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
@@ -111,7 +111,7 @@ PACIENTES
 Twilio WhatsApp / IMAP Email
   │
   ▼
-n8n (7 Workflows + 1 GCal Sync)
+n8n (9 Workflows)
   │  ├── WF-01: WhatsApp Inbound + Triaje IA
   │  ├── WF-02: Gestión de Turnos
   │  ├── WF-03: Recordatorios Automáticos
@@ -119,7 +119,8 @@ n8n (7 Workflows + 1 GCal Sync)
   │  ├── WF-05: Resumen Diario del Médico
   │  ├── WF-06: Recetas y Renovaciones
   │  ├── WF-07: Backup Automático Encriptado
-  │  └── WF-08: Google Calendar Sync
+  │  ├── WF-08: Google Calendar Sync
+  │  └── WF-09: Anonimización Post-Retención
   │
   ▼
 Ollama (Mistral - IA Local)
@@ -171,8 +172,8 @@ consultorio-medico/
 │   ├── lib/                   # auth, db, planes, features, servicios
 │   ├── drizzle/               # Schema Drizzle + migraciones
 │   └── public/                # Landing page + assets
-├── n8n-workflows/             # 8 workflows JSON
-│   ├── current/               # Activos (WF-01 a WF-08)
+├── n8n-workflows/             # 9 workflows JSON
+│   ├── current/               # Activos (WF-01 a WF-09)
 │   └── archive/               # Versiones legacy + designs
 ├── database/                  # Migraciones SQL, seed data
 ├── scripts/                   # Backup, deploy, migrate
@@ -378,6 +379,29 @@ consultorio-medico/
 
 ---
 
+### WF-09: Anonimización Post-Retención
+
+| Propiedad | Valor |
+|-----------|-------|
+| **Archivo** | `n8n-workflows/current/workflow-09-anonimizar.json` |
+| **Trigger** | Cron (4:00 AM todos los días) |
+| **Estado** | ✅ **NUEVO** |
+| **Nodos** | 5 (cron, httpRequest, IF×1, postgres×2) |
+
+**Flujo:**
+1. Cron a las 4:00 AM
+2. POST a `https://med.aicorebots.com/api/privacidad/anonimizar` con `x-webhook-secret`
+3. El endpoint ejecuta `privacidadService.anonimizarPostRetencion()` (90 días)
+4. Si encontró pacientes expirados: `UPDATE pacientes` + hard-delete de datos residuales
+5. Loggea el resultado en `workflow_logs`
+
+**Integración con Dashboard:**
+- `privacidadService.notificarBajaAN8n()` notifica a n8n sobre bajas confirmadas
+- Webhook `/webhook/paciente-baja` para limpiar `n8n_chat_histories`
+- Endpoint protegido `POST /api/privacidad/anonimizar` con verificación de webhook secret
+
+---
+
 ### Matriz Resumen de Agentes
 
 | # | Nombre | Trigger | Ollama | Twilio | PG | GCal | IMAP | Webhook |
@@ -390,6 +414,7 @@ consultorio-medico/
 | **WF-06** | Recetas y Renovaciones | Webhook | ✅ 1 nodo | ✅ | ✅ | ❌ | ❌ | `/receta-solicitar` |
 | **WF-07** | Backup Automático | Cron | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **WF-08** | Google Calendar Sync | Webhook | ❌ | ❌ | ✅ | ✅ | ❌ | `/google-calendar-sync` |
+| **WF-09** | Anonimización Post-Retención | Cron | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
 
 ---
 
@@ -463,7 +488,7 @@ consultorio-medico/
 | API | `http://172.18.0.1:5678` (interno, sin Cloudflare) |
 | API Key | JWT |
 | Versión | 2.19.5 |
-| Workflows activos | 8 |
+| Workflows activos | 9 |
 | Webhook auth | `x-webhook-secret` |
 | Credenciales | PostgreSQL, Twilio (Basic Auth + API), Ollama |
 
@@ -515,7 +540,8 @@ consultorio-medico/
 
 | Feature | Descripción |
 |---------|-------------|
-| Google Calendar sync desde `turnosService` | Mover `syncTurnoToGCal()` desde route handlers a `turnosService` directamente |
+| ~~Google Calendar sync desde `turnosService`~~ | ✅ Completado (28/05) — `turnosService.create/update/delete()` con GCal sync |
+| **ARCO - Derecho de Supresión** | ✅ Completado (28/05) — `privacidadService` con solicitud de baja, cascada de datos, anonimización PII, n8n notification, WF-09 retención 90 días |
 | Panel de monitoreo n8n en dashboard | Ver ejecuciones, errores y logs desde el dashboard |
 | WhatsApp Business API (producción) | Migrar de sandbox a producción con número dedicado |
 | Soporte multimedia en WhatsApp | Imágenes, PDFs, audio en conversaciones |
