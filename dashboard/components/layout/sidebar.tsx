@@ -28,6 +28,7 @@ import {
   Star,
   Rocket,
   BookOpen,
+  ListChecks,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
@@ -54,6 +55,7 @@ const navItems: NavItem[] = [
   { title: 'Recetas', href: '/dashboard/recetas', icon: Syringe, feature: 'recetas' },
   { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3, feature: 'reportes' },
   { title: 'Encuestas', href: '/dashboard/encuestas', icon: Star, feature: 'encuestas' },
+  { title: 'Lista de Espera', href: '/dashboard/lista-espera', icon: ListChecks, feature: 'lista-espera' },
   { title: 'Ajustes', href: '/dashboard/configuracion', icon: Sliders },
   { title: 'Ayuda', href: '/dashboard/ayuda', icon: BookOpen },
 ];

@@ -1,0 +1,129 @@
+{
+  "name": "WF-10: Expiración Lista de Espera",
+  "nodes": [
+    {
+      "id": "cron-trigger",
+      "name": "Cron: Cada 5 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-request",
+      "name": "HTTP POST /api/waitlist/pipeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300],
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_URL || 'https://med.aicorebots.com' }}/api/waitlist/pipeline",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-webhook-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "if-results",
+      "name": "¿Hay ofertas expiradas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.data.expiradas }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "log-success",
+      "name": "Log: Resultado",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [850, 200],
+      "parameters": {}
+    },
+    {
+      "id": "log-skip",
+      "name": "Log: Sin novedades",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [850, 400],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Cron: Cada 5 minutos": {
+      "main": [
+        [
+          {
+            "node": "HTTP POST /api/waitlist/pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP POST /api/waitlist/pipeline": {
+      "main": [
+        [
+          {
+            "node": "¿Hay ofertas expiradas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay ofertas expiradas?": {
+      "main": [
+        [
+          {
+            "node": "Log: Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log: Sin novedades",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

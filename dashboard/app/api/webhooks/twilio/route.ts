@@ -10,6 +10,7 @@ import {
   updateMensajeByTwilioSid,
 } from '@/lib/data-store';
 import { detectSurveyResponse, storeSurveyResponse } from '@/lib/encuestas';
+import { handleWaitlistResponse } from '@/lib/whatsapp-waitlist';
 
 /**
  * Forwardea el webhook a n8n para procesamiento con IA.
@@ -314,12 +315,22 @@ export const POST = withRateLimit(async function POST(request: NextRequest) {
       }).catch(() => {});
     }
 
-    // Forward a n8n para procesamiento con IA (fire-and-forget)
-    forwardToN8n(params).catch(() => {});
+    // Detectar si es respuesta a oferta de lista de espera (ACEPTAR/RECHAZAR)
+    const esWaitlist = paciente
+      ? await handleWaitlistResponse(paciente.id, body, telefono)
+      : false;
 
-    // Notificar al médico (fire-and-forget)
-    const nombrePaciente = `${paciente.nombre} ${paciente.apellido}`.trim();
-    notifyDoctor(nombrePaciente, body, telefono).catch(() => {});
+    // Si fue procesado como waitlist, no forwardear a n8n
+    if (!esWaitlist) {
+      // Forward a n8n para procesamiento con IA (fire-and-forget)
+      forwardToN8n(params).catch(() => {});
+    }
+
+    // Notificar al médico (fire-and-forget) — excepto para respuestas de waitlist
+    if (!esWaitlist) {
+      const nombrePaciente = `${paciente.nombre} ${paciente.apellido}`.trim();
+      notifyDoctor(nombrePaciente, body, telefono).catch(() => {});
+    }
 
     // Responder con TwiML si es una request de Twilio real
     const acceptHeader = request.headers.get('accept') || '';

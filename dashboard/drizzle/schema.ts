@@ -416,6 +416,47 @@ export const auditoriaAccesos = pgTable('auditoria_accesos', {
 }));
 
 // ============================================================
+// LISTA DE ESPERA (para reasignación de turnos cancelados)
+// ============================================================
+export const listaEspera = pgTable('lista_espera', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pacienteId: uuid('paciente_id').notNull().references(() => pacientes.id),
+  medicoId: uuid('medico_id').notNull().references(() => medicos.id),
+  fechaInscripcion: timestamp('fecha_inscripcion', { withTimezone: true }).defaultNow().notNull(),
+  estado: varchar('estado', { length: 20 }).notNull().default('activa'), // activa | expirada | cumplida | cancelada
+  sucursalId: uuid('sucursal_id').references(() => sucursales.id),
+  notas: text('notas'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  idxListaEsperaPaciente: index('idx_lista_espera_paciente').on(table.pacienteId),
+  idxListaEsperaMedico: index('idx_lista_espera_medico').on(table.medicoId),
+  idxListaEsperaEstado: index('idx_lista_espera_estado').on(table.estado),
+}));
+
+// ============================================================
+// OFERTAS DE TURNO (para lista de espera)
+// ============================================================
+export const ofertasTurno = pgTable('ofertas_turno', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  listaEsperaId: uuid('lista_espera_id').notNull().references(() => listaEspera.id),
+  turnoId: uuid('turno_id').notNull().references(() => turnos.id),
+  fechaOferta: timestamp('fecha_oferta', { withTimezone: true }).defaultNow().notNull(),
+  expiracion: timestamp('expiracion', { withTimezone: true }).notNull(),
+  estado: varchar('estado', { length: 20 }).notNull().default('pendiente'), // pendiente | aceptada | rechazada | expirada
+  notificada: boolean('notificada').notNull().default(false),
+  notificadaAt: timestamp('notificada_at', { withTimezone: true }),
+  respondedAt: timestamp('responded_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  idxOfertasListaEspera: index('idx_ofertas_lista_espera').on(table.listaEsperaId),
+  idxOfertasTurno: index('idx_ofertas_turno').on(table.turnoId),
+  idxOfertasEstado: index('idx_ofertas_estado').on(table.estado),
+  idxOfertasExpiracion: index('idx_ofertas_expiracion').on(table.expiracion),
+}));
+
+// ============================================================
 // RELACIONES
 // ============================================================
 export const usuariosRelations = relations(usuarios, ({ one }) => ({
@@ -443,6 +484,7 @@ export const pacientesRelations = relations(pacientes, ({ many, one }) => ({
   recetas: many(recetas),
   pacienteEventos: many(pacienteEventos),
   tareasPendientes: many(tareasPendientes),
+  listaEspera: many(listaEspera),
   sucursal: one(sucursales, {
     fields: [pacientes.sucursalId],
     references: [sucursales.id],
@@ -464,6 +506,7 @@ export const medicosRelations = relations(medicos, ({ many, one }) => ({
   turnos: many(turnos),
   recetas: many(recetas),
   servicios: many(servicios),
+  listaEspera: many(listaEspera),
   sucursal: one(sucursales, {
     fields: [medicos.sucursalId],
     references: [sucursales.id],
@@ -616,6 +659,7 @@ export const sucursalesRelations = relations(sucursales, ({ one, many }) => ({
   pacientes: many(pacientes),
   turnos: many(turnos),
   horariosAtencion: many(horariosAtencion),
+  listaEspera: many(listaEspera),
 }));
 
 // ============================================================
@@ -726,5 +770,38 @@ export const consentimientoLogRelations = relations(consentimientoLog, ({ one })
   paciente: one(pacientes, {
     fields: [consentimientoLog.pacienteId],
     references: [pacientes.id],
+  }),
+}));
+
+// ─── Types ──────────────────────────────────────────────
+export type ListaEspera = InferSelectModel<typeof listaEspera>;
+export type NewListaEspera = InferInsertModel<typeof listaEspera>;
+export type OfertaTurno = InferSelectModel<typeof ofertasTurno>;
+export type NewOfertaTurno = InferInsertModel<typeof ofertasTurno>;
+
+export const listaEsperaRelations = relations(listaEspera, ({ one, many }) => ({
+  paciente: one(pacientes, {
+    fields: [listaEspera.pacienteId],
+    references: [pacientes.id],
+  }),
+  medico: one(medicos, {
+    fields: [listaEspera.medicoId],
+    references: [medicos.id],
+  }),
+  sucursal: one(sucursales, {
+    fields: [listaEspera.sucursalId],
+    references: [sucursales.id],
+  }),
+  ofertas: many(ofertasTurno),
+}));
+
+export const ofertasTurnoRelations = relations(ofertasTurno, ({ one }) => ({
+  listaEspera: one(listaEspera, {
+    fields: [ofertasTurno.listaEsperaId],
+    references: [listaEspera.id],
+  }),
+  turno: one(turnos, {
+    fields: [ofertasTurno.turnoId],
+    references: [turnos.id],
   }),
 }));

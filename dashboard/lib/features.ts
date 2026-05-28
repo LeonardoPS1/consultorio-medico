@@ -36,7 +36,8 @@ export type FeatureId =
   | 'api-publica'
   | 'portal-paciente'
   | 'multi-sucursal'
-  | 'encuestas';
+  | 'encuestas'
+  | 'lista-espera';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -66,6 +67,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'portal-paciente': 'starter',
   'multi-sucursal': 'enterprise',
   'encuestas': 'starter',
+  'lista-espera': 'professional',
 };
 
 // ============================================================

@@ -22,6 +22,13 @@
       "when": 1779284577377,
       "tag": "0002_lovely_sasquatch",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1748446400000,
+      "tag": "0014_lista_espera_ofertas",
+      "breakpoints": true
     }
   ]
 }

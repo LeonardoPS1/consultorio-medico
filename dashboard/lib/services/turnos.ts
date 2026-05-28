@@ -1,9 +1,10 @@
 import { db } from '@/lib/db';
-import { turnos, pacientes, medicos, bloqueosAgenda } from '@/drizzle/schema';
+import { turnos, pacientes, medicos, bloqueosAgenda, ofertasTurno } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, gte, lt } from 'drizzle-orm';
 import type { CreateTurno, UpdateTurno } from '@/lib/validations';
 import { conflict, notFound, fail } from '@/lib/api-handler';
 import { buildGCalPayload, syncTurnoToGCal } from '@/lib/google-calendar-sync';
+import { waitlistService } from '@/lib/services/waitlist';
 
 export const turnosService = {
   async list(fechaStr: string, estado?: string, medico?: string, tipo?: string, search?: string, limit = 100, offset = 0, sucursalId?: string) {
@@ -147,55 +148,73 @@ export const turnosService = {
 
      const turnoActualizado = (await db.update(turnos).set(data).where(eq(turnos.id, id)).returning())[0];
 
-     // Disparar sync a Google Calendar si hubo cambios relevantes (fire-and-forget)
-     try {
-        // Solo sync si cambió fechaHora, estado, o si se está cancelando
-        const camposRelevantes = ['fecha', 'hora', 'estado'];
-        const hayCambiosRelevantes = camposRelevantes.some(campo => (input as any)[campo] !== undefined);
-       
-       if (hayCambiosRelevantes) {
-         const [paciente] = await db
-           .select({ nombre: pacientes.nombre, apellido: pacientes.apellido, telefono: pacientes.telefono })
-           .from(pacientes)
-           .where(and(eq(pacientes.id, turnoActualizado.pacienteId), sql`${pacientes.deletedAt} IS NULL`))
-           .limit(1);
+      // Disparar sync a Google Calendar si hubo cambios relevantes (fire-and-forget)
+      try {
+         // Solo sync si cambió fechaHora, estado, o si se está cancelando
+         const camposRelevantes = ['fecha', 'hora', 'estado'];
+         const hayCambiosRelevantes = camposRelevantes.some(campo => (input as any)[campo] !== undefined);
+        
+        if (hayCambiosRelevantes) {
+          const [paciente] = await db
+            .select({ nombre: pacientes.nombre, apellido: pacientes.apellido, telefono: pacientes.telefono })
+            .from(pacientes)
+            .where(and(eq(pacientes.id, turnoActualizado.pacienteId), sql`${pacientes.deletedAt} IS NULL`))
+            .limit(1);
 
-         const [medico] = await db
-           .select({ nombre: medicos.nombre })
-           .from(medicos)
-           .where(and(eq(medicos.id, turnoActualizado.medicoId), sql`${medicos.deletedAt} IS NULL`))
-           .limit(1);
+          const [medico] = await db
+            .select({ nombre: medicos.nombre })
+            .from(medicos)
+            .where(and(eq(medicos.id, turnoActualizado.medicoId), sql`${medicos.deletedAt} IS NULL`))
+            .limit(1);
 
-         const fechaHoraStr = turnoActualizado.fechaHora instanceof Date
-           ? turnoActualizado.fechaHora.toISOString()
-           : new Date(turnoActualizado.fechaHora).toISOString();
+          const fechaHoraStr = turnoActualizado.fechaHora instanceof Date
+            ? turnoActualizado.fechaHora.toISOString()
+            : new Date(turnoActualizado.fechaHora).toISOString();
 
-         const pacienteNombre = paciente ? `${paciente.nombre} ${paciente.apellido}`.trim() : 'Paciente';
-         const medicoNombre = medico?.nombre;
+          const pacienteNombre = paciente ? `${paciente.nombre} ${paciente.apellido}`.trim() : 'Paciente';
+          const medicoNombre = medico?.nombre;
 
-         // Determinar la acción según el estado
-         const gcalAction = turnoActualizado.estado === 'cancelada'
-           ? 'delete' as const
-           : turnoActualizado.googleCalendarEventId
-             ? 'update' as const
-             : 'create' as const;
+          // Determinar la acción según el estado
+          const gcalAction = turnoActualizado.estado === 'cancelada'
+            ? 'delete' as const
+            : turnoActualizado.googleCalendarEventId
+              ? 'update' as const
+              : 'create' as const;
 
-         const payload = buildGCalPayload({
-           action: gcalAction,
-           turnoId: turnoActualizado.id,
-           googleCalendarEventId: turnoActualizado.googleCalendarEventId,
-           fechaHora: fechaHoraStr,
-           duracionMinutos: turnoActualizado.duracionMinutos,
-           pacienteNombre,
-           pacienteTelefono: paciente?.telefono,
-           medicoNombre,
-           motivo: turnoActualizado.motivo,
-         });
-         syncTurnoToGCal(payload).catch(() => {});
-       }
-     } catch {
-       // No bloquear la actualización si el sync falla
-     }
+          const payload = buildGCalPayload({
+            action: gcalAction,
+            turnoId: turnoActualizado.id,
+            googleCalendarEventId: turnoActualizado.googleCalendarEventId,
+            fechaHora: fechaHoraStr,
+            duracionMinutos: turnoActualizado.duracionMinutos,
+            pacienteNombre,
+            pacienteTelefono: paciente?.telefono,
+            medicoNombre,
+            motivo: turnoActualizado.motivo,
+          });
+          syncTurnoToGCal(payload).catch(() => {});
+        }
+      } catch {
+        // No bloquear la actualización si el sync falla
+      }
+
+      // Si el turno fue cancelado, buscar candidato en lista de espera (fire-and-forget)
+      if (input.estado === 'cancelada') {
+        waitlistService.buscarCandidato(turnoActualizado.medicoId, turnoActualizado.sucursalId || undefined)
+          .then(async (candidato) => {
+            if (!candidato) return;
+
+            // Crear oferta para el candidato
+            const oferta = await waitlistService.crearOferta(candidato.id, turnoActualizado.id);
+
+            // Notificar al paciente vía WhatsApp (fire-and-forget)
+            const { notificarOfertaTurno } = await import('@/lib/whatsapp-waitlist');
+            notificarOfertaTurno(oferta.id, turnoActualizado.id, candidato.id).catch(() => {});
+          })
+          .catch((err) => {
+            console.error('[Waitlist] Error al procesar cancelación:', err);
+          });
+      }
 
       return turnoActualizado;
   },
