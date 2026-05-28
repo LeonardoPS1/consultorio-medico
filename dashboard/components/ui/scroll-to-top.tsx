@@ -38,7 +38,7 @@ export function ScrollToTopButton() {
           animate={{ opacity: 1, scale: 1, x: 0 }}
           exit={{ opacity: 0, scale: 0.8, x: 20 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="fixed bottom-6 right-6 z-50 flex flex-col gap-2"
+          className="fixed right-6 top-1/2 z-40 -translate-y-1/2 flex flex-col gap-2"
         >
           {/* Scroll to top */}
           <button
