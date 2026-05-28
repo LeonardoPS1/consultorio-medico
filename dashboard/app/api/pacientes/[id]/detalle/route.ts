@@ -25,12 +25,44 @@ export async function GET(
     const pacienteId = params.id;
 
     // ─── Datos del paciente ──────────────────────────
+    // Incluimos también deletedAt para saber si ya está dado de baja
     const [paciente] = await db
       .select()
       .from(pacientes)
       .where(and(eq(pacientes.id, pacienteId), sql`${pacientes.deletedAt} IS NULL`));
 
     if (!paciente) {
+      // Podría estar dado de baja — chequeamos con deletedAt
+      const [pacienteDeleted] = await db
+        .select()
+        .from(pacientes)
+        .where(eq(pacientes.id, pacienteId));
+
+      if (pacienteDeleted && pacienteDeleted.deletedAt) {
+        return NextResponse.json({
+          data: {
+            paciente: {
+              ...pacienteDeleted,
+              tags: pacienteDeleted.tags || [],
+              metadata: pacienteDeleted.metadata || {},
+            },
+            turnos: [],
+            recetas: [],
+            historial: [],
+            ultimaConversacion: null,
+            stats: {
+              totalTurnos: 0,
+              totalRecetas: 0,
+              totalHistorial: 0,
+              turnosPorEstado: {},
+              recetasPorEstado: {},
+            },
+            bajaConfirmada: true,
+            bajaSolicitadaAt: pacienteDeleted.bajaSolicitadaAt,
+          },
+        });
+      }
+
       return NextResponse.json(
         { error: 'Paciente no encontrado' },
         { status: 404 },
@@ -144,6 +176,8 @@ export async function GET(
           turnosPorEstado: statsTurnos,
           recetasPorEstado: statsRecetas,
         },
+        bajaSolicitadaAt: paciente.bajaSolicitadaAt || null,
+        bajaConfirmada: false,
       },
     });
   } catch (error) {

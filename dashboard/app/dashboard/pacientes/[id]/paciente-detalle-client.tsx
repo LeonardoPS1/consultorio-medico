@@ -123,6 +123,8 @@ interface Props {
   historial: HistorialRow[];
   ultimaConversacion: { id: string; estado: string } | null;
   stats: Stats;
+  bajaSolicitadaAt?: string | null;
+  bajaConfirmada?: boolean;
 }
 
 // ─── Helpers ──────────────────────────────────────────────
@@ -154,6 +156,8 @@ export function PacienteDetalleClient({
   historial,
   ultimaConversacion,
   stats,
+  bajaSolicitadaAt: initialBajaSolicitadaAt,
+  bajaConfirmada: initialBajaConfirmada,
 }: Props) {
   const router = useRouter();
   const [turnosList, setTurnosList] = useState(turnos);
@@ -185,6 +189,69 @@ export function PacienteDetalleClient({
   const [alergiasEdit, setAlergiasEdit] = useState(paciente.alergias || '');
   const [editandoMedicacion, setEditandoMedicacion] = useState(false);
   const [medicacionEdit, setMedicacionEdit] = useState(paciente.medicacionCronica || '');
+
+  // ─── Baja de datos (ARCO) ──────────────────────
+  const [bajaDialogOpen, setBajaDialogOpen] = useState(false);
+  const [bajaConfirmOpen, setBajaConfirmOpen] = useState(false);
+  const [bajaLoading, setBajaLoading] = useState(false);
+  const [bajaSolicitada, setBajaSolicitada] = useState(!!initialBajaSolicitadaAt);
+  const [bajaConfirmada, setBajaConfirmada] = useState(!!initialBajaConfirmada);
+
+  const handleSolicitarBaja = async () => {
+    setBajaLoading(true);
+    try {
+      const res = await fetch(`/api/pacientes/${paciente.id}/solicitar-baja`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al solicitar la baja');
+      }
+      setBajaSolicitada(true);
+      setBajaDialogOpen(false);
+      toast({
+        title: 'Solicitud registrada',
+        description: 'Los datos se conservarán por 90 días antes de ser anonimizados.',
+      });
+    } catch (e) {
+      toast({
+        title: 'Error',
+        description: (e as Error).message,
+        variant: 'destructive',
+      });
+    } finally {
+      setBajaLoading(false);
+    }
+  };
+
+  const handleConfirmarBaja = async () => {
+    setBajaLoading(true);
+    try {
+      const res = await fetch(`/api/pacientes/${paciente.id}/confirmar-baja`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al confirmar la baja');
+      }
+      setBajaConfirmada(true);
+      setBajaConfirmOpen(false);
+      toast({
+        title: 'Baja confirmada',
+        description: 'Los datos del paciente han sido anonimizados irreversiblemente.',
+      });
+    } catch (e) {
+      toast({
+        title: 'Error',
+        description: (e as Error).message,
+        variant: 'destructive',
+      });
+    } finally {
+      setBajaLoading(false);
+    }
+  };
 
   const handleEstadoTurno = async (id: string, nuevoEstado: string) => {
     setTurnosList((prev) =>
@@ -456,6 +523,16 @@ export function PacienteDetalleClient({
                     <CheckCircle2 className="h-3 w-3 mr-1" /> WhatsApp OK
                   </Badge>
                 )}
+                {bajaSolicitada && (
+                  <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
+                    <AlertCircle className="h-3 w-3 mr-1" /> Baja solicitada
+                  </Badge>
+                )}
+                {bajaConfirmada && (
+                  <Badge variant="outline" className="text-xs text-red-600 border-red-300">
+                    <XCircle className="h-3 w-3 mr-1" /> Datos anonimizados
+                  </Badge>
+                )}
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
@@ -465,6 +542,18 @@ export function PacienteDetalleClient({
               <Button size="sm">
                 <Calendar className="h-4 w-4 mr-2" /> Nuevo Turno
               </Button>
+              {!bajaConfirmada && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                  onClick={() => (bajaSolicitada ? setBajaConfirmOpen(true) : setBajaDialogOpen(true))}
+                  disabled={bajaLoading}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {bajaSolicitada ? 'Confirmar baja' : 'Solicitar baja'}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -1131,7 +1220,66 @@ export function PacienteDetalleClient({
         </DialogContent>
       </Dialog>
 
-      {/* ─── Delete Confirmation ──────────────── */}
+      {/* ─── Baja — Solicitar (Primer paso) ───── */}
+      <AlertDialog open={bajaDialogOpen} onOpenChange={(open) => !open && !bajaLoading && setBajaDialogOpen(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Solicitar baja de datos</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Se va a iniciar el proceso de baja de datos de <strong>{paciente.nombre} {paciente.apellido}</strong>.</p>
+              <ul className="list-disc pl-4 text-sm space-y-1">
+                <li>El paciente quedará marcado como <strong>baja solicitada</strong></li>
+                <li>Los datos clínicos se conservarán por <strong>90 días</strong> (período de retención legal)</li>
+                <li>Luego del período de retención, los datos se <strong>anonimizarán irreversiblemente</strong></li>
+                <li>Se notificará al sistema de automatización (n8n) para limpiar datos asociados</li>
+              </ul>
+              <p className="text-xs text-muted-foreground mt-2">
+                Esta acción cumple con los derechos ARCO (Acceso, Rectificación, Cancelación, Oposición).
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bajaLoading}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSolicitarBaja}
+              disabled={bajaLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {bajaLoading ? 'Procesando...' : 'Solicitar baja'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ─── Baja — Confirmar (Segundo paso) ──── */}
+      <AlertDialog open={bajaConfirmOpen} onOpenChange={(open) => !open && !bajaLoading && setBajaConfirmOpen(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">¿Confirmar baja definitiva?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Esta acción es <strong>irreversible</strong>. Se ejecutará la cascada completa de eliminación:</p>
+              <ul className="list-disc pl-4 text-sm space-y-1">
+                <li>Anonimización de datos personales (nombre, email, teléfono, documento)</li>
+                <li>Soft-delete en cascada de: turnos, recetas, conversaciones, mensajes</li>
+                <li>Soft-delete de historial médico, eventos y tareas pendientes</li>
+                <li>Notificación al sistema para limpiar memoria del chat (n8n)</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bajaLoading}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmarBaja}
+              disabled={bajaLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {bajaLoading ? 'Procesando...' : 'Confirmar baja definitiva'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ─── Delete Confirmation (historial) ───── */}
       <AlertDialog open={!!deleteHistorialId} onOpenChange={(open) => !open && setDeleteHistorialId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

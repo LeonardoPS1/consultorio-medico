@@ -93,6 +93,11 @@ export const privacidadService = {
 
     if (!paciente) notFound('Paciente no encontrado');
 
+    // Marcar bajaSolicitadaAt en el paciente
+    await db.update(pacientes)
+      .set({ bajaSolicitadaAt: new Date() })
+      .where(eq(pacientes.id, pacienteId));
+
     // Registrar solicitud de baja en consentimiento_log
     const consent = await this.registrarConsentimiento({
       pacienteId,

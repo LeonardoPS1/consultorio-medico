@@ -113,6 +113,7 @@ export const pacientes = pgTable('pacientes', {
   metadata: jsonb('metadata').default({}),
   portalToken: varchar('portal_token', { length: 255 }),
   portalTokenExpires: timestamp('portal_token_expires', { withTimezone: true }),
+  bajaSolicitadaAt: timestamp('baja_solicitada_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
