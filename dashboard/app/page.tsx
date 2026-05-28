@@ -10,6 +10,7 @@ import { ContactForm } from '@/components/landing/contact-form';
 import { CTASection } from '@/components/landing/cta-section';
 import { Footer } from '@/components/landing/footer';
 import { WhatsAppFloat } from '@/components/landing/whatsapp-float';
+import { CookieConsentBanner } from '@/components/landing/cookie-consent';
 
 export default function LandingPage() {
   return (
@@ -27,6 +28,7 @@ export default function LandingPage() {
         <CTASection />
       </main>
       <Footer />
+      <CookieConsentBanner />
       <WhatsAppFloat />
     </div>
   );
