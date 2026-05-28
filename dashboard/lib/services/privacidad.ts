@@ -22,7 +22,9 @@ import {
   tareasPendientes,
   facturacion,
   auditoriaAccesos,
+  tenants,
 } from '@/drizzle/schema';
+import type { ConfigPrivacidad } from '@/drizzle/schema';
 import { eq, and, sql, inArray } from 'drizzle-orm';
 import { notFound } from '@/lib/api-handler';
 import { anonymizeNombre, anonymizeEmail, anonymizeTelefono, anonymizeDocumento } from '@/lib/anonymize';
@@ -43,8 +45,34 @@ export interface RegistrarConsentimientoInput {
 
 // ─── Constantes ──────────────────────────────────────────────────
 
-/** Período de retención post-baja antes de anonimización definitiva (en días) */
-export const PERIODO_RETENCION_BAJA_DIAS = 90;
+const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
+const PERIODO_RETENCION_DEFAULT = 90;
+
+/**
+ * Obtiene el período de retención configurado en la DB del tenant.
+ * Fallback a 90 días si no hay configuración.
+ */
+export async function getPeriodoRetencionConfig(): Promise<number> {
+  try {
+    const [tenant] = await db
+      .select({ configPrivacidad: tenants.configPrivacidad })
+      .from(tenants)
+      .where(eq(tenants.id, DEFAULT_TENANT_ID))
+      .limit(1);
+    if (tenant?.configPrivacidad) {
+      const cfg = tenant.configPrivacidad as ConfigPrivacidad;
+      if (cfg.periodoRetencionBajaDias && cfg.periodoRetencionBajaDias > 0) {
+        return cfg.periodoRetencionBajaDias;
+      }
+    }
+  } catch {
+    // Si falla la lectura de DB, usar default
+  }
+  return PERIODO_RETENCION_DEFAULT;
+}
+
+/** Período de retención post-baja antes de anonimización definitiva (en días) — default, usar getPeriodoRetencionConfig() para valor actual */
+export const PERIODO_RETENCION_BAJA_DIAS = PERIODO_RETENCION_DEFAULT;
 
 // ─── Service ─────────────────────────────────────────────────────
 

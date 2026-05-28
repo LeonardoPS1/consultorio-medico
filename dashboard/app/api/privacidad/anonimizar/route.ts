@@ -13,7 +13,7 @@
 
 import { NextRequest } from 'next/server';
 import { apiHandler, success } from '@/lib/api-handler';
-import { privacidadService, PERIODO_RETENCION_BAJA_DIAS } from '@/lib/services/privacidad';
+import { privacidadService, getPeriodoRetencionConfig, PERIODO_RETENCION_BAJA_DIAS } from '@/lib/services/privacidad';
 
 export const POST = apiHandler(async (request: NextRequest) => {
   // Verificar webhook secret
@@ -23,7 +23,8 @@ export const POST = apiHandler(async (request: NextRequest) => {
   }
 
   const body = await request.json().catch(() => ({}));
-  const dias = body.dias || PERIODO_RETENCION_BAJA_DIAS;
+  // Usar el valor enviado, o el configurado en DB, o el default (90)
+  const dias = body.dias ?? (await getPeriodoRetencionConfig()) ?? PERIODO_RETENCION_BAJA_DIAS;
 
   const fechaLimite = new Date();
   fechaLimite.setDate(fechaLimite.getDate() - dias);

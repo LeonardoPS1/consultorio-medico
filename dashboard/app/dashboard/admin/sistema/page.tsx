@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams, useRouter, redirect } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Brain, Link, Shield, Key } from 'lucide-react';
+import { Settings, Brain, Link, Shield, Key, Lock } from 'lucide-react';
 import SistemaTab from '@/components/configuracion/sistema-tab';
 
 const SYSTEM_TABS = [
@@ -13,6 +13,7 @@ const SYSTEM_TABS = [
   { id: 'integraciones', label: 'Integraciones', icon: Link },
   { id: 'credenciales', label: 'Credenciales', icon: Shield },
   { id: 'apikeys', label: 'API Keys', icon: Key },
+  { id: 'privacidad', label: 'Privacidad', icon: Lock },
 ] as const;
 
 const VALID_TABS = SYSTEM_TABS.map(t => t.id);

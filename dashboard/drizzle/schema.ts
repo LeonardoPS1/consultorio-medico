@@ -525,6 +525,10 @@ export const tareasPendientesRelations = relations(tareasPendientes, ({ one }) =
 // ============================================================
 // TENANTS (multi-tenant)
 // ============================================================
+export interface ConfigPrivacidad {
+  periodoRetencionBajaDias: number;
+}
+
 export const tenants = pgTable('tenants', {
   id: uuid('id').defaultRandom().primaryKey(),
   nombre: varchar('nombre', { length: 255 }).notNull(),
@@ -533,6 +537,7 @@ export const tenants = pgTable('tenants', {
   colores: jsonb('colores').default({ primary: '#2563eb' }),
   activo: boolean('activo').notNull().default(true),
   featuresEnabled: jsonb('features_enabled').default({} as Record<string, boolean>),
+  configPrivacidad: jsonb('config_privacidad').default({ periodoRetencionBajaDias: 90 } satisfies ConfigPrivacidad),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });

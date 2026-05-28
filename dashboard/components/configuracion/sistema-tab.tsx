@@ -26,7 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { Save, Loader2, Settings, Brain, Link, Key, Shield } from 'lucide-react';
+import { Save, Loader2, Settings, Brain, Link, Key, Shield, Lock } from 'lucide-react';
 import IntegracionesDashboard from '@/components/configuracion/integraciones-dashboard';
 import CredencialesTab from '@/components/configuracion/credenciales-tab';
 import ApiKeysTab from '@/components/configuracion/api-keys-tab';
@@ -78,7 +78,7 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
 
 interface SistemaTabProps {
   isAdmin: boolean;
-  section?: 'toggles' | 'ia' | 'integraciones' | 'credenciales' | 'apikeys';
+  section?: 'toggles' | 'ia' | 'integraciones' | 'credenciales' | 'apikeys' | 'privacidad';
 }
 
 export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
@@ -328,7 +328,126 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
           <ApiKeysTab />
         </CardContent>
       </Card>}
+
+      {/* ─── Privacidad ─────────────────────────────────────── */}
+      {(showAll || section === 'privacidad') && <PrivacidadConfigSection />}
     </div>
+  );
+}
+
+// ─── Privacidad Config Section ─────────────────────────────────
+
+function PrivacidadConfigSection() {
+  const { toast } = useToast();
+  const [config, setConfig] = useState<{ periodoRetencionBajaDias: number }>({
+    periodoRetencionBajaDias: 90,
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/privacidad-config')
+      .then(r => r.json())
+      .then(data => {
+        if (data.config) {
+          setConfig(data.config);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/privacidad-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (res.ok) {
+        toast({ title: 'Configuración guardada', description: 'El período de retención fue actualizado.' });
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: 'Error al guardar', description: err.error || 'Error desconocido', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Error de conexión', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Lock className="h-5 w-5" />
+          Privacidad y Protección de Datos
+        </CardTitle>
+        <CardDescription>
+          Configuración de retención de datos y privacidad según normativa ARCO
+          (Ley 19.628 Chile / Ley 25.326 Argentina / RGPD).
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {loading ? (
+          <div className="flex items-center gap-2 py-4 justify-center">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span className="text-muted-foreground">Cargando configuración...</span>
+          </div>
+        ) : (
+          <>
+            <div className="max-w-sm space-y-2">
+              <Label htmlFor="retencion-dias">
+                Período de retención post-baja (días)
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Tiempo que los datos del paciente se conservan después de
+                confirmar la baja, antes de ser anonimizados permanentemente.
+              </p>
+              <div className="flex items-center gap-3">
+                <Input
+                  id="retencion-dias"
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={config.periodoRetencionBajaDias}
+                  onChange={(e) =>
+                    setConfig((prev) => ({
+                      ...prev,
+                      periodoRetencionBajaDias: parseInt(e.target.value) || 90,
+                    }))
+                  }
+                  className="w-24"
+                />
+                <span className="text-sm text-muted-foreground">días</span>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-primary/10 bg-primary/5 p-4 space-y-2">
+              <h4 className="text-sm font-semibold">¿Cómo funciona?</h4>
+              <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Cuando un paciente solicita la baja, se registra la solicitud y se le notifica</li>
+                <li>Al confirmar la baja, sus datos personales se anonimizan inmediatamente (nombre, email, teléfono, DNI)</li>
+                <li>Los datos clínicos se conservan de forma anonimizada durante el período configurado</li>
+                <li>Pasado ese período, un job automático (n8n WF-09) elimina definitivamente los datos residuales</li>
+                <li>El paciente puede solicitar la portabilidad de sus datos antes de la baja</li>
+              </ul>
+            </div>
+
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-1" />
+              )}
+              Guardar configuración
+            </Button>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
