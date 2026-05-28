@@ -29,6 +29,7 @@ import {
   Trash2,
   Save,
   RotateCcw,
+  Download,
 } from 'lucide-react';
 import { formatPhone, getInitials, formatDate, getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
@@ -250,6 +251,28 @@ export function PacienteDetalleClient({
       });
     } finally {
       setBajaLoading(false);
+    }
+  };
+
+  const handleExportarDatos = async () => {
+    try {
+      const res = await fetch(`/api/pacientes/${paciente.id}/exportar-datos`);
+      if (!res.ok) throw new Error('Error al exportar datos');
+      const data = await res.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `datos-${paciente.nombre}-${paciente.apellido}-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: 'Exportación completa', description: 'Datos exportados en formato JSON.' });
+    } catch (e) {
+      toast({
+        title: 'Error',
+        description: (e as Error).message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -541,6 +564,9 @@ export function PacienteDetalleClient({
               </Button>
               <Button size="sm">
                 <Calendar className="h-4 w-4 mr-2" /> Nuevo Turno
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportarDatos}>
+                <Download className="h-4 w-4 mr-2" /> Exportar datos
               </Button>
               {!bajaConfirmada && (
                 <Button
