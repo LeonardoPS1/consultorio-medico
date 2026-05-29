@@ -85,6 +85,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             name: user.nombre,
             role: user.rol,
             plan: user.plan || 'free',
+            medicoId: user.medicoId,
           };
         } catch (error) {
           if (error instanceof Error) {
@@ -102,16 +103,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = user.role;
         token.id = user.id;
         token.plan = user.plan;
+        token.medicoId = user.medicoId;
       }
-      // Refrescar plan desde DB para que cambios post-pago apliquen sin re-login
+      // Refrescar plan y medicoId desde DB para que cambios post-pago apliquen sin re-login
       if (token.email && !user) {
         try {
           const dbUser = await getUserByEmail(token.email);
-          if (dbUser && dbUser.plan) {
-            token.plan = dbUser.plan;
+          if (dbUser) {
+            if (dbUser.plan) token.plan = dbUser.plan;
+            if (dbUser.medicoId) token.medicoId = dbUser.medicoId;
           }
         } catch {
-          // Si falla la consulta, mantenemos el plan actual del token
+          // Si falla la consulta, mantenemos los valores actuales del token
         }
       }
       return token;
@@ -121,6 +124,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role = token.role;
         if (token.id) session.user.id = token.id;
         if (token.plan) session.user.plan = token.plan;
+        if (token.medicoId) session.user.medicoId = token.medicoId;
       }
       return session;
     },

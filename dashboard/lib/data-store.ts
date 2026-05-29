@@ -8,7 +8,7 @@
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
 import { pacientes, conversaciones, mensajes, usuarios, medicos, tenants } from '@/drizzle/schema';
-import { eq, and, or, like, sql, desc, count, gte, lte, asc } from 'drizzle-orm';
+import { eq, and, or, like, sql, desc, count, gte, lte, asc, isNull } from 'drizzle-orm';
 
 // ============================================================
 // Tipos compartidos
@@ -45,6 +45,7 @@ export interface UsuarioData {
   rol: string;
   activo: boolean;
   plan?: string;
+  medicoId?: string;
   ultimoAcceso?: string;
   secreto2fa?: string | null;
   activo2fa?: boolean;
@@ -161,7 +162,7 @@ export async function createPaciente(data: Omit<PacienteData, 'id' | 'createdAt'
 // ============================================================
 
 export async function getConversaciones(
-  options?: { estado?: string; canal?: string; search?: string; limit?: number; offset?: number }
+  options?: { estado?: string; canal?: string; search?: string; limit?: number; offset?: number; medicoId?: string }
 ): Promise<ConversacionData[]> {
   let query: any = db
     .select({
@@ -189,6 +190,9 @@ export async function getConversaciones(
         like(conversaciones.ultimoMensaje, `%${options.search}%`)
       )
     );
+  }
+  if (options?.medicoId) {
+    conditions.push(eq(conversaciones.medicoId, options.medicoId));
   }
 
   if (conditions.length > 0) {
@@ -598,6 +602,19 @@ export async function getUserByEmail(email: string): Promise<UsuarioData | null>
   if (result.length === 0) return null;
   const u = result[0];
   if (!u.activo) return null;
+
+  let medicoId: string | undefined;
+  try {
+    const [medico] = await db
+      .select({ id: medicos.id })
+      .from(medicos)
+      .where(and(eq(medicos.usuarioId, u.id), isNull(medicos.deletedAt)))
+      .limit(1);
+    if (medico) medicoId = medico.id;
+  } catch {
+    // Tabla medicos puede no existir aún en entornos muy nuevos
+  }
+
   return {
     id: u.id,
     email: u.email,
@@ -606,6 +623,7 @@ export async function getUserByEmail(email: string): Promise<UsuarioData | null>
     rol: u.rol,
     activo: u.activo,
     plan: u.plan || 'free',
+    medicoId,
     ultimoAcceso: u.ultimoAcceso?.toISOString(),
     createdAt: u.createdAt.toISOString(),
     updatedAt: u.updatedAt.toISOString(),

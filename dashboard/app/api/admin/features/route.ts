@@ -24,6 +24,7 @@ const ALL_FEATURES = [
   'ia-assistant','plantillas','2fa','equipo','integraciones',
   'auditoria','backup-encriptado','webhooks-log','credenciales',
   'api-publica','portal-paciente','multi-sucursal','encuestas',
+  'lista-espera','n8n-monitor',
 ];
 
 // ─── GET ─────────────────────────────────────────────────────

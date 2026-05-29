@@ -7,6 +7,7 @@ import {
   createPaciente,
   seedDataIfEmpty,
 } from '@/lib/data-store';
+import { auth } from '@/lib/auth';
 
 /**
  * GET /api/conversaciones
@@ -20,6 +21,10 @@ import {
  */
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    const sessionMedicoId = (session?.user as any)?.medicoId;
+    const sessionRol = (session?.user as any)?.role;
+
     const { searchParams } = new URL(request.url);
     const estado = searchParams.get('estado') || undefined;
     const canal = searchParams.get('canal') || undefined;
@@ -30,7 +35,8 @@ export async function GET(request: NextRequest) {
     // Auto-seed si está vacío (primera vez)
     await seedDataIfEmpty();
 
-    const conversaciones = await getConversaciones({ estado, canal, search, limit, offset });
+    const medicoIdFilter = sessionRol === 'medico' ? sessionMedicoId : undefined;
+    const conversaciones = await getConversaciones({ estado, canal, search, limit, offset, medicoId: medicoIdFilter });
 
     return NextResponse.json({
       data: conversaciones,

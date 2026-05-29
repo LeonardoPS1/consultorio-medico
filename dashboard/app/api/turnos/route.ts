@@ -10,12 +10,17 @@ import { apiHandler, created } from '@/lib/api-handler';
 import { parseBody } from '@/lib/validations';
 import { createTurnoSchema } from '@/lib/validations';
 import { turnosService } from '@/lib/services/turnos';
+import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { buildGCalPayload } from '@/lib/google-calendar-sync';
 
 export const GET = apiHandler(async (request: NextRequest) => {
+  const session = await auth();
+  const sessionMedicoId = (session?.user as any)?.medicoId;
+  const sessionRol = (session?.user as any)?.role;
+
   const { searchParams } = new URL(request.url);
   const fechaStr = searchParams.get('fecha') || new Date().toISOString().split('T')[0];
   const estado = searchParams.get('estado') || undefined;
@@ -26,7 +31,8 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0;
   const sucursalId = searchParams.get('sucursalId') || undefined;
 
-  const result = await turnosService.list(fechaStr, estado, medico, tipo, search, limit, offset, sucursalId);
+  const medicoIdFilter = sessionRol === 'medico' ? sessionMedicoId : undefined;
+  const result = await turnosService.list(fechaStr, estado, medico, tipo, search, limit, offset, sucursalId, medicoIdFilter);
   return NextResponse.json(result);
 });
 

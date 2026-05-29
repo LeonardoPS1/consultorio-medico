@@ -24,6 +24,7 @@ import {
   Webhook,
   ScrollText,
   HardDrive,
+  Network,
   X,
   Star,
   Rocket,
@@ -315,6 +316,20 @@ export function Sidebar() {
                 >
                   <HardDrive className="h-5 w-5 shrink-0" />
                   {!collapsed && <span className="flex-1 truncate">Backups</span>}
+                </Link>
+                <Link
+                  href="/dashboard/admin/n8n"
+                  onClick={closeMobile}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    pathname === '/dashboard/admin/n8n' || pathname.startsWith('/dashboard/admin/n8n/')
+                      ? 'bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                  )}
+                  title={collapsed ? 'n8n' : undefined}
+                >
+                  <Network className="h-5 w-5 shrink-0" />
+                  {!collapsed && <span className="flex-1 truncate">n8n</span>}
                 </Link>
                 <Link
                   href="/dashboard/webhooks"

@@ -7,12 +7,14 @@ declare module 'next-auth' {
       id?: string;
       role?: string;
       plan?: string;
+      medicoId?: string;
     } & DefaultSession['user'];
   }
 
   interface User {
     role?: string;
     plan?: string;
+    medicoId?: string;
   }
 }
 
@@ -21,5 +23,6 @@ declare module 'next-auth/jwt' {
     role?: string;
     id?: string;
     plan?: string;
+    medicoId?: string;
   }
 }

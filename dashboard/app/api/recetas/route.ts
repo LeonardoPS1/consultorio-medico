@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { recetas, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql, count, like, or } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
 
 /**
  * GET /api/recetas
@@ -16,6 +17,11 @@ import { eq, and, sql, count, like, or } from 'drizzle-orm';
  */
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    const sessionMedicoId = (session?.user as any)?.medicoId;
+    const sessionRol = (session?.user as any)?.role;
+    const isMedico = sessionRol === 'medico' && !!sessionMedicoId;
+
     const { searchParams } = new URL(request.url);
     const estado = searchParams.get('estado') || undefined;
     const search = searchParams.get('search') || undefined;
@@ -29,23 +35,24 @@ export async function GET(request: NextRequest) {
     // Condiciones
     const whereConditions = and(
       estado ? eq(recetas.estado, estado) : undefined,
+      isMedico ? eq(recetas.medicoId, sessionMedicoId) : undefined,
     );
 
     // Contar recetas por estado
     const [{ activas }] = await db
       .select({ activas: count() })
       .from(recetas)
-      .where(and(eq(recetas.estado, 'activa')));
+      .where(and(eq(recetas.estado, 'activa'), isMedico ? eq(recetas.medicoId, sessionMedicoId) : undefined));
 
     const [{ vencidas }] = await db
       .select({ vencidas: count() })
       .from(recetas)
-      .where(and(eq(recetas.estado, 'vencida')));
+      .where(and(eq(recetas.estado, 'vencida'), isMedico ? eq(recetas.medicoId, sessionMedicoId) : undefined));
 
     const [{ historial }] = await db
       .select({ historial: count() })
       .from(recetas)
-      .where(and(eq(recetas.estado, 'historial')));
+      .where(and(eq(recetas.estado, 'historial'), isMedico ? eq(recetas.medicoId, sessionMedicoId) : undefined));
 
     const [{ total }] = await db
       .select({ total: count() })
@@ -159,16 +166,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Si no se especifica médico, usar el primero disponible
+    // Si no se especifica médico, usar el del usuario logueado o el primero disponible
     let medicoFinal = medicoId;
     if (!medicoFinal) {
-      const primerMedico = await db
-        .select({ id: medicos.id })
-        .from(medicos)
-        .where(sql`${medicos.deletedAt} IS NULL`)
-        .limit(1);
-      if (primerMedico.length > 0) {
-        medicoFinal = primerMedico[0].id;
+      const session = await auth();
+      const sessionMedicoId = (session?.user as any)?.medicoId;
+      const sessionRol = (session?.user as any)?.role;
+      if (sessionRol === 'medico' && sessionMedicoId) {
+        medicoFinal = sessionMedicoId;
+      } else {
+        const primerMedico = await db
+          .select({ id: medicos.id })
+          .from(medicos)
+          .where(sql`${medicos.deletedAt} IS NULL`)
+          .limit(1);
+        if (primerMedico.length > 0) {
+          medicoFinal = primerMedico[0].id;
+        }
       }
     }
 

@@ -37,7 +37,8 @@ export type FeatureId =
   | 'portal-paciente'
   | 'multi-sucursal'
   | 'encuestas'
-  | 'lista-espera';
+  | 'lista-espera'
+  | 'n8n-monitor';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -68,6 +69,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'multi-sucursal': 'enterprise',
   'encuestas': 'starter',
   'lista-espera': 'professional',
+  'n8n-monitor': 'premium',
 };
 
 // ============================================================

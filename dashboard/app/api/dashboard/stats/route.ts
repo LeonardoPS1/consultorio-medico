@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { turnos, pacientes, conversaciones, pacienteEventos, mensajes } from '@/drizzle/schema';
 import { eq, and, gte, lte, lt, desc, sql, count, avg, ne, isNotNull } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +19,11 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: Request) {
   try {
+    const session = await auth();
+    const sessionMedicoId = (session?.user as any)?.medicoId;
+    const sessionRol = (session?.user as any)?.role;
+    const isMedico = sessionRol === 'medico' && !!sessionMedicoId;
+
     const { searchParams } = new URL(request.url);
     const sucursalId = searchParams.get('sucursalId') || undefined;
     const now = new Date();
@@ -31,6 +37,7 @@ export async function GET(request: Request) {
     // Helper para filtro sucursal
     const sucFiltro = sucursalId ? [eq(turnos.sucursalId, sucursalId)] : [];
     const sucFiltroPac = sucursalId ? [eq(pacientes.sucursalId, sucursalId)] : [];
+    const medicoFiltro = isMedico ? [eq(turnos.medicoId, sessionMedicoId)] : [];
 
     // 1. Turnos de hoy
     const turnosHoy = await db
@@ -42,6 +49,7 @@ export async function GET(request: Request) {
           lt(turnos.fechaHora, todayEnd),
           sql`${turnos.deletedAt} IS NULL`,
           ...sucFiltro,
+          ...medicoFiltro,
         )
       );
 
@@ -56,6 +64,7 @@ export async function GET(request: Request) {
           lt(turnos.fechaHora, todayStart),
           sql`${turnos.deletedAt} IS NULL`,
           ...sucFiltro,
+          ...medicoFiltro,
         )
       );
 
@@ -68,6 +77,9 @@ export async function GET(request: Request) {
           gte(pacientes.createdAt, sevenDaysAgo),
           sql`${pacientes.deletedAt} IS NULL`,
           ...sucFiltroPac,
+          isMedico
+            ? sql`EXISTS (SELECT 1 FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.medicoId} = ${sessionMedicoId} AND ${turnos.deletedAt} IS NULL)`
+            : undefined,
         )
       );
 
@@ -82,6 +94,9 @@ export async function GET(request: Request) {
           lt(pacientes.createdAt, sevenDaysAgo),
           sql`${pacientes.deletedAt} IS NULL`,
           ...sucFiltroPac,
+          isMedico
+            ? sql`EXISTS (SELECT 1 FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.medicoId} = ${sessionMedicoId} AND ${turnos.deletedAt} IS NULL)`
+            : undefined,
         )
       );
 
@@ -93,7 +108,8 @@ export async function GET(request: Request) {
         and(
           eq(conversaciones.estado, 'activa'),
           sql`${conversaciones.optOut} = false`,
-          sql`${conversaciones.deletedAt} IS NULL`
+          sql`${conversaciones.deletedAt} IS NULL`,
+          isMedico ? eq(conversaciones.medicoId, sessionMedicoId) : undefined,
         )
       );
 
@@ -117,7 +133,10 @@ export async function GET(request: Request) {
       .where(
         and(
           eq(mensajes.rol, 'paciente'),
-          gte(mensajes.createdAt, todayStart)
+          gte(mensajes.createdAt, todayStart),
+          isMedico
+            ? sql`EXISTS (SELECT 1 FROM conversaciones c WHERE c.id = ${mensajes.conversacionId} AND c.medico_id = ${sessionMedicoId})`
+            : undefined,
         )
       );
 
@@ -128,7 +147,10 @@ export async function GET(request: Request) {
       .where(
         and(
           eq(mensajes.rol, 'paciente'),
-          gte(mensajes.createdAt, thirtyDaysAgo)
+          gte(mensajes.createdAt, thirtyDaysAgo),
+          isMedico
+            ? sql`EXISTS (SELECT 1 FROM conversaciones c WHERE c.id = ${mensajes.conversacionId} AND c.medico_id = ${sessionMedicoId})`
+            : undefined,
         )
       );
 
@@ -138,7 +160,10 @@ export async function GET(request: Request) {
       .where(
         and(
           eq(mensajes.rol, 'asistente_ia'),
-          gte(mensajes.createdAt, thirtyDaysAgo)
+          gte(mensajes.createdAt, thirtyDaysAgo),
+          isMedico
+            ? sql`EXISTS (SELECT 1 FROM conversaciones c WHERE c.id = ${mensajes.conversacionId} AND c.medico_id = ${sessionMedicoId})`
+            : undefined,
         )
       );
 
@@ -273,6 +298,7 @@ export async function GET(request: Request) {
             lt(turnos.fechaHora, todayEnd),
             sql`${turnos.deletedAt} IS NULL`,
             ...sucFiltro,
+            isMedico ? eq(turnos.medicoId, sessionMedicoId) : undefined,
           )
         )
         .orderBy(turnos.fechaHora)
@@ -338,7 +364,12 @@ export async function GET(request: Request) {
         .from(mensajes)
         .leftJoin(conversaciones, eq(mensajes.conversacionId, conversaciones.id))
         .leftJoin(pacientes, eq(conversaciones.pacienteId, pacientes.id))
-        .where(eq(mensajes.rol, 'paciente'))
+        .where(
+          and(
+            eq(mensajes.rol, 'paciente'),
+            isMedico ? eq(conversaciones.medicoId, sessionMedicoId) : undefined,
+          )
+        )
         .orderBy(desc(mensajes.createdAt))
         .limit(5);
 
@@ -372,7 +403,8 @@ export async function GET(request: Request) {
         .where(
           and(
             eq(conversaciones.estado, 'activa'),
-            sql`${conversaciones.deletedAt} IS NULL`
+            sql`${conversaciones.deletedAt} IS NULL`,
+            isMedico ? eq(conversaciones.medicoId, sessionMedicoId) : undefined,
           )
         );
       conversacionesActivas = Number(convActivas[0]?.total ?? 0);

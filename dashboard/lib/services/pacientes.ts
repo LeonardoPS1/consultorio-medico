@@ -13,7 +13,15 @@ import { privacidadService } from '@/lib/services/privacidad';
 
 export const pacientesService = {
   /** Listar pacientes con búsqueda y stats */
-  async list(search?: string, limit = 100, offset = 0, sucursalId?: string) {
+  async list(search?: string, limit = 100, offset = 0, sucursalId?: string, medicoId?: string) {
+    const turnoJoin = medicoId
+      ? sql`EXISTS (SELECT 1 FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.medicoId} = ${medicoId} AND ${turnos.deletedAt} IS NULL)`
+      : sql`EXISTS (SELECT 1 FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.deletedAt} IS NULL)`;
+
+    const noTurnoJoin = medicoId
+      ? sql`NOT EXISTS (SELECT 1 FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.medicoId} = ${medicoId} AND ${turnos.deletedAt} IS NULL)`
+      : sql`NOT EXISTS (SELECT 1 FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.deletedAt} IS NULL)`;
+
     const whereConditions = and(
       sql`${pacientes.deletedAt} IS NULL`,
       search
@@ -33,7 +41,7 @@ export const pacientesService = {
       .from(pacientes)
       .where(and(
         sql`${pacientes.deletedAt} IS NULL`,
-        sql`EXISTS (SELECT 1 FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.deletedAt} IS NULL)`,
+        turnoJoin,
         sucursalId ? eq(pacientes.sucursalId, sucursalId) : undefined,
       ));
 
@@ -42,16 +50,24 @@ export const pacientesService = {
       .from(pacientes)
       .where(and(
         sql`${pacientes.deletedAt} IS NULL`,
-        sql`NOT EXISTS (SELECT 1 FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.deletedAt} IS NULL)`,
+        noTurnoJoin,
         sucursalId ? eq(pacientes.sucursalId, sucursalId) : undefined,
       ));
+
+    const turnoSubSelect = medicoId
+      ? sql`(SELECT MAX(${turnos.fechaHora}::text) FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.medicoId} = ${medicoId} AND ${turnos.deletedAt} IS NULL)`
+      : sql`(SELECT MAX(${turnos.fechaHora}::text) FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.deletedAt} IS NULL)`;
+
+    const turnoCountSelect = medicoId
+      ? sql`(SELECT COUNT(*) FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.medicoId} = ${medicoId} AND ${turnos.deletedAt} IS NULL)`
+      : sql`(SELECT COUNT(*) FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.deletedAt} IS NULL)`;
 
     const lista = await db.select({
       id: pacientes.id, nombre: pacientes.nombre, apellido: pacientes.apellido,
       telefono: pacientes.telefono, email: pacientes.email, obraSocial: pacientes.obraSocial,
       tags: pacientes.tags, dni: pacientes.dni, createdAt: pacientes.createdAt,
-      ultimoTurno: sql<string>`(SELECT MAX(${turnos.fechaHora}::text) FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.deletedAt} IS NULL)`,
-      totalTurnos: sql<number>`(SELECT COUNT(*) FROM ${turnos} WHERE ${turnos.pacienteId} = ${pacientes.id} AND ${turnos.deletedAt} IS NULL)`,
+      ultimoTurno: sql<string>`${turnoSubSelect}`,
+      totalTurnos: sql<number>`${turnoCountSelect}`,
     }).from(pacientes).where(whereConditions).orderBy(pacientes.createdAt).limit(limit).offset(offset);
 
     const data = lista.map(p => ({ ...p, tags: Array.isArray(p.tags) ? p.tags : typeof p.tags === 'string' ? JSON.parse(p.tags) : [] }));
