@@ -57,10 +57,20 @@ dashboard/conversaciones
 # Backups locales
 backups/
 
+# Scripts de diagnóstico (no subir a git)
+scripts/_diag_*.py
+scripts/_exec*.py
+scripts/_fix_n8n*.py
+scripts/_diagnose_n8n.py
+scripts/deploy-vps.py
+
 # Deploy scripts (contienen credenciales VPS)
 deploy_vps.py
 deploy_vps_api.py
 deploy_vps.sh
+
+# Deployment summaries
+DEPLOYMENT_SUMMARY.md
 
 # Credenciales (NO subir a git)
 docs/ACCESS.md
