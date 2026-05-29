@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { recetas, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql, count, desc } from 'drizzle-orm';
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 
 // ─── Tipos ─────────────────────────────────────────────────
 
@@ -237,16 +237,32 @@ export async function obtenerReceta(id: string) {
  * Crea una nueva receta con hash de verificación.
  */
 export async function crearReceta(input: CreateRecetaInput) {
+  if (!input.medicoId) {
+    throw new Error('Se requiere un médico para crear la receta');
+  }
+
   const fechaInicio = new Date().toISOString().split('T')[0];
   const fechaFin = new Date(Date.now() + 30 * 86400000)
     .toISOString()
     .split('T')[0];
 
+  // Generar UUID antes de insertar para calcular el hash en la misma operación
+  const id = randomUUID();
+
+  const hash = generarHashVerificacion({
+    id,
+    pacienteId: input.pacienteId,
+    medicamento: input.medicamento.trim(),
+    dosis: input.dosis.trim(),
+    fechaInicio,
+  });
+
   const [nueva] = await db
     .insert(recetas)
     .values({
+      id,
       pacienteId: input.pacienteId,
-      medicoId: input.medicoId || input.pacienteId,
+      medicoId: input.medicoId,
       medicamento: input.medicamento.trim(),
       presentacion: input.presentacion?.trim() || null,
       dosis: input.dosis.trim(),
@@ -257,26 +273,11 @@ export async function crearReceta(input: CreateRecetaInput) {
       fechaInicio,
       fechaFin,
       estado: 'activa',
+      hashVerificacion: hash,
     })
     .returning();
 
-  // Generar hash de verificación
-  const hash = generarHashVerificacion({
-    id: nueva.id,
-    pacienteId: nueva.pacienteId,
-    medicamento: nueva.medicamento,
-    dosis: nueva.dosis,
-    fechaInicio: nueva.fechaInicio,
-  });
-
-  // Actualizar con el hash
-  const [actualizada] = await db
-    .update(recetas)
-    .set({ hashVerificacion: hash })
-    .where(eq(recetas.id, nueva.id))
-    .returning();
-
-  return actualizada;
+  return nueva;
 }
 
 /**
