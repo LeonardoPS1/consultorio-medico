@@ -32,7 +32,7 @@ async function n8nFetch<T>(path: string): Promise<T | null> {
     const url = `${N8N_BASE_URL}${path}`;
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (N8N_API_KEY) {
-      headers['Authorization'] = `Bearer ${N8N_API_KEY}`;
+      headers['X-N8N-API-KEY'] = N8N_API_KEY;
     }
     const res = await fetch(url, { headers, next: { revalidate: 30 } });
     if (!res.ok) {
