@@ -25,14 +25,14 @@ export default function AdminSistemaPage() {
   const searchParams = useSearchParams();
 
   // Leer tab desde URL o usar default
-  const tabFromUrl = searchParams.get('tab');
+  const tabFromUrl = searchParams?.get('tab');
   type TabId = typeof VALID_TABS[number];
   const initialTab = tabFromUrl && VALID_TABS.includes(tabFromUrl as TabId) ? (tabFromUrl as TabId) : DEFAULT_TAB;
   const [tab, setTab] = useState(initialTab);
 
   // Sincronizar URL con el estado del tab
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
     if (tab === DEFAULT_TAB) {
       params.delete('tab');
     } else {

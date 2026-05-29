@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { recetas } from '@/drizzle/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
+import { recetasService } from '@/lib/services/recetas';
 
 /**
- * PATCH /api/recetas/[id]
- *
- * Actualiza una receta (cambiar estado, renovar, etc.)
- *
- * Body (JSON): campos a actualizar
- * - estado: 'activa' | 'vencida' | 'historial'
- * - medicamento, dosis, frecuencia, duracion, indicaciones, etc.
- *
  * GET /api/recetas/[id]
  *
  * Obtiene una receta por ID.
@@ -21,10 +14,7 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   try {
-    const [receta] = await db
-      .select()
-      .from(recetas)
-      .where(and(eq(recetas.id, params.id)));
+    const receta = await recetasService.obtener(params.id);
 
     if (!receta) {
       return NextResponse.json(
@@ -47,6 +37,7 @@ export async function GET(
  * PATCH /api/recetas/[id]
  *
  * Actualiza una receta existente.
+ * Regenera hash de verificación si cambian datos sensibles.
  */
 export async function PATCH(
   request: NextRequest,
@@ -76,20 +67,7 @@ export async function PATCH(
       );
     }
 
-    // Si se cambia a 'activa' desde otro estado (renovar), actualizar fechas
-    const updateData: Record<string, any> = { ...body, updatedAt: new Date() };
-    if (body.estado === 'activa' && existente[0]) {
-      updateData.fechaInicio = new Date().toISOString().split('T')[0];
-      updateData.fechaFin = new Date(Date.now() + 30 * 86400000)
-        .toISOString()
-        .split('T')[0];
-    }
-
-    const [actualizada] = await db
-      .update(recetas)
-      .set(updateData)
-      .where(eq(recetas.id, params.id))
-      .returning();
+    const actualizada = await recetasService.actualizar(params.id, body);
 
     return NextResponse.json({ data: actualizada });
   } catch (error) {

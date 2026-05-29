@@ -13,6 +13,9 @@ import {
   FileText,
   Printer,
   MoreHorizontal,
+  FileSpreadsheet,
+  FileDown,
+  QrCode,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -24,6 +27,7 @@ import { formatDate } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NuevaRecetaModal } from '@/components/modals/nueva-receta-modal';
 import { toast } from '@/components/ui/use-toast';
+
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -57,11 +61,14 @@ function descargarReceta(receta: Receta) {
 }
 
 async function generarPDFReceta(receta: Receta, org: Record<string, string>) {
-  // Generar QR code de verificacion
+  // Generar QR code de verificacion con firma digital
   let qrDataUrl = '';
   try {
     const QRCode = await import('qrcode');
-    const verificationUrl = `https://med.aicorebots.com/verificar-receta/${receta.id}`;
+    const baseUrl = typeof window !== 'undefined'
+      ? `${window.location.protocol}//${window.location.host}`
+      : 'https://med.aicorebots.com';
+    const verificationUrl = `${baseUrl}/verificar-receta/${receta.id}`;
     qrDataUrl = await QRCode.toDataURL(verificationUrl, {
       width: 120,
       margin: 2,
@@ -171,7 +178,10 @@ async function imprimirReceta(receta: Receta) {
       let qrDataUrl = '';
       try {
         const QRCode = await import('qrcode');
-        qrDataUrl = await QRCode.toDataURL(`https://med.aicorebots.com/api/verificar-receta/${receta.id}`, { width: 120, margin: 2, color: { dark: '#1a1a1a', light: '#ffffff' } });
+        const baseUrl = typeof window !== 'undefined'
+          ? `${window.location.protocol}//${window.location.host}`
+          : 'https://med.aicorebots.com';
+        qrDataUrl = await QRCode.toDataURL(`${baseUrl}/verificar-receta/${receta.id}`, { width: 120, margin: 2, color: { dark: '#1a1a1a', light: '#ffffff' } });
       } catch {}
       const html = generarHTMLRecetaCompletaConBoton({ ...org, receta, qrDataUrl } as any);
       const ventana = window.open('', '_blank');
@@ -181,7 +191,10 @@ async function imprimirReceta(receta: Receta) {
       let qrDataUrl = '';
       try {
         const QRCode = await import('qrcode');
-        qrDataUrl = await QRCode.toDataURL(`https://med.aicorebots.com/api/verificar-receta/${receta.id}`, { width: 120, margin: 2, color: { dark: '#1a1a1a', light: '#ffffff' } });
+        const baseUrl = typeof window !== 'undefined'
+          ? `${window.location.protocol}//${window.location.host}`
+          : 'https://med.aicorebots.com';
+        qrDataUrl = await QRCode.toDataURL(`${baseUrl}/verificar-receta/${receta.id}`, { width: 120, margin: 2, color: { dark: '#1a1a1a', light: '#ffffff' } });
       } catch {}
       const html = generarHTMLRecetaCompletaConBoton({ receta, qrDataUrl } as any);
       const ventana = window.open('', '_blank');
@@ -590,11 +603,30 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
             <TabsTrigger value="vencidas">Vencidas</TabsTrigger>
             <TabsTrigger value="historial">Historial</TabsTrigger>
           </TabsList>
-          <Button onClick={() => setShowNewReceta(true)} className="shrink-0">
-            <Plus className="h-4 w-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Nueva Receta</span>
-            <span className="sm:hidden">Nueva</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Export buttons */}
+            <Button
+              variant="outline"
+              size="icon"
+              title="Exportar Excel"
+              onClick={() => window.open('/api/recetas/exportar?formato=excel', '_blank')}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              title="Exportar PDF"
+              onClick={() => window.open('/api/recetas/exportar?formato=pdf', '_blank')}
+            >
+              <FileDown className="h-4 w-4" />
+            </Button>
+            <Button onClick={() => setShowNewReceta(true)} className="shrink-0">
+              <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Nueva Receta</span>
+              <span className="sm:hidden">Nueva</span>
+            </Button>
+          </div>
         </div>
 
         <TabsContent value="activas" className="mt-4">

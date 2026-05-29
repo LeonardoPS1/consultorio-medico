@@ -62,7 +62,7 @@ const navItems: NavItem[] = [
 ];
 
 export function Sidebar() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const { data: session } = useSession();
   const { isFeatureEnabled } = useFeatureFlags();
   const [collapsed, setCollapsed] = useState(false);

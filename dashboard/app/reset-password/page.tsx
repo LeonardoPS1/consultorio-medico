@@ -11,7 +11,7 @@ import { Lock, Loader2, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-reac
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token') || '';
+  const token = searchParams?.get('token') || '';
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

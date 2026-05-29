@@ -15,7 +15,10 @@ import {
   Mail,
   MessageSquare,
   ExternalLink,
+  FileSpreadsheet,
+  FileDown,
 } from 'lucide-react';
+
 import { formatPhone, getInitials, formatDate } from '@/lib/utils';
 import { NuevoPacienteModal } from '@/components/modals/nuevo-paciente-modal';
 import { toast } from '@/components/ui/use-toast';
@@ -118,6 +121,23 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        {/* Export buttons */}
+        <Button
+          variant="outline"
+          size="icon"
+          title="Exportar Excel"
+          onClick={() => window.open('/api/pacientes/exportar?formato=excel', '_blank')}
+        >
+          <FileSpreadsheet className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="Exportar PDF"
+          onClick={() => window.open('/api/pacientes/exportar?formato=pdf', '_blank')}
+        >
+          <FileDown className="h-4 w-4" />
+        </Button>
         <Button onClick={() => setShowNewPaciente(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Paciente

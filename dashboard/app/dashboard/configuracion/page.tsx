@@ -90,7 +90,7 @@ function ConfigContent() {
   const userRole = session?.user?.role;
   const userPlan = session?.user?.plan ?? 'free';
   const isAdmin = userRole === 'admin';
-  const tabFromUrl = searchParams.get('tab') || 'perfil';
+  const tabFromUrl = searchParams?.get('tab') || 'perfil';
   const [plantillas, setPlantillas] = useState<PlantillaWhatsApp[]>([]);
   const [showPlantillaModal, setShowPlantillaModal] = useState(false);
   const [editingPlantilla, setEditingPlantilla] = useState<PlantillaWhatsApp | null>(null);
@@ -104,7 +104,7 @@ function ConfigContent() {
 
   // Sincronizar tabs con la URL
   useEffect(() => {
-    const urlTab = searchParams.get('tab');
+    const urlTab = searchParams?.get('tab');
     if (urlTab && urlTab !== activeTab) {
       setActiveTab(urlTab);
     }

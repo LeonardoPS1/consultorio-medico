@@ -1,70 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { recetas, pacientes, medicos } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { recetasService, verificarHash } from '@/lib/services/recetas';
 
 /**
  * GET /api/verificar-receta/[id]
  *
- * Endpoint publico para verificar la autenticidad de una receta
- * mediante el codigo QR impreso en el PDF.
- * No requiere autenticacion.
+ * Endpoint público (sin auth) para verificar autenticidad de una receta.
+ * Usado por el QR code en las recetas impresas.
  */
 export async function GET(
   _request: NextRequest,
   { params }: { params: { id: string } },
 ) {
   try {
-    const [receta] = await db
-      .select({
-        id: recetas.id,
-        medicamento: recetas.medicamento,
-        dosis: recetas.dosis,
-        frecuencia: recetas.frecuencia,
-        duracion: recetas.duracion,
-        indicaciones: recetas.indicaciones,
-        estado: recetas.estado,
-        fechaInicio: recetas.fechaInicio,
-        fechaFin: recetas.fechaFin,
-        pacienteNombre: pacientes.nombre,
-        pacienteApellido: pacientes.apellido,
-        medicoNombre: medicos.nombre,
-        medicoMatricula: medicos.matricula,
-        createdAt: recetas.createdAt,
-      })
-      .from(recetas)
-      .leftJoin(pacientes, eq(recetas.pacienteId, pacientes.id))
-      .leftJoin(medicos, eq(recetas.medicoId, medicos.id))
-      .where(eq(recetas.id, params.id));
+    const receta = await recetasService.obtener(params.id);
 
     if (!receta) {
       return NextResponse.json(
-        { error: 'Receta no encontrada', valida: false },
+        {
+          valida: false,
+          error: 'Receta no encontrada',
+          codigo: 'NOT_FOUND',
+        },
         { status: 404 },
       );
     }
 
+    const verificacion = verificarHash({
+      id: receta.id,
+      pacienteId: receta.pacienteId,
+      medicamento: receta.medicamento,
+      dosis: receta.dosis,
+      fechaInicio: receta.fechaInicio,
+      hashVerificacion: receta.hashVerificacion,
+    });
+
+    const hoy = new Date().toISOString().split('T')[0];
+    const vencida = receta.fechaFin ? receta.fechaFin < hoy : false;
+
     return NextResponse.json({
-      valida: true,
+      valida: verificacion.valido,
+      regenerarHash: verificacion.regenerado || null,
       receta: {
+        id: receta.id,
+        paciente: `${receta.pacienteNombre || ''} ${receta.pacienteApellido || ''}`.trim(),
         medicamento: receta.medicamento,
+        presentacion: receta.presentacion,
         dosis: receta.dosis,
         frecuencia: receta.frecuencia,
         duracion: receta.duracion,
+        cantidadTotal: receta.cantidadTotal,
         indicaciones: receta.indicaciones,
-        estado: receta.estado,
         fechaInicio: receta.fechaInicio,
         fechaFin: receta.fechaFin,
-        paciente: `${receta.pacienteNombre || ''} ${receta.pacienteApellido || ''}`.trim(),
-        medico: receta.medicoNombre || 'No especificado',
-        matricula: receta.medicoMatricula || null,
-        emitida: receta.createdAt,
+        estado: receta.estado,
+        medico: receta.medicoNombre || '—',
+        vencida,
+        createdAt: receta.createdAt,
       },
     });
   } catch (error) {
-    console.error('[API] Error verificar receta:', error);
+    console.error('[API] Error GET /api/verificar-receta/[id]:', error);
     return NextResponse.json(
-      { error: 'Error al verificar receta', valida: false },
+      { valida: false, error: 'Error al verificar receta' },
       { status: 500 },
     );
   }

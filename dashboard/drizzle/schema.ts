@@ -314,6 +314,7 @@ export const recetas = pgTable('recetas', {
   fechaFin: date('fecha_fin'),
   requiereAutorizacion: boolean('requiere_autorizacion').default(false),
   autorizacionObraSocial: boolean('autorizacion_obra_social').default(false),
+  hashVerificacion: varchar('hash_verificacion', { length: 64 }),
   recetaAnteriorId: uuid('receta_anterior_id').references((): any => recetas.id),
   pdfGenerado: boolean('pdf_generado').default(false),
   pdfUrl: text('pdf_url'),

@@ -1,4 +1,5 @@
-'use client';
+export const dynamic = 'force-dynamic';
+
 import Link from 'next/link';
 
 export default function NotFound() {
@@ -19,12 +20,6 @@ export default function NotFound() {
           >
             Volver al inicio
           </Link>
-          <button
-            onClick={() => history.back()}
-            className="inline-flex h-9 items-center justify-center rounded-lg border bg-background px-4 text-sm font-medium transition-colors hover:bg-accent"
-          >
-            Retroceder
-          </button>
         </div>
       </div>
     </div>

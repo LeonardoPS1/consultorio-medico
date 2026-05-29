@@ -38,7 +38,7 @@ export function GatedContent({ children }: { children: React.ReactNode }) {
   // Mientras carga la sesión, permitir acceso temporal
   if (status === 'loading') return <>{children}</>;
 
-  const required = getRequiredFeature(pathname);
+  const required = getRequiredFeature(pathname ?? '');
   if (required && !canAccess(plan, required)) {
     // Redirigir al panel principal
     if (typeof window !== 'undefined') {

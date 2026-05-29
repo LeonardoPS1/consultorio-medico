@@ -16,7 +16,7 @@ export default function PortalVerify() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const token = searchParams.get('token');
+    const token = searchParams?.get('token');
     if (!token) {
       setError('Enlace inválido: falta el token de acceso.');
       return;

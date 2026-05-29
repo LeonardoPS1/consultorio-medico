@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { recetas, pacientes, medicos } from '@/drizzle/schema';
-import { eq, and, sql, count, like, or } from 'drizzle-orm';
+import { pacientes, medicos } from '@/drizzle/schema';
+import { eq, and, sql } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
+import { recetasService } from '@/lib/services/recetas';
 
 /**
  * GET /api/recetas
@@ -12,7 +13,7 @@ import { auth } from '@/lib/auth';
  * Query params:
  * - estado: activa | vencida | historial (opcional)
  * - search: búsqueda por paciente o medicamento
- * - limit: cantidad máxima (default 50)
+ * - limit: cantidad máxima (default 100)
  * - offset: paginación (default 0)
  */
 export async function GET(request: NextRequest) {
@@ -24,7 +25,6 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const estado = searchParams.get('estado') || undefined;
-    const search = searchParams.get('search') || undefined;
     const limit = searchParams.get('limit')
       ? parseInt(searchParams.get('limit')!)
       : 100;
@@ -32,82 +32,14 @@ export async function GET(request: NextRequest) {
       ? parseInt(searchParams.get('offset')!)
       : 0;
 
-    // Condiciones
-    const whereConditions = and(
-      estado ? eq(recetas.estado, estado) : undefined,
-      isMedico ? eq(recetas.medicoId, sessionMedicoId) : undefined,
-    );
-
-    // Contar recetas por estado
-    const [{ activas }] = await db
-      .select({ activas: count() })
-      .from(recetas)
-      .where(and(eq(recetas.estado, 'activa'), isMedico ? eq(recetas.medicoId, sessionMedicoId) : undefined));
-
-    const [{ vencidas }] = await db
-      .select({ vencidas: count() })
-      .from(recetas)
-      .where(and(eq(recetas.estado, 'vencida'), isMedico ? eq(recetas.medicoId, sessionMedicoId) : undefined));
-
-    const [{ historial }] = await db
-      .select({ historial: count() })
-      .from(recetas)
-      .where(and(eq(recetas.estado, 'historial'), isMedico ? eq(recetas.medicoId, sessionMedicoId) : undefined));
-
-    const [{ total }] = await db
-      .select({ total: count() })
-      .from(recetas)
-      .where(whereConditions);
-
-    // Lista de recetas con join a pacientes
-    const lista = await db
-      .select({
-        id: recetas.id,
-        pacienteId: recetas.pacienteId,
-        pacienteNombre: pacientes.nombre,
-        pacienteApellido: pacientes.apellido,
-        estado: recetas.estado,
-        medicamento: recetas.medicamento,
-        dosis: recetas.dosis,
-        frecuencia: recetas.frecuencia,
-        duracion: recetas.duracion,
-        indicaciones: recetas.indicaciones,
-        fechaInicio: recetas.fechaInicio,
-        fechaFin: recetas.fechaFin,
-        renovable: sql<boolean>`${recetas.recetaAnteriorId} IS NOT NULL`,
-        createdAt: recetas.createdAt,
-      })
-      .from(recetas)
-      .leftJoin(pacientes, eq(recetas.pacienteId, pacientes.id))
-      .where(whereConditions)
-      .orderBy(recetas.createdAt)
-      .limit(limit)
-      .offset(offset);
-
-    const data = lista.map((r) => ({
-      id: r.id,
-      paciente: `${r.pacienteNombre || ''} ${r.pacienteApellido || ''}`.trim() || 'Paciente',
-      medicamento: r.medicamento,
-      dosis: r.dosis,
-      duracion: r.duracion || r.frecuencia,
-      estado: r.estado,
-      indicaciones: r.indicaciones || undefined,
-      vence: r.fechaFin || r.fechaInicio,
-      fechaCreacion: r.createdAt
-        ? new Date(r.createdAt).toISOString().split('T')[0]
-        : '',
-      renovable: r.renovable,
-    }));
-
-    return NextResponse.json({
-      data,
-      total: Number(total),
-      activas: Number(activas),
-      vencidas: Number(vencidas),
-      historial: Number(historial),
+    const result = await recetasService.listar({
+      estado,
       limit,
       offset,
+      medicoId: isMedico ? sessionMedicoId : null,
     });
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('[API] Error GET /api/recetas:', error);
     return NextResponse.json(
@@ -120,7 +52,7 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/recetas
  *
- * Crea una nueva receta.
+ * Crea una nueva receta con firma digital (hash de verificación).
  *
  * Body (JSON):
  * - pacienteId: string (obligatorio)
@@ -129,7 +61,9 @@ export async function GET(request: NextRequest) {
  * - frecuencia: string (opcional)
  * - duracion: string (opcional)
  * - indicaciones: string (opcional)
- * - medicoId: string (opcional, usa el primer médico disponible si no se envía)
+ * - presentacion: string (opcional)
+ * - cantidadTotal: string (opcional)
+ * - medicoId: string (opcional)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -141,6 +75,8 @@ export async function POST(request: NextRequest) {
       frecuencia,
       duracion,
       indicaciones,
+      presentacion,
+      cantidadTotal,
       medicoId,
     } = body;
 
@@ -166,7 +102,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Si no se especifica médico, usar el del usuario logueado o el primero disponible
+    // Resolver médico
     let medicoFinal = medicoId;
     if (!medicoFinal) {
       const session = await auth();
@@ -186,27 +122,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Crear receta
-    const fechaInicio = new Date().toISOString().split('T')[0];
-    const fechaFin = new Date(Date.now() + 30 * 86400000)
-      .toISOString()
-      .split('T')[0];
-
-    const [nueva] = await db
-      .insert(recetas)
-      .values({
-        pacienteId,
-        medicoId: medicoFinal || pacienteId,
-        medicamento: medicamento.trim(),
-        dosis: dosis.trim(),
-        frecuencia: frecuencia?.trim() || duracion?.trim() || 'Según indicación',
-        duracion: duracion?.trim() || null,
-        indicaciones: indicaciones?.trim() || null,
-        fechaInicio,
-        fechaFin,
-        estado: 'activa',
-      })
-      .returning();
+    // Crear receta con hash de verificación
+    const nueva = await recetasService.crear({
+      pacienteId,
+      medicamento,
+      dosis,
+      frecuencia,
+      duracion,
+      indicaciones,
+      presentacion,
+      cantidadTotal,
+      medicoId: medicoFinal,
+    });
 
     return NextResponse.json({ data: nueva }, { status: 201 });
   } catch (error) {

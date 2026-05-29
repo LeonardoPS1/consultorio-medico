@@ -29,6 +29,13 @@
       "when": 1748446400000,
       "tag": "0014_lista_espera_ofertas",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1748541600000,
+      "tag": "0015_hash_verificacion_recetas",
+      "breakpoints": true
     }
   ]
 }
