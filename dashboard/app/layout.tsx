@@ -30,7 +30,11 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: tenantName,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
+    startupImage: {
+      url: '/icons/icon-512x512.png',
+      media: '(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)',
+    },
   },
   formatDetection: {
     telephone: true,

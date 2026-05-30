@@ -1,37 +1,94 @@
-// AiCoreMed — Service Worker
-// Cache first para assets estáticos, network first para API/data
+// AiCoreMed — Service Worker v2
+// Estrategia: Cache first para assets con hash, Network first para API/navegación
+// Offline: fallback a página offline.html
 
-const CACHE_NAME = 'aicoremed-v1';
-const STATIC_ASSETS = [
-  '/',
+const CACHE_NAME = 'aicoremed-v2';
+const STATIC_CACHE = 'aicoremed-static-v2';
+const API_CACHE = 'aicoremed-api-v2';
+
+const PRECACHE_URLS = [
+  '/offline.html',
+  '/icons/icon-48x48.png',
+  '/icons/icon-96x96.png',
+  '/icons/icon-144x144.png',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
   '/icons/icon-192x192.svg',
+  '/favicon.png',
 ];
 
-// Instalación: precachear assets críticos
+// ─── INSTALACIÓN ────────────────────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-// Activación: limpiar caches viejos
+// ─── ACTIVACIÓN ─────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
+    caches.keys().then((keys) =>
+      Promise.all(
         keys
-          .filter((key) => key !== CACHE_NAME)
+          .filter((key) => key !== CACHE_NAME && key !== STATIC_CACHE && key !== API_CACHE)
           .map((key) => caches.delete(key))
-      );
-    })
+      )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Fetch: cache-first para assets, network-first para API
+// ─── ESTRATEGIAS DE CACHE ───────────────────────────────────
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(STATIC_CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return caches.match('/offline.html');
+  }
+}
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(API_CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    // Para navegación, servir offline.html
+    if (request.mode === 'navigate') {
+      const offline = await caches.match('/offline.html');
+      if (offline) return offline;
+    }
+    return new Response('Sin conexión', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(STATIC_CACHE);
+  const cached = await cache.match(request);
+  const fetchPromise = fetch(request)
+    .then((response) => {
+      if (response.ok) cache.put(request, response.clone());
+      return response;
+    })
+    .catch(() => cached);
+  return cached || fetchPromise;
+}
+
+// ─── INTERCEPTOR FETCH ──────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -39,13 +96,25 @@ self.addEventListener('fetch', (event) => {
   // Solo interceptar requests del mismo origen
   if (url.origin !== self.location.origin) return;
 
-  // API calls → network first (con fallback a cache)
+  // API calls → network first (con fallback)
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(networkFirst(request));
     return;
   }
 
-  // Assets estáticos → cache first
+  // Assets Next.js con hash (chunks, JS, CSS) → cache first
+  if (url.pathname.startsWith('/_next/static/')) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Imágenes de Next.js → cache first
+  if (url.pathname.startsWith('/_next/image/')) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Assets estáticos (style, script, font, image) → cache first
   if (
     request.destination === 'style' ||
     request.destination === 'script' ||
@@ -56,26 +125,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navegación → network first
+  // Icons y favicon → cache first
+  if (url.pathname.startsWith('/icons/') || url.pathname === '/favicon.png') {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Navegación (páginas) → network first con fallback a offline
   if (request.mode === 'navigate') {
     event.respondWith(networkFirst(request));
     return;
   }
+
+  // Otros (manifest, etc.) → stale-while-revalidate
+  event.respondWith(staleWhileRevalidate(request));
 });
-
-async function cacheFirst(request) {
-  const cached = await caches.match(request);
-  return cached || fetch(request);
-}
-
-async function networkFirst(request) {
-  try {
-    const response = await fetch(request);
-    const cache = await caches.open(CACHE_NAME);
-    cache.put(request, response.clone());
-    return response;
-  } catch {
-    const cached = await caches.match(request);
-    return cached || new Response('Offline', { status: 503 });
-  }
-}
