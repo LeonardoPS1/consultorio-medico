@@ -304,107 +304,108 @@ export function Header() {
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 p-0">
-            <DropdownMenuLabel className="flex items-center justify-between px-4 py-3">
-              <span className="font-semibold">Notificaciones</span>
+          <DropdownMenuContent
+            align="end"
+            className="w-[320px] p-0 overflow-hidden"
+            sideOffset={8}
+            onCloseAutoFocus={(e) => e.preventDefault()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-3 py-2.5 border-b">
+              <span className="text-sm font-semibold">Notificaciones</span>
               {noLeidas > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-auto p-0 text-xs text-primary font-normal"
+                <button
                   onClick={marcarTodasLeidas}
+                  className="text-xs text-primary hover:underline font-medium"
                 >
-                  Marcar todas leídas
-                </Button>
+                  Leer todas
+                </button>
               )}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator className="my-0" />
-            <ScrollArea className="h-[300px]">
+            </div>
+
+            {/* Lista */}
+            <ScrollArea className="max-h-[340px]">
               {loadingNotif && notificaciones.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-24 text-sm text-muted-foreground">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent mb-1" />
+                <div className="flex flex-col items-center justify-center py-10 text-sm text-muted-foreground">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent mb-2" />
                   Cargando...
                 </div>
               ) : notificaciones.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-24 text-sm text-muted-foreground">
-                  <Bell className="h-6 w-6 mb-1 opacity-50" />
+                <div className="flex flex-col items-center justify-center py-10 text-sm text-muted-foreground">
+                  <Bell className="h-6 w-6 mb-2 opacity-40" />
                   Sin notificaciones
                 </div>
               ) : (
                 notificaciones.slice(0, 15).map((notif) => {
                   const Icon = iconosNotificacion[notif.tipo] || Bell;
                   return (
-                    <DropdownMenuItem
+                    <div
                       key={notif.id}
-                      className={`flex items-start gap-3 px-4 py-3 cursor-pointer rounded-none ${
-                        !notif.leido ? 'bg-primary/5' : ''
-                      }`}
-                      onSelect={(e) => {
-                        e.preventDefault();
-                        if (!notif.leido) marcarLeida(notif.id);
-                        if (notif.href) { router.push(notif.href); setNotifOpen(false); }
-                      }}
+                      className={`group flex items-start gap-2.5 px-3 py-2.5 border-b last:border-0 transition-colors ${
+                        !notif.leido ? 'bg-primary/[0.03]' : ''
+                      } hover:bg-muted/40`}
                     >
-                      <div className={`h-8 w-8 rounded-lg ${coloresNotificacion[notif.tipo] || ''} flex items-center justify-center shrink-0`}>
-                        <Icon className="h-4 w-4" />
+                      {/* Icono */}
+                      <div className={`h-7 w-7 rounded-lg ${coloresNotificacion[notif.tipo] || ''} flex items-center justify-center shrink-0 mt-0.5`}>
+                        <Icon className="h-3.5 w-3.5" />
                       </div>
+
+                      {/* Contenido */}
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm ${!notif.leido ? 'font-semibold' : ''}`}>
+                        <p className={`text-[13px] leading-tight ${!notif.leido ? 'font-semibold' : ''} truncate`}>
                           {notif.titulo}
                         </p>
-                        {notif.descripcion && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {notif.descripcion}
-                          </p>
-                        )}
-                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                        <p className="text-[11px] text-muted-foreground/60 mt-0.5">
                           {formatRelative(notif.createdAt)}
                         </p>
                       </div>
-                      <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+
+                      {/* Acciones (visibles en hover) */}
+                      <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5">
                         {notif.leido ? (
                           <button
-                            onClick={() => marcarNoLeida(notif.id)}
-                            className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted transition-colors"
+                            onClick={(e) => { e.stopPropagation(); marcarNoLeida(notif.id); }}
+                            className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
                             title="Marcar como no leída"
                           >
-                            <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                            <EyeOff className="h-3 w-3 text-muted-foreground/60" />
                           </button>
                         ) : (
                           <button
-                            onClick={() => marcarLeida(notif.id)}
-                            className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted transition-colors"
+                            onClick={(e) => { e.stopPropagation(); marcarLeida(notif.id); }}
+                            className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
                             title="Marcar como leída"
                           >
-                            <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                            <Eye className="h-3 w-3 text-muted-foreground/60" />
                           </button>
                         )}
                         <button
-                          onClick={() => eliminarNotificacion(notif.id)}
-                          className="h-7 w-7 flex items-center justify-center rounded hover:bg-destructive/10 transition-colors"
+                          onClick={(e) => { e.stopPropagation(); eliminarNotificacion(notif.id); }}
+                          className="h-6 w-6 flex items-center justify-center rounded hover:bg-destructive/10 transition-colors"
                           title="Eliminar"
                         >
-                          <Trash2 className="h-3.5 w-3.5 text-destructive/70" />
+                          <Trash2 className="h-3 w-3 text-destructive/60" />
                         </button>
                       </div>
+
+                      {/* Indicador no leído */}
                       {!notif.leido && (
-                        <div className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1.5" />
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 mt-2.5" />
                       )}
-                    </DropdownMenuItem>
+                    </div>
                   );
                 })
               )}
             </ScrollArea>
-            <DropdownMenuSeparator className="my-0" />
-            <div className="p-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-xs text-muted-foreground"
-                onClick={() => { router.push('/dashboard/configuracion?tab=notificaciones'); setNotifOpen(false); }}
+
+            {/* Footer */}
+            <div className="border-t">
+              <DropdownMenuItem
+                className="justify-center text-xs text-muted-foreground rounded-none py-2.5 cursor-pointer"
+                onClick={() => { router.push('/dashboard/notificaciones'); setNotifOpen(false); }}
               >
-                ⚙️ Configurar notificaciones
-              </Button>
+                Ver todas las notificaciones
+              </DropdownMenuItem>
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
