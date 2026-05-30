@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { Store, Plus, Loader2, Pencil, MapPin, Phone, Mail, Check, X } from 'lucide-react';
+import { PageHeader } from '@/components/page-header';
 
 interface Sucursal {
   id: string;
@@ -125,12 +126,7 @@ export default function AdminSucursalesPage() {
   return (
     <div className="space-y-6 animate-in">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Sucursales</h1>
-          <p className="text-muted-foreground mt-1">
-            Gestioná las sucursales o sedes de tu consultorio
-          </p>
-        </div>
+        <PageHeader title="Sucursales" description="Gestioná las sucursales del consultorio" />
         <Button onClick={openNew}>
           <Plus className="h-4 w-4 mr-1" />
           Nueva Sucursal

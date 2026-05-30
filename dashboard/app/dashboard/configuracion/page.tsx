@@ -31,6 +31,7 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import Setup2FA from '@/components/configuracion/setup-2fa';
 import SuscripcionTab from '@/components/configuracion/suscripcion-tab';
 import { ChangePasswordForm } from '@/components/configuracion/change-password-form';
+import { PageHeader } from '@/components/page-header';
 
 // ============================================================
 // Tipos
@@ -140,10 +141,7 @@ function ConfigContent() {
   return (
     <div className="space-y-6 animate-in">
       <div>
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Configuración</h2>
-        <p className="text-muted-foreground">
-          Gestioná las integraciones y preferencias del sistema
-        </p>
+        <PageHeader title="Configuración" description="Gestioná las integraciones y preferencias del sistema" />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>

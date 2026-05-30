@@ -1,4 +1,5 @@
 import { WebhooksClient } from './webhooks-client';
+import { PageHeader } from '@/components/page-header';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -104,16 +105,7 @@ export default async function WebhooksLogsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header (server-rendered) */}
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-          Registro de Webhooks
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Monitoreo de mensajes entrantes y salientes con estado de entrega
-          Twilio
-        </p>
-      </div>
+      <PageHeader title="Webhooks" />
 
       {/* KPIs (server-rendered — sin loading state) */}
       <KpiCards total={total} porEstado={porEstado} />

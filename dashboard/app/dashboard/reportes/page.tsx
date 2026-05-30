@@ -25,6 +25,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { exportReporteExcel } from '@/lib/export-reporte-excel';
+import { PageHeader } from '@/components/page-header';
 
 const TurnosChart = dynamic(() => import('@/components/charts/turnos-chart'), {
   ssr: false,
@@ -203,12 +204,7 @@ export default function ReportesPage() {
     <div className="space-y-6 animate-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Reportes</h2>
-          <p className="text-muted-foreground">
-            Métricas y estadísticas del consultorio
-          </p>
-        </div>
+        <PageHeader title="Reportes" description="Métricas y estadísticas del consultorio" />
         <div className="flex items-center gap-2">
           <div className="flex items-center rounded-lg border p-1">
             <Button variant={periodo === 'semana' ? 'secondary' : 'ghost'} size="sm" onClick={() => setPeriodo('semana')}>

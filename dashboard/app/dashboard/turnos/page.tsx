@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { TurnosClient } from './turnos-client';
+import { PageHeader } from '@/components/page-header';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -85,15 +86,7 @@ export default async function TurnosPage() {
 
   return (
     <div className="space-y-6 animate-in">
-      {/* Header (server-rendered) */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Turnos</h2>
-          <p className="text-muted-foreground">
-            Gestioná los turnos de tus pacientes
-          </p>
-        </div>
-      </div>
+      <PageHeader title="Turnos" description="Gestioná los turnos de tus pacientes" />
 
       {/* Stats del día (server-rendered) */}
       <div className="flex flex-wrap gap-2">

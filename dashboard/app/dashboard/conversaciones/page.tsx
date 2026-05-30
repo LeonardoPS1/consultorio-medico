@@ -24,6 +24,7 @@ import {
 import { getInitials, formatRelative, truncate, formatPhone } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
 import { NuevaConversacionModal } from '@/components/modals/nueva-conversacion-modal';
+import { PageHeader } from '@/components/page-header';
 
 // ============================================================
 // Tipos
@@ -185,12 +186,7 @@ export default function ConversacionesPage() {
     <div className="space-y-6 animate-in">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Conversaciones</h2>
-          <p className="text-muted-foreground">
-            Bandeja unificada de WhatsApp, SMS y Email
-          </p>
-        </div>
+        <PageHeader title="Conversaciones" description="Bandeja unificada de WhatsApp, SMS y Email" />
         <div className="flex items-center gap-2">
           <Button
             variant="outline"

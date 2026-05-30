@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Star, TrendingUp, TrendingDown, Minus, MessageSquare, Users, BarChart3 } from 'lucide-react';
 import { EncuestasClient } from './encuestas-client';
+import { PageHeader } from '@/components/page-header';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -179,25 +180,14 @@ export default async function EncuestasPage() {
   if (!stats) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Encuestas</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            No hay datos de encuestas disponibles.
-          </p>
-        </div>
+        <PageHeader title="Encuestas" description="No hay datos de encuestas disponibles." />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold">Encuestas de Satisfacción</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Resultados de encuestas post-consulta enviadas por WhatsApp
-        </p>
-      </div>
+      <PageHeader title="Encuestas" description="Resultados de encuestas post-consulta enviadas por WhatsApp" />
 
       {/* KPIs */}
       <KpiCards stats={stats} />

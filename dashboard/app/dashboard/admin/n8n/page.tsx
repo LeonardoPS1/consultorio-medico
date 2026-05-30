@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { canAccess } from '@/lib/features';
 import { getN8nStats } from '@/lib/services/n8n-monitor';
 import N8nClient from './n8n-client';
+import { PageHeader } from '@/components/page-header';
 
 export default async function N8nAdminPage() {
   const session = await auth();
@@ -13,12 +14,7 @@ export default async function N8nAdminPage() {
 
   return (
     <div className="space-y-6 animate-in">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">n8n Monitor</h1>
-        <p className="text-muted-foreground mt-1">
-          Monitoreo de workflows, ejecuciones y errores de n8n
-        </p>
-      </div>
+      <PageHeader title="n8n Monitor" />
       <N8nClient initialStats={stats} />
     </div>
   );

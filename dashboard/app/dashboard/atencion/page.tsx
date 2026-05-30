@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
+import { PageHeader } from '@/components/page-header';
 
 // ============================================================
 // Tipos
@@ -539,22 +540,7 @@ export default function AtencionPage() {
     <div className="space-y-6 animate-in">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight gradient-text flex items-center gap-3">
-            <Activity className="h-7 w-7 text-primary" />
-            Atención de Turnos
-          </h2>
-          <p className="text-muted-foreground flex items-center gap-2 mt-1">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Arrastrá turnos entre columnas o usá los botones &mdash;{' '}
-            {new Date().toLocaleDateString('es-AR', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })}
-          </p>
-        </div>
+        <PageHeader title="Atención de Turnos" gradient />
         <div className="flex items-center gap-2">
           {/* Filtro por médico */}
           <div className="flex items-center gap-2 rounded-lg border p-1">

@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import { canAccess, type FeatureId } from '@/lib/features';
 import { toast } from '@/components/ui/use-toast';
+import { PageHeader } from '@/components/page-header';
 
 interface AuditEntry {
   id: string;
@@ -163,15 +164,7 @@ function AuditoriaContent() {
   return (
     <div className="space-y-6 animate-in">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-            <Shield className="h-7 w-7" />
-            Auditoría
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Registro de accesos y acciones del sistema
-          </p>
-        </div>
+        <PageHeader title="Auditoría" description="Registro de accesos y acciones del sistema" gradient />
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="text-sm px-3 py-1">
             {total} registros

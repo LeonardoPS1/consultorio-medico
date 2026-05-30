@@ -17,6 +17,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Building2, Plus, Loader2, AlertCircle } from 'lucide-react';
+import { PageHeader } from '@/components/page-header';
 
 interface Tenant {
   id: string;
@@ -94,12 +95,7 @@ export default function AdminTenantsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Tenants</h2>
-          <p className="text-muted-foreground">
-            Gestioná las instancias multi-tenant del sistema
-          </p>
-        </div>
+        <PageHeader title="Tenants" />
         <Button onClick={() => setShowModal(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nuevo tenant

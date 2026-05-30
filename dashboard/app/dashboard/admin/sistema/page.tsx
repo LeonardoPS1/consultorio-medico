@@ -6,6 +6,7 @@ import { useSearchParams, useRouter, redirect } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Brain, Link, Shield, Key, Lock } from 'lucide-react';
 import SistemaTab from '@/components/configuracion/sistema-tab';
+import { PageHeader } from '@/components/page-header';
 
 const SYSTEM_TABS = [
   { id: 'toggles', label: 'Feature Toggles', icon: Settings },
@@ -50,12 +51,7 @@ export default function AdminSistemaPage() {
 
   return (
     <div className="space-y-6 animate-in">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Sistema</h1>
-        <p className="text-muted-foreground mt-1">
-          Configuración avanzada del consultorio
-        </p>
-      </div>
+      <PageHeader title="Sistema" description="Configuración avanzada del consultorio" gradient />
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)}>
         <TabsList className="flex-wrap">

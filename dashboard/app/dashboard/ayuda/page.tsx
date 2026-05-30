@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { SECCIONES_AYUDA, type AyudaSeccion } from '@/lib/ayuda-content';
 import Link from 'next/link';
+import { PageHeader } from '@/components/page-header';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Rocket, Calendar, Users, Activity, Syringe, MessageSquare,
@@ -48,15 +49,7 @@ export default function AyudaPage() {
   return (
     <div className="space-y-6 animate-in max-w-5xl mx-auto">
       {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-          <BookOpen className="h-7 w-7" />
-          Centro de Ayuda
-        </div>
-        <p className="text-muted-foreground">
-          Guía completa de uso del sistema — instrucciones paso a paso, tips y preguntas frecuentes
-        </p>
-      </div>
+      <PageHeader title="Centro de Ayuda" description="Guía completa de uso del sistema — instrucciones paso a paso, tips y preguntas frecuentes" />
 
       {/* Buscador */}
       <div className="relative">

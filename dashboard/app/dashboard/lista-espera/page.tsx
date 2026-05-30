@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 import { ListChecks, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { ListaEsperaClient } from './lista-espera-client';
+import { PageHeader } from '@/components/page-header';
 
 interface WaitlistItem {
   id: string;
@@ -46,13 +47,7 @@ export default async function ListaEsperaPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Lista de Espera</h1>
-        <p className="text-muted-foreground mt-1">
-          Pacientes esperando turnos por cancelaciones
-        </p>
-      </div>
+      <PageHeader title="Lista de Espera" />
 
       {/* KPIs */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

@@ -1,4 +1,5 @@
 import { RecetasClient } from './recetas-client';
+import { PageHeader } from '@/components/page-header';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -52,15 +53,7 @@ export default async function RecetasPage() {
 
   return (
     <div className="space-y-6 animate-in">
-      {/* Header (server-rendered) */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Recetas</h2>
-          <p className="text-muted-foreground">
-            Recetas activas, vencidas y renovaciones
-          </p>
-        </div>
-      </div>
+      <PageHeader title="Recetas" description="Recetas activas, vencidas y renovaciones" />
 
       {/* Estadísticas (server-rendered) */}
 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
