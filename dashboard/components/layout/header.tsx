@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Bell, Moon, Sun, Monitor, Calendar, MessageSquare, Syringe,
-  AlertTriangle, X, Menu, Store, ChevronDown, Check, Trash2,
-  EyeOff, Eye, BellOff, List
+  AlertTriangle, X, Menu, Store, ChevronDown, Trash2,
+  EyeOff, Eye,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getInitials, formatRelative } from '@/lib/utils';
@@ -299,7 +299,7 @@ export function Header() {
               <Bell className="h-4 w-4" />
               {noLeidas > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white">
-                  {noLeidas > 99 ? '99+' : noLeidas}
+                  {noLeidas}
                 </span>
               )}
             </Button>
@@ -307,32 +307,19 @@ export function Header() {
           <DropdownMenuContent align="end" className="w-80 p-0">
             <DropdownMenuLabel className="flex items-center justify-between px-4 py-3">
               <span className="font-semibold">Notificaciones</span>
-              <div className="flex items-center gap-1">
-                {noLeidas > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-auto p-1 text-xs text-primary font-normal"
-                    onClick={marcarTodasLeidas}
-                    title="Marcar todas leídas"
-                  >
-                    <Check className="h-3.5 w-3.5 mr-1" />
-                    Leídas
-                  </Button>
-                )}
+              {noLeidas > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto p-1 text-xs text-muted-foreground font-normal"
-                  onClick={() => { router.push('/dashboard/notificaciones'); setNotifOpen(false); }}
-                  title="Ver todas"
+                  className="h-auto p-0 text-xs text-primary font-normal"
+                  onClick={marcarTodasLeidas}
                 >
-                  <List className="h-3.5 w-3.5" />
+                  Marcar todas leídas
                 </Button>
-              </div>
+              )}
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="my-0" />
-            <ScrollArea className="h-[350px]">
+            <ScrollArea className="h-[300px]">
               {loadingNotif && notificaciones.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-24 text-sm text-muted-foreground">
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent mb-1" />
@@ -340,96 +327,83 @@ export function Header() {
                 </div>
               ) : notificaciones.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-24 text-sm text-muted-foreground">
-                  <BellOff className="h-6 w-6 mb-1 opacity-50" />
+                  <Bell className="h-6 w-6 mb-1 opacity-50" />
                   Sin notificaciones
                 </div>
               ) : (
                 notificaciones.slice(0, 15).map((notif) => {
                   const Icon = iconosNotificacion[notif.tipo] || Bell;
                   return (
-                    <div
+                    <DropdownMenuItem
                       key={notif.id}
-                      className={`group relative flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors rounded-none ${
-                        !notif.leido ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/50'
+                      className={`flex items-start gap-3 px-4 py-3 cursor-pointer rounded-none ${
+                        !notif.leido ? 'bg-primary/5' : ''
                       }`}
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        if (!notif.leido) marcarLeida(notif.id);
+                        if (notif.href) { router.push(notif.href); setNotifOpen(false); }
+                      }}
                     >
-                      {/* Click principal → marcar leído + navegar */}
-                      <div
-                        className="flex items-start gap-3 flex-1 min-w-0"
-                        onClick={() => handleNotifClick(notif)}
-                      >
-                        <div className={`h-8 w-8 rounded-lg ${coloresNotificacion[notif.tipo] || ''} flex items-center justify-center shrink-0`}>
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm pr-6 ${!notif.leido ? 'font-semibold' : ''}`}>
-                            {notif.titulo}
-                          </p>
-                          {notif.descripcion && (
-                            <p className="text-xs text-muted-foreground truncate">
-                              {notif.descripcion}
-                            </p>
-                          )}
-                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                            {formatRelative(notif.createdAt)}
-                          </p>
-                        </div>
+                      <div className={`h-8 w-8 rounded-lg ${coloresNotificacion[notif.tipo] || ''} flex items-center justify-center shrink-0`}>
+                        <Icon className="h-4 w-4" />
                       </div>
-
-                      {/* Indicador de no leído */}
-                      {!notif.leido && (
-                        <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-primary shrink-0" />
-                      )}
-
-                      {/* Acciones: hover */}
-                      <div className="absolute top-2 right-1 hidden group-hover:flex items-center gap-0.5 bg-background/90 backdrop-blur-sm rounded-lg border shadow-xs p-0.5">
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm ${!notif.leido ? 'font-semibold' : ''}`}>
+                          {notif.titulo}
+                        </p>
+                        {notif.descripcion && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {notif.descripcion}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                          {formatRelative(notif.createdAt)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                         {notif.leido ? (
                           <button
-                            onClick={(e) => { e.stopPropagation(); marcarNoLeida(notif.id); }}
-                            className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
+                            onClick={() => marcarNoLeida(notif.id)}
+                            className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted transition-colors"
                             title="Marcar como no leída"
                           >
                             <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
                           </button>
                         ) : (
                           <button
-                            onClick={(e) => { e.stopPropagation(); marcarLeida(notif.id); }}
-                            className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
+                            onClick={() => marcarLeida(notif.id)}
+                            className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted transition-colors"
                             title="Marcar como leída"
                           >
                             <Eye className="h-3.5 w-3.5 text-muted-foreground" />
                           </button>
                         )}
                         <button
-                          onClick={(e) => { e.stopPropagation(); eliminarNotificacion(notif.id); }}
-                          className="h-6 w-6 flex items-center justify-center rounded hover:bg-destructive/10 transition-colors"
-                          title="Eliminar notificación"
+                          onClick={() => eliminarNotificacion(notif.id)}
+                          className="h-7 w-7 flex items-center justify-center rounded hover:bg-destructive/10 transition-colors"
+                          title="Eliminar"
                         >
                           <Trash2 className="h-3.5 w-3.5 text-destructive/70" />
                         </button>
                       </div>
-                    </div>
+                      {!notif.leido && (
+                        <div className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1.5" />
+                      )}
+                    </DropdownMenuItem>
                   );
                 })
               )}
             </ScrollArea>
             <DropdownMenuSeparator className="my-0" />
-            <div className="p-2 flex gap-1">
+            <div className="p-2">
               <Button
                 variant="ghost"
                 size="sm"
-                className="flex-1 text-xs text-muted-foreground"
-                onClick={() => { router.push('/dashboard/notificaciones'); setNotifOpen(false); }}
-              >
-                Ver todas
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-1 text-xs text-muted-foreground"
+                className="w-full text-xs text-muted-foreground"
                 onClick={() => { router.push('/dashboard/configuracion?tab=notificaciones'); setNotifOpen(false); }}
               >
-                ⚙️ Configurar
+                ⚙️ Configurar notificaciones
               </Button>
             </div>
           </DropdownMenuContent>
