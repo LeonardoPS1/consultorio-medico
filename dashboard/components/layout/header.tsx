@@ -5,7 +5,11 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Bell, Moon, Sun, Monitor, Calendar, MessageSquare, Syringe, AlertTriangle, X, Menu, Store, ChevronDown } from 'lucide-react';
+import {
+  Bell, Moon, Sun, Monitor, Calendar, MessageSquare, Syringe,
+  AlertTriangle, X, Menu, Store, ChevronDown, Check, Trash2,
+  EyeOff, Eye, BellOff, List
+} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getInitials, formatRelative } from '@/lib/utils';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
@@ -21,61 +25,19 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 // ============================================================
-// Tipos de notificaciones
+// Tipos
 // ============================================================
 
-interface Notificacion {
+interface NotificacionData {
   id: string;
   titulo: string;
-  descripcion: string;
+  descripcion: string | null;
   tipo: 'turno' | 'mensaje' | 'receta' | 'urgencia' | 'sistema';
   leido: boolean;
-  href: string;
-  tiempo: string;
+  href: string | null;
+  createdAt: string;
+  deletedAt: string | null;
 }
-
-// ============================================================
-// Mock de notificaciones
-// ============================================================
-
-const notificacionesMock: Notificacion[] = [
-  {
-    id: 'n1',
-    titulo: 'Nuevo mensaje de Juan Pérez',
-    descripcion: 'Confirmó su turno para mañana a las 10:00',
-    tipo: 'turno',
-    leido: false,
-    href: '/dashboard/conversaciones',
-    tiempo: new Date(Date.now() - 5 * 60000).toISOString(),
-  },
-  {
-    id: 'n2',
-    titulo: '🚨 Urgencia: Carlos Ruiz',
-    descripcion: 'Reportó dolor en el pecho - Revisar mensaje',
-    tipo: 'urgencia',
-    leido: false,
-    href: '/dashboard/conversaciones',
-    tiempo: new Date(Date.now() - 30 * 60000).toISOString(),
-  },
-  {
-    id: 'n3',
-    titulo: 'Recordatorio de turno',
-    descripcion: 'María García tiene turno en 1 hora',
-    tipo: 'sistema',
-    leido: false,
-    href: '/dashboard/turnos',
-    tiempo: new Date(Date.now() - 60 * 60000).toISOString(),
-  },
-  {
-    id: 'n4',
-    titulo: 'Receta pendiente de autorización',
-    descripcion: 'Ana López solicitó renovación de Losartán',
-    tipo: 'receta',
-    leido: true,
-    href: '/dashboard/recetas',
-    tiempo: new Date(Date.now() - 120 * 60000).toISOString(),
-  },
-];
 
 // ============================================================
 // Iconos por tipo
@@ -106,8 +68,10 @@ export function Header() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { sucursalId: activeSucursalId, sucursales, setSucursalId, hasMultiple } = useSucursal();
-  const [notificaciones, setNotificaciones] = useState(notificacionesMock);
+  const [notificaciones, setNotificaciones] = useState<NotificacionData[]>([]);
+  const [noLeidas, setNoLeidas] = useState(0);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [loadingNotif, setLoadingNotif] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
@@ -116,7 +80,7 @@ export function Header() {
   // Evitar hydration mismatch del theme toggle
   useEffect(() => { setMounted(true); }, []);
 
-  // Cargar datos desde organización
+  // ─── Cargar datos de organización ─────────────────────────
   const cargarOrg = useCallback(() => {
     fetch('/api/organization')
       .then(r => r.json())
@@ -136,24 +100,104 @@ export function Header() {
     return () => window.removeEventListener('organization-updated', cargarOrg);
   }, [cargarOrg]);
 
+  // ─── Cargar notificaciones ─────────────────────────────────
+  const cargarNotificaciones = useCallback(async () => {
+    setLoadingNotif(true);
+    try {
+      const res = await fetch('/api/notificaciones?limit=20&soloNoLeidas=false');
+      if (!res.ok) return;
+      const json = await res.json();
+      setNotificaciones(json.data || []);
+      setNoLeidas(json.noLeidas || 0);
+    } catch {
+      console.warn('[Header] Error al cargar notificaciones');
+    } finally {
+      setLoadingNotif(false);
+    }
+  }, []);
+
+  // Cargar al montar y cada 60s
+  useEffect(() => {
+    cargarNotificaciones();
+    const interval = setInterval(cargarNotificaciones, 60000);
+    return () => clearInterval(interval);
+  }, [cargarNotificaciones]);
+
+  // Recargar al abrir el dropdown
+  useEffect(() => {
+    if (notifOpen) cargarNotificaciones();
+  }, [notifOpen, cargarNotificaciones]);
+
+  // ─── Acciones ──────────────────────────────────────────────
+
+  const marcarLeida = async (id: string) => {
+    try {
+      await fetch(`/api/notificaciones/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'read' }),
+      });
+      setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, leido: true } : n));
+      setNoLeidas(prev => Math.max(0, prev - 1));
+    } catch (e) {
+      console.error('Error al marcar leída', e);
+    }
+  };
+
+  const marcarNoLeida = async (id: string) => {
+    try {
+      await fetch(`/api/notificaciones/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'unread' }),
+      });
+      setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, leido: false } : n));
+      setNoLeidas(prev => prev + 1);
+    } catch (e) {
+      console.error('Error al marcar no leída', e);
+    }
+  };
+
+  const marcarTodasLeidas = async () => {
+    try {
+      await fetch('/api/notificaciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'leidas' }),
+      });
+      setNotificaciones(prev => prev.map(n => ({ ...n, leido: true })));
+      setNoLeidas(0);
+    } catch (e) {
+      console.error('Error al marcar todas leídas', e);
+    }
+  };
+
+  const eliminarNotificacion = async (id: string) => {
+    try {
+      await fetch(`/api/notificaciones/${id}`, { method: 'DELETE' });
+      setNotificaciones(prev => prev.filter(n => n.id !== id));
+      setNoLeidas(prev =>
+        prev - (notificaciones.find(n => n.id === id)?.leido ? 0 : 1)
+      );
+    } catch (e) {
+      console.error('Error al eliminar notificación', e);
+    }
+  };
+
+  const handleNotifClick = (notif: NotificacionData) => {
+    if (!notif.leido) marcarLeida(notif.id);
+    if (notif.href) {
+      router.push(notif.href);
+      setNotifOpen(false);
+    }
+  };
+
   const user = session?.user;
   const nombreCompleto = user?.name || 'Dr.';
   const nameParts = nombreCompleto.trim().split(/\s+/);
   const initials = nameParts.length > 1
     ? (nameParts[0].charAt(0) + nameParts[1].charAt(0)).toUpperCase()
     : nameParts[0].charAt(0).toUpperCase();
-
-  const noLeidas = notificaciones.filter((n) => !n.leido).length;
-
-  const marcarLeida = (id: string) => {
-    setNotificaciones((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, leido: true } : n))
-    );
-  };
-
-  const marcarTodasLeidas = () => {
-    setNotificaciones((prev) => prev.map((n) => ({ ...n, leido: true })));
-  };
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
@@ -255,7 +299,7 @@ export function Header() {
               <Bell className="h-4 w-4" />
               {noLeidas > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white">
-                  {noLeidas}
+                  {noLeidas > 99 ? '99+' : noLeidas}
                 </span>
               )}
             </Button>
@@ -263,70 +307,129 @@ export function Header() {
           <DropdownMenuContent align="end" className="w-80 p-0">
             <DropdownMenuLabel className="flex items-center justify-between px-4 py-3">
               <span className="font-semibold">Notificaciones</span>
-              {noLeidas > 0 && (
+              <div className="flex items-center gap-1">
+                {noLeidas > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto p-1 text-xs text-primary font-normal"
+                    onClick={marcarTodasLeidas}
+                    title="Marcar todas leídas"
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1" />
+                    Leídas
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto p-0 text-xs text-primary font-normal"
-                  onClick={marcarTodasLeidas}
+                  className="h-auto p-1 text-xs text-muted-foreground font-normal"
+                  onClick={() => { router.push('/dashboard/notificaciones'); setNotifOpen(false); }}
+                  title="Ver todas"
                 >
-                  Marcar todas leídas
+                  <List className="h-3.5 w-3.5" />
                 </Button>
-              )}
+              </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="my-0" />
-            <ScrollArea className="h-[300px]">
-              {notificaciones.length === 0 ? (
+            <ScrollArea className="h-[350px]">
+              {loadingNotif && notificaciones.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-24 text-sm text-muted-foreground">
-                  <Bell className="h-6 w-6 mb-1 opacity-50" />
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent mb-1" />
+                  Cargando...
+                </div>
+              ) : notificaciones.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-24 text-sm text-muted-foreground">
+                  <BellOff className="h-6 w-6 mb-1 opacity-50" />
                   Sin notificaciones
                 </div>
               ) : (
-                notificaciones.map((notif) => {
+                notificaciones.slice(0, 15).map((notif) => {
                   const Icon = iconosNotificacion[notif.tipo] || Bell;
                   return (
-                    <DropdownMenuItem
+                    <div
                       key={notif.id}
-                      className={`flex items-start gap-3 px-4 py-3 cursor-pointer rounded-none ${
-                        !notif.leido ? 'bg-primary/5' : ''
+                      className={`group relative flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors rounded-none ${
+                        !notif.leido ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/50'
                       }`}
-                      onClick={() => {
-                        marcarLeida(notif.id);
-                        router.push(notif.href);
-                        setNotifOpen(false);
-                      }}
                     >
-                      <div className={`h-8 w-8 rounded-lg ${coloresNotificacion[notif.tipo] || ''} flex items-center justify-center shrink-0`}>
-                        <Icon className="h-4 w-4" />
+                      {/* Click principal → marcar leído + navegar */}
+                      <div
+                        className="flex items-start gap-3 flex-1 min-w-0"
+                        onClick={() => handleNotifClick(notif)}
+                      >
+                        <div className={`h-8 w-8 rounded-lg ${coloresNotificacion[notif.tipo] || ''} flex items-center justify-center shrink-0`}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm pr-6 ${!notif.leido ? 'font-semibold' : ''}`}>
+                            {notif.titulo}
+                          </p>
+                          {notif.descripcion && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {notif.descripcion}
+                            </p>
+                          )}
+                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                            {formatRelative(notif.createdAt)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm ${!notif.leido ? 'font-semibold' : ''}`}>
-                          {notif.titulo}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {notif.descripcion}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                          {formatRelative(notif.tiempo)}
-                        </p>
-                      </div>
+
+                      {/* Indicador de no leído */}
                       {!notif.leido && (
-                        <div className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1.5" />
+                        <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-primary shrink-0" />
                       )}
-                    </DropdownMenuItem>
+
+                      {/* Acciones: hover */}
+                      <div className="absolute top-2 right-1 hidden group-hover:flex items-center gap-0.5 bg-background/90 backdrop-blur-sm rounded-lg border shadow-xs p-0.5">
+                        {notif.leido ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); marcarNoLeida(notif.id); }}
+                            className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
+                            title="Marcar como no leída"
+                          >
+                            <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); marcarLeida(notif.id); }}
+                            className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
+                            title="Marcar como leída"
+                          >
+                            <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); eliminarNotificacion(notif.id); }}
+                          className="h-6 w-6 flex items-center justify-center rounded hover:bg-destructive/10 transition-colors"
+                          title="Eliminar notificación"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-destructive/70" />
+                        </button>
+                      </div>
+                    </div>
                   );
                 })
               )}
             </ScrollArea>
             <DropdownMenuSeparator className="my-0" />
-            <div className="p-2">
+            <div className="p-2 flex gap-1">
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full text-xs text-muted-foreground"
+                className="flex-1 text-xs text-muted-foreground"
+                onClick={() => { router.push('/dashboard/notificaciones'); setNotifOpen(false); }}
+              >
+                Ver todas
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-1 text-xs text-muted-foreground"
                 onClick={() => { router.push('/dashboard/configuracion?tab=notificaciones'); setNotifOpen(false); }}
               >
-                ⚙️ Configurar notificaciones
+                ⚙️ Configurar
               </Button>
             </div>
           </DropdownMenuContent>

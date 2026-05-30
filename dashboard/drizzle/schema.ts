@@ -688,6 +688,31 @@ export const horariosAtencionRelations = relations(horariosAtencion, ({ one }) =
 }));
 
 // ============================================================
+// NOTIFICACIONES (in-app)
+// ============================================================
+export const notificaciones = pgTable('notificaciones', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  usuarioId: uuid('usuario_id').notNull(),
+  titulo: varchar('titulo', { length: 255 }).notNull(),
+  descripcion: text('descripcion'),
+  tipo: varchar('tipo', { length: 20 }).notNull().default('sistema'), // turno | mensaje | receta | urgencia | sistema
+  leido: boolean('leido').notNull().default(false),
+  href: varchar('href', { length: 500 }),
+  metadata: jsonb('metadata').default({}),
+  tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (table) => ({
+  idxNotificacionesUsuario: index('idx_notificaciones_usuario').on(table.usuarioId),
+  idxNotificacionesLeido: index('idx_notificaciones_leido').on(table.usuarioId, table.leido),
+  idxNotificacionesCreatedAt: index('idx_notificaciones_created_at').on(table.createdAt),
+}));
+
+export type Notificacion = InferSelectModel<typeof notificaciones>;
+export type NewNotificacion = InferInsertModel<typeof notificaciones>;
+
+// ============================================================
 // PREFERENCIAS DE NOTIFICACIONES
 // ============================================================
 export const preferenciasNotificaciones = pgTable('preferencias_notificaciones', {
