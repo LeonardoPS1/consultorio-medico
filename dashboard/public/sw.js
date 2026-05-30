@@ -26,6 +26,13 @@ self.addEventListener('install', (event) => {
   );
 });
 
+// ─── MENSAJES DESDE LA APP ──────────────────────────────────
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // ─── ACTIVACIÓN ─────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
   event.waitUntil(

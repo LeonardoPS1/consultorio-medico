@@ -18,11 +18,7 @@ export function PWARegister() {
   const handleUpdate = useCallback(() => {
     if (waitingSW) {
       waitingSW.postMessage({ type: 'SKIP_WAITING' });
-      waitingSW.addEventListener('statechange', () => {
-        if (waitingSW.state === 'activated') {
-          window.location.reload();
-        }
-      });
+      // El SW llama a skipWaiting(), toma control y dispara controllerchange
     }
   }, [waitingSW]);
 
@@ -59,6 +55,8 @@ export function PWARegister() {
     window.addEventListener('appinstalled', handleInstalled);
 
     // ─── Service Worker ───────────────────────────────
+    const handleControllerChange = () => window.location.reload();
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { scope: '/' })
         .then((registration) => {
@@ -85,12 +83,8 @@ export function PWARegister() {
           // SW no soportado o error — no crítico
         });
 
-      // Escuchar mensaje de SKIP_WAITING response
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data?.type === 'SKIP_WAITING_RESPONSE') {
-          window.location.reload();
-        }
-      });
+      // Cuando el SW salta la espera y toma control, recargamos la página
+      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
     }
 
     return () => {
@@ -98,6 +92,9 @@ export function PWARegister() {
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
       window.removeEventListener('appinstalled', handleInstalled);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+      }
     };
   }, []);
 
