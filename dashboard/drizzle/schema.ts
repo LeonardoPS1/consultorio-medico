@@ -713,6 +713,28 @@ export type Notificacion = InferSelectModel<typeof notificaciones>;
 export type NewNotificacion = InferInsertModel<typeof notificaciones>;
 
 // ============================================================
+// PUSH SUBSCRIPTIONS (Web Push API)
+// ============================================================
+export const pushSubscriptions = pgTable('push_subscriptions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  usuarioId: uuid('usuario_id').notNull(),
+  endpoint: text('endpoint').notNull(),
+  auth: varchar('auth', { length: 255 }).notNull(),
+  p256dh: varchar('p256dh', { length: 255 }).notNull(),
+  userAgent: text('user_agent'),
+  activa: boolean('activa').notNull().default(true),
+  tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  idxPushUsuario: index('idx_push_usuario').on(table.usuarioId),
+  idxPushEndpoint: uniqueIndex('idx_push_endpoint').on(table.endpoint),
+}));
+
+export type PushSubscriptionDB = InferSelectModel<typeof pushSubscriptions>;
+export type NewPushSubscription = InferInsertModel<typeof pushSubscriptions>;
+
+// ============================================================
 // PREFERENCIAS DE NOTIFICACIONES
 // ============================================================
 export const preferenciasNotificaciones = pgTable('preferencias_notificaciones', {

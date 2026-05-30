@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Bell, BellOff, Calendar, MessageSquare, Syringe, AlertTriangle,
-  Check, Eye, EyeOff, Trash2, CheckCheck, Filter, Loader2,
+  Check, Eye, EyeOff, Trash2, CheckCheck, Filter, Loader2, Smartphone,
 } from 'lucide-react';
+import { PushNotificationToggle } from '@/components/push-notification-toggle';
 import { formatRelative } from '@/lib/utils';
 
 // ============================================================
@@ -169,6 +170,13 @@ export default function NotificacionesPage() {
             {labelsTipo[tipo] || tipo}
           </Badge>
         ))}
+      </div>
+
+      {/* ─── Push Notification Toggle ────────────────────── */}
+      <div className="flex items-center gap-2 px-4 py-3 rounded-xl border bg-card/50">
+        <Smartphone className="w-4 h-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground font-medium">Notificaciones en este dispositivo:</span>
+        <PushNotificationToggle />
       </div>
 
       {/* ─── Lista ───────────────────────────────────────── */}

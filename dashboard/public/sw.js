@@ -33,6 +33,68 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// ─── PUSH NOTIFICATIONS ─────────────────────────────────────
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  try {
+    const data = event.data.json();
+    const title = data.title || 'AiCoreMed';
+    const options = {
+      body: data.body || '',
+      icon: data.icon || '/icons/icon-192x192.png',
+      badge: data.badge || '/icons/icon-96x96.png',
+      tag: data.tag || 'default',
+      data: {
+        url: data.url || '/',
+        id: data.id || null,
+        tipo: data.tipo || 'sistema',
+      },
+      vibrate: [200, 100, 200],
+      requireInteraction: true,
+      silent: false,
+    };
+
+    event.waitUntil(self.registration.showNotification(title, options));
+  } catch {
+    // Si no es JSON válido, mostrar el texto plano
+    const title = 'AiCoreMed';
+    const options = {
+      body: event.data.text(),
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-96x96.png',
+    };
+    event.waitUntil(self.registration.showNotification(title, options));
+  }
+});
+
+// ─── CLICK EN NOTIFICACIÓN ──────────────────────────────────
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const url = event.notification.data?.url || '/';
+  const id = event.notification.data?.id;
+
+  // Enfocar o abrir la URL correspondiente
+  const urlToOpen = id
+    ? new URL(url, self.location.origin).href
+    : new URL(url, self.location.origin).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Si ya hay una ventana abierta, enfocarla y navegar
+        for (const client of clientList) {
+          if (client.url.includes(self.location.host)) {
+            return client.navigate(urlToOpen).then(() => client.focus());
+          }
+        }
+        // Si no, abrir una nueva
+        return clients.openWindow(urlToOpen);
+      })
+  );
+});
+
 // ─── ACTIVACIÓN ─────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
   event.waitUntil(

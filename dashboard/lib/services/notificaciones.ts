@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { notificaciones } from '@/drizzle/schema';
-import { eq, and, sql, count, desc, ilike, or } from 'drizzle-orm';
-import { notFound, fail } from '@/lib/api-handler';
+import { eq, and, sql, count, desc } from 'drizzle-orm';
+import { notFound } from '@/lib/api-handler';
 
 export interface CreateNotificacionInput {
   usuarioId: string;
@@ -78,7 +78,7 @@ export const notificacionesService = {
   },
 
   /**
-   * Crear una nueva notificación
+   * Crear una nueva notificación y enviar push si está configurado
    */
   async create(input: CreateNotificacionInput) {
     const [nueva] = await db
@@ -93,6 +93,22 @@ export const notificacionesService = {
         tenantId: (input.tenantId as any) || undefined,
       })
       .returning();
+
+    // Enviar push notification (fire-and-forget)
+    try {
+      const { pushService } = await import('@/lib/services/push');
+      if (pushService.isConfigured()) {
+        pushService.sendToUser(input.usuarioId, {
+          title: input.titulo,
+          body: input.descripcion || input.titulo,
+          url: input.href || '/',
+          id: nueva.id,
+          tipo: input.tipo || 'sistema',
+        }).catch(() => {});
+      }
+    } catch {
+      // No bloquear si push falla
+    }
 
     return nueva;
   },
