@@ -38,7 +38,11 @@ export type FeatureId =
   | 'multi-sucursal'
   | 'encuestas'
   | 'lista-espera'
-  | 'n8n-monitor';
+  | 'n8n-monitor'
+  | 'pwa'
+  | 'firma-digital'
+  | 'exportacion'
+  | 'gcal-sync';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -70,6 +74,10 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'encuestas': 'starter',
   'lista-espera': 'professional',
   'n8n-monitor': 'premium',
+  'pwa': 'free',
+  'firma-digital': 'professional',
+  'exportacion': 'professional',
+  'gcal-sync': 'premium',
 };
 
 // ============================================================

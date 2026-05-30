@@ -56,6 +56,7 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
   { id: 'notificaciones', label: 'Notificaciones', description: 'Alertas por WhatsApp y email', category: 'modulos' },
   { id: 'portal-paciente', label: 'Portal del Paciente', description: 'Acceso web para que pacientes vean turnos y recetas', category: 'modulos' },
   { id: 'encuestas', label: 'Encuestas Post-Consulta', description: 'Encuestas de satisfacción automáticas por WhatsApp', category: 'modulos' },
+  { id: 'pwa', label: 'PWA (App Instalable)', description: 'Progressive Web App con modo offline y actualizaciones automáticas', category: 'modulos' },
 
   // ─── Funcionalidades avanzadas ──────────────────────────
   { id: 'reportes-avanzados', label: 'Reportes Avanzados', description: 'Gráficos, exportación Excel y PDF', category: 'avanzado' },
@@ -64,6 +65,9 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
   { id: '2fa', label: 'Autenticación 2FA', description: 'Segundo factor de autenticación para médicos', category: 'avanzado' },
   { id: 'equipo', label: 'Gestión de Equipo', description: 'Múltiples médicos y profesionales', category: 'avanzado' },
   { id: 'credenciales', label: 'Credenciales', description: 'Gestión de credenciales de servicios externos', category: 'avanzado' },
+  { id: 'firma-digital', label: 'Firma Digital QR', description: 'Hash de verificación SHA-256 en recetas con QR público', category: 'avanzado' },
+  { id: 'exportacion', label: 'Exportación Excel/PDF', description: 'Exportar pacientes y recetas a Excel y PDF', category: 'avanzado' },
+  { id: 'lista-espera', label: 'Lista de Espera', description: 'Lista de espera inteligente con ofertas automáticas al cancelar turnos', category: 'avanzado' },
   { id: 'multi-sucursal', label: 'Multi-sucursal', description: 'Múltiples sucursales o consultorios', category: 'avanzado' },
 
   // ─── Sistema ────────────────────────────────────────────
@@ -72,6 +76,8 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
   { id: 'auditoria', label: 'Auditoría', description: 'Registro de accesos y acciones del sistema', category: 'sistema' },
   { id: 'backup-encriptado', label: 'Backup Encriptado', description: 'Respaldo automático encriptado de la BD', category: 'sistema' },
   { id: 'webhooks-log', label: 'Log de Webhooks', description: 'Registro de llamadas webhook entrantes', category: 'sistema' },
+  { id: 'gcal-sync', label: 'Google Calendar Sync', description: 'Sincronización bidireccional de turnos con Google Calendar', category: 'sistema' },
+  { id: 'n8n-monitor', label: 'n8n Monitor', description: 'Dashboard de monitoreo de workflows n8n en vivo', category: 'sistema' },
 ];
 
 // ─── Props ───────────────────────────────────────────────────
