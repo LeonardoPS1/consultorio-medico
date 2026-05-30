@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateRequest } from 'twilio';
+import { and, eq, sql } from 'drizzle-orm';
 import { withRateLimit } from '@/lib/rate-limit';
+import { db } from '@/lib/db';
+import { turnos, pacienteEventos } from '@/drizzle/schema';
+import { turnosService } from '@/lib/services/turnos';
 import {
   getPacienteByTelefono,
   createPaciente,
@@ -94,6 +98,126 @@ async function notifyDoctor(patientName: string, messagePreview: string, telefon
   } catch (e) {
     console.warn('[Twilio] ⚠️ No se pudo notificar al médico:', (e as Error).message);
   }
+}
+
+/**
+ * Maneja respuestas a recordatorios (CONFIRMAR / CANCELAR).
+ *
+ * Cuando un paciente responde a un recordatorio:
+ * - CONFIRMAR → marca confirmoAsistencia y envía confirmación
+ * - CANCELAR  → cancela el turno vía turnosService (dispara waitlist + GCal)
+ *
+ * @returns true si se manejó la respuesta (no debe forwardearse a n8n)
+ */
+async function handleReminderResponse(
+  messageBody: string,
+  pacienteId: string,
+  telefono: string
+): Promise<{ handled: boolean; skipN8n: boolean }> {
+  const upperBody = messageBody.trim().toUpperCase().replace(/[.!¡¿?]/g, '');
+  const esConfirmar = /^(SI\s*)?(CONFIRMAR|CONFIRMO|CONFIRMÓ)$/.test(upperBody);
+  const esCancelar = /^(CANCELAR|CANCELO|CANCELAR\s*TURNO)$/.test(upperBody);
+
+  if (!esConfirmar && !esCancelar) {
+    return { handled: false, skipN8n: false };
+  }
+
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
+
+  // Buscar el próximo turno del paciente que esté activo
+  const [turno] = await db
+    .select({ id: turnos.id, fechaHora: turnos.fechaHora })
+    .from(turnos)
+    .where(and(
+      eq(turnos.pacienteId, pacienteId),
+      sql`${turnos.deletedAt} IS NULL`,
+      sql`${turnos.estado} IN ('pendiente', 'confirmada')`,
+      sql`${turnos.fechaHora} > NOW()`,
+    ))
+    .orderBy(turnos.fechaHora)
+    .limit(1);
+
+  if (!turno) {
+    console.log('[Reminder] No se encontró turno activo para el paciente');
+    return { handled: true, skipN8n: false };
+  }
+
+  if (esConfirmar) {
+    // Marcar confirmación de asistencia + leído
+    await db.update(turnos)
+      .set({ confirmoAsistencia: true, recordatorio24hLeido: true, updatedAt: new Date() })
+      .where(eq(turnos.id, turno.id));
+
+    // Insertar evento en timeline
+    await db.insert(pacienteEventos).values({
+      pacienteId,
+      tipo: 'confirmacion',
+      descripcion: 'Paciente confirmó asistencia al turno',
+      metadata: { turnoId: turno.id, fuente: 'recordatorio_whatsapp' },
+    });
+
+    console.log(`[Reminder] Turno ${turno.id} confirmado por paciente ${pacienteId}`);
+
+    // Enviar confirmación al paciente
+    if (accountSid && authToken && fromNumber) {
+      const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
+      const fecha = new Date(turno.fechaHora).toLocaleString('es-AR', {
+        day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+      });
+      await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+        method: 'POST',
+        headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          From: fromNumber,
+          To: `whatsapp:${telefono}`,
+          Body: `✅ ¡Asistencia confirmada! Te esperamos el ${fecha}.\n\nSi necesitás reprogramar, escribinos.`,
+        }).toString(),
+        signal: AbortSignal.timeout(5000),
+      });
+    }
+  }
+
+  if (esCancelar) {
+    // Cancelar turno vía service (dispara waitlist + GCal)
+    await turnosService.update(turno.id, {
+      estado: 'cancelada',
+      motivoCancelacion: 'Cancelado por paciente desde recordatorio WhatsApp',
+    });
+
+    // Marcar recordatorio como leído (el paciente respondió, claramente lo leyó)
+    await db.update(turnos)
+      .set({ recordatorio24hLeido: true, updatedAt: new Date() })
+      .where(eq(turnos.id, turno.id));
+
+    // Insertar evento en timeline
+    await db.insert(pacienteEventos).values({
+      pacienteId,
+      tipo: 'cancelacion',
+      descripcion: 'Paciente canceló turno desde recordatorio WhatsApp',
+      metadata: { turnoId: turno.id, fuente: 'recordatorio_whatsapp' },
+    });
+
+    console.log(`[Reminder] Turno ${turno.id} cancelado por paciente ${pacienteId} desde recordatorio`);
+
+    // Enviar confirmación
+    if (accountSid && authToken && fromNumber) {
+      const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
+      await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+        method: 'POST',
+        headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          From: fromNumber,
+          To: `whatsapp:${telefono}`,
+          Body: '❌ Turno cancelado. Si querés pedir un nuevo turno, escribinos "SACAR TURNO" y te ayudamos.',
+        }).toString(),
+        signal: AbortSignal.timeout(5000),
+      });
+    }
+  }
+
+  return { handled: true, skipN8n: true };
 }
 
 /**
@@ -229,6 +353,7 @@ export const POST = withRateLimit(async function POST(request: NextRequest) {
               `, Error: ${errorCode} — ${errorMessage || 'sin detalle'}`
           );
         }
+
       } else {
         console.warn(`[Twilio] Mensaje ${callbackMessageSid} no encontrado en DB (puede ser de antes del tracking)`);
       }
@@ -320,13 +445,20 @@ export const POST = withRateLimit(async function POST(request: NextRequest) {
       ? await handleWaitlistResponse(paciente.id, body, telefono)
       : false;
 
-    // Si fue procesado como waitlist, no forwardear a n8n
-    if (!esWaitlist) {
-      // Forward a n8n para procesamiento con IA (fire-and-forget)
-      forwardToN8n(params).catch(() => {});
+    // Detectar si es respuesta a recordatorio (CONFIRMAR / CANCELAR)
+    const esRecordatorio = paciente
+      ? await handleReminderResponse(body, paciente.id, telefono)
+      : { handled: false, skipN8n: false };
+
+    // Si fue procesado como waitlist o recordatorio, responder sin forwardear
+    if (esWaitlist || esRecordatorio.skipN8n) {
+      return new NextResponse(null, { status: 200 });
     }
 
-    // Notificar al médico (fire-and-forget) — excepto para respuestas de waitlist
+    // Forward a n8n para procesamiento con IA (fire-and-forget)
+    forwardToN8n(params).catch(() => {});
+
+    // Notificar al médico (fire-and-forget)
     if (!esWaitlist) {
       const nombrePaciente = `${paciente.nombre} ${paciente.apellido}`.trim();
       notifyDoctor(nombrePaciente, body, telefono).catch(() => {});

@@ -26,7 +26,7 @@
       },
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT t.id, t.fecha_hora, t.estado,\n  p.id as paciente_id, p.nombre, p.apellido, p.telefono,\n  m.nombre as medico_nombre\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nJOIN medicos m ON m.id = t.medico_id\nWHERE t.estado IN ('pendiente', 'confirmada')\n  AND t.recordatorio_24h_enviado = FALSE\n  AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '24 hours'\n  AND t.fecha_hora > NOW() + INTERVAL '1 hour' -- no overlap with 1h reminders\n  AND p.consentimiento_whatsapp = TRUE\n  AND EXTRACT(HOUR FROM NOW()) BETWEEN 8 AND 20 -- solo horario diurno\nORDER BY t.fecha_hora;"
+        "query": "SELECT t.id, t.fecha_hora, t.estado,\n  p.id as paciente_id, p.nombre, p.apellido, p.telefono, p.consentimiento_whatsapp,\n  m.nombre as medico_nombre, m.telefono as medico_telefono,\n  COALESCE(\n    (SELECT pm.contenido FROM plantillas_mensajes pm\n     WHERE pm.categoria = 'recordatorios' AND pm.nombre LIKE '%24h%' AND pm.activa = TRUE LIMIT 1),\n    '👋 Hola {{nombre}}! Te recordamos que tenés un turno mañana {{fecha_hora}} con {{medico_nombre}}. Respondé CONFIRMAR para confirmar tu asistencia o CANCELAR si necesitás reprogramar. 😊'\n  ) as plantilla_contenido\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nJOIN medicos m ON m.id = t.medico_id\nWHERE t.estado IN ('pendiente', 'confirmada')\n  AND t.recordatorio_24h_enviado = FALSE\n  AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '24 hours'\n  AND t.fecha_hora > NOW() + INTERVAL '1 hour'\n  AND p.consentimiento_whatsapp = TRUE\n  AND EXTRACT(HOUR FROM NOW()) BETWEEN 8 AND 20\nORDER BY t.fecha_hora;"
       }
     },
     {
@@ -40,7 +40,7 @@
       },
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT t.id, t.fecha_hora, t.estado,\n  p.id as paciente_id, p.nombre, p.apellido, p.telefono,\n  m.nombre as medico_nombre\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nJOIN medicos m ON m.id = t.medico_id\nWHERE t.estado IN ('pendiente', 'confirmada')\n  AND t.recordatorio_1h_enviado = FALSE\n  AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '1 hour'\n  AND p.consentimiento_whatsapp = TRUE\n  AND EXTRACT(HOUR FROM NOW()) BETWEEN 8 AND 20 -- solo horario diurno\nORDER BY t.fecha_hora;"
+        "query": "SELECT t.id, t.fecha_hora, t.estado,\n  p.id as paciente_id, p.nombre, p.apellido, p.telefono, p.consentimiento_whatsapp,\n  m.nombre as medico_nombre, m.telefono as medico_telefono,\n  COALESCE(\n    (SELECT pm.contenido FROM plantillas_mensajes pm\n     WHERE pm.categoria = 'recordatorios' AND pm.nombre LIKE '%1h%' AND pm.activa = TRUE LIMIT 1),\n    '⏰ Recordatorio {{nombre}}: en 1 hora tenés turno con {{medico_nombre}} ({{fecha_hora}}). Te esperamos! 🏥'\n  ) as plantilla_contenido\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nJOIN medicos m ON m.id = t.medico_id\nWHERE t.estado IN ('pendiente', 'confirmada')\n  AND t.recordatorio_1h_enviado = FALSE\n  AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '1 hour'\n  AND p.consentimiento_whatsapp = TRUE\n  AND EXTRACT(HOUR FROM NOW()) BETWEEN 8 AND 20\nORDER BY t.fecha_hora;"
       }
     },
     {
@@ -79,7 +79,7 @@
       "position": [750, 100],
       "parameters": {
         "language": "javaScript",
-        "code": "// Template: Recordatorio 24h\n// Editá este contenido desde el Dashboard en Configuración → Plantillas WhatsApp\nconst TEMPLATE = `👋 Hola {{nombre}}! Te recordamos que tenés un turno mañana {{fecha_hora}} con {{medico_nombre}}. Respondé CONFIRMAR para confirmar tu asistencia. ¡Gracias! 😊`;\n\nreturn items.map(item => {\n  let body = TEMPLATE;\n  const vars = item.json;\n  // Reemplazar {{variables}} con los valores del turno\n  body = body.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (match, key) => {\n    return vars[key] !== undefined ? String(vars[key]) : match;\n  });\n  return { json: { ...vars, body } };\n});"
+        "code": "// Template: Recordatorio 24h — leído desde plantillas_mensajes (categoria: recordatorios)\nreturn items.map(item => {\n  let body = item.json.plantilla_contenido || '👋 Hola {{nombre}}! Te recordamos tu turno mañana {{fecha_hora}} con {{medico_nombre}}.';\n  const vars = item.json;\n  body = body.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (match, key) => {\n    return vars[key] !== undefined ? String(vars[key]) : match;\n  });\n  return { json: { ...vars, body } };\n});"
       }
     },
     {
@@ -90,7 +90,7 @@
       "position": [750, 400],
       "parameters": {
         "language": "javaScript",
-        "code": "// Template: Recordatorio 1h\n// Editá este contenido desde el Dashboard en Configuración → Plantillas WhatsApp\nconst TEMPLATE = `⏰ Recordatorio: en 1 hora tenés turno con {{medico_nombre}}. Te esperamos! 🏥`;\n\nreturn items.map(item => {\n  let body = TEMPLATE;\n  const vars = item.json;\n  body = body.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (match, key) => {\n    return vars[key] !== undefined ? String(vars[key]) : match;\n  });\n  return { json: { ...vars, body } };\n});"
+        "code": "// Template: Recordatorio 1h — leído desde plantillas_mensajes (categoria: recordatorios)\nreturn items.map(item => {\n  let body = item.json.plantilla_contenido || '⏰ Recordatorio {{nombre}}: en 1 hora tenés turno con {{medico_nombre}} ({{fecha_hora}}).';\n  const vars = item.json;\n  body = body.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (match, key) => {\n    return vars[key] !== undefined ? String(vars[key]) : match;\n  });\n  return { json: { ...vars, body } };\n});"
       }
     },
     {
@@ -162,11 +162,45 @@
       }
     },
     {
+      "id": "evento-24h",
+      "name": "PG - Evento Timeline 24h",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1500, 100],
+      "credentials": {
+        "postgres": { "id": "fersBxOXicK7tW99", "name": "Consultorio - postgres" }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO paciente_eventos (paciente_id, tipo, descripcion, metadata)\nVALUES ($1, 'recordatorio', $2, $3);",
+        "additionalFields": {
+          "queryParams": "={{ [$json.paciente_id, 'Recordatorio 24h enviado - turno: ' + $json.id, JSON.stringify({turno_id: $json.id, tipo: '24h'})] }}"
+        }
+      }
+    },
+    {
+      "id": "evento-1h",
+      "name": "PG - Evento Timeline 1h",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1500, 400],
+      "credentials": {
+        "postgres": { "id": "fersBxOXicK7tW99", "name": "Consultorio - postgres" }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO paciente_eventos (paciente_id, tipo, descripcion, metadata)\nVALUES ($1, 'recordatorio', $2, $3);",
+        "additionalFields": {
+          "queryParams": "={{ [$json.paciente_id, 'Recordatorio 1h enviado - turno: ' + $json.id, JSON.stringify({turno_id: $json.id, tipo: '1h'})] }}"
+        }
+      }
+    },
+    {
       "id": "log",
       "name": "PG - Log de Envío",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
-      "position": [1500, 250],
+      "position": [1750, 250],
       "credentials": {
         "postgres": { "id": "fersBxOXicK7tW99", "name": "Consultorio - postgres" }
       },
@@ -177,6 +211,62 @@
           "queryParams": "={{ [$json.executionId, 'Recordatorio enviado - turno: ' + $json.id, JSON.stringify({turno_id: $json.id, paciente: $json.nombre + ' ' + $json.apellido})] }}"
         }
       }
+    },
+    {
+      "id": "query-no-confirmados",
+      "name": "PG - Turnos No Confirmados",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [250, 750],
+      "credentials": {
+        "postgres": { "id": "fersBxOXicK7tW99", "name": "Consultorio - postgres" }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.id, t.fecha_hora,\n  p.nombre, p.apellido, p.telefono,\n  m.nombre as medico_nombre, m.telefono as medico_telefono\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nJOIN medicos m ON m.id = t.medico_id\nWHERE t.estado IN ('pendiente', 'confirmada')\n  AND t.recordatorio_24h_enviado = TRUE\n  AND (t.confirmo_asistencia = FALSE OR t.confirmo_asistencia IS NULL)\n  AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '3 hours'\n  AND EXTRACT(HOUR FROM NOW()) BETWEEN 8 AND 20\nORDER BY m.nombre, t.fecha_hora;"
+      }
+    },
+    {
+      "id": "if-no-confirmados",
+      "name": "¿Hay no confirmados?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [500, 750],
+      "parameters": {
+        "conditions": {
+          "number": [
+            { "value1": "={{ $items().length }}", "operation": "larger", "value2": 0 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "code-no-confirmados",
+      "name": "Code - Armar Alerta Médico",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 700],
+      "parameters": {
+        "language": "javaScript",
+        "code": "// Armar mensaje de alerta para el médico con los turnos no confirmados\n// Agrupar por médico para enviar un solo mensaje\nconst groups = {};\nfor (const item of items) {\n  const d = item.json;\n  const key = d.medico_telefono || 'sin-telefono';\n  if (!groups[key]) {\n    groups[key] = {\n      medico_nombre: d.medico_nombre,\n      medico_telefono: d.medico_telefono,\n      turnos: []\n    };\n  }\n  groups[key].turnos.push(d);\n}\n\nconst result = [];\nfor (const [tel, g] of Object.entries(groups)) {\n  const lista = g.turnos.map(t =>\n    `• ${t.nombre} ${t.apellido} — ${new Date(t.fecha_hora).toLocaleString('es-AR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}`\n  ).join('\\n');\n  const body = `⚠️ Pacientes que NO confirmaron su turno:\\n\\n${lista}\\n\\nContactalos para confirmar asistencia.`;\n  result.push({ json: { medico_nombre: g.medico_nombre, medico_telefono: g.medico_telefono, body, turnos: g.turnos } });\n}\nreturn result;"
+      }
+    },
+    {
+      "id": "twilio-no-confirmados",
+      "name": "Twilio - Alerta Médico",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
+      "position": [1000, 700],
+      "credentials": {
+        "twilioApi": { "id": "aE31QgQsM9spWb5a", "name": "Consultorio - Twilio API" }
+      },
+      "parameters": {
+        "resource": "message",
+        "operation": "create",
+        "to": "={{ 'whatsapp:+549' + $json.medico_telefono }}",
+        "from": "={{ $env.TWILIO_WHATSAPP_NUMBER }}",
+        "body": "={{ $json.body }}"
+      }
     }
   ],
   "connections": {
@@ -184,7 +274,8 @@
       "main": [
         [
           { "node": "PG - Turnos Próximas 24hs", "type": "main", "index": 0 },
-          { "node": "PG - Turnos Próxima 1h", "type": "main", "index": 0 }
+          { "node": "PG - Turnos Próxima 1h", "type": "main", "index": 0 },
+          { "node": "PG - Turnos No Confirmados", "type": "main", "index": 0 }
         ]
       ]
     },
@@ -219,10 +310,28 @@
       "main": [[{ "node": "PG - Marcar Recordatorio 1h", "type": "main", "index": 0 }]]
     },
     "PG - Marcar Recordatorio 24h": {
-      "main": [[{ "node": "PG - Log de Envío", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "PG - Evento Timeline 24h", "type": "main", "index": 0 }]]
     },
     "PG - Marcar Recordatorio 1h": {
+      "main": [[{ "node": "PG - Evento Timeline 1h", "type": "main", "index": 0 }]]
+    },
+    "PG - Evento Timeline 24h": {
       "main": [[{ "node": "PG - Log de Envío", "type": "main", "index": 0 }]]
+    },
+    "PG - Evento Timeline 1h": {
+      "main": [[{ "node": "PG - Log de Envío", "type": "main", "index": 0 }]]
+    },
+    "PG - Turnos No Confirmados": {
+      "main": [[{ "node": "¿Hay no confirmados?", "type": "main", "index": 0 }]]
+    },
+    "¿Hay no confirmados?": {
+      "main": [
+        [{ "node": "Code - Armar Alerta Médico", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Code - Armar Alerta Médico": {
+      "main": [[{ "node": "Twilio - Alerta Médico", "type": "main", "index": 0 }]]
     }
   },
   "settings": {
