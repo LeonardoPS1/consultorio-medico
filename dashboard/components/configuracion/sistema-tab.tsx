@@ -57,6 +57,7 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
   { id: 'portal-paciente', label: 'Portal del Paciente', description: 'Acceso web para que pacientes vean turnos y recetas', category: 'modulos' },
   { id: 'encuestas', label: 'Encuestas Post-Consulta', description: 'Encuestas de satisfacción automáticas por WhatsApp', category: 'modulos' },
   { id: 'pwa', label: 'PWA (App Instalable)', description: 'Progressive Web App con modo offline y actualizaciones automáticas', category: 'modulos' },
+  { id: 'notas-soap', label: 'Notas SOAP', description: 'Evolución clínica estructurada con CIE-10 en la ficha del paciente', category: 'modulos' },
 
   // ─── Funcionalidades avanzadas ──────────────────────────
   { id: 'reportes-avanzados', label: 'Reportes Avanzados', description: 'Gráficos, exportación Excel y PDF', category: 'avanzado' },
@@ -67,6 +68,7 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
   { id: 'credenciales', label: 'Credenciales', description: 'Gestión de credenciales de servicios externos', category: 'avanzado' },
   { id: 'firma-digital', label: 'Firma Digital QR', description: 'Hash de verificación SHA-256 en recetas con QR público', category: 'avanzado' },
   { id: 'exportacion', label: 'Exportación Excel/PDF', description: 'Exportar pacientes y recetas a Excel y PDF', category: 'avanzado' },
+  { id: 'certificados-qr', label: 'Certificados Médicos QR', description: 'Certificados médicos con hash SHA-256 y verificación pública', category: 'avanzado' },
   { id: 'lista-espera', label: 'Lista de Espera', description: 'Lista de espera inteligente con ofertas automáticas al cancelar turnos', category: 'avanzado' },
   { id: 'multi-sucursal', label: 'Multi-sucursal', description: 'Múltiples sucursales o consultorios', category: 'avanzado' },
 

@@ -14,18 +14,12 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { tenants } from '@/drizzle/schema';
 import { eq, sql } from 'drizzle-orm';
+import { FEATURE_PLAN } from '@/lib/features';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 
 // Lista completa de features del sistema (SSOT desde features.ts)
-const ALL_FEATURES = [
-  'panel-principal','atencion','turnos','pacientes','conversaciones',
-  'recetas','reportes','horarios','notificaciones','reportes-avanzados',
-  'ia-assistant','plantillas','2fa','equipo','integraciones',
-  'auditoria','backup-encriptado','webhooks-log','credenciales',
-  'api-publica','portal-paciente','multi-sucursal','encuestas',
-  'lista-espera','n8n-monitor',
-];
+const ALL_FEATURES = Object.keys(FEATURE_PLAN);
 
 // ─── GET ─────────────────────────────────────────────────────
 

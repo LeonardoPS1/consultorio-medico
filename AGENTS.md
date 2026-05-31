@@ -2,7 +2,7 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 28/05/2026
+**Última actualización:** 31/05/2026
 **Proyecto:** Consultorio Médico — Aicore (aicorebots.com)
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
@@ -161,7 +161,7 @@ consultorio-medico/
 │   │   │   ├── recetas/       # CRUD recetas + PDF
 │   │   │   ├── conversaciones/# Chat con pacientes
 │   │   │   ├── webhooks/      # Logs de Twilio
-│   │   │   ├── reportes/      # Reportes (mock data 🟡)
+│   │   │   ├── reportes/      # Reportes con datos reales de DB
 │   │   │   ├── encuestas/     # Encuestas post-consulta
 │   │   │   ├── onboarding/    # Onboarding asistido por IA
 │   │   │   ├── configuracion/ # 8 tabs de configuración
@@ -528,26 +528,36 @@ consultorio-medico/
 
 ## 🗺 Roadmap y Pendientes
 
+### ✅ Prioritario — Completado
+
+| Feature | Descripción | Fecha |
+|---------|-------------|-------|
+| **Reportes con datos reales** | API `/api/reportes` con queries DB reales (4 tabs con charts: ingresos, turnos, pacientes, recetas) | 31/05 |
+| **Notas SOAP** | Evolución clínica estructurada (S/O/A/P) con CIE-10, migration 0018, API CRUD, UI en ficha paciente | 31/05 |
+| **Certificados médicos con QR** | Hash SHA-256, verificación pública, HTML PDF, migration 0019 | 31/05 |
+| **CIE-10 buscador** | ~900 códigos con autocomplete, integrado en SOAP, historial, certificados | 31/05 |
+| **Firma digital QR en recetas** | Hash de verificación SHA-256 con QR y endpoint público | 29/05 |
+| **PWA (App instalable)** | Service worker v2, offline page, update/install prompts | 30/05 |
+| **Exportación Excel/PDF** | Exportar pacientes y recetas en formato Excel y PDF | 29/05 |
+| **Múltiples médicos** | Sesión con medicoId, scoping en 7 rutas API, agenda-scope utility | 29/05 |
+| ~~Google Calendar sync~~ | `turnosService.create/update/delete()` con GCal sync | 28/05 |
+| ~~ARCO - Derecho de Supresión~~ | `privacidadService` con baja, cascada de datos, anonimización, WF-09 retención 90 días | 28/05 |
+
 ### 🟡 Prioridad Media
 
 | Feature | Descripción | Dependencias |
 |---------|-------------|--------------|
 | **WF-04 Correo Inteligente completo** | Configurar IMAP/SMTP real en n8n. Ya tiene el workflow completo (10 nodos), falta activar las credenciales | Credenciales IMAP/SMTP |
-| **Reportes con datos reales** | Migrar los reportes de mock data a datos reales de DB (ingresos, turnos por médico, pacientes nuevos) | Queries de agregación |
 | **Tests de integración** | Suite de tests automatizados para flujo completo: webhook → DB → n8n → Twilio | Playwright/Jest |
 
 ### 🟢 Prioridad Baja
 
 | Feature | Descripción |
 |---------|-------------|
-| ~~Google Calendar sync desde `turnosService`~~ | ✅ Completado (28/05) — `turnosService.create/update/delete()` con GCal sync |
-| **ARCO - Derecho de Supresión** | ✅ Completado (28/05) — `privacidadService` con solicitud de baja, cascada de datos, anonimización PII, n8n notification, WF-09 retención 90 días |
 | Panel de monitoreo n8n en dashboard | Ver ejecuciones, errores y logs desde el dashboard |
 | WhatsApp Business API (producción) | Migrar de sandbox a producción con número dedicado |
 | Soporte multimedia en WhatsApp | Imágenes, PDFs, audio en conversaciones |
-| Múltiples médicos con agendas independientes | Cada médico con su propia agenda y pacientes |
 | Encuestas post-consulta avanzadas | Análisis de satisfacción con ML |
-| Plantillas de mensajes | Mensajes predefinidos para respuestas rápidas |
 | Dashboard de analytics | Estadísticas avanzadas con charts |
 | Sistema de alertas inteligentes | Stock bajo, pacientes críticos, cumpleaños |
 | Sistema de derivaciones | Derivar pacientes entre especialistas |
@@ -555,9 +565,6 @@ consultorio-medico/
 ### 💡 Ideas a Futuro
 - Portal del paciente (login para ver turnos, recetas, historial)
 - Chat en vivo en dashboard (WebSocket)
-- Firma digital de recetas (QR verificable)
-- Modo offline (PWA)
-- Exportación Excel/PDF
 - Recordatorios vía email
 - Historial clínico digital expandido
 

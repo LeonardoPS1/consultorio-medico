@@ -23,6 +23,8 @@ export type FeatureId =
   | 'reportes'
   | 'horarios'
   | 'notificaciones'
+  | 'notas-soap'
+  | 'certificados-qr'
   | 'reportes-avanzados'
   | 'ia-assistant'
   | 'plantillas'
@@ -58,6 +60,8 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'reportes': 'starter',
   'horarios': 'starter',
   'notificaciones': 'starter',
+  'notas-soap': 'starter',
+  'certificados-qr': 'professional',
   'reportes-avanzados': 'professional',
   'ia-assistant': 'professional',
   'plantillas': 'professional',
