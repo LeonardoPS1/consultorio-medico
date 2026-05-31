@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Loader2, Lightbulb, ExternalLink, MessageSquare, Stethoscope, Clock, UserPlus, Bell, Sparkles } from 'lucide-react';
+import { CheckCircle2, Loader2, Lightbulb, ExternalLink, MessageSquare, Stethoscope, Clock, UserPlus, Bell, Sparkles, RefreshCw } from 'lucide-react';
 import { ONBOARDING_STEPS, type OnboardingStep } from '@/lib/onboarding-types';
 
 // ─── Props ──────────────────────────────────────────────────
@@ -24,6 +24,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Clock,
   UserPlus,
   Bell,
+  Sparkles,
 };
 
 // ─── Component ──────────────────────────────────────────────
@@ -211,34 +212,41 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
             {/* Expanded content */}
             {active && !done && (
               <CardContent className="p-4 pt-3 space-y-3">
-                {/* AI Tip */}
-                <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/30 p-3">
-                  <div className="flex items-start gap-2">
-                    <Sparkles className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                {/* AI Tip — Guía contextual generada por Mistral */}
+                <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/10 border border-amber-200/50 dark:border-amber-800/30 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/40 shrink-0 mt-0.5">
+                      <Sparkles className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mb-0.5">
-                        Sugerencia IA
+                      <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1 tracking-wide uppercase">
+                        Guía IA · {step.title}
                       </p>
                       {loadingTips.has(step.id) ? (
-                        <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          Pensando...
+                        <div className="flex items-center gap-2.5 text-sm text-amber-700 dark:text-amber-400 py-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Consultando al asistente IA...</span>
                         </div>
                       ) : failedTips.has(step.id) ? (
-                        <div className="flex flex-col gap-2">
-                          <p className="text-sm text-amber-800/80 dark:text-amber-300/80">
-                            No se pudo cargar la sugerencia.
+                        <div className="flex flex-col gap-2 py-1">
+                          <p className="text-sm text-amber-800/70 dark:text-amber-300/70">
+                            No se pudo conectar con el asistente IA. Puede que Ollama esté iniciando o haya un problema temporal.
                           </p>
                           <button
                             onClick={(e) => { e.stopPropagation(); loadTip(step.id); }}
-                            className="text-xs text-amber-700 dark:text-amber-400 underline hover:no-underline self-start"
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors self-start mt-1"
                           >
-                            Reintentar
+                            <RefreshCw className="h-3 w-3" />
+                            Reintentar conectar IA
                           </button>
                         </div>
+                      ) : tips[step.id] ? (
+                        <p className="text-sm leading-relaxed text-amber-900 dark:text-amber-200">
+                          {tips[step.id]}
+                        </p>
                       ) : (
-                        <p className="text-sm text-amber-800/80 dark:text-amber-300/80">
-                          {tips[step.id] || 'Hacé clic para ver una sugerencia personalizada.'}
+                        <p className="text-sm text-amber-700/60 dark:text-amber-400/60 italic">
+                          Hacé clic en este paso para recibir una guía personalizada del asistente IA.
                         </p>
                       )}
                     </div>

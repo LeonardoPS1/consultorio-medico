@@ -1,14 +1,18 @@
 /**
  * Onboarding — Asistente guiado para configuración inicial.
  *
- * Verifica qué pasos están completos y genera tips contextuales con IA (Ollama).
+ * Verifica qué pasos están completos y genera guías contextuales con IA (Ollama).
  * El progreso se calcula en base al estado real de la DB.
  */
 
 import { db } from '@/lib/db';
-import { medicos, pacientes, horariosAtencion, preferenciasNotificaciones } from '@/drizzle/schema';
-import { count, sql } from 'drizzle-orm';
+import {
+  medicos, pacientes, horariosAtencion, preferenciasNotificaciones,
+  usuarios,
+} from '@/drizzle/schema';
+import { count, sql, eq, isNull } from 'drizzle-orm';
 import { ONBOARDING_STEPS, type OnboardingState, type AiTipResult } from './onboarding-types';
+import { auth } from '@/lib/auth';
 
 // ─── Verificar pasos completados ────────────────────────────
 
@@ -19,37 +23,64 @@ import { ONBOARDING_STEPS, type OnboardingState, type AiTipResult } from './onbo
 export async function getOnboardingState(): Promise<OnboardingState> {
   const completed: string[] = [];
 
+  // Paso 0: Plan — suscripción activa (no free sin plan asignado)
+  try {
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (userId) {
+      const [userWithPlan] = await db
+        .select({ plan: usuarios.plan })
+        .from(usuarios)
+        .where(eq(usuarios.id, userId));
+      if (userWithPlan?.plan && userWithPlan.plan !== 'free') {
+        completed.push('plan');
+      }
+    }
+  } catch {
+    // Si no hay sesión, asumimos que no está configurado
+  }
+
   // Paso 1: WhatsApp — verificar que hay credenciales de Twilio configuradas
-  const [twilioCred] = await db.execute(
-    sql`SELECT 1 FROM credenciales WHERE servicio = 'twilio' LIMIT 1`,
-  );
-  if (twilioCred) completed.push('whatsapp');
+  try {
+    const [twilioCred] = await db.execute(
+      sql`SELECT 1 FROM credenciales WHERE servicio = 'twilio' AND deleted_at IS NULL LIMIT 1`,
+    );
+    if (twilioCred) completed.push('whatsapp');
+  } catch { /* ignorar */ }
 
   // Paso 2: Médico — al menos un médico activo
-  const [medCount] = await db
-    .select({ total: count() })
-    .from(medicos)
-    .where(sql`${medicos.deletedAt} IS NULL`);
-  if (Number(medCount?.total || 0) > 0) completed.push('medico');
+  try {
+    const [medCount] = await db
+      .select({ total: count() })
+      .from(medicos)
+      .where(isNull(medicos.deletedAt));
+    if (Number(medCount?.total || 0) > 0) completed.push('medico');
+  } catch { /* ignorar */ }
 
   // Paso 3: Horarios — al menos un horario configurado
-  const [horariosCount] = await db
-    .select({ total: count() })
-    .from(horariosAtencion);
-  if (Number(horariosCount?.total || 0) > 0) completed.push('horarios');
+  try {
+    const [horariosCount] = await db
+      .select({ total: count() })
+      .from(horariosAtencion);
+    if (Number(horariosCount?.total || 0) > 0) completed.push('horarios');
+  } catch { /* ignorar */ }
 
   // Paso 4: Paciente — al menos un paciente
-  const [pacCount] = await db
-    .select({ total: count() })
-    .from(pacientes)
-    .where(sql`${pacientes.deletedAt} IS NULL`);
-  if (Number(pacCount?.total || 0) > 0) completed.push('paciente');
+  try {
+    const [pacCount] = await db
+      .select({ total: count() })
+      .from(pacientes)
+      .where(isNull(pacientes.deletedAt));
+    if (Number(pacCount?.total || 0) > 0) completed.push('paciente');
+  } catch { /* ignorar */ }
 
   // Paso 5: Notificaciones — preferencias configuradas
-  const [notifCount] = await db
-    .select({ total: count() })
-    .from(preferenciasNotificaciones);
-  if (Number(notifCount?.total || 0) > 0) completed.push('notificaciones');
+  try {
+    const [notifCount] = await db
+      .select({ total: count() })
+      .from(preferenciasNotificaciones);
+    if (Number(notifCount?.total || 0) > 0) completed.push('notificaciones');
+  } catch { /* ignorar */ }
 
   const progress = Math.round((completed.length / ONBOARDING_STEPS.length) * 100);
   const isComplete = completed.length >= ONBOARDING_STEPS.length;
@@ -63,84 +94,201 @@ export async function getOnboardingState(): Promise<OnboardingState> {
   };
 }
 
+// ─── Obtener contexto real del tenant ──────────────────────
+
+interface TenantContext {
+  nombre: string;
+  plan: string;
+  medicosCount: number;
+  pacientesCount: number;
+  turnosCount: number;
+}
+
+async function getTenantContext(): Promise<TenantContext> {
+  const ctx: TenantContext = {
+    nombre: 'tu consultorio',
+    plan: 'free',
+    medicosCount: 0,
+    pacientesCount: 0,
+    turnosCount: 0,
+  };
+
+  try {
+    const [tenant] = await db.execute(
+      sql`SELECT nombre FROM tenants WHERE id = '00000000-0000-0000-0000-000000000000' LIMIT 1`,
+    );
+    const raw = tenant as Record<string, unknown> | undefined;
+    if (raw?.nombre && typeof raw.nombre === 'string') ctx.nombre = raw.nombre;
+  } catch { /* usar default */ }
+
+  try {
+    const session = await auth();
+    if (session?.user?.plan) ctx.plan = session.user.plan;
+  } catch { /* ignorar */ }
+
+  try {
+    const [mc] = await db.select({ total: count() }).from(medicos).where(isNull(medicos.deletedAt));
+    ctx.medicosCount = Number(mc?.total || 0);
+  } catch { /* ignorar */ }
+
+  try {
+    const [pc] = await db.select({ total: count() }).from(pacientes).where(isNull(pacientes.deletedAt));
+    ctx.pacientesCount = Number(pc?.total || 0);
+  } catch { /* ignorar */ }
+
+  try {
+    const [tc] = await db.execute(sql`SELECT COUNT(*) as total FROM turnos WHERE deleted_at IS NULL`);
+    const tRaw = tc as Record<string, unknown> | undefined;
+    ctx.turnosCount = Number(tRaw?.total || 0);
+  } catch { /* ignorar */ }
+
+  return ctx;
+}
+
 // ─── AI Tips contextuales ───────────────────────────────────
 
 /**
- * Genera un prompt contextual para Ollama basado en el paso actual
- * y el estado del consultorio.
+ * Genera un prompt guía contextual para Ollama basado en el paso actual
+ * y el estado real del consultorio. A diferencia de la versión anterior,
+ * estos prompts son guías completas que ayudan al usuario a entender
+ * QUÉ hacer y POR QUÉ es importante cada paso.
  */
-export function buildOnboardingPrompt(stepId: string, state: OnboardingState, orgName?: string): string {
+export function buildOnboardingPrompt(stepId: string, state: OnboardingState, ctx: TenantContext): string {
   const step = ONBOARDING_STEPS.find((s) => s.id === stepId);
   if (!step) return '';
 
-  const consultorio = orgName || 'tu consultorio';
+  const { nombre: consultorio, plan, medicosCount, pacientesCount, turnosCount } = ctx;
   const completedCount = state.completedSteps.length;
 
   const prompts: Record<string, string> = {
-    whatsapp: `Estás ayudando al equipo de "${consultorio}" a conectar WhatsApp (paso ${completedCount + 1} de 5).
+    plan: `Sos el asistente de configuración de "${consultorio}". El usuario está eligiendo su plan (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
 
-CONTEXTO REAL DEL USUARIO:
-- Consultorio: ${consultorio}
-- Pasos completados: ${completedCount} de 5
-- Próximo paso pendiente después de este: ${state.nextStep?.title || 'ninguno, sería el último'}
+CONTEXTO REAL DEL CONSULTORIO:
+- Nombre: ${consultorio}
+- Médicos registrados: ${medicosCount}
+- Pacientes registrados: ${pacientesCount}
+- Turnos registrados: ${turnosCount}
+- Plan actual: ${plan}
+- Pasos completados: ${completedCount} de ${ONBOARDING_STEPS.length}
+- Siguiente paso después de este: ${state.nextStep?.title || 'ninguno'}
 
-DALE UN CONSEJO CÁLIDO Y PERSONALIZADO para conectar WhatsApp. Mencioná el nombre "${consultorio}" si aplica. Máximo 3 oraciones.`, 
-    medico: `Estás ayudando al equipo de "${consultorio}" a registrar su primer médico (paso ${completedCount + 1} de 5).
+INDICACIONES PARA TU RESPUESTA:
+1. Saludá al usuario por el nombre del consultorio.
+2. Explicá BREVEMENTE las diferencias entre los planes (Free, Starter, Professional).
+3. Recomendá cuál plan es mejor para su volumen actual (si tiene 0 pacientes, Free/Starter es suficiente).
+4. Mencioná que pueden escalar cuando lo necesiten sin perder datos.
 
-CONTEXTO REAL:
-- Consultorio: ${consultorio}
-- Pasos completados: ${completedCount} de 5
+FORMATO: Respondé en español argentino, cálido, profesional. Máximo 4 oraciones. No uses markdown ni emojis.`,
 
-DALE UN CONSEJO sobre agregar un médico. Mencioná que los horarios se personalizan después y que pueden tener colores en el calendario. Máximo 3 oraciones.`,
-    horarios: `Estás ayudando al equipo de "${consultorio}" a configurar horarios de atención (paso ${completedCount + 1} de 5).
+    whatsapp: `Sos el asistente de configuración de "${consultorio}". El usuario está conectando WhatsApp (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
 
-CONTEXTO REAL:
-- Consultorio: ${consultorio}
-- Pasos completados: ${completedCount} de 5
+CONTEXTO REAL DEL CONSULTORIO:
+- Nombre: ${consultorio}
+- Médicos: ${medicosCount}
+- Pacientes: ${pacientesCount}
+- Turnos registrados: ${turnosCount}
+- Plan actual: ${plan}
+- Pasos completados: ${completedCount} de ${ONBOARDING_STEPS.length}
 
-DALE UN CONSEJO sobre horarios recomendados para un consultorio. Mencioná Lunes a Viernes 9-18 como sugerencia. Máximo 3 oraciones.`,
-    paciente: `Estás ayudando al equipo de "${consultorio}" a agregar su primer paciente (paso ${completedCount + 1} de 5).
+INDICACIONES PARA TU RESPUESTA:
+1. Explicá que con WhatsApp los pacientes pueden pedir turnos, cancelar y hacer consultas desde su celular.
+2. Indicá que necesitan el TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN (los encuentran en la consola de Twilio).
+3. Mencioná que una vez conectado, el asistente IA de WhatsApp responde automáticamente las 24hs.
+4. Si ya hay pacientes (${pacientesCount}), destacá que se van a poder comunicar por este medio.
 
-CONTEXTO REAL:
-- Consultorio: ${consultorio}
-- Pasos completados: ${completedCount} de 5
+FORMATO: Respondé en español argentino, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
 
-DALE UN CONSEJO sobre qué datos cargar (nombre, teléfono, obra social). Máximo 3 oraciones.`,
-    notificaciones: `Estás ayudando al equipo de "${consultorio}" a configurar notificaciones (paso ${completedCount + 1} de 5).
+    medico: `Sos el asistente de configuración de "${consultorio}". El usuario está agregando un médico (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
 
-CONTEXTO REAL:
-- Consultorio: ${consultorio}
-- Pasos completados: ${completedCount} de 5
+CONTEXTO REAL DEL CONSULTORIO:
+- Nombre: ${consultorio}
+- Médicos actuales: ${medicosCount}
+- Pacientes: ${pacientesCount}
+- Turnos registrados: ${turnosCount}
+- Plan actual: ${plan}
+- Pasos completados: ${completedCount} de ${ONBOARDING_STEPS.length}
 
-DALE UN CONSEJO sobre notificaciones (urgencias WhatsApp, recordatorios para reducir ausentismo). Máximo 3 oraciones.`,
+INDICACIONES PARA TU RESPUESTA:
+1. Explicá que cada médico tiene su propio perfil con especialidad, horarios y color en el calendario.
+2. Si no hay médicos (${medicosCount}), decile que registre al menos el suyo.
+3. Si ya hay ${medicosCount} médico(s), preguntale si quiere agregar más profesionales.
+4. Mencioná que los horarios se personalizan después para cada médico.
+
+FORMATO: Respondé en español argentino, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
+
+    horarios: `Sos el asistente de configuración de "${consultorio}". El usuario está configurando los horarios de atención (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
+
+CONTEXTO REAL DEL CONSULTORIO:
+- Nombre: ${consultorio}
+- Médicos: ${medicosCount}
+- Pacientes: ${pacientesCount}
+- Turnos: ${turnosCount}
+- Plan actual: ${plan}
+- Pasos completados: ${completedCount} de ${ONBOARDING_STEPS.length}
+
+INDICACIONES PARA TU RESPUESTA:
+1. Explicá que los horarios definen cuándo se pueden agendar turnos automáticamente.
+2. Recomendá arrancar con Lunes a Viernes de 9 a 18 hs y Sábados de 9 a 13 hs.
+3. Si hay ${medicosCount} médico(s), mencioná que cada profesional puede tener horarios diferentes.
+4. Destacá que los turnos fuera de horario se rechazan automáticamente, evitando confusiones.
+
+FORMATO: Respondé en español argentino, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
+
+    paciente: `Sos el asistente de configuración de "${consultorio}". El usuario está agregando su primer paciente (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
+
+CONTEXTO REAL DEL CONSULTORIO:
+- Nombre: ${consultorio}
+- Médicos: ${medicosCount}
+- Pacientes actuales: ${pacientesCount}
+- Turnos: ${turnosCount}
+- Plan actual: ${plan}
+- Pasos completados: ${completedCount} de ${ONBOARDING_STEPS.length}
+- Médico(s) registrado(s): ${medicosCount}
+
+INDICACIONES PARA TU RESPUESTA:
+1. Si no hay pacientes (${pacientesCount}), explicá que cargar un paciente de prueba ayuda a ver el sistema en acción.
+2. Indicá los datos clave: nombre, teléfono (con código de país) y obra social si aplica.
+3. Si ya hay ${medicosCount} médico(s), mencioná que después de cargar el paciente ya pueden asignarle un turno.
+4. Mencioná que el paciente va a poder recibir recordatorios automáticos por WhatsApp una vez configurado.
+
+FORMATO: Respondé en español argentino, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
+
+    notificaciones: `Sos el asistente de configuración de "${consultorio}". El usuario está configurando las notificaciones (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}). Es el ÚLTIMO paso.
+
+CONTEXTO REAL DEL CONSULTORIO:
+- Nombre: ${consultorio}
+- Médicos: ${medicosCount}
+- Pacientes: ${pacientesCount}
+- Turnos: ${turnosCount}
+- Plan actual: ${plan}
+- Pasos completados: ${completedCount} de ${ONBOARDING_STEPS.length}
+
+INDICACIONES PARA TU RESPUESTA:
+1. Explicá que las notificaciones avisan al médico sobre: urgencias de pacientes, recordatorios de turnos (reducen ausentismo), y alertas del sistema.
+2. Recomendá activar: notificaciones push en el navegador, y recordatorios automáticos para pacientes.
+3. Si ya hay ${pacientesCount} pacientes, destacá que los recordatorios van a reducir las ausencias.
+4. Cerra con un mensaje motivador: este es el último paso de configuración.
+
+FORMATO: Respondé en español argentino, cálido, motivador. Máximo 4 oraciones. No uses markdown ni emojis.`,
   };
 
-  return prompts[stepId] || `El usuario de "${consultorio}" está completando el paso "${step.title}" (${completedCount}/5). Dá un consejo práctico para este paso. Máximo 3 oraciones.`;
+  return prompts[stepId] || `Sos el asistente de configuración de "${consultorio}". El usuario está en el paso "${step.title}" (${completedCount + 1}/${ONBOARDING_STEPS.length}). Dá una guía práctica y cálida para completar este paso. Máximo 4 oraciones. Sin emojis ni markdown.`;
 }
 
-// ─── Llamar a Ollama para tips ──────────────────────────────
+// ─── Llamar a Ollama para guías ────────────────────────────
 
 /**
- * Obtiene un tip contextual de Ollama para el paso indicado.
- * Fire-and-forget friendly: devuelve mensaje genérico si falla.
+ * Obtiene una guía contextual de Ollama para el paso indicado.
+ * Usa datos reales del tenant para personalizar la respuesta.
  */
 export async function getAiOnboardingTip(stepId: string): Promise<AiTipResult> {
   try {
-    const state = await getOnboardingState();
+    const [state, ctx] = await Promise.all([
+      getOnboardingState(),
+      getTenantContext(),
+    ]);
 
-    // Obtener nombre del consultorio para personalizar el prompt
-    let orgName = 'tu consultorio';
-    try {
-      const [tenant] = await db.execute(
-        sql`SELECT nombre FROM tenants WHERE id = '00000000-0000-0000-0000-000000000000' LIMIT 1`,
-      );
-      const raw = tenant as Record<string, unknown> | undefined;
-      if (raw?.nombre && typeof raw.nombre === 'string') orgName = raw.nombre;
-    } catch {
-      // ignorar, usar default
-    }
-
-    const prompt = buildOnboardingPrompt(stepId, state, orgName);
+    const prompt = buildOnboardingPrompt(stepId, state, ctx);
 
     const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
     const model = process.env.OLLAMA_MODEL || 'mistral';
@@ -153,12 +301,20 @@ export async function getAiOnboardingTip(stepId: string): Promise<AiTipResult> {
         messages: [
           {
             role: 'system',
-            content: 'Sos un asistente amable que ayuda a configurar un consultorio médico digital. Respondé en español argentino, cálido, conciso (máximo 3 oraciones). Dá solo el consejo, sin introducciones.',
+            content: `Sos "Asistente IA", el guía de configuración de AiCoreMed, un sistema de gestión para consultorios médicos.
+
+REGLAS:
+- Respondé SIEMPRE en español argentino, con tono cálido y profesional.
+- Usá el nombre del consultorio cuando lo conozcas.
+- Sé práctico y directo: decí QUÉ hacer y POR QUÉ es importante.
+- No uses emojis, markdown, ni formato especial.
+- Máximo 4 oraciones por respuesta.
+- No saludes genéricamente ("¡Hola!") — empezá directo con el consejo.`,
           },
           { role: 'user', content: prompt },
         ],
         temperature: 0.7,
-        max_tokens: 150,
+        max_tokens: 250,
       }),
       signal: AbortSignal.timeout(25000),
     });
@@ -172,8 +328,9 @@ export async function getAiOnboardingTip(stepId: string): Promise<AiTipResult> {
 
     return { tip, success: true };
   } catch (e) {
+    console.error('[Onboarding] Error al obtener guía IA:', e);
     return {
-      tip: '💡 Tip: Completá este paso para tener todo configurado. Si necesitás ayuda, consultá la documentación en cada sección.',
+      tip: '',
       success: false,
     };
   }

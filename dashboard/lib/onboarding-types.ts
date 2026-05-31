@@ -38,9 +38,17 @@ export interface AiTipResult {
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
+    id: 'plan',
+    title: 'Elegí tu plan',
+    description: 'Seleccioná el plan que mejor se adapte a tu consultorio. Podés empezar con el plan Free y escalar cuando lo necesites.',
+    icon: 'Sparkles',
+    actionLink: '/dashboard/configuracion?tab=suscripcion',
+    actionLabel: 'Ver planes disponibles',
+  },
+  {
     id: 'whatsapp',
     title: 'Conectá WhatsApp',
-    description: 'Vinculá tu número de WhatsApp para que los pacientes puedan comunicarse.',
+    description: 'Vinculá tu número de WhatsApp para que los pacientes puedan comunicarse con tu consultorio.',
     icon: 'MessageSquare',
     actionLink: '/dashboard/admin/sistema?tab=credenciales',
     actionLabel: 'Configurar WhatsApp',
@@ -48,7 +56,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'medico',
     title: 'Agregá un médico',
-    description: 'Registrá al menos un profesional para poder asignar turnos.',
+    description: 'Registrá al menos un profesional para poder asignar turnos y recetas.',
     icon: 'Stethoscope',
     actionLink: '/dashboard/configuracion?tab=equipo',
     actionLabel: 'Agregar médico',
@@ -56,7 +64,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'horarios',
     title: 'Configurá horarios',
-    description: 'Definí los días y horarios de atención del consultorio.',
+    description: 'Definí los días y horarios de atención del consultorio para cada médico.',
     icon: 'Clock',
     actionLink: '/dashboard/configuracion?tab=horarios',
     actionLabel: 'Configurar horarios',
@@ -64,7 +72,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'paciente',
     title: 'Agregá tu primer paciente',
-    description: 'Cargá un paciente de prueba para ver cómo funciona el sistema.',
+    description: 'Cargá un paciente de prueba para ver cómo funciona el sistema con datos reales.',
     icon: 'UserPlus',
     actionLink: '/dashboard/pacientes',
     actionLabel: 'Agregar paciente',
@@ -72,7 +80,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'notificaciones',
     title: 'Configurá notificaciones',
-    description: 'Elegí cómo y cuándo querés recibir alertas del consultorio.',
+    description: 'Elegí cómo y cuándo querés recibir alertas del consultorio, y activá los recordatorios automáticos.',
     icon: 'Bell',
     actionLink: '/dashboard/configuracion?tab=notificaciones',
     actionLabel: 'Configurar notificaciones',
