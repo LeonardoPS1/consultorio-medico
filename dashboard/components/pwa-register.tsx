@@ -1,22 +1,19 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { X, RefreshCw, Download, Smartphone } from 'lucide-react';
+import { X, Download, Smartphone, RefreshCw } from 'lucide-react';
+import { useUpdate } from '@/lib/update-context';
 
+/**
+ * Registra el Service Worker y maneja los eventos de instalación PWA.
+ * Los eventos de actualización y offline se manejan desde UpdateContext
+ * y se renderizan en el Header.
+ */
 export function PWARegister() {
-  const [updateReady, setUpdateReady] = useState(false);
-  const [waitingSW, setWaitingSW] = useState<ServiceWorker | null>(null);
-  const [isOffline, setIsOffline] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
+  const { updateReady, handleUpdate, dismissUpdate, isOffline } = useUpdate();
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
   const [installDismissed, setInstallDismissed] = useState(false);
   const [installing, setInstalling] = useState(false);
-
-  const handleUpdate = useCallback(() => {
-    if (waitingSW) {
-      waitingSW.postMessage({ type: 'SKIP_WAITING' });
-    }
-  }, [waitingSW]);
 
   const handleInstall = useCallback(async () => {
     if (!deferredPrompt) return;
@@ -32,18 +29,6 @@ export function PWARegister() {
   }, [deferredPrompt]);
 
   useEffect(() => {
-    // ─── Detectar si ya estamos en modo standalone (app instalada) ──
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsStandalone(true);
-    }
-
-    // ─── Estado de conexión ────────────────────────────────────────
-    setIsOffline(!navigator.onLine);
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
     // ─── Before Install Prompt (PWA) ──────────────────────────────
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
@@ -54,61 +39,20 @@ export function PWARegister() {
     // ─── Cuando se completa la instalación ─────────────────────────
     const handleInstalled = () => {
       setDeferredPrompt(null);
-      setIsStandalone(true);
       setInstallDismissed(false);
     };
     window.addEventListener('appinstalled', handleInstalled);
 
-    // ─── Service Worker ────────────────────────────────────────────
-    const handleControllerChange = () => window.location.reload();
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js', { scope: '/' })
-        .then((registration) => {
-          // Si ya hay un SW esperando (nueva versión)
-          if (registration.waiting) {
-            setUpdateReady(true);
-            setWaitingSW(registration.waiting);
-          }
-
-          // Escuchar cuando se encuentra una nueva versión
-          registration.addEventListener('updatefound', () => {
-            const newSW = registration.installing;
-            if (!newSW) return;
-
-            newSW.addEventListener('statechange', () => {
-              if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-                setUpdateReady(true);
-                setWaitingSW(newSW);
-              }
-            });
-          });
-        })
-        .catch(() => {
-          // SW no soportado — no crítico
-        });
-
-      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
-    }
-
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
       window.removeEventListener('appinstalled', handleInstalled);
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
-      }
     };
   }, []);
 
-  // No renderizar nada si la app está instalada y no hay novedades
-  if (isStandalone && !updateReady && !isOffline) return null;
-
   return (
     <>
-      {/* ─── Banner: Instalar App (solo si no está instalada) ──── */}
-      {!isStandalone && deferredPrompt && !installDismissed && !updateReady && !isOffline && (
+      {/* ─── Banner: Instalar App ──────────────────────────────── */}
+      {deferredPrompt && !installDismissed && !updateReady && !isOffline && (
         <div className="fixed bottom-4 right-4 z-50 max-w-sm animate-in slide-in-from-bottom-4 fade-in duration-300">
           <div className="bg-white border border-blue-200 rounded-xl shadow-lg p-4 flex items-start gap-3">
             <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
@@ -143,7 +87,7 @@ export function PWARegister() {
         </div>
       )}
 
-      {/* ─── Banner: Nueva versión disponible ──────────────────── */}
+      {/* ─── Banner: Nueva versión disponible (fallback fuera del header) ──── */}
       {updateReady && (
         <div className="fixed bottom-4 right-4 z-50 max-w-sm animate-in slide-in-from-bottom-4 fade-in duration-300">
           <div className="bg-white border border-blue-200 rounded-xl shadow-lg p-4 flex items-start gap-3">
@@ -162,7 +106,7 @@ export function PWARegister() {
               </button>
             </div>
             <button
-              onClick={() => setUpdateReady(false)}
+              onClick={dismissUpdate}
               className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
             >
               <X className="w-3.5 h-3.5 text-gray-400" />
@@ -172,7 +116,7 @@ export function PWARegister() {
       )}
 
       {/* ─── Badge: Offline ────────────────────────────────────── */}
-      {isOffline && !isStandalone && (
+      {isOffline && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in fade-in duration-300">
           <div className="bg-amber-50 border border-amber-200 rounded-full px-4 py-1.5 flex items-center gap-2 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />

@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { UpdateBadge } from '@/components/layout/update-badge';
 import {
   Bell, Moon, Sun, Monitor, Calendar, MessageSquare, Syringe,
   AlertTriangle, X, Menu, Store, ChevronDown, Trash2,
@@ -291,6 +292,9 @@ export function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
         )}
+
+        {/* Novedades / Actualización */}
+        <UpdateBadge />
 
         {/* Notificaciones */}
         <DropdownMenu open={notifOpen} onOpenChange={setNotifOpen}>

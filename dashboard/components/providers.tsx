@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { FeatureFlagsProvider } from '@/lib/feature-flags-context';
 import { SucursalProvider } from '@/lib/sucursal-context';
+import { UpdateProvider } from '@/lib/update-context';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -25,14 +26,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <FeatureFlagsProvider>
           <SucursalProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              {children}
-            </ThemeProvider>
+            <UpdateProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                {children}
+              </ThemeProvider>
+            </UpdateProvider>
           </SucursalProvider>
         </FeatureFlagsProvider>
       </QueryClientProvider>
