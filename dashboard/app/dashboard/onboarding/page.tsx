@@ -9,9 +9,9 @@
  * OnboardingClient: maneja interactividad, progreso y tips de IA.
  */
 
+import { Sparkles as SparklesIcon } from 'lucide-react';
 import { getOnboardingState } from '@/lib/onboarding';
 import { OnboardingClient } from './onboarding-client';
-import { PageHeader } from '@/components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,14 +26,26 @@ export default async function OnboardingPage({
 
   return (
     <div className="space-y-6 animate-in max-w-3xl mx-auto">
-      <PageHeader
-        title={showComplete ? '🎉 ¡Todo listo!' : 'Asistente IA'}
-        description={showComplete
-          ? 'Tu consultorio está completamente configurado.'
-          : isForceRestart
-            ? 'Repasá cada paso y marcalo como completado cuando lo configures.'
-            : 'Guía paso a paso para dejar tu consultorio listo.'}
-      />
+      {/* Header con gradiente */}
+      <div className="rounded-xl bg-gradient-to-br from-primary/5 via-primary/[0.02] to-background border p-6 shadow-sm">
+        <div className="flex items-start gap-4">
+          <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-primary/10 text-primary shrink-0 shadow-sm">
+            <SparklesIcon className="h-6 w-6" />
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-xl font-semibold tracking-tight">
+              {showComplete ? 'Todo listo' : 'Asistente IA'}
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
+              {showComplete
+                ? 'Tu consultorio está completamente configurado.'
+                : isForceRestart
+                  ? 'Repasá cada paso y marcalo como completado cuando lo configures.'
+                  : 'Guía paso a paso para dejar tu consultorio listo. Cada paso tiene una guía IA personalizada.'}
+            </p>
+          </div>
+        </div>
+      </div>
 
       <OnboardingClient
         initialCompleted={isForceRestart ? [] : state.completedSteps}

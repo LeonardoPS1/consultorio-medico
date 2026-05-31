@@ -39,8 +39,9 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   const [completed, setCompleted] = useState<string[]>(initialCompleted);
   const [activeStep, setActiveStep] = useState<string | null>(null);
   const [tips, setTips] = useState<Record<string, string>>({});
-  const [loadingTips, setLoadingTips] = useState<Set<string>>(new Set());
-  const [failedTips, setFailedTips] = useState<Set<string>>(new Set());
+const [loadingTips, setLoadingTips] = useState<Set<string>>(new Set());
+const [failedTips, setFailedTips] = useState<Set<string>>(new Set());
+const [fallbackTips, setFallbackTips] = useState<Set<string>>(new Set());
 
   // ── Cargar tip IA ───────────────────────────────────────
 
@@ -49,6 +50,7 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
 
     setLoadingTips((prev) => new Set(prev).add(stepId));
     setFailedTips((prev) => { const next = new Set(prev); next.delete(stepId); return next; });
+    setFallbackTips((prev) => { const next = new Set(prev); next.delete(stepId); return next; });
     try {
       const res = await fetch('/api/onboarding', {
         method: 'POST',
@@ -58,6 +60,10 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
       const data = await res.json();
       if (data.tip) {
         setTips((prev) => ({ ...prev, [stepId]: data.tip }));
+        // Si success es false, es un tip de fallback (IA offline)
+        if (data.success === false) {
+          setFallbackTips((prev) => new Set(prev).add(stepId));
+        }
       } else {
         setFailedTips((prev) => new Set(prev).add(stepId));
       }
@@ -135,28 +141,43 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
 
   if (isComplete || allLocallyDone) {
     return (
-      <div className="text-center space-y-6 py-12">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-          <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+      <div className="flex flex-col items-center justify-center py-16 px-4">
+        {/* Icono animado */}
+        <div className="relative mb-8">
+          <div className="absolute inset-0 bg-emerald-200/30 dark:bg-emerald-800/20 rounded-full blur-xl animate-pulse" />
+          <div className="relative flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/30">
+            <CheckCircle2 className="h-12 w-12 text-white" />
+          </div>
         </div>
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold">Consultorio operativo</h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Todos los pasos están completos. Ya podés gestionar turnos, pacientes y comunicarte con tus pacientes.
+
+        {/* Texto */}
+        <div className="text-center space-y-3 mb-8 max-w-md">
+          <h3 className="text-2xl font-bold tracking-tight">
+            Consultorio operativo
+          </h3>
+          <p className="text-muted-foreground leading-relaxed">
+            Todos los pasos están completos. Ya podés gestionar turnos, 
+            pacientes y comunicarte con tus pacientes desde el panel.
           </p>
         </div>
-        <div className="flex gap-3 justify-center flex-wrap">
-          <Button asChild>
-            <Link href="/dashboard">Ir al Panel Principal</Link>
+
+        {/* Acciones */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+          <Button asChild className="flex-1 shadow-sm">
+            <Link href="/dashboard">
+              Ir al Panel Principal
+            </Link>
           </Button>
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/turnos">Gestionar Turnos</Link>
-          </Button>
-          <Button variant="ghost" onClick={handleReiniciar}>
-            <Sparkles className="h-4 w-4 mr-1" />
-            Re-ejecutar asistente IA
+          <Button variant="outline" asChild className="flex-1">
+            <Link href="/dashboard/turnos">
+              Gestionar Turnos
+            </Link>
           </Button>
         </div>
+        <Button variant="ghost" onClick={handleReiniciar} className="mt-4 text-muted-foreground">
+          <Sparkles className="h-4 w-4 mr-1.5" />
+          Re-ejecutar asistente IA
+        </Button>
       </div>
     );
   }
@@ -164,16 +185,88 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   // ── Vista principal ──────────────────────────────────────
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+
+      {/* ── Progress bar ──────────────────────────────────────── */}
+      <div className="rounded-xl bg-card border p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Progreso</span>
+            <span className="text-xs text-muted-foreground">
+              {isForceRestart
+                ? `Revisando ${ONBOARDING_STEPS.length} pasos`
+                : `${completed.length} de ${ONBOARDING_STEPS.length} pasos`}
+            </span>
+          </div>
+          <span className="text-sm font-semibold tabular-nums text-primary">
+            {localProgress}%
+          </span>
+        </div>
+
+        {/* Barra */}
+        <div className="h-2.5 bg-muted rounded-full overflow-hidden mb-3">
+          <div
+            className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-700 ease-out"
+            style={{ width: `${localProgress}%` }}
+          />
+        </div>
+
+        {/* Step dots */}
+        <div className="flex items-center justify-between">
+          {ONBOARDING_STEPS.map((step, idx) => {
+            const done = isStepCompleted(step.id);
+            const active = isStepActive(step.id);
+            const stepNumber = idx + 1;
+            return (
+              <button
+                key={step.id}
+                onClick={() => {
+                  if (done || isStepPending(step.id)) return;
+                  setActiveStep(active ? null : step.id);
+                }}
+                disabled={isStepPending(step.id) && !done}
+                className="flex flex-col items-center gap-1 group"
+                title={step.title}
+              >
+                <div
+                  className={`
+                    flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium
+                    transition-all duration-300
+                    ${done
+                      ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-200'
+                      : active
+                        ? 'bg-primary text-primary-foreground ring-2 ring-primary/30 scale-110'
+                        : isStepPending(step.id)
+                          ? 'bg-muted-foreground/10 text-muted-foreground/40 cursor-not-allowed'
+                          : 'bg-muted text-muted-foreground group-hover:bg-muted-foreground/20 group-hover:scale-105 cursor-pointer'
+                    }
+                  `}
+                >
+                  {done ? (
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  ) : (
+                    stepNumber
+                  )}
+                </div>
+                <span className={`
+                  text-[10px] leading-tight text-center max-w-14 truncate
+                  ${done ? 'text-emerald-600 font-medium' : active ? 'text-primary font-medium' : 'text-muted-foreground/60'}
+                `}>
+                  {step.title}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ── Barra de acciones ─────────────────────────────── */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <p className="text-sm text-muted-foreground">
-            {isForceRestart
-              ? 'Repasá cada paso y marcalo como completado.'
-              : `Completaste ${completed.length} de ${ONBOARDING_STEPS.length} pasos.`}
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          {isForceRestart
+            ? 'Repasá cada paso y marcalo como completado cuando lo configures.'
+            : `Hacé clic en un paso para abrir la guía IA y configurarlo.`}
+        </p>
         <div className="flex items-center gap-2">
           {isForceRestart ? (
             <Button variant="outline" size="sm" asChild>
@@ -185,13 +278,14 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
           ) : (
             <Button variant="outline" size="sm" onClick={handleReiniciar}>
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-              Reiniciar configuración
+              Reiniciar
             </Button>
           )}
         </div>
       </div>
 
       {/* ── Steps ──────────────────────────────────────────── */}
+      <div className="space-y-2.5">
       {ONBOARDING_STEPS.map((step, idx) => {
         const Icon = ICON_MAP[step.icon] || Lightbulb;
         const done = isStepCompleted(step.id);
@@ -202,14 +296,14 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
         return (
           <Card
             key={step.id}
-            className={`transition-all duration-200 ${
+            className={`transition-all duration-300 overflow-hidden ${
               done
-                ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-950/10'
+                ? 'border-emerald-200/70 dark:border-emerald-800/40 bg-emerald-50/40 dark:bg-emerald-950/8'
                 : active
-                  ? 'border-primary/30 shadow-sm ring-1 ring-primary/10'
+                  ? 'border-primary/25 shadow-md shadow-primary/5 ring-1 ring-primary/10'
                   : pending
-                    ? 'opacity-50'
-                    : 'hover:border-muted-foreground/20 cursor-pointer'
+                    ? 'opacity-40'
+                    : 'hover:border-muted-foreground/25 hover:shadow-sm cursor-pointer'
             }`}
           >
             {/* ── Header (clickeable) ──────────────────────── */}
@@ -221,15 +315,15 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
               }}
               disabled={done || pending}
             >
-              <CardHeader className="p-4 pb-0">
+              <CardHeader className={`p-4 transition-colors ${active && !done ? 'pb-3' : 'pb-4'}`}>
                 <div className="flex items-center gap-3">
                   {/* Icon */}
                   <div
-                    className={`flex items-center justify-center h-10 w-10 rounded-lg shrink-0 ${
+                    className={`flex items-center justify-center h-10 w-10 rounded-xl shrink-0 transition-all duration-300 ${
                       done
-                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600'
+                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 shadow-sm shadow-emerald-200/50'
                         : active
-                          ? 'bg-primary/10 text-primary'
+                          ? 'bg-primary/10 text-primary scale-105'
                           : 'bg-muted text-muted-foreground'
                     }`}
                   >
@@ -243,25 +337,35 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
                   {/* Title + status */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <CardTitle className="text-base">{step.title}</CardTitle>
+                      <CardTitle className={`text-base ${done ? 'text-emerald-700 dark:text-emerald-300' : ''}`}>
+                        {step.title}
+                      </CardTitle>
                       {done && (
-                        <Badge variant="outline" className="text-emerald-600 border-emerald-200 text-[10px] px-1.5 h-5">
+                        <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-100/50 dark:border-emerald-800 dark:text-emerald-400 dark:bg-emerald-900/20 text-[10px] px-1.5 h-5 font-medium">
                           Listo
                         </Badge>
                       )}
                       {pending && (
-                        <Badge variant="outline" className="text-muted-foreground text-[10px] px-1.5 h-5">
+                        <Badge variant="outline" className="text-muted-foreground/60 border-muted-foreground/20 text-[10px] px-1.5 h-5">
                           Bloqueado
                         </Badge>
                       )}
                     </div>
-                    <CardDescription className="text-sm mt-0.5">
+                    <CardDescription className={`text-sm mt-0.5 ${done ? 'text-emerald-600/60 dark:text-emerald-400/60' : ''}`}>
                       {step.description}
                     </CardDescription>
                   </div>
 
                   {/* Step number */}
-                  <div className={`text-xs font-mono ${done ? 'text-emerald-500' : active ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <div className={`
+                    flex items-center justify-center h-7 w-7 rounded-full text-xs font-mono transition-all duration-300
+                    ${done
+                      ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+                      : active
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-muted/50 text-muted-foreground'
+                    }
+                  `}>
                     {done ? '✓' : `0${idx + 1}`}
                   </div>
                 </div>
@@ -270,26 +374,31 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
 
             {/* ── Expanded content ─────────────────────────── */}
             {active && !done && (
-              <CardContent className="p-4 pt-3 space-y-3">
+              <CardContent className="px-4 pb-4 pt-0 space-y-3">
+                {/* Separador */}
+                <div className="h-px bg-border/50" />
+
                 {/* AI Tip */}
-                <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/10 border border-amber-200/50 dark:border-amber-800/30 p-4">
+                <div className="rounded-xl bg-gradient-to-br from-amber-50 to-orange-50/40 dark:from-amber-950/15 dark:to-orange-950/8 border border-amber-200/40 dark:border-amber-800/25 p-4 shadow-sm">
                   <div className="flex items-start gap-3">
-                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/40 shrink-0 mt-0.5">
+                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/40 shrink-0 mt-0.5 shadow-sm shadow-amber-200/50">
                       <Sparkles className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1 tracking-wide uppercase">
+                      <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1.5 tracking-wide uppercase">
                         Guía IA · {step.title}
                       </p>
                       {loadingTips.has(step.id) ? (
                         <div className="flex items-center gap-2.5 text-sm text-amber-700 dark:text-amber-400 py-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Consultando al asistente IA...</span>
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Consultando al asistente IA...</span>
+                          </div>
                         </div>
                       ) : failedTips.has(step.id) ? (
                         <div className="flex flex-col gap-2 py-1">
-                          <p className="text-sm text-amber-800/70 dark:text-amber-300/70">
-                            No se pudo conectar con el asistente IA. Puede que Ollama esté iniciando o haya un problema temporal.
+                          <p className="text-sm text-amber-800/70 dark:text-amber-300/70 leading-relaxed">
+                            No se pudo conectar con el asistente IA. Puede que esté iniciando o haya un problema temporal.
                           </p>
                           <button
                             onClick={(e) => { e.stopPropagation(); loadTip(step.id); }}
@@ -300,11 +409,27 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
                           </button>
                         </div>
                       ) : tips[step.id] ? (
-                        <p className="text-sm leading-relaxed text-amber-900 dark:text-amber-200">
-                          {tips[step.id]}
-                        </p>
+                        <>
+                          <p className="text-sm leading-relaxed text-amber-900 dark:text-amber-200">
+                            {tips[step.id]}
+                          </p>
+                          {fallbackTips.has(step.id) && (
+                            <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-amber-200/30 dark:border-amber-800/25">
+                              <span className="text-[10px] text-amber-500/60 dark:text-amber-400/50">
+                                Asistente IA no disponible
+                              </span>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); loadTip(step.id); }}
+                                className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 transition-colors"
+                              >
+                                <RefreshCw className="h-2.5 w-2.5" />
+                                Reintentar con conexión IA
+                              </button>
+                            </div>
+                          )}
+                        </>
                       ) : (
-                        <p className="text-sm text-amber-700/60 dark:text-amber-400/60 italic">
+                        <p className="text-sm text-amber-700/50 dark:text-amber-400/50 italic leading-relaxed">
                           Hacé clic en este paso para recibir una guía personalizada del asistente IA.
                         </p>
                       )}
@@ -313,7 +438,7 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
                 </div>
 
                 {/* Action button */}
-                <Button asChild className="w-full gap-2">
+                <Button asChild className="w-full gap-2 shadow-sm">
                   <Link href={step.actionLink}>
                     <ExternalLink className="h-4 w-4" />
                     {step.actionLabel}
@@ -325,7 +450,7 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
                   {/* Ya lo configuré — siempre visible */}
                   <Button
                     variant="outline"
-                    className="flex-1 gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+                    className="flex-1 gap-2 border-emerald-200/70 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 dark:border-emerald-800/50 dark:text-emerald-400 dark:hover:bg-emerald-950/30 dark:hover:border-emerald-700 transition-all"
                     onClick={(e) => {
                       e.stopPropagation();
                       marcarCompletado(step.id);
@@ -339,7 +464,7 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="shrink-0 text-muted-foreground hover:text-foreground"
+                    className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50"
                     onClick={(e) => {
                       e.stopPropagation();
                       saltarPaso(step.id);
@@ -355,22 +480,25 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
         );
       })}
 
+      </div> {/* end steps wrapper */}
+
       {/* ── Footer ──────────────────────────────────────────── */}
-      <div className="flex items-center justify-between pt-2">
-        <p className="text-xs text-muted-foreground">
-          Progreso local: {localProgress}%
-        </p>
+      <div className="flex items-center justify-between pt-2 border-t border-muted/50">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+          <span>{completed.length}/{ONBOARDING_STEPS.length} completados</span>
+        </div>
         <div className="flex items-center gap-2">
           {isForceRestart && (
             <Button variant="ghost" size="sm" asChild>
               <Link href="/dashboard/onboarding">
-                Volver a vista normal
+                Ver progreso real
               </Link>
             </Button>
           )}
-          <Button variant="ghost" size="sm" onClick={handleReiniciar}>
+          <Button variant="ghost" size="sm" onClick={handleReiniciar} className="text-muted-foreground">
             <RotateCcw className="h-3 w-3 mr-1" />
-            Reiniciar
+            {isForceRestart ? 'Reiniciar de nuevo' : 'Reiniciar'}
           </Button>
         </div>
       </div>

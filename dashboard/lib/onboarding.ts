@@ -145,15 +145,94 @@ async function getTenantContext(): Promise<TenantContext> {
   return ctx;
 }
 
-// ─── AI Tips contextuales ───────────────────────────────────
+// ─── Tips de fallback (cuando Ollama no está disponible) ───
+
+/**
+ * Tips estáticos por paso que se muestran cuando Ollama no responde.
+ * Son funcionales y prácticos para que el onboarding siempre sea útil.
+ */
+const FALLBACK_TIPS: Record<string, string> = {
+  plan: 'Elegí un plan que se ajuste al volumen de pacientes que atendes. Si estás empezando, el plan Starter es suficiente y después podés escalar sin perder datos. En la sección de suscripción vas a ver las diferencias entre cada plan.',
+  whatsapp: 'Conectando WhatsApp tus pacientes van a poder pedir turnos y hacer consultas desde su celular. Necesitás las credenciales de Twilio (Account SID y Auth Token) que encontrás en la consola de Twilio. Una vez conectado, el asistente IA responde automáticamente las 24 horas.',
+  medico: 'Registrá al menos un médico para poder asignarle turnos y recetas. Cada profesional tiene su propio perfil con especialidad, horarios y color en el calendario. Si ya tenés un médico registrado, verifica que los datos estén completos.',
+  horarios: 'Los horarios definen cuándo se pueden agendar turnos automáticamente. Te recomiendo arrancar con lunes a viernes de 9 a 18 y sábados de 9 a 13. Si tenés varios médicos, cada uno puede tener horarios diferentes.',
+  paciente: 'Cargá un paciente de prueba para ver el sistema en funcionamiento. Los datos clave son nombre, teléfono con código de país y obra social si aplica. Después de cargarlo ya le podés asignar un turno y va a recibir recordatorios automáticos.',
+  notificaciones: 'Las notificaciones te avisan sobre urgencias, recordatorios de turnos y alertas del sistema. Te recomiendo activar las notificaciones push en el navegador y los recordatorios automáticos para pacientes. Este es el último paso, ya casi tenés todo listo.',
+};
+
+// ─── Llamar a Ollama para guías ────────────────────────────
+
+/**
+ * Obtiene una guía contextual del paso indicado.
+ * Primero intenta con Ollama (IA local) y si no está disponible,
+ * devuelve un tip de fallback predefinido pero funcional.
+ *
+ * Así el onboarding siempre es útil aunque Ollama no esté corriendo.
+ */
+export async function getAiOnboardingTip(stepId: string): Promise<AiTipResult> {
+  const fallbackTip = FALLBACK_TIPS[stepId] || 'Completá este paso siguiendo las instrucciones en pantalla.';
+
+  try {
+    const [state, ctx] = await Promise.all([
+      getOnboardingState(),
+      getTenantContext(),
+    ]);
+
+    const prompt = buildOnboardingPrompt(stepId, state, ctx);
+
+    const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+    const model = process.env.OLLAMA_MODEL || 'mistral';
+
+    const res = await fetch(`${ollamaUrl}/v1/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: `Sos "Asistente IA", el guía de configuración de AiCoreMed, un sistema de gestión para consultorios médicos.
+
+REGLAS:
+- Respondé SIEMPRE en español argentino, con tono cálido y profesional.
+- Usá el nombre del consultorio cuando lo conozcas.
+- Sé práctico y directo: decí QUÉ hacer y POR QUÉ es importante.
+- No uses emojis, markdown, ni formato especial.
+- Máximo 4 oraciones por respuesta.
+- No saludes genéricamente ("¡Hola!") — empezá directo con el consejo.`,
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 250,
+      }),
+      signal: AbortSignal.timeout(25000),
+    });
+
+    if (!res.ok) throw new Error(`Ollama responded ${res.status}`);
+
+    const data = await res.json();
+    const tip = data?.choices?.[0]?.message?.content?.trim();
+
+    if (!tip) throw new Error('Respuesta vacía de Ollama');
+
+    return { tip, success: true };
+  } catch (e) {
+    console.warn('[Onboarding] Ollama no disponible, usando tip de fallback:', e);
+    return {
+      tip: fallbackTip,
+      success: false,
+    };
+  }
+}
+
+// ─── Build prompt (para referencia / testing) ──────────────
 
 /**
  * Genera un prompt guía contextual para Ollama basado en el paso actual
- * y el estado real del consultorio. A diferencia de la versión anterior,
- * estos prompts son guías completas que ayudan al usuario a entender
- * QUÉ hacer y POR QUÉ es importante cada paso.
+ * y el estado real del consultorio.
  */
-export function buildOnboardingPrompt(stepId: string, state: OnboardingState, ctx: TenantContext): string {
+function buildOnboardingPrompt(stepId: string, state: OnboardingState, ctx: TenantContext): string {
   const step = ONBOARDING_STEPS.find((s) => s.id === stepId);
   if (!step) return '';
 
@@ -273,65 +352,4 @@ FORMATO: Respondé en español argentino, cálido, motivador. Máximo 4 oracione
   };
 
   return prompts[stepId] || `Sos el asistente de configuración de "${consultorio}". El usuario está en el paso "${step.title}" (${completedCount + 1}/${ONBOARDING_STEPS.length}). Dá una guía práctica y cálida para completar este paso. Máximo 4 oraciones. Sin emojis ni markdown.`;
-}
-
-// ─── Llamar a Ollama para guías ────────────────────────────
-
-/**
- * Obtiene una guía contextual de Ollama para el paso indicado.
- * Usa datos reales del tenant para personalizar la respuesta.
- */
-export async function getAiOnboardingTip(stepId: string): Promise<AiTipResult> {
-  try {
-    const [state, ctx] = await Promise.all([
-      getOnboardingState(),
-      getTenantContext(),
-    ]);
-
-    const prompt = buildOnboardingPrompt(stepId, state, ctx);
-
-    const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-    const model = process.env.OLLAMA_MODEL || 'mistral';
-
-    const res = await fetch(`${ollamaUrl}/v1/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: 'system',
-            content: `Sos "Asistente IA", el guía de configuración de AiCoreMed, un sistema de gestión para consultorios médicos.
-
-REGLAS:
-- Respondé SIEMPRE en español argentino, con tono cálido y profesional.
-- Usá el nombre del consultorio cuando lo conozcas.
-- Sé práctico y directo: decí QUÉ hacer y POR QUÉ es importante.
-- No uses emojis, markdown, ni formato especial.
-- Máximo 4 oraciones por respuesta.
-- No saludes genéricamente ("¡Hola!") — empezá directo con el consejo.`,
-          },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 250,
-      }),
-      signal: AbortSignal.timeout(25000),
-    });
-
-    if (!res.ok) throw new Error(`Ollama responded ${res.status}`);
-
-    const data = await res.json();
-    const tip = data?.choices?.[0]?.message?.content?.trim();
-
-    if (!tip) throw new Error('Respuesta vacía de Ollama');
-
-    return { tip, success: true };
-  } catch (e) {
-    console.error('[Onboarding] Error al obtener guía IA:', e);
-    return {
-      tip: '',
-      success: false,
-    };
-  }
 }
