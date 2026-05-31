@@ -6,6 +6,7 @@ import {
   recetas,
   medicos,
   historialMedico,
+  notasSoap,
   conversaciones,
   mensajes,
 } from '@/drizzle/schema';
@@ -54,6 +55,7 @@ export async function GET(
               totalTurnos: 0,
               totalRecetas: 0,
               totalHistorial: 0,
+              totalNotasSoap: 0,
               turnosPorEstado: {},
               recetasPorEstado: {},
             },
@@ -128,6 +130,12 @@ export async function GET(
       .orderBy(desc(historialMedico.createdAt))
       .limit(20);
 
+    // ─── Notas SOAP count ─────────────────────────
+    const [notasSoapCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(notasSoap)
+      .where(eq(notasSoap.pacienteId, pacienteId));
+
     // ─── Última conversación ─────────────────────────
     const [ultimaConversacion] = await db
       .select({
@@ -173,6 +181,7 @@ export async function GET(
           totalTurnos: turnosList.length,
           totalRecetas: recetasList.length,
           totalHistorial: historial.length,
+          totalNotasSoap: Number(notasSoapCount?.count || 0),
           turnosPorEstado: statsTurnos,
           recetasPorEstado: statsRecetas,
         },

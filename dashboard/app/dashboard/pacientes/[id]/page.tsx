@@ -65,6 +65,7 @@ interface PacienteDetalle {
     totalTurnos: number;
     totalRecetas: number;
     totalHistorial: number;
+    totalNotasSoap: number;
     turnosPorEstado: Record<string, number>;
     recetasPorEstado: Record<string, number>;
   };

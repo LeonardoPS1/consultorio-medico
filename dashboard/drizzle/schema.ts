@@ -295,6 +295,27 @@ export const historialMedico = pgTable('historial_medico', {
 });
 
 // ============================================================
+// NOTAS SOAP (Evolución Clínica Estructurada)
+// ============================================================
+export const notasSoap = pgTable('notas_soap', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pacienteId: uuid('paciente_id').notNull().references(() => pacientes.id),
+  medicoId: uuid('medico_id').notNull().references(() => medicos.id),
+  turnoId: uuid('turno_id').references(() => turnos.id),
+  subjetivo: text('subjetivo'),
+  objetivo: text('objetivo'),
+  assessment: text('assessment'),
+  plan: text('plan'),
+  cie10Codigo: varchar('cie10_codigo', { length: 10 }),
+  cie10Descripcion: text('cie10_descripcion'),
+  derivarA: varchar('derivar_a', { length: 255 }),
+  requiereControl: boolean('requiere_control').default(false),
+  controlEnDias: integer('control_en_dias'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ============================================================
 // RECETAS
 // ============================================================
 export const recetas = pgTable('recetas', {
@@ -482,6 +503,7 @@ export const pacientesRelations = relations(pacientes, ({ many, one }) => ({
   turnos: many(turnos),
   conversaciones: many(conversaciones),
   historialMedico: many(historialMedico),
+  notasSoap: many(notasSoap),
   recetas: many(recetas),
   pacienteEventos: many(pacienteEventos),
   tareasPendientes: many(tareasPendientes),
@@ -506,6 +528,7 @@ export const comunasRelations = relations(comunas, ({ one }) => ({
 export const medicosRelations = relations(medicos, ({ many, one }) => ({
   turnos: many(turnos),
   recetas: many(recetas),
+  notasSoap: many(notasSoap),
   servicios: many(servicios),
   listaEspera: many(listaEspera),
   sucursal: one(sucursales, {
@@ -514,7 +537,7 @@ export const medicosRelations = relations(medicos, ({ many, one }) => ({
   }),
 }));
 
-export const turnosRelations = relations(turnos, ({ one }) => ({
+export const turnosRelations = relations(turnos, ({ one, many }) => ({
   paciente: one(pacientes, {
     fields: [turnos.pacienteId],
     references: [pacientes.id],
@@ -526,6 +549,22 @@ export const turnosRelations = relations(turnos, ({ one }) => ({
   sucursal: one(sucursales, {
     fields: [turnos.sucursalId],
     references: [sucursales.id],
+  }),
+  notasSoap: many(notasSoap),
+}));
+
+export const notasSoapRelations = relations(notasSoap, ({ one }) => ({
+  paciente: one(pacientes, {
+    fields: [notasSoap.pacienteId],
+    references: [pacientes.id],
+  }),
+  medico: one(medicos, {
+    fields: [notasSoap.medicoId],
+    references: [medicos.id],
+  }),
+  turno: one(turnos, {
+    fields: [notasSoap.turnoId],
+    references: [turnos.id],
   }),
 }));
 

@@ -30,6 +30,11 @@ import {
   Save,
   RotateCcw,
   Download,
+  Stethoscope,
+  Brain,
+  ClipboardList,
+  ArrowRight,
+  RefreshCw,
 } from 'lucide-react';
 import { formatPhone, getInitials, formatDate, getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
@@ -109,10 +114,30 @@ interface PacienteData {
   createdAt: string;
 }
 
+interface NotaSoapRow {
+  id: string;
+  pacienteId: string;
+  medicoId: string;
+  turnoId: string | null;
+  subjetivo: string | null;
+  objetivo: string | null;
+  assessment: string | null;
+  plan: string | null;
+  cie10Codigo: string | null;
+  cie10Descripcion: string | null;
+  derivarA: string | null;
+  requiereControl: boolean;
+  controlEnDias: number | null;
+  medicoNombre: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Stats {
   totalTurnos: number;
   totalRecetas: number;
   totalHistorial: number;
+  totalNotasSoap: number;
   turnosPorEstado: Record<string, number>;
   recetasPorEstado: Record<string, number>;
 }
@@ -182,6 +207,138 @@ export function PacienteDetalleClient({
     codigo: '',
   });
   const [savingHistorial, setSavingHistorial] = useState(false);
+
+  // ─── SOAP state ────────────────────────────────
+  const [notasSoapList, setNotasSoapList] = useState<NotaSoapRow[]>([]);
+  const [soapLoaded, setSoapLoaded] = useState(false);
+  const [soapLoading, setSoapLoading] = useState(false);
+  const [showNewSoap, setShowNewSoap] = useState(false);
+  const [editSoapDialog, setEditSoapDialog] = useState<NotaSoapRow | null>(null);
+  const [deleteSoapId, setDeleteSoapId] = useState<string | null>(null);
+  const [savingSoap, setSavingSoap] = useState(false);
+  const [soapForm, setSoapForm] = useState({
+    subjetivo: '',
+    objetivo: '',
+    assessment: '',
+    plan: '',
+    cie10Codigo: '',
+    cie10Descripcion: '',
+    derivarA: '',
+    requiereControl: false,
+    controlEnDias: '',
+  });
+
+  const fetchNotasSoap = async () => {
+    if (soapLoaded) return;
+    setSoapLoading(true);
+    try {
+      const res = await fetch(`/api/pacientes/${paciente.id}/notas-soap`);
+      if (res.ok) {
+        const data = await res.json();
+        setNotasSoapList(data);
+        setSoapLoaded(true);
+      }
+    } catch {
+      // Silencio
+    } finally {
+      setSoapLoading(false);
+    }
+  };
+
+  const handleCreateSoap = async () => {
+    if (!soapForm.subjetivo.trim() && !soapForm.objetivo.trim() && !soapForm.assessment.trim() && !soapForm.plan.trim()) {
+      toast({ title: 'Completá al menos un campo', variant: 'destructive' });
+      return;
+    }
+    setSavingSoap(true);
+    try {
+      const res = await fetch(`/api/pacientes/${paciente.id}/notas-soap`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subjetivo: soapForm.subjetivo.trim() || null,
+          objetivo: soapForm.objetivo.trim() || null,
+          assessment: soapForm.assessment.trim() || null,
+          plan: soapForm.plan.trim() || null,
+          cie10Codigo: soapForm.cie10Codigo.trim() || null,
+          cie10Descripcion: soapForm.cie10Descripcion.trim() || null,
+          derivarA: soapForm.derivarA.trim() || null,
+          requiereControl: soapForm.requiereControl,
+          controlEnDias: soapForm.controlEnDias ? parseInt(soapForm.controlEnDias) : null,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const newNota: NotaSoapRow = {
+        ...data,
+        medicoNombre: null,
+      };
+      setNotasSoapList((prev) => [newNota, ...prev]);
+      toast({ title: 'Nota SOAP guardada' });
+      setShowNewSoap(false);
+      setSoapForm({
+        subjetivo: '', objetivo: '', assessment: '', plan: '',
+        cie10Codigo: '', cie10Descripcion: '',
+        derivarA: '', requiereControl: false, controlEnDias: '',
+      });
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo guardar', variant: 'destructive' });
+    } finally {
+      setSavingSoap(false);
+    }
+  };
+
+  const handleUpdateSoap = async () => {
+    if (!editSoapDialog) return;
+    setSavingSoap(true);
+    try {
+      const res = await fetch(
+        `/api/pacientes/${paciente.id}/notas-soap?entryId=${editSoapDialog.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subjetivo: editSoapDialog.subjetivo,
+            objetivo: editSoapDialog.objetivo,
+            assessment: editSoapDialog.assessment,
+            plan: editSoapDialog.plan,
+            cie10Codigo: editSoapDialog.cie10Codigo,
+            cie10Descripcion: editSoapDialog.cie10Descripcion,
+            derivarA: editSoapDialog.derivarA,
+            requiereControl: editSoapDialog.requiereControl,
+            controlEnDias: editSoapDialog.controlEnDias,
+          }),
+        },
+      );
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setNotasSoapList((prev) =>
+        prev.map((n) => (n.id === data.id ? { ...n, ...data } : n)),
+      );
+      toast({ title: 'Nota SOAP actualizada' });
+      setEditSoapDialog(null);
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo actualizar', variant: 'destructive' });
+    } finally {
+      setSavingSoap(false);
+    }
+  };
+
+  const handleDeleteSoap = async () => {
+    if (!deleteSoapId) return;
+    try {
+      const res = await fetch(
+        `/api/pacientes/${paciente.id}/notas-soap?entryId=${deleteSoapId}`,
+        { method: 'DELETE' },
+      );
+      if (!res.ok) throw new Error();
+      setNotasSoapList((prev) => prev.filter((n) => n.id !== deleteSoapId));
+      toast({ title: 'Nota SOAP eliminada' });
+      setDeleteSoapId(null);
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo eliminar', variant: 'destructive' });
+    }
+  };
 
   // ─── Notas / Alergias / Medicacion editables ──────
   const [editandoNotas, setEditandoNotas] = useState(false);
@@ -735,6 +892,9 @@ export function PacienteDetalleClient({
           <TabsTrigger value="historial">
             <Activity className="h-4 w-4 mr-1" /> Historial ({historial.length})
           </TabsTrigger>
+          <TabsTrigger value="soap" onClick={fetchNotasSoap}>
+            <Stethoscope className="h-4 w-4 mr-1" /> SOAP ({stats.totalNotasSoap})
+          </TabsTrigger>
           <TabsTrigger value="notas">
             <FileText className="h-4 w-4 mr-1" /> Notas
           </TabsTrigger>
@@ -1087,6 +1247,281 @@ export function PacienteDetalleClient({
           )}
         </TabsContent>
 
+        {/* SOAP */}
+        <TabsContent value="soap" className="mt-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-muted-foreground">{notasSoapList.length} notas SOAP</p>
+            {!showNewSoap && (
+              <Button variant="outline" size="sm" onClick={() => setShowNewSoap(true)}>
+                <FilePlus2 className="h-4 w-4 mr-1" /> Nueva Nota SOAP
+              </Button>
+            )}
+          </div>
+
+          {/* Form nueva nota SOAP */}
+          {showNewSoap && (
+            <Card className="border-dashed border-primary/40 mb-3">
+              <CardContent className="p-4 space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1 md:col-span-2">
+                    <Label className="text-xs font-semibold text-blue-600 flex items-center gap-1">
+                      <Brain className="h-3 w-3" /> S — Subjetivo
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground -mt-0.5 mb-1">
+                      Lo que el paciente refiere (síntomas, motivo de consulta)
+                    </p>
+                    <Textarea
+                      className="min-h-[60px] text-xs"
+                      placeholder="Ej: Paciente refiere dolor de cabeza intenso desde hace 3 días..."
+                      value={soapForm.subjetivo}
+                      onChange={(e) => setSoapForm((f) => ({ ...f, subjetivo: e.target.value }))}
+                      autoFocus
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <Label className="text-xs font-semibold text-green-600 flex items-center gap-1">
+                      <Activity className="h-3 w-3" /> O — Objetivo
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground -mt-0.5 mb-1">
+                      Hallazgos del examen físico y estudios
+                    </p>
+                    <Textarea
+                      className="min-h-[60px] text-xs"
+                      placeholder="Ej: PA: 130/80, FC: 85, Temp: 36.5°C..."
+                      value={soapForm.objetivo}
+                      onChange={(e) => setSoapForm((f) => ({ ...f, objetivo: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <Label className="text-xs font-semibold text-amber-600 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> A — Assessment
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground -mt-0.5 mb-1">
+                      Diagnóstico / Impresión clínica
+                    </p>
+                    <Textarea
+                      className="min-h-[60px] text-xs"
+                      placeholder="Ej: Cefalea tensional probable. Se descarta origen vascular..."
+                      value={soapForm.assessment}
+                      onChange={(e) => setSoapForm((f) => ({ ...f, assessment: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <Label className="text-xs font-semibold text-purple-600 flex items-center gap-1">
+                      <ClipboardList className="h-3 w-3" /> P — Plan
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground -mt-0.5 mb-1">
+                      Tratamiento, estudios, indicaciones
+                    </p>
+                    <Textarea
+                      className="min-h-[60px] text-xs"
+                      placeholder="Ej: Indicar ibuprofeno 600mg c/8hs por 5 días. Solicitar RNM de cerebro..."
+                      value={soapForm.plan}
+                      onChange={(e) => setSoapForm((f) => ({ ...f, plan: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                {/* CIE-10 + Derivación + Control */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">CIE-10</Label>
+                    <Input
+                      className="h-8 text-xs font-mono"
+                      placeholder="ej: G44.2"
+                      value={soapForm.cie10Codigo}
+                      onChange={(e) => setSoapForm((f) => ({ ...f, cie10Codigo: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Descripción CIE-10</Label>
+                    <Input
+                      className="h-8 text-xs"
+                      placeholder="ej: Cefalea tensional"
+                      value={soapForm.cie10Descripcion}
+                      onChange={(e) => setSoapForm((f) => ({ ...f, cie10Descripcion: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Derivar a</Label>
+                    <Input
+                      className="h-8 text-xs"
+                      placeholder="ej: Neurología"
+                      value={soapForm.derivarA}
+                      onChange={(e) => setSoapForm((f) => ({ ...f, derivarA: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300"
+                      checked={soapForm.requiereControl}
+                      onChange={(e) => setSoapForm((f) => ({ ...f, requiereControl: e.target.checked }))}
+                    />
+                    <span className="text-xs">Requiere control</span>
+                  </label>
+                  {soapForm.requiereControl && (
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs">Control en</Label>
+                      <Input
+                        type="number"
+                        className="h-7 w-20 text-xs"
+                        placeholder="días"
+                        value={soapForm.controlEnDias}
+                        onChange={(e) => setSoapForm((f) => ({ ...f, controlEnDias: e.target.value }))}
+                      />
+                      <span className="text-xs text-muted-foreground">días</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      setShowNewSoap(false);
+                      setSoapForm({
+                        subjetivo: '', objetivo: '', assessment: '', plan: '',
+                        cie10Codigo: '', cie10Descripcion: '',
+                        derivarA: '', requiereControl: false, controlEnDias: '',
+                      });
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={handleCreateSoap}
+                    disabled={savingSoap}
+                  >
+                    {savingSoap ? 'Guardando...' : 'Guardar Nota SOAP'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Lista de notas SOAP */}
+          {soapLoading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+              </CardContent>
+            </Card>
+          ) : notasSoapList.length === 0 && !showNewSoap ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <Stethoscope className="h-10 w-10 text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground">Sin notas SOAP registradas</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Las notas SOAP estructuran la evolución clínica en 4 partes
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {notasSoapList.map((n) => (
+                <Card key={n.id} className="hoverable:hover:bg-muted/30 transition-colors group">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Stethoscope className="h-4 w-4 text-primary" />
+                        <span className="text-xs text-muted-foreground">
+                          {n.medicoNombre && `${n.medicoNombre} · `}
+                          {formatDate(n.createdAt, "d 'de' MMMM, HH:mm")}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => setEditSoapDialog(n)}
+                          title="Editar"
+                        >
+                          <Edit3 className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-destructive"
+                          onClick={() => setDeleteSoapId(n.id)}
+                          title="Eliminar"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {n.subjetivo && (
+                        <div className="space-y-0.5">
+                          <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider flex items-center gap-1">
+                            <Brain className="h-3 w-3" /> S — Subjetivo
+                          </p>
+                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">{n.subjetivo}</p>
+                        </div>
+                      )}
+                      {n.objetivo && (
+                        <div className="space-y-0.5">
+                          <p className="text-[10px] font-semibold text-green-600 uppercase tracking-wider flex items-center gap-1">
+                            <Activity className="h-3 w-3" /> O — Objetivo
+                          </p>
+                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">{n.objetivo}</p>
+                        </div>
+                      )}
+                      {n.assessment && (
+                        <div className="space-y-0.5">
+                          <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" /> A — Assessment
+                          </p>
+                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">{n.assessment}</p>
+                        </div>
+                      )}
+                      {n.plan && (
+                        <div className="space-y-0.5">
+                          <p className="text-[10px] font-semibold text-purple-600 uppercase tracking-wider flex items-center gap-1">
+                            <ClipboardList className="h-3 w-3" /> P — Plan
+                          </p>
+                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">{n.plan}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer: CIE-10 + Derivación + Control */}
+                    <div className="flex items-center gap-2 mt-3 pt-2 border-t flex-wrap">
+                      {n.cie10Codigo && (
+                        <Badge variant="outline" className="text-[10px] font-mono">
+                          {n.cie10Codigo}
+                          {n.cie10Descripcion && ` — ${n.cie10Descripcion}`}
+                        </Badge>
+                      )}
+                      {n.derivarA && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          <ArrowRight className="h-2.5 w-2.5 mr-1" />
+                          Derivar a {n.derivarA}
+                        </Badge>
+                      )}
+                      {n.requiereControl && n.controlEnDias && (
+                        <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-300">
+                          <RefreshCw className="h-2.5 w-2.5 mr-1" />
+                          Control en {n.controlEnDias} días
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
         {/* Notas médicas (siempre visible, editable) */}
         <TabsContent value="notas" className="mt-4">
           <Card>
@@ -1245,6 +1680,134 @@ export function PacienteDetalleClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ─── SOAP Edit Dialog ──────────────── */}
+      <Dialog open={!!editSoapDialog} onOpenChange={(open) => !open && setEditSoapDialog(null)}>
+        <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Nota SOAP</DialogTitle>
+          </DialogHeader>
+          {editSoapDialog && (
+            <div className="space-y-3 py-2">
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-blue-600 flex items-center gap-1">
+                  <Brain className="h-3 w-3" /> S — Subjetivo
+                </Label>
+                <Textarea
+                  className="min-h-[60px] text-xs"
+                  value={editSoapDialog.subjetivo || ''}
+                  onChange={(e) => setEditSoapDialog({ ...editSoapDialog, subjetivo: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-green-600 flex items-center gap-1">
+                  <Activity className="h-3 w-3" /> O — Objetivo
+                </Label>
+                <Textarea
+                  className="min-h-[60px] text-xs"
+                  value={editSoapDialog.objetivo || ''}
+                  onChange={(e) => setEditSoapDialog({ ...editSoapDialog, objetivo: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-amber-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" /> A — Assessment
+                </Label>
+                <Textarea
+                  className="min-h-[60px] text-xs"
+                  value={editSoapDialog.assessment || ''}
+                  onChange={(e) => setEditSoapDialog({ ...editSoapDialog, assessment: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-purple-600 flex items-center gap-1">
+                  <ClipboardList className="h-3 w-3" /> P — Plan
+                </Label>
+                <Textarea
+                  className="min-h-[60px] text-xs"
+                  value={editSoapDialog.plan || ''}
+                  onChange={(e) => setEditSoapDialog({ ...editSoapDialog, plan: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">CIE-10</Label>
+                  <Input
+                    className="h-8 text-xs font-mono"
+                    value={editSoapDialog.cie10Codigo || ''}
+                    onChange={(e) => setEditSoapDialog({ ...editSoapDialog, cie10Codigo: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Descripción</Label>
+                  <Input
+                    className="h-8 text-xs"
+                    value={editSoapDialog.cie10Descripcion || ''}
+                    onChange={(e) => setEditSoapDialog({ ...editSoapDialog, cie10Descripcion: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Derivar a</Label>
+                  <Input
+                    className="h-8 text-xs"
+                    value={editSoapDialog.derivarA || ''}
+                    onChange={(e) => setEditSoapDialog({ ...editSoapDialog, derivarA: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300"
+                    checked={editSoapDialog.requiereControl}
+                    onChange={(e) => setEditSoapDialog({ ...editSoapDialog, requiereControl: e.target.checked })}
+                  />
+                  <span className="text-xs">Requiere control</span>
+                </label>
+                {editSoapDialog.requiereControl && (
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs">Control en</Label>
+                    <Input
+                      type="number"
+                      className="h-7 w-20 text-xs"
+                      value={editSoapDialog.controlEnDias || ''}
+                      onChange={(e) => setEditSoapDialog({ ...editSoapDialog, controlEnDias: parseInt(e.target.value) || null })}
+                    />
+                    <span className="text-xs text-muted-foreground">días</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setEditSoapDialog(null)}>
+              Cancelar
+            </Button>
+            <Button size="sm" onClick={handleUpdateSoap} disabled={savingSoap}>
+              {savingSoap ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── SOAP Delete Alert ──────────────── */}
+      <AlertDialog open={!!deleteSoapId} onOpenChange={(open) => !open && setDeleteSoapId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar Nota SOAP</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro? Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteSoap} className="bg-destructive text-destructive-foreground">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ─── Baja — Solicitar (Primer paso) ───── */}
       <AlertDialog open={bajaDialogOpen} onOpenChange={(open) => !open && !bajaLoading && setBajaDialogOpen(false)}>
