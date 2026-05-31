@@ -104,15 +104,15 @@ export function DashboardKpisClient({ initialKpis }: DashboardKpisClientProps) {
         return (
           <Card key={kpi.title} className="hover-card overflow-hidden relative">
             <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-[0.03] dark:opacity-[0.08]`} />
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative">
+            <CardHeader className="flex flex-row items-center justify-between pb-1 md:pb-2 space-y-0 px-3 md:px-6 pt-3 md:pt-6 relative">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {kpi.title}
               </CardTitle>
-              <div className={`rounded-lg ${bg} p-2`}>
-                <Icon className={`h-4 w-4 ${kpi.urgent ? 'text-red-500 animate-pulse-soft' : ''}`} />
+              <div className={`rounded-lg ${bg} p-1.5 md:p-2`}>
+                <Icon className={`h-3.5 w-3.5 md:h-4 md:w-4 ${kpi.urgent ? 'text-red-500 animate-pulse-soft' : ''}`} />
               </div>
             </CardHeader>
-            <CardContent className="relative">
+            <CardContent className="px-3 md:px-6 pb-3 md:pb-6 relative">
               <div className="flex items-baseline gap-2">
                 <div className="text-2xl sm:text-3xl font-bold">{kpi.value}</div>
                 <span className={`text-sm font-medium ${kpi.urgent ? 'text-red-500' : 'text-emerald-500'}`}>

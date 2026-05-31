@@ -143,7 +143,7 @@ export function Sidebar() {
         <div className="flex h-32 lg:h-[172px] items-center justify-center px-2 border-b border-sidebar-muted relative">
           {!collapsed && (
             <div className="flex flex-col items-center">
-              <div className="h-28 w-28 lg:h-40 lg:w-40 shrink-0">
+              <div className="h-20 w-20 lg:h-40 lg:w-40 shrink-0">
                 <img
                   src="/aicoremed_dark_1200.svg"
                   alt={orgNombre}

@@ -306,7 +306,7 @@ export function Header() {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="w-[320px] p-0 overflow-hidden"
+            className="w-[85vw] max-w-[320px] p-0 overflow-hidden"
             sideOffset={8}
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
