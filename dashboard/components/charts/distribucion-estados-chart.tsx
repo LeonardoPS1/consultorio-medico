@@ -3,7 +3,7 @@
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
-import type { DistribucionEstado } from '@/app/dashboard/reportes/reportes-data';
+export interface DistribucionEstado { estado: string; valor: number; color: string; }
 
 interface Props {
   data: DistribucionEstado[];

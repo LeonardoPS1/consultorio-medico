@@ -3,7 +3,7 @@
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import type { WhatsAppVolumen } from '@/app/dashboard/reportes/reportes-data';
+export interface WhatsAppVolumen { dia: string; recibidos: number; enviados: number; }
 
 interface Props {
   data: WhatsAppVolumen[];

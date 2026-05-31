@@ -3,7 +3,7 @@
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import type { TurnoDia } from '@/app/dashboard/reportes/reportes-data';
+export interface TurnoDia { dia: string; cantidad: number; completados: number; cancelados: number; ausentes: number; }
 
 interface Props {
   data: TurnoDia[];
