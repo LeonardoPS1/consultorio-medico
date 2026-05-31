@@ -2,11 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Loader2, Lightbulb, ExternalLink, MessageSquare, Stethoscope, Clock, UserPlus, Bell, Sparkles, RefreshCw } from 'lucide-react';
-import { ONBOARDING_STEPS, type OnboardingStep } from '@/lib/onboarding-types';
+import {
+  CheckCircle2, Loader2, Lightbulb, ExternalLink,
+  MessageSquare, Stethoscope, Clock, UserPlus, Bell,
+  Sparkles, RefreshCw, RotateCcw, SkipForward,
+} from 'lucide-react';
+import { ONBOARDING_STEPS } from '@/lib/onboarding-types';
 
 // ─── Props ──────────────────────────────────────────────────
 
@@ -30,13 +35,15 @@ const ICON_MAP: Record<string, React.ElementType> = {
 // ─── Component ──────────────────────────────────────────────
 
 export function OnboardingClient({ initialCompleted, isComplete, isForceRestart }: OnboardingClientProps) {
+  const router = useRouter();
   const [completed, setCompleted] = useState<string[]>(initialCompleted);
   const [activeStep, setActiveStep] = useState<string | null>(null);
   const [tips, setTips] = useState<Record<string, string>>({});
   const [loadingTips, setLoadingTips] = useState<Set<string>>(new Set());
   const [failedTips, setFailedTips] = useState<Set<string>>(new Set());
 
-  // Cargar tip de IA para un paso (definir ANTES del early return)
+  // ── Cargar tip IA ───────────────────────────────────────
+
   const loadTip = async (stepId: string) => {
     if (loadingTips.has(stepId)) return;
 
@@ -65,7 +72,8 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
     }
   };
 
-  // useEffect ANTES del early return para mantener hooks consistentes
+  // ── Efecto: cargar tip al abrir un paso ─────────────────
+
   useEffect(() => {
     if (isComplete) return;
     if (activeStep && !tips[activeStep]) {
@@ -74,8 +82,58 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStep, isComplete]);
 
-  // Si ya está completo, mostrar pantalla de éxito
-  if (isComplete) {
+  // ── Helpers ──────────────────────────────────────────────
+
+  const isStepCompleted = (id: string) => completed.includes(id);
+  const isStepActive = (id: string) => activeStep === id;
+
+  const isStepPending = (id: string) => {
+    const idx = ONBOARDING_STEPS.findIndex((s) => s.id === id);
+    // Primer paso nunca está pendiente
+    if (idx === 0) return false;
+    // Pendiente si el anterior no está completado
+    return !isStepCompleted(ONBOARDING_STEPS[idx - 1].id);
+  };
+
+  const allLocallyDone = completed.length >= ONBOARDING_STEPS.length;
+  const localProgress = Math.round((completed.length / ONBOARDING_STEPS.length) * 100);
+
+  // ── Marcar paso como completado ──────────────────────────
+
+  const marcarCompletado = (stepId: string) => {
+    setCompleted((prev) => {
+      if (prev.includes(stepId)) return prev;
+      const next = [...prev, stepId];
+      const currentIdx = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
+      const nextStep = ONBOARDING_STEPS[currentIdx + 1];
+      if (nextStep) {
+        setActiveStep(nextStep.id);
+      }
+      return next;
+    });
+  };
+
+  // ── Saltar paso (no aplica / lo haré después) ───────────
+
+  const saltarPaso = (stepId: string) => {
+    const currentIdx = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
+    const nextStep = ONBOARDING_STEPS[currentIdx + 1];
+    if (nextStep) {
+      setActiveStep(nextStep.id);
+    } else {
+      setActiveStep(null);
+    }
+  };
+
+  // ── Reiniciar ────────────────────────────────────────────
+
+  const handleReiniciar = () => {
+    router.push('/dashboard/onboarding?reiniciar=true');
+  };
+
+  // ── Pantalla de éxito (todo completado) ─────────────────
+
+  if (isComplete || allLocallyDone) {
     return (
       <div className="text-center space-y-6 py-12">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30">
@@ -94,52 +152,52 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
           <Button variant="outline" asChild>
             <Link href="/dashboard/turnos">Gestionar Turnos</Link>
           </Button>
-          <Button variant="ghost" asChild>
-            <Link href="/dashboard/onboarding?reiniciar=true">
-              <Sparkles className="h-4 w-4 mr-1" />
-              Re-ejecutar asistente IA
-            </Link>
+          <Button variant="ghost" onClick={handleReiniciar}>
+            <Sparkles className="h-4 w-4 mr-1" />
+            Re-ejecutar asistente IA
           </Button>
         </div>
       </div>
     );
   }
 
-  const isStepCompleted = (id: string) => completed.includes(id);
-  const isStepActive = (id: string) => activeStep === id;
-  // En modo reinicio, todos los pasos están disponibles sin bloqueo
-  // En modo reinicio, los pasos se habilitan progresivamente
-  const isStepPending = (id: string) => {
-    if (isForceRestart) {
-      const idx = ONBOARDING_STEPS.findIndex((s) => s.id === id);
-      return idx > 0 && !isStepCompleted(ONBOARDING_STEPS[idx - 1].id);
-    }
-    const idx = ONBOARDING_STEPS.findIndex((s) => s.id === id);
-    return idx > 0 && !isStepCompleted(ONBOARDING_STEPS[idx - 1].id);
-  };
-
-  // Marcar paso como completado manualmente (modo reinicio)
-  const marcarCompletado = (stepId: string) => {
-    setCompleted((prev) => {
-      if (prev.includes(stepId)) return prev;
-      const next = [...prev, stepId];
-      // Auto-abrir el siguiente paso
-      const currentIdx = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
-      const nextStep = ONBOARDING_STEPS[currentIdx + 1];
-      if (nextStep) {
-        setActiveStep(nextStep.id);
-      }
-      return next;
-    });
-  };
+  // ── Vista principal ──────────────────────────────────────
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      {/* ── Barra de acciones ─────────────────────────────── */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-muted-foreground">
+            {isForceRestart
+              ? 'Repasá cada paso y marcalo como completado.'
+              : `Completaste ${completed.length} de ${ONBOARDING_STEPS.length} pasos.`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {isForceRestart ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/dashboard/onboarding">
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                Ver progreso real
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={handleReiniciar}>
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+              Reiniciar configuración
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Steps ──────────────────────────────────────────── */}
       {ONBOARDING_STEPS.map((step, idx) => {
         const Icon = ICON_MAP[step.icon] || Lightbulb;
         const done = isStepCompleted(step.id);
         const active = isStepActive(step.id);
         const pending = isStepPending(step.id);
+        const isLastStep = idx === ONBOARDING_STEPS.length - 1;
 
         return (
           <Card
@@ -148,19 +206,20 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
               done
                 ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-950/10'
                 : active
-                  ? 'border-primary/30 shadow-sm'
+                  ? 'border-primary/30 shadow-sm ring-1 ring-primary/10'
                   : pending
                     ? 'opacity-50'
-                    : 'hover:border-muted-foreground/20'
+                    : 'hover:border-muted-foreground/20 cursor-pointer'
             }`}
           >
+            {/* ── Header (clickeable) ──────────────────────── */}
             <button
               className="w-full text-left"
               onClick={() => {
-                if (done) return;
+                if (done || pending) return;
                 setActiveStep(active ? null : step.id);
               }}
-              disabled={pending}
+              disabled={done || pending}
             >
               <CardHeader className="p-4 pb-0">
                 <div className="flex items-center gap-3">
@@ -183,7 +242,7 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
 
                   {/* Title + status */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <CardTitle className="text-base">{step.title}</CardTitle>
                       {done && (
                         <Badge variant="outline" className="text-emerald-600 border-emerald-200 text-[10px] px-1.5 h-5">
@@ -209,10 +268,10 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
               </CardHeader>
             </button>
 
-            {/* Expanded content */}
+            {/* ── Expanded content ─────────────────────────── */}
             {active && !done && (
               <CardContent className="p-4 pt-3 space-y-3">
-                {/* AI Tip — Guía contextual generada por Mistral */}
+                {/* AI Tip */}
                 <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/10 border border-amber-200/50 dark:border-amber-800/30 p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex items-center justify-center h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/40 shrink-0 mt-0.5">
@@ -261,36 +320,60 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
                   </Link>
                 </Button>
 
-                {/* Botón "Ya lo configuré" — solo en modo reinicio */}
-                {isForceRestart && (
+                {/* Botones de acción inferiores */}
+                <div className="flex items-center gap-2">
+                  {/* Ya lo configuré — siempre visible */}
                   <Button
                     variant="outline"
-                    className="w-full gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+                    className="flex-1 gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
                     onClick={(e) => {
                       e.stopPropagation();
                       marcarCompletado(step.id);
                     }}
                   >
                     <CheckCircle2 className="h-4 w-4" />
-                    Ya lo configuré, siguiente paso →
+                    {isLastStep ? 'Listo, terminé' : 'Ya lo configuré, siguiente →'}
                   </Button>
-                )}
+
+                  {/* Saltar paso — ghost */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0 text-muted-foreground hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      saltarPaso(step.id);
+                    }}
+                    title="Saltar este paso (lo haré después)"
+                  >
+                    <SkipForward className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardContent>
             )}
           </Card>
         );
       })}
 
-      {/* Botón para salir del modo reinicio */}
-      {isForceRestart && (
-        <div className="text-center pt-4">
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/onboarding">
-              Volver a configuración normal
-            </Link>
+      {/* ── Footer ──────────────────────────────────────────── */}
+      <div className="flex items-center justify-between pt-2">
+        <p className="text-xs text-muted-foreground">
+          Progreso local: {localProgress}%
+        </p>
+        <div className="flex items-center gap-2">
+          {isForceRestart && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/dashboard/onboarding">
+                Volver a vista normal
+              </Link>
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={handleReiniciar}>
+            <RotateCcw className="h-3 w-3 mr-1" />
+            Reiniciar
           </Button>
         </div>
-      )}
+      </div>
     </div>
   );
 }

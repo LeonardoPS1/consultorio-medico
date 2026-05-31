@@ -6,7 +6,7 @@
  * contextual generado por Ollama.
  *
  * Server component: renderiza el estado inicial del onboarding.
- * OnboardingClient: maneja interactividad y tips de IA.
+ * OnboardingClient: maneja interactividad, progreso y tips de IA.
  */
 
 import { getOnboardingState } from '@/lib/onboarding';
@@ -26,31 +26,15 @@ export default async function OnboardingPage({
 
   return (
     <div className="space-y-6 animate-in max-w-3xl mx-auto">
-      {/* Header */}
       <PageHeader
-        title={showComplete ? '🎉 ¡Todo listo!' : 'Configuración inicial'}
+        title={showComplete ? '🎉 ¡Todo listo!' : 'Asistente IA'}
         description={showComplete
-          ? 'Tu consultorio está completamente configurado. ¡Empezá a gestionar!'
+          ? 'Tu consultorio está completamente configurado.'
           : isForceRestart
-            ? 'Repasá los pasos de configuración. Los tips de IA te ayudarán.'
-            : 'Completá estos pasos para dejar todo listo'}
+            ? 'Repasá cada paso y marcalo como completado cuando lo configures.'
+            : 'Guía paso a paso para dejar tu consultorio listo.'}
       />
 
-      {/* Progress bar */}
-      <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Progreso</span>
-            <span className="font-semibold">{state.progress}%</span>
-          </div>
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
-              style={{ width: `${state.progress}%` }}
-            />
-          </div>
-      </div>
-
-      {/* Client component con pasos interactivos */}
       <OnboardingClient
         initialCompleted={isForceRestart ? [] : state.completedSteps}
         isComplete={showComplete}
