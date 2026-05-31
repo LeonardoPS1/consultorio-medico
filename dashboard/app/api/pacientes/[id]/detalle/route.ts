@@ -131,10 +131,18 @@ export async function GET(
       .limit(20);
 
     // ─── Notas SOAP count ─────────────────────────
-    const [notasSoapCount] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(notasSoap)
-      .where(eq(notasSoap.pacienteId, pacienteId));
+    // Si la tabla notas_soap no existe aún, devolvemos 0
+    let notasSoapCount = { count: 0 };
+    try {
+      const [result] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(notasSoap)
+        .where(eq(notasSoap.pacienteId, pacienteId));
+      notasSoapCount = result || { count: 0 };
+    } catch {
+      // La tabla podría no existir si la migración 0018 no se aplicó
+      notasSoapCount = { count: 0 };
+    }
 
     // ─── Última conversación ─────────────────────────
     const [ultimaConversacion] = await db
