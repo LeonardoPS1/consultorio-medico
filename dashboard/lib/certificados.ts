@@ -1,0 +1,235 @@
+import { createHash } from 'crypto';
+
+// ─── Constants ──────────────────────────────────────────────
+
+const SECRET = process.env.CERTIFICADO_HASH_SECRET || 'consultorio-medico-cert-secret-2026';
+
+// ─── Types ──────────────────────────────────────────────────
+
+export interface CertificadoData {
+  diagnostico: string;
+  cie10Codigo?: string | null;
+  reposoDesde?: string | null;
+  reposoHasta?: string | null;
+  reposoDias?: number | null;
+  indicaciones?: string | null;
+}
+
+export interface CertificadoParams {
+  id: string;
+  pacienteId: string;
+  pacienteNombre: string;
+  pacienteApellido: string;
+  pacienteDni?: string | null;
+  medicoNombre: string;
+  medicoMatricula?: string | null;
+  data: CertificadoData;
+}
+
+// ─── Hash ───────────────────────────────────────────────────
+
+export function generarHashCertificado(params: {
+  id: string;
+  pacienteId: string;
+  diagnostico: string;
+}): string {
+  const payload = [
+    params.id,
+    params.pacienteId,
+    params.diagnostico.trim().toLowerCase(),
+    SECRET,
+  ].join('||');
+  return createHash('sha256').update(payload).digest('hex');
+}
+
+// ─── HTML Template ──────────────────────────────────────────
+
+export function generarHTMLCertificado(
+  params: CertificadoParams,
+  qrDataUrl: string,
+  baseUrl: string,
+): string {
+  const {
+    pacienteNombre,
+    pacienteApellido,
+    pacienteDni,
+    medicoNombre,
+    medicoMatricula,
+    data,
+  } = params;
+
+  const fechaActual = new Date().toLocaleDateString('es-AR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const verificationUrl = `${baseUrl}/verificar-certificado/${params.id}`;
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Certificado Médico</title>
+  <style>
+    @page { margin: 2.5cm 2cm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      color: #1a1a1a;
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 3px double #1a1a1a;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      font-size: 22px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 5px;
+    }
+    .header p {
+      font-size: 13px;
+      color: #555;
+    }
+    .titulo {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 25px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+    .content { margin-bottom: 30px; }
+    .data-row {
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    .data-row strong {
+      display: inline-block;
+      min-width: 140px;
+    }
+    .diagnostico-box {
+      background: #f8f8f8;
+      border-left: 4px solid #1a1a1a;
+      padding: 15px 20px;
+      margin: 15px 0;
+      font-style: italic;
+      font-size: 15px;
+    }
+    .reposo-box {
+      background: #fff8f0;
+      border: 1px solid #e8d5b5;
+      padding: 15px 20px;
+      margin: 15px 0;
+      font-size: 14px;
+    }
+    .indicaciones {
+      margin: 15px 0;
+      padding: 10px 0;
+      font-size: 13px;
+      color: #444;
+    }
+    .footer {
+      margin-top: 50px;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+    }
+    .firma-area {
+      text-align: center;
+      min-width: 200px;
+    }
+    .firma-line {
+      width: 200px;
+      border-top: 1px solid #1a1a1a;
+      margin: 0 auto 5px;
+    }
+    .firma-area p {
+      font-size: 13px;
+      color: #555;
+    }
+    .qr-area {
+      text-align: center;
+    }
+    .qr-area img {
+      width: 100px;
+      height: 100px;
+    }
+    .qr-area p {
+      font-size: 10px;
+      color: #999;
+      margin-top: 3px;
+    }
+    .sello-agua {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 80px;
+      opacity: 0.03;
+      font-weight: bold;
+      pointer-events: none;
+    }
+    @media print {
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sello-agua">CERTIFICADO MÉDICO</div>
+
+  <div class="header">
+    <h1>${medicoNombre.toUpperCase()}</h1>
+    <p>${medicoMatricula ? `Matrícula: ${medicoMatricula}` : 'Médico Matriculado'}</p>
+  </div>
+
+  <div class="titulo">Certificado Médico</div>
+
+  <div class="content">
+    <div class="data-row"><strong>Paciente:</strong> ${pacienteNombre} ${pacienteApellido}</div>
+    ${pacienteDni ? `<div class="data-row"><strong>DNI:</strong> ${pacienteDni}</div>` : ''}
+    <div class="data-row"><strong>Fecha de emisión:</strong> ${fechaActual}</div>
+
+    <div class="diagnostico-box">
+      <strong>Diagnóstico:</strong> ${data.diagnostico}
+      ${data.cie10Codigo ? `<br><span style="font-size:12px;color:#666;">CIE-10: ${data.cie10Codigo}</span>` : ''}
+    </div>
+
+    ${data.reposoDesde ? `
+    <div class="reposo-box">
+      <strong>Reposo médico:</strong><br>
+      Desde: ${data.reposoDesde}<br>
+      Hasta: ${data.reposoHasta}<br>
+      ${data.reposoDias ? `Duración: ${data.reposoDias} días` : ''}
+    </div>` : ''}
+
+    ${data.indicaciones ? `
+    <div class="indicaciones">
+      <strong>Indicaciones:</strong><br>
+      ${data.indicaciones}
+    </div>` : ''}
+  </div>
+
+  <div class="footer">
+    <div class="firma-area">
+      <p class="firma-line">&nbsp;</p>
+      <p><strong>${medicoNombre}</strong></p>
+      <p>${medicoMatricula ? `Mat. ${medicoMatricula}` : ''}</p>
+      <p style="font-size:11px;color:#888;margin-top:5px;">Firma del médico</p>
+    </div>
+    <div class="qr-area">
+      <img src="${qrDataUrl}" alt="QR Verificación" />
+      <p>Escané para verificar</p>
+      <p style="font-size:8px;word-break:break-all;max-width:120px;">${verificationUrl}</p>
+    </div>
+  </div>
+</body>
+</html>`;
+}

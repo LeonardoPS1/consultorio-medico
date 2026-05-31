@@ -290,6 +290,8 @@ export const historialMedico = pgTable('historial_medico', {
   diagnosticoDescripcion: text('diagnostico_descripcion'),
   archivos: jsonb('archivos').default([]),
   visibleParaPaciente: boolean('visible_para_paciente').default(true),
+  hashVerificacion: varchar('hash_verificacion', { length: 64 }),
+  pdfGenerado: boolean('pdf_generado').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });

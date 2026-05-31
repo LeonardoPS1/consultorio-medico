@@ -35,6 +35,8 @@ import {
   ClipboardList,
   ArrowRight,
   RefreshCw,
+  ScrollText,
+  Printer,
 } from 'lucide-react';
 import { formatPhone, getInitials, formatDate, getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
@@ -337,6 +339,50 @@ export function PacienteDetalleClient({
       setDeleteSoapId(null);
     } catch {
       toast({ title: 'Error', description: 'No se pudo eliminar', variant: 'destructive' });
+    }
+  };
+
+  // ─── Certificado state ─────────────────────────
+  const [showCertDialog, setShowCertDialog] = useState(false);
+  const [certForm, setCertForm] = useState({
+    diagnostico: '',
+    cie10Codigo: '',
+    reposoDesde: '',
+    reposoHasta: '',
+    reposoDias: '',
+    indicaciones: '',
+  });
+  const [savingCert, setSavingCert] = useState(false);
+
+  const handleCreateCertificado = async () => {
+    if (!certForm.diagnostico.trim()) {
+      toast({ title: 'El diagnóstico es obligatorio', variant: 'destructive' });
+      return;
+    }
+    setSavingCert(true);
+    try {
+      const res = await fetch(`/api/pacientes/${paciente.id}/certificados`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(certForm),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      toast({ title: 'Certificado creado', description: 'Abriendo vista previa...' });
+
+      // Abrir PDF en nueva ventana
+      const pdfUrl = `/api/pacientes/${paciente.id}/certificados?format=pdf&entryId=${data.id}`;
+      window.open(pdfUrl, '_blank');
+
+      setShowCertDialog(false);
+      setCertForm({
+        diagnostico: '', cie10Codigo: '', reposoDesde: '', reposoHasta: '',
+        reposoDias: '', indicaciones: '',
+      });
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo crear el certificado', variant: 'destructive' });
+    } finally {
+      setSavingCert(false);
     }
   };
 
@@ -721,6 +767,9 @@ export function PacienteDetalleClient({
               </Button>
               <Button size="sm">
                 <Calendar className="h-4 w-4 mr-2" /> Nuevo Turno
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setShowCertDialog(true)}>
+                <ScrollText className="h-4 w-4 mr-2" /> Certificado
               </Button>
               <Button variant="outline" size="sm" onClick={handleExportarDatos}>
                 <Download className="h-4 w-4 mr-2" /> Exportar datos
@@ -1808,6 +1857,109 @@ export function PacienteDetalleClient({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ─── Certificado Dialog ──────────────── */}
+      <Dialog open={showCertDialog} onOpenChange={(open) => !open && setShowCertDialog(false)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ScrollText className="h-5 w-5" /> Nuevo Certificado Médico
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">
+                Diagnóstico <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                className="min-h-[60px] text-xs"
+                placeholder="Ej: Infección respiratoria aguda"
+                value={certForm.diagnostico}
+                onChange={(e) => setCertForm((f) => ({ ...f, diagnostico: e.target.value }))}
+                autoFocus
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">CIE-10</Label>
+                <Input
+                  className="h-8 text-xs font-mono"
+                  placeholder="ej: J06.9"
+                  value={certForm.cie10Codigo}
+                  onChange={(e) => setCertForm((f) => ({ ...f, cie10Codigo: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Días de reposo</Label>
+                <Input
+                  type="number"
+                  className="h-8 text-xs"
+                  placeholder="ej: 7"
+                  value={certForm.reposoDias}
+                  onChange={(e) => {
+                    const dias = e.target.value;
+                    setCertForm((f) => ({ ...f, reposoDias: dias }));
+                    // Auto-calcular fechas
+                    if (dias && parseInt(dias) > 0) {
+                      const hoy = new Date();
+                      const desde = hoy.toISOString().split('T')[0];
+                      const hasta = new Date(hoy.getTime() + parseInt(dias) * 86400000).toISOString().split('T')[0];
+                      setCertForm((f) => ({ ...f, reposoDesde: desde, reposoHasta: hasta }));
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            {certForm.reposoDias && parseInt(certForm.reposoDias) > 0 && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Desde</Label>
+                  <Input
+                    type="date"
+                    className="h-8 text-xs"
+                    value={certForm.reposoDesde}
+                    onChange={(e) => setCertForm((f) => ({ ...f, reposoDesde: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Hasta</Label>
+                  <Input
+                    type="date"
+                    className="h-8 text-xs"
+                    value={certForm.reposoHasta}
+                    onChange={(e) => setCertForm((f) => ({ ...f, reposoHasta: e.target.value }))}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="space-y-1">
+              <Label className="text-xs">Indicaciones (opcional)</Label>
+              <Textarea
+                className="min-h-[60px] text-xs"
+                placeholder="Ej: Reposo relativo, evitar esfuerzos, tomar medicación indicada..."
+                value={certForm.indicaciones}
+                onChange={(e) => setCertForm((f) => ({ ...f, indicaciones: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setShowCertDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleCreateCertificado}
+              disabled={savingCert || !certForm.diagnostico.trim()}
+            >
+              {savingCert ? 'Generando...' : (
+                <>
+                  <Printer className="h-4 w-4 mr-1" /> Generar y Ver
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ─── Baja — Solicitar (Primer paso) ───── */}
       <AlertDialog open={bajaDialogOpen} onOpenChange={(open) => !open && !bajaLoading && setBajaDialogOpen(false)}>
