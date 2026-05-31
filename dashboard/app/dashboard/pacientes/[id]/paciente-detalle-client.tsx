@@ -43,6 +43,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Cie10Search } from '@/components/ui/cie10-search';
 import {
   Dialog,
   DialogContent,
@@ -1180,11 +1181,11 @@ export function PacienteDetalleClient({
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Código CIE-10</Label>
-                    <Input
-                      className="h-8 text-xs"
-                      placeholder="ej: J02.9"
+                    <Cie10Search
                       value={historialForm.codigo}
-                      onChange={(e) => setHistorialForm((f) => ({ ...f, codigo: e.target.value }))}
+                      onSelect={(entry) => setHistorialForm((f) => ({ ...f, codigo: entry.codigo }))}
+                      onChange={(v) => setHistorialForm((f) => ({ ...f, codigo: v }))}
+                      placeholder="Buscar CIE-10..."
                     />
                   </div>
                 </div>
@@ -1375,11 +1376,13 @@ export function PacienteDetalleClient({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">CIE-10</Label>
-                    <Input
-                      className="h-8 text-xs font-mono"
-                      placeholder="ej: G44.2"
+                    <Cie10Search
                       value={soapForm.cie10Codigo}
-                      onChange={(e) => setSoapForm((f) => ({ ...f, cie10Codigo: e.target.value }))}
+                      onSelect={(entry) => {
+                        setSoapForm((f) => ({ ...f, cie10Codigo: entry.codigo, cie10Descripcion: entry.descripcion }));
+                      }}
+                      onChange={(v) => setSoapForm((f) => ({ ...f, cie10Codigo: v }))}
+                      placeholder="Buscar CIE-10..."
                     />
                   </div>
                   <div className="space-y-1">
@@ -1687,13 +1690,11 @@ export function PacienteDetalleClient({
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Código CIE-10</Label>
-                  <Input
-                    className="h-8 text-xs"
-                    placeholder="ej: J02.9"
+                  <Cie10Search
                     value={editHistorialDialog.diagnosticoCodigo || ''}
-                    onChange={(e) =>
-                      setEditHistorialDialog({ ...editHistorialDialog, diagnosticoCodigo: e.target.value })
-                    }
+                    onSelect={(entry) => setEditHistorialDialog({ ...editHistorialDialog, diagnosticoCodigo: entry.codigo })}
+                    onChange={(v) => setEditHistorialDialog({ ...editHistorialDialog, diagnosticoCodigo: v })}
+                    placeholder="Buscar CIE-10..."
                   />
                 </div>
               </div>
@@ -1781,10 +1782,11 @@ export function PacienteDetalleClient({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">CIE-10</Label>
-                  <Input
-                    className="h-8 text-xs font-mono"
+                  <Cie10Search
                     value={editSoapDialog.cie10Codigo || ''}
-                    onChange={(e) => setEditSoapDialog({ ...editSoapDialog, cie10Codigo: e.target.value })}
+                    onSelect={(entry) => setEditSoapDialog({ ...editSoapDialog, cie10Codigo: entry.codigo, cie10Descripcion: entry.descripcion })}
+                    onChange={(v) => setEditSoapDialog({ ...editSoapDialog, cie10Codigo: v })}
+                    placeholder="Buscar CIE-10..."
                   />
                 </div>
                 <div className="space-y-1">
@@ -1882,11 +1884,11 @@ export function PacienteDetalleClient({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">CIE-10</Label>
-                <Input
-                  className="h-8 text-xs font-mono"
-                  placeholder="ej: J06.9"
+                <Cie10Search
                   value={certForm.cie10Codigo}
-                  onChange={(e) => setCertForm((f) => ({ ...f, cie10Codigo: e.target.value }))}
+                  onSelect={(entry) => setCertForm((f) => ({ ...f, cie10Codigo: entry.codigo }))}
+                  onChange={(v) => setCertForm((f) => ({ ...f, cie10Codigo: v }))}
+                  placeholder="Buscar CIE-10..."
                 />
               </div>
               <div className="space-y-1">
