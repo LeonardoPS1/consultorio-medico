@@ -1,19 +1,35 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { X, RefreshCw } from 'lucide-react';
+import { X, RefreshCw, Download, Smartphone } from 'lucide-react';
 
 export function PWARegister() {
   const [updateReady, setUpdateReady] = useState(false);
   const [waitingSW, setWaitingSW] = useState<ServiceWorker | null>(null);
   const [isOffline, setIsOffline] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
+  const [installDismissed, setInstallDismissed] = useState(false);
+  const [installing, setInstalling] = useState(false);
 
   const handleUpdate = useCallback(() => {
     if (waitingSW) {
       waitingSW.postMessage({ type: 'SKIP_WAITING' });
     }
   }, [waitingSW]);
+
+  const handleInstall = useCallback(async () => {
+    if (!deferredPrompt) return;
+    setInstalling(true);
+    // @ts-expect-error - beforeinstallprompt tiene prompt() que no está en tipos TS
+    deferredPrompt.prompt();
+    // @ts-expect-error - userChoice tampoco está tipado
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+    setInstalling(false);
+  }, [deferredPrompt]);
 
   useEffect(() => {
     // ─── Detectar si ya estamos en modo standalone (app instalada) ──
@@ -27,6 +43,21 @@ export function PWARegister() {
     const handleOffline = () => setIsOffline(true);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
+    // ─── Before Install Prompt (PWA) ──────────────────────────────
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+
+    // ─── Cuando se completa la instalación ─────────────────────────
+    const handleInstalled = () => {
+      setDeferredPrompt(null);
+      setIsStandalone(true);
+      setInstallDismissed(false);
+    };
+    window.addEventListener('appinstalled', handleInstalled);
 
     // ─── Service Worker ────────────────────────────────────────────
     const handleControllerChange = () => window.location.reload();
@@ -63,6 +94,8 @@ export function PWARegister() {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleInstalled);
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
       }
@@ -74,6 +107,42 @@ export function PWARegister() {
 
   return (
     <>
+      {/* ─── Banner: Instalar App (solo si no está instalada) ──── */}
+      {!isStandalone && deferredPrompt && !installDismissed && !updateReady && !isOffline && (
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm animate-in slide-in-from-bottom-4 fade-in duration-300">
+          <div className="bg-white border border-blue-200 rounded-xl shadow-lg p-4 flex items-start gap-3">
+            <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+              <Download className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900">Instalá AiCoreMed</p>
+              <p className="text-xs text-gray-500 mt-0.5">Accedé más rápido desde tu pantalla de inicio</p>
+              <div className="mt-2 flex items-center gap-2">
+                <button
+                  onClick={handleInstall}
+                  disabled={installing}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  <Download className="w-3 h-3" />
+                  {installing ? 'Instalando...' : 'Instalar'}
+                </button>
+                <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                  <Smartphone className="w-3 h-3" />
+                  Sin datos bancarios
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setInstallDismissed(true)}
+              className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+              title="No mostrar de nuevo"
+            >
+              <X className="w-3.5 h-3.5 text-gray-400" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ─── Banner: Nueva versión disponible ──────────────────── */}
       {updateReady && (
         <div className="fixed bottom-4 right-4 z-50 max-w-sm animate-in slide-in-from-bottom-4 fade-in duration-300">
