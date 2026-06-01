@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { turnos, pacientes, conversaciones, mensajes } from '@/drizzle/schema';
 import { eq, and, gte, lte, lt, sql, count, asc, isNotNull } from 'drizzle-orm';
+import { getDemoReportes } from '@/lib/reportes-demo-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,10 +13,10 @@ export const dynamic = 'force-dynamic';
  * Reemplaza totalmente el mock data de reportes-data.ts.
  */
 export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const periodo = (searchParams.get('periodo') || 'mes') as 'semana' | 'mes' | 'año';
+  
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const periodo = (searchParams.get('periodo') || 'mes') as 'semana' | 'mes' | 'año';
-
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -447,10 +448,11 @@ export async function GET(request: NextRequest) {
       pacientesObraSocial: [], // requeriría groupBy obraSocial
     });
   } catch (error) {
-    console.error('[Reportes API] Error:', error);
-    return NextResponse.json(
-      { error: 'Error al obtener reportes' },
-      { status: 500 }
-    );
+    console.warn('[Reportes API] DB no disponible, usando datos demo:', error);
+    const demo = getDemoReportes(periodo);
+    return NextResponse.json({
+      ...demo,
+      _demo: true, // flag para identificar datos demo
+    });
   }
 }

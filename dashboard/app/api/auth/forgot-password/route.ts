@@ -37,19 +37,18 @@ export async function POST(request: Request) {
       });
     }
 
-    // Generar token
+    // Generar token y guardar SOLO su hash SHA-256 en DB
     const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
 
     await db
       .update(usuarios)
       .set({
-        resetToken: token,
+        resetToken: tokenHash,
         resetTokenExpires: expires,
       })
       .where(eq(usuarios.id, user.id));
-
-    console.log(`[ForgotPassword] Token para ${email}: ${token}`);
 
     // En desarrollo/dev, devolvemos el token en la respuesta
     // En producción, enviar por email

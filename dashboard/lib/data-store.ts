@@ -49,6 +49,7 @@ export interface UsuarioData {
   ultimoAcceso?: string;
   secreto2fa?: string | null;
   activo2fa?: boolean;
+  backupCodes?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -624,6 +625,9 @@ export async function getUserByEmail(email: string): Promise<UsuarioData | null>
     activo: u.activo,
     plan: u.plan || 'free',
     medicoId,
+    secreto2fa: u.secreto2fa,
+    activo2fa: u.activo2fa,
+    backupCodes: u.backupCodes,
     ultimoAcceso: u.ultimoAcceso?.toISOString(),
     createdAt: u.createdAt.toISOString(),
     updatedAt: u.updatedAt.toISOString(),
@@ -674,7 +678,7 @@ export async function createAdminUserIfNotExists(): Promise<boolean> {
       });
     }
 
-    console.log('[DataStore] Admin creado en PostgreSQL: admin@consultorio.com / admin123');
+    console.log('[DataStore] Admin creado en PostgreSQL exitosamente');
     return true;
   } catch (err) {
     console.error('[DataStore] Error creando admin en PostgreSQL:', err);
@@ -684,21 +688,39 @@ export async function createAdminUserIfNotExists(): Promise<boolean> {
 
 export async function updateUser2FA(
   email: string,
-  data: { secreto2fa: string | null; activo2fa: boolean }
+  data: { secreto2fa: string | null; activo2fa: boolean; clearBackupCodes?: boolean }
 ): Promise<boolean> {
   try {
+    const updateData: Record<string, any> = {
+      secreto2fa: data.secreto2fa,
+      activo2fa: data.activo2fa,
+      updatedAt: new Date(),
+    };
+    if (data.clearBackupCodes) {
+      updateData.backupCodes = null;
+    }
     await db
       .update(usuarios)
-      .set({
-        secreto2fa: data.secreto2fa,
-        activo2fa: data.activo2fa,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(usuarios.email, email));
     return true;
   } catch {
     return false;
   }
+}
+
+/**
+ * Almacena los códigos de respaldo 2FA hasheados.
+ * Se recibe un array de SHA-256 (hex) ya calculados.
+ */
+export async function storeBackupCodes(email: string, hashedCodes: string[]): Promise<void> {
+  await db
+    .update(usuarios)
+    .set({
+      backupCodes: JSON.stringify(hashedCodes),
+      updatedAt: new Date(),
+    })
+    .where(eq(usuarios.email, email));
 }
 
 // ============================================================

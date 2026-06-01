@@ -18,21 +18,18 @@ export function CTASection() {
         <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] rounded-full bg-primary/5 blur-3xl animate-orb-2" />
       </div>
 
-      {/* Security badge */}
-      <div className="absolute inset-x-0 top-16 flex justify-center pointer-events-none">
+      {/* Security badge — absolute on md+, in-flow on mobile */}
+      <div className="relative md:absolute inset-x-0 top-12 md:top-16 flex justify-center pointer-events-none pb-4 md:pb-0">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="flex items-center gap-4 text-primary/80 text-sm"
+          className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-primary/70 text-xs sm:text-sm px-4"
         >
-          <ShieldCheck className="h-5 w-5" />
-          <span>Datos 100% protegidos</span>
-          <Lock className="h-5 w-5" />
-          <span>IA 100% local</span>
-          <Server className="h-5 w-5" />
-          <span>Servidor propio en Chile</span>
+          <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" /> Datos 100% protegidos</span>
+          <span className="inline-flex items-center gap-1.5"><Lock className="h-4 w-4 sm:h-5 sm:w-5" /> IA 100% local</span>
+          <span className="inline-flex items-center gap-1.5"><Server className="h-4 w-4 sm:h-5 sm:w-5" /> Servidor propio en Chile</span>
         </motion.div>
       </div>
 

@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { recetas } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { recetasService } from '@/lib/services/recetas';
+import { auth } from '@/lib/auth';
 
 /**
  * GET /api/recetas/[id]
@@ -14,12 +15,27 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+    const sessionMedicoId = (session?.user as any)?.medicoId;
+    const sessionRol = (session?.user as any)?.role;
+
     const receta = await recetasService.obtener(params.id);
 
     if (!receta) {
       return NextResponse.json(
         { error: 'Receta no encontrada' },
         { status: 404 },
+      );
+    }
+
+    // IDOR check: médico solo puede ver sus propias recetas (o admin)
+    if (sessionRol !== 'admin' && sessionMedicoId && receta.medicoId !== sessionMedicoId) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 403 },
       );
     }
 
@@ -44,6 +60,13 @@ export async function PATCH(
   { params }: { params: { id: string } },
 ) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+    const sessionMedicoId = (session?.user as any)?.medicoId;
+    const sessionRol = (session?.user as any)?.role;
+
     const body = await request.json();
 
     if (!body || Object.keys(body).length === 0) {
@@ -53,9 +76,9 @@ export async function PATCH(
       );
     }
 
-    // Verificar que la receta existe
+    // Verificar que la receta existe y pertenece al médico
     const existente = await db
-      .select({ id: recetas.id })
+      .select({ id: recetas.id, medicoId: recetas.medicoId })
       .from(recetas)
       .where(eq(recetas.id, params.id))
       .limit(1);
@@ -64,6 +87,14 @@ export async function PATCH(
       return NextResponse.json(
         { error: 'Receta no encontrada' },
         { status: 404 },
+      );
+    }
+
+    // IDOR check
+    if (sessionRol !== 'admin' && sessionMedicoId && existente[0].medicoId !== sessionMedicoId) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 403 },
       );
     }
 

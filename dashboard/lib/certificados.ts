@@ -1,8 +1,19 @@
 import { createHash } from 'crypto';
+import { escapeHtml } from '@/lib/html-utils';
 
 // ─── Constants ──────────────────────────────────────────────
 
-const SECRET = process.env.CERTIFICADO_HASH_SECRET || 'consultorio-medico-cert-secret-2026';
+function getCertificadoSecret(): string {
+  const s = process.env.CERTIFICADO_HASH_SECRET;
+  if (!s) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('CERTIFICADO_HASH_SECRET es obligatorio en producción');
+    }
+    console.warn('[Certificados] CERTIFICADO_HASH_SECRET no configurado — usando fallback de desarrollo');
+    return 'dev-fallback-not-for-production-cert';
+  }
+  return s;
+}
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -37,7 +48,7 @@ export function generarHashCertificado(params: {
     params.id,
     params.pacienteId,
     params.diagnostico.trim().toLowerCase(),
-    SECRET,
+    getCertificadoSecret(),
   ].join('||');
   return createHash('sha256').update(payload).digest('hex');
 }
@@ -57,6 +68,20 @@ export function generarHTMLCertificado(
     medicoMatricula,
     data,
   } = params;
+
+  const safe = {
+    pacienteNombre: escapeHtml(pacienteNombre),
+    pacienteApellido: escapeHtml(pacienteApellido),
+    pacienteDni: pacienteDni ? escapeHtml(pacienteDni) : null,
+    medicoNombre: escapeHtml(medicoNombre),
+    medicoMatricula: medicoMatricula ? escapeHtml(medicoMatricula) : null,
+    diagnostico: escapeHtml(data.diagnostico),
+    cie10Codigo: data.cie10Codigo ? escapeHtml(data.cie10Codigo) : null,
+    reposoDesde: data.reposoDesde ? escapeHtml(data.reposoDesde) : null,
+    reposoHasta: data.reposoHasta ? escapeHtml(data.reposoHasta) : null,
+    reposoDias: data.reposoDias,
+    indicaciones: data.indicaciones ? escapeHtml(data.indicaciones) : null,
+  };
 
   const fechaActual = new Date().toLocaleDateString('es-AR', {
     day: 'numeric',
@@ -186,42 +211,42 @@ export function generarHTMLCertificado(
   <div class="sello-agua">CERTIFICADO MÉDICO</div>
 
   <div class="header">
-    <h1>${medicoNombre.toUpperCase()}</h1>
-    <p>${medicoMatricula ? `Matrícula: ${medicoMatricula}` : 'Médico Matriculado'}</p>
+    <h1>${safe.medicoNombre.toUpperCase()}</h1>
+    <p>${safe.medicoMatricula ? `Matrícula: ${safe.medicoMatricula}` : 'Médico Matriculado'}</p>
   </div>
 
   <div class="titulo">Certificado Médico</div>
 
   <div class="content">
-    <div class="data-row"><strong>Paciente:</strong> ${pacienteNombre} ${pacienteApellido}</div>
-    ${pacienteDni ? `<div class="data-row"><strong>DNI:</strong> ${pacienteDni}</div>` : ''}
+    <div class="data-row"><strong>Paciente:</strong> ${safe.pacienteNombre} ${safe.pacienteApellido}</div>
+    ${safe.pacienteDni ? `<div class="data-row"><strong>DNI:</strong> ${safe.pacienteDni}</div>` : ''}
     <div class="data-row"><strong>Fecha de emisión:</strong> ${fechaActual}</div>
 
     <div class="diagnostico-box">
-      <strong>Diagnóstico:</strong> ${data.diagnostico}
-      ${data.cie10Codigo ? `<br><span style="font-size:12px;color:#666;">CIE-10: ${data.cie10Codigo}</span>` : ''}
+      <strong>Diagnóstico:</strong> ${safe.diagnostico}
+      ${safe.cie10Codigo ? `<br><span style="font-size:12px;color:#666;">CIE-10: ${safe.cie10Codigo}</span>` : ''}
     </div>
 
-    ${data.reposoDesde ? `
+    ${safe.reposoDesde ? `
     <div class="reposo-box">
       <strong>Reposo médico:</strong><br>
-      Desde: ${data.reposoDesde}<br>
-      Hasta: ${data.reposoHasta}<br>
-      ${data.reposoDias ? `Duración: ${data.reposoDias} días` : ''}
+      Desde: ${safe.reposoDesde}<br>
+      Hasta: ${safe.reposoHasta}<br>
+      ${safe.reposoDias ? `Duración: ${safe.reposoDias} días` : ''}
     </div>` : ''}
 
-    ${data.indicaciones ? `
+    ${safe.indicaciones ? `
     <div class="indicaciones">
       <strong>Indicaciones:</strong><br>
-      ${data.indicaciones}
+      ${safe.indicaciones}
     </div>` : ''}
   </div>
 
   <div class="footer">
     <div class="firma-area">
       <p class="firma-line">&nbsp;</p>
-      <p><strong>${medicoNombre}</strong></p>
-      <p>${medicoMatricula ? `Mat. ${medicoMatricula}` : ''}</p>
+      <p><strong>${safe.medicoNombre}</strong></p>
+      <p>${safe.medicoMatricula ? `Mat. ${safe.medicoMatricula}` : ''}</p>
       <p style="font-size:11px;color:#888;margin-top:5px;">Firma del médico</p>
     </div>
     <div class="qr-area">

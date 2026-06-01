@@ -29,6 +29,7 @@ export const usuarios = pgTable('usuarios', {
   ultimoAcceso: timestamp('ultimo_acceso', { withTimezone: true }),
   secreto2fa: varchar('secreto_2fa', { length: 255 }),
   activo2fa: boolean('activo_2fa').notNull().default(false),
+  backupCodes: text('backup_codes'),
   tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000').references(() => tenants.id),
   plan: varchar('plan', { length: 50 }).notNull().default('free'),
   resetToken: varchar('reset_token', { length: 255 }),

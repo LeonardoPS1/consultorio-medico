@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { usuarios } from '@/drizzle/schema';
 import { eq, sql } from 'drizzle-orm';
 
 // POST /api/auth/reset-password
-// Valida el token y actualiza la contraseña
+// Valida el token (comparando contra SHA-256 almacenado) y actualiza la contraseña
 export async function POST(request: Request) {
   try {
     const { token, password } = await request.json();
@@ -17,13 +18,24 @@ export async function POST(request: Request) {
     if (password.length < 8) {
       return NextResponse.json({ error: 'La contraseña debe tener al menos 8 caracteres' }, { status: 400 });
     }
+    if (!/[A-Z]/.test(password)) {
+      return NextResponse.json({ error: 'La contraseña debe contener al menos una mayúscula' }, { status: 400 });
+    }
+    if (!/[0-9]/.test(password)) {
+      return NextResponse.json({ error: 'La contraseña debe contener al menos un número' }, { status: 400 });
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      return NextResponse.json({ error: 'La contraseña debe contener al menos un carácter especial' }, { status: 400 });
+    }
 
-    // Buscar usuario con token válido
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Buscar usuario con token válido (comparando contra hash)
     const result = await db
       .select()
       .from(usuarios)
       .where(
-        sql`${usuarios.resetToken} = ${token} AND ${usuarios.resetTokenExpires} > NOW()`
+        sql`${usuarios.resetToken} = ${tokenHash} AND ${usuarios.resetTokenExpires} > NOW()`
       )
       .limit(1);
 

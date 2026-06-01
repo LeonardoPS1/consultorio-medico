@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { medicos } from '@/drizzle/schema';
 import { eq, and, sql, count } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
 
 /**
  * GET /api/medicos
@@ -12,6 +13,10 @@ import { eq, and, sql, count } from 'drizzle-orm';
  */
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
     const { searchParams } = new URL(request.url);
     const sucursalId = searchParams.get('sucursalId') || undefined;
 
@@ -45,6 +50,11 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { nombre, especialidad, email, telefono, whatsapp, matricula, duracionTurnoMinutos, horarios } = body;
 

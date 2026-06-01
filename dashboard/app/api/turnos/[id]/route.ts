@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
-import { apiHandler, success, notFound } from '@/lib/api-handler';
+import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
 import { parseBody, updateTurnoSchema } from '@/lib/validations';
 import { turnosService } from '@/lib/services/turnos';
 import { sendSurveyWhatsApp } from '@/lib/encuestas';
+import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { turnos, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
@@ -11,6 +12,10 @@ import { eq, and, sql } from 'drizzle-orm';
  * GET /api/turnos/[id] - Detalle individual de turno
  */
 export const GET = apiHandler(async (_req: NextRequest, { params }) => {
+  const session = await auth();
+  const sessionMedicoId = (session?.user as any)?.medicoId;
+  const sessionRol = (session?.user as any)?.role;
+
   const [turno] = await db
     .select({
       id: turnos.id,
@@ -36,7 +41,11 @@ export const GET = apiHandler(async (_req: NextRequest, { params }) => {
     .from(turnos)
     .leftJoin(pacientes, eq(turnos.pacienteId, pacientes.id))
     .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
-    .where(and(eq(turnos.id, params.id), sql`${turnos.deletedAt} IS NULL`))
+    .where(and(
+      eq(turnos.id, params.id),
+      sessionRol !== 'admin' && sessionMedicoId ? eq(turnos.medicoId, sessionMedicoId) : undefined,
+      sql`${turnos.deletedAt} IS NULL`,
+    ))
     .limit(1);
 
   if (!turno) notFound('Turno no encontrado');
@@ -47,13 +56,45 @@ export const GET = apiHandler(async (_req: NextRequest, { params }) => {
  * DELETE /api/turnos/[id] - Soft-delete de turno con sync GCal
  */
 export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
+  const session = await auth();
+  const sessionMedicoId = (session?.user as any)?.medicoId;
+  const sessionRol = (session?.user as any)?.role;
+
+  // Verificar que el turno pertenece al médico (o es admin)
+  const [turno] = await db
+    .select({ id: turnos.id, medicoId: turnos.medicoId })
+    .from(turnos)
+    .where(eq(turnos.id, params.id))
+    .limit(1);
+
+  if (!turno) notFound('Turno no encontrado');
+  if (sessionRol !== 'admin' && turno.medicoId !== sessionMedicoId) {
+    fail('No autorizado');
+  }
+
   const result = await turnosService.delete(params.id);
   return success(result);
 });
 
 export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
+  const session = await auth();
+  const sessionMedicoId = (session?.user as any)?.medicoId;
+  const sessionRol = (session?.user as any)?.role;
+
+  // Verificar que el turno pertenece al médico (o es admin)
+  const [turno] = await db
+    .select({ id: turnos.id, medicoId: turnos.medicoId })
+    .from(turnos)
+    .where(eq(turnos.id, params.id))
+    .limit(1);
+
+  if (!turno) notFound('Turno no encontrado');
+  if (sessionRol !== 'admin' && turno.medicoId !== sessionMedicoId) {
+    fail('No autorizado');
+  }
+
   const body = await parseBody(request, updateTurnoSchema);
-  const turno = await turnosService.update(params.id, body);
+  const updated = await turnosService.update(params.id, body);
 
   // Encuesta post-consulta
   if (body.estado === 'atendido') {
@@ -62,5 +103,5 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
 
 // El sync a Google Calendar ahora lo maneja turnosService.update()
 
-  return success(turno);
+  return success(updated);
 });

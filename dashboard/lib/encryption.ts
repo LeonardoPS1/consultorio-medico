@@ -25,12 +25,9 @@ function getEncryptionKey(): Buffer {
         'Configuralo en las variables de entorno del dashboard.'
       );
     }
-    // Fallback solo para desarrollo local
-    console.warn(
-      '[encryption] AUTH_SECRET no configurado. Usando fallback de desarrollo. ' +
-      'Las credenciales NO son seguras sin AUTH_SECRET.'
-    );
-    const devFallback = 'dev-fallback-only-not-for-production';
+    // En desarrollo sin AUTH_SECRET, usa hash de hostname + cwd como fallback
+    // NO es seguro pero evita un string hardcodeado predecible
+    const devFallback = process.env.HOSTNAME + process.cwd();
     return crypto.createHash('sha256').update(devFallback).digest();
   }
   return crypto.createHash('sha256').update(secret).digest();

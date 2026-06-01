@@ -25,9 +25,17 @@ export interface AuthenticatedRequest extends NextRequest {
 
 // ─── Helpers de respuesta ────────────────────────────────────
 
+function corsOrigin(): string {
+  // En producción, limitar a dominios conocidos; en desarrollo permitir localhost
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.CORS_ORIGIN || 'https://med.aicorebots.com';
+  }
+  return '*';
+}
+
 function corsHeaders(): Record<string, string> {
   return {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': corsOrigin(),
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, x-api-key, Authorization',
     'Access-Control-Max-Age': '86400',

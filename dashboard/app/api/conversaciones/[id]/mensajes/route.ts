@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { eq } from 'drizzle-orm';
 import {
   getMensajesByConversacion,
   createMensaje,
   getConversacionById,
 } from '@/lib/data-store';
+import { auth } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { conversaciones } from '@/drizzle/schema';
 
 /**
  * GET /api/conversaciones/[id]/mensajes
@@ -15,6 +19,10 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await auth();
+    const sessionMedicoId = (session?.user as any)?.medicoId;
+    const sessionRol = (session?.user as any)?.role;
+
     const { id } = params;
 
     if (!id) {
@@ -24,12 +32,20 @@ export async function GET(
       );
     }
 
-    // Verificar que la conversación existe
+    // Verificar que la conversación existe y pertenece al médico
     const conversacion = await getConversacionById(id);
     if (!conversacion) {
       return NextResponse.json(
         { error: 'Conversación no encontrada' },
         { status: 404 }
+      );
+    }
+
+    // IDOR check: médico solo puede ver sus propias conversaciones
+    if (sessionRol !== 'admin' && sessionMedicoId && conversacion.medicoId !== sessionMedicoId) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 403 }
       );
     }
 
@@ -69,6 +85,10 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await auth();
+    const sessionMedicoId = (session?.user as any)?.medicoId;
+    const sessionRol = (session?.user as any)?.role;
+
     const { id } = params;
 
     if (!id) {
@@ -78,12 +98,20 @@ export async function POST(
       );
     }
 
-    // Verificar que la conversación existe
+    // Verificar que la conversación existe y pertenece al médico
     const conversacion = await getConversacionById(id);
     if (!conversacion) {
       return NextResponse.json(
         { error: 'Conversación no encontrada' },
         { status: 404 }
+      );
+    }
+
+    // IDOR check
+    if (sessionRol !== 'admin' && sessionMedicoId && conversacion.medicoId !== sessionMedicoId) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 403 }
       );
     }
 

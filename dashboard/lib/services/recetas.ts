@@ -55,7 +55,19 @@ export interface RecetaListResult {
 
 // ─── Constantes ─────────────────────────────────────────────
 
-const SECRET = process.env.RECETA_HASH_SECRET || 'consultorio-medico-receta-secret-2026';
+import { escapeHtml } from '@/lib/html-utils';
+
+function getRecetaSecret(): string {
+  const s = process.env.RECETA_HASH_SECRET;
+  if (!s) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('RECETA_HASH_SECRET es obligatorio en producción');
+    }
+    console.warn('[Recetas] RECETA_HASH_SECRET no configurado — usando fallback de desarrollo');
+    return 'dev-fallback-not-for-production-receta';
+  }
+  return s;
+}
 
 // ─── Hash de verificación ───────────────────────────────────
 
@@ -76,7 +88,7 @@ export function generarHashVerificacion(params: {
     params.medicamento.trim().toLowerCase(),
     params.dosis.trim().toLowerCase(),
     params.fechaInicio,
-    SECRET,
+    getRecetaSecret(),
   ].join('||');
   return createHash('sha256').update(payload).digest('hex');
 }
@@ -451,12 +463,12 @@ export function generarHTMLRecetasPDF(
       (r, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td>${r.Paciente}</td>
-      <td><strong>${r.Medicamento}</strong></td>
-      <td>${r.Dosis}</td>
-      <td>${r.Estado}</td>
-      <td>${r['Fecha Inicio']}</td>
-      <td>${r['Fecha Fin']}</td>
+      <td>${escapeHtml(r.Paciente)}</td>
+      <td><strong>${escapeHtml(r.Medicamento)}</strong></td>
+      <td>${escapeHtml(r.Dosis)}</td>
+      <td>${escapeHtml(r.Estado)}</td>
+      <td>${escapeHtml(r['Fecha Inicio'])}</td>
+      <td>${escapeHtml(r['Fecha Fin'])}</td>
     </tr>`,
     )
     .join('');

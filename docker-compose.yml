@@ -12,6 +12,7 @@
 #
 # Servicios:
 #   dashboard  → Next.js 14 (puerto 3000)
+#   pgbouncer  → Pool de conexiones PostgreSQL (puerto 6432)
 #   postgres   → PostgreSQL 16 (puerto 5432)
 #   n8n        → Workflow automation (puerto 5678)
 #   ollama     → IA local (puerto 11434, solo LAN)
@@ -29,8 +30,9 @@ services:
       - '3000:3000'
     environment:
       - NODE_ENV=production
-      # ⚠️ REEMPLAZAR: usá una variable de entorno o .env para producción
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/consultorio_medico
+      - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:6432/consultorio_medico
+      # PgBouncer monitorea la conexión a PostgreSQL, reduce overhead y permite
+      # escalar horizontalmente sin agotar max_connections de PG.
       # 🔴 OBLIGATORIO en producción: generar con `openssl rand -base64 32`
       - AUTH_SECRET=${AUTH_SECRET:-}
       - AUTH_URL=http://localhost:3000
@@ -53,7 +55,7 @@ services:
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
       - VAPID_CONTACT_EMAIL=${VAPID_CONTACT_EMAIL:-mailto:notificaciones@aicoremed.com}
     depends_on:
-      postgres:
+      pgbouncer:
         condition: service_healthy
     networks:
       - consultorio-net
@@ -71,9 +73,8 @@ services:
     ports:
       - '5432:5432'
     environment:
-      # ⚠️ REEMPLAZAR para producción
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: consultorio_medico
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -84,6 +85,32 @@ services:
       retries: 5
     networks:
       - consultorio-net
+
+  # ─── PgBouncer (Pool de Conexiones PostgreSQL) ──────────────────────────────
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: consultorio-medico-pgbouncer
+    restart: unless-stopped
+    ports:
+      - '6432:6432'
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini
+      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h localhost -p 6432 -U postgres || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - consultorio-net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
 
   # ─── n8n (Workflow Automation) ────────────────────────────────────────────
   n8n:
@@ -103,7 +130,7 @@ services:
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_DATABASE=consultorio_medico
       - DB_POSTGRESDB_USER=postgres
-      - DB_POSTGRESDB_PASSWORD=postgres
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - N8N_METRICS=false
       - N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN=true
     volumes:

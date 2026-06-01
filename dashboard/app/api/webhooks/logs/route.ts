@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMensajes } from '@/lib/data-store';
+import { auth } from '@/lib/auth';
 
 /**
  * GET /api/webhooks/logs
@@ -17,6 +18,10 @@ import { getMensajes } from '@/lib/data-store';
  */
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
     const { searchParams } = new URL(request.url);
     const estado = searchParams.get('estado') || undefined;
     const desde = searchParams.get('desde') || undefined;

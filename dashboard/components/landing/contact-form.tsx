@@ -60,8 +60,8 @@ export function ContactForm() {
 
   return (
     <section id="contact" className="relative overflow-hidden border-t bg-muted/20">
-      <div className="container mx-auto px-4 md:px-6 py-20 md:py-28">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 max-w-5xl mx-auto">
+      <div className="container mx-auto px-4 md:px-6 py-16 md:py-28">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 max-w-5xl mx-auto">
           {/* Left: benefits */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -72,12 +72,12 @@ export function ContactForm() {
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Transformá la gestión de tu consultorio hoy
             </h2>
-            <p className="text-muted-foreground mb-8">
+            <p className="text-muted-foreground mb-6 md:mb-8">
               Completá el formulario y obtené una demostración personalizada con un agente de IA
               adaptado a tu especialidad.
             </p>
 
-            <div className="space-y-5">
+            <div className="space-y-4 sm:space-y-5">
               {BENEFITS.map((b) => (
                 <div key={b.title} className="flex items-start gap-3">
                   <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -100,7 +100,7 @@ export function ContactForm() {
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
             {!submitted ? (
-              <form onSubmit={handleSubmit} className="rounded-xl border bg-card p-6 space-y-5 shadow-sm">
+              <form onSubmit={handleSubmit} className="rounded-xl border bg-card p-5 sm:p-6 space-y-5 shadow-sm">
                 {/* Progress bar */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs text-muted-foreground">
@@ -243,25 +243,25 @@ export function ContactForm() {
                 {/* Navigation */}
                 <div className="flex items-center gap-3 pt-2">
                   {step > 1 && (
-                    <Button type="button" variant="outline" size="sm" onClick={prevStep}>
+                    <Button type="button" variant="outline" size="default" onClick={prevStep}>
                       Atrás
                     </Button>
                   )}
                   {step < 3 ? (
-                    <Button type="button" size="sm" className="ml-auto gap-1.5" onClick={nextStep}>
+                    <Button type="button" size="default" className="ml-auto gap-1.5" onClick={nextStep}>
                       Siguiente
-                      <ArrowRight className="h-3.5 w-3.5" />
+                      <ArrowRight className="h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button type="submit" size="sm" className="ml-auto gap-1.5" disabled={loading}>
+                    <Button type="submit" size="default" className="ml-auto gap-1.5" disabled={loading}>
                       {loading ? (
                         <>
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                           Enviando...
                         </>
                       ) : (
                         <>
-                          <MessageCircle className="h-3.5 w-3.5" />
+                          <MessageCircle className="h-4 w-4" />
                           Solicitar demo gratis
                         </>
                       )}

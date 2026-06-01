@@ -25,9 +25,27 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!password || typeof password !== 'string' || password.length < 6) {
+    if (!password || typeof password !== 'string' || password.length < 8) {
       return NextResponse.json(
-        { error: 'La contraseña debe tener al menos 6 caracteres.' },
+        { error: 'La contraseña debe tener al menos 8 caracteres.' },
+        { status: 400 }
+      );
+    }
+    if (!/[A-Z]/.test(password)) {
+      return NextResponse.json(
+        { error: 'La contraseña debe contener al menos una mayúscula.' },
+        { status: 400 }
+      );
+    }
+    if (!/[0-9]/.test(password)) {
+      return NextResponse.json(
+        { error: 'La contraseña debe contener al menos un número.' },
+        { status: 400 }
+      );
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      return NextResponse.json(
+        { error: 'La contraseña debe contener al menos un carácter especial.' },
         { status: 400 }
       );
     }

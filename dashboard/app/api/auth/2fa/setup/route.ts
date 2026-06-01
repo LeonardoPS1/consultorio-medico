@@ -3,8 +3,9 @@
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { createHash } from 'crypto';
 import { generate2faSecret, generateQRCodeBase64, generateBackupCodes, verify2faToken } from '@/lib/mfa';
-import { updateUser2FA, getUserByEmail } from '@/lib/data-store';
+import { updateUser2FA, getUserByEmail, storeBackupCodes } from '@/lib/data-store';
 
 export async function GET() {
   try {
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
-    const { secret, token } = await request.json();
+    const { secret, token, backupCodes } = await request.json();
 
     if (!secret || !token) {
       return NextResponse.json({ error: 'Faltan secret o token' }, { status: 400 });
@@ -46,11 +47,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Código inválido. Verificá que la hora de tu celular esté sincronizada.' }, { status: 400 });
     }
 
-    // Guardar el secreto en el store del usuario
+    // Guardar el secreto y los backup codes hasheados en el store del usuario
+    const hashedBackupCodes = Array.isArray(backupCodes)
+      ? backupCodes.map((c: string) => createHash('sha256').update(c.toUpperCase()).digest('hex'))
+      : [];
+
     await updateUser2FA(session.user.email, {
       secreto2fa: secret,
       activo2fa: true,
     });
+
+    if (hashedBackupCodes.length > 0) {
+      await storeBackupCodes(session.user.email, hashedBackupCodes);
+    }
 
     return NextResponse.json({ success: true, message: '2FA activado correctamente' });
   } catch (error) {
@@ -69,6 +78,7 @@ export async function DELETE() {
     await updateUser2FA(session.user.email, {
       secreto2fa: null,
       activo2fa: false,
+      clearBackupCodes: true,
     });
 
     return NextResponse.json({ success: true, message: '2FA desactivado' });

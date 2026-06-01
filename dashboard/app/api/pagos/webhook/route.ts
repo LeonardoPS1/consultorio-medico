@@ -61,8 +61,15 @@ export async function POST(request: Request) {
     }
 
     // Validar firma de MercadoPago (x-signature con HMAC-SHA256)
+    // 🔴 OBLIGATORIO en producción — sin firma válida se rechaza
     const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
-    if (webhookSecret) {
+    if (!webhookSecret) {
+      if (process.env.NODE_ENV === 'production') {
+        console.error('[MP Webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — rechazando');
+        return NextResponse.json({ ok: false, error: 'Server config error' }, { status: 500 });
+      }
+      console.warn('[MP Webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — saltando validación (solo desarrollo)');
+    } else {
       const signatureHeader = request.headers.get('x-signature');
       const url = new URL(request.url);
       const querySecret = url.searchParams.get('secret');

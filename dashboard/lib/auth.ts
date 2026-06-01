@@ -5,6 +5,10 @@ import { getUserByEmail, createAdminUserIfNotExists } from '@/lib/data-store';
 import { isAccountLocked, incrementFailedAttempts, resetFailedAttempts } from '@/lib/account-lockout';
 import { verify2faToken } from '@/lib/mfa';
 import { logAudit } from '@/lib/audit-log';
+import { createHash } from 'crypto';
+import { db } from '@/lib/db';
+import { usuarios } from '@/drizzle/schema';
+import { eq } from 'drizzle-orm';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -62,7 +66,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               throw new Error('2FA_REQUIRED');
             }
 
-            if (!verify2faToken(token2fa, user.secreto2fa)) {
+            // Intentar verificación TOTP primero
+            if (verify2faToken(token2fa, user.secreto2fa)) {
+              // TOTP válido → todo ok
+            } else if (user.backupCodes) {
+              // Fallback: verificar contra códigos de respaldo hasheados
+              let parsedCodes: string[] = [];
+              try {
+                parsedCodes = JSON.parse(user.backupCodes);
+              } catch { /* formato inválido */ }
+
+              const codeHash = createHash('sha256').update(token2fa.toUpperCase()).digest('hex');
+              const idx = parsedCodes.indexOf(codeHash);
+
+              if (idx === -1) {
+                throw new Error('Código 2FA o código de respaldo incorrecto.');
+              }
+
+              // Backup code usado → eliminarlo (one-time use)
+              parsedCodes.splice(idx, 1);
+              await db
+                .update(usuarios)
+                .set({
+                  backupCodes: parsedCodes.length > 0 ? JSON.stringify(parsedCodes) : null,
+                })
+                .where(eq(usuarios.email, email));
+            } else {
               throw new Error('Código 2FA incorrecto. Verificá la hora de tu celular.');
             }
           }
