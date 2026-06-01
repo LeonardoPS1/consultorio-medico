@@ -6,6 +6,7 @@
  */
 
 import { db } from '@/lib/db';
+import { safeLog, safeWarn, safeError } from '@/lib/logger';
 import {
   turnos,
   pacientes,
@@ -25,7 +26,7 @@ async function enviarWhatsApp(telefono: string, mensaje: string): Promise<boolea
     const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
 
     if (!accountSid || !authToken || !fromNumber) {
-      console.warn('[WhatsApp-Waitlist] ⚠️ Falta config Twilio');
+      safeWarn('[WhatsApp-Waitlist] ⚠️ Falta config Twilio');
       return false;
     }
 
@@ -49,13 +50,13 @@ async function enviarWhatsApp(telefono: string, mensaje: string): Promise<boolea
 
     if (!res.ok) {
       const body = await res.text();
-      console.error(`[WhatsApp-Waitlist] Error Twilio: ${res.status} ${body}`);
+      safeError(`[WhatsApp-Waitlist] Error Twilio: ${res.status} ${body}`);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('[WhatsApp-Waitlist] Error al enviar WhatsApp:', error);
+    safeError('[WhatsApp-Waitlist] Error al enviar WhatsApp:', error instanceof Error ? { message: error.message } : error);
     return false;
   }
 }
@@ -135,7 +136,7 @@ export async function notificarOfertaTurno(
         .where(eq(ofertasTurno.id, ofertaId));
     }
   } catch (error) {
-    console.error('[WhatsApp-Waitlist] Error notificarOfertaTurno:', error);
+    safeError('[WhatsApp-Waitlist] Error notificarOfertaTurno:', error instanceof Error ? { message: error.message } : error);
   }
 }
 
@@ -181,7 +182,7 @@ export async function notificarMedicoReasignacion(turnoId: string): Promise<void
 
     await enviarWhatsApp(medico.whatsapp, mensaje);
   } catch (error) {
-    console.error('[WhatsApp-Waitlist] Error notificarMedicoReasignacion:', error);
+    safeError('[WhatsApp-Waitlist] Error notificarMedicoReasignacion:', error instanceof Error ? { message: error.message } : error);
   }
 }
 
@@ -215,7 +216,7 @@ export async function notificarConfirmacionReasignacion(turnoId: string, pacient
 
     await enviarWhatsApp(paciente.telefono, mensaje);
   } catch (error) {
-    console.error('[WhatsApp-Waitlist] Error notificarConfirmacionReasignacion:', error);
+    safeError('[WhatsApp-Waitlist] Error notificarConfirmacionReasignacion:', error instanceof Error ? { message: error.message } : error);
   }
 }
 
@@ -260,7 +261,7 @@ export async function handleWaitlistResponse(
       .limit(1);
 
     if (!oferta) {
-      console.log(`[WhatsApp-Waitlist] No hay oferta pendiente para paciente ${pacienteId}`);
+      safeLog(`[WhatsApp-Waitlist] No hay oferta pendiente para paciente ${pacienteId}`);
       await enviarWhatsApp(
         telefono,
         'No encontré una oferta de turno pendiente para vos. Si necesitas ayuda, escribí "HOLA" para hablar con un asistente.',
@@ -290,7 +291,7 @@ export async function handleWaitlistResponse(
 
     return true;
   } catch (error) {
-    console.error('[WhatsApp-Waitlist] Error handleWaitlistResponse:', error);
+    safeError('[WhatsApp-Waitlist] Error handleWaitlistResponse:', error instanceof Error ? { message: error.message } : error);
     return false;
   }
 }

@@ -12,6 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { safeError } from '@/lib/logger';
 
 export function apiHandler(fn: (...args: any[]) => any): (...args: any[]) => any {
   return async (...args: any[]) => {
@@ -21,7 +22,7 @@ export function apiHandler(fn: (...args: any[]) => any): (...args: any[]) => any
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error interno del servidor';
       const status = (error as any)?.status || 500;
-      console.error(`[API] ${request.method} ${request.nextUrl.pathname}:`, message);
+      safeError(`[API] ${request.method} ${request.nextUrl.pathname}:`, { error: message });
       return NextResponse.json(
         { error: process.env.NODE_ENV === 'production' ? 'Error interno del servidor' : message },
         { status },

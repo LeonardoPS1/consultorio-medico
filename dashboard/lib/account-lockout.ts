@@ -1,82 +1,123 @@
 // ============================================================
-// Account Lockout - Protección contra fuerza bruta
+// Account Lockout - Protección contra fuerza bruta (PostgreSQL)
 // ============================================================
+//
+// Reemplaza la versión in-memory que se perdía al reiniciar el servidor.
+// Usa la tabla `account_lockouts` en PostgreSQL para persistencia.
+
+import { db } from '@/lib/db';
+import { accountLockouts } from '@/drizzle/schema';
+import { eq, sql, and } from 'drizzle-orm';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutos
 
-// Mapa en memoria: email -> { attempts, lockedUntil }
-const lockoutMap = new Map<string, { attempts: number; lockedUntil: number }>();
-
-// Limpiar expirados cada 5 minutos
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    lockoutMap.forEach((entry, email) => {
-      if (now > entry.lockedUntil) lockoutMap.delete(email);
-    });
-  }, 5 * 60_000);
-}
-
 /**
- * Verifica si una cuenta está bloqueada
+ * Verifica si una cuenta está bloqueada.
  */
-export function isAccountLocked(email: string): { locked: boolean; remainingMinutes?: number } {
-  const entry = lockoutMap.get(email.toLowerCase().trim());
-  if (!entry) return { locked: false };
+export async function isAccountLocked(email: string): Promise<{ locked: boolean; remainingMinutes?: number }> {
+  const key = email.toLowerCase().trim();
 
-  const now = Date.now();
+  const [entry] = await db
+    .select()
+    .from(accountLockouts)
+    .where(eq(accountLockouts.email, key))
+    .limit(1);
+
+  if (!entry || !entry.lockedUntil) return { locked: false };
+
+  const lockedUntil = new Date(entry.lockedUntil);
+  const now = new Date();
 
   // Si ya pasó el tiempo de bloqueo, limpiar y permitir
-  if (now > entry.lockedUntil) {
-    lockoutMap.delete(email.toLowerCase().trim());
+  if (now >= lockedUntil) {
+    await db
+      .delete(accountLockouts)
+      .where(eq(accountLockouts.email, key));
     return { locked: false };
   }
 
-  const remainingMs = entry.lockedUntil - now;
+  const remainingMs = lockedUntil.getTime() - now.getTime();
   const remainingMinutes = Math.ceil(remainingMs / 60_000);
 
   return { locked: true, remainingMinutes };
 }
 
 /**
- * Incrementa el contador de intentos fallidos
- * Devuelve true si la cuenta quedó bloqueada
+ * Incrementa el contador de intentos fallidos.
+ * Devuelve el estado de bloqueo.
  */
-export function incrementFailedAttempts(email: string): { locked: boolean; remainingMinutes?: number } {
+export async function incrementFailedAttempts(email: string): Promise<{ locked: boolean; remainingMinutes?: number }> {
   const key = email.toLowerCase().trim();
-  const now = Date.now();
-  const entry = lockoutMap.get(key);
+  const now = new Date();
 
-  if (entry) {
-    entry.attempts++;
+  const [existing] = await db
+    .select()
+    .from(accountLockouts)
+    .where(eq(accountLockouts.email, key))
+    .limit(1);
 
-    if (entry.attempts >= MAX_FAILED_ATTEMPTS) {
-      entry.lockedUntil = now + LOCKOUT_DURATION_MS;
+  if (existing) {
+    const newAttempts = existing.attempts + 1;
+
+    if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+      const lockedUntil = new Date(now.getTime() + LOCKOUT_DURATION_MS);
+      await db
+        .update(accountLockouts)
+        .set({
+          attempts: newAttempts,
+          lockedUntil,
+          updatedAt: sql`CURRENT_TIMESTAMP`,
+        })
+        .where(eq(accountLockouts.email, key));
+
       return { locked: true, remainingMinutes: 15 };
     }
+
+    await db
+      .update(accountLockouts)
+      .set({
+        attempts: newAttempts,
+        updatedAt: sql`CURRENT_TIMESTAMP`,
+      })
+      .where(eq(accountLockouts.email, key));
 
     return { locked: false };
   }
 
   // Primer intento fallido
-  lockoutMap.set(key, { attempts: 1, lockedUntil: 0 });
+  await db
+    .insert(accountLockouts)
+    .values({
+      email: key,
+      attempts: 1,
+    });
+
   return { locked: false };
 }
 
 /**
- * Resetea el contador de intentos fallidos (login exitoso)
+ * Resetea el contador de intentos fallidos (login exitoso).
  */
-export function resetFailedAttempts(email: string): void {
-  lockoutMap.delete(email.toLowerCase().trim());
+export async function resetFailedAttempts(email: string): Promise<void> {
+  const key = email.toLowerCase().trim();
+  await db
+    .delete(accountLockouts)
+    .where(eq(accountLockouts.email, key));
 }
 
 /**
- * Devuelve los intentos restantes antes del bloqueo
+ * Devuelve los intentos restantes antes del bloqueo.
  */
-export function getRemainingAttempts(email: string): number {
+export async function getRemainingAttempts(email: string): Promise<number> {
   const key = email.toLowerCase().trim();
-  const entry = lockoutMap.get(key);
+
+  const [entry] = await db
+    .select()
+    .from(accountLockouts)
+    .where(eq(accountLockouts.email, key))
+    .limit(1);
+
   if (!entry) return MAX_FAILED_ATTEMPTS;
   return Math.max(0, MAX_FAILED_ATTEMPTS - entry.attempts);
 }

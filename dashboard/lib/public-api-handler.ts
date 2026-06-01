@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { safeError } from '@/lib/logger';
 import { withRateLimit } from '@/lib/rate-limit';
 import { extractApiKey, validateApiKey, hasScope, type ApiKeyData, type ApiScope } from '@/lib/public-api-auth';
 
@@ -131,7 +132,7 @@ export function publicApiHandler(
       try {
         return await handler(authenticatedRequest);
       } catch (e) {
-        console.error('[PublicAPI] Error en handler:', e);
+        safeError('[PublicAPI] Error en handler:', e instanceof Error ? { message: e.message } : e);
         return errorResponse('Error interno del servidor', 500);
       }
     },

@@ -13,6 +13,7 @@
  * - La env var N8N_BASE_URL debe apuntar al n8n interno
  */
 
+import { safeLog, safeWarn } from '@/lib/logger';
 import { anonymizeNombreGCal, anonymizeTelefono } from '@/lib/anonymize';
 
 // ─── Tipos ─────────────────────────────────────────────────
@@ -53,13 +54,13 @@ export async function syncTurnoToGCal(payload: GCalSyncPayload): Promise<void> {
     });
 
     if (res.ok) {
-      console.log(`[GCalSync] ✅ Sync enviado: ${payload.action} | turno ${payload.turnoId}`);
+      safeLog(`[GCalSync] ✅ Sync enviado: ${payload.action} | turno ${payload.turnoId}`);
     } else {
-      console.warn(`[GCalSync] ⚠️ n8n respondió ${res.status}: ${await res.text().catch(() => '')}`);
+      safeWarn(`[GCalSync] ⚠️ n8n respondió ${res.status}: ${await res.text().catch(() => '')}`);
     }
   } catch (e) {
     // Si el workflow no está activo o n8n no responde, solo loguear
-    console.warn(`[GCalSync] ⚠️ No se pudo sincronizar turno ${payload.turnoId}:`, (e as Error).message);
+    safeWarn(`[GCalSync] ⚠️ No se pudo sincronizar turno ${payload.turnoId}:`, { error: (e as Error).message });
   }
 }
 

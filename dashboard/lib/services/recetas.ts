@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { safeWarn } from '@/lib/logger';
 import { recetas, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql, count, desc } from 'drizzle-orm';
 import { createHash, randomUUID } from 'crypto';
@@ -63,7 +64,7 @@ function getRecetaSecret(): string {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('RECETA_HASH_SECRET es obligatorio en producción');
     }
-    console.warn('[Recetas] RECETA_HASH_SECRET no configurado — usando fallback de desarrollo');
+    safeWarn('[Recetas] RECETA_HASH_SECRET no configurado — usando fallback de desarrollo');
     return 'dev-fallback-not-for-production-receta';
   }
   return s;

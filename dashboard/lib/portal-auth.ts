@@ -11,6 +11,7 @@
  */
 
 import { db } from '@/lib/db';
+import { safeWarn, safeError } from '@/lib/logger';
 import { pacientes } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { SignJWT, jwtVerify } from 'jose';
@@ -207,7 +208,7 @@ export async function sendPortalMagicLinkWhatsApp(
   const fromNumber = process.env.TWILIO_PHONE_NUMBER;
 
   if (!accountSid || !authToken || !fromNumber) {
-    console.warn('[PortalAuth] Twilio no configurado, no se puede enviar magic link');
+    safeWarn('[PortalAuth] Twilio no configurado, no se puede enviar magic link');
     return false;
   }
 
@@ -239,7 +240,7 @@ No compartas este mensaje.`;
 
     return response.ok;
   } catch (e) {
-    console.error('[PortalAuth] Error enviando magic link:', e);
+    safeError('[PortalAuth] Error enviando magic link:', e instanceof Error ? { message: e.message } : e);
     return false;
   }
 }

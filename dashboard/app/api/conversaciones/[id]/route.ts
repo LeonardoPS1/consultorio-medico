@@ -36,7 +36,10 @@ export async function GET(
   } catch (error) {
     console.error('[API] Error GET /api/conversaciones/[id]:', error);
     return NextResponse.json(
-      { error: 'Error al obtener conversación', details: (error as Error).message },
+      {
+        error: 'Error al obtener conversación',
+        ...(process.env.NODE_ENV === 'development' ? { details: (error as Error).message } : {}),
+      },
       { status: 500 }
     );
   }

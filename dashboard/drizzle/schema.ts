@@ -863,6 +863,36 @@ export const consentimientoLogRelations = relations(consentimientoLog, ({ one })
   }),
 }));
 
+// ============================================================
+// RATE LIMITS (persistente en PostgreSQL)
+// ============================================================
+export const rateLimits = pgTable('rate_limits', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  key: varchar('key', { length: 255 }).notNull(),
+  maxRequests: integer('max_requests').notNull(),
+  count: integer('count').notNull().default(0),
+  windowMs: integer('window_ms').notNull(),
+  resetAt: timestamp('reset_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  rateLimitsUniqueKey: uniqueIndex('idx_rate_limits_key').on(table.key),
+}));
+
+// ============================================================
+// ACCOUNT LOCKOUTS (persistente en PostgreSQL)
+// ============================================================
+export const accountLockouts = pgTable('account_lockouts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: varchar('email', { length: 255 }).notNull(),
+  attempts: integer('attempts').notNull().default(1),
+  lockedUntil: timestamp('locked_until', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountLockoutsIndex: index('idx_account_lockouts_email').on(table.email),
+}));
+
 // ─── Types ──────────────────────────────────────────────
 export type ListaEspera = InferSelectModel<typeof listaEspera>;
 export type NewListaEspera = InferInsertModel<typeof listaEspera>;

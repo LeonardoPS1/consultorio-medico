@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { safeWarn, safeError } from '@/lib/logger';
 import { workflowLogs, workflowErrors } from '@/drizzle/schema';
 import { desc, eq, and, gte, lte, count } from 'drizzle-orm';
 
@@ -36,12 +37,12 @@ async function n8nFetch<T>(path: string): Promise<T | null> {
     }
     const res = await fetch(url, { headers, next: { revalidate: 30 } });
     if (!res.ok) {
-      console.warn(`[n8n-monitor] ${res.status} on ${path}`);
+      safeWarn(`[n8n-monitor] ${res.status} on ${path}`);
       return null;
     }
     return res.json() as Promise<T>;
   } catch (err) {
-    console.error(`[n8n-monitor] Error fetching ${path}:`, err);
+    safeError(`[n8n-monitor] Error fetching ${path}:`, err instanceof Error ? { message: err.message } : err);
     return null;
   }
 }

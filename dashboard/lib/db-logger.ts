@@ -9,6 +9,7 @@
  */
 
 import { db as originalDb } from './db';
+import { safeWarn, safeError } from '@/lib/logger';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 const SLOW_QUERY_THRESHOLD_MS = 100;
@@ -25,21 +26,21 @@ function wrapQuery(name: string, fn: QueryFn): QueryFn {
         return result.then((value: any) => {
           const duration = performance.now() - start;
           if (duration > SLOW_QUERY_THRESHOLD_MS) {
-            console.warn(`[DB] SLOW QUERY (${duration.toFixed(0)}ms): ${name}`, {
+            safeWarn(`[DB] SLOW QUERY (${duration.toFixed(0)}ms): ${name}`, {
               args: args.map(a => typeof a === 'object' ? '[object]' : String(a)).slice(0, 3),
             });
           }
           return value;
         }).catch((err: Error) => {
           const duration = performance.now() - start;
-          console.error(`[DB] QUERY ERROR (${duration.toFixed(0)}ms): ${name}`, err.message);
+          safeError(`[DB] QUERY ERROR (${duration.toFixed(0)}ms): ${name}`, { error: err.message });
           throw err;
         });
       }
       return result;
     } catch (err: any) {
       const duration = performance.now() - start;
-      console.error(`[DB] SYNC ERROR (${duration.toFixed(0)}ms): ${name}`, err.message);
+      safeError(`[DB] SYNC ERROR (${duration.toFixed(0)}ms): ${name}`, { error: err.message });
       throw err;
     }
   };

@@ -7,6 +7,7 @@ import { verify2faToken } from '@/lib/mfa';
 import { logAudit } from '@/lib/audit-log';
 import { createHash } from 'crypto';
 import { db } from '@/lib/db';
+import { safeError } from '@/lib/logger';
 import { usuarios } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 
@@ -29,7 +30,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         try {
           // 1. Verificar si la cuenta está bloqueada por intentos fallidos
-          const lockStatus = isAccountLocked(email);
+          const lockStatus = await isAccountLocked(email);
           if (lockStatus.locked) {
             throw new Error(
               'Demasiados intentos fallidos. Intentá de nuevo más tarde.'
@@ -43,15 +44,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const user = await getUserByEmail(email);
 
           if (!user) {
-            incrementFailedAttempts(email);
+            await incrementFailedAttempts(email);
             throw new Error('Email o contraseña incorrectos');
           }
 
           const isValid = await compare(password, user.passwordHash);
 
           if (!isValid) {
-            incrementFailedAttempts(email);
-            const lockStatusAfter = isAccountLocked(email);
+            await incrementFailedAttempts(email);
+            const lockStatusAfter = await isAccountLocked(email);
             if (lockStatusAfter.locked) {
               throw new Error(
                 'Demasiados intentos fallidos. Intentá de nuevo más tarde.'
@@ -97,7 +98,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
 
           // 3. Login exitoso → resetear contador + auditar
-          resetFailedAttempts(email);
+          await resetFailedAttempts(email);
 
           logAudit({
             usuarioId: user.id,
@@ -120,7 +121,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (error instanceof Error) {
             throw error;
           }
-          console.error('[Auth] Error en authorize:', error);
+          safeError('[Auth] Error en authorize:', error instanceof Error ? { message: error.message } : error);
           return null;
         }
       },

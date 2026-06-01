@@ -9,6 +9,7 @@
  */
 
 import { db } from '@/lib/db';
+import { safeError } from '@/lib/logger';
 import { apiKeys } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import crypto from 'crypto';
@@ -126,7 +127,7 @@ export async function validateApiKey(key: string): Promise<ApiKeyValidation> {
       },
     };
   } catch (e) {
-    console.error('[PublicAPI] Error validando key:', e);
+    safeError('[PublicAPI] Error validando key:', e instanceof Error ? { message: e.message } : e);
     return { valid: false, error: 'Error interno de validación' };
   }
 }

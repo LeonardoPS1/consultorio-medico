@@ -1,28 +1,15 @@
 /**
- * Rate limiter simple (in-memory) para endpoints críticos.
- * 
- * Sin dependencias externas. Usa un Map con TTL.
- * Adecuado para entornos single-instance (Docker Swarm con 1 réplica).
- * 
- * Para multi-instancia, reemplazar por @upstash/ratelimit + Redis.
+ * Rate limiter persistente en PostgreSQL.
+ *
+ * Reemplaza la versión in-memory que se perdía al reiniciar el servidor.
+ * Usa la tabla `rate_limits` con TTL manejado por resetAt.
+ * Las entradas expiradas se limpian automáticamente en cada consulta.
  */
 
-interface RateLimitEntry {
-  count: number;
-  resetAt: number;
-}
-
-const store = new Map<string, RateLimitEntry>();
-
-// Limpiar entradas vencidas cada 5 minutos
-setInterval(() => {
-  const now = Date.now();
-  const keysToDelete: string[] = [];
-  store.forEach((entry, key) => {
-    if (now > entry.resetAt) keysToDelete.push(key);
-  });
-  keysToDelete.forEach(key => store.delete(key));
-}, 5 * 60 * 1000);
+import { db } from '@/lib/db';
+import { rateLimits } from '@/drizzle/schema';
+import { eq, and, sql } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
 
 export interface RateLimitConfig {
   maxRequests: number;   // Máximo de requests en la ventana
@@ -38,46 +25,75 @@ const DEFAULT_CONFIG: RateLimitConfig = {
 
 /**
  * Verifica si una request excede el rate limit.
- * 
- * @param key - Identificador único (ej: IP del cliente)
- * @param config - Configuración opcional
- * @returns { allowed: boolean, remaining: number, resetAt: number }
+ * Usa PostgreSQL como almacenamiento persistente.
  */
-export function checkRateLimit(
+export async function checkRateLimit(
   key: string,
   config: Partial<RateLimitConfig> = {},
-): { allowed: boolean; remaining: number; resetAt: number } {
+): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
   const { maxRequests, windowMs } = { ...DEFAULT_CONFIG, ...config };
-  const now = Date.now();
+  const now = new Date();
 
-  let entry = store.get(key);
+  // Limpiar entradas expiradas older than 1h (housekeeping)
+  await db
+    .delete(rateLimits)
+    .where(sql`${rateLimits.resetAt} < ${now}`)
+    .execute()
+    .catch(() => {}); // fire-and-forget, no crítico
 
-  // Si no existe o expiró, crear nueva entrada
-  if (!entry || now > entry.resetAt) {
-    entry = { count: 0, resetAt: now + windowMs };
-    store.set(key, entry);
+  // Buscar entrada existente
+  const [existing] = await db
+    .select()
+    .from(rateLimits)
+    .where(eq(rateLimits.key, key))
+    .limit(1);
+
+  if (!existing || new Date(existing.resetAt) < now) {
+    // Crear nueva ventana
+    const resetAt = new Date(now.getTime() + windowMs);
+    await db
+      .insert(rateLimits)
+      .values({
+        key,
+        maxRequests,
+        count: 1,
+        windowMs,
+        resetAt,
+      })
+      .onConflictDoUpdate({
+        target: rateLimits.key,
+        set: { count: 1, resetAt, maxRequests, windowMs, updatedAt: sql`CURRENT_TIMESTAMP` },
+      });
+
+    return {
+      allowed: true,
+      remaining: maxRequests - 1,
+      resetAt: resetAt.getTime(),
+    };
   }
 
-  entry.count++;
+  // Ventana activa — incrementar contador
+  const newCount = existing.count + 1;
+  await db
+    .update(rateLimits)
+    .set({ count: newCount })
+    .where(eq(rateLimits.key, key));
 
   return {
-    allowed: entry.count <= maxRequests,
-    remaining: Math.max(0, maxRequests - entry.count),
-    resetAt: entry.resetAt,
+    allowed: newCount <= maxRequests,
+    remaining: Math.max(0, maxRequests - newCount),
+    resetAt: existing.resetAt.getTime(),
   };
 }
 
 /**
- * Middleware-style wrapper para Next.js API routes.
- * 
+ * Middleware-style wrapper para Next.js API routes con rate limiting persistente.
+ *
  * Uso:
  *   export const POST = withRateLimit(async (request) => {
  *     ...
  *   }, { maxRequests: 10, windowMs: 60000 });
  */
-
-import { NextRequest, NextResponse } from 'next/server';
-
 export function withRateLimit(
   handler: (request: NextRequest) => Promise<NextResponse>,
   config?: Partial<RateLimitConfig>,
@@ -87,7 +103,7 @@ export function withRateLimit(
       || request.headers.get('x-real-ip')
       || 'unknown';
 
-    const { allowed, remaining, resetAt } = checkRateLimit(ip, config);
+    const { allowed, remaining, resetAt } = await checkRateLimit(ip, config);
 
     if (!allowed) {
       return NextResponse.json(

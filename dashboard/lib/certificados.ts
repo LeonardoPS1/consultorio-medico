@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import { safeWarn } from '@/lib/logger';
 import { escapeHtml } from '@/lib/html-utils';
 
 // ─── Constants ──────────────────────────────────────────────
@@ -9,7 +10,7 @@ function getCertificadoSecret(): string {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('CERTIFICADO_HASH_SECRET es obligatorio en producción');
     }
-    console.warn('[Certificados] CERTIFICADO_HASH_SECRET no configurado — usando fallback de desarrollo');
+    safeWarn('[Certificados] CERTIFICADO_HASH_SECRET no configurado — usando fallback de desarrollo');
     return 'dev-fallback-not-for-production-cert';
   }
   return s;

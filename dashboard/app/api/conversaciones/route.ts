@@ -47,7 +47,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('[API] Error GET /api/conversaciones:', error);
     return NextResponse.json(
-      { error: 'Error al obtener conversaciones', details: (error as Error).message },
+      {
+        error: 'Error al obtener conversaciones',
+        ...(process.env.NODE_ENV === 'development' ? { details: (error as Error).message } : {}),
+      },
       { status: 500 }
     );
   }
@@ -117,7 +120,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[API] Error POST /api/conversaciones:', error);
     return NextResponse.json(
-      { error: 'Error al crear conversación', details: (error as Error).message },
+      {
+        error: 'Error al crear conversación',
+        ...(process.env.NODE_ENV === 'development' ? { details: (error as Error).message } : {}),
+      },
       { status: 500 }
     );
   }

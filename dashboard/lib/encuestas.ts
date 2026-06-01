@@ -7,6 +7,7 @@
  */
 
 import { db } from '@/lib/db';
+import { safeLog, safeWarn, safeError } from '@/lib/logger';
 import { turnos, pacientes, medicos, historialMedico } from '@/drizzle/schema';
 import { eq, and, sql, count, avg, desc, gte, lt } from 'drizzle-orm';
 
@@ -57,13 +58,13 @@ export async function sendSurveyWhatsApp(turnoId: string): Promise<void> {
       .limit(1);
 
     if (!row) {
-      console.warn(`[Encuestas] Turno ${turnoId} no encontrado — no se envía encuesta`);
+      safeWarn(`[Encuestas] Turno ${turnoId} no encontrado — no se envía encuesta`);
       return;
     }
 
     const telefono = row.telefono;
     if (!telefono) {
-      console.warn(`[Encuestas] Paciente del turno ${turnoId} sin teléfono`);
+      safeWarn(`[Encuestas] Paciente del turno ${turnoId} sin teléfono`);
       return;
     }
 
@@ -72,7 +73,7 @@ export async function sendSurveyWhatsApp(turnoId: string): Promise<void> {
     const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
 
     if (!accountSid || !authToken || !fromNumber) {
-      console.warn('[Encuestas] ⚠️ Falta config Twilio (TWILIO_ACCOUNT_SID, AUTH_TOKEN, WHATSAPP_NUMBER)');
+      safeWarn('[Encuestas] ⚠️ Falta config Twilio (TWILIO_ACCOUNT_SID, AUTH_TOKEN, WHATSAPP_NUMBER)');
       return;
     }
 
@@ -99,13 +100,13 @@ export async function sendSurveyWhatsApp(turnoId: string): Promise<void> {
     });
 
     if (res.ok) {
-      console.log(`[Encuestas] ✅ Encuesta enviada a ${pacienteNombre} (${telefono}) por turno ${turnoId}`);
+      safeLog(`[Encuestas] ✅ Encuesta enviada a ${pacienteNombre} (${telefono}) por turno ${turnoId}`);
     } else {
       const errBody = await res.text();
-      console.warn(`[Encuestas] ⚠️ Error Twilio al enviar encuesta: ${res.status} — ${errBody}`);
+      safeWarn(`[Encuestas] ⚠️ Error Twilio al enviar encuesta: ${res.status} — ${errBody}`);
     }
   } catch (e) {
-    console.warn('[Encuestas] ⚠️ Error al enviar encuesta:', (e as Error).message);
+    safeWarn('[Encuestas] ⚠️ Error al enviar encuesta:', { error: (e as Error).message });
   }
 }
 
@@ -131,10 +132,10 @@ export async function storeSurveyResponse(data: {
       descripcion: data.comentario || 'Sin comentarios',
       visibleParaPaciente: false,
     });
-    console.log(`[Encuestas] ✅ Respuesta guardada: paciente ${data.pacienteId}, puntaje ${data.puntaje}`);
+    safeLog(`[Encuestas] ✅ Respuesta guardada: paciente ${data.pacienteId}, puntaje ${data.puntaje}`);
     return true;
   } catch (e) {
-    console.error('[Encuestas] Error al guardar respuesta:', e);
+    safeError('[Encuestas] Error al guardar respuesta:', e instanceof Error ? { message: e.message } : e);
     return false;
   }
 }

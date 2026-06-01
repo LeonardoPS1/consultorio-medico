@@ -6,6 +6,7 @@
  */
 
 import { db } from '@/lib/db';
+import { safeWarn } from '@/lib/logger';
 import {
   medicos, pacientes, horariosAtencion, preferenciasNotificaciones,
   usuarios,
@@ -218,7 +219,7 @@ REGLAS:
 
     return { tip, success: true };
   } catch (e) {
-    console.warn('[Onboarding] Ollama no disponible, usando tip de fallback:', e);
+    safeWarn('[Onboarding] Ollama no disponible, usando tip de fallback:', e instanceof Error ? { message: e.message } : e);
     return {
       tip: fallbackTip,
       success: false,

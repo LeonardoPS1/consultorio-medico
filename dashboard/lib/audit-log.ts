@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import { sql, desc, eq, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
+import { safeError } from '@/lib/logger';
 import { auditoriaAccesos } from '@/drizzle/schema';
 
 const AUDIT_DIR = path.join(process.cwd(), '.data');
@@ -92,7 +93,7 @@ export async function logAudit(entry: {
 
     fs.writeFileSync(AUDIT_FILE, JSON.stringify(logs, null, 2));
   } catch (err) {
-    console.error('[AuditLog] Error al guardar:', err);
+    safeError('[AuditLog] Error al guardar:', err instanceof Error ? { message: err.message } : err);
   }
 }
 
@@ -119,7 +120,7 @@ export async function cleanAuditLogs(options: {
 
     return { deleted: result.length };
   } catch (err) {
-    console.error('[AuditLog] Error al limpiar:', err);
+    safeError('[AuditLog] Error al limpiar:', err instanceof Error ? { message: err.message } : err);
     return { deleted: 0 };
   }
 }

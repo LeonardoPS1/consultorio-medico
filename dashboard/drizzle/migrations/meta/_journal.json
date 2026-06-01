@@ -36,6 +36,13 @@
       "when": 1748541600000,
       "tag": "0015_hash_verificacion_recetas",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1780277174705,
+      "tag": "0016_ordinary_puppet_master",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,7 @@
 
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
+import { safeLog, safeError } from '@/lib/logger';
 import { pacientes, conversaciones, mensajes, usuarios, medicos, tenants } from '@/drizzle/schema';
 import { eq, and, or, like, sql, desc, count, gte, lte, asc, isNull } from 'drizzle-orm';
 
@@ -678,10 +679,10 @@ export async function createAdminUserIfNotExists(): Promise<boolean> {
       });
     }
 
-    console.log('[DataStore] Admin creado en PostgreSQL exitosamente');
+    safeLog('[DataStore] Admin creado en PostgreSQL exitosamente');
     return true;
   } catch (err) {
-    console.error('[DataStore] Error creando admin en PostgreSQL:', err);
+    safeError('[DataStore] Error creando admin en PostgreSQL:', err instanceof Error ? { message: err.message } : err);
     return false;
   }
 }

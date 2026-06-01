@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { safeError } from '@/lib/logger';
 import { turnos, pacientes, medicos, bloqueosAgenda, ofertasTurno } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, gte, lt } from 'drizzle-orm';
 import type { CreateTurno, UpdateTurno } from '@/lib/validations';
@@ -214,7 +215,7 @@ export const turnosService = {
             notificarOfertaTurno(oferta.id, turnoActualizado.id, candidato.id).catch(() => {});
           })
           .catch((err) => {
-            console.error('[Waitlist] Error al procesar cancelación:', err);
+            safeError('[Waitlist] Error al procesar cancelación:', err instanceof Error ? { message: err.message } : err);
           });
       }
 
