@@ -12,6 +12,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.6.0',
+    date: '01/06/2026',
+    title: 'Mejoras en Turnos, Recetas y Seguridad',
+    items: [
+      'Nuevo Turno desde la ficha del paciente con atajo de teclado Ctrl+T',
+      'Certificados médicos: ahora funciona también para usuarios administradores',
+      'Eliminación de recetas con confirmación (soft-delete a historial)',
+      'Limpieza de workflows n8n duplicados',
+    ],
+  },
+  {
     version: '1.5.0',
     date: '31/05/2026',
     title: 'Notas SOAP, Certificados QR y CIE-10',

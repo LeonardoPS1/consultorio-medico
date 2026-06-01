@@ -145,7 +145,27 @@ export async function POST(
 ) {
   try {
     const session = await auth();
-    if (!session?.user?.medicoId) {
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 401 },
+      );
+    }
+    let medicoId = (session.user as any)?.medicoId as string | undefined;
+
+    // Si el usuario no tiene medicoId (ej. admin), buscar el primer médico activo
+    if (!medicoId) {
+      const [primerMedico] = await db
+        .select({ id: medicos.id })
+        .from(medicos)
+        .where(eq(medicos.activo, true))
+        .limit(1);
+      if (primerMedico) {
+        medicoId = primerMedico.id;
+      }
+    }
+
+    if (!medicoId) {
       return NextResponse.json(
         { error: 'Debe estar autenticado como médico' },
         { status: 401 },
@@ -190,7 +210,7 @@ export async function POST(
       .values({
         id: entryId,
         pacienteId: params.id,
-        medicoId: session.user.medicoId,
+        medicoId,
         tipo: 'certificado',
         titulo,
         descripcion: JSON.stringify(data),

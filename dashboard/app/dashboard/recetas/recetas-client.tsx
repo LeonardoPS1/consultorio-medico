@@ -16,6 +16,7 @@ import {
   FileSpreadsheet,
   FileDown,
   QrCode,
+  Trash2,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -27,6 +28,16 @@ import { formatDate } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NuevaRecetaModal } from '@/components/modals/nueva-receta-modal';
 import { toast } from '@/components/ui/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 
 // ─── Types ────────────────────────────────────────────────
@@ -449,6 +460,26 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
     }
   };
 
+  const [deleteRecetaId, setDeleteRecetaId] = useState<string | null>(null);
+
+  const handleEliminar = async () => {
+    if (!deleteRecetaId) return;
+    try {
+      const res = await fetch(`/api/recetas/${deleteRecetaId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        toast({ title: 'Error', description: 'No se pudo eliminar la receta', variant: 'destructive' });
+        return;
+      }
+      setRecetas((prev) => prev.filter((r) => r.id !== deleteRecetaId));
+      toast({ title: 'Receta eliminada', description: 'La receta se movió al historial' });
+      setDeleteRecetaId(null);
+    } catch {
+      toast({ title: 'Error', description: 'Error de red al eliminar receta', variant: 'destructive' });
+    }
+  };
+
   const renderRecetaCard = (
     receta: Receta,
     variant: 'activa' | 'vencida' | 'historial',
@@ -560,6 +591,18 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
                 Renovar
               </Button>
             )}
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Eliminar"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDeleteRecetaId(receta.id);
+              }}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Mobile dropdown */}
@@ -585,6 +628,12 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
                     <RotateCcw className="h-4 w-4 mr-2" /> Renovar
                   </DropdownMenuItem>
                 )}
+                <DropdownMenuItem
+                  onClick={(e) => { e.stopPropagation(); setDeleteRecetaId(receta.id); }}
+                  className="text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -715,6 +764,24 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         onOpenChange={setShowNewReceta}
         onSubmit={handleNuevaReceta}
       />
+
+      {/* Confirmación eliminar receta */}
+      <AlertDialog open={!!deleteRecetaId} onOpenChange={(open) => !open && setDeleteRecetaId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar receta?</AlertDialogTitle>
+            <AlertDialogDescription>
+              La receta se moverá al historial. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEliminar} className="bg-destructive text-destructive-foreground">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

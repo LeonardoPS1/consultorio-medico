@@ -61,6 +61,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -394,6 +395,20 @@ export function PacienteDetalleClient({
   const [alergiasEdit, setAlergiasEdit] = useState(paciente.alergias || '');
   const [editandoMedicacion, setEditandoMedicacion] = useState(false);
   const [medicacionEdit, setMedicacionEdit] = useState(paciente.medicacionCronica || '');
+
+  // ─── Nuevo Turno ───────────────────────────────
+  const [showNuevoTurno, setShowNuevoTurno] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 't') {
+        e.preventDefault();
+        setShowNuevoTurno(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // ─── Baja de datos (ARCO) ──────────────────────
   const [bajaDialogOpen, setBajaDialogOpen] = useState(false);
@@ -766,7 +781,7 @@ export function PacienteDetalleClient({
               <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/conversaciones`)}>
                 <MessageSquare className="h-4 w-4 mr-2" /> Mensaje
               </Button>
-              <Button size="sm">
+              <Button size="sm" onClick={() => setShowNuevoTurno(true)} title="Nuevo Turno (Ctrl+T)">
                 <Calendar className="h-4 w-4 mr-2" /> Nuevo Turno
               </Button>
               <Button variant="outline" size="sm" onClick={() => setShowCertDialog(true)}>
@@ -2039,6 +2054,30 @@ export function PacienteDetalleClient({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ─── Nuevo Turno Modal ─────────────────── */}
+      <NuevoTurnoModal
+        open={showNuevoTurno}
+        onOpenChange={setShowNuevoTurno}
+        onSubmit={async (data) => {
+          try {
+            const res = await fetch('/api/turnos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                pacienteId: paciente.id,
+                ...data,
+              }),
+            });
+            if (!res.ok) throw new Error();
+            const turno = await res.json();
+            setTurnosList((prev) => [turno, ...prev]);
+            toast({ title: 'Turno creado', description: `Turno agendado correctamente.` });
+          } catch {
+            toast({ title: 'Error', description: 'No se pudo crear el turno', variant: 'destructive' });
+          }
+        }}
+      />
     </div>
   );
 }
