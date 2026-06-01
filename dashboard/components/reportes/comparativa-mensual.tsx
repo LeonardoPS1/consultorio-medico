@@ -7,10 +7,10 @@ import {
 import {
   TrendingUp, TrendingDown, Minus,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { Periodo } from '@/app/dashboard/reportes/reportes-data';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type ComparativaData = { kpis: { titulo: string; actual: string; anterior: string; cambio: string; cambioPct: string; up: boolean }[]; turnos: { label: string; actual: number; anterior: number }[]; intenciones: { intencion: string; actual: number; anterior: number; cambioPct: number }[]; whatsapp: { titulo: string; actual: string; anterior: string; cambio: string; up: boolean }[]; pacientesActual: number; pacientesAnterior: number; };
+export type ComparativaData = { kpis: { titulo: string; actual: string; anterior: string; cambio: string; cambioPct: string; up: boolean }[]; turnos: { label: string; actual: number; anterior: number }[]; intenciones: { intencion: string; actual: number; anterior: number; cambioPct: number }[]; whatsapp: { titulo: string; actual: string; anterior: string; cambio: string; up: boolean }[]; pacientesActual: number; pacientesAnterior: number; };
 
 interface Props {
   data: ComparativaData;
@@ -44,43 +44,55 @@ export default function ComparativaMensual({ data, periodo }: Props) {
   return (
     <div className="space-y-6">
       {/* KPIs Comparativos */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <motion.div
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+        initial="hidden"
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+      >
         {data.kpis.map((kpi) => (
-          <Card key={kpi.titulo} className="transition-all hoverable:hover:shadow-card-hover">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {kpi.titulo}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline justify-between">
-                <div className="text-2xl font-bold">{kpi.actual}</div>
-                <div className="flex items-center gap-1">
-                  {kpi.up ? (
-                    <TrendingUp className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4 text-red-500" />
-                  )}
-                  <span className={`text-sm font-semibold ${kpi.up ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {kpi.cambioPct}
+          <motion.div
+            key={kpi.titulo}
+            variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            <Card className="relative overflow-hidden transition-all hoverable:hover:shadow-card-hover">
+              <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${kpi.up ? 'from-emerald-400 to-emerald-600' : 'from-red-400 to-red-600'}`} />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {kpi.titulo}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline justify-between">
+                  <div className="text-2xl font-bold">{kpi.actual}</div>
+                  <div className="flex items-center gap-1">
+                    {kpi.up ? (
+                      <TrendingUp className="h-4 w-4 text-emerald-500" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4 text-red-500" />
+                    )}
+                    <span className={`text-sm font-semibold ${kpi.up ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {kpi.cambioPct}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-1.5 text-[11px] text-muted-foreground border-t pt-1.5">
+                  <span className="flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                    {kpi.actual}
+                  </span>
+                  <Minus className="h-3 w-3" />
+                  <span className="flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
+                    {kpi.anterior}
                   </span>
                 </div>
-              </div>
-              <div className="flex items-center justify-between mt-1.5 text-[11px] text-muted-foreground border-t pt-1.5">
-                <span className="flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  {kpi.actual}
-                </span>
-                <Minus className="h-3 w-3" />
-                <span className="flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
-                  {kpi.anterior}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Gráfico comparativo de turnos */}
       <Card>
@@ -197,33 +209,45 @@ export default function ComparativaMensual({ data, periodo }: Props) {
       </Card>
 
       {/* WhatsApp comparativo */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <motion.div
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+        initial="hidden"
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+      >
         {data.whatsapp.map((w) => (
-          <Card key={w.titulo}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{w.titulo}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline justify-between">
-                <div className="text-2xl font-bold">{w.actual}</div>
-                <div className="flex items-center gap-1">
-                  {w.up ? (
-                    <TrendingUp className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4 text-red-500" />
-                  )}
-                  <span className={`text-sm font-semibold ${w.up ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {w.cambio}
-                  </span>
+          <motion.div
+            key={w.titulo}
+            variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            <Card className="relative overflow-hidden">
+              <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${w.up ? 'from-emerald-400 to-emerald-600' : 'from-red-400 to-red-600'}`} />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">{w.titulo}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline justify-between">
+                  <div className="text-2xl font-bold">{w.actual}</div>
+                  <div className="flex items-center gap-1">
+                    {w.up ? (
+                      <TrendingUp className="h-4 w-4 text-emerald-500" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4 text-red-500" />
+                    )}
+                    <span className={`text-sm font-semibold ${w.up ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {w.cambio}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1.5 border-t pt-1.5">
-                {pALabel}: <span className="font-medium">{w.anterior}</span>
-              </p>
-            </CardContent>
-          </Card>
+                <p className="text-[11px] text-muted-foreground mt-1.5 border-t pt-1.5">
+                  {pALabel}: <span className="font-medium">{w.anterior}</span>
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Resumen pacientes */}
       <Card>

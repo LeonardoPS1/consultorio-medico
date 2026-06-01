@@ -124,6 +124,35 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
     { obra: 'Otras', cantidad: 11 },
   ];
 
+  // ─── Datos de comparativa (período anterior) ────────────
+  const _comparativa = {
+    kpis: [
+      { titulo: 'Turnos', actual: String(totalTurnos), anterior: String(Math.round(totalTurnos * 0.85)), cambio: '+15%', cambioPct: '+15%', up: true },
+      { titulo: 'Asistencia', actual: `${asistenciaPct}%`, anterior: '78%', cambio: '+7%', cambioPct: '+7%', up: true },
+      { titulo: 'Nuevos Pacientes', actual: String(nuevos), anterior: String(Math.round(nuevos * 0.7)), cambio: '+30%', cambioPct: '+30%', up: true },
+      { titulo: 'Conversaciones', actual: String(Math.max(1, Math.floor(totalRecibidos / 5))), anterior: String(Math.max(1, Math.floor(totalRecibidos / 7))), cambio: '+12%', cambioPct: '+12%', up: true },
+    ],
+    turnos: etiquetas.map((label, i) => ({
+      label,
+      actual: turnos[i].cantidad,
+      anterior: Math.max(1, turnos[i].cantidad - 2 - Math.round(Math.random() * 4)),
+    })),
+    intenciones: intenciones.map(item => ({
+      intencion: item.intencion,
+      actual: item.cantidad,
+      anterior: Math.max(1, item.cantidad - Math.round(Math.random() * 8)),
+      cambioPct: Math.round((Math.random() * 20 + 5)),
+    })),
+    whatsapp: [
+      { titulo: 'Mensajes recibidos', actual: String(totalRecibidos), anterior: String(Math.round(totalRecibidos * 0.8)), cambio: '+12%', up: true },
+      { titulo: 'Mensajes enviados', actual: String(totalEnviados), anterior: String(Math.round(totalEnviados * 0.75)), cambio: '+8%', up: true },
+      { titulo: 'Tasa de respuesta', actual: '94%', anterior: '91%', cambio: '+3%', up: true },
+      { titulo: 'Conversaciones activas', actual: String(Math.max(1, Math.floor(totalRecibidos / 5))), anterior: String(Math.max(1, Math.floor(totalRecibidos / 6))), cambio: '+10%', up: true },
+    ],
+    pacientesActual: totalPac,
+    pacientesAnterior: Math.round(totalPac * 0.82),
+  };
+
   return {
     metricas,
     turnos,
@@ -138,5 +167,6 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
     intenciones,
     whatsapp,
     pacientesObraSocial,
+    _comparativa,
   };
 }

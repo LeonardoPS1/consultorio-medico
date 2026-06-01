@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { canAccess } from '@/lib/features';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ import { PageHeader } from '@/components/page-header';
 import type { TurnoDia } from '@/components/charts/turnos-chart';
 import type { WhatsAppVolumen } from '@/components/charts/volumen-whatsapp-chart';
 import type { DistribucionEstado } from '@/components/charts/distribucion-estados-chart';
+import type { ComparativaData } from '@/components/reportes/comparativa-mensual';
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -40,6 +42,8 @@ interface ReporteApiResponse {
   calidadRespuesta: { tasa: string; tiempo: string; msgsPorConv: string };
   intenciones: { intencion: string; cantidad: number; porcentaje: number }[];
   whatsapp: { titulo: string; valor: string; cambio: string; up: boolean }[];
+  _demo?: boolean;
+  _comparativa?: ComparativaData;
 }
 
 // ─── Charts (dynamic import, no SSR) ───────────────────────
@@ -57,6 +61,10 @@ const VolumenWhatsAppChart = dynamic(() => import('@/components/charts/volumen-w
   loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
 });
 const DistribucionEstadosChart = dynamic(() => import('@/components/charts/distribucion-estados-chart'), {
+  ssr: false,
+  loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
+});
+const ComparativaMensual = dynamic(() => import('@/components/reportes/comparativa-mensual'), {
   ssr: false,
   loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
 });
@@ -78,6 +86,7 @@ export default function ReportesPage() {
   const isAdvancedReports = canAccess(userPlan, 'reportes-avanzados');
 
   const [periodo, setPeriodo] = useState<Periodo>('mes');
+  const [fetchKey, setFetchKey] = useState(0);
   const [data, setData] = useState<ReporteApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +97,7 @@ export default function ReportesPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/reportes?periodo=${periodo}`);
+        const res = await fetch(`/api/reportes?periodo=${periodo}&demo=true`);
         if (!res.ok) throw new Error(`Error ${res.status}`);
         const json = await res.json();
         setData(json);
@@ -100,7 +109,9 @@ export default function ReportesPage() {
       }
     };
     fetchReportes();
-  }, [periodo]);
+  }, [periodo, fetchKey]);
+
+  const reintentar = () => setFetchKey(k => k + 1);
 
   // ── Exportar ──────────────────────────────────────────────
 
@@ -285,7 +296,7 @@ export default function ReportesPage() {
             <AlertCircle className="h-10 w-10 text-destructive mb-3" />
             <p className="text-sm font-medium text-destructive mb-1">Error al cargar reportes</p>
             <p className="text-xs text-muted-foreground mb-4">{error || 'No hay datos disponibles'}</p>
-            <Button variant="outline" size="sm" onClick={() => setPeriodo(prev => prev)}>
+            <Button variant="outline" size="sm" onClick={reintentar}>
               Reintentar
             </Button>
           </CardContent>
@@ -332,8 +343,15 @@ export default function ReportesPage() {
             </DropdownMenuContent>
           </DropdownMenu>
           )}
-          <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-200">
-            Datos reales
+          <Badge variant="outline" className={`group relative text-[10px] cursor-default select-none ${data?._demo ? 'text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-800' : 'text-emerald-600 border-emerald-200 dark:text-emerald-400 dark:border-emerald-800'}`}>
+            {data?._demo ? '⚡ Datos demo' : '✅ Datos reales'}
+            {data?._demo && (
+              <span className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-10">
+                <span className="whitespace-nowrap bg-foreground text-background text-[10px] px-2 py-1 rounded shadow-md">
+                  Datos ilustrativos — conectá la DB para datos reales
+                </span>
+              </span>
+            )}
           </Badge>
         </div>
       </div>
@@ -356,37 +374,55 @@ export default function ReportesPage() {
             <MessageSquare className="h-4 w-4 sm:mr-1" />
             <span className="hidden sm:inline">WhatsApp</span>
           </TabsTrigger>
+          <TabsTrigger value="comparativa" className="px-2 sm:px-3">
+            <TrendingUp className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Comparativa</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* ============ TAB GENERAL ============ */}
         <TabsContent value="general" className="mt-4 space-y-6">
           {/* KPIs */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <motion.div
+            className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+          >
             {data.metricas.map((m) => {
               const Icon = iconNames[m.icon] || Calendar;
               return (
-                <Card key={m.titulo} className="transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-[1px] hoverable:hover:shadow-card-hover">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">{m.titulo}</CardTitle>
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{m.valor}</div>
-                    <div className="flex items-center gap-1 mt-1">
-                      {m.up ? (
-                        <TrendingUp className="h-3 w-3 text-emerald-500" />
-                      ) : (
-                        <TrendingDown className="h-3 w-3 text-red-500" />
-                      )}
-                      <span className={`text-xs ${m.up ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {m.cambio} vs período anterior
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
+                <motion.div
+                  key={m.titulo}
+                  variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                >
+                  <Card className="relative overflow-hidden transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-[1px] hoverable:hover:shadow-card-hover">
+                    <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${m.up ? 'from-emerald-400 to-emerald-600' : 'from-red-400 to-red-600'}`} />
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">{m.titulo}</CardTitle>
+                      <div className={`p-1.5 rounded-md ${m.up ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400' : 'bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400'}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{m.valor}</div>
+                      <div className="flex items-center gap-1 mt-1">
+                        {m.up ? (
+                          <TrendingUp className="h-3 w-3 text-emerald-500" />
+                        ) : (
+                          <TrendingDown className="h-3 w-3 text-red-500" />
+                        )}
+                        <span className={`text-xs ${m.up ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {m.cambio} vs período anterior
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
 
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Gráfico Turnos por día */}
@@ -452,39 +488,62 @@ export default function ReportesPage() {
 
         {/* ============ TAB TURNOS ============ */}
         <TabsContent value="turnos" className="mt-4 space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Turnos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data.turnosKpis.total}</div>
-                <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
-                  <ArrowUpRight className="h-3 w-3" /> {data.turnosKpis.cambioTotal} este {periodo === 'año' ? 'año' : periodo === 'mes' ? 'mes' : 'período'}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Tasa de Asistencia</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data.turnosKpis.asistencia}</div>
-                <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
-                  <ArrowUpRight className="h-3 w-3" /> vs período anterior
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Duración Promedio</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data.turnosKpis.duracion}</div>
-                <p className="text-xs text-muted-foreground mt-1">Por consulta</p>
-              </CardContent>
-            </Card>
-          </div>
+          <motion.div
+            className="grid gap-4 md:grid-cols-3"
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+          >
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              <Card className="relative overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Turnos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{data.turnosKpis.total}</div>
+                  <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
+                    <ArrowUpRight className="h-3 w-3" /> {data.turnosKpis.cambioTotal} este {periodo === 'año' ? 'año' : periodo === 'mes' ? 'mes' : 'período'}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              <Card className="relative overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-emerald-400 to-emerald-600" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Tasa de Asistencia</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{data.turnosKpis.asistencia}</div>
+                  <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
+                    <ArrowUpRight className="h-3 w-3" /> vs período anterior
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              <Card className="relative overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-purple-400 to-purple-600" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Duración Promedio</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{data.turnosKpis.duracion}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Por consulta</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
 
           <Card>
             <CardHeader>
@@ -514,39 +573,62 @@ export default function ReportesPage() {
 
         {/* ============ TAB PACIENTES ============ */}
         <TabsContent value="pacientes" className="mt-4 space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {periodo === 'año' ? 'Total Pacientes' : 'Pacientes Activos'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data.pacientesKpis.total}</div>
-                <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
-                  <ArrowUpRight className="h-3 w-3" /> +{data.pacientesKpis.nuevos} nuevos este {periodo === 'año' ? 'año' : periodo === 'mes' ? 'mes' : 'período'}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Pacientes Frecuentes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data.pacientesKpis.frecuentes}</div>
-                <p className="text-xs text-muted-foreground mt-1">+3 turnos en los últimos 6 meses</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Edad Promedio</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data.pacientesKpis.edadPromedio}</div>
-                <p className="text-xs text-muted-foreground mt-1">De pacientes registrados</p>
-              </CardContent>
-            </Card>
-          </div>
+          <motion.div
+            className="grid gap-4 md:grid-cols-3"
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+          >
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              <Card className="relative overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {periodo === 'año' ? 'Total Pacientes' : 'Pacientes Activos'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{data.pacientesKpis.total}</div>
+                  <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
+                    <ArrowUpRight className="h-3 w-3" /> +{data.pacientesKpis.nuevos} nuevos este {periodo === 'año' ? 'año' : periodo === 'mes' ? 'mes' : 'período'}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              <Card className="relative overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-400 to-amber-600" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Pacientes Frecuentes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{data.pacientesKpis.frecuentes}</div>
+                  <p className="text-xs text-muted-foreground mt-1">+3 turnos en los últimos 6 meses</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              <Card className="relative overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-purple-400 to-purple-600" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Edad Promedio</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{data.pacientesKpis.edadPromedio}</div>
+                  <p className="text-xs text-muted-foreground mt-1">De pacientes registrados</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
 
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
@@ -593,26 +675,38 @@ export default function ReportesPage() {
 
         {/* ============ TAB WHATSAPP ============ */}
         <TabsContent value="whatsapp" className="mt-4 space-y-6">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <motion.div
+            className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+          >
             {data.whatsapp.map((m) => (
-              <Card key={m.titulo}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">{m.titulo}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{m.valor}</div>
-                  <div className="flex items-center gap-1 mt-1">
-                    {m.up ? (
-                      <TrendingUp className="h-3 w-3 text-emerald-500" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 text-red-500" />
-                    )}
-                    <span className={`text-xs ${m.up ? 'text-emerald-600' : 'text-red-600'}`}>{m.cambio}</span>
-                  </div>
-                </CardContent>
-              </Card>
+              <motion.div
+                key={m.titulo}
+                variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+              >
+                <Card className="relative overflow-hidden">
+                  <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${m.up ? 'from-emerald-400 to-emerald-600' : 'from-red-400 to-red-600'}`} />
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{m.titulo}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{m.valor}</div>
+                    <div className="flex items-center gap-1 mt-1">
+                      {m.up ? (
+                        <TrendingUp className="h-3 w-3 text-emerald-500" />
+                      ) : (
+                        <TrendingDown className="h-3 w-3 text-red-500" />
+                      )}
+                      <span className={`text-xs ${m.up ? 'text-emerald-600' : 'text-red-600'}`}>{m.cambio}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
@@ -678,6 +772,20 @@ export default function ReportesPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ============ TAB COMPARATIVA ============ */}
+        <TabsContent value="comparativa" className="mt-4">
+          {data._comparativa ? (
+            <ComparativaMensual data={data._comparativa} periodo={periodo} />
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <AlertCircle className="h-10 w-10 text-muted-foreground mb-3" />
+                <p className="text-sm text-muted-foreground">Datos comparativos no disponibles para este período</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
