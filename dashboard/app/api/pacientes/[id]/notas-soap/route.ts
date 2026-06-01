@@ -3,6 +3,25 @@ import { db } from '@/lib/db';
 import { notasSoap, medicos } from '@/drizzle/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
+import { verifyPacienteAccess } from '@/lib/api-auth';
+
+/**
+ * Helper de auth para GET/PATCH/DELETE de notas SOAP
+ */
+async function requireAuthForNotasSoap(request: NextRequest, params: { id: string }) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { session: null, error: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) };
+  }
+  const sessionMedicoId = (session.user as any)?.medicoId;
+  const sessionRol = (session.user as any)?.role;
+  try {
+    await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+  } catch {
+    return { session: null, error: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) };
+  }
+  return { session, error: null };
+}
 
 /**
  * GET /api/pacientes/[id]/notas-soap
@@ -12,6 +31,9 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const { error } = await requireAuthForNotasSoap(_request, params);
+  if (error) return error;
+
   try {
     const list = await db
       .select({
@@ -102,6 +124,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const { error } = await requireAuthForNotasSoap(request, params);
+  if (error) return error;
+
   try {
     const { searchParams } = new URL(request.url);
     const entryId = searchParams.get('entryId');
@@ -171,6 +196,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const { error } = await requireAuthForNotasSoap(request, params);
+  if (error) return error;
+
   try {
     const { searchParams } = new URL(request.url);
     const entryId = searchParams.get('entryId');

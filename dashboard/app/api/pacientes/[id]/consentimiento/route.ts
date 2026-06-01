@@ -9,6 +9,7 @@
 
 import { NextRequest } from 'next/server';
 import { apiHandler, success } from '@/lib/api-handler';
+import { requireAuth, verifyPacienteAccess } from '@/lib/api-auth';
 import { parseBody } from '@/lib/validations';
 import { z } from 'zod';
 import { privacidadService } from '@/lib/services/privacidad';
@@ -27,6 +28,11 @@ const registrarConsentimientoSchema = z.object({
  * POST - Registrar un evento de consentimiento
  */
 export const POST = apiHandler(async (request: NextRequest, { params }) => {
+  const session = await requireAuth();
+  const sessionMedicoId = (session.user as any)?.medicoId;
+  const sessionRol = (session.user as any)?.role;
+  await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+
   const body = await parseBody(request, registrarConsentimientoSchema);
   const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined;
   const userAgent = request.headers.get('user-agent') || undefined;
@@ -69,6 +75,11 @@ export const POST = apiHandler(async (request: NextRequest, { params }) => {
  * GET - Obtener historial de consentimientos del paciente
  */
 export const GET = apiHandler(async (_request: NextRequest, { params }) => {
+  const session = await requireAuth();
+  const sessionMedicoId = (session.user as any)?.medicoId;
+  const sessionRol = (session.user as any)?.role;
+  await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+
   const historial = await privacidadService.getHistorialConsentimiento(params.id);
   return success(historial);
 });

@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { historialMedico, pacientes, medicos } from '@/drizzle/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
+import { verifyPacienteAccess } from '@/lib/api-auth';
 import { generarHashCertificado, generarHTMLCertificado } from '@/lib/certificados';
 import QRCode from 'qrcode';
 
@@ -15,6 +16,18 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 401 },
+      );
+    }
+
+    const sessionMedicoId = (session.user as any)?.medicoId;
+    const sessionRol = (session.user as any)?.role;
+    await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+
     const { searchParams } = new URL(_request.url);
     const format = searchParams.get('format');
     const entryId = searchParams.get('entryId');

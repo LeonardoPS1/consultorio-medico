@@ -15,6 +15,8 @@ import {
   auditoriaAccesos,
 } from '@/drizzle/schema';
 import { eq, sql, desc, and } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
+import { verifyPacienteAccess } from '@/lib/api-auth';
 
 /**
  * GET /api/pacientes/[id]/exportar-datos
@@ -37,6 +39,18 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 401 },
+      );
+    }
+
+    const sessionMedicoId = (session.user as any)?.medicoId;
+    const sessionRol = (session.user as any)?.role;
+    await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+
     const pacienteId = params.id;
 
     // ─── 1. Datos del paciente ────────────────────────

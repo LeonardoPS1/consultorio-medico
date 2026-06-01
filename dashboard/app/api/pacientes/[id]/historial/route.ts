@@ -2,6 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { historialMedico } from '@/drizzle/schema';
 import { eq, desc, and } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
+import { verifyPacienteAccess } from '@/lib/api-auth';
+
+/**
+ * Autenticación compartida para todas las rutas de historial
+ */
+async function requireAuthForHistorial(request: NextRequest, params: { id: string }) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { session: null, error: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) };
+  }
+  const sessionMedicoId = (session.user as any)?.medicoId;
+  const sessionRol = (session.user as any)?.role;
+  try {
+    await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+  } catch (e) {
+    return { session: null, error: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) };
+  }
+  return { session, error: null };
+}
 
 /**
  * GET /api/pacientes/[id]/historial
@@ -11,6 +31,9 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const { error } = await requireAuthForHistorial(_request, params);
+  if (error) return error;
+
   try {
     const entries = await db
       .select()
@@ -36,6 +59,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const { error } = await requireAuthForHistorial(request, params);
+  if (error) return error;
+
   try {
     const body = await request.json();
 
@@ -77,6 +103,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const { error } = await requireAuthForHistorial(request, params);
+  if (error) return error;
+
   try {
     const { searchParams } = new URL(request.url);
     const entryId = searchParams.get('entryId');
@@ -144,6 +173,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const { error } = await requireAuthForHistorial(request, params);
+  if (error) return error;
+
   try {
     const { searchParams } = new URL(request.url);
     const entryId = searchParams.get('entryId');
