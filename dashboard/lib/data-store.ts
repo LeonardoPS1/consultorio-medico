@@ -653,7 +653,11 @@ export async function createAdminUserIfNotExists(): Promise<boolean> {
       });
     }
 
-    const hash = await bcrypt.hash('admin123', 10);
+    const seedPassword = process.env.SEED_ADMIN_PASSWORD || process.env.NEXT_PUBLIC_SEED_ADMIN_PASSWORD;
+    if (!seedPassword) {
+      console.warn('[Seed] No SEED_ADMIN_PASSWORD set, using fallback. Cambiá la password después del primer login.');
+    }
+    const hash = await bcrypt.hash(seedPassword || 'Admin123456!', 10);
     const adminId = crypto.randomUUID();
 
     await db.insert(usuarios).values({

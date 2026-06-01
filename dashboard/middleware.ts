@@ -97,7 +97,7 @@ export function middleware(request: NextRequest) {
   if (process.env.NODE_ENV === 'production') {
     response.headers.set(
       'Strict-Transport-Security',
-      'max-age=63072000; includeSubDomains; preload'
+      'max-age=63072000; includeSubDomains'
     );
   }
 

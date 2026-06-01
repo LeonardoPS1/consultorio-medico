@@ -2,6 +2,8 @@
  * Portal Layout — Fuerza modo claro para evitar pantalla negra por tema oscuro.
  * Corre ANTES del ThemeProvider global para prevenir que el modo oscuro afecte al portal.
  */
+import Script from 'next/script';
+
 export default function PortalLayout({
   children,
 }: {
@@ -11,11 +13,12 @@ export default function PortalLayout({
     <>
       {/* Ojito: este script se ejectuta antes de que el theme script global
           prevenga que se aplique dark mode al portal. */}
-      <script
+      <Script
+        id="portal-light-mode"
+        strategy="beforeInteractive"
         dangerouslySetInnerHTML={{
           __html: `
             (function() {
-              // Forzar modo claro en el portal
               document.documentElement.classList.remove('dark');
               document.documentElement.style.colorScheme = 'light';
               try { localStorage.removeItem('theme'); } catch(e) {}
