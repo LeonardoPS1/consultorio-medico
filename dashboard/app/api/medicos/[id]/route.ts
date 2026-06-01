@@ -3,9 +3,27 @@ import { db } from '@/lib/db';
 import { medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { apiHandler, success, notFound } from '@/lib/api-handler';
+import { auth } from '@/lib/auth';
+
+/**
+ * Helper: solo admin o el propio médico puede modificar/eliminar
+ */
+async function requireMedicoAccess(medicoId: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('No autorizado');
+  const sessionMedicoId = (session.user as any)?.medicoId;
+  const sessionRol = (session.user as any)?.role;
+  if (sessionRol === 'admin') return;
+  if (sessionMedicoId !== medicoId) throw new Error('No autorizado');
+}
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const [medico] = await db.select().from(medicos).where(eq(medicos.id, params.id));
     if (!medico) return NextResponse.json({ error: 'Medico no encontrado' }, { status: 404 });
     return NextResponse.json({ data: medico });
@@ -16,6 +34,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    await requireMedicoAccess(params.id);
+
     const body = await request.json();
     if (!body || Object.keys(body).length === 0) {
       return NextResponse.json({ error: 'Envia al menos un campo' }, { status: 400 });
@@ -37,6 +57,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     return NextResponse.json({ data: actualizado });
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error interno';
+    if (message === 'No autorizado') {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+    }
     console.error('[API] Error PATCH /api/medicos:', error);
     return NextResponse.json({ error: 'Error al actualizar medico' }, { status: 500 });
   }
@@ -44,6 +68,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
 /** DELETE /api/medicos/[id] - Soft-delete de médico */
 export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
+  await requireMedicoAccess(params.id);
+
   const [medico] = await db
     .select({ id: medicos.id })
     .from(medicos)

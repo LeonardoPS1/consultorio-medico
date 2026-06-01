@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { servicios } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const [servicio] = await db.select().from(servicios).where(eq(servicios.id, params.id));
     if (!servicio) return NextResponse.json({ error: 'Servicio no encontrado' }, { status: 404 });
     return NextResponse.json({ data: servicio });
@@ -15,6 +21,11 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const body = await request.json();
     if (!body || Object.keys(body).length === 0) {
       return NextResponse.json({ error: 'Envia al menos un campo' }, { status: 400 });

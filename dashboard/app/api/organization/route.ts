@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrganization, updateOrganization } from '@/lib/organization-store';
+import { auth } from '@/lib/auth';
 
 export async function GET() {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const org = getOrganization();
     return NextResponse.json({ data: org });
   } catch (error) {
@@ -15,6 +21,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const body = await request.json();
     const updated = updateOrganization(body);
     return NextResponse.json({ data: updated, message: 'Configuración guardada' });

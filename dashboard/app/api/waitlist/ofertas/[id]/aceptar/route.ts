@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { apiHandler, success } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/api-auth';
 import { waitlistService } from '@/lib/services/waitlist';
 import {
   notificarMedicoReasignacion,
@@ -10,6 +11,7 @@ import {
  * POST /api/waitlist/ofertas/[id]/aceptar - Acepta una oferta de turno
  */
 export const POST = apiHandler(async (_req: NextRequest, { params }: { params: { id: string } }) => {
+  await requireAuth();
   const result = await waitlistService.aceptar(params.id);
 
   // Notificar al médico y al paciente (fire-and-forget)
