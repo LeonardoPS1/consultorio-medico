@@ -6,7 +6,7 @@
 
 import { db } from '@/lib/db';
 import { pacientes, turnos, pacienteEventos } from '@/drizzle/schema';
-import { eq, and, sql, count, or, like, desc } from 'drizzle-orm';
+import { eq, and, sql, count, or, ilike, desc } from 'drizzle-orm';
 import type { CreatePaciente, UpdatePaciente } from '@/lib/validations';
 import { conflict, notFound } from '@/lib/api-handler';
 import { privacidadService } from '@/lib/services/privacidad';
@@ -26,9 +26,10 @@ export const pacientesService = {
       sql`${pacientes.deletedAt} IS NULL`,
       search
         ? or(
-            like(pacientes.nombre, `%${search}%`),
-            like(pacientes.apellido, `%${search}%`),
-            like(pacientes.telefono, `%${search}%`),
+            ilike(pacientes.nombre, `%${search}%`),
+            ilike(pacientes.apellido, `%${search}%`),
+            ilike(pacientes.telefono, `%${search}%`),
+            sql`${pacientes.nombre} || ' ' || ${pacientes.apellido} ILIKE ${'%' + search + '%'}`,
           )
         : undefined,
       sucursalId ? eq(pacientes.sucursalId, sucursalId) : undefined,

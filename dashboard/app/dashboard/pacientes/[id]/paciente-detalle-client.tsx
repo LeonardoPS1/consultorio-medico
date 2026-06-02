@@ -416,6 +416,8 @@ export function PacienteDetalleClient({
         diagnostico: '', cie10Codigo: '', reposoDesde: '', reposoHasta: '',
         reposoDias: '', indicaciones: '',
       });
+      // Refrescar lista de certificados para que aparezca el nuevo
+      setCertLoaded(false);
     } catch (e) {
       toast({
         title: 'Error',

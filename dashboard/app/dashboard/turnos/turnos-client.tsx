@@ -252,15 +252,40 @@ export function TurnosClient({
     try {
       // Buscar paciente que coincida (si no viene pacienteId)
       let pacienteId = data.pacienteId;
+      let pacienteNombre = data.paciente;
       if (!pacienteId) {
         const busquedaPaciente = await fetch(`/api/pacientes?search=${encodeURIComponent(data.paciente)}&limit=5`);
-        const pacientesJson = await busquedaPaciente.json();
+        let pacientesJson;
+        try { pacientesJson = await busquedaPaciente.json(); } catch { pacientesJson = { data: [] }; }
         const pacienteEncontrado = pacientesJson.data?.[0];
-        if (!pacienteEncontrado) {
-          toast({ title: 'Error', description: 'Paciente no encontrado. Creá el paciente primero.', variant: 'destructive' });
-          return;
+        if (pacienteEncontrado) {
+          pacienteId = pacienteEncontrado.id;
+          pacienteNombre = `${pacienteEncontrado.nombre} ${pacienteEncontrado.apellido}`;
+        } else {
+          // Crear paciente automáticamente
+          const nombreParts = data.paciente.trim().split(/\s+/);
+          const nombre = nombreParts[0] || data.paciente.trim();
+          const apellido = nombreParts.slice(1).join(' ') || 'Sin apellido';
+          const createRes = await fetch('/api/pacientes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              nombre,
+              apellido,
+              telefono: '0000000000', // Placeholder, el admin puede editarlo después
+              sucursalId: sucursalId || undefined,
+            }),
+          });
+          if (!createRes.ok) {
+            const errBody = await createRes.json().catch(() => ({ error: 'Error al crear paciente' }));
+            toast({ title: 'Error', description: errBody.error || 'No se pudo crear el paciente', variant: 'destructive' });
+            return;
+          }
+          const createdPaciente = await createRes.json();
+          pacienteId = createdPaciente.data?.id || createdPaciente.id;
+          pacienteNombre = `${nombre} ${apellido}`;
+          toast({ title: 'Paciente creado', description: `${pacienteNombre} — recordá completar sus datos después` });
         }
-        pacienteId = pacienteEncontrado.id;
       }
 
       // Buscar médico por nombre para obtener su ID
@@ -306,7 +331,7 @@ export function TurnosClient({
       const newTurno: TurnoData = {
         id: created.id,
         hora: data.hora,
-        paciente: data.paciente,
+        paciente: pacienteNombre,
         tipo: data.tipo,
         medico: data.medico,
         estado: created.estado || 'pendiente',
@@ -315,7 +340,7 @@ export function TurnosClient({
         pacienteId: created.pacienteId || pacienteId,
       };
       setTurnos((prev) => [newTurno, ...prev]);
-      toast({ title: 'Turno creado', description: `${data.paciente} - ${data.hora}` });
+      toast({ title: 'Turno creado', description: `${pacienteNombre} - ${data.hora}` });
     } catch {
       toast({ title: 'Error', description: 'Error de red al crear turno', variant: 'destructive' });
     }
