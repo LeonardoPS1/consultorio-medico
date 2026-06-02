@@ -89,12 +89,20 @@ export default function ReportesPage() {
   const [fetchKey, setFetchKey] = useState(0);
   const [data, setData] = useState<ReporteApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // ── Fetch desde API ──────────────────────────────────────
+  // Stale-while-revalidate: mantiene datos viejos visibles mientras carga
   useEffect(() => {
     const fetchReportes = async () => {
-      setLoading(true);
+      if (data) {
+        // Ya hay datos previos → refresco silencioso
+        setIsRefreshing(true);
+      } else {
+        // Primera carga → muestra skeleton
+        setLoading(true);
+      }
       setError(null);
       try {
         const res = await fetch(`/api/reportes?periodo=${periodo}&demo=true`);
@@ -106,6 +114,7 @@ export default function ReportesPage() {
         setError('No se pudieron cargar los reportes. Intentalo de nuevo.');
       } finally {
         setLoading(false);
+        setIsRefreshing(false);
       }
     };
     fetchReportes();
@@ -271,8 +280,8 @@ export default function ReportesPage() {
     toast({ title: '📊 Reporte generado', description: `Período ${periodoLabel} - Abrí la ventana para guardar como PDF` });
   };
 
-  // ── UI: Loading ──────────────────────────────────────────
-  if (loading) {
+  // ── UI: Loading (solo primera carga) ─────────────────────
+  if (loading && !data) {
     return (
       <div className="space-y-6 animate-in">
         <PageHeader title="Reportes" description="Cargando métricas del consultorio..." />
@@ -317,8 +326,8 @@ export default function ReportesPage() {
     );
   }
 
-  // ── UI: Error ────────────────────────────────────────────
-  if (error || !data) {
+  // ── UI: Error (solo si no hay datos previos) ─────────────
+  if ((error && !data) || (!loading && !data && !error)) {
     return (
       <div className="space-y-6 animate-in">
         <PageHeader title="Reportes" description="Métricas y estadísticas del consultorio" />
@@ -336,12 +345,23 @@ export default function ReportesPage() {
     );
   }
 
+  // Si no hay datos (loading + no data todavía), no renderizar nada
+  if (!data) return null;
+
   // ── UI: Normal ───────────────────────────────────────────
   return (
     <div className="space-y-6 animate-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <PageHeader title="Reportes" description="Métricas y estadísticas del consultorio" />
+        <div className="flex items-center gap-3">
+          <PageHeader title="Reportes" description="Métricas y estadísticas del consultorio" />
+          {isRefreshing && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground animate-in fade-in">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Actualizando...
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center rounded-lg border p-1">
             <Button variant={periodo === 'semana' ? 'secondary' : 'ghost'} size="sm" onClick={() => setPeriodo('semana')}>

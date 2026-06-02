@@ -19,6 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/select';
+import { Loader2 } from 'lucide-react';
+
+interface MedicoOption {
+  id: string;
+  nombre: string;
+}
 
 interface NuevoTurnoModalProps {
   open: boolean;
@@ -39,34 +45,69 @@ interface NuevoTurnoModalProps {
 export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: propPacienteId, pacienteName }: NuevoTurnoModalProps) {
   const [paciente, setPaciente] = useState(pacienteName || '');
   const [tipo, setTipo] = useState('Consulta');
-  const [medico, setMedico] = useState('Dr. García');
+  const [medicoId, setMedicoId] = useState('');
+  const [medicoNombre, setMedicoNombre] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
   const [hora, setHora] = useState('09:00');
   const [loading, setLoading] = useState(false);
+  const [medicos, setMedicos] = useState<MedicoOption[]>([]);
+  const [loadingMedicos, setLoadingMedicos] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Cargar médicos desde la API
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setLoadingMedicos(true);
+    fetch('/api/medicos')
+      .then((r) => r.json())
+      .then((json) => {
+        if (cancelled) return;
+        const lista: MedicoOption[] = json.data || [];
+        setMedicos(lista);
+        if (lista.length > 0) {
+          setMedicoId(lista[0].id);
+          setMedicoNombre(lista[0].nombre);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setMedicos([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingMedicos(false);
+      });
+    return () => { cancelled = true; };
+  }, [open]);
 
   // Sincronizar pacienteName si cambia externamente
   useEffect(() => {
     if (pacienteName) setPaciente(pacienteName);
   }, [pacienteName]);
 
+  // Resetear formulario al cerrar
   useEffect(() => {
-    return () => {
+    if (!open) {
+      setLoading(false);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, []);
+    }
+  }, [open]);
+
+  const handleMedicoChange = (value: string) => {
+    setMedicoId(value);
+    const found = medicos.find((m) => m.id === value);
+    setMedicoNombre(found?.nombre || value);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simular creación
     timeoutRef.current = setTimeout(() => {
       onSubmit({
         pacienteId: propPacienteId,
         paciente,
         tipo,
-        medicoId: '',
-        medico,
+        medicoId,
+        medico: medicoNombre,
         hora,
         fecha,
       });
@@ -127,15 +168,29 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
 
             <div className="space-y-2">
               <Label>Médico</Label>
-              <Select value={medico} onValueChange={setMedico}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Dr. García">Dr. García</SelectItem>
-                  <SelectItem value="Dra. López">Dra. López</SelectItem>
-                </SelectContent>
-              </Select>
+              {loadingMedicos ? (
+                <div className="flex h-10 w-full items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Cargando médicos...
+                </div>
+              ) : medicos.length === 0 ? (
+                <div className="flex h-10 w-full items-center rounded-md border border-dashed border-destructive/50 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                  No hay médicos registrados
+                </div>
+              ) : (
+                <Select value={medicoId} onValueChange={handleMedicoChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {medicos.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
 
@@ -166,7 +221,7 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading || !paciente.trim()}>
+            <Button type="submit" disabled={loading || !paciente.trim() || loadingMedicos || medicos.length === 0}>
               {loading ? 'Creando...' : 'Crear Turno'}
             </Button>
           </DialogFooter>
