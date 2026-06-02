@@ -34,6 +34,14 @@ ENV NODE_ENV=production
 
 RUN corepack enable && corepack prepare pnpm@latest --activate && pnpm build
 
+# Crear tarball con symlinks resueltos para los paquetes que necesita server.js
+# El standalone output de Next.js 14.2+ con pnpm solo tiene symlinks a la store.
+# Docker COPY preserva symlinks rotos. tar --dereference los convierte en archivos reales.
+RUN tar -chf /app/dashboard/node_modules/next.tar \
+    -C /app/dashboard/node_modules \
+    --dereference \
+    next react react-dom scheduler js-tokens loose-envify
+
 # ─── Stage 3: Runner (producción) ────────────────────────────────────────────
 FROM node:22-alpine AS runner
 WORKDIR /app
@@ -55,8 +63,10 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
 
 # ⚠️ Next.js 14.2.21+ con pnpm NO incluye 'next' en el standalone node_modules.
-# Lo copiamos explícitamente desde el builder (Docker COPY resuelve symlinks de pnpm).
-COPY --from=builder --chown=nextjs:nodejs /app/dashboard/node_modules/next ./node_modules/next
+# Docker COPY preserva symlinks. En pnpm, node_modules/next es symlink a .pnpm/next@.../node_modules/next
+# que NO existe en el runner. Usamos tar --dereference para copiar los archivos reales.
+COPY --from=builder /app/dashboard/node_modules/next.tar /tmp/
+RUN tar -xf /tmp/next.tar -C ./node_modules && rm /tmp/next.tar
 
 # Copiar static assets (junto a server.js, no bajo dashboard/)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./.next/static
