@@ -54,6 +54,10 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copiar standalone output de Next.js
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
 
+# Las dependencias de pnpm en standalone son symlinks a .pnpm/ que se rompen
+# al copiarlas. Las reinstalamos con npm (sin symlinks) para producción.
+RUN rm -rf node_modules && npm install --omit=dev --no-audit --no-fund
+
 # Copiar static assets (deben ir junto a server.js bajo dashboard/)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./dashboard/.next/static
 
