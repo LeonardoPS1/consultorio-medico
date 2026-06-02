@@ -1,0 +1,55 @@
+# =============================================================================
+# docker-compose.prod.yml — Consultorio Médico (producción / Dokploy)
+#
+# Uso en Dokploy: Crear aplicación tipo "Docker Compose" apuntando a
+# este archivo. Las variables de entorno se configuran desde el UI de Dokploy.
+#
+# Redes externas:
+#   dokploy-network                     → Tráfico de Traefik al dashboard
+#   aicore-n8nrunnerpostgresollama-a715gi → Acceso a PostgreSQL, n8n y Ollama
+# =============================================================================
+
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      # DB directo a PostgreSQL (sin PgBouncer — no existe en prod)
+      - DATABASE_URL=${DATABASE_URL}
+      # Secrets — vienen de Dokploy env vars
+      - AUTH_SECRET=${AUTH_SECRET}
+      - AUTH_URL=${AUTH_URL:-https://med.aicorebots.com}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://med.aicorebots.com}
+      # Twilio
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_WHATSAPP_NUMBER=${TWILIO_WHATSAPP_NUMBER}
+      - TWILIO_DOCTOR_NUMBER=${TWILIO_DOCTOR_NUMBER}
+      # IA Local — service names resueltos por Docker DNS en backend network
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=mistral
+      # n8n
+      - N8N_BASE_URL=http://n8n:5678
+      - N8N_HOST=${N8N_HOST:-n8n.aicorebots.com}
+      - N8N_API_KEY=${N8N_API_KEY}
+      - N8N_WEBHOOK_INBOUND_URL=http://n8n:5678/webhook/consultorio-inbound
+      # MercadoPago
+      - MERCADOPAGO_ACCESS_TOKEN=${MERCADOPAGO_ACCESS_TOKEN}
+      - NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY=${NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY}
+      - MERCADOPAGO_WEBHOOK_SECRET=${MERCADOPAGO_WEBHOOK_SECRET}
+      # Web Push / VAPID
+      - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - VAPID_CONTACT_EMAIL=${VAPID_CONTACT_EMAIL:-mailto:notificaciones@aicoremed.com}
+    networks:
+      - dokploy-network
+      - aicore-n8nrunnerpostgresollama-a715gi
+
+networks:
+  dokploy-network:
+    external: true
+  aicore-n8nrunnerpostgresollama-a715gi:
+    external: true
