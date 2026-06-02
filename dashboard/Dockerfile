@@ -54,16 +54,15 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copiar standalone output de Next.js (plano: server.js, .next, node_modules en raíz)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
 
+# ⚠️ Next.js 14.2.21+ con pnpm NO incluye 'next' en el standalone node_modules.
+# Lo copiamos explícitamente desde el builder (Docker COPY resuelve symlinks de pnpm).
+COPY --from=builder --chown=nextjs:nodejs /app/dashboard/node_modules/next ./node_modules/next
+
 # Copiar static assets (junto a server.js, no bajo dashboard/)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./.next/static
 
 # Copiar assets públicos (en raíz, no bajo dashboard/)
-COPY --from=builder --chown=nextjs:nodejs /app/dashboard/public ./public
-
-# El standalone output de Next.js ya incluye node_modules con las dependencias
-# necesarias para producción (incluyendo 'next' que server.js necesita).
-# No hacemos npm install porque el package.json del standalone no lista
-# 'next' como dependencia explícita (Next.js lo maneja internamente).
+COPY --from=builder --chown=nodejs:nodejs /app/dashboard/public ./public
 
 # Crear directorio para cache de Next.js con permisos correctos
 RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
