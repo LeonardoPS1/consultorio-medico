@@ -17,7 +17,6 @@ export interface PlanInfo {
   nombre: string;
   precioUSD: number;
   precioCLP: number;
-  precioARS: number;
   descripcion: string;
   popular: boolean;
   features: string[];
@@ -29,7 +28,6 @@ export interface PlanInfo {
 // ============================================================
 
 export const USD_TO_CLP = 950;
-export const USD_TO_ARS = 1100;
 
 // ============================================================
 // Planes
@@ -41,7 +39,6 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     nombre: 'Free',
     precioUSD: 0,
     precioCLP: 0,
-    precioARS: 0,
     descripcion: 'Para probar la plataforma',
     popular: false,
     features: [
@@ -57,7 +54,6 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     nombre: 'Starter',
     precioUSD: 49,
     precioCLP: 49 * USD_TO_CLP,
-    precioARS: 49 * USD_TO_ARS,
     descripcion: 'Para consultorios individuales',
     popular: false,
     features: [
@@ -82,7 +78,6 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     nombre: 'Profesional',
     precioUSD: 99,
     precioCLP: 99 * USD_TO_CLP,
-    precioARS: 99 * USD_TO_ARS,
     descripcion: 'Para consultorios en crecimiento',
     popular: true,
     features: [
@@ -104,7 +99,6 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     nombre: 'Premium',
     precioUSD: 199,
     precioCLP: 199 * USD_TO_CLP,
-    precioARS: 199 * USD_TO_ARS,
     descripcion: 'Para clinicas y centros medicos',
     popular: false,
     features: [
@@ -126,7 +120,6 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     nombre: 'Enterprise',
     precioUSD: 499,
     precioCLP: 499 * USD_TO_CLP,
-    precioARS: 499 * USD_TO_ARS,
     descripcion: 'Para grandes centros y redes medicas',
     popular: false,
     features: [

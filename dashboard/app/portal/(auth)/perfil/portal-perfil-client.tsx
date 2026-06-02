@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { User, Mail, Phone, Shield, Save, MapPin, Heart } from 'lucide-react';
+import { ISAPRES_CHILENAS } from '@/lib/isapres';
 
 interface Region {
   id: string;
@@ -29,6 +30,7 @@ interface PacienteData {
   rut?: string;
   obraSocial?: string;
   sistemaSalud?: string;
+  isapreNombre?: string;
   regionId?: string;
   comunaId?: string;
   region?: string;
@@ -52,6 +54,7 @@ const SISTEMAS_SALUD = [
 export default function PortalPerfilClient({ paciente }: Props) {
   const [email, setEmail] = useState(paciente.email || '');
   const [sistemaSalud, setSistemaSalud] = useState(paciente.sistemaSalud || '');
+  const [isapreNombre, setIsapreNombre] = useState(paciente.isapreNombre || '');
   const [regionId, setRegionId] = useState(paciente.regionId || '');
   const [comunaId, setComunaId] = useState(paciente.comunaId || '');
   const [consentimientoWhatsapp, setConsentimientoWhatsapp] = useState(
@@ -103,6 +106,7 @@ export default function PortalPerfilClient({ paciente }: Props) {
         body: JSON.stringify({
           email,
           sistemaSalud: sistemaSalud || undefined,
+          isapreNombre: sistemaSalud === 'isapre' ? isapreNombre || undefined : undefined,
           regionId: regionId || undefined,
           comunaId: comunaId || undefined,
           consentimientoWhatsapp,
@@ -223,7 +227,7 @@ export default function PortalPerfilClient({ paciente }: Props) {
             </label>
             <select
               value={sistemaSalud}
-              onChange={(e) => setSistemaSalud(e.target.value)}
+              onChange={(e) => { setSistemaSalud(e.target.value); setIsapreNombre('') }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
             >
               {SISTEMAS_SALUD.map(s => (
@@ -231,6 +235,24 @@ export default function PortalPerfilClient({ paciente }: Props) {
               ))}
             </select>
           </div>
+
+          {sistemaSalud === 'isapre' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Isapre
+              </label>
+              <select
+                value={isapreNombre}
+                onChange={(e) => setIsapreNombre(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
+              >
+                <option value="">Selecciona una Isapre...</option>
+                {ISAPRES_CHILENAS.map(i => (
+                  <option key={i.value} value={i.value}>{i.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Región */}
           <div>

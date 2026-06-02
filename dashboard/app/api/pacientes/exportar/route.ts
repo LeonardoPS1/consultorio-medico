@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     // PDF - HTML imprimible
     const nombreOrg =
       process.env.ORGANIZATION_NAME || 'Consultorio Médico';
-    const fechaActual = new Date().toLocaleDateString('es-AR', {
+    const fechaActual = new Date().toLocaleDateString('es-CL', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',

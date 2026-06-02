@@ -54,8 +54,8 @@ export function RequireFeature({ feature, children, redirectTo }: Props) {
             </div>
             <h2 className="text-lg font-semibold">Funcionalidad no disponible</h2>
             <p className="text-sm text-muted-foreground">
-              Esta sección requiere un plan superior al que tenés actualmente.
-              Actualizá tu plan para acceder a esta funcionalidad.
+              Esta sección requiere un plan superior al que tienes actualmente.
+              Actualiza tu plan para acceder a esta funcionalidad.
             </p>
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => router.push('/dashboard')}>

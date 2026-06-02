@@ -56,7 +56,7 @@ export async function generateQRCodeBase64(secret: string, email: string): Promi
 }
 
 /**
- * Genera códigos de respaldo (para cuando no tenés el celular)
+ * Genera códigos de respaldo (para cuando no tienes el teléfono)
  */
 export function generateBackupCodes(count: number = 8): string[] {
   const codes: string[] = [];

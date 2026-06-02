@@ -26,7 +26,7 @@ interface Props {
 
 function formatDate(date: string): string {
   if (!date) return '—';
-  return new Date(date).toLocaleDateString('es-AR', {
+  return new Date(date).toLocaleDateString('es-CL', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -100,7 +100,7 @@ export default function PortalRecetasClient({ recetas }: Props) {
       ) : (
         <div className="text-center py-12 text-gray-400">
           <FileText className="h-12 w-12 mx-auto mb-3" />
-          <p>No tenés recetas registradas</p>
+          <p>No tienes recetas registradas</p>
         </div>
       )}
     </div>

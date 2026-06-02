@@ -79,7 +79,7 @@ export default function PortalHistorialClient({ historial }: Props) {
       ) : (
         <div className="text-center py-12 text-gray-400">
           <ClipboardList className="h-12 w-12 mx-auto mb-3" />
-          <p>No tenés historial médico registrado</p>
+          <p>No tienes historial médico registrado</p>
         </div>
       )}
     </div>

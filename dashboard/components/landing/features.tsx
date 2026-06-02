@@ -44,7 +44,7 @@ const features = [
   {
     icon: Smartphone,
     title: 'App Instalable (PWA)',
-    desc: 'Instalá AiCoreMed como app en tu celular o escritorio. Notificaciones push, funcionamiento offline parcial y acceso rápido desde cualquier lugar.',
+    desc: 'Instala AiCoreMed como app en tu teléfono o escritorio. Notificaciones push, funcionamiento offline parcial y acceso rápido desde cualquier lugar.',
   },
 ];
 
@@ -78,7 +78,7 @@ export function Features() {
           className="text-center mb-14"
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Todo lo que necesitás en un solo lugar
+            Todo lo que necesitas en un solo lugar
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-base">
             Desde la gestión de turnos hasta reportes avanzados, pasando por WhatsApp con IA

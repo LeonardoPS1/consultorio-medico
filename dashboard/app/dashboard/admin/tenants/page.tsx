@@ -130,7 +130,7 @@ export default function AdminTenantsPage() {
             </CardHeader>
             <CardContent>
               <p className="text-xs text-muted-foreground">
-                ID: {t.id} · Creado: {new Date(t.created_at).toLocaleDateString('es-AR')}
+                ID: {t.id} · Creado: {new Date(t.created_at).toLocaleDateString('es-CL')}
               </p>
             </CardContent>
           </Card>

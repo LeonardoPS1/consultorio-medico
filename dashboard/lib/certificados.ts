@@ -84,7 +84,7 @@ export function generarHTMLCertificado(
     indicaciones: data.indicaciones ? escapeHtml(data.indicaciones) : null,
   };
 
-  const fechaActual = new Date().toLocaleDateString('es-AR', {
+  const fechaActual = new Date().toLocaleDateString('es-CL', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

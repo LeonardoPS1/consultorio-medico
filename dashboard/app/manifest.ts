@@ -16,7 +16,7 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: themeColor,
     orientation: 'any',
     categories: ['medical', 'health', 'business'],
-    lang: 'es-AR',
+    lang: 'es-CL',
     prefer_related_applications: false,
     icons: [
       { src: '/icons/icon-48x48.png', sizes: '48x48', type: 'image/png' },

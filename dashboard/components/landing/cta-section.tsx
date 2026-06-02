@@ -56,7 +56,7 @@ export function CTASection() {
             ¿Listo para transformar tu consultorio?
           </h2>
           <p className="text-muted-foreground text-base mb-8">
-            Empezá hoy. En 5 minutos tenés todo configurado. Sin compromisos, sin tarjeta.
+            Empieza hoy. En 5 minutos tienes todo configurado. Sin compromisos, sin tarjeta.
             <br />
             <span className="font-medium text-foreground">14 días de prueba gratis.</span>
           </p>

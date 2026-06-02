@@ -41,13 +41,13 @@ export function RegistroExpressModal({ open, onOpenChange, planId }: RegistroMod
       errors.nombre = 'El nombre debe tener al menos 2 caracteres';
     }
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      errors.email = 'Ingresá un email válido';
+      errors.email = 'Ingresa un email válido';
     }
     if (!form.password || form.password.length < 6) {
       errors.password = 'La contraseña debe tener al menos 6 caracteres';
     }
     if (!consentAccepted) {
-      errors.consent = 'Debés aceptar la política de privacidad para continuar';
+      errors.consent = 'Debes aceptar la política de privacidad para continuar';
     }
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -280,7 +280,7 @@ export function RegistroExpressModal({ open, onOpenChange, planId }: RegistroMod
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
-                  ¿Ya tenés cuenta?{' '}
+                  ¿Ya tienes cuenta?{' '}
                   <button
                     type="button"
                     onClick={() => {

@@ -32,17 +32,17 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     icono: 'Rocket',
     pasos: [
       {
-        titulo: '1. Conectá WhatsApp',
+        titulo: '1. Conecta WhatsApp',
         descripcion: 'Vinculá tu número de WhatsApp empresarial para que los pacientes puedan comunicarse con el consultorio.',
         tips: [
-          'Necesitás una cuenta de Twilio con WhatsApp habilitado',
+          'Necesitas una cuenta de Twilio con WhatsApp habilitado',
           'Ingresá las credenciales en Sistema → Credenciales → Twilio',
-          'Verificá que el webhook esté apuntando a med.aicorebots.com/api/webhook/twilio',
+          'Verifica que el webhook esté apuntando a med.aicorebots.com/api/webhook/twilio',
         ],
         enlace: { href: '/dashboard/admin/sistema', label: 'Ir a Sistema → Credenciales' },
       },
       {
-        titulo: '2. Agregá un médico',
+        titulo: '2. Agrega un médico',
         descripcion: 'Registrá al menos un profesional para poder asignar turnos y atención.',
         tips: [
           'Completá nombre, especialidad y datos de contacto',
@@ -52,27 +52,27 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         enlace: { href: '/dashboard/configuracion?tab=equipo', label: 'Ir a Ajustes → Equipo' },
       },
       {
-        titulo: '3. Configurá horarios',
+        titulo: '3. Configura horarios',
         descripcion: 'Definí los días y horarios de atención del consultorio.',
         tips: [
-          'Podés configurar horarios diferentes por día de la semana',
+          'Puedes configurar horarios diferentes por día de la semana',
           'Los turnos se asignan automáticamente dentro de estos horarios',
-          'Si tenés varios médicos, cada uno puede tener sus propios horarios',
+          'Si tienes varios médicos, cada uno puede tener sus propios horarios',
         ],
         enlace: { href: '/dashboard/configuracion?tab=horarios', label: 'Ir a Ajustes → Horarios' },
       },
       {
-        titulo: '4. Agregá pacientes',
+        titulo: '4. Agrega pacientes',
         descripcion: 'Cargá pacientes manualmente o esperá a que soliciten turno por WhatsApp.',
         tips: [
           'Los pacientes chilenos requieren RUT y sistema de salud',
           'El teléfono debe tener formato chileno (+569XXXXXXXX)',
-          'Podés cargar región y comuna para datos demográficos',
+          'Puedes cargar región y comuna para datos demográficos',
         ],
         enlace: { href: '/dashboard/pacientes', label: 'Ir a Pacientes' },
       },
       {
-        titulo: '5. Activá notificaciones',
+        titulo: '5. Activa notificaciones',
         descripcion: 'Configurá alertas automáticas para no perderte ningún evento importante.',
         tips: [
           'Activá urgencias por WhatsApp para atención inmediata',
@@ -85,7 +85,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Cuánto tiempo toma la configuración inicial?',
-        respuesta: 'Aproximadamente 15-20 minutos si ya tenés las credenciales de Twilio. El asistente IA te guía paso a paso con sugerencias personalizadas.',
+        respuesta: 'Aproximadamente 15-20 minutos si ya tienes las credenciales de Twilio. El asistente IA te guía paso a paso con sugerencias personalizadas.',
       },
       {
         pregunta: '¿Puedo cambiar la configuración después?',
@@ -113,7 +113,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         titulo: 'Gestionar estados',
         descripcion: 'Los turnos pasan por varios estados: pendiente → en_curso → atendido / cancelado.',
         tips: [
-          'Usá la vista Kanban (Atención) para arrastrar turnos entre estados',
+          'Usa la vista Kanban (Atención) para arrastrar turnos entre estados',
           'Los estados se actualizan automáticamente desde WhatsApp',
           'Un turno cancelado libera el horario para otro paciente',
         ],
@@ -131,7 +131,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Cómo cancelo un turno?',
-        respuesta: 'Desde la lista de turnos, hacé clic en el turno y seleccioná "Cancelar". También podés cancelar desde el Kanban de Atención arrastrando a la columna "Cancelados".',
+        respuesta: 'Desde la lista de turnos, haz clic en el turno y selecciona "Cancelar". También podés cancelar desde el Kanban de Atención arrastrando a la columna "Cancelados".',
       },
       {
         pregunta: '¿Los pacientes pueden pedir turno por WhatsApp?',
@@ -217,7 +217,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Qué pasa si un paciente no asiste?',
-        respuesta: 'Podés marcar el turno como "Cancelado" con motivo "ausente". El sistema enviará una notificación para reagendar.',
+        respuesta: 'Puedes marcar el turno como "Cancelado" con motivo "ausente". El sistema enviará una notificación para reagendar.',
       },
     ],
   },
@@ -233,7 +233,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         tips: [
           'Seleccioná paciente y médico prescriptor',
           'Agregá medicamentos con dosis, frecuencia y duración',
-          'Podés incluir indicaciones adicionales',
+          'Puedes incluir indicaciones adicionales',
           'La receta queda registrada en el historial médico del paciente',
         ],
         enlace: { href: '/dashboard/recetas', label: 'Ir a Recetas' },
@@ -266,7 +266,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         descripcion: 'Todos los mensajes de WhatsApp llegan a esta bandeja.',
         tips: [
           'Los mensajes no leídos aparecen destacados',
-          'Podés responder directamente desde el panel',
+          'Puedes responder directamente desde el panel',
           'La IA clasifica automáticamente la intención del mensaje',
           'Las urgencias se marcan y notifican automáticamente',
         ],
@@ -277,7 +277,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         descripcion: 'El asistente IA puede responder mensajes comunes automáticamente.',
         tips: [
           'Activá respuestas automáticas desde Sistema → Asistente IA',
-          'Podés personalizar el prompt del sistema',
+          'Puedes personalizar el prompt del sistema',
           'La IA detecta urgencias y las deriva al médico',
         ],
       },
@@ -297,7 +297,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     pasos: [
       {
         titulo: 'Panel de reportes',
-        descripcion: 'Accedé a estadísticas generales del consultorio.',
+        descripcion: 'Accede a estadísticas generales del consultorio.',
         tips: [
           'La pestaña General muestra KPIs principales',
           'Turnos: distribución por estado y evolución temporal',
@@ -310,8 +310,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         titulo: 'Exportar reportes',
         descripcion: 'Descargá reportes en Excel o PDF (plan Professional+).',
         tips: [
-          'Usá Exportar Excel para análisis detallado',
-          'Usá Exportar PDF para compartir con el equipo',
+          'Usa Exportar Excel para análisis detallado',
+          'Usa Exportar PDF para compartir con el equipo',
           'Los datos incluyen el período seleccionado',
         ],
       },
@@ -320,7 +320,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
   {
     id: 'encuestas',
     titulo: 'Encuestas Post-Consulta',
-    descripcion: 'Recibí feedback automático de pacientes después de cada atención',
+    descripcion: 'Recibe feedback automático de pacientes después de cada atención',
     icono: 'Star',
     pasos: [
       {
@@ -371,7 +371,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         titulo: 'Credenciales',
         descripcion: 'Gestioná las credenciales de servicios externos.',
         tips: [
-          'Usá el botón "Probar conexión" para verificar cada servicio',
+          'Usa el botón "Probar conexión" para verificar cada servicio',
           'Las credenciales se almacenan encriptadas (AES-256)',
           'La sincronización con n8n se hace automáticamente',
         ],
@@ -381,8 +381,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         descripcion: 'Creá API keys para integraciones externas.',
         tips: [
           'Cada key tiene scopes específicos (lectura/escritura)',
-          'Podés revocar keys en cualquier momento',
-          'Usá la API para conectar sistemas externos',
+          'Puedes revocar keys en cualquier momento',
+          'Usa la API para conectar sistemas externos',
         ],
       },
     ],
@@ -415,10 +415,10 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Cambiar de plan',
-        descripcion: 'Actualizá o cancelá tu suscripción.',
+        descripcion: 'Actualiza o cancela tu suscripción.',
         tips: [
           'Los pagos se procesan via MercadoPago',
-          'Podés pagar con tarjeta de crédito o débito',
+          'Puedes pagar con tarjeta de crédito o débito',
           'El cambio es inmediato al confirmar el pago',
         ],
       },
@@ -441,7 +441,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         descripcion: 'Los pacientes ingresan con su número de teléfono.',
         tips: [
           'Ingresá a consultorio.aicorebots.com/portal',
-          'Escribí tu número con +569 (ej: +56912345678)',
+          'Escribe tu número con +569 (ej: +56912345678)',
           'Te llega un magic link por WhatsApp',
           'Hacé clic en el enlace para entrar al portal',
         ],
@@ -461,7 +461,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Qué hago si no me llega el magic link?',
-        respuesta: 'Verificá que el número esté escrito correctamente con +569. Si sigue sin llegar, contactá al consultorio para verificar tus datos.',
+        respuesta: 'Verifica que el número esté escrito correctamente con +569. Si sigue sin llegar, contacta al consultorio para verificar tus datos.',
       },
     ],
   },

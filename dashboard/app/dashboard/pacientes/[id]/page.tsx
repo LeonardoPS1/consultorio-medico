@@ -26,6 +26,8 @@ interface PacienteDetalle {
     fechaNacimiento: string | null;
     direccion: string | null;
     obraSocial: string | null;
+    sistemaSalud: string | null;
+    isapreNombre: string | null;
     numeroAfiliado: string | null;
     alergias: string | null;
     medicacionCronica: string | null;
@@ -89,7 +91,30 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
 
     // ─── Datos del paciente ──────────────────────────
     const [paciente] = await db
-      .select()
+      .select({
+        id: pacientes.id,
+        nombre: pacientes.nombre,
+        apellido: pacientes.apellido,
+        telefono: pacientes.telefono,
+        email: pacientes.email,
+        dni: pacientes.dni,
+        fechaNacimiento: pacientes.fechaNacimiento,
+        direccion: pacientes.direccion,
+        obraSocial: pacientes.obraSocial,
+        sistemaSalud: pacientes.sistemaSalud,
+        isapreNombre: pacientes.isapreNombre,
+        numeroAfiliado: pacientes.numeroAfiliado,
+        alergias: pacientes.alergias,
+        medicacionCronica: pacientes.medicacionCronica,
+        notasMedicas: pacientes.notasMedicas,
+        tags: pacientes.tags,
+        consentimientoWhatsapp: pacientes.consentimientoWhatsapp,
+        consentimientoEmail: pacientes.consentimientoEmail,
+        bajaSolicitadaAt: pacientes.bajaSolicitadaAt,
+        createdAt: pacientes.createdAt,
+        updatedAt: pacientes.updatedAt,
+        deletedAt: pacientes.deletedAt,
+      })
       .from(pacientes)
       .where(and(eq(pacientes.id, id), sql`${pacientes.deletedAt} IS NULL`));
 
@@ -204,6 +229,8 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
       consentimientoEmail: paciente.consentimientoEmail ?? false,
       createdAt: paciente.createdAt?.toISOString() ?? '',
       fechaNacimiento: paciente.fechaNacimiento ?? null,
+      sistemaSalud: paciente.sistemaSalud ?? null,
+      isapreNombre: paciente.isapreNombre ?? null,
     };
     const turnosData = turnosList.map((t) => ({
       ...t,

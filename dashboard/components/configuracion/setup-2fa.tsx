@@ -52,7 +52,7 @@ export default function Setup2FA() {
 
       if (!res.ok) {
         const data = await res.json();
-        toast({ title: 'Código inválido', description: data.error || 'Verificá la hora de tu celular', variant: 'destructive' });
+        toast({ title: 'Código inválido', description: data.error || 'Verifica la hora de tu teléfono', variant: 'destructive' });
         return;
       }
 

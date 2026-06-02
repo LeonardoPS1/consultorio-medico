@@ -7,7 +7,7 @@ import { ChevronDown } from 'lucide-react';
 const FAQS = [
   {
     q: '¿Cómo se integra AiCoreMed con mi agenda actual?',
-    a: 'AiCoreMed es un sistema completo que incluye su propia gestión de turnos, pacientes y agenda. No requiere integración con sistemas externos. Si ya usás otro software, podemos migrar tus datos existentes o conectar via API con sistemas como Dentalink, Medilink o Doctoralia mediante nuestros workflows de n8n.',
+    a: 'AiCoreMed es un sistema completo que incluye su propia gestión de turnos, pacientes y agenda. No requiere integración con sistemas externos. Si ya usas otro software, podemos migrar tus datos existentes o conectar via API con sistemas como Dentalink, Medilink o Doctoralia mediante nuestros workflows de n8n.',
   },
   {
     q: '¿La IA realmente entiende el contexto de mis pacientes?',
@@ -27,7 +27,7 @@ const FAQS = [
   },
   {
     q: '¿Puedo probarlo antes de pagar?',
-    a: 'Sí. Todos los planes incluyen 14 días de prueba gratis sin tarjeta de crédito. Configurás tu consultorio en minutos y empezá a probar todas las funcionalidades. Si no te convence, cancelás sin compromiso.',
+    a: 'Sí. Todos los planes incluyen 14 días de prueba gratis sin tarjeta de crédito. Configuras tu consultorio en minutos y empieza a probar todas las funcionalidades. Si no te convence, cancelas sin compromiso.',
   },
 ];
 
@@ -50,7 +50,7 @@ export function FAQ() {
             Preguntas Frecuentes
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-base">
-            Todo lo que necesitás saber antes de empezar. Si tenés otra consulta,
+            Todo lo que necesitas saber antes de empezar. Si tienes otra consulta,
             escribinos por WhatsApp.
           </p>
         </motion.div>

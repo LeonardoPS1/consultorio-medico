@@ -140,7 +140,7 @@ export default function SuscripcionTab() {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">Próximo vencimiento:</span>
                   <span className="text-sm text-muted-foreground">
-                    {new Date(data.periodEnd).toLocaleDateString('es-AR')}
+                    {new Date(data.periodEnd).toLocaleDateString('es-CL')}
                   </span>
                 </div>
               )}

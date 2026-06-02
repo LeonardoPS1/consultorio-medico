@@ -153,12 +153,12 @@ async function getTenantContext(): Promise<TenantContext> {
  * Son funcionales y prácticos para que el onboarding siempre sea útil.
  */
 const FALLBACK_TIPS: Record<string, string> = {
-  plan: 'Elegí un plan que se ajuste al volumen de pacientes que atendes. Si estás empezando, el plan Starter es suficiente y después podés escalar sin perder datos. En la sección de suscripción vas a ver las diferencias entre cada plan.',
-  whatsapp: 'Conectando WhatsApp tus pacientes van a poder pedir turnos y hacer consultas desde su celular. Necesitás las credenciales de Twilio (Account SID y Auth Token) que encontrás en la consola de Twilio. Una vez conectado, el asistente IA responde automáticamente las 24 horas.',
-  medico: 'Registrá al menos un médico para poder asignarle turnos y recetas. Cada profesional tiene su propio perfil con especialidad, horarios y color en el calendario. Si ya tenés un médico registrado, verifica que los datos estén completos.',
-  horarios: 'Los horarios definen cuándo se pueden agendar turnos automáticamente. Te recomiendo arrancar con lunes a viernes de 9 a 18 y sábados de 9 a 13. Si tenés varios médicos, cada uno puede tener horarios diferentes.',
-  paciente: 'Cargá un paciente de prueba para ver el sistema en funcionamiento. Los datos clave son nombre, teléfono con código de país y obra social si aplica. Después de cargarlo ya le podés asignar un turno y va a recibir recordatorios automáticos.',
-  notificaciones: 'Las notificaciones te avisan sobre urgencias, recordatorios de turnos y alertas del sistema. Te recomiendo activar las notificaciones push en el navegador y los recordatorios automáticos para pacientes. Este es el último paso, ya casi tenés todo listo.',
+  plan: 'Elige un plan que se ajuste al volumen de pacientes que atiendes. Si estás empezando, el plan Starter es suficiente y después puedes escalar sin perder datos. En la sección de suscripción vas a ver las diferencias entre cada plan.',
+  whatsapp: 'Conectando WhatsApp tus pacientes van a poder pedir turnos y hacer consultas desde su teléfono. Necesitas las credenciales de Twilio (Account SID y Auth Token) que encuentras en la consola de Twilio. Una vez conectado, el asistente IA responde automáticamente las 24 horas.',
+  medico: 'Registra al menos un médico para poder asignarle turnos y recetas. Cada profesional tiene su propio perfil con especialidad, horarios y color en el calendario. Si ya tienes un médico registrado, verifica que los datos estén completos.',
+  horarios: 'Los horarios definen cuándo se pueden agendar turnos automáticamente. Te recomiendo empezar con lunes a viernes de 9 a 18 y sábados de 9 a 13. Si tienes varios médicos, cada uno puede tener horarios diferentes.',
+  paciente: 'Carga un paciente de prueba para ver el sistema en funcionamiento. Los datos clave son nombre, teléfono con código de país y obra social si aplica. Después de cargarlo ya le puedes asignar un turno y va a recibir recordatorios automáticos.',
+  notificaciones: 'Las notificaciones te avisan sobre urgencias, recordatorios de turnos y alertas del sistema. Te recomiendo activar las notificaciones push en el navegador y los recordatorios automáticos para pacientes. Este es el último paso, ya casi tienes todo listo.',
 };
 
 // ─── Llamar a Ollama para guías ────────────────────────────
@@ -171,7 +171,7 @@ const FALLBACK_TIPS: Record<string, string> = {
  * Así el onboarding siempre es útil aunque Ollama no esté corriendo.
  */
 export async function getAiOnboardingTip(stepId: string): Promise<AiTipResult> {
-  const fallbackTip = FALLBACK_TIPS[stepId] || 'Completá este paso siguiendo las instrucciones en pantalla.';
+  const fallbackTip = FALLBACK_TIPS[stepId] || 'Completa este paso siguiendo las instrucciones en pantalla.';
 
   try {
     const [state, ctx] = await Promise.all([
@@ -192,10 +192,10 @@ export async function getAiOnboardingTip(stepId: string): Promise<AiTipResult> {
         messages: [
           {
             role: 'system',
-            content: `Sos "Asistente IA", el guía de configuración de AiCoreMed, un sistema de gestión para consultorios médicos.
+            content: `Eres "Asistente IA", el guía de configuración de AiCoreMed, un sistema de gestión para consultorios médicos.
 
 REGLAS:
-- Respondé SIEMPRE en español argentino, con tono cálido y profesional.
+- Responde SIEMPRE en español neutro, con tono cálido y profesional.
 - Usá el nombre del consultorio cuando lo conozcas.
 - Sé práctico y directo: decí QUÉ hacer y POR QUÉ es importante.
 - No uses emojis, markdown, ni formato especial.
@@ -241,7 +241,7 @@ function buildOnboardingPrompt(stepId: string, state: OnboardingState, ctx: Tena
   const completedCount = state.completedSteps.length;
 
   const prompts: Record<string, string> = {
-    plan: `Sos el asistente de configuración de "${consultorio}". El usuario está eligiendo su plan (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
+    plan: `Eres el asistente de configuración de "${consultorio}". El usuario está eligiendo su plan (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
 
 CONTEXTO REAL DEL CONSULTORIO:
 - Nombre: ${consultorio}
@@ -253,14 +253,14 @@ CONTEXTO REAL DEL CONSULTORIO:
 - Siguiente paso después de este: ${state.nextStep?.title || 'ninguno'}
 
 INDICACIONES PARA TU RESPUESTA:
-1. Saludá al usuario por el nombre del consultorio.
-2. Explicá BREVEMENTE las diferencias entre los planes (Free, Starter, Professional).
-3. Recomendá cuál plan es mejor para su volumen actual (si tiene 0 pacientes, Free/Starter es suficiente).
-4. Mencioná que pueden escalar cuando lo necesiten sin perder datos.
+1. Saluda al usuario por el nombre del consultorio.
+2. Explica BREVEMENTE las diferencias entre los planes (Free, Starter, Professional).
+3. Recomienda cuál plan es mejor para su volumen actual (si tiene 0 pacientes, Free/Starter es suficiente).
+4. Menciona que pueden escalar cuando lo necesiten sin perder datos.
 
-FORMATO: Respondé en español argentino, cálido, profesional. Máximo 4 oraciones. No uses markdown ni emojis.`,
+FORMATO: Responde en español neutro, cálido, profesional. Máximo 4 oraciones. No uses markdown ni emojis.`,
 
-    whatsapp: `Sos el asistente de configuración de "${consultorio}". El usuario está conectando WhatsApp (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
+    whatsapp: `Eres el asistente de configuración de "${consultorio}". El usuario está conectando WhatsApp (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
 
 CONTEXTO REAL DEL CONSULTORIO:
 - Nombre: ${consultorio}
@@ -271,14 +271,14 @@ CONTEXTO REAL DEL CONSULTORIO:
 - Pasos completados: ${completedCount} de ${ONBOARDING_STEPS.length}
 
 INDICACIONES PARA TU RESPUESTA:
-1. Explicá que con WhatsApp los pacientes pueden pedir turnos, cancelar y hacer consultas desde su celular.
-2. Indicá que necesitan el TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN (los encuentran en la consola de Twilio).
-3. Mencioná que una vez conectado, el asistente IA de WhatsApp responde automáticamente las 24hs.
-4. Si ya hay pacientes (${pacientesCount}), destacá que se van a poder comunicar por este medio.
+1. Explica que con WhatsApp los pacientes pueden pedir turnos, cancelar y hacer consultas desde su teléfono.
+2. Indica que necesitan el TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN (los encuentran en la consola de Twilio).
+3. Menciona que una vez conectado, el asistente IA de WhatsApp responde automáticamente las 24hs.
+4. Si ya hay pacientes (${pacientesCount}), destaca que se van a poder comunicar por este medio.
 
-FORMATO: Respondé en español argentino, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
+FORMATO: Responde en español neutro, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
 
-    medico: `Sos el asistente de configuración de "${consultorio}". El usuario está agregando un médico (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
+    medico: `Eres el asistente de configuración de "${consultorio}". El usuario está agregando un médico (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
 
 CONTEXTO REAL DEL CONSULTORIO:
 - Nombre: ${consultorio}
@@ -289,14 +289,14 @@ CONTEXTO REAL DEL CONSULTORIO:
 - Pasos completados: ${completedCount} de ${ONBOARDING_STEPS.length}
 
 INDICACIONES PARA TU RESPUESTA:
-1. Explicá que cada médico tiene su propio perfil con especialidad, horarios y color en el calendario.
-2. Si no hay médicos (${medicosCount}), decile que registre al menos el suyo.
-3. Si ya hay ${medicosCount} médico(s), preguntale si quiere agregar más profesionales.
-4. Mencioná que los horarios se personalizan después para cada médico.
+1. Explica que cada médico tiene su propio perfil con especialidad, horarios y color en el calendario.
+2. Si no hay médicos (${medicosCount}), dile que registre al menos el suyo.
+3. Si ya hay ${medicosCount} médico(s), pregúntale si quiere agregar más profesionales.
+4. Menciona que los horarios se personalizan después para cada médico.
 
-FORMATO: Respondé en español argentino, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
+FORMATO: Responde en español neutro, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
 
-    horarios: `Sos el asistente de configuración de "${consultorio}". El usuario está configurando los horarios de atención (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
+    horarios: `Eres el asistente de configuración de "${consultorio}". El usuario está configurando los horarios de atención (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
 
 CONTEXTO REAL DEL CONSULTORIO:
 - Nombre: ${consultorio}
@@ -307,14 +307,14 @@ CONTEXTO REAL DEL CONSULTORIO:
 - Pasos completados: ${completedCount} de ${ONBOARDING_STEPS.length}
 
 INDICACIONES PARA TU RESPUESTA:
-1. Explicá que los horarios definen cuándo se pueden agendar turnos automáticamente.
-2. Recomendá arrancar con Lunes a Viernes de 9 a 18 hs y Sábados de 9 a 13 hs.
+1. Explica que los horarios definen cuándo se pueden agendar turnos automáticamente.
+2. Recomienda empezar con Lunes a Viernes de 9 a 18 hs y Sábados de 9 a 13 hs.
 3. Si hay ${medicosCount} médico(s), mencioná que cada profesional puede tener horarios diferentes.
-4. Destacá que los turnos fuera de horario se rechazan automáticamente, evitando confusiones.
+4. Destaca que los turnos fuera de horario se rechazan automáticamente, evitando confusiones.
 
-FORMATO: Respondé en español argentino, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
+FORMATO: Responde en español neutro, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
 
-    paciente: `Sos el asistente de configuración de "${consultorio}". El usuario está agregando su primer paciente (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
+    paciente: `Eres el asistente de configuración de "${consultorio}". El usuario está agregando su primer paciente (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
 
 CONTEXTO REAL DEL CONSULTORIO:
 - Nombre: ${consultorio}
@@ -327,13 +327,13 @@ CONTEXTO REAL DEL CONSULTORIO:
 
 INDICACIONES PARA TU RESPUESTA:
 1. Si no hay pacientes (${pacientesCount}), explicá que cargar un paciente de prueba ayuda a ver el sistema en acción.
-2. Indicá los datos clave: nombre, teléfono (con código de país) y obra social si aplica.
+2. Indica los datos clave: nombre, teléfono (con código de país) y obra social si aplica.
 3. Si ya hay ${medicosCount} médico(s), mencioná que después de cargar el paciente ya pueden asignarle un turno.
-4. Mencioná que el paciente va a poder recibir recordatorios automáticos por WhatsApp una vez configurado.
+4. Menciona que el paciente va a poder recibir recordatorios automáticos por WhatsApp una vez configurado.
 
-FORMATO: Respondé en español argentino, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
+FORMATO: Responde en español neutro, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
 
-    notificaciones: `Sos el asistente de configuración de "${consultorio}". El usuario está configurando las notificaciones (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}). Es el ÚLTIMO paso.
+    notificaciones: `Eres el asistente de configuración de "${consultorio}". El usuario está configurando las notificaciones (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}). Es el ÚLTIMO paso.
 
 CONTEXTO REAL DEL CONSULTORIO:
 - Nombre: ${consultorio}
@@ -344,13 +344,13 @@ CONTEXTO REAL DEL CONSULTORIO:
 - Pasos completados: ${completedCount} de ${ONBOARDING_STEPS.length}
 
 INDICACIONES PARA TU RESPUESTA:
-1. Explicá que las notificaciones avisan al médico sobre: urgencias de pacientes, recordatorios de turnos (reducen ausentismo), y alertas del sistema.
-2. Recomendá activar: notificaciones push en el navegador, y recordatorios automáticos para pacientes.
-3. Si ya hay ${pacientesCount} pacientes, destacá que los recordatorios van a reducir las ausencias.
-4. Cerra con un mensaje motivador: este es el último paso de configuración.
+1. Explica que las notificaciones avisan al médico sobre: urgencias de pacientes, recordatorios de turnos (reducen ausentismo), y alertas del sistema.
+2. Recomienda activar: notificaciones push en el navegador, y recordatorios automáticos para pacientes.
+3. Si ya hay ${pacientesCount} pacientes, destaca que los recordatorios van a reducir las ausencias.
+4. Cierra con un mensaje motivador: este es el último paso de configuración.
 
-FORMATO: Respondé en español argentino, cálido, motivador. Máximo 4 oraciones. No uses markdown ni emojis.`,
+FORMATO: Responde en español neutro, cálido, motivador. Máximo 4 oraciones. No uses markdown ni emojis.`,
   };
 
-  return prompts[stepId] || `Sos el asistente de configuración de "${consultorio}". El usuario está en el paso "${step.title}" (${completedCount + 1}/${ONBOARDING_STEPS.length}). Dá una guía práctica y cálida para completar este paso. Máximo 4 oraciones. Sin emojis ni markdown.`;
+  return prompts[stepId] || `Eres el asistente de configuración de "${consultorio}". El usuario está en el paso "${step.title}" (${completedCount + 1}/${ONBOARDING_STEPS.length}). Da una guía práctica y cálida para completar este paso. Máximo 4 oraciones. Sin emojis ni markdown.`;
 }

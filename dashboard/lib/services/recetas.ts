@@ -453,7 +453,7 @@ export function generarHTMLRecetasPDF(
   titulo?: string,
 ): string {
   const nombreOrg = process.env.ORGANIZATION_NAME || 'Consultorio Médico';
-  const fecha = new Date().toLocaleDateString('es-AR', {
+  const fecha = new Date().toLocaleDateString('es-CL', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

@@ -186,7 +186,7 @@ export function PortalDashboardClient({ data }: { data: PortalData }) {
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-10 text-center">
                   <Calendar className="h-10 w-10 text-muted-foreground/30 mb-3" />
-                  <p className="text-muted-foreground">No tenes turnos proximos</p>
+                  <p className="text-muted-foreground">No tienes turnos próximos</p>
                 </CardContent>
               </Card>
             ) : (

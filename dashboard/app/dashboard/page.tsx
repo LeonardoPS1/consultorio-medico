@@ -153,7 +153,7 @@ export default async function DashboardPage() {
   const sucursalId = cookieStore.get('sucursal_activa')?.value;
   const data = await getDashboardData(sucursalId);
 
-  const dateStr = new Date().toLocaleDateString('es-AR', {
+  const dateStr = new Date().toLocaleDateString('es-CL', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',

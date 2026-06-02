@@ -93,7 +93,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 })
                 .where(eq(usuarios.email, email));
             } else {
-              throw new Error('Código 2FA incorrecto. Verificá la hora de tu celular.');
+              throw new Error('Código 2FA incorrecto. Verifica la hora de tu teléfono.');
             }
           }
 

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     // Verificar el código TOTP
     if (!verify2faToken(token, secret)) {
-      return NextResponse.json({ error: 'Código inválido. Verificá que la hora de tu celular esté sincronizada.' }, { status: 400 });
+      return NextResponse.json({ error: 'Código inválido. Verifica que la hora de tu teléfono esté sincronizada.' }, { status: 400 });
     }
 
     // Guardar el secreto y los backup codes hasheados en el store del usuario

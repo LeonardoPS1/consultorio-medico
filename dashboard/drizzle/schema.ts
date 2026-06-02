@@ -101,6 +101,7 @@ export const pacientes = pgTable('pacientes', {
   comunaId: uuid('comuna_id').references(() => comunas.id),
   obraSocial: varchar('obra_social', { length: 255 }),
   sistemaSalud: varchar('sistema_salud', { length: 20 }),
+  isapreNombre: varchar('isapre_nombre', { length: 100 }),
   sucursalId: uuid('sucursal_id').references(() => sucursales.id),
   numeroAfiliado: varchar('numero_afiliado', { length: 100 }),
   alergias: text('alergias'),

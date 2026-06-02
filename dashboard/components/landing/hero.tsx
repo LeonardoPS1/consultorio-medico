@@ -71,7 +71,7 @@ export function Hero() {
               transition={springTransition}
               className="text-[1.75rem] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
             >
-              Gestioná tu consultorio{' '}
+              Gestiona tu consultorio{' '}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/60">
                 con IA
               </span>
@@ -84,7 +84,7 @@ export function Hero() {
             >
               Turnos, WhatsApp, recetas, reportes y un asistente con IA local.
               Todo en un solo panel. Sin mensualidades por IA, sin configuraciones complejas.
-              {' '}<span className="font-semibold text-foreground">Ahorrá hasta 10 horas por semana.</span>
+              {' '}<span className="font-semibold text-foreground">Ahorra hasta 10 horas por semana.</span>
             </motion.p>
 
             <motion.div

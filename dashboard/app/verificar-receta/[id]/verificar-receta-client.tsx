@@ -206,7 +206,7 @@ export function VerificarRecetaClient({ data, recetaId }: Props) {
           <span>Código de verificación: {receta.id.substring(0, 8)}...</span>
         </div>
         <p className="text-xs text-muted-foreground">
-          Este documento fue verificado electrónicamente el {new Date().toLocaleDateString('es-AR', {
+          Este documento fue verificado electrónicamente el {new Date().toLocaleDateString('es-CL', {
             day: 'numeric',
             month: 'long',
             year: 'numeric',
@@ -259,7 +259,7 @@ function CardNoEncontrada({ recetaId }: { recetaId: string }) {
 
 function formatearFecha(fecha: string): string {
   try {
-    return new Date(fecha + 'T00:00:00').toLocaleDateString('es-AR', {
+    return new Date(fecha + 'T00:00:00').toLocaleDateString('es-CL', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',

@@ -54,7 +54,7 @@ const template24h: Plantilla = {
 
 const template1h: Plantilla = {
   nombre: 'Recordatorio 1h',
-  contenido: 'Recordatorio: en 1 hora tenés turno con {{medico_nombre}}.',
+  contenido: 'Recordatorio: en 1 hora tienes turno con {{medico_nombre}}.',
   categoria: 'recordatorios',
   variables: ['medico_nombre'],
 };
@@ -75,7 +75,7 @@ describe('Plantillas WhatsApp - Sustitución de variables', () => {
     const resultado = populateTemplate(template1h, {
       medico_nombre: 'Dr. García',
     });
-    expect(resultado).toBe('Recordatorio: en 1 hora tenés turno con Dr. García.');
+    expect(resultado).toBe('Recordatorio: en 1 hora tienes turno con Dr. García.');
   });
 
   it('debe reemplazar múltiples variables', () => {
@@ -149,7 +149,7 @@ describe('Plantillas WhatsApp - Casos borde', () => {
       medico_nombre: 'Dr. López',
       variable_extra: 'no debería aparecer',
     });
-    expect(resultado).toBe('Recordatorio: en 1 hora tenés turno con Dr. López.');
+    expect(resultado).toBe('Recordatorio: en 1 hora tienes turno con Dr. López.');
   });
 
   it('debe manejar caracteres especiales en los valores', () => {

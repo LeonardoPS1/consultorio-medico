@@ -418,7 +418,7 @@ export function TurnosClient({
               </Button>
               <h3 className="text-sm sm:text-lg font-semibold min-w-[120px] sm:min-w-[200px] text-center truncate">
                 <span className="hidden sm:inline">
-                  {selectedDate.toLocaleDateString('es-AR', {
+                  {selectedDate.toLocaleDateString('es-CL', {
                     weekday: 'long',
                     day: 'numeric',
                     month: 'long',
@@ -426,7 +426,7 @@ export function TurnosClient({
                   })}
                 </span>
                 <span className="sm:hidden">
-                  {selectedDate.toLocaleDateString('es-AR', {
+                  {selectedDate.toLocaleDateString('es-CL', {
                     weekday: 'short',
                     day: 'numeric',
                     month: 'short',

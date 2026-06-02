@@ -263,7 +263,7 @@ export default function PrivacidadPage() {
           <section>
             <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">14. Contacto</h2>
             <p>
-              Si tenés preguntas sobre esta Política de Privacidad o sobre el tratamiento de tus datos,
+              Si tienes preguntas sobre esta Política de Privacidad o sobre el tratamiento de tus datos,
               podés contactarnos en:
             </p>
             <div className="bg-muted/50 rounded-lg p-4 mt-2 text-sm">

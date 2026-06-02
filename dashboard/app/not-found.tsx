@@ -11,7 +11,7 @@ export default function NotFound() {
           Página no encontrada
         </h1>
         <p className="mb-8 text-sm text-muted-foreground">
-          La página que buscás no existe, fue movida o no tenés acceso.
+          La página que buscas no existe, fue movida o no tienes acceso.
         </p>
         <div className="flex items-center justify-center gap-3">
           <Link

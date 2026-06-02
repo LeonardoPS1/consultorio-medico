@@ -1,398 +1,138 @@
-<p align="center">
-  <h1 align="center">Consultorio Medico</h1>
-  <p align="center">
-    Sistema de gestion integral para consultorios medicos
-    <br />
-    Automatizacion con IA local + Dashboard Web + WhatsApp + Email
-  </p>
-  <p align="center">
-    <strong>Stack:</strong> Next.js 14 · PostgreSQL · n8n · Ollama · Twilio · Dokploy
-  </p>
-</p>
+# AicoreMed — Sistema de Gestión para Consultorios Médicos
 
-<p align="center">
-  <a href="#features">Features</a> ·
-  <a href="#arquitectura">Arquitectura</a> ·
-  <a href="#empezar">Empezar</a> ·
-  <a href="#workflows">Workflows</a> ·
-  <a href="#estructura">Estructura</a> ·
-  <a href="#documentacion">Documentacion</a>
-</p>
+> Sistema integral para la gestión de consultorios médicos en Chile.
+> Automatización con WhatsApp, IA local, agenda inteligente y más.
 
----
+## Características Principales
 
-## 🏥 ¿Que hace?
+- **Agenda Inteligente**: Gestión de turnos con confirmación por WhatsApp
+- **WhatsApp Business**: Comunicación automatizada con pacientes (triaje IA, recordatorios)
+- **IA Local** con Ollama + Mistral: Asistente virtual para configuración y triaje
+- **Historia Clínica Digital**: Notas SOAP, CIE-10, recetas digitales con firma QR
+- **Isapre y Fonasa**: Sistema de salud chileno completo con catálogo de Isapres
+- **Reportes y Analytics**: KPIs en tiempo real, exportación Excel/PDF
+- **PWA**: App instalable con modo offline
+- **Multi-tenant**: Soporte para múltiples sucursales y profesionales
 
-Un sistema que **automatiza la comunicacion** entre pacientes y un consultorio medico usando **IA local** (Ollama + Mistral), manteniendo todos los datos en tu propia infraestructura.
+## Stack Tecnológico
 
-**Ejemplos de lo que hace solo:**
+| Capa | Tecnología |
+|------|-----------|
+| Frontend | Next.js 14 (App Router) + Tailwind CSS + shadcn/ui |
+| Backend | Next.js API Routes + Drizzle ORM |
+| Base de Datos | PostgreSQL 16 |
+| Autenticación | NextAuth v5 + JWT + 2FA TOTP |
+| Automatización | n8n (9 workflows activos) |
+| IA Local | Ollama + Mistral |
+| Mensajería | Twilio WhatsApp API |
+| Pagos | MercadoPago (CLP) |
+| Infraestructura | Docker Swarm + Dokploy |
 
-1. Un paciente escribe por WhatsApp: _"Hola, necesito turno para el martes a la manana"_
-2. La IA clasifica la intencion, busca disponibilidad, agenda el turno y confirma
-3. 24h antes envia un recordatorio automatico y pide confirmacion
-4. Si el paciente no confirma, alerta al medico
+## Funcionalidades por Plan
 
-Todo sin intervencion humana, todo en tu VPS, todo en espanol argentino.
+| Funcionalidad | Free | Starter | Professional | Premium | Enterprise |
+|---------------|------|---------|--------------|---------|------------|
+| Panel Principal | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Gestión de Turnos | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Pacientes Ilimitados | ❌ | ✅ | ✅ | ✅ | ✅ |
+| WhatsApp + Recordatorios | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Recetas Digitales QR | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Notas SOAP + CIE-10 | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Asistente IA | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Certificados QR | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Reportes Avanzados | ❌ | ❌ | ✅ | ✅ | ✅ |
+| 2FA / Seguridad | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Integraciones (GCal, n8n) | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Multi-sucursal | ❌ | ❌ | ❌ | ❌ | ✅ |
 
----
+## Adaptación Chile
 
-## 🎯 Features
+- **Sistema de Salud**: FONASA, ISAPRE (con catálogo completo), Particular y Otro
+- **Idioma**: Español neutro chileno en toda la interfaz
+- **Precios**: En pesos chilenos (CLP) y USD
+- **Regiones y Comunas**: Selectores con todas las regiones y comunas de Chile
+- **RUT**: Soporte para RUT chileno
+- **Teléfono**: Formato chileno (+569XXXXXXXX)
 
-### 🤖 Automatización Inteligente
+## Comenzar
 
-| Feature | Descripción |
-|---------|-------------|
-| **WhatsApp AI Agent** | Atiende mensajes, clasifica intenciones, responde y ejecuta acciones (turnos, recetas) |
-| **Correo Inteligente** | Clasifica emails entrantes (urgente/spam/responder) y redacta borradores |
-| **Recordatorios** | Envia recordatorios 24h y 1h antes del turno con confirmacion |
-| **Resumen Diario** | Envia al medico un resumen cada manana con turnos, novedades y pendientes |
-| **Recetas** | Renovacion automatica o derivacion al medico segun el caso |
+### Prerrequisitos
+- Node.js 18+
+- PostgreSQL 16
+- Docker (opcional, para desarrollo)
 
-### 🗄️ Datos
-
-- Datos **100% locales** en tu VPS (nada en la nube de terceros)
-- PostgreSQL con 20+ tablas, 5 vistas optimizadas, 35+ indices
-- Soft delete, auditoria, logs de IA y Twilio
-
-### 📊 Dashboard Web
-
-- Panel con KPIs en tiempo real
-- Gestion de turnos (vista lista + calendario FullCalendar)
-- Fichas de pacientes con historial clinico
-- Bandeja unificada de conversaciones (WhatsApp + Email)
-- Recetas, reportes con graficos (Recharts SVG), configuracion completa
-- Exportacion a Excel y PDF de reportes
-- Comparativa mensual de metricas
-- Modo oscuro/claro, responsive, autenticacion segura
-- **Planes de suscripcion**: feature gating por plan (free/start/professional/premium/enterprise)
-- **Recuperacion de contrasena**: forgot/reset password con tokens seguros
-- **Cambio de contrasena** desde Configuracion → Perfil
-
-### 🔐 Seguridad
-
-- IA local (Ollama) — nada sale de tu VPS
-- **2FA / MFA** con TOTP (Google Authenticator / Authy)
-- **Rate limiting** por IP (5 intentos/min login, 30/min API)
-- **Bloqueo de cuenta** tras 5 intentos fallidos (15 min)
-- **Auto-logout** por inactividad (30 min)
-- **Password validator** (8+ chars, mayuscula, numero, simbolo)
-- **Recuperacion de contrasena** con token criptografico (expiracion 1h)
-- **Cambio de contrasena** desde el dashboard (requiere contrasena actual)
-- Headers HTTP de seguridad (X-Frame-Options, HSTS, CSP parcial)
-- Sesiones JWT con expiracion
-- Verificacion de firmas en webhooks de Twilio
-- Logs de auditoria de accesos a datos medicos
-- Consentimiento explicito para WhatsApp/Email
-- Sanitizacion de prompts IA anti-jailbreak
-- Backup encriptado automatico (pg_dump + GPG)
-
----
-
-## 🏗️ Arquitectura
-
-```
-                         PACIENTES
-                     ┌─────┴──────┐
-                     │            │
-                  WhatsApp      Email
-                     │            │
-                  Twilio        IMAP
-                     │            │
-                ┌────▼────────────▼────┐
-                │   n8n (6 Workflows)  │
-                │  ┌────────────────┐  │
-                │  │  AI Agents     │  │
-                │  │  (Ollama +     │  │
-                │  │   Memoria)     │  │
-                │  └────────────────┘  │
-                └────┬────────────┬────┘
-                     │            │
-               ┌─────▼────┐ ┌────▼──────┐
-               │ Ollama   │ │PostgreSQL │
-               │ (Mistral)│ │ (16 tabs) │
-               └──────────┘ └────┬──────┘
-                                 │
-                     ┌───────────▼───────────┐
-                     │  Dashboard Web        │
-                     │  (Next.js 14 +        │
-                     │   shadcn/ui)          │
-                     └───────────────────────┘
-```
-
-[Ver documentacion completa de arquitectura →](docs/architecture.md)
-
----
-
-## 🚀 Empezar
-
-### Desarrollo Local (2 minutos)
-
+### Instalación
 ```bash
-git clone https://github.com/tu-usuario/consultorio-medico.git
-cd consultorio-medico/dashboard
-pnpm install
-pnpm run dev
-```
-
-Abrir `http://localhost:3000` — **sin PostgreSQL, sin Ollama, sin Twilio**. Usa datos mock automaticamente.
-
-**Credenciales de prueba:** `admin@consultorio.com` / `admin123`
-
-### Produccion (VPS + Dokploy)
-
-```bash
-# 1. Clonar
-git clone https://github.com/tu-usuario/consultorio-medico.git
+# Clonar repositorio
+git clone https://github.com/LeonardoPS1/consultorio-medico.git
 cd consultorio-medico
 
-# 2. Base de datos
-createdb consultorio_medico
-for f in database/migrations/0*.sql; do
-  psql -U postgres -d consultorio_medico -f "$f"
-done
+# Instalar dependencias
+cd dashboard && npm install
 
-# 3. Dashboard
-cd dashboard && pnpm install && pnpm run build
+# Configurar variables de entorno
+cp .env.example .env.local
 
-# 4. n8n → Importar workflows de n8n-workflows/current/
-# 5. Ollama → docker exec -it ollama ollama pull mistral
-# 6. Twilio → Configurar webhook
+# Ejecutar migraciones de base de datos
+# Ver database/README.md o aplicar migraciones manualmente
+
+# Iniciar desarrollo
+npm run dev
 ```
 
-[Guia de inicio rapido completa →](INSTALL.md)
-
----
-
-## 🔄 Workflows
-
-| # | Workflow | Trigger | Que hace |
-|---|----------|---------|----------|
-| 01 | **AI Agent WhatsApp** | Webhook Twilio | Atiende mensajes, clasifica con IA, responde, agenda turnos, recetas |
-| 02 | **Gestion de Turnos** | Webhook | Crea turnos, verifica disponibilidad, Google Calendar |
-| 03 | **Recordatorios** | Cron (cada hora) | Envia recordatorios 24h y 1h antes + pide confirmacion |
-| 04 | **AI Agent Correo** | IMAP | Clasifica emails con IA, notifica urgencias, redacta borradores |
-| 05 | **Resumen Diario** | Cron (7 AM) | Envia resumen de turnos, pacientes nuevos y pendientes |
-| 06 | **Recetas** | Webhook | Renovacion automatica o deriva al medico |
-
-[Documentacion detallada de workflows →](docs/workflows.md)
-
-### AI Agents — El Corazon Inteligente
-
-Los workflows 01 y 04 usan **AI Agents** de n8n con Ollama:
-
-```mermaid
-graph LR
-    A[Entrada] --> B[Pre-carga contexto]
-    B --> C[AI Agent<br/>Ollama + Memoria]
-    C --> D[Parsear accion]
-    D --> E[Ejecutar<br/>turno/receta/urgencia]
-    D --> F[Responder<br/>al paciente]
-```
-
-- **Pre-cargan datos** del paciente (turnos, recetas) antes de llamar a la IA
-- **Memoria conversacional** por paciente (Postgres Chat Memory)
-- **Acciones estructuradas** via `###ACCION###/###FIN###` en la respuesta del agente
-
----
-
-## 📁 Estructura del Repositorio
+## Estructura del Proyecto
 
 ```
 consultorio-medico/
-│
-├── README.md                    # Esta pagina
-├── INSTALL.md                   # Guia de inicio rapido
-├── CHANGELOG.md                 # Historial de cambios
-│
-├── dashboard/                   # Aplicacion web (Next.js 14)
-│   ├── app/                     # App Router
-│   │   ├── login/               # Pagina de inicio de sesion
-│   │   ├── recuperar/           # Recuperacion de contrasena
-│   │   ├── reset-password/      # Restablecer contrasena con token
-│   │   ├── dashboard/           # Paginas protegidas
-│   │   │   ├── page.tsx         # KPIs principal
-│   │   │   ├── atencion/        # Tablero Kanban de atencion
-│   │   │   ├── turnos/          # Gestion de turnos
-│   │   │   ├── pacientes/       # Fichas de pacientes
-│   │   │   ├── conversaciones/  # Bandeja de chats
-│   │   │   ├── recetas/         # Recetas medicas
-│   │   │   ├── reportes/        # Metricas y graficos
-│   │   │   ├── admin/           # Panel admin (tenants)
-│   │   │   └── configuracion/   # Perfil, suscripcion, integraciones, equipo
-│   │   └── api/                 # API Routes
-│   │       └── auth/            # Auth: login, 2FA, forgot/reset/change password
-│   │           ├── [...nextauth]/
-│   │           ├── 2fa/
-│   │           ├── forgot-password/
-│   │           ├── reset-password/
-│   │           └── change-password/
-│   ├── components/              # Componentes React
-│   │   ├── ui/                  # shadcn/ui (Radix)
-│   │   ├── layout/              # Sidebar, Header
-│   │   ├── calendar/            # FullCalendar
-│   │   ├── charts/              # Recharts (turnos, pacientes, WhatsApp)
-│   │   ├── modals/              # Modales CRUD
-│   │   ├── configuracion/       # Suscripcion, 2FA, credenciales, change-password
-│   │   └── gated-content.tsx    # Feature gating por plan
-│   ├── lib/                     # Logica compartida
-│   │   ├── auth.ts              # NextAuth config
-│   │   ├── planes.ts            # Planes de suscripcion (single source of truth)
-│   │   ├── features.ts          # Feature gating por plan
-│   │   ├── mercadopago.ts       # Integracion de pagos (CLP)
-│   │   ├── data-store.ts        # Almacenamiento dual (PG/JSON)
-│   │   ├── db.ts                # Conexion Drizzle
-│   │   ├── mfa.ts               # Autenticacion 2FA (TOTP)
-│   │   ├── audit-log.ts         # Auditoria de accesos
-│   │   ├── account-lockout.ts   # Bloqueo por intentos fallidos
-│   │   ├── password-validator.ts# Validador de fortaleza
-│   │   └── encryption.ts        # Encriptacion AES-256-GCM
-│   ├── drizzle/                 # Schema ORM
-│   ├── types/                   # Tipos TypeScript extendidos
-│   └── middleware.ts            # Seguridad: rate limiting, headers, auth
-│
-├── database/                    # Base de datos
-│   └── migrations/              # Migraciones SQL (001-011)
-│
-├── n8n-workflows/               # Automatizaciones
-│   ├── current/                 # Workflows activos (6)
-│   └── archive/                 # Versiones anteriores
-│
-├── scripts/                     # Utilidades
-│   ├── backup-encriptado.sh     # Backup automatico (pg_dump + GPG)
-│   ├── generate-pwa-icons.js    # Generacion de iconos PWA
-│   ├── generate-listado-pdf.js  # Generacion de PDF
-│   └── generate-aicoremed-pdf.js# PDF de producto
-│
-└── docs/                        # Documentacion
-    ├── architecture.md           # Arquitectura del sistema
-    ├── workflows.md              # Workflows detallados
-    ├── database.md               # Esquema de base de datos
-    └── prompts-seguridad.md      # Guia anti-jailbreak para prompts IA
-
-[Documentacion detallada de workflows →](docs/workflows.md)
-```
-consultorio-medico/
-│
-├── README.md                    # Esta pagina
-├── INSTALL.md                   # Guia de inicio rapido
-├── CHANGELOG.md                 # Historial de cambios
-│
-├── dashboard/                   # Aplicacion web (Next.js 14)
-│   ├── app/                     # App Router
-│   │   ├── dashboard/           # Paginas protegidas
-│   │   │   ├── page.tsx         # KPIs principal
-│   │   │   ├── turnos/          # Gestion de turnos
-│   │   │   ├── pacientes/       # Fichas de pacientes
-│   │   │   ├── conversaciones/  # Bandeja de chats
-│   │   │   ├── recetas/         # Recetas medicas
-│   │   │   ├── reportes/        # Metricas y graficos
-│   │   │   └── configuracion/   # Integraciones, equipo
-│   │   └── api/                 # API Routes
-│   ├── components/              # Componentes React
-│   │   ├── ui/                  # shadcn/ui (Radix)
-│   │   ├── layout/              # Sidebar, Header
-│   │   ├── calendar/            # FullCalendar
-│   │   └── modals/              # Modales CRUD
-│   ├── lib/                     # Logica compartida
-│   │   ├── data-store.ts        # Almacenamiento dual (PG/JSON)
-│   │   ├── db.ts                # Conexion Drizzle
-│   │   └── auth.ts              # NextAuth config
-│   ├── drizzle/                 # Schema ORM
-│   └── .env.example             # Variables de entorno
-│
-├── database/                    # Base de datos
-│   └── migrations/              # Migraciones SQL
-│       ├── 001_core.sql
-│       ├── 002_turnos.sql
-│       ├── 003_conversaciones.sql
-│       ├── 004_historial_recetas.sql
-│       ├── 005_logs.sql
-│       └── 006_indices.sql      # Indices + vistas
-│
-├── n8n-workflows/               # Automatizaciones
-│   ├── current/                 # Workflows activos
-│   │   ├── workflow-01-agent.json
-│   │   ├── workflow-02-gestion-turnos.json
-│   │   ├── workflow-03-recordatorios.json
-│   │   ├── workflow-04-agent.json
-│   │   ├── workflow-05-resumen-diario.json
-│   │   └── workflow-06-recetas.json
-│   └── archive/                 # Versiones anteriores
-│       ├── workflow-01-whatsapp-inbound.json
-│       ├── workflow-04-correo-inteligente.json
-│       └── designs/
-│
-└── docs/                        # Documentacion
-    ├── architecture.md           # Arquitectura del sistema
-    ├── workflows.md              # Workflows detallados
-    └── database.md               # Esquema de base de datos
+├── dashboard/                  # Next.js 14 App Router (core)
+│   ├── app/                    # Rutas y páginas
+│   │   ├── api/                # API Routes RESTful
+│   │   ├── dashboard/          # Panel protegido
+│   │   ├── login/              # Autenticación
+│   │   ├── portal/             # Portal del paciente
+│   │   └── verificar-*/        # Verificación pública QR
+│   ├── components/             # Componentes UI (shadcn/ui + Radix)
+│   ├── lib/                    # Lógica compartida (servicios, auth, features)
+│   ├── drizzle/                # Schema Drizzle + migraciones SQL
+│   └── public/                 # Landing page + assets
+├── n8n-workflows/              # 9 workflows JSON activos
+├── database/                   # Migraciones históricas
+├── scripts/                    # Backup, deploy, utilidades
+├── docs/                       # Documentación adicional
+└── AGENTS.md                   # Referencia principal del sistema
 ```
 
----
+## Seguridad
 
-## 🗄️ Base de Datos
+- Autenticación JWT + 2FA TOTP
+- Rate limiting y lockout de cuentas
+- HMAC-SHA256 para webhooks (Twilio, MercadoPago)
+- Multi-tenant con tenantId en 22+ tablas
+- Soft delete en tablas críticas
+- Auditoría de accesos
+- Datos encriptados AES-256-GCM
+- Anti-jailbreak en prompts de IA
 
-**16 tablas** organizadas en 6 migraciones acumulativas:
+## Agentes IA (n8n)
 
-| Migracion | Tablas |
-|-----------|--------|
-| 001 Core | `usuarios`, `medicos`, `pacientes`, `paciente_eventos` |
-| 002 Turnos | `turnos`, `servicios`, `bloqueos_agenda` |
-| 003 Conversaciones | `conversaciones`, `mensajes`, `plantillas_whatsapp`, `tareas_pendientes` |
-| 004 Historial | `historial_medico`, `recetas`, `facturacion` |
-| 005 Logs | `workflow_logs`, `workflow_errors`, `twilio_logs`, `ia_logs`, `audit_log` |
-| 006 Indices | 30+ indices, 4 vistas optimizadas |
+| # | Workflow | Trigger | Función |
+|---|----------|---------|---------|
+| 01 | WhatsApp Inbound + Triaje IA | Webhook | Atención automática de pacientes |
+| 02 | Gestión de Turnos | Webhook | Creación y disponibilidad |
+| 03 | Recordatorios Automáticos | Cron | Recordatorios 24h y 1h |
+| 04 | Correo Inteligente | IMAP | Clasificación de emails |
+| 05 | Resumen Diario | Cron | Resumen para el médico |
+| 06 | Recetas y Renovaciones | Webhook | Gestión de recetas |
+| 07 | Backup Automático | Cron | Backup cifrado diario |
+| 08 | Google Calendar Sync | Webhook | Sincronización bidireccional |
+| 09 | Anonimización Post-Retención | Cron | Cumplimiento normativo |
 
-[Documentacion completa de la base de datos →](docs/database.md)
+## Licencia
 
----
+Proyecto privado — Aicore (aicorebots.com)
 
-## 🧠 IA Local (Ollama + Mistral)
+## Contacto
 
-Todo el procesamiento de lenguaje natural corre **localmente en la VPS**:
-
-- **Clasificacion de intenciones**: saludo, turno, receta, urgencia, consulta...
-- **Extraccion de entidades**: fechas, medicamentos, sintomas...
-- **Generacion de respuestas**: en espanol argentino, tono profesional y cercano
-- **Triaje de urgencias**: deteccion de palabras clave y contexto
-- **Memoria conversacional**: el agente recuerda la conversacion anterior
-
-No se envia ningun dato a OpenAI, Google o cualquier servicio externo.
-
----
-
-## 📚 Documentacion
-
-| Documento | Descripcion |
-|-----------|-------------|
-| [INSTALL.md](INSTALL.md) | Guia de inicio rapido |
-| [docs/architecture.md](docs/architecture.md) | Arquitectura del sistema |
-| [docs/workflows.md](docs/workflows.md) | Workflows en detalle |
-| [docs/database.md](docs/database.md) | Esquema de base de datos |
-| [CHANGELOG.md](CHANGELOG.md) | Historial de cambios |
-
----
-
-## 🛠️ Stack
-
-| Capa | Tecnologia |
-|------|-----------|
-| Frontend | Next.js 14, shadcn/ui, Radix UI, Tailwind CSS |
-| Calendario | FullCalendar 6 |
-| Graficos | Recharts |
-| ORM | Drizzle ORM |
-| Base de Datos | PostgreSQL |
-| Automatizacion | n8n (self-hosted) |
-| IA Local | Ollama + Mistral |
-| Mensajeria | Twilio (WhatsApp, SMS) |
-| Autenticacion | NextAuth v5 + bcrypt |
-| Despliegue | Dokploy (VPS) |
-| Paquete | pnpm |
-
----
-
-<p align="center">
-  Hecho con ❤️ por <a href="https://aicorebots.com">Aicore</a>
-  <br />
-  Automatizaciones · Agentes de IA · Chatbots
-</p>
+- **Web**: https://aicorebots.com
+- **Dashboard**: https://med.aicorebots.com
+- **n8n**: https://n8n.aicorebots.com

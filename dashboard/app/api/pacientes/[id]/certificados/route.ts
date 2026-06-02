@@ -204,7 +204,7 @@ export async function POST(
       diagnostico: diagnostico.trim(),
     });
 
-    const titulo = `Certificado Médico — ${new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    const titulo = `Certificado Médico — ${new Date().toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })}`;
 
     const [entry] = await db
       .insert(historialMedico)

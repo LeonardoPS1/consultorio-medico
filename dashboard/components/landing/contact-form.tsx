@@ -12,7 +12,7 @@ const BENEFITS = [
   },
   {
     title: 'Análisis de procesos gratuito',
-    desc: 'Identificamos qué tareas administrativas podés delegar a la IA.',
+    desc: 'Identificamos qué tareas administrativas puedes delegar a la IA.',
   },
   {
     title: 'Cotización a medida',
@@ -70,10 +70,10 @@ export function ContactForm() {
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Transformá la gestión de tu consultorio hoy
+              Transforma la gestión de tu consultorio hoy
             </h2>
             <p className="text-muted-foreground mb-6 md:mb-8">
-              Completá el formulario y obtené una demostración personalizada con un agente de IA
+               Completa el formulario y obtén una demostración personalizada con un agente de IA
               adaptado a tu especialidad.
             </p>
 
@@ -124,7 +124,7 @@ export function ContactForm() {
                     animate={{ opacity: 1, x: 0 }}
                     className="space-y-4"
                   >
-                    <h3 className="text-sm font-semibold">Contanos sobre vos</h3>
+                    <h3 className="text-sm font-semibold">Cuéntanos sobre ti</h3>
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Nombre Completo</label>
                       <input
@@ -166,7 +166,7 @@ export function ContactForm() {
                         onChange={(e) => update('specialty', e.target.value)}
                         className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-all"
                       >
-                        <option value="" disabled>Seleccioná una opción</option>
+                        <option value="" disabled>Selecciona una opción</option>
                         <option value="general">Clínica Médica / Especialidades</option>
                         <option value="odontologia">Clínica Odontológica</option>
                         <option value="oftalmologia">Centro Oftalmológico</option>
@@ -182,7 +182,7 @@ export function ContactForm() {
                         onChange={(e) => update('size', e.target.value)}
                         className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-all"
                       >
-                        <option value="" disabled>Seleccioná cantidad</option>
+                        <option value="" disabled>Selecciona cantidad</option>
                         <option value="1">1 Profesional</option>
                         <option value="2-5">2 a 5 Profesionales</option>
                         <option value="6-15">6 a 15 Profesionales</option>

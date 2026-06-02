@@ -305,7 +305,7 @@ export async function GET(request: Request) {
         .limit(8);
 
       proximosTurnos = turnosQuery.map((t) => ({
-        hora: t.fechaHora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+        hora: t.fechaHora.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
         paciente: `${t.pacienteNombre || ''} ${t.pacienteApellido || ''}`.trim() || 'Paciente',
         tipo: t.motivo || t.tipoConsulta || 'Consulta',
         estado: t.estado,
@@ -341,7 +341,7 @@ export async function GET(request: Request) {
       for (const ev of eventos) {
         if (ev.descripcion) {
           actividadReciente.push({
-            hora: ev.createdAt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+            hora: ev.createdAt.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
             texto: ev.descripcion,
             tipo: ev.tipo,
             timestamp: ev.createdAt.toISOString(),
@@ -380,7 +380,7 @@ export async function GET(request: Request) {
           : m.contenido;
 
         actividadReciente.push({
-          hora: m.createdAt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+          hora: m.createdAt.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
           texto: `${nombre}: "${textoCorto}"`,
           tipo: 'consulta',
           timestamp: m.createdAt.toISOString(),

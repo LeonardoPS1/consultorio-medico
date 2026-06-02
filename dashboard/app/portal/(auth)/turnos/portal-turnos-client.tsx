@@ -30,7 +30,7 @@ const TIPO_ICONS: Record<string, React.ReactNode> = {
 
 function formatDate(date: string): string {
   const d = new Date(date);
-  return d.toLocaleDateString('es-AR', {
+  return d.toLocaleDateString('es-CL', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -177,7 +177,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
       {turnos.length === 0 && (
         <div className="text-center py-12 text-gray-400">
           <Calendar className="h-12 w-12 mx-auto mb-3" />
-          <p>No tenés turnos registrados</p>
+          <p>No tienes turnos registrados</p>
         </div>
       )}
     </div>

@@ -109,6 +109,8 @@ interface PacienteData {
   fechaNacimiento: string | null;
   direccion: string | null;
   obraSocial: string | null;
+  sistemaSalud: string | null;
+  isapreNombre: string | null;
   numeroAfiliado: string | null;
   alergias: string | null;
   medicacionCronica: string | null;
@@ -795,12 +797,18 @@ export function PacienteDetalleClient({
                 )}
               </div>
               <div className="flex items-center gap-2 mt-3 flex-wrap">
-                {paciente.obraSocial && (
-                  <Badge variant="secondary" className="text-xs">
-                    {paciente.obraSocial}
-                    {paciente.numeroAfiliado && ` #${paciente.numeroAfiliado}`}
-                  </Badge>
-                )}
+                <Badge variant="secondary" className="text-xs" title="Sistema de Salud">
+                  {paciente.sistemaSalud
+                    ? (() => {
+                        const saludMap: Record<string, string> = { fonasa: 'FONASA', isapre: 'ISAPRE', particular: 'Particular', otro: 'Otro' };
+                        const base = saludMap[paciente.sistemaSalud] || paciente.sistemaSalud;
+                        return paciente.sistemaSalud === 'isapre' && paciente.isapreNombre
+                          ? `${base} · ${paciente.isapreNombre}`
+                          : base;
+                      })()
+                    : paciente.obraSocial || 'Sin cobertura'}
+                  {paciente.numeroAfiliado && ` · #${paciente.numeroAfiliado}`}
+                </Badge>
                 {paciente.consentimientoWhatsapp && (
                   <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300">
                     <CheckCircle2 className="h-3 w-3 mr-1" /> WhatsApp OK

@@ -32,6 +32,8 @@ interface Paciente {
   telefono: string;
   email: string | null;
   obraSocial: string | null;
+  sistemaSalud?: string | null;
+  isapreNombre?: string | null;
   tags: string[];
   ultimoTurno: string | null;
   totalTurnos: number;
@@ -68,6 +70,8 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
     telefono: string;
     email: string;
     obraSocial: string;
+    sistemaSalud?: string;
+    isapreNombre?: string;
   }) => {
     try {
       const res = await fetch('/api/pacientes', {
@@ -95,6 +99,8 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
         ultimoTurno: null,
         totalTurnos: 0,
         obraSocial: created.obraSocial,
+        sistemaSalud: created.sistemaSalud,
+        isapreNombre: created.isapreNombre,
         tags: Array.isArray(created.tags) ? created.tags : [],
       };
       setPacientesList((prev) => [newPaciente, ...prev]);
@@ -157,8 +163,8 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
               </p>
               <p className="text-sm text-muted-foreground/70 mt-1 mb-4">
                 {search
-                  ? 'Probá con otros términos de búsqueda'
-                  : 'Registrá tu primer paciente'}
+                  ? 'Prueba con otros términos de búsqueda'
+                  : 'Registra tu primer paciente'}
               </p>
               {!search && (
                 <Button onClick={() => setShowNewPaciente(true)}>

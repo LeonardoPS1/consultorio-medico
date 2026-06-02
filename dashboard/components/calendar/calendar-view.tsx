@@ -204,7 +204,7 @@ export function CalendarView({ turnos, onDateChange, onTurnoClick }: CalendarVie
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <h3 className="text-lg font-semibold min-w-[200px] text-center">
-                  {selectedDate.toLocaleDateString('es-AR', {
+                  {selectedDate.toLocaleDateString('es-CL', {
                     weekday: 'long',
                     day: 'numeric',
                     month: 'long',

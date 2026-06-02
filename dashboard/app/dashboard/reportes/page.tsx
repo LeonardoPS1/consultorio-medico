@@ -127,7 +127,7 @@ export default function ReportesPage() {
   const exportarReporte = (formato: 'pdf' | 'excel') => {
     if (!data) return;
     const periodoLabel = periodo === 'semana' ? 'Semanal' : periodo === 'mes' ? 'Mensual' : 'Anual';
-    const fechaHoy = new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const fechaHoy = new Date().toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
     const maxTurnos = Math.max(...data.turnos.map(t => t.cantidad)) || 1;
     const maxIntencion = Math.max(...data.intenciones.map(i => i.cantidad)) || 1;
 

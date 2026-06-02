@@ -41,8 +41,8 @@ export async function createCheckoutPreference(
   if (!plan) throw new Error(`Plan no valido: ${planId}`);
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  const currency = process.env.MERCADOPAGO_CURRENCY || 'ARS';
-  const price = currency === 'CLP' ? plan.precioCLP : plan.precioARS;
+  const currency = process.env.MERCADOPAGO_CURRENCY || 'CLP';
+  const price = currency === 'CLP' ? plan.precioCLP : plan.precioUSD;
 
   const preference = new Preference(client);
 

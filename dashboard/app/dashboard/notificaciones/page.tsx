@@ -192,7 +192,7 @@ export default function NotificacionesPage() {
             <p className="text-sm font-medium">No hay notificaciones</p>
             <p className="text-xs mt-1">
               {soloNoLeidas
-                ? 'No tenés notificaciones sin leer'
+                ? 'No tienes notificaciones sin leer'
                 : 'No hay notificaciones para mostrar con este filtro'}
             </p>
           </div>

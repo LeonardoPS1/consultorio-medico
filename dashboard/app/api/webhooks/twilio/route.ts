@@ -167,7 +167,7 @@ async function handleReminderResponse(
     // Enviar confirmación al paciente
     if (accountSid && authToken && fromNumber) {
       const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
-      const fecha = new Date(turno.fechaHora).toLocaleString('es-AR', {
+      const fecha = new Date(turno.fechaHora).toLocaleString('es-CL', {
         day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
       });
       await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {

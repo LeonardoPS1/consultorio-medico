@@ -50,8 +50,8 @@ export function Pricing() {
             Planes simples, sin sorpresas
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-base">
-            Elegí el plan que mejor se adapte a tu consultorio. Todos incluyen IA local sin costos adicionales.
-            Cancelá cuando quieras, sin preguntas.
+            Elige el plan que mejor se adapte a tu consultorio. Todos incluyen IA local sin costos adicionales.
+            Cancela cuando quieras, sin preguntas.
           </p>
         </motion.div>
 

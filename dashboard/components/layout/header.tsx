@@ -228,7 +228,7 @@ export function Header() {
             {orgFirma || 'Dr.'}
           </h1>
           <p className="text-[11px] lg:text-xs text-muted-foreground truncate hidden sm:block">
-            {orgNombre} · {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+            {orgNombre} · {new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
         {/* Selector de sucursal */}

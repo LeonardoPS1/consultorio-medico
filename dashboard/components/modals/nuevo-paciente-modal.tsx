@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/select';
+import { SISTEMAS_SALUD, ISAPRES_CHILENAS } from '@/lib/isapres';
 
 interface NuevoPacienteModalProps {
   open: boolean;
@@ -29,15 +30,18 @@ interface NuevoPacienteModalProps {
     telefono: string;
     email: string;
     obraSocial: string;
+    sistemaSalud?: string;
+    isapreNombre?: string;
   }) => void;
 }
 
 export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacienteModalProps) {
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
-  const [telefono, setTelefono] = useState('+54911');
+  const [telefono, setTelefono] = useState('');
   const [email, setEmail] = useState('');
-  const [obraSocial, setObraSocial] = useState('Particular');
+  const [sistemaSalud, setSistemaSalud] = useState('particular');
+  const [isapreNombre, setIsapreNombre] = useState('');
   const [loading, setLoading] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -51,14 +55,24 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
     e.preventDefault();
     setLoading(true);
     timeoutRef.current = setTimeout(() => {
-      onSubmit?.({ nombre, apellido, telefono, email, obraSocial });
+      const isapreValue = sistemaSalud === 'isapre' ? isapreNombre : undefined;
+      onSubmit?.({
+        nombre,
+        apellido,
+        telefono,
+        email,
+        obraSocial: isapreValue || sistemaSalud || 'Particular',
+        sistemaSalud,
+        isapreNombre: isapreValue,
+      });
       setLoading(false);
       onOpenChange(false);
       setNombre('');
       setApellido('');
-      setTelefono('+54911');
+      setTelefono('');
       setEmail('');
-      setObraSocial('Particular');
+      setSistemaSalud('particular');
+      setIsapreNombre('');
     }, 300);
   };
 
@@ -68,7 +82,7 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
         <DialogHeader>
           <DialogTitle>Nuevo Paciente</DialogTitle>
           <DialogDescription>
-            Registrá un nuevo paciente en el sistema
+            Registra un nuevo paciente en el sistema
           </DialogDescription>
         </DialogHeader>
 
@@ -101,7 +115,7 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
             <Label htmlFor="telefono">Teléfono *</Label>
             <Input
               id="telefono"
-              placeholder="+5491155550101"
+              placeholder="+569XXXXXXXX"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
               required
@@ -120,21 +134,34 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
           </div>
 
           <div className="space-y-2">
-            <Label>Obra Social</Label>
-            <Select value={obraSocial} onValueChange={setObraSocial}>
+            <Label>Sistema de Salud</Label>
+            <Select value={sistemaSalud} onValueChange={(val) => { setSistemaSalud(val); setIsapreNombre(''); }}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Particular">Particular</SelectItem>
-                <SelectItem value="OSDE">OSDE</SelectItem>
-                <SelectItem value="Swiss Medical">Swiss Medical</SelectItem>
-                <SelectItem value="Galeno">Galeno</SelectItem>
-                <SelectItem value="Medicus">Medicus</SelectItem>
-                <SelectItem value="Otra">Otra</SelectItem>
+                {SISTEMAS_SALUD.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
+
+          {sistemaSalud === 'isapre' && (
+            <div className="space-y-2">
+              <Label>Isapre</Label>
+              <Select value={isapreNombre} onValueChange={setIsapreNombre}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona una Isapre" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ISAPRES_CHILENAS.map((i) => (
+                    <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -126,7 +126,7 @@ WHERE NOT EXISTS (SELECT 1 FROM horarios_atencion LIMIT 1);
 -- ─── 5. Plantillas de mensajes por defecto ──────────────────
 INSERT INTO plantillas_mensajes (nombre, contenido, categoria, variables, activa, tenant_id)
 SELECT * FROM (VALUES
-    ('Recordatorio 24hs', 'Hola {{paciente}}, te recordamos que tenés un turno con el Dr. {{medico}} manana a las {{hora}}. Respondé "CONFIRMAR" para confirmar asistencia o "CANCELAR" si necesitás reprogramar.', 'recordatorios', ARRAY['paciente', 'medico', 'hora'], true, '00000000-0000-0000-0000-000000000000'::uuid),
+    ('Recordatorio 24hs', 'Hola {{paciente}}, te recordamos que tienes un turno con el Dr. {{medico}} mañana a las {{hora}}. Responde "CONFIRMAR" para confirmar asistencia o "CANCELAR" si necesitas reprogramar.', 'recordatorios', ARRAY['paciente', 'medico', 'hora'], true, '00000000-0000-0000-0000-000000000000'::uuid),
     ('Recordatorio 1h', 'Recordatorio: {{paciente}}, tu turno con el Dr. {{medico}} es en 1 hora ({{hora}}). Te esperamos!', 'recordatorios', ARRAY['paciente', 'medico', 'hora'], true, '00000000-0000-0000-0000-000000000000'::uuid),
     ('Confirmacion turno', 'Gracias {{paciente}}! Tu turno con el Dr. {{medico}} el dia {{fecha}} a las {{hora}} fue confirmado.', 'turnos', ARRAY['paciente', 'medico', 'fecha', 'hora'], true, '00000000-0000-0000-0000-000000000000'::uuid),
     ('Cancelacion turno', 'Hola {{paciente}}, te confirmamos que tu turno del {{fecha}} a las {{hora}} fue cancelado.', 'turnos', ARRAY['paciente', 'fecha', 'hora'], true, '00000000-0000-0000-0000-000000000000'::uuid),

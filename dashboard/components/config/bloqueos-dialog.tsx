@@ -46,12 +46,12 @@ function formatBloqueoFecha(isoInicio: string, isoFin: string): string {
     || fin.getUTCHours() !== 0 || fin.getUTCMinutes() !== 0
     || (fin.getTime() - inicio.getTime()) < 86400000;
 
-  const fechaIni = inicio.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
-  const fechaFinStr = fin.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  const fechaIni = inicio.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  const fechaFinStr = fin.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
   if (esHorario) {
-    const horaIni = inicio.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-    const horaFin = fin.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    const horaIni = inicio.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+    const horaFin = fin.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 
     if (fechaIni === fechaFinStr) {
       // Mismo día, solo mostrar horario

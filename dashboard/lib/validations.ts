@@ -50,6 +50,8 @@ export const createPacienteSchema = z.object({
   telefono: z.string().min(1, 'Teléfono es obligatorio').regex(/^\+?\d+/, 'Teléfono debe ser numérico'),
   email: z.string().email('Email inválido').optional().nullable(),
   obraSocial: z.string().optional().nullable(),
+  sistemaSalud: z.enum(['fonasa', 'isapre', 'particular', 'otro']).optional().nullable(),
+  isapreNombre: z.string().optional().nullable(),
   dni: z.string().optional().nullable(),
   fechaNacimiento: z.string().optional().nullable(),
   direccion: z.string().optional().nullable(),

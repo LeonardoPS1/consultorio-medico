@@ -115,8 +115,8 @@ export async function notificarOfertaTurno(
 
     // Formatear fecha y hora
     const fecha = turno.fechaHora instanceof Date ? turno.fechaHora : new Date(turno.fechaHora);
-    const fechaStr = fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
-    const horaStr = fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    const fechaStr = fecha.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' });
+    const horaStr = fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 
     const mensaje =
       `🎯 ¡Hola ${paciente.nombre}! Un turno se ha liberado para tu médico ${medico.nombre}:\n\n` +
@@ -171,8 +171,8 @@ export async function notificarMedicoReasignacion(turnoId: string): Promise<void
     if (!paciente) return;
 
     const fecha = turno.fechaHora instanceof Date ? turno.fechaHora : new Date(turno.fechaHora);
-    const fechaStr = fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
-    const horaStr = fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    const fechaStr = fecha.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' });
+    const horaStr = fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 
     const mensaje =
       `🔄 Dr. ${medico.nombre}, un turno cancelado fue reasignado:\n\n` +
@@ -206,8 +206,8 @@ export async function notificarConfirmacionReasignacion(turnoId: string, pacient
     if (!paciente || !paciente.telefono) return;
 
     const fecha = turno.fechaHora instanceof Date ? turno.fechaHora : new Date(turno.fechaHora);
-    const fechaStr = fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
-    const horaStr = fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    const fechaStr = fecha.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' });
+    const horaStr = fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 
     const mensaje =
       `✅ ¡Turno confirmado ${paciente.nombre}!\n\n` +
@@ -264,7 +264,7 @@ export async function handleWaitlistResponse(
       safeLog(`[WhatsApp-Waitlist] No hay oferta pendiente para paciente ${pacienteId}`);
       await enviarWhatsApp(
         telefono,
-        'No encontré una oferta de turno pendiente para vos. Si necesitas ayuda, escribí "HOLA" para hablar con un asistente.',
+        'No encontré una oferta de turno pendiente para ti. Si necesitas ayuda, escribí "HOLA" para hablar con un asistente.',
       );
       return true;
     }

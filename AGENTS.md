@@ -2,8 +2,8 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 31/05/2026
-**Proyecto:** Consultorio Médico — Aicore (aicorebots.com)
+**Última actualización:** 02/06/2026
+**Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
 **Repositorio:** `main` → https://github.com/LeonardoPS1/consultorio-medico
@@ -45,6 +45,7 @@
 6. **Commit + Push** a `origin/main` con mensajes claros y convencionales.
 
 ### Convenciones de Código
+- **Idioma**: Todo el texto visible al usuario en español neutro chileno (no argentino). Prompts de IA en español neutro.
 - **TypeScript estricto**: `strict: true` en tsconfig. Evitar `any`.
 - **Drizzle ORM puro**: Queries tipadas con `db.select()`, `db.insert()`, etc. Sin SQL raw excepto migraciones.
 - **API Routes**: Patrón RESTful con `apiHandler` para errores consistentes.
@@ -89,7 +90,7 @@
 | **Automatización** | n8n (self-hosted) | 2.19.5 |
 | **IA Local** | Ollama + Mistral | Último |
 | **WhatsApp** | Twilio API | ^5.0.0 |
-| **Pagos** | MercadoPago (sandbox) | ^2.12.1 |
+| **Pagos** | MercadoPago (sandbox, CLP) | ^2.12.1 |
 | **Calendario** | Google Calendar API (service account) | — |
 | **Infraestructura** | Docker Swarm + Dokploy | — |
 | **Proxy** | Traefik + Let's Encrypt | — |
@@ -458,7 +459,7 @@ consultorio-medico/
 | Número Doctor | `+18453735358` (actualmente mismo, configurable vía `TWILIO_DOCTOR_NUMBER`) |
 | SMS URL | `https://med.aicorebots.com/api/webhooks/twilio` |
 | Status Callback | `https://med.aicorebots.com/api/webhooks/twilio` |
-| Soportados | Argentina (+54), Chile (+56) |
+| Soportados | Chile (+56) — principal, Argentina (+54) — legacy |
 | Verificación | HMAC-SHA256 via `validateRequest()` de twilio SDK |
 
 ### PostgreSQL
@@ -478,7 +479,7 @@ consultorio-medico/
 ### MercadoPago (Sandbox)
 - 5 planes de suscripción (Free, Starter, Professional, Business, Enterprise)
 - Webhook con validación HMAC-SHA256 (`x-signature`)
-- Moneda configurable (ARS / CLP / USD)
+- Moneda: CLP (Chile) por defecto, compatible con ARS/USD legacy
 - Flujo: checkout → preferencia → webhook → actualiza plan del usuario
 
 ### n8n
@@ -542,6 +543,7 @@ consultorio-medico/
 | **Múltiples médicos** | Sesión con medicoId, scoping en 7 rutas API, agenda-scope utility | 29/05 |
 | ~~Google Calendar sync~~ | `turnosService.create/update/delete()` con GCal sync | 28/05 |
 | ~~ARCO - Derecho de Supresión~~ | `privacidadService` con baja, cascada de datos, anonimización, WF-09 retención 90 días | 28/05 |
+| **Adaptación Chile** | Isapre/Fonasa, español neutro, precios CLP, regiones/comunas, RUT, teléfono +569 | 02/06 |
 
 ### 🟡 Prioridad Media
 
