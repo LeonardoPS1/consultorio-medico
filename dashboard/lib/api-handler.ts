@@ -23,8 +23,10 @@ export function apiHandler(fn: (...args: any[]) => any): (...args: any[]) => any
       const message = error instanceof Error ? error.message : 'Error interno del servidor';
       const status = (error as any)?.status || 500;
       safeError(`[API] ${request.method} ${request.nextUrl.pathname}:`, { error: message });
+      // En producción, mostrar errores user-facing (400, 404, 409) y ocultar solo errores internos (500)
+      const userFacing = status < 500;
       return NextResponse.json(
-        { error: process.env.NODE_ENV === 'production' ? 'Error interno del servidor' : message },
+        { error: userFacing ? message : 'Error interno del servidor' },
         { status },
       );
     }
