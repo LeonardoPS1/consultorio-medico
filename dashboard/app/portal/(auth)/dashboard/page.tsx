@@ -43,6 +43,7 @@ export default async function PortalDashboardPage() {
     .select({
       id: turnos.id,
       fechaHora: sql<string>`${turnos.fechaHora}::text`,
+      hora: sql<string>`TO_CHAR(${turnos.fechaHora}, 'HH24:MI')`,
       estado: turnos.estado,
       tipoConsulta: turnos.tipoConsulta,
       motivo: turnos.motivo,

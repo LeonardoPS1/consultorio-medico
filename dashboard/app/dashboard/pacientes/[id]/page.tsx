@@ -11,6 +11,7 @@ import {
   conversaciones,
 } from '@/drizzle/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
+
 import { auth } from '@/lib/auth';
 
 // ─── Types ────────────────────────────────────────────────
@@ -39,6 +40,7 @@ interface PacienteDetalle {
   turnos: Array<{
     id: string;
     fechaHora: string;
+    hora: string;
     estado: string;
     tipoConsulta: string;
     motivo: string | null;
@@ -125,6 +127,7 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
       .select({
         id: turnos.id,
         fechaHora: turnos.fechaHora,
+        hora: sql<string>`TO_CHAR(${turnos.fechaHora}, 'HH24:MI')`,
         estado: turnos.estado,
         tipoConsulta: turnos.tipoConsulta,
         motivo: turnos.motivo,
@@ -234,7 +237,8 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
     };
     const turnosData = turnosList.map((t) => ({
       ...t,
-      fechaHora: t.fechaHora ? String(t.fechaHora) : '',
+      fechaHora: t.fechaHora ? t.fechaHora.toISOString() : '',
+      hora: t.hora || '',
     }));
     const recetasData = recetasList.map((r) => ({
       ...r,

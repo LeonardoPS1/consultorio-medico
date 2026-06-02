@@ -10,6 +10,7 @@ import { Calendar, MapPin, Video, Phone, Clock, XCircle, AlertCircle } from 'luc
 interface Turno {
   id: string;
   fechaHora: string;
+  hora: string;
   estado: string;
   motivo?: string;
   tipoConsulta: string;
@@ -34,8 +35,6 @@ function formatDate(date: string): string {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
   });
 }
 
@@ -97,7 +96,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                   <div>
                     <div className="flex items-center gap-2 text-gray-700 mb-1">
                       <Calendar className="h-4 w-4" />
-                      <span className="font-medium">{formatDate(t.fechaHora)}</span>
+                      <span className="font-medium">{formatDate(t.fechaHora)} · {t.hora}</span>
                     </div>
                     <div className="text-sm text-gray-500 mb-2">
                       Dr/a. {t.medicoNombre} · {t.medicoEspecialidad}
@@ -150,7 +149,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="text-sm font-medium text-gray-700">
-                      {formatDate(t.fechaHora)}
+                      {formatDate(t.fechaHora)} · {t.hora}
                     </div>
                     <div className="text-xs text-gray-400">
                       Dr/a. {t.medicoNombre} · {t.tipoConsulta}

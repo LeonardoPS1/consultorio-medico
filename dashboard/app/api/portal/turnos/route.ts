@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     .select({
       id: turnos.id,
       fechaHora: turnos.fechaHora,
+      hora: sql<string>`TO_CHAR(${turnos.fechaHora}, 'HH24:MI')`,
       estado: turnos.estado,
       motivo: turnos.motivo,
       tipoConsulta: turnos.tipoConsulta,

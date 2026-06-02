@@ -23,6 +23,7 @@ import { formatDate, formatPhone, getTurnoColor, getTurnoLabel } from '@/lib/uti
 interface TurnoRow {
   id: string;
   fechaHora: string;
+  hora: string;
   estado: string;
   tipoConsulta: string;
   motivo: string | null;
@@ -206,7 +207,7 @@ export function PortalDashboardClient({ data }: { data: PortalData }) {
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {formatDate(t.fechaHora, 'HH:mm')} · {t.duracionMinutos}min · {t.motivo || t.tipoConsulta}
+                        {t.hora} · {t.duracionMinutos}min · {t.motivo || t.tipoConsulta}
                       </p>
                       {t.medicoNombre && (
                         <p className="text-xs text-muted-foreground/70 mt-1">
@@ -238,7 +239,7 @@ export function PortalDashboardClient({ data }: { data: PortalData }) {
                       <CardContent className="p-4 flex items-center gap-3">
                         <Icon className="h-5 w-5 text-muted-foreground shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">{formatDate(t.fechaHora, "d 'de' MMMM, HH:mm")}</p>
+                          <p className="text-sm font-medium">{formatDate(t.fechaHora, "d 'de' MMMM")} · {t.hora}</p>
                           <p className="text-xs text-muted-foreground">{t.motivo || t.tipoConsulta}</p>
                         </div>
                         <Badge variant="outline" className="text-xs">

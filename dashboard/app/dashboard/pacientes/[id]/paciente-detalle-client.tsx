@@ -68,6 +68,7 @@ import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
 interface TurnoRow {
   id: string;
   fechaHora: string;
+  hora: string;
   estado: string;
   tipoConsulta: string;
   motivo: string | null;
@@ -1038,11 +1039,11 @@ export function PacienteDetalleClient({
                         color: getTurnoColor(t.estado),
                       }}
                     >
-                      {formatDate(t.fechaHora, 'dd/MM')}
+                      {t.fechaHora.substring(8, 10)}/{t.fechaHora.substring(5, 7)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm">
-                        {formatDate(t.fechaHora, "d 'de' MMMM, HH:mm")}
+                        {formatDate(t.fechaHora, "d 'de' MMMM")} a las {t.hora}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {t.motivo || t.tipoConsulta} {t.medicoNombre && `· ${t.medicoNombre}`} · {t.duracionMinutos}min
