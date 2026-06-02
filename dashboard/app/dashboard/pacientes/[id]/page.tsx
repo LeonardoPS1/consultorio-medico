@@ -196,11 +196,34 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
       {} as Record<string, number>,
     );
 
+    // Mapear tipos: Drizzle devuelve Date/nulleables, la interface espera strings/no-nulos
+    const pacienteData = {
+      ...paciente,
+      tags: paciente.tags ?? [],
+      consentimientoWhatsapp: paciente.consentimientoWhatsapp ?? false,
+      consentimientoEmail: paciente.consentimientoEmail ?? false,
+      createdAt: paciente.createdAt?.toISOString() ?? '',
+      fechaNacimiento: paciente.fechaNacimiento ?? null,
+    };
+    const turnosData = turnosList.map((t) => ({
+      ...t,
+      fechaHora: String(t.fechaHora),
+    }));
+    const recetasData = recetasList.map((r) => ({
+      ...r,
+      fechaInicio: String(r.fechaInicio),
+      fechaFin: String(r.fechaFin),
+    }));
+    const historialData = historial.map((h) => ({
+      ...h,
+      fecha: String(h.fecha),
+    }));
+
     return {
-      paciente,
-      turnos: turnosList,
-      recetas: recetasList,
-      historial,
+      paciente: pacienteData,
+      turnos: turnosData,
+      recetas: recetasData,
+      historial: historialData,
       ultimaConversacion: ultimaConversacion || null,
       stats: {
         totalTurnos: turnosList.length,
@@ -210,7 +233,7 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
         turnosPorEstado: statsTurnos,
         recetasPorEstado: statsRecetas,
       },
-      bajaSolicitadaAt: paciente.bajaSolicitadaAt || null,
+      bajaSolicitadaAt: paciente.bajaSolicitadaAt?.toISOString() ?? null,
       bajaConfirmada: false,
     };
   } catch {
