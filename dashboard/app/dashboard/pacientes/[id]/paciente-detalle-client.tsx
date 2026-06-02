@@ -2193,7 +2193,6 @@ export function PacienteDetalleClient({
                 medicoId: medicoEncontrado.id,
                 fecha: data.fecha,
                 hora: data.hora,
-                tipoConsulta: data.tipo || 'presencial',
                 motivo: data.tipo,
               }),
             });

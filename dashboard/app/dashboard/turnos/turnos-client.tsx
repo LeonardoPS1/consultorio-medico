@@ -290,7 +290,6 @@ export function TurnosClient({
           medicoId,
           fecha: data.fecha,
           hora: data.hora,
-          tipoConsulta: data.tipo || 'presencial',
           motivo: data.tipo,
           sucursalId,
         }),
