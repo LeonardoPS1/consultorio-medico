@@ -1,42 +1,19 @@
 import { notFound } from 'next/navigation';
-import { headers } from 'next/headers';
 import { PacienteDetalleClient } from './paciente-detalle-client';
+import { db } from '@/lib/db';
+import {
+  pacientes,
+  turnos,
+  recetas,
+  medicos,
+  historialMedico,
+  notasSoap,
+  conversaciones,
+} from '@/drizzle/schema';
+import { eq, and, sql, desc } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
 
 // ─── Types ────────────────────────────────────────────────
-
-interface TurnoRow {
-  id: string;
-  fechaHora: string;
-  estado: string;
-  tipoConsulta: string;
-  motivo: string | null;
-  medicoNombre: string | null;
-  duracionMinutos: number;
-  notasMedico: string | null;
-}
-
-interface RecetaRow {
-  id: string;
-  medicamento: string;
-  dosis: string;
-  frecuencia: string;
-  duracion: string | null;
-  indicaciones: string | null;
-  estado: string;
-  fechaInicio: string;
-  fechaFin: string | null;
-  medicoNombre: string | null;
-}
-
-interface HistorialRow {
-  id: string;
-  tipo: string;
-  titulo: string;
-  descripcion: string | null;
-  diagnosticoCodigo: string | null;
-  diagnosticoDescripcion: string | null;
-  fecha: string;
-}
 
 interface PacienteDetalle {
   paciente: {
@@ -57,9 +34,37 @@ interface PacienteDetalle {
     consentimientoWhatsapp: boolean;
     createdAt: string;
   };
-  turnos: TurnoRow[];
-  recetas: RecetaRow[];
-  historial: HistorialRow[];
+  turnos: Array<{
+    id: string;
+    fechaHora: string;
+    estado: string;
+    tipoConsulta: string;
+    motivo: string | null;
+    medicoNombre: string | null;
+    duracionMinutos: number;
+    notasMedico: string | null;
+  }>;
+  recetas: Array<{
+    id: string;
+    medicamento: string;
+    dosis: string;
+    frecuencia: string;
+    duracion: string | null;
+    indicaciones: string | null;
+    estado: string;
+    fechaInicio: string;
+    fechaFin: string | null;
+    medicoNombre: string | null;
+  }>;
+  historial: Array<{
+    id: string;
+    tipo: string;
+    titulo: string;
+    descripcion: string | null;
+    diagnosticoCodigo: string | null;
+    diagnosticoDescripcion: string | null;
+    fecha: string;
+  }>;
   ultimaConversacion: { id: string; estado: string } | null;
   stats: {
     totalTurnos: number;
@@ -73,24 +78,141 @@ interface PacienteDetalle {
   bajaConfirmada?: boolean;
 }
 
-// ─── Data fetching ─────────────────────────────────────────
+// ─── Data fetching (directo a DB, sin fetch a API) ─────────
 
 export const dynamic = 'force-dynamic';
 
 async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
   try {
-    const headersList = headers();
-    const host = headersList.get('host') || 'localhost:3000';
-    const protocol = host === 'localhost:3000' || host === '127.0.0.1:3000' ? 'http' : 'https';
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
+    const session = await auth();
+    if (!session?.user?.id) return null;
 
-    const res = await fetch(
-      `${baseUrl}/api/pacientes/${id}/detalle`,
-      { cache: 'no-store' },
+    // ─── Datos del paciente ──────────────────────────
+    const [paciente] = await db
+      .select()
+      .from(pacientes)
+      .where(and(eq(pacientes.id, id), sql`${pacientes.deletedAt} IS NULL`));
+
+    if (!paciente) return null;
+
+    // ─── Turnos ──────────────────────────────────────
+    const turnosList = await db
+      .select({
+        id: turnos.id,
+        fechaHora: turnos.fechaHora,
+        estado: turnos.estado,
+        tipoConsulta: turnos.tipoConsulta,
+        motivo: turnos.motivo,
+        medicoNombre: medicos.nombre,
+        duracionMinutos: turnos.duracionMinutos,
+        notasMedico: turnos.notasMedico,
+      })
+      .from(turnos)
+      .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
+      .where(
+        and(eq(turnos.pacienteId, id), sql`${turnos.deletedAt} IS NULL`),
+      )
+      .orderBy(desc(turnos.fechaHora))
+      .limit(30);
+
+    // ─── Recetas ─────────────────────────────────────
+    const recetasList = await db
+      .select({
+        id: recetas.id,
+        medicamento: recetas.medicamento,
+        dosis: recetas.dosis,
+        frecuencia: recetas.frecuencia,
+        duracion: recetas.duracion,
+        indicaciones: recetas.indicaciones,
+        estado: recetas.estado,
+        fechaInicio: recetas.fechaInicio,
+        fechaFin: recetas.fechaFin,
+        medicoNombre: medicos.nombre,
+      })
+      .from(recetas)
+      .leftJoin(medicos, eq(recetas.medicoId, medicos.id))
+      .where(eq(recetas.pacienteId, id))
+      .orderBy(desc(recetas.createdAt))
+      .limit(20);
+
+    // ─── Historial médico ────────────────────────────
+    const historial = await db
+      .select({
+        id: historialMedico.id,
+        tipo: historialMedico.tipo,
+        titulo: historialMedico.titulo,
+        descripcion: historialMedico.descripcion,
+        diagnosticoCodigo: historialMedico.diagnosticoCodigo,
+        diagnosticoDescripcion: historialMedico.diagnosticoDescripcion,
+        fecha: historialMedico.createdAt,
+      })
+      .from(historialMedico)
+      .where(eq(historialMedico.pacienteId, id))
+      .orderBy(desc(historialMedico.createdAt))
+      .limit(20);
+
+    // ─── Notas SOAP count ─────────────────────────
+    let notasSoapCount = { count: 0 };
+    try {
+      const [result] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(notasSoap)
+        .where(eq(notasSoap.pacienteId, id));
+      notasSoapCount = result || { count: 0 };
+    } catch {
+      notasSoapCount = { count: 0 };
+    }
+
+    // ─── Última conversación ─────────────────────────
+    const [ultimaConversacion] = await db
+      .select({
+        id: conversaciones.id,
+        estado: conversaciones.estado,
+      })
+      .from(conversaciones)
+      .where(
+        and(
+          eq(conversaciones.pacienteId, id),
+          sql`${conversaciones.deletedAt} IS NULL`,
+        ),
+      )
+      .orderBy(desc(conversaciones.ultimaInteraccion))
+      .limit(1);
+
+    // ─── Stats ───────────────────────────────────────
+    const statsTurnos = turnosList.reduce(
+      (acc, t) => {
+        acc[t.estado] = (acc[t.estado] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
     );
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.data;
+
+    const statsRecetas = recetasList.reduce(
+      (acc, r) => {
+        acc[r.estado] = (acc[r.estado] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    return {
+      paciente,
+      turnos: turnosList,
+      recetas: recetasList,
+      historial,
+      ultimaConversacion: ultimaConversacion || null,
+      stats: {
+        totalTurnos: turnosList.length,
+        totalRecetas: recetasList.length,
+        totalHistorial: historial.length,
+        totalNotasSoap: Number(notasSoapCount?.count || 0),
+        turnosPorEstado: statsTurnos,
+        recetasPorEstado: statsRecetas,
+      },
+      bajaSolicitadaAt: paciente.bajaSolicitadaAt || null,
+      bajaConfirmada: false,
+    };
   } catch {
     return null;
   }
