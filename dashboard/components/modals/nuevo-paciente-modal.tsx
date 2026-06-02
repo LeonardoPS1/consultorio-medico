@@ -21,6 +21,17 @@ import {
 } from '@/components/select';
 import { SISTEMAS_SALUD, ISAPRES_CHILENAS } from '@/lib/isapres';
 
+interface Region {
+  id: string;
+  nombre: string;
+  numeroRomano: string | null;
+}
+
+interface Comuna {
+  id: string;
+  nombre: string;
+}
+
 interface NuevoPacienteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -32,7 +43,17 @@ interface NuevoPacienteModalProps {
     obraSocial: string;
     sistemaSalud?: string;
     isapreNombre?: string;
+    regionId?: string;
+    comunaId?: string;
   }) => void;
+}
+
+/** Agrega prefijo +569 si el teléfono no lo tiene */
+function formatTelefonoChile(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length === 9 && digits.startsWith('9')) return `+569${digits}`;
+  if (digits.startsWith('569') && digits.length === 12) return `+${digits}`;
+  return value;
 }
 
 export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacienteModalProps) {
@@ -42,8 +63,36 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
   const [email, setEmail] = useState('');
   const [sistemaSalud, setSistemaSalud] = useState('particular');
   const [isapreNombre, setIsapreNombre] = useState('');
+  const [regionId, setRegionId] = useState('');
+  const [comunaId, setComunaId] = useState('');
   const [loading, setLoading] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Regiones/comunas
+  const [regiones, setRegiones] = useState<Region[]>([]);
+  const [comunas, setComunas] = useState<Comuna[]>([]);
+  const [loadingComunas, setLoadingComunas] = useState(false);
+
+  // Cargar regiones al abrir el modal
+  useEffect(() => {
+    if (open) {
+      fetch('/api/regiones')
+        .then(r => r.json())
+        .then(data => setRegiones(data.data || []))
+        .catch(() => {});
+    }
+  }, [open]);
+
+  // Cargar comunas al cambiar región
+  useEffect(() => {
+    if (!regionId) { setComunas([]); return; }
+    setLoadingComunas(true);
+    fetch(`/api/comunas?region_id=${regionId}`)
+      .then(r => r.json())
+      .then(data => setComunas(data.data || []))
+      .catch(() => {})
+      .finally(() => setLoadingComunas(false));
+  }, [regionId]);
 
   useEffect(() => {
     return () => {
@@ -59,11 +108,13 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
       onSubmit?.({
         nombre,
         apellido,
-        telefono,
+        telefono: formatTelefonoChile(telefono),
         email,
         obraSocial: isapreValue || sistemaSalud || 'Particular',
         sistemaSalud,
         isapreNombre: isapreValue,
+        regionId: regionId || undefined,
+        comunaId: comunaId || undefined,
       });
       setLoading(false);
       onOpenChange(false);
@@ -73,6 +124,8 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
       setEmail('');
       setSistemaSalud('particular');
       setIsapreNombre('');
+      setRegionId('');
+      setComunaId('');
     }, 300);
   };
 
@@ -162,6 +215,42 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
               </Select>
             </div>
           )}
+
+          {/* Región */}
+          <div className="space-y-2">
+            <Label>Región</Label>
+            <Select value={regionId} onValueChange={(val) => { setRegionId(val); setComunaId(''); }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona una región" />
+              </SelectTrigger>
+              <SelectContent>
+                {regiones.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    {r.numeroRomano ? `${r.numeroRomano} - ` : ''}{r.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Comuna */}
+          <div className="space-y-2">
+            <Label>Comuna</Label>
+            <Select
+              value={comunaId}
+              onValueChange={setComunaId}
+              disabled={!regionId || loadingComunas}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={loadingComunas ? 'Cargando...' : 'Selecciona una comuna'} />
+              </SelectTrigger>
+              <SelectContent>
+                {comunas.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

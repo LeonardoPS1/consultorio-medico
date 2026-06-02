@@ -113,6 +113,10 @@ interface PacienteData {
   sistemaSalud: string | null;
   isapreNombre: string | null;
   numeroAfiliado: string | null;
+  regionId: string | null;
+  comunaId: string | null;
+  regionNombre: string | null;
+  comunaNombre: string | null;
   alergias: string | null;
   medicacionCronica: string | null;
   notasMedicas: string | null;
@@ -794,6 +798,11 @@ export function PacienteDetalleClient({
                 {paciente.direccion && (
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5" /> {paciente.direccion}
+                  </span>
+                )}
+                {(paciente.regionNombre || paciente.comunaNombre) && (
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5" /> {[paciente.comunaNombre, paciente.regionNombre].filter(Boolean).join(', ')}
                   </span>
                 )}
               </div>

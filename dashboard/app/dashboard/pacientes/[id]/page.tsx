@@ -9,6 +9,8 @@ import {
   historialMedico,
   notasSoap,
   conversaciones,
+  regiones,
+  comunas,
 } from '@/drizzle/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 
@@ -30,6 +32,10 @@ interface PacienteDetalle {
     sistemaSalud: string | null;
     isapreNombre: string | null;
     numeroAfiliado: string | null;
+    regionId: string | null;
+    comunaId: string | null;
+    regionNombre: string | null;
+    comunaNombre: string | null;
     alergias: string | null;
     medicacionCronica: string | null;
     notasMedicas: string | null;
@@ -106,18 +112,23 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
         sistemaSalud: pacientes.sistemaSalud,
         isapreNombre: pacientes.isapreNombre,
         numeroAfiliado: pacientes.numeroAfiliado,
+        regionId: pacientes.regionId,
+        comunaId: pacientes.comunaId,
+        regionNombre: regiones.nombre,
+        comunaNombre: comunas.nombre,
         alergias: pacientes.alergias,
         medicacionCronica: pacientes.medicacionCronica,
         notasMedicas: pacientes.notasMedicas,
         tags: pacientes.tags,
         consentimientoWhatsapp: pacientes.consentimientoWhatsapp,
         consentimientoEmail: pacientes.consentimientoEmail,
-        bajaSolicitadaAt: pacientes.bajaSolicitadaAt,
         createdAt: pacientes.createdAt,
         updatedAt: pacientes.updatedAt,
         deletedAt: pacientes.deletedAt,
       })
       .from(pacientes)
+      .leftJoin(regiones, eq(pacientes.regionId, regiones.id))
+      .leftJoin(comunas, eq(pacientes.comunaId, comunas.id))
       .where(and(eq(pacientes.id, id), sql`${pacientes.deletedAt} IS NULL`));
 
     if (!paciente) return null;
@@ -191,6 +202,17 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
       notasSoapCount = { count: 0 };
     }
 
+    // ─── Baja ARCO (query segura, columna puede no existir en prod) ──
+    let bajaSolicitadaAt: string | null = null;
+    try {
+      const [row] = await db.execute(sql`SELECT baja_solicitada_at FROM pacientes WHERE id = ${id}`);
+      const raw = (row as Record<string, unknown>)?.baja_solicitada_at;
+      bajaSolicitadaAt = raw ? String(raw) : null;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_e) {
+      bajaSolicitadaAt = null; // columna no existe aún en esta DB
+    }
+
     // ─── Última conversación ─────────────────────────
     const [ultimaConversacion] = await db
       .select({
@@ -234,6 +256,10 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
       fechaNacimiento: paciente.fechaNacimiento ?? null,
       sistemaSalud: paciente.sistemaSalud ?? null,
       isapreNombre: paciente.isapreNombre ?? null,
+      regionId: paciente.regionId ?? null,
+      comunaId: paciente.comunaId ?? null,
+      regionNombre: paciente.regionNombre ?? null,
+      comunaNombre: paciente.comunaNombre ?? null,
     };
     const turnosData = turnosList.map((t) => ({
       ...t,
@@ -264,10 +290,11 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
         turnosPorEstado: statsTurnos,
         recetasPorEstado: statsRecetas,
       },
-      bajaSolicitadaAt: paciente.bajaSolicitadaAt?.toISOString() ?? null,
+      bajaSolicitadaAt,
       bajaConfirmada: false,
     };
-  } catch {
+  } catch (error) {
+    console.error('[PacienteDetalle] Error al obtener datos:', error);
     return null;
   }
 }

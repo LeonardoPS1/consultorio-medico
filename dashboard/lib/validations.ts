@@ -44,10 +44,13 @@ export function parseQuery(request: NextRequest, schema: z.ZodType): Record<stri
 
 // ─── Schemas ─────────────────────────────────────────────
 
+/** Teléfono chileno: +569XXXXXXXX o +562XXXXXXXX o 9XXXXXXXX */
+const telefonoChileRegex = /^(\+569\d{8}|\+562\d{7}|9\d{8})$/;
+
 export const createPacienteSchema = z.object({
   nombre: z.string().min(1, 'Nombre es obligatorio'),
   apellido: z.string().min(1, 'Apellido es obligatorio'),
-  telefono: z.string().min(1, 'Teléfono es obligatorio').regex(/^\+?\d+/, 'Teléfono debe ser numérico'),
+  telefono: z.string().min(1, 'Teléfono es obligatorio').regex(telefonoChileRegex, 'Teléfono debe ser chileno: +569XXXXXXXX'),
   email: z.string().email('Email inválido').optional().nullable(),
   obraSocial: z.string().optional().nullable(),
   sistemaSalud: z.enum(['fonasa', 'isapre', 'particular', 'otro']).optional().nullable(),
@@ -55,6 +58,8 @@ export const createPacienteSchema = z.object({
   dni: z.string().optional().nullable(),
   fechaNacimiento: z.string().optional().nullable(),
   direccion: z.string().optional().nullable(),
+  regionId: z.string().uuid('regionId debe ser UUID').optional().nullable(),
+  comunaId: z.string().uuid('comunaId debe ser UUID').optional().nullable(),
   alergias: z.string().optional().nullable(),
   medicacionCronica: z.string().optional().nullable(),
   notasMedicas: z.string().optional().nullable(),

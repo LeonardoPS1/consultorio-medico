@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import {
   ExternalLink,
   FileSpreadsheet,
   FileDown,
+  Loader2,
 } from 'lucide-react';
 
 import { formatPhone, getInitials, formatDate } from '@/lib/utils';
@@ -52,15 +53,53 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
   const [showNewPaciente, setShowNewPaciente] = useState(false);
   const [pacientesList, setPacientesList] =
     useState<Paciente[]>(initialPacientes);
+  const [searching, setSearching] = useState(false);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Búsqueda debounced vía API
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(async () => {
+      if (!search.trim()) {
+        // Sin búsqueda, restaurar lista inicial
+        setPacientesList(initialPacientes);
+        setSearching(false);
+        return;
+      }
+      setSearching(true);
+      try {
+        const params = new URLSearchParams({ search, limit: '100' });
+        if (sucursalId) params.set('sucursalId', sucursalId);
+        const res = await fetch(`/api/pacientes?${params.toString()}`);
+        if (res.ok) {
+          const json = await res.json();
+          setPacientesList(json.data || []);
+        }
+      } catch {
+        // fallback silencioso
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [search, sucursalId, initialPacientes]);
 
   const filtered = useMemo(
     () =>
-      pacientesList.filter(
-        (p) =>
-          p.nombre.toLowerCase().includes(search.toLowerCase()) ||
-          p.apellido.toLowerCase().includes(search.toLowerCase()) ||
-          p.telefono.includes(search),
-      ),
+      !search.trim()
+        ? pacientesList
+        : pacientesList.filter(
+            (p) =>
+              p.nombre.toLowerCase().includes(search.toLowerCase()) ||
+              p.apellido.toLowerCase().includes(search.toLowerCase()) ||
+              p.telefono.includes(search) ||
+              (p.email && p.email.toLowerCase().includes(search.toLowerCase())) ||
+              (p.obraSocial && p.obraSocial.toLowerCase().includes(search.toLowerCase())),
+          ),
     [pacientesList, search],
   );
 
@@ -72,6 +111,8 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
     obraSocial: string;
     sistemaSalud?: string;
     isapreNombre?: string;
+    regionId?: string;
+    comunaId?: string;
   }) => {
     try {
       const res = await fetch('/api/pacientes', {
@@ -120,8 +161,11 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          {searching && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+          )}
           <Input
-            placeholder="Buscar por nombre, apellido o teléfono..."
+            placeholder="Buscar por nombre, apellido, teléfono o email..."
             className="pl-9 h-10"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
