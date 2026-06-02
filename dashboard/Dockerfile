@@ -60,10 +60,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./.next/st
 # Copiar assets públicos (en raíz, no bajo dashboard/)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/public ./public
 
-# pnpm genera node_modules con symlinks a la store.
-# Al copiar a una nueva etapa (multi-stage), esos symlinks apuntan a rutas inexistentes.
-# Reemplazamos con node_modules planos vía npm para que funcionen en el contenedor final.
-RUN rm -rf node_modules && npm install --omit=dev --no-audit --no-fund --ignore-scripts
+# El standalone output de Next.js ya incluye node_modules con las dependencias
+# necesarias para producción (incluyendo 'next' que server.js necesita).
+# No hacemos npm install porque el package.json del standalone no lista
+# 'next' como dependencia explícita (Next.js lo maneja internamente).
 
 # Crear directorio para cache de Next.js con permisos correctos
 RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
