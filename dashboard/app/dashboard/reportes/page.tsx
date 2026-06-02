@@ -276,11 +276,42 @@ export default function ReportesPage() {
     return (
       <div className="space-y-6 animate-in">
         <PageHeader title="Reportes" description="Cargando métricas del consultorio..." />
-        <div className="flex items-center justify-center py-16">
-          <div className="flex flex-col items-center gap-3 text-muted-foreground">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <p className="text-sm">Cargando reportes...</p>
-          </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05, duration: 0.2 }}
+            >
+              <Card>
+                <CardContent className="p-4">
+                  <div className="h-3 w-24 bg-muted rounded animate-pulse mb-2" />
+                  <div className="h-7 w-16 bg-muted rounded animate-pulse mb-1" />
+                  <div className="h-3 w-20 bg-muted rounded animate-pulse" />
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + i * 0.05, duration: 0.2 }}
+            >
+              <Card>
+                <CardHeader>
+                  <div className="h-5 w-40 bg-muted rounded animate-pulse" />
+                </CardHeader>
+                <CardContent>
+                  <div className="h-52 bg-muted rounded animate-pulse" />
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </div>
       </div>
     );
@@ -424,8 +455,14 @@ export default function ReportesPage() {
             })}
           </motion.div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <motion.div
+            className="grid gap-6 lg:grid-cols-2"
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
+          >
             {/* Gráfico Turnos por día */}
+            <motion.div variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.2, ease: 'easeOut' }}>
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -437,8 +474,10 @@ export default function ReportesPage() {
                 <TurnosChart data={data.turnos} />
               </CardContent>
             </Card>
+            </motion.div>
 
             {/* Intenciones */}
+            <motion.div variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.2, ease: 'easeOut' }}>
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -483,7 +522,8 @@ export default function ReportesPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
+            </motion.div>
+          </motion.div>
         </TabsContent>
 
         {/* ============ TAB TURNOS ============ */}
@@ -545,6 +585,11 @@ export default function ReportesPage() {
             </motion.div>
           </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, delay: 0.1, ease: 'easeOut' }}
+          >
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Distribución por Estado</CardTitle>
@@ -553,7 +598,13 @@ export default function ReportesPage() {
               <DistribucionEstadosChart data={data.distribucionEstados} />
             </CardContent>
           </Card>
+          </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, delay: 0.15, ease: 'easeOut' }}
+          >
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -569,6 +620,7 @@ export default function ReportesPage() {
               </div>
             </CardContent>
           </Card>
+          </motion.div>
         </TabsContent>
 
         {/* ============ TAB PACIENTES ============ */}

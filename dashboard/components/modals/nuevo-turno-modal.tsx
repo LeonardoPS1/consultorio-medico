@@ -24,22 +24,31 @@ interface NuevoTurnoModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: {
+    pacienteId?: string;
     paciente: string;
     tipo: string;
+    medicoId: string;
     medico: string;
     hora: string;
     fecha: string;
   }) => void;
+  pacienteId?: string;
+  pacienteName?: string;
 }
 
-export function NuevoTurnoModal({ open, onOpenChange, onSubmit }: NuevoTurnoModalProps) {
-  const [paciente, setPaciente] = useState('');
+export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: propPacienteId, pacienteName }: NuevoTurnoModalProps) {
+  const [paciente, setPaciente] = useState(pacienteName || '');
   const [tipo, setTipo] = useState('Consulta');
   const [medico, setMedico] = useState('Dr. García');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
   const [hora, setHora] = useState('09:00');
   const [loading, setLoading] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Sincronizar pacienteName si cambia externamente
+  useEffect(() => {
+    if (pacienteName) setPaciente(pacienteName);
+  }, [pacienteName]);
 
   useEffect(() => {
     return () => {
@@ -52,11 +61,19 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit }: NuevoTurnoModa
     setLoading(true);
     // Simular creación
     timeoutRef.current = setTimeout(() => {
-      onSubmit({ paciente, tipo, medico, hora, fecha });
+      onSubmit({
+        pacienteId: propPacienteId,
+        paciente,
+        tipo,
+        medicoId: '',
+        medico,
+        hora,
+        fecha,
+      });
       setLoading(false);
       onOpenChange(false);
       // Reset
-      setPaciente('');
+      if (!propPacienteId) setPaciente('');
       setTipo('Consulta');
       setHora('09:00');
     }, 300);
@@ -75,14 +92,20 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit }: NuevoTurnoModa
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="paciente">Paciente</Label>
-            <Input
-              id="paciente"
-              placeholder="Nombre del paciente"
-              value={paciente}
-              onChange={(e) => setPaciente(e.target.value)}
-              required
-              autoFocus
-            />
+            {pacienteName ? (
+              <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted/50 px-3 py-2 text-sm font-medium">
+                {pacienteName}
+              </div>
+            ) : (
+              <Input
+                id="paciente"
+                placeholder="Nombre del paciente"
+                value={paciente}
+                onChange={(e) => setPaciente(e.target.value)}
+                required
+                autoFocus
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

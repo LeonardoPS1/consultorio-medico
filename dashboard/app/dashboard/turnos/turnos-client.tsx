@@ -241,27 +241,44 @@ export function TurnosClient({
   // ─── CRUD con API ─────────────────────────────────────
 
   const handleNuevoTurno = async (data: {
+    pacienteId?: string;
     paciente: string;
     tipo: string;
+    medicoId: string;
     medico: string;
     hora: string;
     fecha: string;
   }) => {
     try {
-      // Buscar paciente que coincida
-      const busquedaPaciente = await fetch(`/api/pacientes?search=${encodeURIComponent(data.paciente)}&limit=5`);
-      const pacientesJson = await busquedaPaciente.json();
-      const pacienteEncontrado = pacientesJson.data?.[0];
+      // Buscar paciente que coincida (si no viene pacienteId)
+      let pacienteId = data.pacienteId;
+      if (!pacienteId) {
+        const busquedaPaciente = await fetch(`/api/pacientes?search=${encodeURIComponent(data.paciente)}&limit=5`);
+        const pacientesJson = await busquedaPaciente.json();
+        const pacienteEncontrado = pacientesJson.data?.[0];
+        if (!pacienteEncontrado) {
+          toast({ title: 'Error', description: 'Paciente no encontrado. Creá el paciente primero.', variant: 'destructive' });
+          return;
+        }
+        pacienteId = pacienteEncontrado.id;
+      }
 
-      // Buscar médico
-      const turnosRes = await fetch(`/api/turnos?fecha=${data.fecha}&limit=1`);
-      const turnosJson = await turnosRes.json();
-      const medicosDisponibles = turnosJson.medicos || [];
-      const medicoNombre = data.medico;
-
-      if (!pacienteEncontrado) {
-        toast({ title: 'Error', description: 'Paciente no encontrado. Creá el paciente primero.', variant: 'destructive' });
-        return;
+      // Buscar médico por nombre para obtener su ID
+      let medicoId = data.medicoId;
+      if (!medicoId) {
+        const medicosRes = await fetch('/api/medicos');
+        const medicosJson = await medicosRes.json();
+        const medicosList: { id: string; nombre: string }[] = medicosJson.data || [];
+        const medicoEncontrado = medicosList.find(
+          (m) =>
+            m.nombre.toLowerCase().includes(data.medico.toLowerCase()) ||
+            data.medico.toLowerCase().includes(m.nombre.toLowerCase()),
+        );
+        if (!medicoEncontrado) {
+          toast({ title: 'Error', description: 'Médico no encontrado. Verificá la lista de médicos.', variant: 'destructive' });
+          return;
+        }
+        medicoId = medicoEncontrado.id;
       }
 
       // Crear turno vía API
@@ -269,8 +286,8 @@ export function TurnosClient({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pacienteId: pacienteEncontrado.id,
-          medicoId: '',
+          pacienteId,
+          medicoId,
           fecha: data.fecha,
           hora: data.hora,
           tipoConsulta: data.tipo || 'presencial',
@@ -295,8 +312,8 @@ export function TurnosClient({
         medico: data.medico,
         estado: created.estado || 'pendiente',
         fecha: data.fecha || selectedDate.toISOString().split('T')[0],
-        medicoId: created.medicoId || '',
-        pacienteId: created.pacienteId || '',
+        medicoId: created.medicoId || medicoId,
+        pacienteId: created.pacienteId || pacienteId,
       };
       setTurnos((prev) => [newTurno, ...prev]);
       toast({ title: 'Turno creado', description: `${data.paciente} - ${data.hora}` });

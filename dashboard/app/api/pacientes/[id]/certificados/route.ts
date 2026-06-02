@@ -127,9 +127,10 @@ export async function GET(
 
     return NextResponse.json(list);
   } catch (error) {
-    console.error('[API] Error GET certificados:', error);
+    const message = error instanceof Error ? error.message : 'Error al obtener certificados';
+    console.error('[API] Error GET certificados:', message);
     return NextResponse.json(
-      { error: 'Error al obtener certificados' },
+      { error: message },
       { status: 500 },
     );
   }
@@ -223,9 +224,10 @@ export async function POST(
 
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {
-    console.error('[API] Error POST certificados:', error);
+    const message = error instanceof Error ? error.message : 'Error al crear certificado';
+    console.error('[API] Error POST certificados:', message);
     return NextResponse.json(
-      { error: 'Error al crear certificado' },
+      { error: message },
       { status: 500 },
     );
   }

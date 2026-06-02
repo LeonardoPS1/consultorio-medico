@@ -232,6 +232,38 @@ export function PacienteDetalleClient({
     controlEnDias: '',
   });
 
+  // ─── Certificados state (lazy load) ──────────────
+  interface CertificadoRow {
+    id: string;
+    tipo: string;
+    titulo: string;
+    descripcion: string | null;
+    diagnosticoCodigo: string | null;
+    hashVerificacion: string | null;
+    pdfGenerado: boolean;
+    createdAt: string;
+  }
+  const [certificadosList, setCertificadosList] = useState<CertificadoRow[]>([]);
+  const [certLoaded, setCertLoaded] = useState(false);
+  const [certLoading, setCertLoading] = useState(false);
+
+  const fetchCertificados = async () => {
+    if (certLoaded) return;
+    setCertLoading(true);
+    try {
+      const res = await fetch(`/api/pacientes/${paciente.id}/certificados`);
+      if (res.ok) {
+        const data = await res.json();
+        setCertificadosList(data);
+        setCertLoaded(true);
+      }
+    } catch {
+      // Silencio
+    } finally {
+      setCertLoading(false);
+    }
+  };
+
   const fetchNotasSoap = async () => {
     if (soapLoaded) return;
     setSoapLoading(true);
@@ -368,7 +400,10 @@ export function PacienteDetalleClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(certForm),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({ error: 'Error desconocido' }));
+        throw new Error(errBody.error || `Error ${res.status}`);
+      }
       const data = await res.json();
       toast({ title: 'Certificado creado', description: 'Abriendo vista previa...' });
 
@@ -381,8 +416,12 @@ export function PacienteDetalleClient({
         diagnostico: '', cie10Codigo: '', reposoDesde: '', reposoHasta: '',
         reposoDias: '', indicaciones: '',
       });
-    } catch {
-      toast({ title: 'Error', description: 'No se pudo crear el certificado', variant: 'destructive' });
+    } catch (e) {
+      toast({
+        title: 'Error',
+        description: e instanceof Error ? e.message : 'No se pudo crear el certificado',
+        variant: 'destructive',
+      });
     } finally {
       setSavingCert(false);
     }
@@ -947,7 +986,7 @@ export function PacienteDetalleClient({
 
       {/* Tabs */}
       <Tabs defaultValue="turnos">
-        <TabsList>
+        <TabsList className="flex-nowrap overflow-x-auto scrollbar-none w-full justify-start">
           <TabsTrigger value="turnos">
             <Calendar className="h-4 w-4 mr-1" /> Turnos ({turnosList.length})
           </TabsTrigger>
@@ -959,6 +998,9 @@ export function PacienteDetalleClient({
           </TabsTrigger>
           <TabsTrigger value="soap" onClick={fetchNotasSoap}>
             <Stethoscope className="h-4 w-4 mr-1" /> SOAP ({stats.totalNotasSoap})
+          </TabsTrigger>
+          <TabsTrigger value="certificados" onClick={fetchCertificados}>
+            <ScrollText className="h-4 w-4 mr-1" /> Certificados ({certificadosList.length})
           </TabsTrigger>
           <TabsTrigger value="notas">
             <FileText className="h-4 w-4 mr-1" /> Notas
@@ -1589,6 +1631,71 @@ export function PacienteDetalleClient({
           )}
         </TabsContent>
 
+        {/* Certificados */}
+        <TabsContent value="certificados" className="mt-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-muted-foreground">{certificadosList.length} certificados</p>
+            <Button variant="outline" size="sm" onClick={() => setShowCertDialog(true)}>
+              <ScrollText className="h-4 w-4 mr-1" /> Nuevo Certificado
+            </Button>
+          </div>
+
+          {certLoading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+              </CardContent>
+            </Card>
+          ) : certificadosList.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <ScrollText className="h-10 w-10 text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground">Sin certificados emitidos</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Los certificados médicos aparecerán aquí una vez creados
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {certificadosList.map((c) => {
+                const data = c.descripcion ? (() => { try { return JSON.parse(c.descripcion); } catch { return null; } })() : null;
+                return (
+                  <Card key={c.id} className="hoverable:hover:bg-muted/30 transition-colors group">
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+                        <ScrollText className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{data?.diagnostico || c.titulo}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(c.createdAt, "d 'de' MMMM yyyy, HH:mm")}
+                          {c.diagnosticoCodigo && ` · CIE-10: ${c.diagnosticoCodigo}`}
+                        </p>
+                        {data?.indicaciones && (
+                          <p className="text-xs text-muted-foreground/70 mt-0.5 italic truncate">{data.indicaciones}</p>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => {
+                          const pdfUrl = `/api/pacientes/${paciente.id}/certificados?format=pdf&entryId=${c.id}`;
+                          window.open(pdfUrl, '_blank');
+                        }}
+                        title="Ver certificado"
+                      >
+                        <Printer className="h-3.5 w-3.5 mr-1" /> Ver
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
         {/* Notas médicas (siempre visible, editable) */}
         <TabsContent value="notas" className="mt-4">
           <Card>
@@ -2059,17 +2166,42 @@ export function PacienteDetalleClient({
       <NuevoTurnoModal
         open={showNuevoTurno}
         onOpenChange={setShowNuevoTurno}
+        pacienteId={paciente.id}
+        pacienteName={`${paciente.nombre} ${paciente.apellido}`}
         onSubmit={async (data) => {
           try {
+            // Buscar médico por nombre para obtener su ID
+            const medicosRes = await fetch('/api/medicos');
+            const medicosJson = await medicosRes.json();
+            const medicosList: { id: string; nombre: string }[] = medicosJson.data || [];
+            const medicoEncontrado = medicosList.find(
+              (m) =>
+                m.nombre.toLowerCase().includes(data.medico.toLowerCase()) ||
+                data.medico.toLowerCase().includes(m.nombre.toLowerCase()),
+            );
+
+            if (!medicoEncontrado) {
+              toast({ title: 'Error', description: 'Médico no encontrado. Verificá la lista de médicos.', variant: 'destructive' });
+              return;
+            }
+
             const res = await fetch('/api/turnos', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                pacienteId: paciente.id,
-                ...data,
+                pacienteId: data.pacienteId || paciente.id,
+                medicoId: medicoEncontrado.id,
+                fecha: data.fecha,
+                hora: data.hora,
+                tipoConsulta: data.tipo || 'presencial',
+                motivo: data.tipo,
               }),
             });
-            if (!res.ok) throw new Error();
+            if (!res.ok) {
+              const err = await res.json();
+              toast({ title: 'Error', description: err.error || 'No se pudo crear el turno', variant: 'destructive' });
+              return;
+            }
             const turno = await res.json();
             setTurnosList((prev) => [turno, ...prev]);
             toast({ title: 'Turno creado', description: `Turno agendado correctamente.` });
