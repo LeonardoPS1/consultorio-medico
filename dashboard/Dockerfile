@@ -11,7 +11,7 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 
 # Cache buster: cambiar este valor para forzar rebuild completo
-ARG CACHEBUST=2
+ARG CACHEBUST=1
 
 # Corepack para pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -47,27 +47,29 @@ ENV PORT=3000
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copiar standalone output de Next.js (estructura plana: server.js en raiz)
+# El standalone output de Next.js preserva la estructura del monorepo
+# /app/dashboard/.next/standalone/dashboard/ → server.js, .next, node_modules
+# Por eso copiamos a /app/ y server.js queda en /app/dashboard/server.js
+
+# Copiar standalone output de Next.js
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
 
-# Reemplazar symlinks de pnpm por archivos planos (npm)
-RUN rm -rf node_modules && npm install --omit=dev --no-audit --no-fund --ignore-scripts
+# Copiar static assets (deben ir junto a server.js bajo dashboard/)
+COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./dashboard/.next/static
 
-# Copiar static assets al directorio esperado por el servidor (.next/static)
-COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./.next/static
+# Copiar assets públicos (deben ir junto a server.js bajo dashboard/)
+COPY --from=builder --chown=nextjs:nodejs /app/dashboard/public ./dashboard/public
 
-# Copiar assets públicos al directorio raiz (donde el servidor los espera)
-COPY --from=builder --chown=nextjs:nodejs /app/dashboard/public ./public
-
-# Crear directorio para cache de Next.js
-RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
+# Crear directorio para cache de Next.js con permisos correctos
+RUN mkdir -p dashboard/.next/cache && chown -R nextjs:nodejs dashboard/.next
 
 USER nextjs
 
 EXPOSE 3000
 
-# Health check rápido: solo verifica que el server Node.js responda
+# Health check: usa Node.js fetch nativo (no requiere curl/wget).
+# Usa 127.0.0.1 en vez de localhost para evitar problemas de DNS en Docker Swarm.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:3000/api/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"
 
-CMD ["node", "server.js"]
+CMD ["node", "dashboard/server.js"]
