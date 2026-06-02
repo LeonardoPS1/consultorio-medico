@@ -207,16 +207,16 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
     };
     const turnosData = turnosList.map((t) => ({
       ...t,
-      fechaHora: String(t.fechaHora),
+      fechaHora: t.fechaHora ? String(t.fechaHora) : '',
     }));
     const recetasData = recetasList.map((r) => ({
       ...r,
-      fechaInicio: String(r.fechaInicio),
-      fechaFin: String(r.fechaFin),
+      fechaInicio: r.fechaInicio ? String(r.fechaInicio) : '',
+      fechaFin: r.fechaFin ? String(r.fechaFin) : '',
     }));
     const historialData = historial.map((h) => ({
       ...h,
-      fecha: String(h.fecha),
+      fecha: h.fecha ? String(h.fecha) : '',
     }));
 
     return {

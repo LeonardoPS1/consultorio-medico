@@ -66,18 +66,23 @@ export const turnosService = {
     if (!med) notFound('Medico no encontrado');
 
     // Validar que el médico atiende en ese día/horario
-    const dias = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
-    const diaNombre = dias[fechaHora.getUTCDay()];
-    const horaTurno = `${String(fechaHora.getUTCHours()).padStart(2, '0')}:${String(fechaHora.getUTCMinutes()).padStart(2, '0')}`;
+    // Si el médico no tiene horarios configurados, se permite el turno
     const horariosMedico = (med.horarios || {}) as Record<string, { activo?: boolean; inicio?: string; fin?: string }>;
-    const horarioDia = horariosMedico[diaNombre];
+    const tieneHorariosConfigurados = Object.keys(horariosMedico).length > 0;
 
-    if (!horarioDia || !horarioDia.activo) {
-      conflict(`El medico ${med.nombre} no atiende los ${diaNombre}.`);
-    }
-    if (horarioDia.inicio && horarioDia.fin) {
-      if (horaTurno < horarioDia.inicio || horaTurno >= horarioDia.fin) {
-        conflict(`El medico ${med.nombre} atiende los ${diaNombre} de ${horarioDia.inicio} a ${horarioDia.fin}. El turno solicitado (${horaTurno}) esta fuera del horario.`);
+    if (tieneHorariosConfigurados) {
+      const dias = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
+      const diaNombre = dias[fechaHora.getUTCDay()];
+      const horaTurno = `${String(fechaHora.getUTCHours()).padStart(2, '0')}:${String(fechaHora.getUTCMinutes()).padStart(2, '0')}`;
+      const horarioDia = horariosMedico[diaNombre];
+
+      if (!horarioDia || !horarioDia.activo) {
+        conflict(`El medico ${med.nombre} no atiende los ${diaNombre}.`);
+      }
+      if (horarioDia.inicio && horarioDia.fin) {
+        if (horaTurno < horarioDia.inicio || horaTurno >= horarioDia.fin) {
+          conflict(`El medico ${med.nombre} atiende los ${diaNombre} de ${horarioDia.inicio} a ${horarioDia.fin}. El turno solicitado (${horaTurno}) esta fuera del horario.`);
+        }
       }
     }
 
