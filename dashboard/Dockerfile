@@ -50,6 +50,9 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copiar standalone output de Next.js (estructura plana: server.js en raiz)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
 
+# Reemplazar symlinks de pnpm por archivos planos (npm)
+RUN rm -rf node_modules && npm install --omit=dev --no-audit --no-fund --ignore-scripts
+
 # Copiar static assets al directorio esperado por el servidor (.next/static)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./.next/static
 
