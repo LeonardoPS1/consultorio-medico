@@ -2201,7 +2201,8 @@ export function PacienteDetalleClient({
               toast({ title: 'Error', description: err.error || 'No se pudo crear el turno', variant: 'destructive' });
               return;
             }
-            const turno = await res.json();
+            const json = await res.json();
+            const turno = json.data || json;
             setTurnosList((prev) => [turno, ...prev]);
             toast({ title: 'Turno creado', description: `Turno agendado correctamente.` });
           } catch {
