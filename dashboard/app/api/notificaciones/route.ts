@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { preferenciasNotificaciones } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { notificacionesService } from '@/lib/services/notificaciones';
+
+const createNotificacionSchema = z.object({
+  titulo: z.string().min(1).max(200),
+  descripcion: z.string().max(2000).optional(),
+  tipo: z.enum(['turno', 'mensaje', 'receta', 'urgencia', 'sistema']).optional(),
+  href: z.string().max(500).optional(),
+});
 
 // ─── GET /api/notificaciones ────────────────────────────────
 // Query params: ?tipo=turno&soloNoLeidas=true&limit=20&offset=0
@@ -126,16 +134,10 @@ export async function POST(request: Request) {
     }
 
     if (action === 'create') {
-      const { titulo, descripcion, tipo, href } = body;
-      if (!titulo) {
-        return NextResponse.json({ error: 'El título es requerido' }, { status: 400 });
-      }
+      const parsed = createNotificacionSchema.parse(body);
       const nueva = await notificacionesService.create({
         usuarioId: session.user.id,
-        titulo,
-        descripcion,
-        tipo,
-        href,
+        ...parsed,
       });
       return NextResponse.json({ data: nueva }, { status: 201 });
     }

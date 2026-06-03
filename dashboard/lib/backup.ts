@@ -94,7 +94,10 @@ export async function createBackup(): Promise<BackupInfo> {
 
       const colNames = columns.map((c: any) => c.column_name);
 
-      // Obtener datos
+      // Validar que tableName solo contenga caracteres seguros (anti-injection)
+      if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(tableName)) {
+        throw new Error(`Nombre de tabla inválido: ${tableName}`);
+      }
       const rowsResult = await db.execute(sql.raw(
         `SELECT * FROM "${tableName}" ORDER BY 1`
       ));

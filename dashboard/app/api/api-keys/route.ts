@@ -9,8 +9,17 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth';
 import { createApiKey, listApiKeys, revokeApiKey, API_SCOPES } from '@/lib/public-api-auth';
+
+const VALID_SCOPES = Object.values(API_SCOPES);
+
+const createApiKeySchema = z.object({
+  nombre: z.string().min(1).max(100),
+  scopes: z.array(z.enum(VALID_SCOPES as [string, ...string[]])).optional().default(VALID_SCOPES),
+  expiresAt: z.string().datetime().optional(),
+});
 
 // Session helper with strict user.id check
 async function getSession() {
@@ -49,22 +58,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Body inválido' }, { status: 400 });
   }
 
-  const nombre = body.nombre as string | undefined;
-  const scopes = (body.scopes as string[]) || Object.values(API_SCOPES);
-  const expiresAt = body.expiresAt ? new Date(body.expiresAt as string) : undefined;
-
-  if (!nombre || nombre.trim().length === 0) {
-    return NextResponse.json({ error: 'Nombre requerido' }, { status: 400 });
-  }
-
-  if (scopes.length === 0) {
-    return NextResponse.json({ error: 'Al menos un scope requerido' }, { status: 400 });
-  }
+  const parsed = createApiKeySchema.parse(body);
+  const expiresAt = parsed.expiresAt ? new Date(parsed.expiresAt) : undefined;
 
   try {
     const result = await createApiKey({
-      nombre: nombre.trim(),
-      scopes,
+      nombre: parsed.nombre.trim(),
+      scopes: parsed.scopes,
       createdBy: session.user.id,
       expiresAt,
     });
@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
       id: result.id,
       fullKey: result.keyData.fullKey,
       keyPrefix: result.keyData.keyPrefix,
-      nombre: nombre.trim(),
-      scopes,
+      nombre: parsed.nombre.trim(),
+      scopes: parsed.scopes,
       advertencia: 'Guardá esta key. No se mostrará nuevamente.',
     }, { status: 201 });
   } catch (e) {

@@ -16,6 +16,7 @@ import {
   Clock, ArrowUpRight, Users, Phone, XCircle, FileSpreadsheet,
   FileText, Loader2, AlertCircle,
 } from 'lucide-react';
+import { escapeHtml } from '@/lib/html-utils';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -179,7 +180,7 @@ export default function ReportesPage() {
 
 <div class="section-title">📈 Métricas Generales</div>
 <div class="kpi-grid">
-  ${data.metricas.map(m => `<div class="kpi-card"><div class="val">${m.valor}</div><div class="lbl">${m.titulo}</div><div style="font-size:8px;color:${m.up ? '#10b981' : '#ef4444'};margin-top:2px">${m.cambio}</div></div>`).join('')}
+  ${data.metricas.map(m => `<div class="kpi-card"><div class="val">${escapeHtml(m.valor)}</div><div class="lbl">${escapeHtml(m.titulo)}</div><div style="font-size:8px;color:${m.up ? '#10b981' : '#ef4444'};margin-top:2px">${escapeHtml(m.cambio)}</div></div>`).join('')}
 </div>
 
 <div class="section-title">📅 Turnos por Día</div>
@@ -191,9 +192,9 @@ export default function ReportesPage() {
         const pct = Math.max((t.cantidad / maxTurnos) * 100, 5);
         const colores = ['#3b82f6','#60a5fa','#2563eb','#1d4ed8','#93c5fd','#818cf8'];
         return `<div class="chart-col">
-          <div class="chart-num">${t.cantidad}</div>
+          <div class="chart-num">${escapeHtml(String(t.cantidad))}</div>
           <div class="chart-bar" style="height:${pct}%;background-color:${colores[i % colores.length]}"></div>
-          <div class="chart-label">${t.dia}</div>
+          <div class="chart-label">${escapeHtml(t.dia)}</div>
         </div>`;
       }).join('')}
     </div>
@@ -208,9 +209,9 @@ export default function ReportesPage() {
   ${data.intenciones.map((item, idx) => {
     const colores = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#64748b'];
     return `<div class="hc-row">
-      <div class="hc-label">${item.intencion}</div>
+      <div class="hc-label">${escapeHtml(item.intencion)}</div>
       <div class="hc-bar-wrap"><div class="hc-bar" style="width:${(item.cantidad / maxIntencion) * 100}%;background-color:${colores[idx]}\"></div></div>
-      <div class="hc-pct">${item.porcentaje}%</div>
+      <div class="hc-pct">${escapeHtml(String(item.porcentaje))}%</div>
     </div>`;
   }).join('')}
 </div>
@@ -218,15 +219,15 @@ export default function ReportesPage() {
 <div class="section-title">📱 WhatsApp</div>
 <table>
   <tr><th>Métrica</th><th>Valor</th><th>Cambio</th></tr>
-  ${data.whatsapp.map(w => `<tr><td>${w.titulo}</td><td style="font-weight:600">${w.valor}</td><td style="color:${w.up ? '#10b981' : '#ef4444'}">${w.cambio}</td></tr>`).join('')}
+  ${data.whatsapp.map(w => `<tr><td>${escapeHtml(w.titulo)}</td><td style="font-weight:600">${escapeHtml(w.valor)}</td><td style="color:${w.up ? '#10b981' : '#ef4444'}">${escapeHtml(w.cambio)}</td></tr>`).join('')}
 </table>
 
 <div class="section-title">👥 Pacientes</div>
 <table>
   <tr><th>Métrica</th><th>Valor</th></tr>
-  <tr><td>Total pacientes</td><td style="font-weight:600">${data.pacientesKpis.total}</td></tr>
-  <tr><td>Nuevos en el período</td><td style="font-weight:600">${data.pacientesKpis.nuevos}</td></tr>
-  <tr><td>Edad promedio</td><td style="font-weight:600">${data.pacientesKpis.edadPromedio} años</td></tr>
+  <tr><td>Total pacientes</td><td style="font-weight:600">${escapeHtml(String(data.pacientesKpis.total))}</td></tr>
+  <tr><td>Nuevos en el período</td><td style="font-weight:600">${escapeHtml(String(data.pacientesKpis.nuevos))}</td></tr>
+  <tr><td>Edad promedio</td><td style="font-weight:600">${escapeHtml(String(data.pacientesKpis.edadPromedio))} años</td></tr>
 </table>
 
 <div class="footer">

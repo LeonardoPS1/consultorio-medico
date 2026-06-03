@@ -1,8 +1,26 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { plantillasMensajes } from '@/drizzle/schema';
 import { eq, isNull } from 'drizzle-orm';
+
+const CATEGORIAS_VALIDAS = ['recordatorios', 'notificaciones', 'whatsapp', 'email', 'sms', 'general'] as const;
+
+const createPlantillaSchema = z.object({
+  nombre: z.string().min(1).max(100),
+  contenido: z.string().min(1).max(10000),
+  categoria: z.enum(CATEGORIAS_VALIDAS).default('recordatorios'),
+  variables: z.array(z.string()).optional().default([]),
+});
+
+const updatePlantillaSchema = z.object({
+  id: z.string().uuid(),
+  nombre: z.string().min(1).max(100).optional(),
+  contenido: z.string().min(1).max(10000).optional(),
+  categoria: z.enum(CATEGORIAS_VALIDAS).optional(),
+  variables: z.array(z.string()).optional(),
+});
 
 export async function GET() {
   try {
@@ -40,20 +58,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { nombre, contenido, categoria, variables } = body;
-
-    if (!nombre || !contenido) {
-      return NextResponse.json({ error: 'Nombre y contenido son requeridos' }, { status: 400 });
-    }
+    const parsed = createPlantillaSchema.parse(body);
 
     const [nueva] = await db
       .insert(plantillasMensajes)
-      .values({
-        nombre,
-        contenido,
-        categoria: categoria || 'recordatorios',
-        variables: variables || [],
-      })
+      .values(parsed)
       .returning();
 
     return NextResponse.json({
@@ -79,17 +88,14 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const { id, nombre, contenido, categoria, variables } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
-    }
+    const parsed = updatePlantillaSchema.parse(body);
 
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
-    if (nombre !== undefined) updateData.nombre = nombre;
-    if (contenido !== undefined) updateData.contenido = contenido;
-    if (categoria !== undefined) updateData.categoria = categoria;
-    if (variables !== undefined) updateData.variables = variables;
+    if (parsed.nombre !== undefined) updateData.nombre = parsed.nombre;
+    if (parsed.contenido !== undefined) updateData.contenido = parsed.contenido;
+    if (parsed.categoria !== undefined) updateData.categoria = parsed.categoria;
+    if (parsed.variables !== undefined) updateData.variables = parsed.variables;
+    const id = parsed.id;
 
     await db
       .update(plantillasMensajes)

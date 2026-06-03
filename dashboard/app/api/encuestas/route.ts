@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getSurveyStats, storeSurveyResponse } from '@/lib/encuestas';
+
+const encuestaSchema = z.object({
+  pacienteId: z.string().uuid(),
+  turnoId: z.string().uuid().optional(),
+  puntaje: z.number().int().min(1).max(5),
+  comentario: z.string().max(500).optional(),
+});
 
 /**
  * GET /api/encuestas
@@ -25,16 +33,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { pacienteId, turnoId, puntaje, comentario } = body;
+    const parsed = encuestaSchema.parse(body);
 
-    if (!pacienteId) {
-      return NextResponse.json({ error: 'pacienteId requerido' }, { status: 400 });
-    }
-    if (puntaje === undefined || puntaje < 1 || puntaje > 5) {
-      return NextResponse.json({ error: 'puntaje debe ser 1-5' }, { status: 400 });
-    }
-
-    const ok = await storeSurveyResponse({ pacienteId, turnoId, puntaje, comentario });
+    const ok = await storeSurveyResponse(parsed);
 
     if (!ok) {
       return NextResponse.json({ error: 'Error al registrar encuesta' }, { status: 500 });
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { pacienteId, puntaje, comentario, registrada: new Date().toISOString() },
+      data: { pacienteId: parsed.pacienteId, puntaje: parsed.puntaje, comentario: parsed.comentario, registrada: new Date().toISOString() },
     }, { status: 201 });
   } catch (error) {
     console.error('[API] Error POST /api/encuestas:', error);
