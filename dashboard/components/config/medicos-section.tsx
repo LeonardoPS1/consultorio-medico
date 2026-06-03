@@ -30,14 +30,23 @@ interface Props {
 
 const DIAS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
 
-const DEFAULT_HORARIOS: Record<string, { activo: boolean; inicio: string; fin: string }> = {
-  Lunes: { activo: true, inicio: '09:00', fin: '18:00' },
-  Martes: { activo: true, inicio: '09:00', fin: '18:00' },
-  Miercoles: { activo: true, inicio: '09:00', fin: '18:00' },
-  Jueves: { activo: true, inicio: '09:00', fin: '18:00' },
-  Viernes: { activo: true, inicio: '09:00', fin: '18:00' },
-  Sabado: { activo: true, inicio: '09:00', fin: '13:00' },
-  Domingo: { activo: false, inicio: '09:00', fin: '18:00' },
+interface HorarioDia {
+  activo: boolean;
+  inicio: string;
+  fin: string;
+  tipo?: string;
+  inicio2?: string | null;
+  fin2?: string | null;
+}
+
+const DEFAULT_HORARIOS: Record<string, HorarioDia> = {
+  Lunes: { activo: true, inicio: '09:00', fin: '18:00', tipo: 'corrido', inicio2: null, fin2: null },
+  Martes: { activo: true, inicio: '09:00', fin: '18:00', tipo: 'corrido', inicio2: null, fin2: null },
+  Miercoles: { activo: true, inicio: '09:00', fin: '18:00', tipo: 'corrido', inicio2: null, fin2: null },
+  Jueves: { activo: true, inicio: '09:00', fin: '18:00', tipo: 'corrido', inicio2: null, fin2: null },
+  Viernes: { activo: true, inicio: '09:00', fin: '18:00', tipo: 'corrido', inicio2: null, fin2: null },
+  Sabado: { activo: true, inicio: '09:00', fin: '13:00', tipo: 'corrido', inicio2: null, fin2: null },
+  Domingo: { activo: false, inicio: '09:00', fin: '18:00', tipo: 'corrido', inicio2: null, fin2: null },
 };
 
 export function MedicosSection({ plan }: Props) {
@@ -56,7 +65,7 @@ export function MedicosSection({ plan }: Props) {
   const [saving, setSaving] = useState(false);
   const [bloqueosMedicoId, setBloqueosMedicoId] = useState<string | null>(null);
   const [showHorarios, setShowHorarios] = useState(false);
-  const [horarios, setHorarios] = useState<Record<string, { activo: boolean; inicio: string; fin: string }>>({ ...DEFAULT_HORARIOS });
+  const [horarios, setHorarios] = useState<Record<string, HorarioDia>>({ ...DEFAULT_HORARIOS });
   const [sucursales, setSucursales] = useState<{ id: string; nombre: string }[]>([]);
   const [sucursalId, setSucursalId] = useState('');
 
@@ -266,29 +275,109 @@ export function MedicosSection({ plan }: Props) {
                 <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${showHorarios ? 'rotate-180' : ''}`} />
               </button>
               {showHorarios && (
-                <div className="px-3 pb-3 space-y-1">
+                <div className="px-3 pb-3 space-y-2">
                   {DIAS.map((dia) => (
-                    <div key={dia} className="flex items-center gap-2 py-0.5">
-                      <Switch
-                        checked={horarios[dia]?.activo ?? false}
-                        onCheckedChange={(v) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], activo: v } }))}
-                      />
-                      <span className="text-xs w-20 shrink-0">{dia}</span>
-                      <Input
-                        type="time"
-                        className="h-7 w-24 text-xs"
-                        value={horarios[dia]?.inicio || '09:00'}
-                        onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], inicio: e.target.value } }))}
-                        disabled={!horarios[dia]?.activo}
-                      />
-                      <span className="text-xs text-muted-foreground">a</span>
-                      <Input
-                        type="time"
-                        className="h-7 w-24 text-xs"
-                        value={horarios[dia]?.fin || '18:00'}
-                        onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], fin: e.target.value } }))}
-                        disabled={!horarios[dia]?.activo}
-                      />
+                    <div key={dia} className="flex flex-col gap-1 py-0.5">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={horarios[dia]?.activo ?? false}
+                          onCheckedChange={(v) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], activo: v } }))}
+                        />
+                        <span className="text-xs w-20 shrink-0 font-medium">{dia}</span>
+                      </div>
+                      {horarios[dia]?.activo && (
+                        <div className="flex flex-col gap-1 pl-7">
+                          {/* Tipo selector */}
+                          <div className="flex items-center gap-2">
+                            <label className="flex items-center gap-1 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`med-tipo-${dia}`}
+                                checked={(horarios[dia]?.tipo || 'corrido') === 'corrido'}
+                                onChange={() => setHorarios(prev => ({
+                                  ...prev,
+                                  [dia]: { ...prev[dia], tipo: 'corrido', inicio2: null, fin2: null }
+                                }))}
+                                className="accent-primary w-3 h-3"
+                              />
+                              <span className="text-[10px]">Corrido</span>
+                            </label>
+                            <label className="flex items-center gap-1 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`med-tipo-${dia}`}
+                                checked={(horarios[dia]?.tipo || 'corrido') === 'partido'}
+                                onChange={() => setHorarios(prev => ({
+                                  ...prev,
+                                  [dia]: { ...prev[dia], tipo: 'partido', inicio2: prev[dia]?.inicio2 || '15:00', fin2: prev[dia]?.fin2 || '19:00' }
+                                }))}
+                                className="accent-primary w-3 h-3"
+                              />
+                              <span className="text-[10px]">Mañana y Tarde</span>
+                            </label>
+                          </div>
+
+                          {/* Bloque corrido */}
+                          {(horarios[dia]?.tipo || 'corrido') === 'corrido' && (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-muted-foreground">de</span>
+                              <Input
+                                type="time"
+                                className="h-7 w-20 text-xs"
+                                value={horarios[dia]?.inicio || '09:00'}
+                                onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], inicio: e.target.value } }))}
+                              />
+                              <span className="text-[10px] text-muted-foreground">a</span>
+                              <Input
+                                type="time"
+                                className="h-7 w-20 text-xs"
+                                value={horarios[dia]?.fin || '18:00'}
+                                onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], fin: e.target.value } }))}
+                              />
+                            </div>
+                          )}
+
+                          {/* Bloques partido */}
+                          {(horarios[dia]?.tipo || 'corrido') === 'partido' && (
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] text-muted-foreground w-12">Mañana</span>
+                                <span className="text-[10px] text-muted-foreground">de</span>
+                                <Input
+                                  type="time"
+                                  className="h-7 w-20 text-xs"
+                                  value={horarios[dia]?.inicio || '09:00'}
+                                  onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], inicio: e.target.value } }))}
+                                />
+                                <span className="text-[10px] text-muted-foreground">a</span>
+                                <Input
+                                  type="time"
+                                  className="h-7 w-20 text-xs"
+                                  value={horarios[dia]?.fin || '13:00'}
+                                  onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], fin: e.target.value } }))}
+                                />
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] text-muted-foreground w-12">Tarde</span>
+                                <span className="text-[10px] text-muted-foreground">de</span>
+                                <Input
+                                  type="time"
+                                  className="h-7 w-20 text-xs"
+                                  value={horarios[dia]?.inicio2 || '15:00'}
+                                  onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], inicio2: e.target.value } }))}
+                                />
+                                <span className="text-[10px] text-muted-foreground">a</span>
+                                <Input
+                                  type="time"
+                                  className="h-7 w-20 text-xs"
+                                  value={horarios[dia]?.fin2 || '19:00'}
+                                  onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], fin2: e.target.value } }))}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

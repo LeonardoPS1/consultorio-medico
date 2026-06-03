@@ -67,7 +67,7 @@ export const turnosService = {
 
     // Validar que el médico atiende en ese día/horario
     // Si el médico no tiene horarios configurados, se permite el turno
-    const horariosMedico = (med.horarios || {}) as Record<string, { activo?: boolean; inicio?: string; fin?: string }>;
+    const horariosMedico = (med.horarios || {}) as Record<string, { activo?: boolean; inicio?: string; fin?: string; tipo?: string; inicio2?: string | null; fin2?: string | null }>;
     const tieneHorariosConfigurados = Object.keys(horariosMedico).length > 0;
 
     if (tieneHorariosConfigurados) {
@@ -79,9 +79,22 @@ export const turnosService = {
       if (!horarioDia || !horarioDia.activo) {
         conflict(`El medico ${med.nombre} no atiende los ${diaNombre}.`);
       }
-      if (horarioDia.inicio && horarioDia.fin) {
-        if (horaTurno < horarioDia.inicio || horaTurno >= horarioDia.fin) {
-          conflict(`El medico ${med.nombre} atiende los ${diaNombre} de ${horarioDia.inicio} a ${horarioDia.fin}. El turno solicitado (${horaTurno}) esta fuera del horario.`);
+
+      const enRango = (h: string, inicio: string, fin: string) => h >= inicio && h < fin;
+
+      if (horarioDia.tipo === 'partido' && horarioDia.inicio2 && horarioDia.fin2) {
+        // Validar contra dos bloques: mañana y tarde
+        const enManiana = horarioDia.inicio && horarioDia.fin && enRango(horaTurno, horarioDia.inicio, horarioDia.fin);
+        const enTarde = enRango(horaTurno, horarioDia.inicio2, horarioDia.fin2);
+        if (!enManiana && !enTarde) {
+          conflict(`El medico ${med.nombre} atiende los ${diaNombre} de ${horarioDia.inicio} a ${horarioDia.fin} y de ${horarioDia.inicio2} a ${horarioDia.fin2}. El turno solicitado (${horaTurno}) esta fuera del horario.`);
+        }
+      } else {
+        // Corrido: validar contra un solo bloque
+        if (horarioDia.inicio && horarioDia.fin) {
+          if (horaTurno < horarioDia.inicio || horaTurno >= horarioDia.fin) {
+            conflict(`El medico ${med.nombre} atiende los ${diaNombre} de ${horarioDia.inicio} a ${horarioDia.fin}. El turno solicitado (${horaTurno}) esta fuera del horario.`);
+          }
         }
       }
     }

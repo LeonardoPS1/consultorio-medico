@@ -98,7 +98,9 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
               p.apellido.toLowerCase().includes(search.toLowerCase()) ||
               p.telefono.includes(search) ||
               (p.email && p.email.toLowerCase().includes(search.toLowerCase())) ||
-              (p.obraSocial && p.obraSocial.toLowerCase().includes(search.toLowerCase())),
+              (p.obraSocial && p.obraSocial.toLowerCase().includes(search.toLowerCase())) ||
+              (p.sistemaSalud && p.sistemaSalud.toLowerCase().includes(search.toLowerCase())) ||
+              (p.isapreNombre && p.isapreNombre.toLowerCase().includes(search.toLowerCase())),
           ),
     [pacientesList, search],
   );

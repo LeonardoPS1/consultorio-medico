@@ -21,8 +21,11 @@ export async function GET() {
         id: '',
         dia,
         activo: i < 6,
+        tipo: 'corrido',
         inicio: '09:00',
         fin: i < 5 ? '18:00' : '13:00',
+        inicio2: null,
+        fin2: null,
         tenantId: '00000000-0000-0000-0000-000000000000',
         sucursalId: null,
         createdAt: new Date(),
@@ -64,8 +67,11 @@ export async function PUT(request: Request) {
           .update(horariosAtencion)
           .set({
             activo: h.activo,
+            tipo: h.tipo || 'corrido',
             inicio: h.inicio,
             fin: h.fin,
+            inicio2: h.tipo === 'partido' ? (h.inicio2 || null) : null,
+            fin2: h.tipo === 'partido' ? (h.fin2 || null) : null,
             updatedAt: new Date(),
           })
           .where(eq(horariosAtencion.dia, h.dia));
@@ -73,8 +79,11 @@ export async function PUT(request: Request) {
         await db.insert(horariosAtencion).values({
           dia: h.dia,
           activo: h.activo,
+          tipo: h.tipo || 'corrido',
           inicio: h.inicio,
           fin: h.fin,
+          inicio2: h.tipo === 'partido' ? (h.inicio2 || null) : null,
+          fin2: h.tipo === 'partido' ? (h.fin2 || null) : null,
         });
       }
     }

@@ -57,8 +57,11 @@ interface HorarioData {
   id?: string;
   dia: string;
   activo: boolean;
+  tipo: string;
   inicio: string;
   fin: string;
+  inicio2?: string | null;
+  fin2?: string | null;
 }
 
 interface NotifData {
@@ -218,37 +221,143 @@ function ConfigContent() {
               ) : (
               <div className="space-y-4">
                 {horarios.map((dia, idx) => (
-                  <div key={dia.dia} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 rounded-lg bg-muted/30">
-                    <div className="w-16 sm:w-24 font-medium text-sm">{dia.dia}</div>
-                    <Switch
-                      checked={dia.activo}
-                      onCheckedChange={(checked) => {
-                        const nuevos = [...horarios];
-                        nuevos[idx] = { ...nuevos[idx], activo: checked };
-                        setHorarios(nuevos);
-                      }}
-                    />
-                    {dia.activo ? (
+                  <div key={dia.dia} className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4 p-3 rounded-lg bg-muted/30">
+                    <div className="w-16 sm:w-24 font-medium text-sm pt-1">{dia.dia}</div>
+                    <div className="flex flex-col gap-2 flex-1">
                       <div className="flex items-center gap-2">
-                        <Input type="time" value={dia.inicio} onChange={e => {
-                          const nuevos = [...horarios];
-                          nuevos[idx] = { ...nuevos[idx], inicio: e.target.value };
-                        }} className="w-[5.5rem] sm:w-24 h-8 text-sm" />
-                        <span className="text-muted-foreground text-sm">a</span>
-                        <Input type="time" value={dia.fin} onChange={e => {
-                          const nuevos = [...horarios];
-                          nuevos[idx] = { ...nuevos[idx], fin: e.target.value };
-                        }} className="w-[5.5rem] sm:w-24 h-8 text-sm" />
-                        <span className="text-muted-foreground">a</span>
-                        <Input type="time" value={dia.fin} onChange={e => {
-                          const nuevos = [...horarios];
-                          nuevos[idx] = { ...nuevos[idx], fin: e.target.value };
-                          setHorarios(nuevos);
-                        }} className="w-24 h-8 text-sm" />
+                        <Switch
+                          checked={dia.activo}
+                          onCheckedChange={(checked) => {
+                            const nuevos = [...horarios];
+                            nuevos[idx] = { ...nuevos[idx], activo: checked };
+                            setHorarios(nuevos);
+                          }}
+                        />
+                        {!dia.activo && (
+                          <span className="text-sm text-muted-foreground">Cerrado</span>
+                        )}
                       </div>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">Cerrado</span>
-                    )}
+
+                      {dia.activo && (
+                        <div className="flex flex-col gap-2 pl-1">
+                          {/* Selector de tipo */}
+                          <div className="flex items-center gap-3">
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`tipo-${dia.dia}`}
+                                checked={dia.tipo === 'corrido'}
+                                onChange={() => {
+                                  const nuevos = [...horarios];
+                                  nuevos[idx] = { ...nuevos[idx], tipo: 'corrido', inicio2: null, fin2: null };
+                                  setHorarios(nuevos);
+                                }}
+                                className="accent-primary"
+                              />
+                              <span className="text-xs font-medium">Corrido</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`tipo-${dia.dia}`}
+                                checked={dia.tipo === 'partido'}
+                                onChange={() => {
+                                  const nuevos = [...horarios];
+                                  nuevos[idx] = { ...nuevos[idx], tipo: 'partido', inicio2: nuevos[idx].inicio2 || '15:00', fin2: nuevos[idx].fin2 || '19:00' };
+                                  setHorarios(nuevos);
+                                }}
+                                className="accent-primary"
+                              />
+                              <span className="text-xs font-medium">Mañana y Tarde</span>
+                            </label>
+                          </div>
+
+                          {/* Bloque único (corrido) */}
+                          {dia.tipo === 'corrido' && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">de</span>
+                              <Input
+                                type="time"
+                                value={dia.inicio}
+                                onChange={e => {
+                                  const nuevos = [...horarios];
+                                  nuevos[idx] = { ...nuevos[idx], inicio: e.target.value };
+                                  setHorarios(nuevos);
+                                }}
+                                className="w-[5.5rem] sm:w-24 h-8 text-sm"
+                              />
+                              <span className="text-muted-foreground text-sm">a</span>
+                              <Input
+                                type="time"
+                                value={dia.fin}
+                                onChange={e => {
+                                  const nuevos = [...horarios];
+                                  nuevos[idx] = { ...nuevos[idx], fin: e.target.value };
+                                  setHorarios(nuevos);
+                                }}
+                                className="w-[5.5rem] sm:w-24 h-8 text-sm"
+                              />
+                            </div>
+                          )}
+
+                          {/* Dos bloques (partido) */}
+                          {dia.tipo === 'partido' && (
+                            <div className="flex flex-col gap-1.5">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground w-14">Mañana</span>
+                                <span className="text-xs text-muted-foreground">de</span>
+                                <Input
+                                  type="time"
+                                  value={dia.inicio}
+                                  onChange={e => {
+                                    const nuevos = [...horarios];
+                                    nuevos[idx] = { ...nuevos[idx], inicio: e.target.value };
+                                    setHorarios(nuevos);
+                                  }}
+                                  className="w-[5.5rem] sm:w-24 h-8 text-sm"
+                                />
+                                <span className="text-muted-foreground text-sm">a</span>
+                                <Input
+                                  type="time"
+                                  value={dia.fin}
+                                  onChange={e => {
+                                    const nuevos = [...horarios];
+                                    nuevos[idx] = { ...nuevos[idx], fin: e.target.value };
+                                    setHorarios(nuevos);
+                                  }}
+                                  className="w-[5.5rem] sm:w-24 h-8 text-sm"
+                                />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground w-14">Tarde</span>
+                                <span className="text-xs text-muted-foreground">de</span>
+                                <Input
+                                  type="time"
+                                  value={dia.inicio2 || '15:00'}
+                                  onChange={e => {
+                                    const nuevos = [...horarios];
+                                    nuevos[idx] = { ...nuevos[idx], inicio2: e.target.value };
+                                    setHorarios(nuevos);
+                                  }}
+                                  className="w-[5.5rem] sm:w-24 h-8 text-sm"
+                                />
+                                <span className="text-muted-foreground text-sm">a</span>
+                                <Input
+                                  type="time"
+                                  value={dia.fin2 || '19:00'}
+                                  onChange={e => {
+                                    const nuevos = [...horarios];
+                                    nuevos[idx] = { ...nuevos[idx], fin2: e.target.value };
+                                    setHorarios(nuevos);
+                                  }}
+                                  className="w-[5.5rem] sm:w-24 h-8 text-sm"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
                 <div className="flex gap-2">

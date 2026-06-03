@@ -66,6 +66,7 @@ export const pacientesService = {
     const lista = await db.select({
       id: pacientes.id, nombre: pacientes.nombre, apellido: pacientes.apellido,
       telefono: pacientes.telefono, email: pacientes.email, obraSocial: pacientes.obraSocial,
+      sistemaSalud: pacientes.sistemaSalud, isapreNombre: pacientes.isapreNombre,
       tags: pacientes.tags, dni: pacientes.dni, createdAt: pacientes.createdAt,
       ultimoTurno: sql<string>`${turnoSubSelect}`,
       totalTurnos: sql<number>`${turnoCountSelect}`,
@@ -92,7 +93,12 @@ export const pacientesService = {
       comunaId: input.comunaId || null,
       alergias: input.alergias || null, medicacionCronica: input.medicacionCronica || null,
       notasMedicas: input.notasMedicas || null,
-      tags: input.obraSocial === 'Particular' ? ['Particular'] : ['Obra Social'],
+      tags: (() => {
+        if (input.sistemaSalud === 'fonasa') return ['Fonasa'];
+        if (input.sistemaSalud === 'isapre' && input.isapreNombre) return [input.isapreNombre];
+        if (input.sistemaSalud === 'particular' || input.obraSocial === 'Particular') return ['Particular'];
+        return ['Fonasa'];
+      })(),
       sucursalId: (input as any).sucursalId || null,
     }).returning();
 

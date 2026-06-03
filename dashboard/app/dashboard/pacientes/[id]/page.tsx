@@ -9,8 +9,6 @@ import {
   historialMedico,
   notasSoap,
   conversaciones,
-  regiones,
-  comunas,
 } from '@/drizzle/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 
@@ -97,7 +95,7 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
     const session = await auth();
     if (!session?.user?.id) return null;
 
-    // ─── Datos del paciente ──────────────────────────
+    // ─── Datos del paciente (core — siempre existen) ──
     const [paciente] = await db
       .select({
         id: pacientes.id,
@@ -109,13 +107,7 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
         fechaNacimiento: pacientes.fechaNacimiento,
         direccion: pacientes.direccion,
         obraSocial: pacientes.obraSocial,
-        sistemaSalud: pacientes.sistemaSalud,
-        isapreNombre: pacientes.isapreNombre,
         numeroAfiliado: pacientes.numeroAfiliado,
-        regionId: pacientes.regionId,
-        comunaId: pacientes.comunaId,
-        regionNombre: regiones.nombre,
-        comunaNombre: comunas.nombre,
         alergias: pacientes.alergias,
         medicacionCronica: pacientes.medicacionCronica,
         notasMedicas: pacientes.notasMedicas,
@@ -127,11 +119,40 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
         deletedAt: pacientes.deletedAt,
       })
       .from(pacientes)
-      .leftJoin(regiones, eq(pacientes.regionId, regiones.id))
-      .leftJoin(comunas, eq(pacientes.comunaId, comunas.id))
       .where(and(eq(pacientes.id, id), sql`${pacientes.deletedAt} IS NULL`));
 
     if (!paciente) return null;
+
+    // ─── Datos Chile (pueden no existir si faltan migraciones) ──
+    let sistemaSalud: string | null = null;
+    let isapreNombre: string | null = null;
+    let regionId: string | null = null;
+    let comunaId: string | null = null;
+    let regionNombre: string | null = null;
+    let comunaNombre: string | null = null;
+
+    try {
+      const [extra] = await db.execute(sql`
+        SELECT
+          p.sistema_salud, p.isapre_nombre, p.region_id, p.comuna_id,
+          r.nombre AS region_nombre, c.nombre AS comuna_nombre
+        FROM pacientes p
+        LEFT JOIN regiones r ON r.id = p.region_id
+        LEFT JOIN comunas c ON c.id = p.comuna_id
+        WHERE p.id = ${id}
+      `);
+      if (extra) {
+        const row = extra as Record<string, unknown>;
+        sistemaSalud = row.sistema_salud ? String(row.sistema_salud) : null;
+        isapreNombre = row.isapre_nombre ? String(row.isapre_nombre) : null;
+        regionId = row.region_id ? String(row.region_id) : null;
+        comunaId = row.comuna_id ? String(row.comuna_id) : null;
+        regionNombre = row.region_nombre ? String(row.region_nombre) : null;
+        comunaNombre = row.comuna_nombre ? String(row.comuna_nombre) : null;
+      }
+    } catch {
+      // Migraciones de Chile no aplicadas — ignorar silenciosamente
+    }
 
     // ─── Turnos ──────────────────────────────────────
     const turnosList = await db
@@ -254,12 +275,12 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
       consentimientoEmail: paciente.consentimientoEmail ?? false,
       createdAt: paciente.createdAt?.toISOString() ?? '',
       fechaNacimiento: paciente.fechaNacimiento ?? null,
-      sistemaSalud: paciente.sistemaSalud ?? null,
-      isapreNombre: paciente.isapreNombre ?? null,
-      regionId: paciente.regionId ?? null,
-      comunaId: paciente.comunaId ?? null,
-      regionNombre: paciente.regionNombre ?? null,
-      comunaNombre: paciente.comunaNombre ?? null,
+      sistemaSalud,
+      isapreNombre,
+      regionId,
+      comunaId,
+      regionNombre,
+      comunaNombre,
     };
     const turnosData = turnosList.map((t) => ({
       ...t,
