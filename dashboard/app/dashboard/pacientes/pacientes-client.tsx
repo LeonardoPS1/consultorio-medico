@@ -110,6 +110,7 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
     apellido: string;
     telefono: string;
     email: string;
+    dni?: string | null;
     obraSocial: string;
     sistemaSalud?: string;
     isapreNombre?: string;

@@ -40,12 +40,22 @@ interface NuevoPacienteModalProps {
     apellido: string;
     telefono: string;
     email: string;
+    dni?: string | null;
     obraSocial: string;
     sistemaSalud?: string;
     isapreNombre?: string;
     regionId?: string;
     comunaId?: string;
   }) => void;
+}
+
+/** Formatea RUT chileno: 12345678-9 (auto-guion antes del dígito verificador) */
+function formatRut(value: string): string {
+  const cleaned = value.replace(/[^0-9Kk]/g, '').toUpperCase();
+  if (cleaned.length <= 1) return cleaned;
+  const body = cleaned.slice(0, -1).slice(0, 8);
+  const dv = cleaned.slice(-1);
+  return `${body}-${dv}`;
 }
 
 /** Agrega prefijo +569 si el teléfono no lo tiene */
@@ -65,6 +75,7 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
   const [apellido, setApellido] = useState('');
   const [telefono, setTelefono] = useState('');
   const [email, setEmail] = useState('');
+  const [dni, setDni] = useState('');
   const [sistemaSalud, setSistemaSalud] = useState('particular');
   const [isapreNombre, setIsapreNombre] = useState('');
   const [regionId, setRegionId] = useState('');
@@ -114,6 +125,7 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
         apellido,
         telefono: formatTelefonoChile(telefono),
         email,
+        dni: dni.trim() || null,
         obraSocial: isapreValue || sistemaSalud || 'Particular',
         sistemaSalud,
         isapreNombre: isapreValue,
@@ -126,6 +138,7 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
       setApellido('');
       setTelefono('');
       setEmail('');
+      setDni('');
       setSistemaSalud('particular');
       setIsapreNombre('');
       setRegionId('');
@@ -187,6 +200,18 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
               placeholder="paciente@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          {/* RUT */}
+          <div className="space-y-2">
+            <Label htmlFor="rut">RUT</Label>
+            <Input
+              id="rut"
+              placeholder="12345678-9"
+              value={dni}
+              onChange={(e) => setDni(formatRut(e.target.value))}
+              maxLength={11}
             />
           </div>
 
