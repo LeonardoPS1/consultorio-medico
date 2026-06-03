@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { toast } from '@/components/ui/use-toast';
 import {
   Dialog,
   DialogContent,
@@ -57,8 +58,12 @@ interface EditarPacienteModalProps {
 
 function formatTelefonoChile(value: string): string {
   const digits = value.replace(/\D/g, '');
-  if (digits.length === 9 && digits.startsWith('9')) return `+569${digits}`;
-  if (digits.startsWith('569') && digits.length === 12) return `+${digits}`;
+  // 9 dígitos empezando con 9 → +569 + últimos 8 dígitos
+  if (digits.length === 9 && digits.startsWith('9')) return `+56${digits}`;
+  // 11 dígitos empezando con 569 → +569 + últimos 8 dígitos
+  if (digits.length === 11 && digits.startsWith('569')) return `+${digits}`;
+  // 12 dígitos empezando con 569 → ya tiene +, devolver tal cual
+  if (digits.length === 12 && digits.startsWith('569')) return `+${digits}`;
   return value;
 }
 
@@ -156,7 +161,8 @@ export function EditarPacienteModal({ open, onOpenChange, paciente, onSaved }: E
       onSaved(updated.data || updated);
       onOpenChange(false);
     } catch (err) {
-      console.error('Error al editar paciente:', err);
+      const msg = err instanceof Error ? err.message : 'Error al guardar los cambios';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
