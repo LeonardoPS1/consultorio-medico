@@ -1,289 +1,330 @@
-# Guía de Setup Completo — Consultorio Médico
+# 🚀 Guía de Instalación — AicoreMed
 
-## TL;DR
+> **Última actualización:** 03/06/2026
+> **Stack:** Next.js 14 · PostgreSQL 16 · n8n · Ollama · Twilio · Docker
 
+---
+
+## 📋 Índice
+
+1. [Prerrequisitos](#prerrequisitos)
+2. [Instalación Local](#instalación-local)
+3. [Variables de Entorno](#variables-de-entorno)
+4. [Base de Datos](#base-de-datos)
+5. [Producción con Docker](#producción-con-docker)
+6. [Despliegue en Dokploy](#despliegue-en-dokploy)
+7. [Deploy de Workflows n8n](#deploy-de-workflows-n8n)
+8. [Solución de Problemas](#solución-de-problemas)
+
+---
+
+## Prerrequisitos
+
+| Herramienta | Versión Mínima | Recomendada |
+|-------------|---------------|-------------|
+| Node.js | 18.x LTS | 20.x LTS |
+| pnpm | 8.x | 9.x |
+| PostgreSQL | 15.x | 16.x |
+| Docker (opcional) | 24.x | 26.x |
+| n8n (opcional) | 2.0.x | 2.19.x |
+
+### Verificar instalación
 ```bash
-# 1. Clonar y configurar
-git clone ...
+node --version     # v20.x
+pnpm --version     # 9.x
+psql --version     # 16.x
+```
+
+---
+
+## Instalación Local
+
+### 1. Clonar repositorio
+```bash
+git clone https://github.com/LeonardoPS1/consultorio-medico.git
 cd consultorio-medico
-cp dashboard/.env.example dashboard/.env.local
-# Editar .env.local con credenciales reales
+```
 
-# 2. Levantar servicios
-docker compose up -d
+### 2. Instalar dependencias
+```bash
+cd dashboard
+pnpm install
+```
 
-# 3. Migraciones + seed
-docker compose exec dashboard node scripts/migrate-prod.js
+### 3. Configurar variables de entorno
+```bash
+cp .env.example .env.local
+# Editar .env.local con tus credenciales (ver sección siguiente)
+```
+
+### 4. Inicializar base de datos
+```bash
+# Opción A: Push del schema (recomendado)
+npx drizzle-kit push:pg
+
+# Opción B: Migraciones manuales
+cat database/migrations/001_*.sql | psql -U user -d consultorio_medico
+cat database/migrations/002_*.sql | psql -U user -d consultorio_medico
+# ... repetir para todas las migraciones hasta 0023
+```
+
+### 5. Poblar datos iniciales
+```bash
 curl -X POST http://localhost:3000/api/setup \
   -H "X-Setup-Key: tu_setup_key"
+```
 
-# 4. Deploy workflows a n8n
-N8N_API_KEY=tu_key N8N_BASE_URL=http://localhost:5678 \
+### 6. Iniciar desarrollo
+```bash
+pnpm dev
+# Abrir http://localhost:3000
+```
+
+---
+
+## Variables de Entorno
+
+### Esenciales 🔴
+
+```env
+# ─── Base de datos ───
+DATABASE_URL=postgresql://dashboard_user:password@localhost:5432/consultorio_medico
+
+# ─── Autenticación ───
+AUTH_SECRET=openssl_rand_base64_32_bytes
+AUTH_SETUP_KEY=tu_clave_unica_para_setup
+
+# ─── Twilio WhatsApp ───
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=tu_auth_token
+TWILIO_WHATSAPP_NUMBER=+18453735358
+
+# ─── Ollama (IA Local) ───
+OLLAMA_BASE_URL=http://localhost:11434
+
+# ─── Hash para Recetas QR ───
+RECETA_HASH_SECRET=secreto_para_firma_qr
+```
+
+### Importantes 🟡
+
+```env
+# ─── MercadoPago ───
+MP_ACCESS_TOKEN=APP_USR-xxx
+MP_PUBLIC_KEY=APP_USR-xxx
+MP_WEBHOOK_SECRET=tu_webhook_secret
+
+# ─── n8n ───
+N8N_WEBHOOK_SECRET=secret_compartido_con_n8n
+N8N_BASE_URL=https://n8n.aicorebots.com
+
+# ─── Google Calendar ───
+GOOGLE_CALENDAR_EMAIL=service-account@xxx.iam.gserviceaccount.com
+GOOGLE_CALENDAR_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
+```
+
+### Opcionales 🟢
+
+```env
+NEXT_PUBLIC_APP_URL=https://med.aicorebots.com
+ORGANIZATION_NAME=Mi Consultorio
+```
+
+> 📝 Ver archivo `.env.example` completo en el repositorio.
+
+---
+
+## Base de Datos
+
+### Esquema
+El sistema usa **26+ tablas** orquestadas por Drizzle ORM:
+
+```sql
+-- Tablas principales
+pacientes, turnos, recetas, medicos, historial_medico,
+notas_soap, certificados, conversaciones, mensajes,
+usuarios, sucursales, horarios_atencion, servicios,
+credenciales, plantillas_mensajes, preferencias_notificaciones,
+auditoria_accesos, api_keys, workflow_logs, encuestas, etc.
+```
+
+### Migraciones
+```bash
+# Generar nueva migración
+cd dashboard && npx drizzle-kit generate
+
+# Aplicar en producción
+sudo docker exec -i postgres_container psql -U user -d consultorio_medico < migration.sql
+```
+
+### Backup
+- Automático: WF-07 (3:00 AM, encriptado, limpieza 30 días)
+- Manual: `bash scripts/backup-docker.sh`
+
+---
+
+## Producción con Docker
+
+### Dockerfile (pnpm multi-stage)
+```dockerfile
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+FROM base AS deps
+WORKDIR /app
+COPY pnpm-lock.yaml ./
+RUN pnpm fetch
+
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN pnpm build
+
+FROM base AS runner
+WORKDIR /app
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+# Reemplazar symlinks de pnpm con archivos planos
+RUN rm -rf node_modules && npm install --omit=dev --ignore-scripts
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+### docker-compose.yml
+```yaml
+services:
+  dashboard:
+    build: ./dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://user:pass@postgres:5432/consultorio_medico
+      - AUTH_SECRET=...
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: consultorio_medico
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+```
+
+### Construir y ejecutar
+```bash
+pnpm build
+docker compose up -d --build
+```
+
+---
+
+## Despliegue en Dokploy
+
+### Requisitos
+- Dokploy corriendo en VPS con Docker Swarm
+- Repositorio GitHub conectado
+- Variables de entorno configuradas en Dokploy UI
+
+### Pasos
+1. **Conectar repo**: Dokploy → Applications → Add → GitHub → `consultorio-medico`
+2. **Configurar build**: Usar el Dockerfile en `/dashboard`
+3. **Variables de entorno**: Setear todas las variables (ver sección arriba)
+4. **Port**: 3000
+5. **Health check**: `/api/health`
+6. **Resource limits**: 0.5 CPU / 512MB RAM
+
+### Redeploy automático
+```bash
+git push origin main
+# Dokploy detecta el push y redeploya automáticamente
+```
+
+### Redeploy manual
+```bash
+docker service update --force app-hack-back-end-sensor-jd2eu3
+```
+
+---
+
+## Deploy de Workflows n8n
+
+### Prerrequisitos
+- n8n corriendo y accesible
+- API Key generada en n8n Settings → API
+- Workflows JSON en `n8n-workflows/current/`
+
+### Desplegar
+```bash
+# Deploy + activación
+N8N_API_KEY=tu_api_key N8N_BASE_URL=http://localhost:5678 \
   node scripts/deploy-workflows.js --activate
 
-# 5. Login
-# admin@consultorio.com / admin123
+# Solo simular (dry-run)
+node scripts/deploy-workflows.js --dry-run
 ```
 
----
-
-## 1. Variables de Entorno
-
-Copiá `.env.example` a `.env.local` y configurá:
-
-| Variable | Descripción | Obligatoria |
-|----------|-------------|:-----------:|
-| `DATABASE_URL` | PostgreSQL connection string | 🔴 |
-| `AUTH_SECRET` | Secret para JWT (generar con `openssl rand -base64 32`) | 🔴 |
-| `SETUP_KEY` | Key para el endpoint `/api/setup` en producción | 🟡 |
-| `TWILIO_ACCOUNT_SID` | SID de cuenta Twilio | 🟡 |
-| `TWILIO_AUTH_TOKEN` | Token de autenticación Twilio | 🟡 |
-| `TWILIO_WHATSAPP_NUMBER` | Número de WhatsApp de Twilio | 🟡 |
-| `TWILIO_DOCTOR_NUMBER` | WhatsApp del médico para notificaciones | 🟡 |
-| `N8N_BASE_URL` | URL base de n8n | 🟡 |
-| `N8N_API_KEY` | API Key de n8n | 🟡 |
-| `N8N_WEBHOOK_INBOUND_URL` | Webhook de n8n para inbound de WhatsApp | 🟡 |
-| `OLLAMA_BASE_URL` | URL de Ollama | 🟡 |
-| `MERCADOPAGO_ACCESS_TOKEN` | Token de MercadoPago | 🔵 |
-
-### Nombres de columna que espera n8n
-
-Los workflows n8n leen y escriben en las siguientes tablas:
-- `pacientes` — pacientes del sistema
-- `turnos` — turnos con `fecha_hora` (timestamp único, NO `fecha`/`hora_inicio` separados)
-- `medicos` — médicos con `nombre`, `especialidad`, `email`
-- `recetas` — recetas con `created_at` (NO `fecha_emision`)
-- `conversaciones` — conversaciones activas
-- `mensajes` — mensajes individuales
-- `workflow_logs` — logs de ejecución de workflows
-- `paciente_eventos` — eventos de pacientes
-- `plantillas_mensajes` — plantillas de WhatsApp
+### Configurar webhooks en n8n
+1. Ir a n8n UI → Workflows → Abrir cada workflow
+2. Configurar Webhook nodes con `x-webhook-secret` header
+3. Conectar credenciales: PostgreSQL, Twilio, Ollama
+4. Activar workflow
 
 ---
 
-## 3. Migraciones
+## Solución de Problemas
 
-Las migraciones Drizzle están en `dashboard/drizzle/migrations/`:
-
-| Archivo | Descripción |
-|---------|-------------|
-| `0000_red_thunderbolt.sql` | Schema base (23 tablas) |
-| `0001_watery_jean_grey.sql` | `tenant_id` en usuarios |
-| `0002_lovely_sasquatch.sql` | `deleted_at` en turnos |
-| `0003_seed_production.sql` | Seed: admin + tenant + horarios + plantillas |
-
-### Ejecutar migraciones en producción:
+### Error: `Cannot find module 'next'`
 ```bash
-node scripts/migrate-prod.js
+cd dashboard && pnpm install && pnpm build
 ```
 
-Requiere `scripts/.env` con:
-```
-PG_HOST=tu_ip
-PG_PORT=5432
-PG_DATABASE=consultorio_medico
-PG_SUPERUSER=postgres
-PG_SUPERUSER_PASSWORD=...
-PG_APP_USER=dashboard_user
-PG_APP_PASSWORD=...
-```
-
----
-
-## 4. Seed de Datos
-
-### Seed de producción (PostgreSQL)
+### Error: `ECONNREFUSED :5432`
 ```bash
-# Vía API (recomendado):
-curl -X POST https://tudominio.com/api/setup \
-  -H "Content-Type: application/json" \
-  -H "X-Setup-Key: tu_setup_key"
+# Verificar que PostgreSQL está corriendo
+docker ps | grep postgres
 
-# O vía SQL directo:
-docker exec -i postgres psql -U postgres -d consultorio_medico < database/seed_data_n8n.sql
+# Verificar DATABASE_URL en .env.local
+echo $DATABASE_URL
 ```
 
-### Datos creados:
-- Usuario admin: `admin@consultorio.com` / `admin123`
-- Usuario médico: `medico@consultorio.com` / `medico123`
-- Tenant por defecto: `Consultorio Médico`
-- Horarios de atención: L-V 9-18, S 9-13
-- 6 plantillas de mensajes WhatsApp
-- 5 pacientes de prueba
-- 5 turnos próximos
-- 2 conversaciones activas
-- 2 recetas activas
-- 3 eventos de pacientes
-
----
-
-## 5. n8n Workflows
-
-### Importar workflows a n8n
-
+### Error: `RECETA_HASH_SECRET not configured`
 ```bash
-node scripts/deploy-workflows.js --activate
+# Agregar en Dokploy UI o en .env.local
+echo "RECETA_HASH_SECRET=tu_secreto" >> dashboard/.env.local
+# Redeployar
 ```
 
-Variables de entorno necesarias:
+### Error: Build fails con symlinks pnpm
+El standalone output de Next.js ≥14.2.21 tiene symlinks a la store de pnpm. El Dockerfile los reemplaza con:
+```dockerfile
+RUN rm -rf node_modules && npm install --omit=dev --ignore-scripts
+```
+
+### Error: Timeout en health check
 ```bash
-N8N_BASE_URL=https://n8n.aicorebots.com
-N8N_API_KEY=n8n_api_xxx
+# Revisar logs del servicio
+docker service logs app-hack-back-end-sensor-jd2eu3 --tail 50
 ```
 
-### 7 workflows disponibles:
-
-| # | Nombre | Trigger | Descripción |
-|---|--------|---------|-------------|
-| 01 | WhatsApp Inbound + Triaje IA | Webhook | Recibe WhatsApp, clasifica con IA, responde |
-| 02 | Gestión de Turnos | Webhook | Crea turnos verificando disponibilidad |
-| 03 | Recordatorios Automáticos | Cron (c/hora) | Envía recordatorios 24h y 1h antes |
-| 04 | Correo Inteligente | IMAP | Lee emails, clasifica urgencias, notifica |
-| 05 | Resumen Diario | Cron (7am) | Genera resumen diario para el médico |
-| 06 | Recetas y Renovaciones | Webhook | Procesa solicitudes de recetas |
-| 07 | Backup Automático | Cron (3am) | Backup encriptado de PostgreSQL |
-
-### Credenciales que necesita n8n:
-
-Configurá estas credenciales desde el dashboard (`Configuración → Credenciales`):
-
-| Servicio | Variables | Para workflows |
-|----------|-----------|:--------------:|
-| **Twilio** | Account SID, Auth Token | 01, 02, 03, 04, 05, 06 |
-| **Ollama** | Base URL (`http://ollama:11434`) | 01, 02, 04, 05, 06 |
-| **PostgreSQL** | Host, Port, DB, User, Password | 01, 02, 03, 04, 05, 06 |
-| **SMTP** | Host, Port, User, Password | 04, 05 |
-| **IMAP** | Host, Port, User, Password | 04 |
-| **Google Calendar** | Service Account + Key | 02 |
-
----
-
-## 6. Twilio Webhook
-
-Configurá en la consola de Twilio:
-
-1. Ir a **Messaging** → **Services** → **WhatsApp Senders**
-2. En **Webhook URL for Incoming Messages**:
-   - URL: `https://tudominio.com/api/webhooks/twilio`
-   - Método: `POST`
-3. El dashboard recibe el mensaje, lo guarda, y lo forwardea a n8n
-
-Opcionalmente, podés apuntar Twilio directamente a n8n:
-- URL: `https://n8n.tudominio.com/webhook/consultorio-inbound`
-
----
-
-## 7. Credenciales (Dashboard)
-
-Desde el panel (`Configuración → Credenciales`), los administradores pueden:
-
-- Configurar **Twilio**, **Ollama**, **n8n**, **SMTP**, **IMAP**, **PostgreSQL**, **Google Calendar**
-- Las credenciales se **encriptan con AES-256-GCM** antes de guardarse
-- Se **sincronizan automáticamente** con n8n vía API REST
-- Se puede **probar conexión** para Ollama, n8n, Twilio, PostgreSQL
-
----
-
-## 8. Flujo Completo de WhatsApp
-
-```
-Paciente escribe a WhatsApp
-        ↓
-  [Twilio]
-        ↓
-  POST /api/webhooks/twilio  (Dashboard)
-  - Valida firma X-Twilio-Signature
-  - Busca/Crea paciente en DB
-  - Guarda mensaje en conversación
-  - Forwardea a n8n (fire-and-forget)
-  - Responde TwiML a Twilio
-        ↓
-  [n8n WF-01: WhatsApp Inbound + Triaje IA]
-  - Carga contexto del paciente (turnos, recetas)
-  - Ollama (mistral) clasifica intención
-  - AI Agent responde con tono profesional
-  - Envía respuesta vía Twilio API
-  - Guarda en DB (mensajes, logs)
-```
-
----
-
-## 9. Docker / Dokploy
-
-### docker-compose.yml (desarrollo local)
+### Error: Webhook Twilio firma inválida
 ```bash
-docker compose up -d
+# Verificar TWILIO_AUTH_TOKEN
+# Verificar que la URL del webhook coincide con la configurada en Twilio Console
 ```
-Levanta 4 servicios: dashboard (3000), postgres (5432), n8n (5678), ollama (11434).
-
-### Dokploy (producción)
-- Build desde el Dockerfile multi-stage
-- HEALTHCHECK activo en `/api/health`
-- Variables de entorno configuradas en Dokploy UI
-- Backup automático via cron: `bash scripts/backup-docker.sh`
 
 ---
 
-## 10. Health Checks
+## Soporte
 
-| Endpoint | Descripción |
-|----------|-------------|
-| `GET /api/health` | Estado del dashboard + PostgreSQL |
-| `GET /api/setup` | Estado completo: DB, admin, tablas |
-| `GET /api/healthz` (n8n) | Estado de n8n |
-| `GET /api/tags` (Ollama) | Modelos cargados en Ollama |
-| `pg_isready` | PostgreSQL readiness |
-
----
-
-## 11. Troubleshooting
-
-### No llegan mensajes de WhatsApp
-1. Verificar `TWILIO_ACCOUNT_SID` y `TWILIO_AUTH_TOKEN` en `.env.local`
-2. En consola Twilio → Messaging → Logs → buscar el mensaje
-3. Verificar webhook URL en Twilio apunte a `/api/webhooks/twilio`
-4. Revisar logs del dashboard: `docker logs consultorio-medico-dashboard`
-
-### n8n no procesa mensajes
-1. Verificar `N8N_API_KEY` y `N8N_BASE_URL`
-2. Activar workflows: `node scripts/deploy-workflows.js --activate`
-3. Revisar credenciales de n8n desde Configuración → Credenciales
-4. Revisar logs de n8n: `docker logs consultorio-medico-n8n`
-
-### Ollama no responde
-1. Verificar modelo: `curl http://localhost:11434/api/tags`
-2. Descargar modelo: `docker exec ollama ollama pull mistral`
-3. Probar inferencia: `curl -X POST http://localhost:11434/api/generate -d '{"model":"mistral","prompt":"hola","stream":false}'`
-
-### No se puede hacer login
-1. Verificar migraciones ejecutadas (`0003_seed_production.sql`)
-2. Llamar `POST /api/setup` para crear admin
-3. Credenciales default: `admin@consultorio.com` / `admin123`
-4. Hash bcrypt en producción debe ser generado con `require('bcryptjs').hash('admin123', 10)`
-
----
-
-## 12. Comandos Rápidos
-
-```bash
-# Setup completo (desarrollo)
-cp dashboard/.env.example dashboard/.env.local
-docker compose up -d
-sleep 10
-curl -X POST http://localhost:3000/api/setup
-node scripts/deploy-workflows.js --activate
-open http://localhost:3000/login
-
-# Backup DB
-bash scripts/backup-docker.sh /backups
-
-# Restaurar DB
-gunzip -c backup.sql.gz | docker exec -i postgres psql -U postgres -d consultorio_medico
-
-# Ver logs
-docker compose logs -f dashboard
-docker compose logs -f n8n
-
-# Reiniciar todo
-docker compose down && docker compose up -d
-```
+- **Dashboard**: https://med.aicorebots.com
+- **n8n**: https://n8n.aicorebots.com
+- **Web**: https://aicorebots.com
+- **Email**: contacto@aicorebots.com

@@ -2,7 +2,7 @@
 
 ## Esquema General
 
-18 tablas, 5 vistas, 35+ índices, triggers de auditoría automáticos.
+26+ tablas, 5 vistas, 45+ índices, triggers de auditoría automáticos.
 
 ### Diagrama de Relaciones
 

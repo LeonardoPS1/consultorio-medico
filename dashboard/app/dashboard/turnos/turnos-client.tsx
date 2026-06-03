@@ -921,7 +921,7 @@ export function TurnosClient({
             setSelectedDate(date);
             fetchTurnos(date);
           }}
-          onTurnoClick={(turno) => console.log('Turno clicked:', turno)}
+          onTurnoClick={(turno) => {/* onClick handled by parent */}}
         />
       )}
 

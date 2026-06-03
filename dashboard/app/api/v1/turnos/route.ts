@@ -11,9 +11,20 @@
 
 import { db } from '@/lib/db';
 import { turnos } from '@/drizzle/schema';
+import { z } from 'zod';
 import { publicApiHandler, jsonResponse, errorResponse, type AuthenticatedRequest } from '@/lib/public-api-handler';
 import { API_SCOPES } from '@/lib/public-api-auth';
 import { turnosService } from '@/lib/services/turnos';
+
+const turnoSchema = z.object({
+  pacienteId: z.string().uuid(),
+  medicoId: z.string().uuid(),
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato YYYY-MM-DD'),
+  hora: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM'),
+  tipoConsulta: z.enum(['presencial', 'virtual', 'telefonica']).optional().default('presencial'),
+  motivo: z.string().optional(),
+  duracionMinutos: z.number().int().min(5).max(240).optional().default(30),
+});
 
 export const POST = publicApiHandler(
   async (request: AuthenticatedRequest) => {
@@ -24,28 +35,25 @@ export const POST = publicApiHandler(
       return errorResponse('Body inválido. Enviar JSON válido.', 400);
     }
 
-    // Validar campos requeridos
-    const pacienteId = body.pacienteId as string | undefined;
-    const medicoId = body.medicoId as string | undefined;
-    const fecha = body.fecha as string | undefined;
-    const hora = body.hora as string | undefined;
-
-    if (!pacienteId || !medicoId || !fecha || !hora) {
+    // Validar campos con Zod
+    const parsed = turnoSchema.safeParse(body);
+    if (!parsed.success) {
+      const errores = parsed.error.flatten().fieldErrors;
       return errorResponse(
-        'Campos requeridos: pacienteId, medicoId, fecha (YYYY-MM-DD), hora (HH:MM)',
+        `Campos inválidos: ${Object.entries(errores).map(([k, v]) => `${k}: ${v?.join(', ')}`).join('; ')}`,
         400,
       );
     }
 
     try {
       const turno = await turnosService.create({
-        pacienteId,
-        medicoId,
-        fecha,
-        hora,
-        tipoConsulta: (body.tipoConsulta as 'presencial' | 'virtual' | 'telefonica') || 'presencial',
-        motivo: (body.motivo as string) || undefined,
-        duracionMinutos: (body.duracionMinutos as number) || 30,
+        pacienteId: parsed.data.pacienteId,
+        medicoId: parsed.data.medicoId,
+        fecha: parsed.data.fecha,
+        hora: parsed.data.hora,
+        tipoConsulta: parsed.data.tipoConsulta,
+        motivo: parsed.data.motivo,
+        duracionMinutos: parsed.data.duracionMinutos,
       });
 
       // Devolver el turno creado (sin datos sensibles)

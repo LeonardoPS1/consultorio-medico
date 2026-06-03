@@ -1,334 +1,325 @@
-# 🔄 Workflows de n8n
+# 🔄 Workflows n8n — AicoreMed
 
-Este documento describe los 6 workflows de automatización que gestionan la comunicación y operaciones del consultorio.
+> **9 workflows activos** · Automatización inteligente del consultorio
+> **Última actualización:** 03/06/2026
+
+---
+
+## 📋 Índice
+
+1. [Estructura de Archivos](#estructura-de-archivos)
+2. [Matriz de Workflows](#matriz-de-workflows)
+3. [WF-01: WhatsApp Inbound + Triaje IA](#wf-01-whatsapp-inbound--triaje-ia)
+4. [WF-02: Gestión de Turnos](#wf-02-gestión-de-turnos)
+5. [WF-03: Recordatorios Automáticos](#wf-03-recordatorios-automáticos)
+6. [WF-04: Correo Inteligente](#wf-04-correo-inteligente)
+7. [WF-05: Resumen Diario del Médico](#wf-05-resumen-diario-del-médico)
+8. [WF-06: Recetas y Renovaciones](#wf-06-recetas-y-renovaciones)
+9. [WF-07: Backup Automático Encriptado](#wf-07-backup-automático-encriptado)
+10. [WF-08: Google Calendar Sync](#wf-08-google-calendar-sync)
+11. [WF-09: Anonimización Post-Retención](#wf-09-anonimización-post-retención)
+12. [Deploy de Workflows](#deploy-de-workflows)
+13. [Buenas Prácticas](#buenas-prácticas)
+
+---
 
 ## Estructura de Archivos
 
 ```
 n8n-workflows/
-├── current/                          # Workflows activos en producción
-│   ├── workflow-01-agent.json        # AI Agent WhatsApp (Webhook)
-│   ├── workflow-02-gestion-turnos.json  # Gestión de Turnos (Webhook)
-│   ├── workflow-03-recordatorios.json   # Recordatorios (Cron)
-│   ├── workflow-04-agent.json        # AI Agent Correo (IMAP)
-│   ├── workflow-05-resumen-diario.json  # Resumen Diario (Cron)
-│   └── workflow-06-recetas.json      # Recetas (Webhook)
+├── current/                          # ★ Workflows activos en producción
+│   ├── workflow-01-agent.json        # WhatsApp Inbound + Triaje IA
+│   ├── workflow-02-gestion-turnos.json
+│   ├── workflow-03-recordatorios.json
+│   ├── workflow-04-agent.json        # Correo Inteligente
+│   ├── workflow-05-resumen-diario.json
+│   ├── workflow-06-recetas.json
+│   ├── workflow-07-backup.json
+│   ├── workflow-08-google-calendar-sync.json
+│   └── workflow-09-anonimizar.json
 │
-└── archive/                          # Versiones anteriores
-    ├── workflow-01-whatsapp-inbound.json   # WF1 versión legacy
-    ├── workflow-04-correo-inteligente.json # WF4 versión legacy
-    └── designs/                       # Diseños originales de referencia
-```
-
-## Workflow 01: AI Agent WhatsApp
-
-**Trigger:** Webhook (Twilio) → `POST /webhook/consultorio-inbound`
-
-**Propósito:** Recibe mensajes de WhatsApp, los procesa con IA y responde automáticamente, pudiendo ejecutar acciones como crear/cancelar turnos o recetas.
-
-### Nodos (17 total)
-
-```
-Webhook ── IF ── Set ── PG (paciente) ── PG (turnos) ── PG (recetas)
-    │
-    └── Code (generar contexto) ── AI Agent ── Set ── Code (parsear)
-                                                          │
-                                                    ┌─────┴─────┐
-                                                    │            │
-                                               Twilio        IF (acción?)
-                                                                │
-                                                     ┌──────────┴──────────┐
-                                                     │                     │
-                                              PG (logs)             [fin del flujo]
-```
-
-### Flujo Detallado
-
-1. **Webhook** → Recibe mensaje entrante de Twilio (Body: mensaje, From: teléfono)
-2. **IF** → Verifica que tenga número de teléfono válido
-3. **Set** → Estructura los datos del mensaje
-4. **PostgreSQL (paciente)** → Busca paciente por teléfono (expression-based query)
-5. **PostgreSQL (turnos)** → Busca turnos próximos del paciente
-6. **PostgreSQL (recetas)** → Busca recetas activas del paciente
-7. **Code (generar contexto)** → Construye system prompt dinámico:
-   ```
-   Nombre: Juan Pérez
-   Turnos próximos: Mañana 10:00 (pendiente)
-   Recetas activas: Losartán 50mg (vence 15/06)
-   ```
-8. **AI Agent** (Ollama Chat Model + Postgres Chat Memory):
-   - Modelo: `mistral` via `http://ollama:11434/v1`
-   - Memoria: Postgres Chat Memory (sessionKey = teléfono)
-   - System prompt: contexto del paciente + instrucciones de acciones estructuradas
-9. **Set** → Extrae el output del agente
-10. **Code (parsear)** → Detecta acciones estructuradas en la respuesta:
-    ```
-    ###ACCION###
-    tipo: crear_turno
-    fecha: 2026-05-20
-    hora: 10:00
-    motivo: Control
-    ###FIN###
-    ```
-11. **Twilio** → Envía la respuesta al paciente
-12. **IF (acción?)** → Si hay acción estructurada, ejecuta el sub-flujo correspondiente:
-    - `crear_turno` → Inserta en tabla turnos
-    - `cancelar_turno` → Actualiza estado del turno
-    - `receta` → Genera receta
-    - `urgencia` → Notifica al médico
-13. **PostgreSQL (logs)** → Registra la ejecución
-
-### Intenciones Detectadas
-
-| Intención | Acción |
-|-----------|--------|
-| `saludo` | Responde con bienvenida |
-| `turno_nuevo` | Agenda turno, verifica disponibilidad |
-| `turno_cancelar` | Cancela y ofrece reprogramación |
-| `turno_confirmar` | Confirma asistencia |
-| `receta` | Renueva o solicita autorización |
-| `urgencia` | Alerta al médico inmediatamente |
-| `consulta` | Responde con información |
-| `reclamo` | Deriva al médico |
-| `informacion` | Da información del consultorio |
-
----
-
-## Workflow 02: Gestión de Turnos
-
-**Trigger:** Webhook
-
-**Propósito:** Gestiona la agenda: crea turnos, verifica disponibilidad, sincroniza con Google Calendar.
-
-### Nodos
-
-```
-Webhook ── PG (verificar disponibilidad) ── IF (disponible?)
-    │                                              │
-    │                                         [No disponible]
-    │                                              │
-    │                                         Twilio (rechazo)
-    │
-    ├── PG (crear turno) ── Google Calendar ── Twilio (confirmación)
-    └── PG (registrar log)
-```
-
-### Funcionalidades
-
-- Verifica superposición de horarios
-- Considera horarios del médico y bloqueos de agenda
-- Crea evento en Google Calendar
-- Envía confirmación al paciente
-- Registra en log de auditoría
-
----
-
-## Workflow 03: Recordatorios
-
-**Trigger:** Cron (cada hora)
-
-**Propósito:** Envía recordatorios de turnos programados y pide confirmación de asistencia.
-
-### Nodos
-
-```
-Cron ── PG (turnos próximos) ── IF (24h antes) ── Twilio (recordatorio)
-                                    │
-                                    └── IF (1h antes) ── Twilio (recordatorio)
-                                            │
-                                            └── PG (marcar enviado)
-```
-
-### Horarios de Recordatorio
-
-| Momento | Mensaje |
-|---------|---------|
-| **24h antes** | "Recordatorio: tenés turno mañana a las 10:00. ¿Confirmás asistencia?" |
-| **1h antes** | "Tu turno es en 1 hora con el Dr. Rodríguez. Te esperamos!" |
-| **No confirma** | Notifica al médico vía WhatsApp |
-
-### Estados Post-Recordatorio
-
-- `confirmó` → Marca turno como confirmado
-- `canceló` → Libera el turno, busca reprogramación
-- `no respondió` → Notifica al médico
-
----
-
-## Workflow 04: AI Agent Correo Inteligente
-
-**Trigger:** IMAP (cada 5 minutos)
-
-**Propósito:** Lee emails entrantes, los clasifica con IA, y actúa según su contenido.
-
-### Nodos (12 total)
-
-```
-IMAP ── Set (extraer email) ── AI Agent ── Set ── Code (parsear)
-                                                   │
-                                              ┌────┴────┐
-                                              │         │
-                                         Switch      Twilio (URGENTE)
-                                           │
-                                    ┌──────┼──────────┐
-                                    │      │          │
-                               URGENTE   SPAM    BORRADOR
-                                    │      │          │
-                               Twilio   Mover a    Guardar
-                               (notificar) Spam    Borrador
-                                    │      │          │
-                                    └──────┴──────────┘
-                                              │
-                                         PG (logs x2)
-```
-
-### Clasificaciones
-
-| Clasificación | Acción |
-|---------------|--------|
-| `URGENTE` | Notifica al médico por WhatsApp + Twilio |
-| `SPAM` | Mueve a carpeta de spam |
-| `BORRADOR` | Redacta borrador de respuesta y lo guarda |
-
-### Prompt del Agente
-
-El AI Agent recibe el contenido completo del email y debe:
-1. Clasificar el nivel de urgencia
-2. Si es normal, redactar un borrador de respuesta
-3. Devolver la acción estructurada en formato `###EMAIL_ACTION###/###FIN###`
-
----
-
-## Workflow 05: Resumen Diario
-
-**Trigger:** Cron (7:00 AM, lunes a viernes)
-
-**Propósito:** Envía un resumen diario al médico con la información clave del día.
-
-### Contenido del Resumen
-
-```
-📋 Resumen del día [fecha]
-
-🩺 Turnos del día: 8
-├─ 10:00 Juan Pérez (Confirmado)
-├─ 10:30 María García (Pendiente)
-├─ 11:00 Pedro Sánchez (Pendiente)
-...
-
-👤 Pacientes nuevos: 2
-├─ Diego Torres
-└─ Sofía Herrera
-
-⚠️ Pendientes:
-├─ 3 recetas por autorizar
-├─ 1 mensaje sin responder
-└─ 2 turnos sin confirmar
-
-📊 Métricas de ayer:
-├─ Turnos atendidos: 6/8
-├─ Tasa de ausentismo: 25%
-└─ Mensajes procesados: 15
+└── archive/                          # Versiones legacy y diseños
 ```
 
 ---
 
-## Workflow 06: Recetas
+## Matriz de Workflows
 
-**Trigger:** Webhook
+| # | Nombre | Trigger | Nodos | Ollama | Twilio | PG | GCal | IMAP |
+|---|--------|---------|-------|--------|--------|----|------|------|
+| **01** | WhatsApp Inbound + Triaje IA | Webhook | 17 | ✅ Agent | ✅ | ✅ | ❌ | ❌ |
+| **02** | Gestión de Turnos | Webhook | 9 | ✅ 2 nodos | ✅ | ✅ | ✅ | ❌ |
+| **03** | Recordatorios Automáticos | Cron (c/hora) | 12 | ❌ | ✅ | ✅ | ❌ | ❌ |
+| **04** | Correo Inteligente | IMAP (5 min) | 10 | ✅ Agent | ✅ | ✅ | ❌ | ✅ |
+| **05** | Resumen Diario | Cron (7:00 AM) | 9 | ✅ 1 nodo | ✅ | ✅ | ❌ | ❌ |
+| **06** | Recetas y Renovaciones | Webhook | 9 | ✅ 1 nodo | ✅ | ✅ | ❌ | ❌ |
+| **07** | Backup Automático | Cron (3:00 AM) | 2 | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **08** | Google Calendar Sync | Webhook | 8 | ❌ | ❌ | ✅ | ✅ | ❌ |
+| **09** | Anonimización Post-Retención | Cron (4:00 AM) | 5 | ❌ | ❌ | ✅ | ❌ | ❌ |
 
-**Propósito:** Gestiona solicitudes de recetas, renovaciones y autorizaciones.
+---
 
-### Nodos
+## WF-01: WhatsApp Inbound + Triaje IA ⭐ (Crítico)
 
+### Propósito
+Workflow principal que recibe mensajes de WhatsApp de pacientes, los procesa con IA y responde automáticamente.
+
+### Trigger
+**Webhook** → `POST /webhook/consultorio-inbound`
+
+### Flujo
 ```
-Webhook ── PG (verificar paciente) ── IF (tiene receta activa?)
-    │                                              │
-    │                                         [Solicitar renovación]
-    │                                              │
-    │                                         PG (receta anterior)
-    │                                              │
-    │                                         IF (requiere médico?)
-    │                                              │
-    │                                    ┌─────────┴─────────┐
-    │                                    │                   │
-    │                              [Automático]        [Derivar al médico]
-    │                                    │                   │
-    │                              PG (crear receta)    Twilio (notificar)
-    │                                    │
-    └── Twilio (confirmación) ── PG (log)
+Twilio → Webhook (x-webhook-secret validado) →
+  → Busca/crea paciente en PostgreSQL por teléfono →
+  → Consulta turnos próximos y recetas activas →
+  → Construye contexto estructurado →
+  → AI Agent (Ollama Mistral + Chat Memory) →
+  → Analiza intención →
+  → Ejecuta acción (responder, crear turno, etc.) →
+  → Envía respuesta vía Twilio WhatsApp →
+  → Loggea todo en PostgreSQL
+```
+
+### Configuración IA
+| Parámetro | Valor |
+|-----------|-------|
+| Modelo | `mistral` |
+| Base URL | `http://ollama:11434` |
+| Temperatura | 0.3 |
+| Chat Memory | Postgres (`n8n_chat_histories`, sessionKey=teléfono, contextWindow=10) |
+
+### Seguridad
+- Webhook autenticado con `x-webhook-secret`
+- Mensajes sanitizados antes de enviar a IA
+- Anti-jailbreak en system prompt
+
+---
+
+## WF-02: Gestión de Turnos
+
+### Propósito
+Procesa solicitudes de turno (creación, disponibilidad, cancelación) usando IA para extraer datos estructurados.
+
+### Trigger
+**Webhook** → `POST /webhook/turno-solicitar`
+
+### Flujo
+```
+Webhook → Ollama extrae info (motivo, fecha, horario, médico) →
+  → Verifica disponibilidad en PostgreSQL →
+  → Calcula slots libres →
+  → Ollama genera respuesta con horarios →
+  → Crea turno en PostgreSQL →
+  → Envía confirmación WhatsApp →
+  → Crea evento Google Calendar
+```
+
+### Configuración IA
+- Extracción: `mistral`, temp=0.1 (estricto, JSON)
+- Respuesta: `mistral`, temp=0.7 (creativo, friendly)
+
+---
+
+## WF-03: Recordatorios Automáticos
+
+### Propósito
+Envía recordatorios de turnos a pacientes vía WhatsApp 24h y 1h antes.
+
+### Trigger
+**Cron** → Cada hora de 8:00 a 20:00
+
+### Flujo
+```
+Cron → Consulta turnos con recordatorio pendiente a 24h →
+  → Consulta turnos con recordatorio pendiente a 1h →
+  → Arma mensaje con plantilla de DB →
+  → Envía por WhatsApp →
+  → Marca flags enviados
 ```
 
 ### Reglas de Negocio
-
-- **Renovación automática**: si la receta anterior es del mismo medicamento y no requiere cambios
-- **Derivar al médico**: si es un medicamento nuevo, cambia la dosis, o requiere evaluación
-- **Recetas controladas**: siempre requieren aprobación del médico
-- **PDF**: se genera automáticamente y se envía por WhatsApp
+| Regla | Descripción |
+|-------|-------------|
+| Horario | Solo 8:00-20:00 |
+| Consentimiento | Solo pacientes con `consentimiento_whatsapp = TRUE` |
+| No overlap | 24h excluye turnos dentro de 1h |
+| Reintento | Si Twilio falla, flag no se marca |
+| Plantillas | Configurables desde Dashboard → Configuración → Plantillas |
 
 ---
 
-## Credenciales Requeridas
+## WF-04: Correo Inteligente
 
-Cada workflow necesita las siguientes credenciales en n8n:
+### Propósito
+Clasifica emails entrantes usando IA y toma acciones (responder, notificar al médico, spam).
 
-| Workflow | Credenciales |
-|----------|-------------|
-| WF-01 | Twilio API, PostgreSQL, Ollama |
-| WF-02 | PostgreSQL, Google Calendar (opcional) |
-| WF-03 | Twilio API, PostgreSQL |
-| WF-04 | IMAP, Twilio API, PosterSQL, Ollama |
-| WF-05 | Twilio API, PostgreSQL, Ollama |
-| WF-06 | Twilio API, PostgreSQL |
+### Trigger
+**IMAP** → Cada 5 minutos (UNSEEN)
 
-## URLs de Webhook
+### Flujo
+```
+IMAP → Lee emails no leídos →
+  → AI Agent clasifica (URGENTE/SPAM/RECETA/CONSULTA) →
+  → Si URGENTE: notifica al médico vía WhatsApp →
+  → Si SPAM: mueve a carpeta spam →
+  → Otros: redacta borrador →
+  → Loggea clasificación en PostgreSQL
+```
 
-| Endpoint | Workflow | Método |
-|----------|----------|--------|
-| `POST /webhook/consultorio-inbound` | WF-01 | POST |
-| `POST /webhook/turnos` | WF-02 | POST |
-| `POST /webhook/recetas` | WF-06 | POST |
+### ⚠️ Pendiente
+Requiere credenciales IMAP/SMTP reales configuradas en n8n.
 
-## Activación
+---
 
-Los workflows están diseñados para correr 24/7:
+## WF-05: Resumen Diario del Médico
 
-- **WF-01, 02, 06**: Siempre activos (responden a webhooks)
-- **WF-03**: Cada hora, todos los días
-- **WF-04**: Revisa IMAP cada 5 minutos
-- **WF-05**: 7:00 AM, lunes a viernes
+### Propósito
+Genera un resumen diario con turnos, pacientes nuevos, mensajes sin responder y recetas por autorizar.
 
-> ⚠️ Después de importar, activar manualmente desde la UI de n8n.
+### Trigger
+**Cron** → Todos los días a las 7:00 AM
 
-## 🔐 Sincronización de Credenciales
+### Flujo
+```
+Cron → Consulta 4 fuentes en PostgreSQL:
+  - Turnos de hoy
+  - Pacientes nuevos (últimas 24h)
+  - Mensajes sin responder
+  - Recetas por autorizar
+  → Mergea datos →
+  → Ollama genera resumen (temp=0.3, maxTokens=800) →
+  → Envía email detallado →
+  → Envía WhatsApp breve →
+  → Loggea en PostgreSQL
+```
 
-El dashboard incluye un **módulo centralizado de credenciales** (solo accesible por administradores) que permite gestionar todas las API keys y tokens desde un solo lugar.
+---
 
-### ¿Cómo funciona?
+## WF-06: Recetas y Renovaciones
 
-1. **Admin** va a Configuración → Credenciales
-2. Completa los campos de cada servicio (Twilio, Ollama, n8n, SMTP, etc.)
-3. Al guardar, el sistema:
-   - **Encripta** los valores con AES-256-GCM usando `AUTH_SECRET`
-   - **Almacena** en PostgreSQL (o JSON local en desarrollo)
-   - **Sincroniza** automáticamente con n8n via su API REST
+### Propósito
+Gestiona solicitudes de recetas: analiza si es renovación o nueva, notifica al médico y genera PDF.
 
-### Servicios sincronizables con n8n
+### Trigger
+**Webhook** → `POST /webhook/receta-solicitar`
 
-| Servicio | Tipo n8n | ¿Se sincroniza? |
-|----------|----------|----------------|
-| Twilio | `twilioApi` | ✅ Sí |
-| Ollama | `ollamaApi` | ✅ Sí |
-| PostgreSQL | `postgres` | ✅ Sí |
-| SMTP | `smtp` | ✅ Sí |
-| IMAP | `imap` | ✅ Sí |
-| Google Calendar | `googleApi` | ✅ Sí |
-| n8n (API Key) | - | ❌ Usado para la sincronización |
-| Teléfono Doctor | - | ❌ Solo local |
+### Flujo
+```
+Webhook → Ollama analiza: ¿renovación? medicamento, dosis →
+  → Si renovación: auto-crea refill →
+  → Si nueva: notifica al médico vía WhatsApp →
+  → Genera PDF de la receta →
+  → Envía PDF por WhatsApp →
+  → Loggea en PostgreSQL
+```
 
-### Seguridad
+---
 
-- Los valores se encriptan antes de guardar en la DB
-- Solo usuarios con rol `admin` pueden ver/editar credenciales
-- Los usuarios no-admin ven los valores enmascarados (`AC****f3a2`)
-- La clave de encriptación es `AUTH_SECRET` (misma que JWT)
+## WF-07: Backup Automático Encriptado
+
+### Propósito
+Ejecuta backup diario de PostgreSQL con encriptación y limpieza de backups antiguos.
+
+### Trigger
+**Cron** → Todos los días a las 3:00 AM
+
+### Flujo
+```
+Cron → Ejecuta script /opt/consultorio/scripts/backup-encriptado.sh →
+  pg_dump → compresión gzip → encriptación AES-256 →
+  → Limpieza: elimina backups de más de 30 días
+```
+
+---
+
+## WF-08: Google Calendar Sync
+
+### Propósito
+Sincroniza turnos con Google Calendar (creación, actualización, eliminación).
+
+### Trigger
+**Webhook** → `POST /webhook/google-calendar-sync`
+
+### Flujo
+```
+Webhook → Recibe acción (create/update/delete) →
+  → Enruta según acción →
+  → create: Crea evento en GCal, guarda event ID en turnos
+  → update: Actualiza evento existente
+  → delete: Elimina evento de GCal
+  → Loggea en PostgreSQL
+```
+
+### Integración con Dashboard
+- `syncTurnoToGCal()` en `lib/google-calendar-sync.ts`
+- Se dispara desde `turnosService.create()` y `turnosService.update()`
+
+---
+
+## WF-09: Anonimización Post-Retención
+
+### Propósito
+Elimina datos de pacientes que han superado el período de retención legal (90 días desde baja).
+
+### Trigger
+**Cron** → Todos los días a las 4:00 AM
+
+### Flujo
+```
+Cron → POST a /api/privacidad/anonimizar (con x-webhook-secret) →
+  → Ejecuta privacidadService.anonimizarPostRetencion() →
+  → UPDATE pacientes SET datos_anonimizados = TRUE →
+  → Hard-delete de datos residuales →
+  → Loggea resultado en workflow_logs
+```
+
+### Cumplimiento Legal
+- Ley de datos personales (Chile)
+- Período de retención configurable (default: 90 días)
+- No reversible (anonimización completa)
+
+---
+
+## Deploy de Workflows
+
+### Script
+```bash
+# Deploy con activación
+N8N_API_KEY=tu_key N8N_BASE_URL=http://localhost:5678 \
+  node scripts/deploy-workflows.js --activate
+
+# Simular deploy (dry-run)
+node scripts/deploy-workflows.js --dry-run
+
+# Deploy manual via API
+curl -X POST https://n8n.aicorebots.com/rest/workflows \
+  -H "Authorization: Bearer $N8N_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @n8n-workflows/current/workflow-01-agent.json
+```
+
+### Consideraciones
+- Los workflows se importan/exportan como JSON
+- Las credenciales se configuran manualmente en la UI de n8n
+- Los webhooks requieren `x-webhook-secret` para autenticación
+- Cron jobs usan la timezone de Chile (UTC-4)
+
+---
+
+## Buenas Prácticas
+
+### Para Desarrolladores
+1. **Versionar** los JSON de workflows en `n8n-workflows/current/`
+2. **Documentar** cambios en este archivo y en AGENTS.md
+3. **Testear** en entorno de desarrollo antes de deployar a producción
+4. **Usar Postgres Chat Memory** en AI Agents en vez de toolCode
+5. **Pre-cargar datos** del paciente en el prompt (evita sandbox de n8n)
+6. **Temperatura baja** (0.1-0.3) para extracción de datos
+7. **Temperatura media** (0.7) para respuestas al paciente
+8. **Agregar webhook secrets** a todos los webhooks expuestos
+
+### Errores Comunes
+- ❌ ToolCode que falla silenciosamente → usar `console.log` en Function nodes
+- ❌ AI Agent sin memoria → configurar Postgres Chat Memory
+- ❌ Webhooks sin autenticación → agregar `x-webhook-secret`
+- ❌ Timeouts en Ollama → mantener modelo cargado en memoria

@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { formatDate } from '@/lib/utils';
+import { escapeHtml } from '@/lib/html-utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NuevaRecetaModal } from '@/components/modals/nueva-receta-modal';
 import { toast } from '@/components/ui/use-toast';
@@ -281,11 +282,27 @@ function generarHTMLRecetaCompleta(params: {
     qrDataUrl,
   } = params;
 
+  // Escapar todos los valores que vienen del usuario/DB (XSS prevention)
+  const safe = {
+    paciente: escapeHtml(receta.paciente),
+    medicamento: escapeHtml(receta.medicamento),
+    dosis: escapeHtml(receta.dosis),
+    duracion: escapeHtml(receta.duracion),
+    indicaciones: receta.indicaciones ? escapeHtml(receta.indicaciones) : null,
+    nombreOrg: escapeHtml(nombreOrg),
+    direccion: escapeHtml(direccion),
+    ciudad: escapeHtml(ciudad),
+    telefono: escapeHtml(telefono),
+    email: escapeHtml(email),
+    logoUrl: logoUrl ? escapeHtml(logoUrl) : '',
+    qrDataUrl: qrDataUrl ? escapeHtml(qrDataUrl) : null,
+  };
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Receta - ${receta.paciente}</title>
+<title>Receta - ${safe.paciente}</title>
 <style>
   @page { margin: 20mm 25mm; size: A4; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -319,25 +336,25 @@ function generarHTMLRecetaCompleta(params: {
 </head>
 <body>
   <div class="header">
-    <div class="header-logo">${logoUrl ? `<img src="${logoUrl}" alt="Logo">` : nombreOrg.charAt(0).toUpperCase()}</div>
+    <div class="header-logo">${safe.logoUrl ? `<img src="${safe.logoUrl}" alt="Logo">` : safe.nombreOrg.charAt(0).toUpperCase()}</div>
     <div class="header-info">
-      <h1>${nombreOrg}</h1>
-      <p>${[direccion, ciudad].filter(Boolean).join(', ')}</p>
-      <p>${[telefono, email].filter(Boolean).join(' | ')}</p>
+      <h1>${safe.nombreOrg}</h1>
+      <p>${[safe.direccion, safe.ciudad].filter(Boolean).join(', ')}</p>
+      <p>${[safe.telefono, safe.email].filter(Boolean).join(' | ')}</p>
     </div>
   </div>
   <div class="titulo-documento">Receta Médica</div>
   <div class="receta-content">
     <div class="paciente-info">
-      <div><div class="label">Paciente</div><div class="value">${receta.paciente}</div></div>
+      <div><div class="label">Paciente</div><div class="value">${safe.paciente}</div></div>
       <div><div class="label">Fecha de emisión</div><div class="value">${hoy}</div></div>
     </div>
     <div class="prescripcion">
       <h3>Prescripción</h3>
       <div class="prescripcion-item">
-        <div class="medicamento">${receta.medicamento}</div>
-        <div class="detalle"><strong>Dosis:</strong> ${receta.dosis} &nbsp;·&nbsp; <strong>Duración:</strong> ${receta.duracion}</div>
-        ${receta.indicaciones ? `<div class="indicaciones">📋 ${receta.indicaciones}</div>` : ''}
+        <div class="medicamento">${safe.medicamento}</div>
+        <div class="detalle"><strong>Dosis:</strong> ${safe.dosis} &nbsp;·&nbsp; <strong>Duración:</strong> ${safe.duracion}</div>
+        ${safe.indicaciones ? `<div class="indicaciones">📋 ${safe.indicaciones}</div>` : ''}
       </div>
     </div>
     <div class="fechas">
@@ -347,15 +364,15 @@ function generarHTMLRecetaCompleta(params: {
   </div>
   <div class="firma-area">
     <div class="qr-container">
-      ${qrDataUrl ? `<img src="${qrDataUrl}" alt="QR Verificacion" style="width:80px;height:80px;" /><p style="font-size:8px;color:#999;text-align:center;margin-top:3px;">Verificar autenticidad</p>` : '<p style="font-size:9px;color:#ccc;">QR no disponible</p>'}
+      ${safe.qrDataUrl ? `<img src="${safe.qrDataUrl}" alt="QR Verificacion" style="width:80px;height:80px;" /><p style="font-size:8px;color:#999;text-align:center;margin-top:3px;">Verificar autenticidad</p>` : '<p style="font-size:9px;color:#ccc;">QR no disponible</p>'}
     </div>
     <div></div>
     <div class="firma">
       <div class="firma-line"></div>
-      <div class="firma-label">${params.nombreOrg}</div>
+      <div class="firma-label">${safe.nombreOrg}</div>
     </div>
   </div>
-  <div class="footer"><strong>${nombreOrg}</strong> &nbsp;·&nbsp; Documento generado electrónicamente el ${hoy}</div>
+  <div class="footer"><strong>${safe.nombreOrg}</strong> &nbsp;·&nbsp; Documento generado electrónicamente el ${hoy}</div>
 </body>
 </html>`;
 }

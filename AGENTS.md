@@ -2,7 +2,7 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 02/06/2026
+**Última actualización:** 03/06/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
@@ -514,6 +514,7 @@ consultorio-medico/
 14. **Datos encriptados**: AES-256-GCM para credenciales en DB
 15. **Firewall**: UFW, puerto 5432 bloqueado externamente
 16. **Prompt sanitization**: Anti-jailbreak implementado
+17. **Auditoría 03/06**: 0 críticos / 0 altos / 0 medios / 0 bajos ✅
 
 ### Webhooks
 | Webhook | Endpoint | Validación |
@@ -551,6 +552,8 @@ consultorio-medico/
 |---------|-------------|--------------|
 | **WF-04 Correo Inteligente completo** | Configurar IMAP/SMTP real en n8n. Ya tiene el workflow completo (10 nodos), falta activar las credenciales | Credenciales IMAP/SMTP |
 | **Tests de integración** | Suite de tests automatizados para flujo completo: webhook → DB → n8n → Twilio | Playwright/Jest |
+| **Editar pacientes en lista** | Agregar modal de edición desde la lista de pacientes (no solo desde ficha) | — |
+| **Buscador CIE-10 offline** | Cachear códigos CIE-10 en el cliente para búsqueda sin conexión | — |
 
 ### 🟢 Prioridad Baja
 

@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
   // Setear cookie de sesión
   await setPortalSessionCookie(session);
 
-  // Redirigir al dashboard
-  return NextResponse.redirect(new URL('/portal/dashboard', request.url));
+  // Redirigir al dashboard (URL fija para evitar open redirect)
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://med.aicorebots.com';
+  return NextResponse.redirect(new URL('/portal/dashboard', baseUrl));
 }

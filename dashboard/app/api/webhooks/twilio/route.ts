@@ -15,6 +15,7 @@ import {
 } from '@/lib/data-store';
 import { detectSurveyResponse, storeSurveyResponse } from '@/lib/encuestas';
 import { handleWaitlistResponse } from '@/lib/whatsapp-waitlist';
+import { escapeHtml } from '@/lib/html-utils';
 
 /**
  * Forwardea el webhook a n8n para procesamiento con IA.
@@ -334,7 +335,7 @@ export const POST = withRateLimit(async function POST(request: NextRequest) {
 
     if (messageStatus && callbackMessageSid) {
       const errorCode = params.ErrorCode || null;
-      const errorMessage = params.ErrorMessage || null;
+      const errorMessage = params.ErrorMessage ? escapeHtml(params.ErrorMessage) : null;
 
       console.log(
         `[Twilio] Status Callback — SID: ${callbackMessageSid}, Estado: ${messageStatus}` +
