@@ -62,6 +62,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
+import { EditarPacienteModal } from '@/components/modals/editar-paciente-modal';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -446,6 +447,9 @@ export function PacienteDetalleClient({
 
   // ─── Nuevo Turno ───────────────────────────────
   const [showNuevoTurno, setShowNuevoTurno] = useState(false);
+
+  // ─── Editar Paciente ──────────────────────────
+  const [editPacienteOpen, setEditPacienteOpen] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -837,6 +841,9 @@ export function PacienteDetalleClient({
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={() => setEditPacienteOpen(true)}>
+                <Edit3 className="h-4 w-4 mr-2" /> Editar
+              </Button>
               <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/conversaciones`)}>
                 <MessageSquare className="h-4 w-4 mr-2" /> Mensaje
               </Button>
@@ -2181,6 +2188,17 @@ export function PacienteDetalleClient({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ─── Editar Paciente Modal ──────────────── */}
+      <EditarPacienteModal
+        open={editPacienteOpen}
+        onOpenChange={setEditPacienteOpen}
+        paciente={paciente}
+        onSaved={(updated) => {
+          // Actualizar paciente localmente + recargar página para refrescar todo
+          window.location.reload();
+        }}
+      />
 
       {/* ─── Nuevo Turno Modal ─────────────────── */}
       <NuevoTurnoModal
