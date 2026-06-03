@@ -85,7 +85,7 @@ export default function PrivacidadPage() {
             <ul className="list-disc pl-5 space-y-1 text-sm">
               <li>Nombre completo</li>
               <li>Número de teléfono y/o email</li>
-              <li>DNI / RUT / documento de identidad</li>
+              <li>RUT / documento de identidad</li>
               <li>Datos de salud: historial médico, diagnósticos, recetas, alergias, medicación crónica</li>
               <li>Obra social / sistema de salud y número de afiliado</li>
               <li>Historial de turnos y consultas</li>

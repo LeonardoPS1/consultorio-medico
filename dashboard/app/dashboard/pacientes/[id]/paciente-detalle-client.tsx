@@ -791,7 +791,7 @@ export function PacienteDetalleClient({
                 )}
                 {paciente.dni && (
                   <span className="flex items-center gap-1">
-                    <Shield className="h-3.5 w-3.5" /> DNI {paciente.dni}
+                    <Shield className="h-3.5 w-3.5" /> RUT {paciente.dni}
                   </span>
                 )}
                 {edad !== null && (

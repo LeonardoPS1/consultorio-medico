@@ -437,7 +437,7 @@ function PrivacidadConfigSection() {
               <h4 className="text-sm font-semibold">¿Cómo funciona?</h4>
               <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                 <li>Cuando un paciente solicita la baja, se registra la solicitud y se le notifica</li>
-                <li>Al confirmar la baja, sus datos personales se anonimizan inmediatamente (nombre, email, teléfono, DNI)</li>
+                <li>Al confirmar la baja, sus datos personales se anonimizan inmediatamente (nombre, email, teléfono, RUT)</li>
                 <li>Los datos clínicos se conservan de forma anonimizada durante el período configurado</li>
                 <li>Pasado ese período, un job automático (n8n WF-09) elimina definitivamente los datos residuales</li>
                 <li>El paciente puede solicitar la portabilidad de sus datos antes de la baja</li>

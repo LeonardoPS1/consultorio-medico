@@ -56,6 +56,15 @@ interface EditarPacienteModalProps {
   onSaved: (updated: PacienteData) => void;
 }
 
+/** Formatea RUT chileno: 12345678-9 (auto-guion antes del dígito verificador) */
+function formatRut(value: string): string {
+  const cleaned = value.replace(/[^0-9Kk]/g, '').toUpperCase();
+  if (cleaned.length <= 1) return cleaned;
+  const body = cleaned.slice(0, -1).slice(0, 8);
+  const dv = cleaned.slice(-1);
+  return `${body}-${dv}`;
+}
+
 function formatTelefonoChile(value: string): string {
   const digits = value.replace(/\D/g, '');
   // 9 dígitos empezando con 9 → +569 + últimos 8 dígitos
@@ -227,12 +236,13 @@ export function EditarPacienteModal({ open, onOpenChange, paciente, onSaved }: E
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-dni">RUT / DNI</Label>
+              <Label htmlFor="edit-rut">RUT</Label>
               <Input
-                id="edit-dni"
+                id="edit-rut"
                 placeholder="12345678-9"
                 value={dni}
-                onChange={(e) => setDni(e.target.value)}
+                onChange={(e) => setDni(formatRut(e.target.value))}
+                maxLength={11}
               />
             </div>
             <div className="space-y-2">
