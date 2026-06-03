@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { notasSoap, medicos } from '@/drizzle/schema';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, sql } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { verifyPacienteAccess } from '@/lib/api-auth';
 
@@ -79,10 +79,33 @@ export async function POST(
 ) {
   try {
     const session = await auth();
-    if (!session?.user?.medicoId) {
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    const sessionMedicoId = (session.user as any)?.medicoId;
+    const sessionRol = (session.user as any)?.role;
+    try {
+      await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+    } catch {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+    }
+
+    // Si hay medicoId en sesión se usa; si no (admin sin médico asignado), se toma el primer médico activo
+    let medicoFinal = sessionMedicoId;
+    if (!medicoFinal) {
+      const [primerMedico] = await db
+        .select({ id: medicos.id })
+        .from(medicos)
+        .where(sql`${medicos.deletedAt} IS NULL`)
+        .limit(1);
+      if (primerMedico) medicoFinal = primerMedico.id;
+    }
+
+    if (!medicoFinal) {
       return NextResponse.json(
-        { error: 'Debe estar autenticado como médico' },
-        { status: 401 },
+        { error: 'No hay médicos activos en el sistema. Creá al menos un médico primero.' },
+        { status: 400 },
       );
     }
 
@@ -92,7 +115,7 @@ export async function POST(
       .insert(notasSoap)
       .values({
         pacienteId: params.id,
-        medicoId: session.user.medicoId,
+        medicoId: medicoFinal,
         turnoId: body.turnoId || null,
         subjetivo: body.subjetivo || null,
         objetivo: body.objetivo || null,

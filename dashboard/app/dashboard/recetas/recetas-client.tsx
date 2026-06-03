@@ -367,28 +367,19 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
   const [showNewReceta, setShowNewReceta] = useState(false);
 
   const handleNuevaReceta = async (data: {
-    paciente: string;
+    pacienteId: string;
+    pacienteNombre: string;
     medicamento: string;
     dosis: string;
     duracion: string;
     indicaciones: string;
   }) => {
     try {
-      // Buscar paciente
-      const busqueda = await fetch(`/api/pacientes?search=${encodeURIComponent(data.paciente)}&limit=5`);
-      const pacientesJson = await busqueda.json();
-      const paciente = pacientesJson.data?.[0];
-
-      if (!paciente) {
-        toast({ title: 'Error', description: 'Paciente no encontrado. Creá el paciente primero.', variant: 'destructive' });
-        return;
-      }
-
       const res = await fetch('/api/recetas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pacienteId: paciente.id,
+          pacienteId: data.pacienteId,
           medicamento: data.medicamento,
           dosis: data.dosis,
           duracion: data.duracion,
@@ -406,7 +397,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
       const created = json.data;
       const newReceta: Receta = {
         id: created.id,
-        paciente: data.paciente,
+        paciente: data.pacienteNombre,
         medicamento: created.medicamento,
         dosis: created.dosis,
         duracion: created.duracion || 'Según indicación',
@@ -417,7 +408,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         indicaciones: created.indicaciones,
       };
       setRecetas((prev) => [newReceta, ...prev]);
-      toast({ title: 'Receta creada', description: `${created.medicamento} para ${data.paciente}` });
+      toast({ title: 'Receta creada', description: `${created.medicamento} para ${data.pacienteNombre}` });
     } catch {
       toast({ title: 'Error', description: 'Error de red al crear receta', variant: 'destructive' });
     }
