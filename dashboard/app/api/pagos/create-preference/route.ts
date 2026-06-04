@@ -49,8 +49,20 @@ export async function POST(request: Request) {
       sandboxInitPoint: result.sandbox_init_point,
     });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Error desconocido';
-    console.error('[create-preference] Error:', msg, error);
+    // La SDK de MercadoPago v2 lanza objetos planos (no Error) en errores 4xx/5xx
+    let msg = 'Error desconocido';
+    if (error instanceof Error) {
+      msg = error.message; // errores de red
+    } else if (typeof error === 'object' && error !== null) {
+      const mpError = error as Record<string, unknown>;
+      msg = (mpError.message as string) || (mpError.error as string) || JSON.stringify(error);
+      if (mpError.cause) {
+        const cause = Array.isArray(mpError.cause) ? mpError.cause[0] : mpError.cause;
+        const causeMsg = (cause as Record<string, unknown>)?.description || (cause as Record<string, unknown>)?.code;
+        if (causeMsg) msg += ` — ${causeMsg}`;
+      }
+    }
+    console.error('[create-preference] Error:', msg, JSON.stringify(error, null, 2));
     return NextResponse.json(
       { error: `Error al crear preferencia de pago: ${msg}` },
       { status: 500 }

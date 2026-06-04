@@ -40,7 +40,8 @@ export async function createCheckoutPreference(
   const plan = PLANES[planId as PlanId];
   if (!plan) throw new Error(`Plan no valido: ${planId}`);
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const isDev = process.env.NODE_ENV === 'development';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (isDev ? 'http://localhost:3000' : 'https://med.aicorebots.com');
   const currency = process.env.MERCADOPAGO_CURRENCY || 'CLP';
   const price = currency === 'CLP' ? plan.precioCLP : plan.precioUSD;
 
