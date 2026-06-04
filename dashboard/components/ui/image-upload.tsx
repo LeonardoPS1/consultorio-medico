@@ -44,7 +44,7 @@ export function ImageUpload({
   const [loading, setLoading] = useState(false);
 
   const handleFile = useCallback(
-    (file: File) => {
+    async (file: File) => {
       setError(null);
       if (!file.type.startsWith('image/')) {
         setError('Solo se permiten imágenes');
@@ -55,19 +55,26 @@ export function ImageUpload({
         return;
       }
       setLoading(true);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        if (result) {
-          onChange(result);
-          setLoading(false);
+      try {
+        // Subir el archivo al servidor (evita guardar base64 en JSON)
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const json = await res.json();
+        if (res.ok && json.url) {
+          onChange(json.url);
+        } else {
+          setError(json.error || 'Error al subir la imagen');
         }
-      };
-      reader.onerror = () => {
-        setError('Error al leer archivo');
+      } catch {
+        setError('Error de conexión al subir la imagen');
+      } finally {
         setLoading(false);
-      };
-      reader.readAsDataURL(file);
+      }
     },
     [onChange, maxSizeMB]
   );
