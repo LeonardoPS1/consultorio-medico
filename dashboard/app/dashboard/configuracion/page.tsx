@@ -1071,8 +1071,8 @@ function PerfilOrganizacion() {
           <CardContent className="space-y-3">
             <Field label="Dirección" value={data.direccion} onChange={(v) => updateField('direccion', v)} />
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Ciudad" value={data.ciudad} onChange={(v) => updateField('ciudad', v)} />
-              <Field label="Provincia" value={data.provincia} onChange={(v) => updateField('provincia', v)} />
+<Field label="Comuna" value={data.ciudad} onChange={(v) => updateField('ciudad', v)} />
+            <Field label="Región" value={data.provincia} onChange={(v) => updateField('provincia', v)} />
             </div>
           </CardContent>
         </Card>
