@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+/* Google Fonts se cargan via next/font/google en layout.tsx (self-hosted, no CSP issue) */
 
 @layer base {
   :root {

@@ -121,10 +121,11 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Rate limit general para APIs (30 requests por minuto por IP)
+  // Rate limit general para APIs (120 requests por minuto por IP)
+  // Un dashboard hace ~7 llamadas al cargar + polling cada 60s
   // Excluir /api/v1/ — tienen su propio rate limit por API key
   if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/') && !pathname.startsWith('/api/v1/')) {
-    if (!rateLimit(`api:${ip}`, 30, 60_000)) {
+    if (!rateLimit(`api:${ip}`, 120, 60_000)) {
       const headers = new Headers({
         'Content-Type': 'application/json',
         'Retry-After': '60',

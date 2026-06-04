@@ -41,19 +41,20 @@ export function GatedContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  // Mientras carga la sesión, permitir acceso temporal
-  if (status === 'loading') return <>{children}</>;
-
+  // Derivar blocked SIEMPRE, incluso durante loading (evita que el # de hooks cambie)
   const plan = session?.user?.plan ?? 'free';
   const required = getRequiredFeature(pathname ?? '');
   const blocked = required && !canAccess(plan, required);
 
-  // Redirect en useEffect para no hacer side-effects durante el render
+  // Redirect en useEffect — SIEMPRE se registra (no puede ir después de un return)
   useEffect(() => {
     if (blocked) {
       router.replace('/dashboard/configuracion?tab=suscripcion');
     }
   }, [blocked, router]);
+
+  // Mientras carga la sesión, permitir acceso temporal
+  if (status === 'loading') return <>{children}</>;
 
   if (blocked) return null;
 

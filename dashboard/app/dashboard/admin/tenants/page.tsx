@@ -37,11 +37,6 @@ export default function AdminTenantsPage() {
   const [newSubdomain, setNewSubdomain] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Solo admin
-  if (session?.user?.role !== 'admin') {
-    redirect('/dashboard');
-  }
-
   const loadTenants = () => {
     fetch('/api/admin/tenants')
       .then((r) => r.json())
@@ -53,9 +48,15 @@ export default function AdminTenantsPage() {
       .finally(() => setLoading(false));
   };
 
+  // useEffect SIEMPRE antes de cualquier redirect/return (reglas de hooks de React)
   useEffect(() => {
     if (session?.user?.role === 'admin') loadTenants();
   }, [session]);
+
+  // Solo admin
+  if (session?.user?.role !== 'admin') {
+    redirect('/dashboard');
+  }
 
   const handleCreate = async () => {
     if (!newNombre || !newSubdomain) return;

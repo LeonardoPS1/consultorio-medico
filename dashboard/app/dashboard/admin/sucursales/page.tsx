@@ -40,10 +40,6 @@ export default function AdminSucursalesPage() {
   const [telefono, setTelefono] = useState('');
   const [email, setEmail] = useState('');
 
-  if (session?.user?.role !== 'admin') {
-    redirect('/dashboard');
-  }
-
   const load = () => {
     setLoading(true);
     fetch('/api/admin/sucursales')
@@ -53,9 +49,14 @@ export default function AdminSucursalesPage() {
       .finally(() => setLoading(false));
   };
 
+  // useEffect SIEMPRE antes de cualquier redirect/return (reglas de hooks de React)
   useEffect(() => {
     if (session?.user?.role === 'admin') load();
   }, [session]);
+
+  if (session?.user?.role !== 'admin') {
+    redirect('/dashboard');
+  }
 
   const openNew = () => {
     setEditing(null);
