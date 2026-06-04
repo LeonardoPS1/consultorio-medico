@@ -6,11 +6,19 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function PortalVerify() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center p-4"><Loader2 className="h-10 w-10 text-blue-600 animate-spin" /></div>}>
+      <PortalVerifyContent />
+    </Suspense>
+  );
+}
+
+function PortalVerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState('');

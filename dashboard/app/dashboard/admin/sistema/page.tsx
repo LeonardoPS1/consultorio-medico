@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams, useRouter, redirect } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,6 +21,14 @@ const VALID_TABS = SYSTEM_TABS.map(t => t.id);
 const DEFAULT_TAB = 'toggles';
 
 export default function AdminSistemaPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-96"><div className="skeleton h-8 w-48" /></div>}>
+      <AdminSistemaContent />
+    </Suspense>
+  );
+}
+
+function AdminSistemaContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();

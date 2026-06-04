@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { canAccess, type FeatureId } from '@/lib/features';
@@ -45,12 +46,16 @@ export function GatedContent({ children }: { children: React.ReactNode }) {
 
   const plan = session?.user?.plan ?? 'free';
   const required = getRequiredFeature(pathname ?? '');
+  const blocked = required && !canAccess(plan, required);
 
-  // Redirect durante el render si no tiene acceso (más seguro que useEffect)
-  if (required && !canAccess(plan, required)) {
-    router.replace('/dashboard/configuracion?tab=suscripcion');
-    return null;
-  }
+  // Redirect en useEffect para no hacer side-effects durante el render
+  useEffect(() => {
+    if (blocked) {
+      router.replace('/dashboard/configuracion?tab=suscripcion');
+    }
+  }, [blocked, router]);
+
+  if (blocked) return null;
 
   return <>{children}</>;
 }
