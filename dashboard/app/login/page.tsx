@@ -39,6 +39,9 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
+    // Intentar login — NextAuth v5 beta puede fallar en el retorno
+    // aunque la sesión se haya creado correctamente.
+    let errorMessage: string | undefined;
     try {
       const result = await signIn('credentials', {
         email,
@@ -46,35 +49,35 @@ export default function LoginPage() {
         token2fa: step2fa ? token2fa : '',
         redirect: false,
       });
+      errorMessage = result?.error;
+    } catch {
+      // NEXT_REDIRECT u otra excepción de NextAuth v5 beta.
+      // La sesión puede haberse creado igual.
+    }
 
-      if (result?.error) {
-        if (result.error === '2FA_REQUIRED') {
-          setStep2fa(true);
-          setError('Ingresá el código de 6 dígitos de tu app autenticadora');
-          setLoading(false);
-          return;
-        }
-        // NextAuth v5 beta puede tirar error aunque la sesión ya se creó.
-        // Si el error es "Callback" o "Configuration", asumimos éxito y redirigimos.
-        if (result.error === 'Callback' || result.error === 'Configuration') {
-          router.push(callbackUrl);
-          return;
-        }
-        setError(result.error);
-      } else {
+    // Verificar la sesión directamente contra el servidor (no via contexto React,
+    // porque signIn a veces no actualiza el contexto antes de lanzar excepción).
+    try {
+      const sessionRes = await fetch('/api/auth/session');
+      const sessionData = await sessionRes.json();
+      if (sessionData?.user) {
+        // Sesión creada → login exitoso, redirigir sin importar lo que dijo signIn
         router.push(callbackUrl);
+        return;
       }
-    } catch (err: unknown) {
-      // NextAuth v5 beta lanza NEXT_REDIRECT como error aunque redirect:false.
-      // Si es un error de redirect, la sesión ya se creó → redirigir normalmente.
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes('NEXT_REDIRECT')) {
-        router.push(callbackUrl);
-      } else {
-        setError('Error al iniciar sesión. Intente nuevamente.');
-      }
-    } finally {
-      setLoading(false);
+    } catch {
+      // Si falla el fetch de sesión, seguimos con el flujo normal de error
+    }
+
+    // No hay sesión → login realmente falló. Mostrar el error.
+    setLoading(false);
+    if (errorMessage === '2FA_REQUIRED') {
+      setStep2fa(true);
+      setError('Ingresá el código de 6 dígitos de tu app autenticadora');
+    } else if (errorMessage) {
+      setError(errorMessage);
+    } else {
+      setError('Error al iniciar sesión. Intente nuevamente.');
     }
   };
 

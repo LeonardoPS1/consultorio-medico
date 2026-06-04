@@ -444,7 +444,7 @@ export function Header() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={async () => {
-              await signOut({ redirect: false });
+              try { await signOut({ redirect: false }); } catch { /* NextAuth v5 beta puede lanzar igual */ }
               window.location.href = '/';
             }}>
               Cerrar sesión

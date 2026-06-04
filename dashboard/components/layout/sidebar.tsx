@@ -362,7 +362,7 @@ export function Sidebar() {
               collapsed && 'justify-center px-0'
             )}
             onClick={async () => {
-              await signOut({ redirect: false });
+              try { await signOut({ redirect: false }); } catch { /* NextAuth v5 beta puede lanzar igual */ }
               window.location.href = '/';
             }}
             title="Cerrar sesión"
