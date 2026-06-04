@@ -48,12 +48,15 @@ export function GatedContent({ children }: { children: React.ReactNode }) {
   // Admin tiene acceso a TODO, independientemente del plan
   const blocked = !isAdmin && !!required && !canAccess(plan, required);
 
-  // Redirect en useEffect — SIEMPRE se registra (no puede ir después de un return)
+  // Redirect en useEffect — solo cuando la sesión ya cargó completamente
+  // Evita race condition: si redirect durante 'loading', router.replace() se dispara
+  // antes de que sepamos que el usuario es admin (y blocked=false)
   useEffect(() => {
+    if (status === 'loading') return;
     if (blocked) {
       router.replace('/dashboard/configuracion?tab=suscripcion');
     }
-  }, [blocked, router]);
+  }, [blocked, router, status]);
 
   // Mientras carga la sesión, permitir acceso temporal
   if (status === 'loading') return <>{children}</>;
