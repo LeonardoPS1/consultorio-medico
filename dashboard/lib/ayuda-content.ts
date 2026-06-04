@@ -222,6 +222,76 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     ],
   },
   {
+    id: 'notas-soap',
+    titulo: 'Notas SOAP',
+    descripcion: 'Evolución clínica estructurada con diagnóstico CIE-10',
+    icono: 'FileText',
+    pasos: [
+      {
+        titulo: 'Crear una nota SOAP',
+        descripcion: 'Registrá la evolución del paciente usando el formato Subjetivo/Objetivo/Análisis/Plan.',
+        tips: [
+          'Accedé desde la ficha del paciente',
+          'Subjetivo: síntomas que reporta el paciente',
+          'Objetivo: signos vitales y hallazgos del examen',
+          'Análisis: diagnóstico con código CIE-10',
+          'Plan: tratamiento, medicamentos y seguimiento',
+        ],
+        enlace: { href: '/dashboard/pacientes', label: 'Ir a Pacientes' },
+      },
+      {
+        titulo: 'Historial de notas',
+        descripcion: 'Todas las notas SOAP quedan registradas cronológicamente.',
+        tips: [
+          'Cada nota se asocia a un médico y un turno',
+          'Podés ver el historial completo desde la ficha del paciente',
+          'Las notas no se pueden modificar, solo agregar nuevas',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Qué es el código CIE-10?',
+        respuesta: 'La Clasificación Internacional de Enfermedades (CIE-10) es el estándar mundial para diagnósticos. El sistema incluye un buscador con ~900 códigos para facilitar la selección.',
+      },
+    ],
+  },
+  {
+    id: 'lista-espera',
+    titulo: 'Lista de Espera',
+    descripcion: 'Gestión inteligente de pacientes en espera para turnos disponibles',
+    icono: 'Clock',
+    pasos: [
+      {
+        titulo: 'Agregar paciente a lista de espera',
+        descripcion: 'Cuando un paciente necesita turno pero no hay disponibilidad, podés inscribirlo en la lista.',
+        tips: [
+          'Disponible en plan Professional o superior',
+          'Se asigna al médico y especialidad deseada',
+          'El sistema respeta orden FIFO (primero en llegar, primero en ser ofrecido)',
+          'Cada paciente recibe máximo 3 ofertas por día',
+        ],
+        enlace: { href: '/dashboard/lista-espera', label: 'Ir a Lista de Espera' },
+      },
+      {
+        titulo: 'Ofertas automáticas',
+        descripcion: 'Cuando se cancela un turno, el sistema busca automáticamente el primer paciente en espera.',
+        tips: [
+          'El paciente recibe un WhatsApp con la oferta del turno',
+          'Tiene 15 minutos para aceptar o rechazar',
+          'Si acepta, el turno se asigna automáticamente',
+          'Si rechaza, el sistema pasa al siguiente paciente',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Cuánto tiempo espera un paciente en la lista?',
+        respuesta: 'No hay límite de tiempo. Puede esperar hasta que haya una oferta disponible o hasta que el consultorio lo retire manualmente.',
+      },
+    ],
+  },
+  {
     id: 'recetas',
     titulo: 'Recetas Digitales',
     descripcion: 'Prescripciones médicas electrónicas con seguimiento',
@@ -256,6 +326,56 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     ],
   },
   {
+    id: 'firma-digital',
+    titulo: 'Firma Digital QR',
+    descripcion: 'Código QR de verificación en recetas para autenticidad',
+    icono: 'QrCode',
+    pasos: [
+      {
+        titulo: 'Cómo funciona',
+        descripcion: 'Cada receta genera un código QR único basado en hash SHA-256.',
+        tips: [
+          'Disponible en plan Professional o superior',
+          'El QR se imprime en la receta PDF',
+          'Cualquier persona puede escanearlo para verificar autenticidad',
+          'La verificación pública está en med.aicorebots.com/verificar',
+        ],
+        enlace: { href: '/dashboard/recetas', label: 'Ir a Recetas' },
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Qué datos muestra la verificación QR?',
+        respuesta: 'Muestra paciente, médico, medicamentos, fecha de emisión y vigencia. Confirma que la receta fue emitida por el consultorio.',
+      },
+    ],
+  },
+  {
+    id: 'certificados',
+    titulo: 'Certificados Médicos QR',
+    descripcion: 'Certificados digitales con verificación mediante código QR',
+    icono: 'FileCheck',
+    pasos: [
+      {
+        titulo: 'Emitir un certificado',
+        descripcion: 'Generá certificados médicos con código QR de verificación.',
+        tips: [
+          'Disponible en plan Professional o superior',
+          'Seleccioná paciente, tipo de certificado y período',
+          'Incluye diagnóstico con código CIE-10',
+          'El QR permite verificar autenticidad en línea',
+        ],
+        enlace: { href: '/dashboard/pacientes', label: 'Ir a Ficha del Paciente' },
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿El certificado QR tiene validez oficial?',
+        respuesta: 'El QR verifica que el certificado fue emitido por el consultorio. Cada certificado tiene un hash único que garantiza su integridad.',
+      },
+    ],
+  },
+  {
     id: 'conversaciones',
     titulo: 'Conversaciones WhatsApp',
     descripcion: 'Bandeja unificada de mensajes de pacientes con asistencia IA',
@@ -286,6 +406,31 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       {
         pregunta: '¿La IA responde todos los mensajes?',
         respuesta: 'Solo si está habilitado en Sistema → Asistente IA. Las urgencias siempre se derivan al médico. Las respuestas automáticas están limitadas a mensajes no urgentes.',
+      },
+    ],
+  },
+  {
+    id: 'plantillas',
+    titulo: 'Plantillas WhatsApp',
+    descripcion: 'Mensajes personalizables para comunicaciones automáticas',
+    icono: 'FileEdit',
+    pasos: [
+      {
+        titulo: 'Crear una plantilla',
+        descripcion: 'Configurá plantillas para recordatorios, confirmaciones y notificaciones.',
+        tips: [
+          'Disponible en plan Professional o superior',
+          'Usá variables como {{paciente}}, {{fecha}}, {{hora}}',
+          'Las plantillas se usan en recordatorios automáticos y respuestas',
+          'Podés tener varias plantillas para distintos escenarios',
+        ],
+        enlace: { href: '/dashboard/configuracion?tab=plantillas', label: 'Ir a Plantillas' },
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Puedo tener plantillas en distintos idiomas?',
+        respuesta: 'Sí, las plantillas son texto libre. Podés crear versiones en español, inglés o cualquier idioma que necesites.',
       },
     ],
   },
@@ -343,6 +488,39 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     ],
   },
   {
+    id: 'pwa',
+    titulo: 'App Instalable (PWA)',
+    descripcion: 'Usá el dashboard como una app nativa en tu celular o computador',
+    icono: 'Smartphone',
+    pasos: [
+      {
+        titulo: 'Instalar la app',
+        descripcion: 'El dashboard se puede instalar como aplicación en cualquier dispositivo.',
+        tips: [
+          'En Chrome/Edge: buscá "Instalar app" en el menú (tres puntitos)',
+          'En celular Android: aparece un banner "Instalar" automáticamente',
+          'En iOS: usá "Agregar a pantalla de inicio" desde Safari',
+          'La app instalada funciona con modo offline limitado',
+        ],
+      },
+      {
+        titulo: 'Modo offline',
+        descripcion: 'Las páginas básicas se muestran incluso sin conexión a internet.',
+        tips: [
+          'Los datos se actualizan cuando volvés a estar online',
+          'La app notifica cuando hay una nueva versión disponible',
+          'Se recomienda mantener la app actualizada',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿La PWA consume muchos datos?',
+        respuesta: 'No, la PWA almacena en caché los recursos necesarios y solo descarga datos cuando es necesario. Es más liviana que una app nativa.',
+      },
+    ],
+  },
+  {
     id: 'sistema',
     titulo: 'Sistema (Admin)',
     descripcion: 'Configuración avanzada del sistema solo para administradores',
@@ -385,6 +563,38 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
           'Usa la API para conectar sistemas externos',
         ],
       },
+      {
+        titulo: '2FA / Seguridad',
+        descripcion: 'Activá autenticación de dos factores para proteger tu cuenta.',
+        tips: [
+          'Disponible en plan Professional o superior',
+          'Usá Google Authenticator o cualquier app TOTP',
+          'Cada usuario puede activar 2FA desde su perfil',
+          'Si perdés el acceso, contactá al administrador',
+        ],
+      },
+      {
+        titulo: 'Auditoría de accesos',
+        descripcion: 'Registro completo de actividad de usuarios en el sistema.',
+        tips: [
+          'Disponible en plan Premium o superior',
+          'Registra inicios de sesión, cambios y accesos',
+          'Incluye IP, fecha, tipo de acción y usuario',
+          'Los registros se conservan por 90 días',
+        ],
+        enlace: { href: '/dashboard/admin/auditoria', label: 'Ir a Auditoría' },
+      },
+      {
+        titulo: 'Backups y Webhooks',
+        descripcion: 'Gestión de respaldos de base de datos y logs de webhooks.',
+        tips: [
+          'Disponible en plan Premium o superior',
+          'Los backups se almacenan en el servidor',
+          'Podés descargar o eliminar backups manualmente',
+          'Los logs de webhooks muestran actividad de Twilio y n8n',
+        ],
+        enlace: { href: '/dashboard/admin/backups', label: 'Ir a Backups' },
+      },
     ],
     preguntas: [
       {
@@ -394,6 +604,10 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       {
         pregunta: '¿Los feature toggles afectan a todos los usuarios?',
         respuesta: 'Sí, los cambios se aplican a todo el consultorio (todos los médicos y pacientes).',
+      },
+      {
+        pregunta: '¿Los backups son automáticos?',
+        respuesta: 'Sí, n8n ejecuta un backup diario a las 3:00 AM. También podés generar backups manuales desde Sistema.',
       },
     ],
   },

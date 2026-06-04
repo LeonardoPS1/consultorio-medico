@@ -117,6 +117,18 @@ export function TurnosClient({
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Propuesta de lista de espera cuando hay conflicto de horario
+  const [waitlistProposal, setWaitlistProposal] = useState<{
+    pacienteId: string;
+    medicoId: string;
+    pacienteNombre: string;
+    medicoNombre: string;
+    fecha: string;
+    hora: string;
+    reason: string;
+  } | null>(null);
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
+
   // Filtros
   const [filtroMedico, setFiltroMedico] = useState('__all__');
   const [filtroEstado, setFiltroEstado] = useState('__all__');
@@ -321,7 +333,20 @@ export function TurnosClient({
       });
 
       if (!res.ok) {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({ error: 'No se pudo crear el turno' }));
+        // Si es conflicto de horario (409), proponer lista de espera
+        if (res.status === 409) {
+          setWaitlistProposal({
+            pacienteId: pacienteId!,
+            medicoId: medicoId!,
+            pacienteNombre: pacienteNombre,
+            medicoNombre: data.medico,
+            fecha: data.fecha,
+            hora: data.hora,
+            reason: err.error || 'Sin disponibilidad',
+          });
+          return;
+        }
         toast({ title: 'Error', description: err.error || 'No se pudo crear el turno', variant: 'destructive' });
         return;
       }
@@ -1109,6 +1134,81 @@ export function TurnosClient({
               }}
             >
               Confirmar cancelación
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo propuesta lista de espera */}
+      <Dialog
+        open={!!waitlistProposal}
+        onOpenChange={(o) => {
+          if (!o) setWaitlistProposal(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Sin disponibilidad</DialogTitle>
+            <DialogDescription>
+              {waitlistProposal?.reason}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-2">
+            <p className="text-sm">
+              No se puede crear el turno para <strong>{waitlistProposal?.pacienteNombre}</strong> con{' '}
+              <strong>{waitlistProposal?.medicoNombre}</strong> el{' '}
+              {waitlistProposal?.fecha} a las {waitlistProposal?.hora}.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              ¿Querés agregar al paciente a la lista de espera? Cuando haya un turno disponible,
+              recibirá una oferta automática por WhatsApp.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setWaitlistProposal(null)}>
+              Cancelar
+            </Button>
+            <Button
+              disabled={waitlistLoading}
+              onClick={async () => {
+                if (!waitlistProposal) return;
+                setWaitlistLoading(true);
+                try {
+                  const res = await fetch('/api/waitlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      pacienteId: waitlistProposal.pacienteId,
+                      medicoId: waitlistProposal.medicoId,
+                      notas: `Sin disponibilidad: ${waitlistProposal.reason} (${waitlistProposal.fecha} ${waitlistProposal.hora})`,
+                    }),
+                  });
+                  if (res.ok) {
+                    toast({
+                      title: 'Agregado a lista de espera',
+                      description: `${waitlistProposal.pacienteNombre} recibirá una oferta cuando haya disponibilidad.`,
+                    });
+                  } else {
+                    const err = await res.json().catch(() => ({ error: 'Error al agregar' }));
+                    toast({
+                      title: 'Error',
+                      description: err.error || 'No se pudo agregar a la lista de espera',
+                      variant: 'destructive',
+                    });
+                  }
+                } catch {
+                  toast({
+                    title: 'Error',
+                    description: 'Error de red al procesar solicitud',
+                    variant: 'destructive',
+                  });
+                } finally {
+                  setWaitlistLoading(false);
+                  setWaitlistProposal(null);
+                }
+              }}
+            >
+              {waitlistLoading ? 'Agregando...' : 'Sí, agregar a lista de espera'}
             </Button>
           </DialogFooter>
         </DialogContent>

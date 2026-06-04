@@ -67,10 +67,6 @@ export async function createCheckoutPreference(
       pending: process.env.MERCADOPAGO_PENDING_URL || `${baseUrl}/dashboard/configuracion?tab=suscripcion`,
     },
     notification_url: `${baseUrl}/api/pagos/webhook`,
-    ...(process.env.MERCADOPAGO_ACCESS_TOKEN?.startsWith('TEST-') && {
-      marketplace: 'NONE',
-      purpose: 'wallet_purchase',
-    }),
   };
 
   const result = await preference.create({ body });

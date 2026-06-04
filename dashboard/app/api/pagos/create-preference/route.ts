@@ -49,9 +49,10 @@ export async function POST(request: Request) {
       sandboxInitPoint: result.sandbox_init_point,
     });
   } catch (error) {
-    console.error('[create-preference] Error:', error);
+    const msg = error instanceof Error ? error.message : 'Error desconocido';
+    console.error('[create-preference] Error:', msg, error);
     return NextResponse.json(
-      { error: 'Error al crear preferencia de pago' },
+      { error: `Error al crear preferencia de pago: ${msg}` },
       { status: 500 }
     );
   }
