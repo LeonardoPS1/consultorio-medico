@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { canAccess, type FeatureId } from '@/lib/features';
-import { toast } from '@/components/ui/use-toast';
 
 /**
  * Mapa de rutas del dashboard a features requeridas.
@@ -22,7 +20,6 @@ const ROUTE_FEATURE_MAP: Record<string, FeatureId> = {
   '/dashboard/onboarding': 'ia-assistant',
   '/dashboard/admin/tenants': 'multi-sucursal',
   '/dashboard/admin/auditoria': 'auditoria',
-  // '/dashboard/admin/sistema' no tiene feature gating (solo accesible por admin vía sidebar)
   '/dashboard/admin/sucursales': 'multi-sucursal',
   '/dashboard/admin/backups': 'backup-encriptado',
   '/dashboard/admin/n8n': 'n8n-monitor',
@@ -31,9 +28,7 @@ const ROUTE_FEATURE_MAP: Record<string, FeatureId> = {
 
 /** Rutas hijas que heredan el feature de la ruta padre */
 function getRequiredFeature(pathname: string): FeatureId | null {
-  // Buscar match exacto primero
   if (ROUTE_FEATURE_MAP[pathname]) return ROUTE_FEATURE_MAP[pathname];
-  // Buscar match por prefijo (ej: /dashboard/pacientes/[id] → 'pacientes')
   for (const [route, feature] of Object.entries(ROUTE_FEATURE_MAP)) {
     if (pathname.startsWith(route + '/')) return feature;
   }
@@ -44,26 +39,16 @@ export function GatedContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session, status } = useSession();
-  const plan = session?.user?.plan ?? 'free';
 
   // Mientras carga la sesión, permitir acceso temporal
   if (status === 'loading') return <>{children}</>;
 
+  const plan = session?.user?.plan ?? 'free';
   const required = getRequiredFeature(pathname ?? '');
-  const blocked = required && !canAccess(plan, required);
 
-  useEffect(() => {
-    if (blocked) {
-      toast({
-        title: 'Plan requerido',
-        description: `Necesitás un plan superior para acceder a esta sección.`,
-        variant: 'destructive',
-      });
-      router.push('/dashboard/configuracion?tab=suscripcion');
-    }
-  }, [blocked, router]);
-
-  if (blocked) {
+  // Redirect durante el render si no tiene acceso (más seguro que useEffect)
+  if (required && !canAccess(plan, required)) {
+    router.replace('/dashboard/configuracion?tab=suscripcion');
     return null;
   }
 
