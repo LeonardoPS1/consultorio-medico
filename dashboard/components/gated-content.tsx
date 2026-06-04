@@ -42,9 +42,11 @@ export function GatedContent({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
 
   // Derivar blocked SIEMPRE, incluso durante loading (evita que el # de hooks cambie)
+  const isAdmin = session?.user?.role === 'admin';
   const plan = session?.user?.plan ?? 'free';
   const required = getRequiredFeature(pathname ?? '');
-  const blocked = required && !canAccess(plan, required);
+  // Admin tiene acceso a TODO, independientemente del plan
+  const blocked = !isAdmin && !!required && !canAccess(plan, required);
 
   // Redirect en useEffect — SIEMPRE se registra (no puede ir después de un return)
   useEffect(() => {
