@@ -28,6 +28,7 @@ export interface OrganizationData {
   telefonoSecundario: string;
   whatsapp: string;
   email: string;
+  emailSecundario: string;
   sitioWeb: string;
   horarios: { [key: string]: { activo: boolean; inicio: string; fin: string } | undefined };
   redesSociales: { instagram: string; facebook: string; twitter: string };
@@ -43,14 +44,15 @@ const DEFAULT_ORG: OrganizationData = {
   firmaNombre: 'Dr. García',
   colorPrimario: '#2563eb',
   colorSecundario: '#7c3aed',
-  direccion: 'Av. Corrientes 1234',
-  ciudad: 'CABA',
-  provincia: 'Buenos Aires',
-  telefono: '+54 11 5555-0000',
+  direccion: 'Av. Providencia 1234',
+  ciudad: 'Santiago',
+  provincia: 'Región Metropolitana',
+  telefono: '+56 9 5555 0000',
   telefonoSecundario: '',
-  whatsapp: '+5491155550000',
-  email: 'info@consultorio.com',
-  sitioWeb: 'https://consultorio.com',
+  whatsapp: '+56955550000',
+  email: 'info@consultorio.cl',
+  emailSecundario: '',
+  sitioWeb: 'https://consultorio.cl',
   horarios: {
     lunes: { activo: true, inicio: '09:00', fin: '18:00' },
     martes: { activo: true, inicio: '09:00', fin: '18:00' },

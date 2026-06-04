@@ -57,7 +57,7 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     descripcion: 'Para consultorios individuales',
     popular: false,
     features: [
-      'Pacientes ilimitados',
+      'Hasta 50 pacientes',
       'Turnos ilimitados',
       'Recordatorios WhatsApp 24h y 1h con confirmación',
       'Historia clínica digital con CIE-10',
@@ -67,7 +67,6 @@ export const PLANES: Record<PlanId, PlanInfo> = {
       'Reportes y estadísticas del consultorio',
       'Horarios de atención configurables',
       'Notificaciones y alertas personalizables',
-      'Portal del paciente (turnos y recetas)',
       'Encuestas post-consulta automáticas',
       '1 profesional',
     ],
@@ -103,6 +102,7 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     popular: false,
     features: [
       'Todo lo de Profesional +',
+      'Portal del paciente (turnos, recetas e historial)',
       'Profesionales ilimitados',
       'Workflows n8n + automatizaciones personalizadas',
       'Google Calendar Sync bidireccional',

@@ -1,8 +1,10 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { canAccess, type FeatureId } from '@/lib/features';
+import { toast } from '@/components/ui/use-toast';
 
 /**
  * Mapa de rutas del dashboard a features requeridas.
@@ -15,8 +17,16 @@ const ROUTE_FEATURE_MAP: Record<string, FeatureId> = {
   '/dashboard/conversaciones': 'conversaciones',
   '/dashboard/recetas': 'recetas',
   '/dashboard/reportes': 'reportes',
+  '/dashboard/encuestas': 'encuestas',
+  '/dashboard/lista-espera': 'lista-espera',
+  '/dashboard/onboarding': 'ia-assistant',
   '/dashboard/admin/tenants': 'multi-sucursal',
   '/dashboard/admin/auditoria': 'auditoria',
+  // '/dashboard/admin/sistema' no tiene feature gating (solo accesible por admin vía sidebar)
+  '/dashboard/admin/sucursales': 'multi-sucursal',
+  '/dashboard/admin/backups': 'backup-encriptado',
+  '/dashboard/admin/n8n': 'n8n-monitor',
+  '/dashboard/webhooks': 'webhooks-log',
 };
 
 /** Rutas hijas que heredan el feature de la ruta padre */
@@ -32,6 +42,7 @@ function getRequiredFeature(pathname: string): FeatureId | null {
 
 export function GatedContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session, status } = useSession();
   const plan = session?.user?.plan ?? 'free';
 
@@ -39,11 +50,20 @@ export function GatedContent({ children }: { children: React.ReactNode }) {
   if (status === 'loading') return <>{children}</>;
 
   const required = getRequiredFeature(pathname ?? '');
-  if (required && !canAccess(plan, required)) {
-    // Redirigir al panel principal
-    if (typeof window !== 'undefined') {
-      window.location.href = '/dashboard';
+  const blocked = required && !canAccess(plan, required);
+
+  useEffect(() => {
+    if (blocked) {
+      toast({
+        title: 'Plan requerido',
+        description: `Necesitás un plan superior para acceder a esta sección.`,
+        variant: 'destructive',
+      });
+      router.push('/dashboard/configuracion?tab=suscripcion');
     }
+  }, [blocked, router]);
+
+  if (blocked) {
     return null;
   }
 

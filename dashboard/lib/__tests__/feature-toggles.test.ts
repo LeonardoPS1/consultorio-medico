@@ -112,15 +112,16 @@ describe('canAccessWithToggles', () => {
   });
 
   it('feature inexistente devuelve false', () => {
-    // @ts-expect-error — probando feature no definida
-    expect(canAccessWithToggles('premium', 'feature-fantasma' as FeatureId)).toBe(false);
+    // Type assertion intencional para probar feature inexistente
+    expect(canAccessWithToggles('premium', 'feature-fantasma' as unknown as FeatureId)).toBe(false);
   });
 });
 
 // ─── Integración: canAccess base + toggles ──────────────────
 
 describe('combinación plan + toggles', () => {
-  it('Premium tiene acceso a integraciones salvo toggle', () => {
+  it('Premium tiene acceso a portal-paciente e integraciones salvo toggle', () => {
+    expect(canAccess('premium', 'portal-paciente')).toBe(true);
     expect(canAccess('premium', 'integraciones')).toBe(true);
 
     const disabled = new Set<string>(['integraciones']);

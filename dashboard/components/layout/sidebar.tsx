@@ -49,7 +49,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: 'Panel Principal', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'Asistente IA', href: '/dashboard/onboarding', icon: Rocket },
+  { title: 'Asistente IA', href: '/dashboard/onboarding', icon: Rocket, feature: 'ia-assistant' },
   { title: 'Atención', href: '/dashboard/atencion', icon: Activity, feature: 'atencion' },
   { title: 'Turnos', href: '/dashboard/turnos', icon: Calendar, feature: 'turnos' },
   { title: 'Pacientes', href: '/dashboard/pacientes', icon: Users, feature: 'pacientes' },

@@ -166,8 +166,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         ],
       },
       {
-        titulo: 'Portal del Paciente',
-        descripcion: 'Los pacientes acceden a su información desde consultorio.aicorebots.com/portal.',
+        titulo: 'Portal del Paciente (Premium+)',
+        descripcion: 'Los pacientes acceden a su información desde consultorio.aicorebots.com/portal (disponible en plan Premium+).',
         tips: [
           'Ingresan con su número de teléfono +569',
           'Reciben un magic link por WhatsApp para acceder',
@@ -433,9 +433,18 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
   {
     id: 'portal-paciente',
     titulo: 'Portal del Paciente',
-    descripcion: 'Guía para pacientes sobre cómo usar el portal web',
+    descripcion: 'Acceso web para que pacientes vean turnos, recetas e historial',
     icono: 'ExternalLink',
     pasos: [
+      {
+        titulo: 'Requisito de plan',
+        descripcion: 'El Portal del Paciente está disponible en planes Premium y Enterprise.',
+        tips: [
+          'Para acceder, el consultorio debe tener un plan Premium o superior',
+          'Los pacientes reciben un enlace mágico por WhatsApp para ingresar',
+          'El portal es autogestionado por el paciente',
+        ],
+      },
       {
         titulo: 'Acceder al portal',
         descripcion: 'Los pacientes ingresan con su número de teléfono.',
@@ -453,7 +462,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         tips: [
           'Ver próximos turnos y historial de atenciones',
           'Consultar recetas activas y vencidas',
-          'Revisar historial médico',
+          'Revisar historial médico completo',
           'Editar perfil (email, región, sistema de salud)',
         ],
       },

@@ -11,7 +11,7 @@ import { Readable } from 'stream';
 // Config
 // ============================================================
 
-const BACKUP_DIR = process.env.BACKUP_DIR || path.join(process.cwd(), '.backups');
+const BACKUP_DIR = process.env.BACKUP_DIR || '/tmp/backups';
 
 function ensureDir() {
   if (!fs.existsSync(BACKUP_DIR)) {

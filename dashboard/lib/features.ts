@@ -73,7 +73,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'webhooks-log': 'premium',
   'credenciales': 'premium',
   'api-publica': 'professional',
-  'portal-paciente': 'starter',
+  'portal-paciente': 'premium',
   'multi-sucursal': 'enterprise',
   'encuestas': 'starter',
   'lista-espera': 'professional',

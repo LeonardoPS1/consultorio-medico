@@ -877,14 +877,15 @@ function PerfilOrganizacion() {
     firmaNombre: 'Dr. García',
     colorPrimario: '#2563eb',
     colorSecundario: '#7c3aed',
-    direccion: 'Av. Corrientes 1234',
-    ciudad: 'CABA',
-    provincia: 'Buenos Aires',
-    telefono: '+54 11 5555-0000',
+    direccion: 'Av. Providencia 1234',
+    ciudad: 'Santiago',
+    provincia: 'Región Metropolitana',
+    telefono: '+56 9 5555 0000',
     telefonoSecundario: '',
-    whatsapp: '+5491155550000',
-    email: 'info@consultorio.com',
-    sitioWeb: 'https://consultorio.com',
+    whatsapp: '+56955550000',
+    email: 'info@consultorio.cl',
+    emailSecundario: '',
+    sitioWeb: 'https://consultorio.cl',
     instagram: '',
     facebook: '',
   });
@@ -898,7 +899,13 @@ function PerfilOrganizacion() {
       .then((r) => r.json())
       .then((res) => {
         if (res.data) {
-          setData((prev) => ({ ...prev, ...res.data, redesSociales: undefined }));
+          const { redesSociales, ...rest } = res.data;
+          setData((prev) => ({
+            ...prev,
+            ...rest,
+            instagram: redesSociales?.instagram || '',
+            facebook: redesSociales?.facebook || '',
+          }));
           setPreviewColor(res.data.colorPrimario || '#2563eb');
         }
       })
@@ -909,11 +916,23 @@ function PerfilOrganizacion() {
     setGuardando(true);
     setMensaje('');
     try {
+      // Armar payload incluyendo redesSociales anidadas
+      const { instagram, facebook, ...restData } = data;
+      const payload = {
+        ...restData,
+        redesSociales: {
+          instagram: instagram || '',
+          facebook: facebook || '',
+          twitter: '',
+        },
+      };
+
       const res = await fetch('/api/organization', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
+      const json = await res.json().catch(() => ({}));
       if (res.ok) {
         setMensaje('✅ Configuración guardada correctamente');
         setPreviewColor(data.colorPrimario);
@@ -921,10 +940,10 @@ function PerfilOrganizacion() {
         window.dispatchEvent(new CustomEvent('organization-updated'));
         setTimeout(() => setMensaje(''), 3000);
       } else {
-        setMensaje('❌ Error al guardar');
+        setMensaje(`❌ ${json.error || 'Error al guardar'}`);
       }
-    } catch {
-      setMensaje('❌ Error de conexión');
+    } catch (err) {
+      setMensaje(`❌ Error de conexión: ${err instanceof Error ? err.message : 'Error desconocido'}`);
     } finally {
       setGuardando(false);
     }
@@ -1068,7 +1087,8 @@ function PerfilOrganizacion() {
             <Field label="Teléfono principal" value={data.telefono} onChange={(v) => updateField('telefono', v)} />
             <Field label="Teléfono secundario" value={data.telefonoSecundario} onChange={(v) => updateField('telefonoSecundario', v)} />
             <Field label="WhatsApp" value={data.whatsapp} onChange={(v) => updateField('whatsapp', v)} />
-            <Field label="Email" type="email" value={data.email} onChange={(v) => updateField('email', v)} />
+            <Field label="Email principal" type="email" value={data.email} onChange={(v) => updateField('email', v)} />
+            <Field label="Email secundario" type="email" value={data.emailSecundario} onChange={(v) => updateField('emailSecundario', v)} />
             <Field label="Sitio web" value={data.sitioWeb} onChange={(v) => updateField('sitioWeb', v)} />
           </CardContent>
         </Card>
@@ -1091,7 +1111,15 @@ function PerfilOrganizacion() {
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={() => {
           setMensaje(''); fetch('/api/organization').then(r => r.json()).then(res => {
-            if (res.data) setData(res.data);
+            if (res.data) {
+              const { redesSociales, ...rest } = res.data;
+              setData((prev) => ({
+                ...prev,
+                ...rest,
+                instagram: redesSociales?.instagram || '',
+                facebook: redesSociales?.facebook || '',
+              }));
+            }
           });
         }}>
           Restablecer

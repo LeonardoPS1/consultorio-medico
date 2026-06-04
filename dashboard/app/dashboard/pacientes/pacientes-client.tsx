@@ -18,6 +18,7 @@ import {
   FileSpreadsheet,
   FileDown,
   Loader2,
+  Syringe,
 } from 'lucide-react';
 
 import { formatPhone, getInitials, formatDate } from '@/lib/utils';
@@ -286,6 +287,16 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
                   </div>
 
                   <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Recetas"
+                      onClick={() =>
+                        router.push(`/dashboard/pacientes/${paciente.id}`)
+                      }
+                    >
+                      <Syringe className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
