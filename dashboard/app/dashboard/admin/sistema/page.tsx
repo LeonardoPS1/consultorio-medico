@@ -4,13 +4,15 @@ import { Suspense, useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams, useRouter, redirect } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Brain, Link, Shield, Key, Lock } from 'lucide-react';
+import { Settings, Brain, Link, Shield, Key, Lock, Users } from 'lucide-react';
 import SistemaTab from '@/components/configuracion/sistema-tab';
+import AdminUsuariosTab from '@/components/admin/admin-usuarios-tab';
 import { PageHeader } from '@/components/page-header';
 
 const SYSTEM_TABS = [
   { id: 'toggles', label: 'Feature Toggles', icon: Settings },
   { id: 'ia', label: 'Asistente IA', icon: Brain },
+  { id: 'usuarios', label: 'Usuarios', icon: Users },
   { id: 'integraciones', label: 'Integraciones', icon: Link },
   { id: 'credenciales', label: 'Credenciales', icon: Shield },
   { id: 'apikeys', label: 'API Keys', icon: Key },
@@ -73,7 +75,11 @@ function AdminSistemaContent() {
 
         {SYSTEM_TABS.map(t => (
           <TabsContent key={t.id} value={t.id} className="mt-4">
-            <SistemaTab isAdmin={true} section={t.id} />
+            {t.id === 'usuarios' ? (
+              <AdminUsuariosTab />
+            ) : (
+              <SistemaTab isAdmin={true} section={t.id} />
+            )}
           </TabsContent>
         ))}
       </Tabs>

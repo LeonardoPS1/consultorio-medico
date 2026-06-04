@@ -200,7 +200,14 @@ export default function LoginPage() {
             )}
           </form>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            ¿No tenés cuenta?{' '}
+            <Link href="/registro" className="text-primary hover:underline font-medium">
+              Registrate gratis
+            </Link>
+          </p>
+
+          <p className="mt-4 text-center text-xs text-muted-foreground">
             <Link href="/" className="hover:text-foreground transition-colors">
               <ArrowLeft className="h-3 w-3 inline mr-1" />
               Volver a AiCoreMed
