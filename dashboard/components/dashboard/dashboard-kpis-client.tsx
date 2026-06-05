@@ -96,7 +96,7 @@ export function DashboardKpisClient({ initialKpis }: DashboardKpisClientProps) {
   if (kpis.length === 0) return null;
 
   return (
-    <div className={`grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6 stagger-children ${loading ? 'opacity-60 transition-opacity' : ''}`}>
+    <div className={`grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 stagger-children ${loading ? 'opacity-60 transition-opacity' : ''}`}>
       {kpis.map((kpi) => {
         const Icon = getKpiIcon(kpi.type);
         const gradient = getKpiGradient(kpi.type);
@@ -104,22 +104,22 @@ export function DashboardKpisClient({ initialKpis }: DashboardKpisClientProps) {
         return (
           <Card key={kpi.title} className="hover-card overflow-hidden relative">
             <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-[0.03] dark:opacity-[0.08]`} />
-            <CardHeader className="flex flex-row items-center justify-between pb-1 md:pb-2 space-y-0 px-3 md:px-6 pt-3 md:pt-6 relative">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="flex flex-row items-center justify-between pb-1 md:pb-2 space-y-0 px-2.5 sm:px-3 md:px-6 pt-2.5 sm:pt-3 md:pt-6 relative">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground truncate pr-1">
                 {kpi.title}
               </CardTitle>
-              <div className={`rounded-lg ${bg} p-1.5 md:p-2`}>
-                <Icon className={`h-3.5 w-3.5 md:h-4 md:w-4 ${kpi.urgent ? 'text-red-500 animate-pulse-soft' : ''}`} />
+              <div className={`rounded-lg ${bg} p-1 sm:p-1.5 md:p-2 shrink-0`}>
+                <Icon className={`h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 ${kpi.urgent ? 'text-red-500 animate-pulse-soft' : ''}`} />
               </div>
             </CardHeader>
-            <CardContent className="px-3 md:px-6 pb-3 md:pb-6 relative">
-              <div className="flex items-baseline gap-2">
-                <div className="text-2xl sm:text-3xl font-bold">{kpi.value}</div>
-                <span className={`text-sm font-medium ${kpi.urgent ? 'text-red-500' : 'text-emerald-500'}`}>
+            <CardContent className="px-2.5 sm:px-3 md:px-6 pb-2.5 sm:pb-3 md:pb-6 relative">
+              <div className="flex items-baseline gap-1.5 sm:gap-2">
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight">{kpi.value}</div>
+                <span className={`text-xs sm:text-sm font-medium ${kpi.urgent ? 'text-red-500' : 'text-emerald-500'}`}>
                   {kpi.change}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">
                 {kpi.type === 'calendar'
                   ? 'vs día anterior'
                   : kpi.type === 'users'

@@ -81,22 +81,22 @@ export function DashboardClient({ dateStr }: DashboardClientProps) {
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2 mt-1">
             <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
-            <span className="truncate">Resumen de la actividad del consultorio &mdash; {dateStr}</span>
+            <span className="truncate line-clamp-1">Resumen de la actividad del consultorio &mdash; {dateStr}</span>
           </p>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={handleRefresh}
-          className="text-muted-foreground"
+          className="text-muted-foreground shrink-0 h-9 sm:h-10"
         >
           <RefreshCw className="h-4 w-4 mr-1" />
-          Actualizar
+          <span className="hidden sm:inline">Actualizar</span>
         </Button>
       </div>
 
       {/* ─── Quick Actions ─────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
         {quickActions.map((action) => {
           const Icon = action.icon;
           const actionHref =
@@ -114,15 +114,15 @@ export function DashboardClient({ dateStr }: DashboardClientProps) {
               <Link
                 key={action.label}
                 href={actionHref}
-                className="flex items-center gap-3 p-4 rounded-xl border bg-card hoverable:hover:shadow-card-hover transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-0.5 group"
+                className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl border bg-card hoverable:hover:shadow-card-hover transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-0.5 group min-h-[52px] sm:min-h-[60px]"
               >
                 <div
-                  className={`h-10 w-10 rounded-lg ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}
+                  className={`h-9 w-9 sm:h-10 sm:w-10 rounded-lg ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform shrink-0`}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <span className="font-medium text-sm">{action.label}</span>
-                <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
+                <span className="font-medium text-xs sm:text-sm truncate">{action.label}</span>
+                <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-auto text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0" />
               </Link>
             );
           }
@@ -132,15 +132,15 @@ export function DashboardClient({ dateStr }: DashboardClientProps) {
             <button
               key={action.label}
               onClick={() => handleQuickAction('turno')}
-              className="flex items-center gap-3 p-4 rounded-xl border bg-card hoverable:hover:shadow-card-hover transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-0.5 group"
+              className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl border bg-card hoverable:hover:shadow-card-hover transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-0.5 group min-h-[52px] sm:min-h-[60px]"
             >
               <div
-                className={`h-10 w-10 rounded-lg ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}
+                className={`h-9 w-9 sm:h-10 sm:w-10 rounded-lg ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform shrink-0`}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <span className="font-medium text-sm">{action.label}</span>
-              <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
+              <span className="font-medium text-xs sm:text-sm truncate">{action.label}</span>
+              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-auto text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0" />
             </button>
           );
         })}
@@ -148,15 +148,15 @@ export function DashboardClient({ dateStr }: DashboardClientProps) {
         {/* Botón directo a Atención */}
         <Link
           href="/dashboard/atencion"
-          className="flex items-center gap-3 p-4 rounded-xl border-2 border-blue-200 bg-blue-50/50 dark:bg-blue-950/30 hoverable:hover:shadow-card-hover transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-0.5 group"
+          className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl border-2 border-blue-200 bg-blue-50/50 dark:bg-blue-950/30 hoverable:hover:shadow-card-hover transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-0.5 group min-h-[52px] sm:min-h-[60px]"
         >
-          <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-950/50 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Play className="h-5 w-5 text-blue-600" />
+          <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg bg-blue-100 dark:bg-blue-950/50 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+            <Play className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
           </div>
-          <span className="font-medium text-sm">Atención</span>
+          <span className="font-medium text-xs sm:text-sm">Atención</span>
           <Badge
             variant="secondary"
-            className="ml-auto text-[10px] bg-blue-200 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+            className="ml-auto text-[9px] sm:text-[10px] bg-blue-200 text-blue-700 dark:bg-blue-900 dark:text-blue-300 shrink-0"
           >
             En vivo
           </Badge>

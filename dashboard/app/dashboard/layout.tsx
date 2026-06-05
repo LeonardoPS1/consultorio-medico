@@ -30,7 +30,7 @@ export default async function DashboardLayout({
           </Suspense>
         </main>
         {/* Footer compacto */}
-        <footer className="flex items-center justify-between border-t px-3 sm:px-4 lg:px-6 py-2 text-[11px] text-muted-foreground/60">
+        <footer className="flex items-center justify-between border-t px-3 sm:px-4 lg:px-6 py-2.5 sm:py-2 text-[11px] text-muted-foreground/60">
           <span>© {new Date().getFullYear()} {process.env.NEXT_PUBLIC_TENANT_NAME || 'AiCoreMed'}</span>
           <span className="hidden sm:inline">v{process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'}</span>
         </footer>

@@ -130,9 +130,9 @@ export function Sidebar() {
         className={cn(
           // Base
           'flex flex-col border-r bg-sidebar text-sidebar-foreground',
-          // Mobile: fixed drawer overlay con slide
-          'fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-out',
-          'lg:relative lg:z-auto lg:transition-all lg:duration-300',
+          // Mobile: fixed drawer overlay con slide — más ancho para mejor usabilidad
+          'fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-out w-[85vw] max-w-[320px]',
+          'lg:relative lg:z-auto lg:transition-all lg:duration-300 lg:w-auto',
           // Mobile: slide in/out
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
           'lg:translate-x-0',
@@ -168,10 +168,10 @@ export function Sidebar() {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-2 right-2 h-7 w-7 lg:hidden text-sidebar-foreground/60 hoverable:hover:text-sidebar-foreground"
+            className="absolute top-2 right-2 h-9 w-9 lg:hidden text-sidebar-foreground/60 hoverable:hover:text-sidebar-foreground"
             onClick={closeMobile}
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
 
@@ -182,7 +182,7 @@ export function Sidebar() {
               <>
                 {/* Skeletons mientras carga la sesión — evita que los links apunten a config */}
                 {navItems.map((item) => (
-                  <div key={item.href} className="flex items-center gap-3 rounded-lg px-3 py-2.5">
+                  <div key={item.href} className="flex items-center gap-3 rounded-lg px-3 py-3">
                     <Skeleton className="h-5 w-5 shrink-0 rounded-md" />
                     {!collapsed && <Skeleton className="h-4 flex-1 max-w-[120px]" />}
                   </div>
@@ -205,8 +205,8 @@ export function Sidebar() {
                     href="/dashboard/configuracion?tab=suscripcion"
                     onClick={closeMobile}
                     className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                      'text-sidebar-foreground/40 hoverable:hover:bg-sidebar-accent/50 hoverable:hover:text-sidebar-foreground/60'
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors',
+                    'text-sidebar-foreground/40 hoverable:hover:bg-sidebar-accent/50 hoverable:hover:text-sidebar-foreground/60'
                     )}
                     title={collapsed ? `${item.title} (Plan ${requiredPlan})` : undefined}
                   >
@@ -232,7 +232,7 @@ export function Sidebar() {
                   href={item.href}
                   onClick={closeMobile}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     isActive
                       ? 'bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
@@ -266,7 +266,7 @@ export function Sidebar() {
                   href="/dashboard/admin/sistema"
                   onClick={closeMobile}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/sistema' || pathname.startsWith('/dashboard/admin/sistema/')
                       ? 'bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
@@ -280,7 +280,7 @@ export function Sidebar() {
                   href="/dashboard/admin/tenants"
                   onClick={closeMobile}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/tenants'
                       ? 'bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
@@ -294,7 +294,7 @@ export function Sidebar() {
                   href="/dashboard/admin/sucursales"
                   onClick={closeMobile}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/sucursales'
                       ? 'bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
@@ -308,7 +308,7 @@ export function Sidebar() {
                   href="/dashboard/admin/auditoria"
                   onClick={closeMobile}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/auditoria'
                       ? 'bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
@@ -322,7 +322,7 @@ export function Sidebar() {
                   href="/dashboard/admin/backups"
                   onClick={closeMobile}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/backups'
                       ? 'bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
@@ -336,7 +336,7 @@ export function Sidebar() {
                   href="/dashboard/admin/n8n"
                   onClick={closeMobile}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/n8n' || pathname.startsWith('/dashboard/admin/n8n/')
                       ? 'bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
@@ -350,7 +350,7 @@ export function Sidebar() {
                   href="/dashboard/webhooks"
                   onClick={closeMobile}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/webhooks' || pathname.startsWith('/dashboard/webhooks/')
                       ? 'bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'

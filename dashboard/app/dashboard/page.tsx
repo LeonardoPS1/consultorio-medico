@@ -161,7 +161,7 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="space-y-6 animate-in">
+    <div className="space-y-4 sm:space-y-6 animate-in">
       {/*
        * DashboardClient maneja:
        * - Header con fecha + botón Actualizar
@@ -174,49 +174,49 @@ export default async function DashboardPage() {
       <DashboardKpisClient initialKpis={data?.kpis ?? []} />
 
       {/* ─── Turnos + Actividad ────────────────────────── */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Próximos Turnos */}
         <Card className="hover-card">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between px-3 sm:px-6 py-3 sm:py-4">
+            <CardTitle className="text-sm sm:text-lg flex items-center gap-2">
+              <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               Próximos Turnos
             </CardTitle>
             <Link
               href="/dashboard/turnos"
-              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
             >
               Ver todos <ArrowRight className="h-3 w-3 ml-1" />
             </Link>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
             {data?.proximosTurnos && data.proximosTurnos.length > 0 ? (
               <div className="space-y-2">
                 {data.proximosTurnos.map((turno) => (
                   <div
                     key={`${turno.hora}-${turno.paciente}`}
-                    className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hoverable:hover:bg-muted/50 transition-colors group"
+                    className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-muted/30 hoverable:hover:bg-muted/50 transition-colors group"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-primary/10 text-primary font-bold text-sm group-hover:scale-105 transition-transform">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                      <div className="flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-primary/10 text-primary font-bold text-xs sm:text-sm group-hover:scale-105 transition-transform shrink-0">
                         {turno.hora}
                       </div>
-                      <div>
-                        <p className="font-medium text-sm">{turno.paciente}</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <div className="min-w-0">
+                        <p className="font-medium text-xs sm:text-sm truncate">{turno.paciente}</p>
+                        <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
                           {turno.tipo} &middot; {turno.medico}
                         </p>
                       </div>
                     </div>
                     <Badge
                       variant="secondary"
-                      className={
+                      className={`shrink-0 text-[10px] sm:text-xs ${
                         turno.estado === 'confirmada'
                           ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
                           : turno.estado === 'pendiente'
                             ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                             : 'bg-muted-foreground/20 text-muted-foreground'
-                      }
+                      }`}
                     >
                       {turno.estado === 'confirmada'
                         ? 'Confirmada'
@@ -228,9 +228,9 @@ export default async function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No hay turnos programados para hoy</p>
+              <div className="text-center py-6 sm:py-8 text-muted-foreground">
+                <Calendar className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-xs sm:text-sm">No hay turnos programados para hoy</p>
               </div>
             )}
           </CardContent>
@@ -238,41 +238,41 @@ export default async function DashboardPage() {
 
         {/* Actividad Reciente */}
         <Card className="hover-card">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between px-3 sm:px-6 py-3 sm:py-4">
+            <CardTitle className="text-sm sm:text-lg flex items-center gap-2">
+              <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               Actividad Reciente
             </CardTitle>
             <Link
               href="/dashboard/conversaciones"
-              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
             >
               Ver todo <ArrowRight className="h-3 w-3 ml-1" />
             </Link>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
             {data?.actividadReciente && data.actividadReciente.length > 0 ? (
               <div className="space-y-1">
                 {data.actividadReciente.map((act, i) => (
                   <div
                     key={`${act.hora}-${i}`}
-                    className="flex items-start gap-3 p-3 rounded-xl hoverable:hoverable:hover:bg-muted/50 transition-colors"
+                    className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl hoverable:hoverable:hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-center gap-2 min-w-[70px]">
-                      <Clock className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground font-medium tabular-nums">
+                    <div className="flex items-center gap-1 sm:gap-2 min-w-[60px] sm:min-w-[70px]">
+                      <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <span className="text-[11px] sm:text-xs text-muted-foreground font-medium tabular-nums">
                         {act.hora}
                       </span>
                     </div>
-                    <p className="text-sm flex-1">{act.texto}</p>
+                    <p className="text-xs sm:text-sm flex-1 leading-snug">{act.texto}</p>
                     <ActividadDot tipo={act.tipo} />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Sin actividad reciente</p>
+              <div className="text-center py-6 sm:py-8 text-muted-foreground">
+                <Activity className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-xs sm:text-sm">Sin actividad reciente</p>
               </div>
             )}
           </CardContent>
@@ -281,14 +281,14 @@ export default async function DashboardPage() {
 
       {/* ─── Sistema Status ────────────────────────────── */}
       <Card className="border-primary/10 bg-gradient-to-br from-primary/[0.03] to-transparent">
-        <CardContent className="flex items-center justify-between p-5">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+        <CardContent className="flex items-center justify-between p-3 sm:p-5">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <div>
-              <p className="text-sm font-medium">Sistema operativo y funcional</p>
-              <p className="text-xs text-muted-foreground">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-medium">Sistema operativo y funcional</p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
                 {data
                   ? data.sistema.datosReales
                     ? `Dashboard con datos en vivo · ${data.sistema.conversacionesActivas} conversaciones activas`
@@ -297,9 +297,9 @@ export default async function DashboardPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-2">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse-soft" />
-            <span className="text-xs text-emerald-600 font-medium">Online</span>
+            <span className="text-[11px] sm:text-xs text-emerald-600 font-medium">Online</span>
           </div>
         </CardContent>
       </Card>

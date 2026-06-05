@@ -201,20 +201,20 @@ export function Header() {
     : nameParts[0].charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
-      <div className="flex items-center gap-2 lg:gap-3 min-w-0">
+    <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 sm:px-4 lg:px-6">
+      <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 min-w-0">
         {/* Hamburger — mobile only */}
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden h-9 w-9 shrink-0"
+          className="lg:hidden h-10 w-10 shrink-0"
           onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
           title="Menú"
         >
           <Menu className="h-5 w-5" />
         </Button>
 
-        <Avatar className="h-8 w-8 lg:h-9 lg:w-9 ring-2 ring-border shrink-0">
+        <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-2 ring-border shrink-0">
           {avatarUrl ? (
             <img src={avatarUrl} alt="Avatar" className="h-full w-full rounded-full object-cover" />
           ) : (
@@ -224,7 +224,7 @@ export function Header() {
           )}
         </Avatar>
         <div className="min-w-0">
-          <h1 className="text-sm lg:text-base font-semibold text-foreground truncate">
+          <h1 className="text-sm sm:text-base font-semibold text-foreground truncate">
             {orgFirma || 'Dr.'}
           </h1>
           <p className="text-[11px] lg:text-xs text-muted-foreground truncate hidden sm:block">
@@ -235,8 +235,8 @@ export function Header() {
         {hasMultiple && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs text-muted-foreground hover:text-foreground ml-1 shrink-0">
-                <Store className="h-3.5 w-3.5" />
+              <Button variant="ghost" size="sm" className="h-8 sm:h-9 gap-1 text-xs text-muted-foreground hover:text-foreground ml-1 shrink-0">
+                <Store className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline max-w-[100px] truncate">
                   {sucursales.find(s => s.id === activeSucursalId)?.nombre || 'Sucursal'}
                 </span>
@@ -262,12 +262,12 @@ export function Header() {
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         {/* Toggle tema con dropdown (Light / Dark / System) */}
         {mounted && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9" title="Cambiar tema">
+              <Button variant="ghost" size="icon" className="h-10 w-10" title="Cambiar tema">
                 <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                 <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                 <span className="sr-only">Cambiar tema</span>
@@ -293,17 +293,19 @@ export function Header() {
           </DropdownMenu>
         )}
 
-        {/* Novedades / Actualización */}
-        <UpdateBadge />
+        {/* Novedades / Actualización — visible desde sm+ */}
+        <div className="hidden sm:inline-flex">
+          <UpdateBadge />
+        </div>
 
         {/* Notificaciones */}
         <DropdownMenu open={notifOpen} onOpenChange={setNotifOpen}>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative h-9 w-9" title="Notificaciones">
-              <Bell className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="relative h-10 w-10" title="Notificaciones">
+              <Bell className="h-[18px] w-[18px]" />
               {noLeidas > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white">
-                  {noLeidas}
+                <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white px-0.5">
+                  {noLeidas > 99 ? '99+' : noLeidas}
                 </span>
               )}
             </Button>
@@ -417,7 +419,7 @@ export function Header() {
         {/* Perfil */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full h-9 w-9">
+            <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
               <Avatar className="h-8 w-8">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="Avatar" className="h-full w-full rounded-full object-cover" />
