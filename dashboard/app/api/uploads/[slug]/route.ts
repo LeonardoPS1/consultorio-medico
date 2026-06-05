@@ -3,8 +3,7 @@ import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { auth } from '@/lib/auth';
-
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), '.data', 'uploads');
+import { getUploadDir } from '@/lib/upload-dir';
 
 /**
  * Sirve archivos subidos (imágenes) desde .data/uploads/
@@ -26,7 +25,7 @@ export async function GET(
       return NextResponse.json({ error: 'Nombre de archivo inválido' }, { status: 400 });
     }
 
-    const filepath = path.join(UPLOAD_DIR, filename);
+    const filepath = path.join(getUploadDir(), filename);
 
     if (!existsSync(filepath)) {
       return NextResponse.json({ error: 'Archivo no encontrado' }, { status: 404 });

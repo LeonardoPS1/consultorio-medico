@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile } from 'fs/promises';
-import { existsSync, mkdirSync } from 'fs';
 import path from 'path';
 import { auth } from '@/lib/auth';
-
-// Directorio donde se guardan los uploads
-// Usar variable de entorno UPLOAD_DIR si está configurada (ej: /data/dashboard/uploads en Docker),
-// o por defecto .data/uploads/ junto a la app
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), '.data', 'uploads');
+import { getUploadDir } from '@/lib/upload-dir';
 
 /** Extensiones permitidas */
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
 const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'];
 
 export async function POST(request: NextRequest) {
+  // Declarar uploadDir fuera del try para que sea accesible en el catch
+  let uploadDir = '';
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -44,10 +41,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crear directorio si no existe
-    if (!existsSync(UPLOAD_DIR)) {
-      mkdirSync(UPLOAD_DIR, { recursive: true });
-    }
+    // Obtener directorio escribible (fallback automático a tmp si no hay permisos)
+    uploadDir = getUploadDir();
 
     // Nombre único: timestamp + random + extensión original
     const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
@@ -56,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
-    const filepath = path.join(UPLOAD_DIR, filename);
+    const filepath = path.join(uploadDir, filename);
 
     // Escribir archivo
     const bytes = await file.arrayBuffer();
@@ -69,7 +64,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Error desconocido';
     const stack = error instanceof Error ? error.stack : '';
-    console.error('[Upload] Error:', msg, '| Dir:', UPLOAD_DIR, '| CWD:', process.cwd());
+    console.error('[Upload] Error:', msg, '| Dir:', uploadDir || 'N/A', '| CWD:', process.cwd());
     if (stack) console.error('[Upload] Stack:', stack);
     return NextResponse.json(
       { error: `Error al subir archivo: ${msg}` },
