@@ -4,7 +4,7 @@ import { existsSync } from 'fs';
 import path from 'path';
 import { auth } from '@/lib/auth';
 
-const UPLOAD_DIR = path.join(process.cwd(), '.data', 'uploads');
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), '.data', 'uploads');
 
 /**
  * Sirve archivos subidos (imágenes) desde .data/uploads/
@@ -52,7 +52,9 @@ export async function GET(
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
     });
-  } catch {
-    return NextResponse.json({ error: 'Error al servir archivo' }, { status: 500 });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : 'Error desconocido';
+    console.error('[Upload/Serve] Error:', msg);
+    return NextResponse.json({ error: `Error al servir archivo: ${msg}` }, { status: 500 });
   }
 }

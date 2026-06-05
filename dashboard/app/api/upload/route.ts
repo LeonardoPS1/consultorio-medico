@@ -4,8 +4,10 @@ import { existsSync, mkdirSync } from 'fs';
 import path from 'path';
 import { auth } from '@/lib/auth';
 
-// Directorio donde se guardan los uploads (junto a organization.json)
-const UPLOAD_DIR = path.join(process.cwd(), '.data', 'uploads');
+// Directorio donde se guardan los uploads
+// Usar variable de entorno UPLOAD_DIR si está configurada (ej: /data/dashboard/uploads en Docker),
+// o por defecto .data/uploads/ junto a la app
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), '.data', 'uploads');
 
 /** Extensiones permitidas */
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
@@ -65,9 +67,12 @@ export async function POST(request: NextRequest) {
       filename,
     });
   } catch (error) {
-    console.error('[Upload] Error:', error);
+    const msg = error instanceof Error ? error.message : 'Error desconocido';
+    const stack = error instanceof Error ? error.stack : '';
+    console.error('[Upload] Error:', msg, '| Dir:', UPLOAD_DIR, '| CWD:', process.cwd());
+    if (stack) console.error('[Upload] Stack:', stack);
     return NextResponse.json(
-      { error: 'Error al subir archivo' },
+      { error: `Error al subir archivo: ${msg}` },
       { status: 500 }
     );
   }

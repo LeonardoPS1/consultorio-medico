@@ -9,6 +9,7 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { usuarios } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
+import { PLANES, type PlanId } from '@/lib/planes';
 
 export async function PATCH(
   request: NextRequest,
@@ -74,9 +75,9 @@ export async function PATCH(
   // Construir campos a actualizar
   const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
-  const validPlans = ['free', 'starter', 'professional', 'premium', 'enterprise'];
+  const validPlans = Object.keys(PLANES) as PlanId[];
   if (body.plan !== undefined) {
-    if (!validPlans.includes(body.plan)) {
+    if (!validPlans.includes(body.plan as PlanId)) {
       return NextResponse.json({ error: 'Plan inválido' }, { status: 400 });
     }
     updateData.plan = body.plan;

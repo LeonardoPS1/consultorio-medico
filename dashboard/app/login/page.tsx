@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +11,6 @@ import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import Link from 'next/link';
 
 export default function LoginPage() {
-  const router = useRouter();
   // Leer callbackUrl del query string directamente (evita Suspense boundary)
   const callbackUrl = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('callbackUrl') || '/dashboard'
@@ -61,8 +59,11 @@ export default function LoginPage() {
       const sessionRes = await fetch('/api/auth/session');
       const sessionData = await sessionRes.json();
       if (sessionData?.user) {
-        // Sesión creada → login exitoso, redirigir sin importar lo que dijo signIn
-        router.push(callbackUrl);
+        // Sesión creada → login exitoso. Usamos hard navigation para asegurar
+        // que la cookie de sesión se envíe al servidor en el próximo request.
+        // router.push() falla porque NextAuth v5 beta no propaga la cookie
+        // en navegación cliente-side.
+        window.location.href = callbackUrl;
         return;
       }
     } catch {

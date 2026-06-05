@@ -36,7 +36,8 @@ interface Usuario {
   createdAt: string;
 }
 
-const PLANES = ['free', 'starter', 'professional', 'premium', 'enterprise'] as const;
+import { PAID_PLANS } from '@/lib/planes';
+const PLANES = ['free', ...PAID_PLANS] as const;
 const ROLES = ['medico', 'admin', 'secretaria'] as const;
 
 function PlanBadge({ plan }: { plan: string }) {

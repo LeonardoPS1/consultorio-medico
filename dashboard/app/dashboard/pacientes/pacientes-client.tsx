@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,7 +48,6 @@ interface PacientesClientProps {
 // ─── Component ─────────────────────────────────────────────
 
 export function PacientesClient({ initialPacientes }: PacientesClientProps) {
-  const router = useRouter();
   const { sucursalId } = useSucursal();
   const [search, setSearch] = useState('');
   const [showNewPaciente, setShowNewPaciente] = useState(false);
@@ -224,12 +223,10 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
           ) : (
             <div className="divide-y">
               {filtered.map((paciente) => (
-                <div
+                <Link
                   key={paciente.id}
-                  className="flex items-center gap-4 p-4 hoverable:hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() =>
-                    router.push(`/dashboard/pacientes/${paciente.id}`)
-                  }
+                  href={`/dashboard/pacientes/${paciente.id}`}
+                  className="flex items-center gap-4 p-4 hoverable:hover:bg-muted/50 transition-colors no-underline"
                 >
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-primary/10 text-primary text-sm">
@@ -286,37 +283,39 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
                     ))}
                   </div>
 
-                  <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex gap-1" onClick={(e) => e.preventDefault()}>
                     <Button
                       variant="ghost"
                       size="icon"
                       title="Recetas"
-                      onClick={() =>
-                        router.push(`/dashboard/pacientes/${paciente.id}`)
-                      }
+                      asChild
                     >
-                      <Syringe className="h-4 w-4" />
+                      <Link href={`/dashboard/pacientes/${paciente.id}`}>
+                        <Syringe className="h-4 w-4" />
+                      </Link>
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       title="Enviar WhatsApp"
-                      onClick={() => router.push(`/dashboard/conversaciones`)}
+                      asChild
                     >
-                      <MessageSquare className="h-4 w-4" />
+                      <Link href={`/dashboard/conversaciones`}>
+                        <MessageSquare className="h-4 w-4" />
+                      </Link>
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       title="Ver ficha completa"
-                      onClick={() =>
-                        router.push(`/dashboard/pacientes/${paciente.id}`)
-                      }
+                      asChild
                     >
-                      <ExternalLink className="h-4 w-4" />
+                      <Link href={`/dashboard/pacientes/${paciente.id}`}>
+                        <ExternalLink className="h-4 w-4" />
+                      </Link>
                     </Button>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

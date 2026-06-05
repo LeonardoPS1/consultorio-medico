@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -63,22 +64,11 @@ export function DashboardClient({ dateStr }: DashboardClientProps) {
 
   const handleQuickAction = useCallback(
     (action: string) => {
-      switch (action) {
-        case 'turno':
-          setShowNewTurno(true);
-          break;
-        case 'paciente':
-          router.push('/dashboard/pacientes');
-          break;
-        case 'whatsapp':
-          router.push('/dashboard/conversaciones');
-          break;
-        case 'reportes':
-          router.push('/dashboard/reportes');
-          break;
+      if (action === 'turno') {
+        setShowNewTurno(true);
       }
     },
-    [router],
+    [],
   );
 
   return (
@@ -109,10 +99,39 @@ export function DashboardClient({ dateStr }: DashboardClientProps) {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {quickActions.map((action) => {
           const Icon = action.icon;
+          const actionHref =
+            action.action === 'paciente'
+              ? '/dashboard/pacientes'
+              : action.action === 'whatsapp'
+                ? '/dashboard/conversaciones'
+                : action.action === 'reportes'
+                  ? '/dashboard/reportes'
+                  : null;
+
+          // 'turno' abre modal, los demás navegan con Link (prefetch automático)
+          if (actionHref) {
+            return (
+              <Link
+                key={action.label}
+                href={actionHref}
+                className="flex items-center gap-3 p-4 rounded-xl border bg-card hoverable:hover:shadow-card-hover transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-0.5 group"
+              >
+                <div
+                  className={`h-10 w-10 rounded-lg ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+                <span className="font-medium text-sm">{action.label}</span>
+                <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
+              </Link>
+            );
+          }
+
+          // 'turno' → abre el modal
           return (
             <button
               key={action.label}
-              onClick={() => handleQuickAction(action.action)}
+              onClick={() => handleQuickAction('turno')}
               className="flex items-center gap-3 p-4 rounded-xl border bg-card hoverable:hover:shadow-card-hover transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-0.5 group"
             >
               <div
@@ -127,8 +146,8 @@ export function DashboardClient({ dateStr }: DashboardClientProps) {
         })}
 
         {/* Botón directo a Atención */}
-        <button
-          onClick={() => router.push('/dashboard/atencion')}
+        <Link
+          href="/dashboard/atencion"
           className="flex items-center gap-3 p-4 rounded-xl border-2 border-blue-200 bg-blue-50/50 dark:bg-blue-950/30 hoverable:hover:shadow-card-hover transition-[transform,box-shadow] duration-200 hoverable:hover:-translate-y-0.5 group"
         >
           <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-950/50 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -141,7 +160,7 @@ export function DashboardClient({ dateStr }: DashboardClientProps) {
           >
             En vivo
           </Badge>
-        </button>
+        </Link>
       </div>
 
       {/* ─── Nuevo Turno Modal ─────────────────────────── */}

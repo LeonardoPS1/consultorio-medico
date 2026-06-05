@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import { canAccess, getFeatureRequiredPlan, type FeatureId } from '@/lib/features';
 import { useFeatureFlags } from '@/lib/feature-flags-context';
@@ -65,7 +66,7 @@ const navItems: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname() ?? '';
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { isFeatureEnabled } = useFeatureFlags();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -177,7 +178,18 @@ export function Sidebar() {
         {/* Navegación */}
         <ScrollArea className="flex-1 py-4">
           <nav className="space-y-1 px-2">
-            {navItems.map((item) => {
+            {status === 'loading' ? (
+              <>
+                {/* Skeletons mientras carga la sesión — evita que los links apunten a config */}
+                {navItems.map((item) => (
+                  <div key={item.href} className="flex items-center gap-3 rounded-lg px-3 py-2.5">
+                    <Skeleton className="h-5 w-5 shrink-0 rounded-md" />
+                    {!collapsed && <Skeleton className="h-4 flex-1 max-w-[120px]" />}
+                  </div>
+                ))}
+              </>
+            ) : (
+              navItems.map((item) => {
               const userPlan = session?.user?.plan ?? 'free';
               const hasAccess = !item.feature || (canAccess(userPlan, item.feature) && isFeatureEnabled(item.feature));
               const isActive = item.href === '/dashboard'
@@ -240,9 +252,10 @@ export function Sidebar() {
                   )}
                 </Link>
               );
-            })}
+            }))
+            }
             {/* Admin section */}
-            {session?.user?.role === 'admin' && (
+            {status !== 'loading' && session?.user?.role === 'admin' && (
               <div className="mt-2 pt-2 border-t border-sidebar-muted">
                 {!collapsed && (
                   <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
