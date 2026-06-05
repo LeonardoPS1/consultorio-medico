@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from 'next-auth/react';
 import { useSearchParams, useRouter, redirect } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -31,7 +32,7 @@ export default function AdminSistemaPage() {
 }
 
 function AdminSistemaContent() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -55,7 +56,21 @@ function AdminSistemaContent() {
     router.replace(newUrl, { scroll: false });
   }, [tab, router, searchParams]);
 
-  if (session?.user?.role !== 'admin') {
+  // No redirigir mientras la sesión carga — evita React #422/#425
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="space-y-4 w-full max-w-md">
+          <Skeleton className="h-8 w-48 mx-auto" />
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!session || session?.user?.role !== 'admin') {
     redirect('/dashboard');
   }
 
