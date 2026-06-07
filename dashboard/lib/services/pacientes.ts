@@ -106,7 +106,8 @@ export const pacientesService = {
       sucursalId: (input as any).sucursalId || null,
     }).returning();
 
-    try { await db.insert(pacienteEventos).values({ pacienteId: nuevo.id, tipo: 'opt_in', descripcion: 'Paciente registrado desde el dashboard', metadata: { source: 'dashboard' } }); } catch {}
+    // Evento de registro (fire-and-forget — no bloquea la respuesta)
+    db.insert(pacienteEventos).values({ pacienteId: nuevo.id, tipo: 'opt_in', descripcion: 'Paciente registrado desde el dashboard', metadata: { source: 'dashboard' } }).then().catch(() => {});
 
     // Invalidar cache de listados
     cache.invalidate('pacientes:list:');

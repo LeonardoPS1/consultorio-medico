@@ -445,18 +445,25 @@ export const POST = withRateLimit(async function POST(request: NextRequest) {
       }).catch(() => {});
     }
 
-    // Detectar si es respuesta a oferta de lista de espera (ACEPTAR/RECHAZAR)
-    const esWaitlist = paciente
-      ? await handleWaitlistResponse(paciente.id, body, telefono)
-      : false;
+    // ─── Detección rápida de respuestas (regex, sin DB) ───────────
+    // Estas son respuestas a recordatorios (CONFIRMAR/CANCELAR) u
+    // ofertas de waitlist (ACEPTAR/RECHAZAR). Se procesan en segundo
+    // plano para no bloquear la respuesta a Twilio.
+    const upperBody = body.trim().toUpperCase().replace(/[.!¡¿?]/g, '');
+    const textExact = body.trim().toUpperCase();
+    const esConfirmar = /^(SI\s*)?(CONFIRMAR|CONFIRMO|CONFIRMÓ)$/.test(upperBody);
+    const esCancelar = /^(CANCELAR|CANCELO|CANCELAR\s*TURNO)$/.test(upperBody);
+    const esReminder = (esConfirmar || esCancelar) && !!paciente;
+    const esAceptarWl = textExact === 'ACEPTAR' || textExact === 'SI' || textExact === 'OK';
+    const esRechazarWl = textExact === 'RECHAZAR' || textExact === 'NO' || textExact === 'RECHAZO';
+    const esRespWaitlist = (esAceptarWl || esRechazarWl) && !!paciente;
 
-    // Detectar si es respuesta a recordatorio (CONFIRMAR / CANCELAR)
-    const esRecordatorio = paciente
-      ? await handleReminderResponse(body, paciente.id, telefono)
-      : { handled: false, skipN8n: false };
+    // Fire handlers en segundo plano (fire-and-forget)
+    if (esReminder) handleReminderResponse(body, paciente!.id, telefono).catch(() => {});
+    if (esRespWaitlist) handleWaitlistResponse(paciente!.id, body, telefono).catch(() => {});
 
-    // Si fue procesado como waitlist o recordatorio, responder sin forwardear
-    if (esWaitlist || esRecordatorio.skipN8n) {
+    // Si es respuesta a recordatorio u oferta, responder 200 inmediato
+    if (esReminder || esRespWaitlist) {
       return new NextResponse(null, { status: 200 });
     }
 
@@ -464,8 +471,8 @@ export const POST = withRateLimit(async function POST(request: NextRequest) {
     forwardToN8n(params).catch(() => {});
 
     // Notificar al médico (fire-and-forget)
-    if (!esWaitlist) {
-      const nombrePaciente = `${paciente.nombre} ${paciente.apellido}`.trim();
+    const nombrePaciente = paciente ? `${paciente.nombre} ${paciente.apellido}`.trim() : '';
+    if (nombrePaciente) {
       notifyDoctor(nombrePaciente, body, telefono).catch(() => {});
     }
 
