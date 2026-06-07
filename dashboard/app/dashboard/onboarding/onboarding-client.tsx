@@ -12,6 +12,7 @@ import {
   Sparkles, RefreshCw, RotateCcw, SkipForward,
 } from 'lucide-react';
 import { ONBOARDING_STEPS } from '@/lib/onboarding-types';
+import { useToast } from '@/components/ui/use-toast';
 
 // ─── Props ──────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 export function OnboardingClient({ initialCompleted, isComplete, isForceRestart }: OnboardingClientProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [completed, setCompleted] = useState<string[]>(initialCompleted);
   const [activeStep, setActiveStep] = useState<string | null>(null);
   const [tips, setTips] = useState<Record<string, string>>({});
@@ -107,28 +109,58 @@ const [fallbackTips, setFallbackTips] = useState<Set<string>>(new Set());
   // ── Marcar paso como completado (persiste en servidor) ──
 
   const marcarCompletado = async (stepId: string) => {
-    // Persistir en el servidor (onboarding_progress)
     try {
-      await fetch('/api/onboarding', {
+      const res = await fetch('/api/onboarding', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stepId }),
       });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Usar el estado REAL del servidor, no el local
+        if (data.state?.completedSteps) {
+          setCompleted(data.state.completedSteps);
+        } else if (data.success) {
+          // Fallback: agregar el paso manualmente
+          setCompleted((prev) => {
+            if (prev.includes(stepId)) return prev;
+            return [...prev, stepId];
+          });
+        }
+      } else {
+        // El servidor rechazó la persistencia
+        toast({
+          title: 'Error al guardar',
+          description: 'El paso se marcó localmente pero no se pudo persistir. Al recargar la página puede que pierdas el progreso.',
+          variant: 'destructive',
+        });
+        // Avanzar igual (degradación elegante con advertencia)
+        setCompleted((prev) => {
+          if (prev.includes(stepId)) return prev;
+          return [...prev, stepId];
+        });
+      }
     } catch {
-      // Degradación elegante: avanza igual aunque falle la persistencia
+      // Error de red / servidor caído
+      toast({
+        title: 'Error de conexión',
+        description: 'No se pudo contactar al servidor. El progreso podría perderse al recargar la página.',
+        variant: 'destructive',
+      });
+      // Avanzar igual (degradación elegante)
+      setCompleted((prev) => {
+        if (prev.includes(stepId)) return prev;
+        return [...prev, stepId];
+      });
     }
 
-    // Actualizar estado local
-    setCompleted((prev) => {
-      if (prev.includes(stepId)) return prev;
-      const next = [...prev, stepId];
-      const currentIdx = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
-      const nextStep = ONBOARDING_STEPS[currentIdx + 1];
-      if (nextStep) {
-        setActiveStep(nextStep.id);
-      }
-      return next;
-    });
+    // Avanzar al siguiente paso (en cualquier escenario)
+    const currentIdx = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
+    const nextStep = ONBOARDING_STEPS[currentIdx + 1];
+    if (nextStep) {
+      setActiveStep(nextStep.id);
+    }
   };
 
   // ── Saltar paso (no aplica / lo haré después) ───────────

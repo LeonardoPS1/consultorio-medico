@@ -43,6 +43,76 @@
       "when": 1780277174705,
       "tag": "0016_ordinary_puppet_master",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1780300000000,
+      "tag": "0017_push_subscriptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1780400000000,
+      "tag": "0018_notas_soap",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1780410000000,
+      "tag": "0019_certificados_hash",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1780500000000,
+      "tag": "0020_rate_limits_lockouts",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1780510000000,
+      "tag": "0021_backup_codes",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1780520000000,
+      "tag": "0022_certificados_check_constraint",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1780550000000,
+      "tag": "0023_isapre_nombre",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1780600000000,
+      "tag": "0024_horarios_tipo",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1780700000000,
+      "tag": "0025_indices_optimizacion",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1780710000000,
+      "tag": "0026_onboarding_progress",
+      "breakpoints": true
     }
   ]
 }

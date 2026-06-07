@@ -80,7 +80,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'notificaciones',
     title: 'Configura notificaciones',
-    description: 'Elige cómo y cuándo querés recibir alertas del consultorio, y activá los recordatorios automáticos.',
+    description: 'Elige cómo y cuándo quieres recibir alertas del consultorio, y activa los recordatorios automáticos.',
     icon: 'Bell',
     actionLink: '/dashboard/configuracion?tab=notificaciones',
     actionLabel: 'Configurar notificaciones',
