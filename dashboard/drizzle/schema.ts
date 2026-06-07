@@ -927,6 +927,18 @@ export const accountLockouts = pgTable('account_lockouts', {
   accountLockoutsIndex: index('idx_account_lockouts_email').on(table.email),
 }));
 
+// ─── ONBOARDING PROGRESS ─────────────────────────────────
+
+export const onboardingProgress = pgTable('onboarding_progress', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  usuarioId: uuid('usuario_id').notNull().references(() => usuarios.id, { onDelete: 'cascade' }),
+  stepId: varchar('step_id', { length: 50 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  uniqueUsuarioStep: uniqueIndex('idx_onboarding_progress_unique').on(table.usuarioId, table.stepId),
+  idxUsuario: index('idx_onboarding_progress_usuario').on(table.usuarioId),
+}));
+
 // ─── Types ──────────────────────────────────────────────
 export type ListaEspera = InferSelectModel<typeof listaEspera>;
 export type NewListaEspera = InferInsertModel<typeof listaEspera>;

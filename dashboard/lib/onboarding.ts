@@ -9,7 +9,7 @@ import { db } from '@/lib/db';
 import { safeWarn } from '@/lib/logger';
 import {
   medicos, pacientes, horariosAtencion, preferenciasNotificaciones,
-  usuarios,
+  usuarios, onboardingProgress,
 } from '@/drizzle/schema';
 import { count, sql, eq, isNull } from 'drizzle-orm';
 import { ONBOARDING_STEPS, type OnboardingState, type AiTipResult } from './onboarding-types';
@@ -19,15 +19,23 @@ import { auth } from '@/lib/auth';
 
 /**
  * Verifica qué pasos del onboarding están completos
- * consultando el estado real de la base de datos.
+ * combinando:
+ *   1. Estado real de la base de datos (credenciales, médicos, etc.)
+ *   2. Progreso manual guardado en `onboarding_progress`
+ *
+ * Así un paso persiste aunque solo se haya marcado manualmente.
  */
 export async function getOnboardingState(): Promise<OnboardingState> {
   const completed: string[] = [];
 
-  // Paso 0: Plan — suscripción activa (no free sin plan asignado)
+  // Obtener sesión para userId
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  // ─── 1. Chequeos reales de DB ──────────────────────────
+
+  // Plan — suscripción activa (no free sin plan asignado)
   try {
-    const session = await auth();
-    const userId = session?.user?.id;
     if (userId) {
       const [userWithPlan] = await db
         .select({ plan: usuarios.plan })
@@ -37,19 +45,17 @@ export async function getOnboardingState(): Promise<OnboardingState> {
         completed.push('plan');
       }
     }
-  } catch {
-    // Si no hay sesión, asumimos que no está configurado
-  }
+  } catch { /* ignorar */ }
 
-  // Paso 1: WhatsApp — verificar que hay credenciales de Twilio configuradas
+  // WhatsApp — verificar que hay credenciales de Twilio configuradas
   try {
     const [twilioCred] = await db.execute(
-      sql`SELECT 1 FROM credenciales WHERE servicio = 'twilio' AND deleted_at IS NULL LIMIT 1`,
+      sql`SELECT 1 FROM credenciales WHERE servicio = 'twilio' LIMIT 1`,
     );
     if (twilioCred) completed.push('whatsapp');
   } catch { /* ignorar */ }
 
-  // Paso 2: Médico — al menos un médico activo
+  // Médico — al menos un médico activo
   try {
     const [medCount] = await db
       .select({ total: count() })
@@ -58,7 +64,7 @@ export async function getOnboardingState(): Promise<OnboardingState> {
     if (Number(medCount?.total || 0) > 0) completed.push('medico');
   } catch { /* ignorar */ }
 
-  // Paso 3: Horarios — al menos un horario configurado
+  // Horarios — al menos un horario configurado
   try {
     const [horariosCount] = await db
       .select({ total: count() })
@@ -66,7 +72,7 @@ export async function getOnboardingState(): Promise<OnboardingState> {
     if (Number(horariosCount?.total || 0) > 0) completed.push('horarios');
   } catch { /* ignorar */ }
 
-  // Paso 4: Paciente — al menos un paciente
+  // Paciente — al menos un paciente
   try {
     const [pacCount] = await db
       .select({ total: count() })
@@ -75,12 +81,28 @@ export async function getOnboardingState(): Promise<OnboardingState> {
     if (Number(pacCount?.total || 0) > 0) completed.push('paciente');
   } catch { /* ignorar */ }
 
-  // Paso 5: Notificaciones — preferencias configuradas
+  // Notificaciones — preferencias configuradas
   try {
     const [notifCount] = await db
       .select({ total: count() })
       .from(preferenciasNotificaciones);
     if (Number(notifCount?.total || 0) > 0) completed.push('notificaciones');
+  } catch { /* ignorar */ }
+
+  // ─── 2. Combinar con progreso manual (onboarding_progress) ──
+  try {
+    if (userId) {
+      const manualSteps = await db
+        .select({ stepId: onboardingProgress.stepId })
+        .from(onboardingProgress)
+        .where(eq(onboardingProgress.usuarioId, userId));
+
+      for (const s of manualSteps) {
+        if (!completed.includes(s.stepId)) {
+          completed.push(s.stepId);
+        }
+      }
+    }
   } catch { /* ignorar */ }
 
   const progress = Math.round((completed.length / ONBOARDING_STEPS.length) * 100);

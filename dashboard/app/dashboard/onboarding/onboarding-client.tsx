@@ -104,9 +104,21 @@ const [fallbackTips, setFallbackTips] = useState<Set<string>>(new Set());
   const allLocallyDone = completed.length >= ONBOARDING_STEPS.length;
   const localProgress = Math.round((completed.length / ONBOARDING_STEPS.length) * 100);
 
-  // ── Marcar paso como completado ──────────────────────────
+  // ── Marcar paso como completado (persiste en servidor) ──
 
-  const marcarCompletado = (stepId: string) => {
+  const marcarCompletado = async (stepId: string) => {
+    // Persistir en el servidor (onboarding_progress)
+    try {
+      await fetch('/api/onboarding', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stepId }),
+      });
+    } catch {
+      // Degradación elegante: avanza igual aunque falle la persistencia
+    }
+
+    // Actualizar estado local
     setCompleted((prev) => {
       if (prev.includes(stepId)) return prev;
       const next = [...prev, stepId];
