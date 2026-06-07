@@ -60,7 +60,10 @@ export const medicos = pgTable('medicos', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
-});
+}, (table) => ({
+  idxMedicosUsuarioId: index('idx_medicos_usuario_id').on(table.usuarioId),
+  idxMedicosSucursalId: index('idx_medicos_sucursal_id').on(table.sucursalId),
+}));
 
 // ============================================================
 // REGIONES DE CHILE
@@ -119,7 +122,10 @@ export const pacientes = pgTable('pacientes', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
-});
+}, (table) => ({
+  idxPacientesSucursalId: index('idx_pacientes_sucursal_id').on(table.sucursalId),
+  idxPacientesCreatedAt: index('idx_pacientes_created_at').on(table.createdAt),
+}));
 
 // ============================================================
 // PACIENTE EVENTOS (historial de contacto)
@@ -164,7 +170,13 @@ export const turnos = pgTable('turnos', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
-});
+}, (table) => ({
+  idxTurnosFechaHora: index('idx_turnos_fecha_hora').on(table.fechaHora),
+  idxTurnosMedicoFecha: index('idx_turnos_medico_fecha').on(table.medicoId, table.fechaHora),
+  idxTurnosEstado: index('idx_turnos_estado').on(table.estado),
+  idxTurnosPacienteId: index('idx_turnos_paciente_id').on(table.pacienteId),
+  idxTurnosSucursalId: index('idx_turnos_sucursal_id').on(table.sucursalId),
+}));
 
 // ============================================================
 // SERVICIOS / PRESTACIONES
@@ -194,7 +206,9 @@ export const bloqueosAgenda = pgTable('bloqueos_agenda', {
   tipo: varchar('tipo', { length: 20 }).notNull().default('bloqueo'),
   motivo: text('motivo'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  idxBloqueosMedicoFecha: index('idx_bloqueos_medico_fecha').on(table.medicoId, table.fechaInicio, table.fechaFin),
+}));
 
 // ============================================================
 // CONVERSACIONES
@@ -219,6 +233,8 @@ export const conversaciones = pgTable('conversaciones', {
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (table) => ({
   idxEstado: index('idx_conversaciones_estado').on(table.estado),
+  idxConversacionesPacienteId: index('idx_conversaciones_paciente_id').on(table.pacienteId),
+  idxConversacionesMedicoId: index('idx_conversaciones_medico_id').on(table.medicoId),
 }));
 
 // ============================================================
@@ -257,7 +273,11 @@ export const mensajes = pgTable('mensajes', {
   n8nExecutionId: varchar('n8n_execution_id', { length: 255 }),
   metadata: jsonb('metadata').default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  idxMensajesConversacionId: index('idx_mensajes_conversacion_id').on(table.conversacionId),
+  idxMensajesRolCreated: index('idx_mensajes_rol_created').on(table.rol, table.createdAt),
+  idxMensajesTwilioSid: index('idx_mensajes_twilio_sid').on(table.twilioSid),
+}));
 
 // ============================================================
 // TAREAS PENDIENTES (seguimiento)
@@ -296,7 +316,10 @@ export const historialMedico = pgTable('historial_medico', {
   pdfGenerado: boolean('pdf_generado').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  idxHistorialPacienteId: index('idx_historial_paciente_id').on(table.pacienteId),
+  idxHistorialMedicoId: index('idx_historial_medico_id').on(table.medicoId),
+}));
 
 // ============================================================
 // NOTAS SOAP (Evolución Clínica Estructurada)
@@ -317,7 +340,11 @@ export const notasSoap = pgTable('notas_soap', {
   controlEnDias: integer('control_en_dias'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  idxNotasSoapPacienteId: index('idx_notas_soap_paciente_id').on(table.pacienteId),
+  idxNotasSoapMedicoId: index('idx_notas_soap_medico_id').on(table.medicoId),
+  idxNotasSoapTurnoId: index('idx_notas_soap_turno_id').on(table.turnoId),
+}));
 
 // ============================================================
 // RECETAS
@@ -347,7 +374,10 @@ export const recetas = pgTable('recetas', {
   whatsappEnviadoAt: timestamp('whatsapp_enviado_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  idxRecetasPacienteId: index('idx_recetas_paciente_id').on(table.pacienteId),
+  idxRecetasMedicoId: index('idx_recetas_medico_id').on(table.medicoId),
+}));
 
 // ============================================================
 // FACTURACIÓN

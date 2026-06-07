@@ -6,51 +6,55 @@ import type { CreateTurno, UpdateTurno } from '@/lib/validations';
 import { conflict, notFound, fail } from '@/lib/api-handler';
 import { buildGCalPayload, syncTurnoToGCal } from '@/lib/google-calendar-sync';
 import { waitlistService } from '@/lib/services/waitlist';
+import { cache } from '@/lib/cache';
 
 export const turnosService = {
   async list(fechaStr: string, estado?: string, medico?: string, tipo?: string, search?: string, limit = 100, offset = 0, sucursalId?: string, medicoId?: string) {
-    const fechaBaseIso = fechaStr + 'T00:00:00.000Z';
-    const fechaFinIso = new Date(new Date(fechaBaseIso).getTime() + 86400000).toISOString();
+    const cacheKey = `turnos:list:${fechaStr}:${estado ?? ''}:${medico ?? ''}:${tipo ?? ''}:${search ?? ''}:${limit}:${offset}:${sucursalId ?? ''}:${medicoId ?? ''}`;
+    return cache.getOrSet(cacheKey, async () => {
+      const fechaBaseIso = fechaStr + 'T00:00:00.000Z';
+      const fechaFinIso = new Date(new Date(fechaBaseIso).getTime() + 86400000).toISOString();
 
-    const whereConditions = and(
-      sql`${turnos.fechaHora} >= ${fechaBaseIso}::timestamptz`,
-      sql`${turnos.fechaHora} < ${fechaFinIso}::timestamptz`,
-      sql`${turnos.deletedAt} IS NULL`,
-      estado ? eq(turnos.estado, estado) : undefined,
-      tipo ? eq(turnos.tipoConsulta, tipo) : undefined,
-      medico ? sql`EXISTS (SELECT 1 FROM ${medicos} WHERE ${medicos.id} = ${turnos.medicoId} AND ${medicos.nombre} ILIKE ${'%' + medico + '%'})` : undefined,
-      search ? sql`EXISTS (SELECT 1 FROM ${pacientes} WHERE ${pacientes.id} = ${turnos.pacienteId} AND (${pacientes.nombre} ILIKE ${'%' + search + '%'} OR ${pacientes.apellido} ILIKE ${'%' + search + '%'}))` : undefined,
-      sucursalId ? eq(turnos.sucursalId, sucursalId) : undefined,
-      medicoId ? eq(turnos.medicoId, medicoId) : undefined,
-    );
+      const whereConditions = and(
+        sql`${turnos.fechaHora} >= ${fechaBaseIso}::timestamptz`,
+        sql`${turnos.fechaHora} < ${fechaFinIso}::timestamptz`,
+        sql`${turnos.deletedAt} IS NULL`,
+        estado ? eq(turnos.estado, estado) : undefined,
+        tipo ? eq(turnos.tipoConsulta, tipo) : undefined,
+        medico ? sql`EXISTS (SELECT 1 FROM ${medicos} WHERE ${medicos.id} = ${turnos.medicoId} AND ${medicos.nombre} ILIKE ${'%' + medico + '%'})` : undefined,
+        search ? sql`EXISTS (SELECT 1 FROM ${pacientes} WHERE ${pacientes.id} = ${turnos.pacienteId} AND (${pacientes.nombre} ILIKE ${'%' + search + '%'} OR ${pacientes.apellido} ILIKE ${'%' + search + '%'}))` : undefined,
+        sucursalId ? eq(turnos.sucursalId, sucursalId) : undefined,
+        medicoId ? eq(turnos.medicoId, medicoId) : undefined,
+      );
 
-    const statsWhere = and(
-      sql`${turnos.fechaHora} >= ${fechaBaseIso}::timestamptz`,
-      sql`${turnos.fechaHora} < ${fechaFinIso}::timestamptz`,
-      sql`${turnos.deletedAt} IS NULL`,
-      sucursalId ? eq(turnos.sucursalId, sucursalId) : undefined,
-      medicoId ? eq(turnos.medicoId, medicoId) : undefined,
-    );
-    const statsRows = await db.select({ estado: turnos.estado, total: count() }).from(turnos).where(statsWhere).groupBy(turnos.estado);
-    const statsPorEstado: Record<string, number> = {};
-    let statsTotal = 0;
-    for (const r of statsRows) { statsPorEstado[r.estado] = Number(r.total); statsTotal += Number(r.total); }
+      const statsWhere = and(
+        sql`${turnos.fechaHora} >= ${fechaBaseIso}::timestamptz`,
+        sql`${turnos.fechaHora} < ${fechaFinIso}::timestamptz`,
+        sql`${turnos.deletedAt} IS NULL`,
+        sucursalId ? eq(turnos.sucursalId, sucursalId) : undefined,
+        medicoId ? eq(turnos.medicoId, medicoId) : undefined,
+      );
+      const statsRows = await db.select({ estado: turnos.estado, total: count() }).from(turnos).where(statsWhere).groupBy(turnos.estado);
+      const statsPorEstado: Record<string, number> = {};
+      let statsTotal = 0;
+      for (const r of statsRows) { statsPorEstado[r.estado] = Number(r.total); statsTotal += Number(r.total); }
 
-    const [{ totalFiltrados }] = await db.select({ totalFiltrados: count() }).from(turnos).where(whereConditions);
-    const lista = await db.select({
-      id: turnos.id, fecha: turnos.fechaHora, hora: sql<string>`TO_CHAR(${turnos.fechaHora}, 'HH24:MI')`,
-      estado: turnos.estado, tipo: turnos.tipoConsulta, motivo: turnos.motivo,
-      pacienteNombre: pacientes.nombre, pacienteApellido: pacientes.apellido,
-      medicoNombre: medicos.nombre, medicoId: medicos.id, pacienteId: pacientes.id,
-    }).from(turnos).leftJoin(pacientes, eq(turnos.pacienteId, pacientes.id)).leftJoin(medicos, eq(turnos.medicoId, medicos.id)).where(whereConditions).orderBy(turnos.fechaHora).limit(limit).offset(offset);
+      const [{ totalFiltrados }] = await db.select({ totalFiltrados: count() }).from(turnos).where(whereConditions);
+      const lista = await db.select({
+        id: turnos.id, fecha: turnos.fechaHora, hora: sql<string>`TO_CHAR(${turnos.fechaHora}, 'HH24:MI')`,
+        estado: turnos.estado, tipo: turnos.tipoConsulta, motivo: turnos.motivo,
+        pacienteNombre: pacientes.nombre, pacienteApellido: pacientes.apellido,
+        medicoNombre: medicos.nombre, medicoId: medicos.id, pacienteId: pacientes.id,
+      }).from(turnos).leftJoin(pacientes, eq(turnos.pacienteId, pacientes.id)).leftJoin(medicos, eq(turnos.medicoId, medicos.id)).where(whereConditions).orderBy(turnos.fechaHora).limit(limit).offset(offset);
 
-    const data = lista.map(t => ({
-      id: t.id, hora: t.hora, paciente: `${t.pacienteNombre || ''} ${t.pacienteApellido || ''}`.trim() || 'Paciente',
-      tipo: t.motivo || t.tipo || 'Consulta', medico: t.medicoNombre || 'Medico', medicoId: t.medicoId, pacienteId: t.pacienteId,
-      estado: t.estado, fecha: fechaStr,
-    }));
+      const data = lista.map(t => ({
+        id: t.id, hora: t.hora, paciente: `${t.pacienteNombre || ''} ${t.pacienteApellido || ''}`.trim() || 'Paciente',
+        tipo: t.motivo || t.tipo || 'Consulta', medico: t.medicoNombre || 'Medico', medicoId: t.medicoId, pacienteId: t.pacienteId,
+        estado: t.estado, fecha: fechaStr,
+      }));
 
-    return { data, total: Number(totalFiltrados), statsTotal, statsPorEstado, fecha: fechaStr };
+      return { data, total: Number(totalFiltrados), statsTotal, statsPorEstado, fecha: fechaStr };
+    }, 10_000); // TTL 10s — turnos cambian frecuentemente
   },
 
   async create(input: CreateTurno) {
@@ -149,7 +153,10 @@ export const turnosService = {
        // No bloquear la creación si el sync falla
      }
 
-     return nuevo;
+      // Invalidar cache de listados
+      cache.invalidate('turnos:list:');
+
+      return nuevo;
   },
 
   async update(id: string, input: UpdateTurno) {
@@ -237,6 +244,9 @@ export const turnosService = {
           });
       }
 
+      // Invalidar cache de listados
+      cache.invalidate('turnos:list:');
+
       return turnoActualizado;
   },
 
@@ -285,6 +295,10 @@ export const turnosService = {
 
     // Soft delete
     await db.update(turnos).set({ deletedAt: new Date() }).where(eq(turnos.id, id));
+
+    // Invalidar cache de listados
+    cache.invalidate('turnos:list:');
+
     return { deleted: true };
   },
 };
