@@ -33,9 +33,9 @@ export function apiHandler(fn: (...args: any[]) => any): (...args: any[]) => any
   };
 }
 
-/** Respuesta exitosa con datos */
+/** Respuesta exitosa con datos (sin wrapper, body directo) */
 export function success<T>(data: T, status = 200) {
-  return NextResponse.json({ data }, { status });
+  return NextResponse.json(data, { status });
 }
 
 /** Respuesta exitosa sin wrapper data (para respuestas planas como health) */
@@ -50,9 +50,9 @@ export function fail(message: string, status = 400): never {
   throw err;
 }
 
-/** Respuesta 201 Created */
+/** Respuesta 201 Created (sin wrapper, body directo) */
 export function created<T>(data: T) {
-  return NextResponse.json({ data }, { status: 201 });
+  return NextResponse.json(data, { status: 201 });
 }
 
 /** Respuesta 404 Not Found */
