@@ -9,7 +9,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { apiHandler, success, fail } from '@/lib/api-handler';
+import { apiHandler, ok, fail } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
 import { parseBody, onboardingStepSchema } from '@/lib/validations';
 import { db } from '@/lib/db';
@@ -21,7 +21,7 @@ export const GET = apiHandler(async () => {
   const session = await requireAuth();
 
   const state = await getOnboardingState(session.user.id!);
-  return success(state);
+  return ok(state);
 });
 
 export const POST = apiHandler(async (request: NextRequest) => {
@@ -30,7 +30,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
   const { stepId } = await parseBody(request, onboardingStepSchema);
 
   const tip = await getAiOnboardingTip(stepId, session.user.id!);
-  return success(tip);
+  return ok(tip);
 });
 
 /**
@@ -58,7 +58,7 @@ export const PUT = apiHandler(async (request: NextRequest) => {
     }).onConflictDoNothing();
 
     const state = await getOnboardingState(session.user.id!);
-    return success({ success: true, state });
+    return ok({ success: true, state });
   } catch (error) {
     safeWarn('[Onboarding] Error al guardar progreso:', error instanceof Error ? error.message : error);
     throw error;

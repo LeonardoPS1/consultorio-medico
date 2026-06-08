@@ -39,7 +39,7 @@ export function success<T>(data: T, status = 200) {
 }
 
 /** Respuesta exitosa sin wrapper data (para respuestas planas como health) */
-export function ok(body: Record<string, unknown>, status = 200) {
+export function ok<T>(body: T, status = 200) {
   return NextResponse.json(body, { status });
 }
 
