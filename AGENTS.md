@@ -512,7 +512,7 @@ consultorio-medico/
 12. **MercadoPago**: Validación HMAC-SHA256 de `x-signature`
 13. **n8n**: Webhook secret entre dashboard y n8n
 14. **Datos encriptados**: AES-256-GCM para credenciales en DB
-15. **Firewall**: UFW, puerto 5432 bloqueado externamente
+15. **Firewall**: UFW, puertos 5432 y 11434 ALLOW solo desde redes Docker (172.17/18/19.0.0/16, 10.0.1.0/24), DENY externo. PG/Ollama bind a 0.0.0.0 (no 127.0.0.1) para que Swarm pueda alcanzarlos via docker_gwbridge (172.18.0.1)
 16. **Prompt sanitization**: Anti-jailbreak implementado
 17. **Auditoría 03/06**: 0 críticos / 0 altos / 0 medios / 0 bajos ✅
 
