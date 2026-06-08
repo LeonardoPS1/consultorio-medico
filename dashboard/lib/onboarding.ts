@@ -2,7 +2,8 @@
  * Onboarding — Asistente guiado para configuración inicial.
  *
  * Verifica qué pasos están completos y genera guías contextuales con IA (Ollama).
- * El progreso se calcula en base al estado real de la DB.
+ * El progreso se calcula en base al estado real de la DB combinado con
+ * el progreso manual guardado en `onboarding_progress`.
  */
 
 import { db } from '@/lib/db';
@@ -18,19 +19,24 @@ import { auth } from '@/lib/auth';
 // ─── Verificar pasos completados ────────────────────────────
 
 /**
- * Verifica qué pasos del onboarding están completos
- * combinando:
- *   1. Estado real de la base de datos (credenciales, médicos, etc.)
- *   2. Progreso manual guardado en `onboarding_progress`
+ * Verifica qué pasos del onboarding están completos.
  *
- * Así un paso persiste aunque solo se haya marcado manualmente.
+ * Recibe `callerUserId` opcional para evitar depender de `auth()` interno.
+ * Si no se pasa, usa `auth()` como fallback (para page.tsx que no tiene session).
+ *
+ * Combinación:
+ *   1. Estado real de la DB (credenciales, médicos, horarios, pacientes, notif.)
+ *   2. Progreso manual guardado en `onboarding_progress`
  */
-export async function getOnboardingState(): Promise<OnboardingState> {
+export async function getOnboardingState(callerUserId?: string): Promise<OnboardingState> {
   const completed: string[] = [];
 
-  // Obtener sesión para userId
-  const session = await auth();
-  const userId = session?.user?.id;
+  // Usar userId del caller si se pasó, sino obtenerlo de auth()
+  let userId = callerUserId;
+  if (!userId) {
+    const session = await auth();
+    userId = session?.user?.id;
+  }
 
   // ─── 1. Chequeos reales de DB ──────────────────────────
 
@@ -202,14 +208,15 @@ const FALLBACK_TIPS: Record<string, string> = {
  * Primero intenta con Ollama (IA local) y si no está disponible,
  * devuelve un tip de fallback predefinido pero funcional.
  *
- * Así el onboarding siempre es útil aunque Ollama no esté corriendo.
+ * Acepta `callerUserId` opcional para pasarlo a getOnboardingState()
+ * y evitar múltiples llamadas a auth() internas.
  */
-export async function getAiOnboardingTip(stepId: string): Promise<AiTipResult> {
+export async function getAiOnboardingTip(stepId: string, callerUserId?: string): Promise<AiTipResult> {
   const fallbackTip = FALLBACK_TIPS[stepId] || 'Completa este paso siguiendo las instrucciones en pantalla.';
 
   try {
     const [state, ctx] = await Promise.all([
-      getOnboardingState(),
+      getOnboardingState(callerUserId),
       getTenantContext(),
     ]);
 

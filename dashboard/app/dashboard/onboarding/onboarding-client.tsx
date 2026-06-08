@@ -108,7 +108,24 @@ const [fallbackTips, setFallbackTips] = useState<Set<string>>(new Set());
 
   // ── Marcar paso como completado (persiste en servidor) ──
 
+  /**
+   * Marca un paso como completado.
+   *
+   * Estrategia de doble capa:
+   *  1. Siempre agrega el paso al estado local (inmediato, nunca se pierde)
+   *  2. Si el servidor responde con estado, lo usa como fuente de verdad
+   *     PERO asegurándose de que el paso actual esté incluido
+   *
+   * Así el paso nunca "desaparece" aunque el servidor tenga un bug
+   * o la respuesta sea inconsistente.
+   */
   const marcarCompletado = async (stepId: string) => {
+    // Siempre agregar localmente primero (nunca perder el paso)
+    setCompleted((prev) => {
+      if (prev.includes(stepId)) return prev;
+      return [...prev, stepId];
+    });
+
     try {
       const res = await fetch('/api/onboarding', {
         method: 'PUT',
@@ -118,41 +135,34 @@ const [fallbackTips, setFallbackTips] = useState<Set<string>>(new Set());
 
       if (res.ok) {
         const data = await res.json();
-        // Usar el estado REAL del servidor, no el local
         if (data.state?.completedSteps) {
-          setCompleted(data.state.completedSteps);
-        } else if (data.success) {
-          // Fallback: agregar el paso manualmente
+          // Usar el estado del servidor como fuente de verdad,
+          // pero asegurar que el paso actual esté incluido
+          // (previene regresión si el servidor no lo incluye)
           setCompleted((prev) => {
-            if (prev.includes(stepId)) return prev;
-            return [...prev, stepId];
+            const serverSteps = data.state.completedSteps as string[];
+            const merged = new Set([...serverSteps, stepId, ...prev]);
+            return Array.from(merged);
           });
         }
+        // Si data.success es true pero no tiene state, mantener el local
       } else {
         // El servidor rechazó la persistencia
         toast({
           title: 'Error al guardar',
-          description: 'El paso se marcó localmente pero no se pudo persistir. Al recargar la página puede que pierdas el progreso.',
+          description: 'Marcamos el paso como listo, pero no se pudo guardar en el servidor. Si recargas la página puede que tengas que marcarlo de nuevo.',
           variant: 'destructive',
         });
-        // Avanzar igual (degradación elegante con advertencia)
-        setCompleted((prev) => {
-          if (prev.includes(stepId)) return prev;
-          return [...prev, stepId];
-        });
+        // El paso ya está en el estado local (primer setCompleted)
       }
     } catch {
       // Error de red / servidor caído
       toast({
         title: 'Error de conexión',
-        description: 'No se pudo contactar al servidor. El progreso podría perderse al recargar la página.',
+        description: 'Marcamos el paso como listo, pero no se pudo contactar al servidor. El progreso está guardado localmente por ahora.',
         variant: 'destructive',
       });
-      // Avanzar igual (degradación elegante)
-      setCompleted((prev) => {
-        if (prev.includes(stepId)) return prev;
-        return [...prev, stepId];
-      });
+      // El paso ya está en el estado local (primer setCompleted)
     }
 
     // Avanzar al siguiente paso (en cualquier escenario)
