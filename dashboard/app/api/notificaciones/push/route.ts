@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { pushService } from '@/lib/services/push';
 import { notificacionesService } from '@/lib/services/notificaciones';
+import { apiHandler, fail } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/api-auth';
+import { pushSubscriptionSchema } from '@/lib/validations';
 
 // GET /api/notificaciones/push?action=public-key
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+export const GET = apiHandler(async (request: NextRequest) => {
+  const session = await requireAuth();
+  const userId = session.user.id as string;
 
   const action = request.nextUrl.searchParams.get('action');
 
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (action === 'subscriptions') {
-    const subs = await pushService.getSubscriptions(session.user.id);
+    const subs = await pushService.getSubscriptions(userId);
     return NextResponse.json({
       data: subs.map((s) => ({
         id: s.id,
@@ -33,89 +33,84 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  return NextResponse.json({ error: 'Acción no válida' }, { status: 400 });
-}
+  fail('Acción no válida');
+});
 
 // POST /api/notificaciones/push
 // Body: { action: 'subscribe' | 'unsubscribe' | 'unsubscribe-all' | 'send', ... }
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+export const POST = apiHandler(async (request: NextRequest) => {
+  const session = await requireAuth();
+  const userId = session.user.id as string;
 
-  try {
-    const body = await request.json();
-    const { action } = body;
+  const body = await request.json();
+  const { action } = body;
 
-    switch (action) {
-      case 'subscribe': {
-        const { subscription, userAgent } = body;
-        if (!subscription?.endpoint || !subscription?.keys?.auth || !subscription?.keys?.p256dh) {
-          return NextResponse.json({ error: 'Suscripción inválida' }, { status: 400 });
-        }
-
-        const result = await pushService.subscribe(
-          session.user.id,
-          subscription,
-          userAgent || request.headers.get('user-agent') || undefined,
-          (session.user as any).tenantId,
-        );
-
-        return NextResponse.json(result);
+  switch (action) {
+    case 'subscribe': {
+      // Validar el subscription contra el schema compartido
+      pushSubscriptionSchema.parse(body);
+      const { subscription, userAgent } = body;
+      if (!subscription?.endpoint || !subscription?.keys?.auth || !subscription?.keys?.p256dh) {
+        fail('Suscripción inválida');
       }
 
-      case 'unsubscribe': {
-        const { endpoint } = body;
-        if (!endpoint) {
-          return NextResponse.json({ error: 'Endpoint requerido' }, { status: 400 });
-        }
+      const result = await pushService.subscribe(
+        userId,
+        subscription,
+        userAgent || request.headers.get('user-agent') || undefined,
+        (session.user as any).tenantId,
+      );
 
-        const result = await pushService.unsubscribe(session.user.id, endpoint);
-        return NextResponse.json(result);
-      }
-
-      case 'unsubscribe-all': {
-        const result = await pushService.unsubscribeAll(session.user.id);
-        return NextResponse.json(result);
-      }
-
-      case 'send': {
-        // Solo admin puede enviar push manualmente
-        if (session.user.role !== 'admin' && session.user.role !== 'superadmin') {
-          return NextResponse.json({ error: 'Solo administradores' }, { status: 403 });
-        }
-
-        const { usuarioId, title, body: pushBody, url, tipo } = body;
-        if (!usuarioId || !title) {
-          return NextResponse.json({ error: 'usuarioId y title requeridos' }, { status: 400 });
-        }
-
-        // Crear notificación in-app
-        await notificacionesService.create({
-          usuarioId,
-          titulo: title,
-          descripcion: pushBody,
-          tipo: tipo || 'sistema',
-          href: url,
-        });
-
-        // Enviar push
-        const result = await pushService.sendToUser(usuarioId, {
-          title,
-          body: pushBody || '',
-          url,
-          tipo,
-        });
-
-        return NextResponse.json(result);
-      }
-
-      default:
-        return NextResponse.json({ error: 'Acción no válida' }, { status: 400 });
+      return NextResponse.json(result);
     }
-  } catch (error) {
-    console.error('[Push API] Error:', error);
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 });
+
+    case 'unsubscribe': {
+      const { endpoint } = body;
+      if (!endpoint) {
+        fail('Endpoint requerido');
+      }
+
+      const result = await pushService.unsubscribe(userId, endpoint);
+      return NextResponse.json(result);
+    }
+
+    case 'unsubscribe-all': {
+      const result = await pushService.unsubscribeAll(userId);
+      return NextResponse.json(result);
+    }
+
+    case 'send': {
+      // Solo admin puede enviar push manualmente
+      if (session.user.role !== 'admin' && session.user.role !== 'superadmin') {
+        fail('Solo administradores', 403);
+      }
+
+      const { usuarioId, title, body: pushBody, url, tipo } = body;
+      if (!usuarioId || !title) {
+        fail('usuarioId y title requeridos');
+      }
+
+      // Crear notificación in-app
+      await notificacionesService.create({
+        usuarioId,
+        titulo: title,
+        descripcion: pushBody,
+        tipo: tipo || 'sistema',
+        href: url,
+      });
+
+      // Enviar push
+      const result = await pushService.sendToUser(usuarioId, {
+        title,
+        body: pushBody || '',
+        url,
+        tipo,
+      });
+
+      return NextResponse.json(result);
+    }
+
+    default:
+      fail('Acción no válida');
   }
-}
+});

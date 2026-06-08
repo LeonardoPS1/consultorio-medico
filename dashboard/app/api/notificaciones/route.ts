@@ -1,150 +1,122 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { preferenciasNotificaciones } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { notificacionesService } from '@/lib/services/notificaciones';
-
-const createNotificacionSchema = z.object({
-  titulo: z.string().min(1).max(200),
-  descripcion: z.string().max(2000).optional(),
-  tipo: z.enum(['turno', 'mensaje', 'receta', 'urgencia', 'sistema']).optional(),
-  href: z.string().max(500).optional(),
-});
+import { apiHandler, success, created, ok, fail } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/api-auth';
+import { createNotificacionSchema } from '@/lib/validations';
 
 // ─── GET /api/notificaciones ────────────────────────────────
 // Query params: ?tipo=turno&soloNoLeidas=true&limit=20&offset=0
 // También funciona sin params para obtener preferencias (backward compat)
-export async function GET(request: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+export const GET = apiHandler(async (request: NextRequest) => {
+  const session = await requireAuth();
+  const userId = session.user.id as string;
+
+  const { searchParams } = new URL(request.url);
+
+  // Si hay ?preferencias=true, devolver solo preferencias (backward compat)
+  if (searchParams.get('preferencias') === 'true' || !searchParams.toString()) {
+    let prefs = await db
+      .select()
+      .from(preferenciasNotificaciones)
+      .where(eq(preferenciasNotificaciones.usuarioId, userId))
+      .limit(1);
+
+    if (prefs.length === 0) {
+      return success({
+        urgenciasWhatsapp: true,
+        resumenDiarioEmail: true,
+        alertasAusentismo: true,
+        nuevosPacientes: false,
+        whatsappPersonal: '',
+      });
     }
-
-    const { searchParams } = new URL(request.url);
-
-    // Si hay ?preferencias=true, devolver solo preferencias (backward compat)
-    if (searchParams.get('preferencias') === 'true' || !searchParams.toString()) {
-      let prefs = await db
-        .select()
-        .from(preferenciasNotificaciones)
-        .where(eq(preferenciasNotificaciones.usuarioId, session.user.id))
-        .limit(1);
-
-      if (prefs.length === 0) {
-        return NextResponse.json({
-          data: {
-            urgenciasWhatsapp: true,
-            resumenDiarioEmail: true,
-            alertasAusentismo: true,
-            nuevosPacientes: false,
-            whatsappPersonal: '',
-          },
-        });
-      }
-      return NextResponse.json({ data: prefs[0] });
-    }
-
-    // Listar notificaciones del usuario
-    const tipo = searchParams.get('tipo') || undefined;
-    const soloNoLeidas = searchParams.get('soloNoLeidas') === 'true';
-    const limit = Math.min(Number(searchParams.get('limit')) || 50, 200);
-    const offset = Number(searchParams.get('offset')) || 0;
-
-    const result = await notificacionesService.list(session.user.id, {
-      limit,
-      offset,
-      tipo,
-      soloNoLeidas,
-    });
-
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error('[Notificaciones GET]', error);
-    return NextResponse.json({ error: 'Error al cargar notificaciones' }, { status: 500 });
+    return success(prefs[0]);
   }
-}
+
+  // Listar notificaciones del usuario
+  const tipo = searchParams.get('tipo') || undefined;
+  const soloNoLeidas = searchParams.get('soloNoLeidas') === 'true';
+  const limit = Math.min(Number(searchParams.get('limit')) || 50, 200);
+  const offset = Number(searchParams.get('offset')) || 0;
+
+  const result = await notificacionesService.list(userId, {
+    limit,
+    offset,
+    tipo,
+    soloNoLeidas,
+  });
+
+  return NextResponse.json(result);
+});
 
 // ─── PUT /api/notificaciones ────────────────────────────────
 // Actualizar preferencias de notificaciones
-export async function PUT(request: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+export const PUT = apiHandler(async (request: NextRequest) => {
+  const session = await requireAuth();
+  const userId = session.user.id as string;
 
-    const body = await request.json();
-    const { urgenciasWhatsapp, resumenDiarioEmail, alertasAusentismo, nuevosPacientes, whatsappPersonal } = body;
+  const body = await request.json();
+  const { urgenciasWhatsapp, resumenDiarioEmail, alertasAusentismo, nuevosPacientes, whatsappPersonal } = body;
 
-    const existing = await db
-      .select()
-      .from(preferenciasNotificaciones)
-      .where(eq(preferenciasNotificaciones.usuarioId, session.user.id))
-      .limit(1);
+  const existing = await db
+    .select()
+    .from(preferenciasNotificaciones)
+    .where(eq(preferenciasNotificaciones.usuarioId, userId))
+    .limit(1);
 
-    if (existing.length > 0) {
-      await db
-        .update(preferenciasNotificaciones)
-        .set({
-          urgenciasWhatsapp: urgenciasWhatsapp ?? true,
-          resumenDiarioEmail: resumenDiarioEmail ?? true,
-          alertasAusentismo: alertasAusentismo ?? true,
-          nuevosPacientes: nuevosPacientes ?? false,
-          whatsappPersonal: whatsappPersonal ?? '',
-          updatedAt: new Date(),
-        })
-        .where(eq(preferenciasNotificaciones.usuarioId, session.user.id));
-    } else {
-      await db.insert(preferenciasNotificaciones).values({
-        usuarioId: session.user.id,
+  if (existing.length > 0) {
+    await db
+      .update(preferenciasNotificaciones)
+      .set({
         urgenciasWhatsapp: urgenciasWhatsapp ?? true,
         resumenDiarioEmail: resumenDiarioEmail ?? true,
         alertasAusentismo: alertasAusentismo ?? true,
         nuevosPacientes: nuevosPacientes ?? false,
         whatsappPersonal: whatsappPersonal ?? '',
-      });
-    }
-
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error('[Notificaciones PUT]', error);
-    return NextResponse.json({ error: 'Error al guardar preferencias' }, { status: 500 });
+        updatedAt: new Date(),
+      })
+      .where(eq(preferenciasNotificaciones.usuarioId, userId));
+  } else {
+    await db.insert(preferenciasNotificaciones).values({
+      usuarioId: userId,
+      urgenciasWhatsapp: urgenciasWhatsapp ?? true,
+      resumenDiarioEmail: resumenDiarioEmail ?? true,
+      alertasAusentismo: alertasAusentismo ?? true,
+      nuevosPacientes: nuevosPacientes ?? false,
+      whatsappPersonal: whatsappPersonal ?? '',
+    });
   }
-}
+
+  return ok({ ok: true });
+});
 
 // ─── POST /api/notificaciones ───────────────────────────────
 // Acciones masivas: { action: 'leidas' } → marca todas como leídas
 // También: { action: 'create', ... } → crear notificación (admin)
-export async function POST(request: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+export const POST = apiHandler(async (request: NextRequest) => {
+  const session = await requireAuth();
+  const userId = session.user.id as string;
 
-    const body = await request.json();
-    const { action } = body;
+  const body = await request.json();
+  const { action } = body;
 
-    if (action === 'leidas') {
-      await notificacionesService.marcarTodasLeidas(session.user.id);
-      return NextResponse.json({ success: true });
-    }
-
-    if (action === 'create') {
-      const parsed = createNotificacionSchema.parse(body);
-      const nueva = await notificacionesService.create({
-        usuarioId: session.user.id,
-        ...parsed,
-      });
-      return NextResponse.json({ data: nueva }, { status: 201 });
-    }
-
-    return NextResponse.json({ error: 'Acción no válida' }, { status: 400 });
-  } catch (error) {
-    console.error('[Notificaciones POST]', error);
-    return NextResponse.json({ error: 'Error al procesar' }, { status: 500 });
+  if (action === 'leidas') {
+    await notificacionesService.marcarTodasLeidas(userId);
+    return ok({ success: true });
   }
-}
+
+  if (action === 'create') {
+    const parsed = createNotificacionSchema.parse(body);
+    const { usuarioId: _uid, ...data } = parsed;
+    const nueva = await notificacionesService.create({
+      ...data,
+      usuarioId: userId,
+    } as any);
+    return created(nueva);
+  }
+
+  fail('Acción no válida');
+});

@@ -1,47 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { servicios } from '@/drizzle/schema';
-import { eq, sql, count } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
+import { sql, count } from 'drizzle-orm';
+import { apiHandler, success, created } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/api-auth';
+import { parseBody, createServicioSchema } from '@/lib/validations';
 
-export async function GET(_request: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+export const GET = apiHandler(async (_request: NextRequest) => {
+  await requireAuth();
 
-    const lista = await db.select().from(servicios).where(sql`${servicios.deletedAt} IS NULL`).orderBy(servicios.nombre);
-    const [{ total }] = await db.select({ total: count() }).from(servicios).where(sql`${servicios.deletedAt} IS NULL`);
-    return NextResponse.json({ data: lista, total: Number(total) });
-  } catch (error) {
-    return NextResponse.json({ error: 'Error al obtener servicios' }, { status: 500 });
-  }
-}
+  const lista = await db.select().from(servicios).where(sql`${servicios.deletedAt} IS NULL`).orderBy(servicios.nombre);
+  const [{ total }] = await db.select({ total: count() }).from(servicios).where(sql`${servicios.deletedAt} IS NULL`);
+  return success({ lista, total: Number(total) });
+});
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+export const POST = apiHandler(async (request: NextRequest) => {
+  await requireAuth();
 
-    const body = await request.json();
-    const { nombre, descripcion, duracionMinutos, precio, medicoId } = body;
-    if (!nombre?.trim()) return NextResponse.json({ error: 'nombre es obligatorio' }, { status: 400 });
+  const body = await parseBody(request, createServicioSchema);
 
-    const [nuevo] = await db.insert(servicios).values({
-      nombre: nombre.trim(),
-      descripcion: descripcion?.trim() || null,
-      duracionMinutos: duracionMinutos || 30,
-      precio: precio || null,
-      medicoId: medicoId || null,
-      activo: true,
-    }).returning();
+  const [nuevo] = await db.insert(servicios).values({
+    nombre: body.nombre,
+    descripcion: body.descripcion ?? null,
+    duracionMinutos: body.duracionMinutos,
+    precio: body.precio ?? null,
+    medicoId: body.medicoId ?? null,
+    activo: true,
+  } as any).returning();
 
-    return NextResponse.json({ data: nuevo }, { status: 201 });
-  } catch (error) {
-    console.error('[API] Error POST /api/servicios:', error);
-    return NextResponse.json({ error: 'Error al crear servicio' }, { status: 500 });
-  }
-}
+  return created(nuevo);
+});

@@ -1,60 +1,49 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextRequest } from 'next/server';
 import { notificacionesService } from '@/lib/services/notificaciones';
+import { apiHandler, ok, notFound } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/api-auth';
+import { parseBody, updateNotificacionSchema } from '@/lib/validations';
 
 // ─── PATCH /api/notificaciones/[id] ─────────────────────────
-// Body: { action: 'read' } | { action: 'unread' }
-export async function PATCH(
+export const PATCH = apiHandler(async (
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+) => {
+  const session = await requireAuth();
+  const userId = session.user.id as string;
+  const { action } = await parseBody(request, updateNotificacionSchema);
+
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { action } = body;
-
     if (action === 'read') {
-      await notificacionesService.marcarLeida(params.id, session.user.id);
-      return NextResponse.json({ success: true });
+      await notificacionesService.marcarLeida(params.id, userId);
+      return ok({ success: true });
     }
 
-    if (action === 'unread') {
-      await notificacionesService.marcarNoLeida(params.id, session.user.id);
-      return NextResponse.json({ success: true });
-    }
-
-    return NextResponse.json({ error: 'Acción no válida. Usar "read" o "unread"' }, { status: 400 });
+    await notificacionesService.marcarNoLeida(params.id, userId);
+    return ok({ success: true });
   } catch (error: any) {
     if (error?.message?.includes?.('No encontrada') || error?.digest?.includes?.('NOT_FOUND')) {
-      return NextResponse.json({ error: 'Notificación no encontrada' }, { status: 404 });
+      notFound('Notificación no encontrada');
     }
-    console.error('[Notificaciones PATCH]', error);
-    return NextResponse.json({ error: 'Error al actualizar notificación' }, { status: 500 });
+    throw error;
   }
-}
+});
 
 // ─── DELETE /api/notificaciones/[id] ────────────────────────
-export async function DELETE(
+export const DELETE = apiHandler(async (
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+) => {
+  const session = await requireAuth();
+  const userId = session.user.id as string;
 
-    await notificacionesService.eliminar(params.id, session.user.id);
-    return NextResponse.json({ success: true });
+  try {
+    await notificacionesService.eliminar(params.id, userId);
+    return ok({ success: true });
   } catch (error: any) {
     if (error?.message?.includes?.('No encontrada') || error?.digest?.includes?.('NOT_FOUND')) {
-      return NextResponse.json({ error: 'Notificación no encontrada' }, { status: 404 });
+      notFound('Notificación no encontrada');
     }
-    console.error('[Notificaciones DELETE]', error);
-    return NextResponse.json({ error: 'Error al eliminar notificación' }, { status: 500 });
+    throw error;
   }
-}
+});

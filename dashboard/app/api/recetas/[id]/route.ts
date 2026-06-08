@@ -1,163 +1,76 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { recetas } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { recetasService } from '@/lib/services/recetas';
-import { auth } from '@/lib/auth';
+import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/api-auth';
+import { parseBody, updateRecetaSchema } from '@/lib/validations';
 
-/**
- * GET /api/recetas/[id]
- *
- * Obtiene una receta por ID.
- */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
-    const sessionMedicoId = (session?.user as any)?.medicoId;
-    const sessionRol = (session?.user as any)?.role;
+export const GET = apiHandler(async (request: NextRequest, { params }: { params: { id: string } }) => {
+  const session = await requireAuth();
+  const sessionMedicoId = (session?.user as any)?.medicoId;
+  const sessionRol = (session?.user as any)?.role;
 
-    const receta = await recetasService.obtener(params.id);
+  const receta = await recetasService.obtener(params.id);
 
-    if (!receta) {
-      return NextResponse.json(
-        { error: 'Receta no encontrada' },
-        { status: 404 },
-      );
-    }
-
-    // IDOR check: médico solo puede ver sus propias recetas (o admin)
-    if (sessionRol !== 'admin' && sessionMedicoId && receta.medicoId !== sessionMedicoId) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 403 },
-      );
-    }
-
-    return NextResponse.json({ data: receta });
-  } catch (error) {
-    console.error('[API] Error GET /api/recetas/[id]:', error);
-    return NextResponse.json(
-      { error: 'Error al obtener receta' },
-      { status: 500 },
-    );
+  if (!receta) {
+    notFound('Receta no encontrada');
   }
-}
 
-/**
- * PATCH /api/recetas/[id]
- *
- * Actualiza una receta existente.
- * Regenera hash de verificación si cambian datos sensibles.
- */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
-    const sessionMedicoId = (session?.user as any)?.medicoId;
-    const sessionRol = (session?.user as any)?.role;
-
-    const body = await request.json();
-
-    if (!body || Object.keys(body).length === 0) {
-      return NextResponse.json(
-        { error: 'Enviá al menos un campo para actualizar' },
-        { status: 400 },
-      );
-    }
-
-    // Verificar que la receta existe y pertenece al médico
-    const existente = await db
-      .select({ id: recetas.id, medicoId: recetas.medicoId })
-      .from(recetas)
-      .where(eq(recetas.id, params.id))
-      .limit(1);
-
-    if (existente.length === 0) {
-      return NextResponse.json(
-        { error: 'Receta no encontrada' },
-        { status: 404 },
-      );
-    }
-
-    // IDOR check
-    if (sessionRol !== 'admin' && sessionMedicoId && existente[0].medicoId !== sessionMedicoId) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 403 },
-      );
-    }
-
-    const actualizada = await recetasService.actualizar(params.id, body);
-
-    return NextResponse.json({ data: actualizada });
-  } catch (error) {
-    console.error('[API] Error PATCH /api/recetas/[id]:', error);
-    return NextResponse.json(
-      { error: 'Error al actualizar receta' },
-      { status: 500 },
-    );
+  if (sessionRol !== 'admin' && sessionMedicoId && receta.medicoId !== sessionMedicoId) {
+    fail('No autorizado', 403);
   }
-}
 
-/**
- * DELETE /api/recetas/[id]
- *
- * Elimina (soft-delete) una receta, moviéndola a historial.
- */
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
-    const sessionMedicoId = (session?.user as any)?.medicoId;
-    const sessionRol = (session?.user as any)?.role;
+  return success(receta);
+});
 
-    // Verificar que la receta existe
-    const existente = await db
-      .select({ id: recetas.id, medicoId: recetas.medicoId })
-      .from(recetas)
-      .where(eq(recetas.id, params.id))
-      .limit(1);
+export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: { id: string } }) => {
+  const session = await requireAuth();
+  const sessionMedicoId = (session?.user as any)?.medicoId;
+  const sessionRol = (session?.user as any)?.role;
 
-    if (existente.length === 0) {
-      return NextResponse.json(
-        { error: 'Receta no encontrada' },
-        { status: 404 },
-      );
-    }
+  const body = await parseBody(request, updateRecetaSchema);
 
-    // IDOR check
-    if (sessionRol !== 'admin' && sessionMedicoId && existente[0].medicoId !== sessionMedicoId) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 403 },
-      );
-    }
+  const existente = await db
+    .select({ id: recetas.id, medicoId: recetas.medicoId })
+    .from(recetas)
+    .where(eq(recetas.id, params.id))
+    .limit(1);
 
-    // Soft delete: mover a historial
-    const actualizada = await recetasService.actualizar(params.id, { estado: 'historial' as const });
-
-    return NextResponse.json({ data: actualizada });
-  } catch (error) {
-    console.error('[API] Error DELETE /api/recetas/[id]:', error);
-    return NextResponse.json(
-      { error: 'Error al eliminar receta' },
-      { status: 500 },
-    );
+  if (existente.length === 0) {
+    notFound('Receta no encontrada');
   }
-}
+
+  if (sessionRol !== 'admin' && sessionMedicoId && existente[0].medicoId !== sessionMedicoId) {
+    fail('No autorizado', 403);
+  }
+
+  const actualizada = await recetasService.actualizar(params.id, body);
+
+  return success(actualizada);
+});
+
+export const DELETE = apiHandler(async (_request: NextRequest, { params }: { params: { id: string } }) => {
+  const session = await requireAuth();
+  const sessionMedicoId = (session?.user as any)?.medicoId;
+  const sessionRol = (session?.user as any)?.role;
+
+  const existente = await db
+    .select({ id: recetas.id, medicoId: recetas.medicoId })
+    .from(recetas)
+    .where(eq(recetas.id, params.id))
+    .limit(1);
+
+  if (existente.length === 0) {
+    notFound('Receta no encontrada');
+  }
+
+  if (sessionRol !== 'admin' && sessionMedicoId && existente[0].medicoId !== sessionMedicoId) {
+    fail('No autorizado', 403);
+  }
+
+  const actualizada = await recetasService.actualizar(params.id, { estado: 'historial' as const });
+
+  return success(actualizada);
+});

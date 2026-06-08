@@ -1,38 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { apiHandler, success, ok } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/api-auth';
+import { parseBody, updateOrganizationSchema } from '@/lib/validations';
 import { getOrganization, updateOrganization } from '@/lib/organization-store';
-import { auth } from '@/lib/auth';
 
-export async function GET() {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+export const GET = apiHandler(async () => {
+  await requireAuth();
 
-    const org = getOrganization();
-    return NextResponse.json({ data: org });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Error al obtener configuración' },
-      { status: 500 }
-    );
-  }
-}
+  const org = getOrganization();
+  return success(org);
+});
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+export const POST = apiHandler(async (request: NextRequest) => {
+  await requireAuth();
 
-    const body = await request.json();
-    const updated = updateOrganization(body);
-    return NextResponse.json({ data: updated, message: 'Configuración guardada' });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Error al guardar configuración' },
-      { status: 500 }
-    );
-  }
-}
+  const body = await parseBody(request, updateOrganizationSchema);
+  const updated = updateOrganization(body);
+  return ok({ data: updated, message: 'Configuración guardada' });
+});

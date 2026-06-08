@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import {
   getConversaciones,
   getConversacionById,
@@ -8,6 +8,21 @@ import {
   seedDataIfEmpty,
 } from '@/lib/data-store';
 import { auth } from '@/lib/auth';
+import { apiHandler, success, created } from '@/lib/api-handler';
+import { parseBody, parseQuery, createConversacionSchema, conversacionQuerySchema } from '@/lib/validations';
+import { z } from 'zod';
+
+const conversacionCreateSchema = createConversacionSchema.extend({
+  mensaje: z.string().optional(),
+  intencion: z.string().optional(),
+  email: z.string().email().optional().nullable(),
+}).passthrough();
+
+const conversacionListQuerySchema = conversacionQuerySchema.extend({
+  canal: z.enum(['whatsapp', 'sms', 'email', 'web']).optional(),
+  offset: z.coerce.number().optional(),
+  estado: z.enum(['activa', 'pendiente', 'cerrada', 'derivada']).optional(),
+}).passthrough();
 
 /**
  * GET /api/conversaciones
@@ -19,42 +34,27 @@ import { auth } from '@/lib/auth';
  * - limit: cantidad máxima (default 50)
  * - offset: paginación
  */
-export async function GET(request: NextRequest) {
-  try {
-    const session = await auth();
-    const sessionMedicoId = (session?.user as any)?.medicoId;
-    const sessionRol = (session?.user as any)?.role;
+export const GET = apiHandler(async (request: NextRequest) => {
+  const session = await auth();
+  const sessionMedicoId = (session?.user as any)?.medicoId;
+  const sessionRol = (session?.user as any)?.role;
 
-    const { searchParams } = new URL(request.url);
-    const estado = searchParams.get('estado') || undefined;
-    const canal = searchParams.get('canal') || undefined;
-    const search = searchParams.get('search') || undefined;
-    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 50;
-    const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0;
+  const q = parseQuery(request, conversacionListQuerySchema) as any;
 
-    // Auto-seed si está vacío (primera vez)
-    await seedDataIfEmpty();
+  await seedDataIfEmpty();
 
-    const medicoIdFilter = sessionRol === 'medico' ? sessionMedicoId : undefined;
-    const conversaciones = await getConversaciones({ estado, canal, search, limit, offset, medicoId: medicoIdFilter });
+  const medicoIdFilter = sessionRol === 'medico' ? sessionMedicoId : undefined;
+  const conversaciones = await getConversaciones({
+    estado: q.estado,
+    canal: q.canal,
+    search: q.search,
+    limit: q.limit ?? 50,
+    offset: q.offset ?? 0,
+    medicoId: medicoIdFilter,
+  });
 
-    return NextResponse.json({
-      data: conversaciones,
-      total: conversaciones.length,
-      limit,
-      offset,
-    });
-  } catch (error) {
-    console.error('[API] Error GET /api/conversaciones:', error);
-    return NextResponse.json(
-      {
-        error: 'Error al obtener conversaciones',
-        ...(process.env.NODE_ENV === 'development' ? { details: (error as Error).message } : {}),
-      },
-      { status: 500 }
-    );
-  }
-}
+  return success({ conversaciones, total: conversaciones.length, limit: q.limit ?? 50, offset: q.offset ?? 0 });
+});
 
 /**
  * POST /api/conversaciones
@@ -71,60 +71,33 @@ export async function GET(request: NextRequest) {
  *   intencion: string (opcional)
  * }
  */
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+export const POST = apiHandler(async (request: NextRequest) => {
+  const body = await parseBody(request, conversacionCreateSchema) as any;
 
-    // Validación básica
-    if (!body.telefono) {
-      return NextResponse.json(
-        { error: 'El teléfono es obligatorio' },
-        { status: 400 }
-      );
-    }
-    if (!body.nombre || !body.apellido) {
-      return NextResponse.json(
-        { error: 'Nombre y apellido son obligatorios' },
-        { status: 400 }
-      );
-    }
+  let paciente = await getPacienteByTelefono(body.telefono);
 
-    // Buscar paciente existente o crear uno nuevo
-    let paciente = await getPacienteByTelefono(body.telefono);
-
-    if (!paciente) {
-      paciente = await createPaciente({
-        telefono: body.telefono,
-        nombre: body.nombre,
-        apellido: body.apellido,
-        email: body.email,
-        canalPreferido: body.canal || 'whatsapp',
-        consentimientoWhatsapp: true,
-        consentimientoEmail: false,
-        fuente: body.canal || 'whatsapp',
-        tags: [],
-        metadata: {},
-      });
-    }
-
-    // Crear la conversación
-    const conversacion = await createConversacion({
-      pacienteId: paciente.id,
-      canal: body.canal || 'whatsapp',
-      mensajeInicial: body.mensaje,
-      rolMensajeInicial: 'paciente',
-      intencionInicial: body.intencion,
+  if (!paciente) {
+    paciente = await createPaciente({
+      telefono: body.telefono,
+      nombre: body.nombre,
+      apellido: body.apellido,
+      email: body.email,
+      canalPreferido: body.canal || 'whatsapp',
+      consentimientoWhatsapp: true,
+      consentimientoEmail: false,
+      fuente: body.canal || 'whatsapp',
+      tags: [],
+      metadata: {},
     });
-
-    return NextResponse.json(conversacion, { status: 201 });
-  } catch (error) {
-    console.error('[API] Error POST /api/conversaciones:', error);
-    return NextResponse.json(
-      {
-        error: 'Error al crear conversación',
-        ...(process.env.NODE_ENV === 'development' ? { details: (error as Error).message } : {}),
-      },
-      { status: 500 }
-    );
   }
-}
+
+  const conversacion = await createConversacion({
+    pacienteId: paciente.id,
+    canal: body.canal || 'whatsapp',
+    mensajeInicial: body.mensaje,
+    rolMensajeInicial: 'paciente',
+    intencionInicial: body.intencion,
+  });
+
+  return created(conversacion);
+});

@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { getPaymentById, getMerchantOrderById } from '@/lib/mercadopago';
 import { PLANES, type PlanId } from '@/lib/planes';
 import { db } from '@/lib/db';
-import { suscripciones } from '@/drizzle/schema';
-import { eq, sql } from 'drizzle-orm';
-import { usuarios } from '@/drizzle/schema';
+import { suscripciones, usuarios } from '@/drizzle/schema';
+import { eq } from 'drizzle-orm';
 import { getUserByEmail } from '@/lib/data-store';
 import { createHmac, timingSafeEqual } from 'crypto';
+import { apiHandler, ok } from '@/lib/api-handler';
 
 // ─── Verificar firma de MercadoPago ──────────────────────────
 function verifySignature(
@@ -49,62 +49,58 @@ function verifySignature(
 
 // POST /api/pagos/webhook
 // Webhook de MercadoPago (IPN) - notificaciones de pago
-export async function POST(request: Request) {
+// ⚠️ PÚBLICO — MercadoPago llama a este endpoint sin autenticación
+export const POST = apiHandler(async (request: Request) => {
+  // Leer body crudo una sola vez
+  const rawBody = await request.text();
+  let body: { type?: string; data?: { id?: string | number } };
   try {
-    // Leer body crudo una sola vez
-    const rawBody = await request.text();
-    let body: { type?: string; data?: { id?: string | number } };
-    try {
-      body = JSON.parse(rawBody);
-    } catch {
-      return NextResponse.json({ ok: false, error: 'JSON inválido' }, { status: 400 });
-    }
-
-    // Validar firma de MercadoPago (x-signature con HMAC-SHA256)
-    // 🔴 OBLIGATORIO en producción — sin firma válida se rechaza
-    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
-    if (!webhookSecret) {
-      if (process.env.NODE_ENV === 'production') {
-        console.error('[MP Webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — rechazando');
-        return NextResponse.json({ ok: false, error: 'Server config error' }, { status: 500 });
-      }
-      console.warn('[MP Webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — saltando validación (solo desarrollo)');
-    } else {
-      const signatureHeader = request.headers.get('x-signature');
-      const url = new URL(request.url);
-      const querySecret = url.searchParams.get('secret');
-      const isValid = verifySignature(signatureHeader, body, querySecret, webhookSecret);
-      if (!isValid) {
-        console.warn('[MP Webhook] Firma inválida');
-        return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
-      }
-    }
-    const { type, data } = body;
-
-    console.log('[MP Webhook] Recibido:', { type, data });
-
-    if (!type || !data?.id) {
-      return NextResponse.json({ ok: false, error: 'Payload inválido' }, { status: 400 });
-    }
-
-    // Procesar según tipo de notificación
-    switch (type) {
-      case 'payment':
-        await handlePaymentNotification(String(data.id));
-        break;
-      case 'merchant_order':
-        await handleMerchantOrderNotification(String(data.id));
-        break;
-      default:
-        console.log('[MP Webhook] Tipo no manejado:', type);
-    }
-
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error('[MP Webhook] Error:', error);
-    return NextResponse.json({ ok: false, error: 'Error interno' }, { status: 500 });
+    body = JSON.parse(rawBody);
+  } catch {
+    return NextResponse.json({ ok: false, error: 'JSON inválido' }, { status: 400 });
   }
-}
+
+  // Validar firma de MercadoPago (x-signature con HMAC-SHA256)
+  // 🔴 OBLIGATORIO en producción — sin firma válida se rechaza
+  const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[MP Webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — rechazando');
+      return NextResponse.json({ ok: false, error: 'Server config error' }, { status: 500 });
+    }
+    console.warn('[MP Webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — saltando validación (solo desarrollo)');
+  } else {
+    const signatureHeader = request.headers.get('x-signature');
+    const url = new URL(request.url);
+    const querySecret = url.searchParams.get('secret');
+    const isValid = verifySignature(signatureHeader, body, querySecret, webhookSecret);
+    if (!isValid) {
+      console.warn('[MP Webhook] Firma inválida');
+      return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+    }
+  }
+  const { type, data } = body;
+
+  console.log('[MP Webhook] Recibido:', { type, data });
+
+  if (!type || !data?.id) {
+    return NextResponse.json({ ok: false, error: 'Payload inválido' }, { status: 400 });
+  }
+
+  // Procesar según tipo de notificación
+  switch (type) {
+    case 'payment':
+      await handlePaymentNotification(String(data.id));
+      break;
+    case 'merchant_order':
+      await handleMerchantOrderNotification(String(data.id));
+      break;
+    default:
+      console.log('[MP Webhook] Tipo no manejado:', type);
+  }
+
+  return ok({ ok: true });
+});
 
 // ─── Manejar notificación de pago ────────────────────────────
 async function handlePaymentNotification(paymentId: string) {

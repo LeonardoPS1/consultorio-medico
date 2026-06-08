@@ -1,73 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { medicos } from '@/drizzle/schema';
-import { auth } from '@/lib/auth';
 import { medicosService } from '@/lib/services/medicos';
+import { apiHandler, created } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/api-auth';
+import { parseBody, parseQuery, createMedicoSchema } from '@/lib/validations';
+import { z } from 'zod';
 
-/**
- * GET /api/medicos
- *
- * Lista todos los medicos activos (con cache TTL de 60s).
- * Query params:
- *   sucursalId  - opcional, filtra por sucursal
- */
-export async function GET(request: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
-    const { searchParams } = new URL(request.url);
-    const sucursalId = searchParams.get('sucursalId') || undefined;
+const medicosQuerySchema = z.object({
+  sucursalId: z.string().optional(),
+});
 
-    const result = await medicosService.list(sucursalId);
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error('[API] Error GET /api/medicos:', error);
-    return NextResponse.json({ error: 'Error al obtener medicos' }, { status: 500 });
-  }
-}
+export const GET = apiHandler(async (request: NextRequest) => {
+  await requireAuth();
 
-/**
- * POST /api/medicos
- *
- * Crea un nuevo medico e invalida el cache.
- */
-export async function POST(request: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+  const { sucursalId } = parseQuery(request, medicosQuerySchema);
 
-    const body = await request.json();
-    const { nombre, especialidad, email, telefono, whatsapp, matricula, duracionTurnoMinutos, horarios } = body;
+  const result = await medicosService.list(sucursalId);
+  return NextResponse.json(result);
+});
 
-    if (!nombre?.trim() || !especialidad?.trim()) {
-      return NextResponse.json({ error: 'nombre y especialidad son obligatorios' }, { status: 400 });
-    }
+const medicoBodySchema = createMedicoSchema.extend({
+  horarios: z.record(z.any()).optional(),
+});
 
-    const [nuevo] = await db
-      .insert(medicos)
-      .values({
-        nombre: nombre.trim(),
-        especialidad: especialidad.trim(),
-        email: email?.trim() || null,
-        telefono: telefono?.trim() || null,
-        whatsapp: whatsapp?.trim() || null,
-        matricula: matricula?.trim() || null,
-        duracionTurnoMinutos: duracionTurnoMinutos || 30,
-        horarios: horarios || {},
-        activo: true,
-      })
-      .returning();
+export const POST = apiHandler(async (request: NextRequest) => {
+  await requireAuth();
 
-    // Invalidar cache para que la próxima lectura vea los cambios
-    medicosService.invalidate();
+  const body = await parseBody(request, medicoBodySchema);
+  const { nombre, especialidad, email, telefono, whatsapp, matricula, duracionTurnoMinutos, horarios } = body;
 
-    return NextResponse.json({ data: nuevo }, { status: 201 });
-  } catch (error) {
-    console.error('[API] Error POST /api/medicos:', error);
-    return NextResponse.json({ error: 'Error al crear medico' }, { status: 500 });
-  }
-}
+  const [nuevo] = await db
+    .insert(medicos)
+    .values({
+      nombre: nombre.trim(),
+      especialidad: especialidad.trim(),
+      email: email?.trim() || null,
+      telefono: telefono?.trim() || null,
+      whatsapp: whatsapp?.trim() || null,
+      matricula: matricula?.trim() || null,
+      duracionTurnoMinutos: duracionTurnoMinutos || 30,
+      horarios: horarios || {},
+      activo: true,
+    })
+    .returning();
+
+  medicosService.invalidate();
+
+  return created(nuevo);
+});

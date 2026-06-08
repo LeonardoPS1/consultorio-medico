@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import {
   getAllCredenciales,
   getAllCredencialesMasked,
@@ -11,22 +10,9 @@ import {
 } from '@/lib/credential-store';
 import { testCredentialConnection, getN8nCredentials } from '@/lib/n8n-sync';
 import { logAudit } from '@/lib/audit-log';
-
-/**
- * Verifica que el usuario sea admin.
- * Los usuarios no-admin solo pueden LEER credenciales (enmascaradas).
- */
-async function checkAdmin(): Promise<{ isAdmin: boolean; error?: NextResponse }> {
-  const session = await auth();
-  if (!session?.user) {
-    return { isAdmin: false, error: NextResponse.json({ error: 'No autenticado' }, { status: 401 }) };
-  }
-  const role = session.user?.role;
-  if (role !== 'admin') {
-    return { isAdmin: false, error: NextResponse.json({ error: 'Solo administradores' }, { status: 403 }) };
-  }
-  return { isAdmin: true };
-}
+import { apiHandler, ok, fail } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/api-auth';
+import { parseBody, createCredencialSchema, updateCredencialSchema } from '@/lib/validations';
 
 /**
  * GET /api/credenciales
@@ -38,63 +24,58 @@ async function checkAdmin(): Promise<{ isAdmin: boolean; error?: NextResponse }>
  * Respuesta:
  *   { credenciales: [...], servicios: [...] }
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const servicio = searchParams.get('servicio');
-    const raw = searchParams.get('raw') === 'true';
+export const GET = apiHandler(async (request: NextRequest) => {
+  const session = await requireAuth();
+  const { searchParams } = new URL(request.url);
+  const servicio = searchParams.get('servicio');
+  const raw = searchParams.get('raw') === 'true';
 
-    const session = await auth();
-    const isAdmin = session?.user?.role === 'admin';
+  const isAdmin = session.user?.role === 'admin';
 
-    // Si pide raw y no es admin, denegar
-    if (raw && !isAdmin) {
-      return NextResponse.json({ error: 'Solo administradores pueden ver valores completos' }, { status: 403 });
-    }
-
-    let credenciales;
-
-    if (servicio) {
-      // Devolver credenciales de un servicio específico
-      credenciales = await getCredencialesByServicio(servicio);
-      return NextResponse.json({
-        servicio,
-        credenciales,
-        config: SERVICIOS_CONFIG.find((s) => s.servicio === servicio) || null,
-      });
-    }
-
-    if (raw && isAdmin) {
-      credenciales = await getAllCredenciales();
-    } else {
-      credenciales = await getAllCredencialesMasked();
-    }
-
-    // Agrupar por servicio para facilitar el frontend
-    const grouped: Record<string, any> = {};
-    for (const c of credenciales) {
-      if (!grouped[c.servicio]) {
-        const config = SERVICIOS_CONFIG.find((s) => s.servicio === c.servicio);
-        grouped[c.servicio] = {
-          servicio: c.servicio,
-          config: config || null,
-          credenciales: {},
-        };
-      }
-      grouped[c.servicio].credenciales[c.clave] = c.valor;
-    }
-
-    return NextResponse.json({
-      credenciales,
-      grouped: Object.values(grouped),
-      servicios: SERVICIOS_CONFIG,
-      isAdmin,
-    });
-  } catch (error) {
-    console.error('[Credenciales API] Error GET:', error);
-    return NextResponse.json({ error: 'Error al obtener credenciales' }, { status: 500 });
+  // Si pide raw y no es admin, denegar
+  if (raw && !isAdmin) {
+    fail('Solo administradores pueden ver valores completos', 403);
   }
-}
+
+  let credenciales;
+
+  if (servicio) {
+    // Devolver credenciales de un servicio específico
+    credenciales = await getCredencialesByServicio(servicio);
+    return NextResponse.json({
+      servicio,
+      credenciales,
+      config: SERVICIOS_CONFIG.find((s) => s.servicio === servicio) || null,
+    });
+  }
+
+  if (raw && isAdmin) {
+    credenciales = await getAllCredenciales();
+  } else {
+    credenciales = await getAllCredencialesMasked();
+  }
+
+  // Agrupar por servicio para facilitar el frontend
+  const grouped: Record<string, any> = {};
+  for (const c of credenciales) {
+    if (!grouped[c.servicio]) {
+      const config = SERVICIOS_CONFIG.find((s) => s.servicio === c.servicio);
+      grouped[c.servicio] = {
+        servicio: c.servicio,
+        config: config || null,
+        credenciales: {},
+      };
+    }
+    grouped[c.servicio].credenciales[c.clave] = c.valor;
+  }
+
+  return NextResponse.json({
+    credenciales,
+    grouped: Object.values(grouped),
+    servicios: SERVICIOS_CONFIG,
+    isAdmin,
+  });
+});
 
 /**
  * POST /api/credenciales
@@ -111,64 +92,57 @@ export async function GET(request: NextRequest) {
  *   },
  *   n8nCredentialId: "abc123"  // opcional
  * }
- *
- * Respuesta:
- *   { success: true, credenciales: [...], n8nSync: {...} }
  */
-export async function POST(request: NextRequest) {
-  try {
-    const { isAdmin, error } = await checkAdmin();
-    if (!isAdmin) return error;
-
-    const body = await request.json();
-    const { servicio, credenciales, n8nCredentialId } = body;
-
-    if (!servicio) {
-      return NextResponse.json({ error: 'Falta el campo "servicio"' }, { status: 400 });
-    }
-
-    if (!credenciales || typeof credenciales !== 'object') {
-      return NextResponse.json({ error: 'Falta el campo "credenciales"' }, { status: 400 });
-    }
-
-    // Validar que el servicio exista
-    const config = SERVICIOS_CONFIG.find((s) => s.servicio === servicio);
-    if (!config) {
-      return NextResponse.json({ error: `Servicio "${servicio}" no reconocido` }, { status: 400 });
-    }
-
-    // Guardar y sincronizar
-    const result = await saveServicioCredenciales(servicio, credenciales, n8nCredentialId);
-
-    // Auditar cambio de credenciales
-    const session = await auth();
-    const campos = Object.keys(credenciales).join(', ');
-    logAudit({
-      usuarioId: session?.user?.id,
-      usuarioEmail: session?.user?.email || undefined,
-      usuarioNombre: session?.user?.name || undefined,
-      accion: 'config',
-      entidad: 'credencial',
-      entidadId: servicio,
-      detalle: `Credenciales actualizadas: ${campos}`,
-      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
-      userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
-
-    return NextResponse.json({
-      success: true,
-      servicio,
-      credenciales: result.credenciales.map((c) => ({
-        ...c,
-        valor: undefined, // No devolver valores por seguridad
-      })),
-      n8nSync: result.n8nSyncResult,
-    });
-  } catch (error) {
-    console.error('[Credenciales API] Error POST:', error);
-    return NextResponse.json({ error: 'Error al guardar credenciales' }, { status: 500 });
+export const POST = apiHandler(async (request: NextRequest) => {
+  const session = await requireAuth();
+  if (session.user.role !== 'admin') {
+    fail('Solo administradores', 403);
   }
-}
+
+  const body = await request.json();
+  const { servicio, credenciales, n8nCredentialId } = body;
+
+  if (!servicio) {
+    fail('Falta el campo "servicio"');
+  }
+
+  if (!credenciales || typeof credenciales !== 'object') {
+    fail('Falta el campo "credenciales"');
+  }
+
+  // Validar que el servicio exista
+  const config = SERVICIOS_CONFIG.find((s) => s.servicio === servicio);
+  if (!config) {
+    fail(`Servicio "${servicio}" no reconocido`);
+  }
+
+  // Guardar y sincronizar
+  const result = await saveServicioCredenciales(servicio, credenciales, n8nCredentialId);
+
+  // Auditar cambio de credenciales
+  const campos = Object.keys(credenciales).join(', ');
+  logAudit({
+    usuarioId: session.user?.id,
+    usuarioEmail: session.user?.email || undefined,
+    usuarioNombre: session.user?.name || undefined,
+    accion: 'config',
+    entidad: 'credencial',
+    entidadId: servicio,
+    detalle: `Credenciales actualizadas: ${campos}`,
+    ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+    userAgent: request.headers.get('user-agent') || undefined,
+  }).catch(() => {});
+
+  return NextResponse.json({
+    success: true,
+    servicio,
+    credenciales: result.credenciales.map((c) => ({
+      ...c,
+      valor: undefined, // No devolver valores por seguridad
+    })),
+    n8nSync: result.n8nSyncResult,
+  });
+});
 
 /**
  * DELETE /api/credenciales
@@ -179,45 +153,41 @@ export async function POST(request: NextRequest) {
  *   - servicio (requerido): servicio a eliminar
  *   - clave (opcional): si se especifica, elimina solo esa clave
  */
-export async function DELETE(request: NextRequest) {
-  try {
-    const { isAdmin, error } = await checkAdmin();
-    if (!isAdmin) return error;
-
-    const { searchParams } = new URL(request.url);
-    const servicio = searchParams.get('servicio');
-    const clave = searchParams.get('clave');
-
-    if (!servicio) {
-      return NextResponse.json({ error: 'Falta el parámetro "servicio"' }, { status: 400 });
-    }
-
-    if (clave) {
-      await deleteCredencial(servicio, clave);
-    } else {
-      await deleteServicioCredenciales(servicio);
-    }
-
-    // Auditar eliminación de credenciales
-    const session = await auth();
-    logAudit({
-      usuarioId: session?.user?.id,
-      usuarioEmail: session?.user?.email || undefined,
-      usuarioNombre: session?.user?.name || undefined,
-      accion: 'delete',
-      entidad: 'credencial',
-      entidadId: servicio,
-      detalle: clave ? `Clave eliminada: ${clave}` : `Servicio completo eliminado: ${servicio}`,
-      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
-      userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('[Credenciales API] Error DELETE:', error);
-    return NextResponse.json({ error: 'Error al eliminar credenciales' }, { status: 500 });
+export const DELETE = apiHandler(async (request: NextRequest) => {
+  const session = await requireAuth();
+  if (session.user.role !== 'admin') {
+    fail('Solo administradores', 403);
   }
-}
+
+  const { searchParams } = new URL(request.url);
+  const servicio = searchParams.get('servicio');
+  const clave = searchParams.get('clave');
+
+  if (!servicio) {
+    fail('Falta el parámetro "servicio"');
+  }
+
+  if (clave) {
+    await deleteCredencial(servicio!, clave);
+  } else {
+    await deleteServicioCredenciales(servicio!);
+  }
+
+  // Auditar eliminación de credenciales
+  logAudit({
+    usuarioId: session.user?.id,
+    usuarioEmail: session.user?.email || undefined,
+    usuarioNombre: session.user?.name || undefined,
+    accion: 'delete',
+    entidad: 'credencial',
+    entidadId: servicio!,
+    detalle: clave ? `Clave eliminada: ${clave}` : `Servicio completo eliminado: ${servicio!}`,
+    ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+    userAgent: request.headers.get('user-agent') || undefined,
+  }).catch(() => {});
+
+  return ok({ success: true });
+});
 
 /**
  * PATCH /api/credenciales?action=test
@@ -230,37 +200,36 @@ export async function DELETE(request: NextRequest) {
  *   credenciales: { base_url: "http://..." }
  * }
  */
-export async function PATCH(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action');
+export const PATCH = apiHandler(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const action = searchParams.get('action');
 
-    if (action === 'test') {
-      const { isAdmin, error } = await checkAdmin();
-      if (!isAdmin) return error;
-
-      const body = await request.json();
-      const { servicio, credenciales } = body;
-
-      if (!servicio || !credenciales) {
-        return NextResponse.json({ error: 'Faltan parámetros' }, { status: 400 });
-      }
-
-      const result = await testCredentialConnection(servicio, credenciales);
-      return NextResponse.json(result);
+  if (action === 'test') {
+    const session = await requireAuth();
+    if (session.user.role !== 'admin') {
+      fail('Solo administradores', 403);
     }
 
-    if (action === 'n8n-status') {
-      const { isAdmin, error } = await checkAdmin();
-      if (!isAdmin) return error;
+    const body = await request.json();
+    const { servicio, credenciales } = body;
 
-      const result = await getN8nCredentials();
-      return NextResponse.json(result);
+    if (!servicio || !credenciales) {
+      fail('Faltan parámetros');
     }
 
-    return NextResponse.json({ error: 'Acción no reconocida' }, { status: 400 });
-  } catch (error) {
-    console.error('[Credenciales API] Error PATCH:', error);
-    return NextResponse.json({ error: 'Error al procesar' }, { status: 500 });
+    const result = await testCredentialConnection(servicio, credenciales);
+    return NextResponse.json(result);
   }
-}
+
+  if (action === 'n8n-status') {
+    const session = await requireAuth();
+    if (session.user.role !== 'admin') {
+      fail('Solo administradores', 403);
+    }
+
+    const result = await getN8nCredentials();
+    return NextResponse.json(result);
+  }
+
+  fail('Acción no reconocida');
+});

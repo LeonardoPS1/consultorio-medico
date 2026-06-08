@@ -1,72 +1,54 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import { apiHandler, success, notFound } from '@/lib/api-handler';
-import { auth } from '@/lib/auth';
+import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/api-auth';
+import { parseBody, updateMedicoSchema } from '@/lib/validations';
+import { z } from 'zod';
 
-/**
- * Helper: solo admin o el propio médico puede modificar/eliminar
- */
 async function requireMedicoAccess(medicoId: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error('No autorizado');
+  const session = await requireAuth();
   const sessionMedicoId = (session.user as any)?.medicoId;
   const sessionRol = (session.user as any)?.role;
   if (sessionRol === 'admin') return;
-  if (sessionMedicoId !== medicoId) throw new Error('No autorizado');
+  if (sessionMedicoId !== medicoId) fail('No autorizado', 403);
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+export const GET = apiHandler(async (_req: NextRequest, { params }: { params: { id: string } }) => {
+  await requireAuth();
 
-    const [medico] = await db.select().from(medicos).where(eq(medicos.id, params.id));
-    if (!medico) return NextResponse.json({ error: 'Medico no encontrado' }, { status: 404 });
-    return NextResponse.json({ data: medico });
-  } catch (error) {
-    return NextResponse.json({ error: 'Error al obtener medico' }, { status: 500 });
-  }
-}
+  const [medico] = await db.select().from(medicos).where(eq(medicos.id, params.id));
+  if (!medico) notFound('Medico no encontrado');
+  return success(medico);
+});
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    await requireMedicoAccess(params.id);
+const medicoPatchSchema = updateMedicoSchema.extend({
+  horarios: z.any().optional(),
+});
 
-    const body = await request.json();
-    if (!body || Object.keys(body).length === 0) {
-      return NextResponse.json({ error: 'Envia al menos un campo' }, { status: 400 });
-    }
+export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: { id: string } }) => {
+  await requireMedicoAccess(params.id);
 
-    const updateData: Record<string, any> = { updatedAt: new Date() };
-    if (body.nombre !== undefined) updateData.nombre = body.nombre;
-    if (body.especialidad !== undefined) updateData.especialidad = body.especialidad;
-    if (body.email !== undefined) updateData.email = body.email;
-    if (body.telefono !== undefined) updateData.telefono = body.telefono;
-    if (body.whatsapp !== undefined) updateData.whatsapp = body.whatsapp;
-    if (body.matricula !== undefined) updateData.matricula = body.matricula;
-    if (body.duracionTurnoMinutos !== undefined) updateData.duracionTurnoMinutos = body.duracionTurnoMinutos;
-    if (body.activo !== undefined) updateData.activo = body.activo;
-    if (body.horarios !== undefined) updateData.horarios = body.horarios;
+  const body = await parseBody(request, medicoPatchSchema);
 
-    const [actualizado] = await db.update(medicos).set(updateData).where(eq(medicos.id, params.id)).returning();
-    if (!actualizado) return NextResponse.json({ error: 'Medico no encontrado' }, { status: 404 });
+  const updateData: Record<string, any> = { updatedAt: new Date() };
+  if (body.nombre !== undefined) updateData.nombre = body.nombre;
+  if (body.especialidad !== undefined) updateData.especialidad = body.especialidad;
+  if (body.email !== undefined) updateData.email = body.email;
+  if (body.telefono !== undefined) updateData.telefono = body.telefono;
+  if (body.whatsapp !== undefined) updateData.whatsapp = body.whatsapp;
+  if (body.matricula !== undefined) updateData.matricula = body.matricula;
+  if (body.duracionTurnoMinutos !== undefined) updateData.duracionTurnoMinutos = body.duracionTurnoMinutos;
+  if (body.activo !== undefined) updateData.activo = body.activo;
+  if (body.horarios !== undefined) updateData.horarios = body.horarios;
 
-    return NextResponse.json({ data: actualizado });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Error interno';
-    if (message === 'No autorizado') {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
-    }
-    console.error('[API] Error PATCH /api/medicos:', error);
-    return NextResponse.json({ error: 'Error al actualizar medico' }, { status: 500 });
-  }
-}
+  const [actualizado] = await db.update(medicos).set(updateData).where(eq(medicos.id, params.id)).returning();
+  if (!actualizado) notFound('Medico no encontrado');
 
-/** DELETE /api/medicos/[id] - Soft-delete de médico */
+  return success(actualizado);
+});
+
 export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
   await requireMedicoAccess(params.id);
 
