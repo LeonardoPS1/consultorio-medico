@@ -66,7 +66,7 @@
 | Skill | Propósito |
 |-------|-----------|
 | **n8n-workflow-builder** | Diseño, debugging y refactor de workflows n8n |
-| **ollama-aicore** | Prompts para Mistral, optimización de respuestas |
+| **ollama-aicore** | Prompts para Gemma3, optimización de respuestas |
 | **twilio-debugger** | Problemas con WhatsApp/SMS/voz, webhooks, firmas |
 | **sql-aicore** | Esquemas DB, consultas optimizadas, migraciones |
 | **drizzle-migrations** | Migraciones Drizzle ORM seguras en producción |
@@ -88,7 +88,7 @@
 | **ORM** | Drizzle ORM | ^0.31.0 |
 | **Base de datos** | PostgreSQL 16 | 16 |
 | **Automatización** | n8n (self-hosted) | 2.19.5 |
-| **IA Local** | Ollama + Mistral | Último |
+| **IA Local** | Ollama + gemma3/llama3.2 | Último |
 | **WhatsApp** | Twilio API | ^5.0.0 |
 | **Pagos** | MercadoPago (sandbox, CLP) | ^2.12.1 |
 | **Calendario** | Google Calendar API (service account) | — |
@@ -124,7 +124,7 @@ n8n (9 Workflows)
   │  └── WF-09: Anonimización Post-Retención
   │
   ▼
-Ollama (Mistral - IA Local)
+Ollama (Gemma3 - IA Local)
   │
   ▼
 PostgreSQL (26+ tablas)
@@ -141,7 +141,7 @@ Twilio → Webhook → Dashboard (valida firma HMAC) →
   → Forward a n8n (WF-01 con x-webhook-secret) →
   → n8n busca paciente en DB →
   → Construye contexto (turnos, recetas, historial) →
-  → AI Agent (Ollama Mistral + Postgres Chat Memory) →
+  → AI Agent (Ollama Gemma3 + Postgres Chat Memory) →
   → Analiza intención y genera respuesta →
   → Ejecuta acciones estructuradas (crear turno, cancelar, etc.) →
   → Twilio responde al paciente →
@@ -200,13 +200,13 @@ consultorio-medico/
 2. Busca/crea paciente en PostgreSQL por teléfono
 3. Consulta turnos próximos y recetas activas del paciente
 4. Construye contexto estructurado para el AI Agent
-5. **AI Agent** (Ollama Mistral + Postgres Chat Memory) analiza y responde
+5. **AI Agent** (Ollama Gemma3 + Postgres Chat Memory) analiza y responde
 6. Si detecta acciones estructuradas: `crear_turno`, `cancelar_turno`, `receta`, `urgencia`
 7. Envía respuesta vía Twilio WhatsApp
 8. Loggea todo en PostgreSQL
 
 **Configuración IA:**
-- Modelo: `mistral` (Ollama)
+- Modelo: `gemma3` (Ollama)
 - Base URL: `http://ollama:11434`
 - Temperatura: 0.3
 - Chat Memory: Postgres (`n8n_chat_histories`, sessionKey=telefono, contextWindow=10)
@@ -236,8 +236,8 @@ consultorio-medico/
 8. Crea evento en Google Calendar
 
 **Configuración IA:**
-- Extracción: `mistral`, temp=0.1 (estricto, JSON)
-- Respuesta: `mistral`, temp=0.7 (creativo, friendly)
+- Extracción: `gemma3`, temp=0.1 (estricto, JSON)
+- Respuesta: `gemma3`, temp=0.7 (creativo, friendly)
 
 ---
 
@@ -279,14 +279,14 @@ consultorio-medico/
 **Flujo:**
 1. Lee emails no leídos vía IMAP cada 5 minutos
 2. Extrae campos (from, subject, body)
-3. **AI Agent** (Ollama Mistral) clasifica el email:
+3. **AI Agent** (Ollama Gemma3) clasifica el email:
    - `URGENTE` → Notifica al doctor vía Twilio WhatsApp
    - `SPAM` → Mueve a carpeta spam
    - `RECETA` / `CONSULTA_TURNO` / `CONSULTA_GENERAL` / `OTRO` → Redacta borrador de respuesta
 4. Loggea clasificación y acción en PostgreSQL
 
 **Configuración IA:**
-- Modelo: `mistral`, temp=0.3
+- Modelo: `gemma3`, temp=0.3
 - Clasifica y decide acción en un solo paso
 
 **⚠️ Pendiente:** Configurar credenciales IMAP/SMTP reales en n8n para activar flujo completo.
@@ -336,7 +336,7 @@ consultorio-medico/
 7. Marca como enviada en PG, loggea todo
 
 **Configuración IA:**
-- Modelo: `mistral`, temp=0.1, maxTokens=200 (estricto, extraer JSON)
+- Modelo: `gemma3`, temp=0.1, maxTokens=200 (estricto, extraer JSON)
 - Campos extraídos: `es_renovacion`, `medicamento`, `dosis`, `tipo`
 
 ---
@@ -424,19 +424,19 @@ consultorio-medico/
 ### Configuración General
 - **Servidor:** Ollama en VPS (172.18.0.1:11434 interno, ollama:11434 desde n8n)
 - **API:** Compatible con OpenAI (`/v1/chat/completions`)
-- **Modelo principal:** `mistral`
+- **Modelo principal:** `gemma3`
 - **Límite de RAM:** 8GB
 
 ### Configuración por Workflow
 
 | Workflow | Modelo | Temp | MaxTokens | Propósito |
 |----------|--------|------|-----------|-----------|
-| WF-01 Agent | mistral | 0.3 | default | Triaje completo con memoria conversacional |
-| WF-02 Extraer | mistral | 0.1 | default | Extracción estructurada de datos del turno |
-| WF-02 Responder | mistral | 0.7 | default | Respuesta friendly con horarios disponibles |
-| WF-04 Agent | mistral | 0.3 | default | Clasificación de emails + decisión de acción |
-| WF-05 Resumen | mistral | 0.3 | 800 | Generar resumen diario formateado |
-| WF-06 Analizar | mistral | 0.1 | 200 | Extraer datos de solicitud de receta |
+| WF-01 Agent | gemma3 | 0.3 | default | Triaje completo con memoria conversacional |
+| WF-02 Extraer | gemma3 | 0.1 | default | Extracción estructurada de datos del turno |
+| WF-02 Responder | gemma3 | 0.7 | default | Respuesta friendly con horarios disponibles |
+| WF-04 Agent | gemma3 | 0.3 | default | Clasificación de emails + decisión de acción |
+| WF-05 Resumen | gemma3 | 0.3 | 800 | Generar resumen diario formateado |
+| WF-06 Analizar | gemma3 | 0.1 | 200 | Extraer datos de solicitud de receta |
 
 ### Buenas Prácticas con Ollama
 - **Temperatura baja (0.1-0.3)** para extracción de datos estructurados
@@ -636,7 +636,7 @@ Ubicadas en `.opencode/skills/`. Se cargan con `skill` tool.
 | Skill | Archivo | Cuándo Usarla |
 |-------|---------|---------------|
 | **n8n-workflow-builder** | `.opencode/skills/n8n-workflow-builder/SKILL.md` | Diseñar, debuggear o refactorizar workflows n8n |
-| **ollama-aicore** | `.opencode/skills/ollama-aicore/SKILL.md` | Optimizar prompts Mistral, debuggear inferencia |
+| **ollama-aicore** | `.opencode/skills/ollama-aicore/SKILL.md` | Optimizar prompts Gemma3, debuggear inferencia |
 | **twilio-debugger** | `.opencode/skills/twilio-debugger/SKILL.md` | Problemas con WhatsApp, webhooks, rate limiting |
 | **sql-aicore** | `.opencode/skills/sql-aicore/SKILL.md` | Diseñar esquemas DB, consultas optimizadas |
 | **drizzle-migrations** | `.opencode/skills/drizzle-migrations/SKILL.md` | Crear/aplicar migraciones Drizzle seguras |

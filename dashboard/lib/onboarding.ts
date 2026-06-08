@@ -227,7 +227,7 @@ export async function getAiOnboardingTip(stepId: string, callerUserId?: string):
     const prompt = buildOnboardingPrompt(stepId, state, ctx);
 
     const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-    const model = process.env.OLLAMA_MODEL || 'mistral';
+    const model = process.env.OLLAMA_MODEL || 'gemma3';
 
     const res = await fetch(`${ollamaUrl}/v1/chat/completions`, {
       method: 'POST',
