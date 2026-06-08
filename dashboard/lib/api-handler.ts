@@ -44,7 +44,7 @@ export function ok(body: Record<string, unknown>, status = 200) {
 }
 
 /** Respuesta de error con mensaje personalizado */
-export function fail(message: string, status = 400) {
+export function fail(message: string, status = 400): never {
   const err = new Error(message);
   (err as any).status = status;
   throw err;
@@ -56,14 +56,14 @@ export function created<T>(data: T) {
 }
 
 /** Respuesta 404 Not Found */
-export function notFound(message = 'Recurso no encontrado') {
+export function notFound(message = 'Recurso no encontrado'): never {
   const err = new Error(message);
   (err as any).status = 404;
   throw err;
 }
 
 /** Respuesta 409 Conflict */
-export function conflict(message: string) {
+export function conflict(message: string): never {
   const err = new Error(message);
   (err as any).status = 409;
   throw err;

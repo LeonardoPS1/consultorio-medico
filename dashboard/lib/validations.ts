@@ -335,17 +335,18 @@ export const portalAuthVerifySchema = z.object({
 // ─── Portal Perfil ───────────────────────────────────────
 
 export const updatePortalPerfilSchema = z.object({
-  nombre: z.string().optional().nullable(),
-  direccion: z.string().optional().nullable(),
-  telefono: z.string().optional().nullable(),
-  comuna: z.string().optional().nullable(),
-  fechaNacimiento: z.string().optional().nullable(),
+  email: z.string().email('Email inválido').optional().nullable(),
+  consentimientoWhatsapp: z.boolean().optional().nullable(),
+  consentimientoEmail: z.boolean().optional().nullable(),
+  sistemaSalud: z.enum(['fonasa', 'isapre', 'particular', 'otro']).optional().nullable(),
+  regionId: z.string().uuid('regionId debe ser UUID').optional().nullable(),
+  comunaId: z.string().uuid('comunaId debe ser UUID').optional().nullable(),
 });
 
 // ─── Portal Turno ────────────────────────────────────────
 
 export const portalTurnoUpdateSchema = z.object({
-  estado: z.enum(['cancelada']),
+  estado: z.enum(['cancelada']).optional(),
   motivo: z.string().optional().nullable(),
 });
 
@@ -354,6 +355,7 @@ export const portalTurnoUpdateSchema = z.object({
 export const populatePlantillasSchema = z.object({
   categoria: z.string().optional(),
   plantillaId: z.string().optional(),
+  datos: z.record(z.string(), z.unknown()).optional(),
 });
 
 // ─── Setup ───────────────────────────────────────────────

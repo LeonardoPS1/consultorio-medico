@@ -8,14 +8,15 @@ import { db } from '@/lib/db';
 import { turnos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { fail } from '@/lib/api-handler';
+import type { Session } from 'next-auth';
 
 /** Obtiene la sesión y lanza 401 si no está autenticado. Compatible con apiHandler. */
-export async function requireAuth() {
+export async function requireAuth(): Promise<Session & { user: NonNullable<Session['user']> & { id: string } }> {
   const session = await auth();
   if (!session?.user?.id) {
     fail('No autorizado', 401);
   }
-  return session!;
+  return session as Session & { user: NonNullable<Session['user']> & { id: string } };
 }
 
 /** Verifica que el médico tenga acceso al paciente (IDOR check). Lanza 403 si no. */

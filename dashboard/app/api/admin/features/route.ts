@@ -9,25 +9,25 @@
  * incluyendo features guardados con true (habilitados).
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextRequest } from 'next/server';
+import { apiHandler, success, fail } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/api-auth';
+import { parseBody } from '@/lib/validations';
 import { db } from '@/lib/db';
 import { tenants } from '@/drizzle/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { FEATURE_PLAN } from '@/lib/features';
+import { z } from 'zod';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 
-// Lista completa de features del sistema (SSOT desde features.ts)
 const ALL_FEATURES = Object.keys(FEATURE_PLAN);
 
 // ─── GET ─────────────────────────────────────────────────────
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user || session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
-  }
+export const GET = apiHandler(async () => {
+  const session = await requireAuth();
+  if (session.user.role !== 'admin') fail('No autorizado', 403);
 
   const [tenant] = await db
     .select({ featuresEnabled: tenants.featuresEnabled })
@@ -35,32 +35,23 @@ export async function GET() {
     .where(eq(tenants.id, DEFAULT_TENANT_ID))
     .limit(1);
 
-  // Combinar los toggles guardados con defaults (habilitado si no está en DB)
   const saved = (tenant?.featuresEnabled || {}) as Record<string, boolean>;
   const merged: Record<string, boolean> = {};
   for (const f of ALL_FEATURES) {
     merged[f] = saved[f] !== false;
   }
 
-  return NextResponse.json({ features: merged });
-}
+  return success({ features: merged });
+});
 
 // ─── PATCH ───────────────────────────────────────────────────
 
-export async function PATCH(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
-  }
+export const PATCH = apiHandler(async (request: NextRequest) => {
+  const session = await requireAuth();
+  if (session.user.role !== 'admin') fail('No autorizado', 403);
 
-  let body: Record<string, boolean>;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Body JSON requerido' }, { status: 400 });
-  }
+  const body = await parseBody(request, z.record(z.string(), z.boolean()));
 
-  // Leer toggles actuales de la DB
   const [tenant] = await db
     .select({ featuresEnabled: tenants.featuresEnabled })
     .from(tenants)
@@ -69,24 +60,18 @@ export async function PATCH(request: NextRequest) {
 
   const current = (tenant?.featuresEnabled || {}) as Record<string, boolean>;
 
-  // Hacer MERGE: actualizar solo los features enviados, mantener el resto
   const merged: Record<string, boolean> = { ...current };
   for (const [key, value] of Object.entries(body)) {
-    if (typeof value === 'boolean') {
-      merged[key] = value;
-    }
+    merged[key] = value;
   }
 
-  // Guardar solo los features con valor explícito (true o false)
-  // Los features no listados se consideran habilitados por defecto
   await db
     .update(tenants)
     .set({ featuresEnabled: merged })
     .where(eq(tenants.id, DEFAULT_TENANT_ID));
 
-  // Devolver los features merged completos (incluyendo los que no cambiaron)
-  return NextResponse.json({
+  return success({
     features: merged,
     message: 'Toggles actualizados',
   });
-}
+});

@@ -1,17 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextRequest } from 'next/server';
+import { apiHandler, success, created, fail, notFound } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/api-auth';
+import { parseBody, createSucursalSchema } from '@/lib/validations';
 import { db } from '@/lib/db';
-import { sucursales, tenants } from '@/drizzle/schema';
+import { sucursales } from '@/drizzle/schema';
 import { eq, sql } from 'drizzle-orm';
+import { z } from 'zod';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 
+const createBodySchema = createSucursalSchema.extend({
+  email: z.string().optional(),
+});
+
+const patchBodySchema = z.object({
+  id: z.string().uuid(),
+  nombre: z.string().optional(),
+  direccion: z.string().optional().nullable(),
+  telefono: z.string().optional().nullable(),
+  email: z.string().optional().nullable(),
+  activo: z.boolean().optional(),
+});
+
 // ─── GET — Listar sucursales ────────────────────────────────
-export async function GET() {
-  const session = await auth();
-  if (!session?.user || session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
-  }
+export const GET = apiHandler(async () => {
+  const session = await requireAuth();
+  if (session.user.role !== 'admin') fail('No autorizado', 403);
 
   const list = await db
     .select()
@@ -19,26 +33,15 @@ export async function GET() {
     .where(eq(sucursales.tenantId, DEFAULT_TENANT_ID))
     .orderBy(sucursales.nombre);
 
-  return NextResponse.json(list);
-}
+  return success(list);
+});
 
 // ─── POST — Crear sucursal ──────────────────────────────────
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
-  }
+export const POST = apiHandler(async (request: NextRequest) => {
+  const session = await requireAuth();
+  if (session.user.role !== 'admin') fail('No autorizado', 403);
 
-  let body: { nombre: string; direccion?: string; telefono?: string; email?: string };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Body JSON requerido' }, { status: 400 });
-  }
-
-  if (!body.nombre?.trim()) {
-    return NextResponse.json({ error: 'El nombre es requerido' }, { status: 400 });
-  }
+  const body = await parseBody(request, createBodySchema);
 
   const [nueva] = await db
     .insert(sucursales)
@@ -51,26 +54,15 @@ export async function POST(request: NextRequest) {
     })
     .returning();
 
-  return NextResponse.json(nueva, { status: 201 });
-}
+  return created(nueva);
+});
 
 // ─── PATCH — Actualizar sucursal ────────────────────────────
-export async function PATCH(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
-  }
+export const PATCH = apiHandler(async (request: NextRequest) => {
+  const session = await requireAuth();
+  if (session.user.role !== 'admin') fail('No autorizado', 403);
 
-  let body: { id: string; nombre?: string; direccion?: string; telefono?: string; email?: string; activo?: boolean };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Body JSON requerido' }, { status: 400 });
-  }
-
-  if (!body.id) {
-    return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
-  }
+  const body = await parseBody(request, patchBodySchema);
 
   const updateData: Record<string, unknown> = {};
   if (body.nombre !== undefined) updateData.nombre = body.nombre.trim();
@@ -86,9 +78,7 @@ export async function PATCH(request: NextRequest) {
     .where(eq(sucursales.id, body.id))
     .returning();
 
-  if (!actualizada) {
-    return NextResponse.json({ error: 'Sucursal no encontrada' }, { status: 404 });
-  }
+  if (!actualizada) notFound('Sucursal no encontrada');
 
-  return NextResponse.json(actualizada);
-}
+  return success(actualizada);
+});

@@ -3,54 +3,47 @@
  * Protegido: requiere cookie portal_session
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { apiHandler, ok, fail, notFound } from '@/lib/api-handler';
 import { getPortalSession } from '@/lib/portal-auth';
+import { parseBody, portalTurnoUpdateSchema } from '@/lib/validations';
 import { db } from '@/lib/db';
 import { turnos } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 
-export async function PATCH(
+export const PATCH = apiHandler(async (
   request: NextRequest,
   { params }: { params: { id: string } },
-) {
+) => {
   const session = await getPortalSession();
-  if (!session) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  if (!session) fail('No autorizado', 401);
 
   const turnoId = params.id;
-  let body: Record<string, unknown> = {};
-  try {
-    body = await request.json();
-  } catch {}
+  const body = await parseBody(request, portalTurnoUpdateSchema);
 
-  const nuevoEstado = (body.estado as string) || 'cancelada';
+  const nuevoEstado = body.estado || 'cancelada';
 
-  // Solo permitir cancelación desde el portal
   if (!['cancelada'].includes(nuevoEstado)) {
-    return NextResponse.json({ error: 'Solo se permite cancelar turnos' }, { status: 403 });
+    fail('Solo se permite cancelar turnos', 403);
   }
 
-  // Verificar que el turno pertenece al paciente
   const [turno] = await db
     .select({ id: turnos.id, estado: turnos.estado })
     .from(turnos)
     .where(and(eq(turnos.id, turnoId), eq(turnos.pacienteId, session.pacienteId)))
     .limit(1);
 
-  if (!turno) {
-    return NextResponse.json({ error: 'Turno no encontrado' }, { status: 404 });
-  }
+  if (!turno) notFound('Turno no encontrado');
 
   if (turno.estado === 'cancelada') {
-    return NextResponse.json({ error: 'El turno ya fue cancelado' }, { status: 400 });
+    fail('El turno ya fue cancelado', 400);
   }
 
   if (turno.estado === 'atendido') {
-    return NextResponse.json({ error: 'No se puede cancelar un turno ya atendido' }, { status: 400 });
+    fail('No se puede cancelar un turno ya atendido', 400);
   }
 
-  const motivo = (body.motivo as string) || 'Cancelado por el paciente';
+  const motivo = body.motivo || 'Cancelado por el paciente';
 
   await db
     .update(turnos)
@@ -61,5 +54,5 @@ export async function PATCH(
     })
     .where(eq(turnos.id, turnoId));
 
-  return NextResponse.json({ success: true, estado: 'cancelada' });
-}
+  return ok({ success: true, estado: 'cancelada' });
+});

@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { apiHandler, ok, fail, notFound } from '@/lib/api-handler';
+import { parseBody, populatePlantillasSchema } from '@/lib/validations';
 import { db } from '@/lib/db';
 import { plantillasMensajes } from '@/drizzle/schema';
 import { eq, and, isNull } from 'drizzle-orm';
@@ -16,22 +18,17 @@ import { eq, and, isNull } from 'drizzle-orm';
  * Response:
  *   { contenido: "Hola Juan! Tu turno es el ...", template: { id, nombre, categoria } }
  */
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { categoria, datos, plantillaId } = body;
+export const POST = apiHandler(async (request: NextRequest) => {
+  const body = await parseBody(request, populatePlantillasSchema);
+  const { categoria, datos, plantillaId } = body;
 
-    if (!categoria && !plantillaId) {
-      return NextResponse.json(
-        { error: 'Se requiere categoria o plantillaId' },
-        { status: 400 }
-      );
-    }
+  if (!categoria && !plantillaId) {
+    fail('Se requiere categoria o plantillaId', 400);
+  }
 
-    // Buscar plantilla por ID o por categoría + activa
-    let plantilla;
+  const fetchPlantilla = async () => {
     if (plantillaId) {
-      [plantilla] = await db
+      const [p] = await db
         .select()
         .from(plantillasMensajes)
         .where(
@@ -41,59 +38,48 @@ export async function POST(request: NextRequest) {
           )
         )
         .limit(1);
-    } else {
-      [plantilla] = await db
-        .select()
-        .from(plantillasMensajes)
-        .where(
-          and(
-            eq(plantillasMensajes.categoria, categoria),
-            eq(plantillasMensajes.activa, true),
-            isNull(plantillasMensajes.deletedAt)
-          )
+      return p;
+    }
+    const [p] = await db
+      .select()
+      .from(plantillasMensajes)
+      .where(
+        and(
+          eq(plantillasMensajes.categoria, categoria!),
+          eq(plantillasMensajes.activa, true),
+          isNull(plantillasMensajes.deletedAt)
         )
-        .limit(1);
-    }
+      )
+      .limit(1);
+    return p;
+  };
 
-    if (!plantilla) {
-      return NextResponse.json(
-        { error: 'Plantilla no encontrada' },
-        { status: 404 }
-      );
-    }
+  const plantilla = await fetchPlantilla();
+  if (!plantilla) notFound('Plantilla no encontrada');
 
-    // Reemplazar {{variables}} en el contenido
-    let contenido = plantilla.contenido;
-    if (datos && typeof datos === 'object') {
-      for (const [key, value] of Object.entries(datos)) {
-        const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'gi');
-        contenido = contenido.replace(regex, String(value ?? ''));
-      }
+  let contenido = plantilla.contenido;
+  if (datos && typeof datos === 'object') {
+    for (const [key, value] of Object.entries(datos)) {
+      const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'gi');
+      contenido = contenido.replace(regex, String(value ?? ''));
     }
-
-    // También reemplazar variables declaradas pero no provistas con ''
-    const variables = plantilla.variables || [];
-    for (const varName of variables) {
-      if (datos && !(varName in datos)) {
-        const regex = new RegExp(`\\{\\{\\s*${varName}\\s*\\}\\}`, 'gi');
-        contenido = contenido.replace(regex, '');
-      }
-    }
-
-    return NextResponse.json({
-      contenido,
-      template: {
-        id: plantilla.id,
-        nombre: plantilla.nombre,
-        categoria: plantilla.categoria,
-        variables: plantilla.variables,
-      },
-    });
-  } catch (error) {
-    console.error('[Plantillas Populate]', error);
-    return NextResponse.json(
-      { error: 'Error al procesar plantilla' },
-      { status: 500 }
-    );
   }
-}
+
+  const variables = plantilla.variables || [];
+  for (const varName of variables) {
+    if (datos && !(varName in datos)) {
+      const regex = new RegExp(`\\{\\{\\s*${varName}\\s*\\}\\}`, 'gi');
+      contenido = contenido.replace(regex, '');
+    }
+  }
+
+  return ok({
+    contenido,
+    template: {
+      id: plantilla.id,
+      nombre: plantilla.nombre,
+      categoria: plantilla.categoria,
+      variables: plantilla.variables,
+    },
+  });
+});

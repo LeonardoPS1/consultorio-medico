@@ -1,67 +1,49 @@
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextRequest } from 'next/server';
+import { apiHandler, success, created, fail, conflict } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/api-auth';
+import { parseBody, createTenantSchema } from '@/lib/validations';
 import { db } from '@/lib/db';
-import { sql } from 'drizzle-orm';
+import { tenants } from '@/drizzle/schema';
+import { eq, desc } from 'drizzle-orm';
 
 // GET /api/admin/tenants - Listar todos los tenants
-export async function GET() {
-  try {
-    const session = await auth();
-    if (session?.user?.role !== 'admin') {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+export const GET = apiHandler(async () => {
+  const session = await requireAuth();
+  if (session.user.role !== 'admin') fail('No autorizado', 403);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result: any = await db.execute(
-      sql`SELECT id, nombre, subdomain, activo, created_at FROM tenants ORDER BY created_at DESC`
-    );
+  const result = await db
+    .select({
+      id: tenants.id,
+      nombre: tenants.nombre,
+      subdomain: tenants.subdomain,
+      activo: tenants.activo,
+      createdAt: tenants.createdAt,
+    })
+    .from(tenants)
+    .orderBy(desc(tenants.createdAt));
 
-    return NextResponse.json(Array.isArray(result) ? result : []);
-  } catch (error) {
-    console.error('[admin/tenants] Error:', error);
-    return NextResponse.json({ error: 'Error al cargar tenants' }, { status: 500 });
-  }
-}
+  return success(result);
+});
 
 // POST /api/admin/tenants - Crear nuevo tenant
-export async function POST(request: Request) {
-  try {
-    const session = await auth();
-    if (session?.user?.role !== 'admin') {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+export const POST = apiHandler(async (request: NextRequest) => {
+  const session = await requireAuth();
+  if (session.user.role !== 'admin') fail('No autorizado', 403);
 
-    const { nombre, subdomain } = await request.json();
+  const body = await parseBody(request, createTenantSchema);
 
-    if (!nombre?.trim() || !subdomain?.trim()) {
-      return NextResponse.json({ error: 'Nombre y subdominio requeridos' }, { status: 400 });
-    }
+  const existing = await db
+    .select({ id: tenants.id })
+    .from(tenants)
+    .where(eq(tenants.subdomain, body.subdomain))
+    .limit(1);
 
-    // Validar subdominio
-    if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(subdomain)) {
-      return NextResponse.json(
-        { error: 'Subdominio inválido. Usá solo letras minúsculas, números y guiones.' },
-        { status: 400 }
-      );
-    }
+  if (existing.length > 0) conflict('El subdominio ya está en uso');
 
-    // Verificar subdominio único
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const existing: any = await db.execute(
-      sql`SELECT id FROM tenants WHERE subdomain = ${subdomain} LIMIT 1`
-    );
+  await db.insert(tenants).values({
+    nombre: body.nombre.trim(),
+    subdomain: body.subdomain.trim(),
+  });
 
-    if (existing && existing.length > 0) {
-      return NextResponse.json({ error: 'El subdominio ya está en uso' }, { status: 409 });
-    }
-
-    await db.execute(
-      sql`INSERT INTO tenants (nombre, subdomain) VALUES (${nombre.trim()}, ${subdomain.trim()})`
-    );
-
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error('[admin/tenants] POST Error:', error);
-    return NextResponse.json({ error: 'Error al crear tenant' }, { status: 500 });
-  }
-}
+  return created({ ok: true });
+});
