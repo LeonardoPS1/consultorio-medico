@@ -46,12 +46,12 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     actionLabel: 'Ver planes disponibles',
   },
   {
-    id: 'whatsapp',
-    title: 'Conecta WhatsApp',
-    description: 'Vincula tu número de WhatsApp para que los pacientes puedan comunicarse con tu consultorio.',
-    icon: 'MessageSquare',
-    actionLink: '/dashboard/admin/sistema?tab=credenciales',
-    actionLabel: 'Configurar WhatsApp',
+    id: 'perfil',
+    title: 'Completa tu perfil',
+    description: 'Personaliza los datos de tu consultorio: nombre, dirección, logo y colores para que tus pacientes te reconozcan.',
+    icon: 'Building2',
+    actionLink: '/dashboard/configuracion?tab=perfil',
+    actionLabel: 'Completar perfil',
   },
   {
     id: 'medico',

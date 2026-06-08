@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle2, Loader2, Lightbulb, ExternalLink,
-  MessageSquare, Stethoscope, Clock, UserPlus, Bell,
-  Sparkles, RefreshCw, RotateCcw, SkipForward,
+  Stethoscope, Clock, UserPlus, Bell,
+  Sparkles, RefreshCw, RotateCcw, SkipForward, Building2,
 } from 'lucide-react';
 import { ONBOARDING_STEPS } from '@/lib/onboarding-types';
 import { useToast } from '@/components/ui/use-toast';
@@ -25,7 +25,7 @@ interface OnboardingClientProps {
 // ─── Map icon string → component ────────────────────────────
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  MessageSquare,
+  Building2,
   Stethoscope,
   Clock,
   UserPlus,

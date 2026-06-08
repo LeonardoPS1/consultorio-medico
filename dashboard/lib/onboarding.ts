@@ -15,6 +15,7 @@ import {
 import { count, sql, eq, isNull } from 'drizzle-orm';
 import { ONBOARDING_STEPS, type OnboardingState, type AiTipResult } from './onboarding-types';
 import { auth } from '@/lib/auth';
+import { getOrganization, DEFAULT_ORG } from './organization-store';
 
 // ─── Verificar pasos completados ────────────────────────────
 
@@ -53,14 +54,17 @@ export async function getOnboardingState(callerUserId?: string): Promise<Onboard
     }
   } catch { /* ignorar */ }
 
-  // WhatsApp — verificar que hay credenciales de Twilio configuradas
+  // Perfil — verificar que los datos del consultorio se hayan personalizado
   try {
-    const [twilioCred] = await db.execute(
-      sql`SELECT 1 FROM credenciales WHERE servicio = 'twilio' LIMIT 1`,
-    );
-    if (twilioCred) completed.push('whatsapp');
+    const org = getOrganization();
+    const hasCustomName = org.nombre !== DEFAULT_ORG.nombre;
+    const hasCustomPhone = org.telefono !== DEFAULT_ORG.telefono || org.whatsapp !== DEFAULT_ORG.whatsapp;
+    // Si al menos el nombre o el teléfono fueron cambiados, consideramos el perfil completo
+    if (hasCustomName || hasCustomPhone) {
+      completed.push('perfil');
+    }
   } catch (e) {
-    safeWarn('[Onboarding] Error al verificar credenciales Twilio:', e instanceof Error ? e.message : e);
+    safeWarn('[Onboarding] Error al verificar perfil:', e instanceof Error ? e.message : e);
   }
 
   // Médico — al menos un médico activo
@@ -194,7 +198,7 @@ async function getTenantContext(): Promise<TenantContext> {
  */
 const FALLBACK_TIPS: Record<string, string> = {
   plan: 'Elige un plan que se ajuste al volumen de pacientes que atiendes. Si estás empezando, el plan Starter es suficiente y después puedes escalar sin perder datos. En la sección de suscripción vas a ver las diferencias entre cada plan.',
-  whatsapp: 'Conectando WhatsApp tus pacientes van a poder pedir turnos y hacer consultas desde su teléfono. Necesitas las credenciales de Twilio (Account SID y Auth Token) que encuentras en la consola de Twilio. Una vez conectado, el asistente IA responde automáticamente las 24 horas.',
+  perfil: 'Completa los datos de tu consultorio: nombre, dirección, teléfono y email. También puedes subir tu logo y elegir los colores para personalizar el sistema. Esto ayuda a que tus pacientes te reconozcan en los mensajes y recordatorios automáticos.',
   medico: 'Registra al menos un médico para poder asignarle turnos y recetas. Cada profesional tiene su propio perfil con especialidad, horarios y color en el calendario. Si ya tienes un médico registrado, verifica que los datos estén completos.',
   horarios: 'Los horarios definen cuándo se pueden agendar turnos automáticamente. Te recomiendo empezar con lunes a viernes de 9 a 18 y sábados de 9 a 13. Si tienes varios médicos, cada uno puede tener horarios diferentes.',
   paciente: 'Carga un paciente de prueba para ver el sistema en funcionamiento. Los datos clave son nombre, teléfono con código de país y obra social si aplica. Después de cargarlo ya le puedes asignar un turno y va a recibir recordatorios automáticos.',
@@ -308,7 +312,7 @@ INDICACIONES PARA TU RESPUESTA:
 
 FORMATO: Responde en español neutro chileno, cálido, profesional. Máximo 4 oraciones. No uses markdown ni emojis.`,
 
-    whatsapp: `Eres el asistente de configuración de "${consultorio}". El usuario está conectando WhatsApp (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
+    perfil: `Eres el asistente de configuración de "${consultorio}". El usuario está completando el perfil del consultorio (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
 
 CONTEXTO REAL DEL CONSULTORIO:
 - Nombre: ${consultorio}
@@ -319,10 +323,10 @@ CONTEXTO REAL DEL CONSULTORIO:
 - Pasos completados: ${completedCount} de ${ONBOARDING_STEPS.length}
 
 INDICACIONES PARA TU RESPUESTA:
-1. Explica que con WhatsApp los pacientes pueden pedir turnos, cancelar y hacer consultas desde su teléfono.
-2. Indica que necesitan el TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN (los encuentran en la consola de Twilio).
-3. Menciona que una vez conectado, el asistente IA de WhatsApp responde automáticamente las 24hs.
-4. Si ya hay pacientes (${pacientesCount}), destaca que se van a poder comunicar por este medio.
+1. Explica que los datos del perfil (nombre, dirección, teléfono, email) aparecen en los mensajes que reciben los pacientes.
+2. Recomienda subir un logo y personalizar los colores para dar una imagen profesional.
+3. Si ya hay pacientes (${pacientesCount}), menciona que van a ver estos datos en los mensajes.
+4. Destaca que completar el perfil es rápido y queda listo para toda la vida del consultorio.
 
 FORMATO: Responde en español neutro chileno, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
 

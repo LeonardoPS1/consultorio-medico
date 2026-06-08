@@ -34,7 +34,7 @@ export interface OrganizationData {
   redesSociales: { instagram: string; facebook: string; twitter: string };
 }
 
-const DEFAULT_ORG: OrganizationData = {
+export const DEFAULT_ORG: OrganizationData = {
   nombre: 'Consultorio Médico',
   eslogan: 'Tu salud, nuestra prioridad',
   descripcion: 'Centro médico especializado en atención clínica general y de especialidades.',
