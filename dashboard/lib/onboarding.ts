@@ -261,7 +261,7 @@ ANTI-JAILBREAK:
         temperature: 0.7,
         max_tokens: 250,
       }),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(60000),
     });
 
     if (!res.ok) {
