@@ -44,14 +44,18 @@ export function parseQuery(request: NextRequest, schema: z.ZodType): Record<stri
 
 // ─── Schemas ─────────────────────────────────────────────
 
-/** Teléfono chileno: +569XXXXXXXX o +562XXXXXXXX o 9XXXXXXXX */
-const telefonoChileRegex = /^(\+569\d{8}|\+562\d{7}|9\d{8})$/;
+/** 
+ * Teléfono — acepta formatos chileno (+569, +562, 9) y cualquier internacional con +.
+ * Se sanitiza: se eliminan espacios, guiones, paréntesis antes de validar.
+ */
+const telefonoRegex = /^(\+?\d{7,15})$/;
 
 export const createPacienteSchema = z.object({
   nombre: z.string().min(1, 'Nombre es obligatorio'),
   apellido: z.string().min(1, 'Apellido es obligatorio'),
-  telefono: z.string().min(1, 'Teléfono es obligatorio').regex(telefonoChileRegex, 'Teléfono debe ser chileno: +569XXXXXXXX'),
-  email: z.string().email('Email inválido').optional().nullable(),
+  telefono: z.string().min(1, 'Teléfono es obligatorio').trim()
+    .regex(telefonoRegex, 'Teléfono inválido: debe tener entre 7 y 15 dígitos, con o sin +'),
+  email: z.string().trim().email('Email inválido').optional().nullable().or(z.literal('')),
   obraSocial: z.string().optional().nullable(),
   sistemaSalud: z.enum(['fonasa', 'isapre', 'particular', 'otro']).optional().nullable(),
   isapreNombre: z.string().optional().nullable(),

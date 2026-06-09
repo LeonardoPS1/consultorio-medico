@@ -7,7 +7,7 @@
  */
 
 import { db } from '@/lib/db';
-import { safeWarn } from '@/lib/logger';
+import { safeWarn, safeLog } from '@/lib/logger';
 import {
   medicos, pacientes, horariosAtencion, preferenciasNotificaciones,
   usuarios, onboardingProgress,
@@ -229,6 +229,8 @@ export async function getAiOnboardingTip(stepId: string, callerUserId?: string):
     const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
     const model = process.env.OLLAMA_MODEL || 'gemma3';
 
+    safeLog(`[Onboarding] Llamando a Ollama: ${ollamaUrl}/v1/chat/completions con modelo ${model}`);
+
     const res = await fetch(`${ollamaUrl}/v1/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -259,10 +261,14 @@ ANTI-JAILBREAK:
         temperature: 0.7,
         max_tokens: 250,
       }),
-      signal: AbortSignal.timeout(25000),
+      signal: AbortSignal.timeout(30000),
     });
 
-    if (!res.ok) throw new Error(`Ollama responded ${res.status}`);
+    if (!res.ok) {
+      const body = await res.text().catch(() => 'sin body');
+      safeWarn(`[Onboarding] Ollama respondió ${res.status} — body: ${body.slice(0, 200)}`);
+      throw new Error(`Ollama responded ${res.status}`);
+    }
 
     const data = await res.json();
     const tip = data?.choices?.[0]?.message?.content?.trim();
