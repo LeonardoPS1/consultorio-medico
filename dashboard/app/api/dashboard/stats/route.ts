@@ -4,10 +4,45 @@ import { turnos, pacientes, conversaciones, pacienteEventos, mensajes } from '@/
 import { eq, and, gte, lt, desc, sql, count } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { cache } from '@/lib/cache';
+import { safeWarn } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
 const CACHE_TTL = 30_000; // 30s — KPIs stale 30s es aceptable
+
+// ─── Rate limiter para error logging ────────────────────────────
+let lastErrorTime = 0;
+let errorCount = 0;
+function logStatsError(error: unknown) {
+  const now = Date.now();
+  if (now - lastErrorTime > 60_000) {
+    errorCount = 0;
+  }
+  errorCount++;
+  lastErrorTime = now;
+  if (errorCount <= 3) {
+    safeWarn('[Dashboard Stats] Error:', error);
+  }
+}
+
+/**
+ * Convierte recursivamente Date objects a ISO strings antes de serializar.
+ * Esto previene errores de `Buffer.byteLength(Date)` en la serialización
+ * interna de Next.js.
+ */
+function deepSanitize(obj: unknown): unknown {
+  if (obj === null || obj === undefined) return obj;
+  if (obj instanceof Date) return obj.toISOString();
+  if (Array.isArray(obj)) return obj.map(deepSanitize);
+  if (typeof obj === 'object') {
+    const sanitized: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+      sanitized[key] = deepSanitize(value);
+    }
+    return sanitized;
+  }
+  return obj;
+}
 
 /**
  * GET /api/dashboard/stats
@@ -249,9 +284,10 @@ export async function GET(request: Request) {
       };
     }, CACHE_TTL);
 
-    return NextResponse.json(data);
+    // Seguridad extra: sanitizar Date objects antes de serializar
+    return NextResponse.json(deepSanitize(data));
   } catch (error) {
-    console.error('[Dashboard Stats] Error:', error);
+    logStatsError(error);
     return NextResponse.json(
       { error: 'Error al obtener estadísticas' },
       { status: 500 }
