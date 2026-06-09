@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import {
   getConversaciones,
   getConversacionById,
@@ -8,7 +8,7 @@ import {
   seedDataIfEmpty,
 } from '@/lib/data-store';
 import { auth } from '@/lib/auth';
-import { apiHandler, success, created } from '@/lib/api-handler';
+import { apiHandler, created } from '@/lib/api-handler';
 import { parseBody, parseQuery, createConversacionSchema, conversacionQuerySchema } from '@/lib/validations';
 import { z } from 'zod';
 
@@ -53,7 +53,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
     medicoId: medicoIdFilter,
   });
 
-  return success({ conversaciones, total: conversaciones.length, limit: q.limit ?? 50, offset: q.offset ?? 0 });
+  return NextResponse.json({ data: conversaciones, total: conversaciones.length, limit: q.limit ?? 50, offset: q.offset ?? 0 });
 });
 
 /**

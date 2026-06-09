@@ -1,11 +1,11 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import {
   getMensajesByConversacion,
   createMensaje,
   getConversacionById,
 } from '@/lib/data-store';
 import { auth } from '@/lib/auth';
-import { apiHandler, success, created, notFound, fail } from '@/lib/api-handler';
+import { apiHandler, created, notFound, fail } from '@/lib/api-handler';
 import { parseBody, createMensajeSchema } from '@/lib/validations';
 import { z } from 'zod';
 
@@ -42,7 +42,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
 
   const mensajes = await getMensajesByConversacion(id);
 
-  return success({ mensajes, total: mensajes.length, conversacionId: id });
+  return NextResponse.json({ data: mensajes, total: mensajes.length, conversacionId: id });
 });
 
 export const POST = apiHandler(async (request: NextRequest) => {
