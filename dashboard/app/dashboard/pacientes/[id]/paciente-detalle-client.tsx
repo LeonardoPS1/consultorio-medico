@@ -2235,16 +2235,20 @@ export function PacienteDetalleClient({
               }),
             });
             if (!res.ok) {
-              const err = await res.json();
-              toast({ title: 'Error', description: err.error || 'No se pudo crear el turno', variant: 'destructive' });
+              const err = await res.json().catch(() => null);
+              const msg = err?.error || err?.message || 'Error del servidor al crear el turno';
+              console.warn('[Turnos] Error al crear turno:', res.status, msg);
+              toast({ title: 'Error', description: msg, variant: 'destructive' });
               return;
             }
             const json = await res.json();
             const turno = json.data || json;
             setTurnosList((prev) => [turno, ...prev]);
             toast({ title: 'Turno creado', description: `Turno agendado correctamente.` });
-          } catch {
-            toast({ title: 'Error', description: 'No se pudo crear el turno', variant: 'destructive' });
+          } catch (error) {
+            const msg = error instanceof Error ? error.message : 'Error de red al crear el turno';
+            console.warn('[Turnos] Error de red al crear turno:', msg);
+            toast({ title: 'Error', description: msg, variant: 'destructive' });
           }
         }}
       />

@@ -328,12 +328,13 @@ export function TurnosClient({
           fecha: data.fecha,
           hora: data.hora,
           motivo: data.tipo,
-          sucursalId,
+          sucursalId: sucursalId || undefined,
         }),
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'No se pudo crear el turno' }));
+        const err = await res.json().catch(() => null);
+        const msg = err?.error || err?.message || 'Error del servidor al crear el turno';
         // Si es conflicto de horario (409), proponer lista de espera
         if (res.status === 409) {
           setWaitlistProposal({
@@ -343,11 +344,12 @@ export function TurnosClient({
             medicoNombre: data.medico,
             fecha: data.fecha,
             hora: data.hora,
-            reason: err.error || 'Sin disponibilidad',
+            reason: msg,
           });
           return;
         }
-        toast({ title: 'Error', description: err.error || 'No se pudo crear el turno', variant: 'destructive' });
+        console.warn('[Turnos] Error al crear turno:', res.status, msg);
+        toast({ title: 'Error', description: msg, variant: 'destructive' });
         return;
       }
 
@@ -366,8 +368,10 @@ export function TurnosClient({
       };
       setTurnos((prev) => [newTurno, ...prev]);
       toast({ title: 'Turno creado', description: `${pacienteNombre} - ${data.hora}` });
-    } catch {
-      toast({ title: 'Error', description: 'Error de red al crear turno', variant: 'destructive' });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Error de red al crear turno';
+      console.warn('[Turnos] Error de red al crear turno:', msg);
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
     }
   };
 
