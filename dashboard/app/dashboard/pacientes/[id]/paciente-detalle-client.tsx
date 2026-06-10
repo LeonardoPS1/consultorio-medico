@@ -2236,8 +2236,8 @@ export function PacienteDetalleClient({
             });
             if (!res.ok) {
               const err = await res.json().catch(() => null);
-              const msg = err?.error || err?.message || 'Error del servidor al crear el turno';
-              console.warn('[Turnos] Error al crear turno:', res.status, msg);
+              const msg = err?.error || err?.message || `Error del servidor (${res.status})`;
+              console.warn('[Turnos] Error al crear turno:', res.status, msg, err);
               toast({ title: 'Error', description: msg, variant: 'destructive' });
               return;
             }

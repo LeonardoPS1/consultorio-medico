@@ -334,7 +334,6 @@ export function TurnosClient({
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        const msg = err?.error || err?.message || 'Error del servidor al crear el turno';
         // Si es conflicto de horario (409), proponer lista de espera
         if (res.status === 409) {
           setWaitlistProposal({
@@ -344,11 +343,12 @@ export function TurnosClient({
             medicoNombre: data.medico,
             fecha: data.fecha,
             hora: data.hora,
-            reason: msg,
+            reason: err?.error || err?.message || 'Sin disponibilidad',
           });
           return;
         }
-        console.warn('[Turnos] Error al crear turno:', res.status, msg);
+        const msg = err?.error || err?.message || `Error del servidor (${res.status})`;
+        console.warn('[Turnos] Error al crear turno:', res.status, msg, err);
         toast({ title: 'Error', description: msg, variant: 'destructive' });
         return;
       }
