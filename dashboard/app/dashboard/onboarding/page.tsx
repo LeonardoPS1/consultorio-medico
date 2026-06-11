@@ -26,7 +26,6 @@ export default async function OnboardingPage({
   const session = await auth();
   const state = await getOnboardingState(session?.user?.id);
   const isForceRestart = searchParams?.reiniciar === 'true';
-  const showComplete = state.isComplete && !isForceRestart;
 
   return (
     <div className="space-y-6 animate-in max-w-3xl mx-auto">
@@ -38,14 +37,12 @@ export default async function OnboardingPage({
           </div>
           <div className="space-y-1">
             <h1 className="text-xl font-semibold tracking-tight">
-              {showComplete ? 'Todo listo' : 'Asistente IA'}
+              Asistente IA
             </h1>
             <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
-              {showComplete
-                ? 'Tu consultorio está completamente configurado.'
-                : isForceRestart
-                  ? 'Repasá cada paso y marcalo como completado cuando lo configures.'
-                  : 'Guía paso a paso para dejar tu consultorio listo. Cada paso tiene una guía IA personalizada.'}
+              {isForceRestart
+                ? 'Repasá cada paso y marcalo como completado cuando lo configures.'
+                : 'Guía paso a paso para dejar tu consultorio listo. Cada paso tiene una guía IA personalizada.'}
             </p>
           </div>
         </div>
@@ -54,7 +51,7 @@ export default async function OnboardingPage({
       <OnboardingClient
         key={isForceRestart ? 'reiniciar' : 'onboarding'}
         initialCompleted={isForceRestart ? [] : state.completedSteps}
-        isComplete={showComplete}
+        isComplete={state.isComplete && !isForceRestart}
         isForceRestart={isForceRestart}
       />
     </div>
