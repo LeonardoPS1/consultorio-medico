@@ -12,6 +12,26 @@
 
 **Pendiente:** Redeploy Dokploy para aplicar todos los fixes.
 
+## 📌 11/06 — Onboarding: activeStep persistence + UI continuity (~3h) ✅
+
+**Commits:** `2b1d210` (onboarding-client + sidebar)
+
+**Fixes aplicados:**
+1. **activeStep state**: Nuevo estado con lógica de restauración:
+   - Si hay un `activeStep` guardado en localStorage y el paso no está completado → restaurarlo
+   - Si no hay activeStep guardado → abrir el primer paso incompleto automáticamente
+   - Si todos los pasos están completos → null (mostrar pantalla de éxito)
+2. **Persistir activeStep**: Función `persistActiveStep()` que guarda/remueve `aicoremed_onboarding_active_step` en localStorage
+3. **Sidebar badge**: Nuevo badge "Continuar" en el sidebar cuando hay progreso de onboarding pendiente
+4. **Reiniciar**: Limpiar ambos keys (`aicoremed_onboarding_completed` y `aicoremed_onboarding_active_step`) en `handleReiniciar()`
+5. **Pantalla de éxito**: Limpiar activeStep del localStorage cuando se muestra la pantalla de éxito
+
+**Archivos modificados:**
+- `dashboard/app/dashboard/onboarding/onboarding-client.tsx` - Lógica completa de activeStep
+- `dashboard/components/layout/sidebar.tsx` - Badge de progreso onboarding
+
+**Pendiente:** Actualizar `.opencode/memory/projects/consultorio-medico.md` con contexto actualizado
+
 ## Estado Actual — 02/06/2026 (post bugfixes session)
 
 ### ✅ App funcionando — Todos los bugs corregidos
