@@ -22,7 +22,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShieldAlert, UserPlus, Edit, Loader2 } from 'lucide-react';
+import { ShieldAlert, UserPlus, Edit, Loader2, ChevronDown, Sparkles } from 'lucide-react';
+import { FEATURE_PLAN, getFeatureRequiredPlan } from '@/lib/features';
 
 interface Usuario {
   id: string;
@@ -87,6 +88,23 @@ export default function AdminUsuariosTab() {
   const [editActivo, setEditActivo] = useState(true);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState('');
+
+  // Feature overrides per-user
+  const [editOverrides, setEditOverrides] = useState<Set<string>>(new Set());
+  const [editOverridesLoading, setEditOverridesLoading] = useState(false);
+  const [editOverridesOpen, setEditOverridesOpen] = useState(false);
+
+  const fetchOverrides = useCallback(async (userId: string) => {
+    setEditOverridesLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/feature-overrides`);
+      if (res.ok) {
+        const data = await res.json();
+        setEditOverrides(new Set(data.featureIds || []));
+      }
+    } catch { /* ignore */ }
+    finally { setEditOverridesLoading(false); }
+  }, []);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -154,6 +172,8 @@ export default function AdminUsuariosTab() {
     setEditRol(user.rol);
     setEditActivo(user.activo);
     setEditError('');
+    setEditOverridesOpen(false);
+    fetchOverrides(user.id);
   };
 
   const handleSaveEdit = async () => {
@@ -162,6 +182,7 @@ export default function AdminUsuariosTab() {
     setEditError('');
 
     try {
+      // 1. Guardar datos básicos del usuario
       const res = await fetch(`/api/admin/users/${editingUser.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -175,6 +196,20 @@ export default function AdminUsuariosTab() {
       const data = await res.json();
       if (!res.ok) {
         setEditError(data.error || 'Error al actualizar');
+        setEditLoading(false);
+        return;
+      }
+
+      // 2. Guardar feature overrides
+      const overridesRes = await fetch(`/api/admin/users/${editingUser.id}/feature-overrides`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ featureIds: Array.from(editOverrides) }),
+      });
+
+      if (!overridesRes.ok) {
+        const errData = await overridesRes.json().catch(() => ({}));
+        setEditError(errData.error || 'Error al guardar overrides de features');
         setEditLoading(false);
         return;
       }
@@ -421,6 +456,82 @@ export default function AdminUsuariosTab() {
                 checked={editActivo}
                 onCheckedChange={setEditActivo}
               />
+            </div>
+
+            {/* ─── Feature Overrides ──────────────────────────── */}
+            <div className="rounded-lg border border-primary/10">
+              <button
+                type="button"
+                onClick={() => setEditOverridesOpen(!editOverridesOpen)}
+                className="flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium hover:bg-muted/30 transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-amber-500" />
+                  Overrides de features
+                  {editOverrides.size > 0 && (
+                    <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-semibold">
+                      {editOverrides.size}
+                    </span>
+                  )}
+                </span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${editOverridesOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {editOverridesOpen && (
+                <div className="px-3 pb-3 space-y-1 border-t border-primary/10 pt-2">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Los overrides permiten habilitar features de planes superiores para este usuario,
+                    sin necesidad de cambiar su plan de suscripción.
+                  </p>
+                  {editOverridesLoading ? (
+                    <div className="flex items-center gap-2 py-2">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span className="text-xs text-muted-foreground">Cargando...</span>
+                    </div>
+                  ) : (
+                    <div className="max-h-48 overflow-y-auto space-y-0.5">
+                      {Object.entries(FEATURE_PLAN)
+                        .sort(([, aPlan], [, bPlan]) => {
+                          const order = ['free', 'starter', 'professional', 'premium', 'enterprise'];
+                          return order.indexOf(aPlan) - order.indexOf(bPlan);
+                        })
+                        .map(([featureId, requiredPlan]) => {
+                          const isOverridden = editOverrides.has(featureId);
+                          return (
+                            <div
+                              key={featureId}
+                              className="flex items-center justify-between py-1 px-2 rounded hover:bg-muted/30"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="text-xs truncate">{featureId}</span>
+                                {isOverridden && (
+                                  <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 bg-amber-500/10 border-amber-500/30 text-amber-600">
+                                    override
+                                  </Badge>
+                                )}
+                                <Badge variant="secondary" className="text-[9px] px-1 py-0 h-3.5">
+                                  {requiredPlan}
+                                </Badge>
+                              </div>
+                              <Switch
+                                checked={isOverridden}
+                                onCheckedChange={(c) => {
+                                  setEditOverrides((prev) => {
+                                    const next = new Set(prev);
+                                    if (c) next.add(featureId);
+                                    else next.delete(featureId);
+                                    return next;
+                                  });
+                                }}
+                                className="scale-75"
+                              />
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {editError && (

@@ -249,25 +249,25 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
           <ToggleRow
             label="Respuestas automáticas"
             description="La IA responde automáticamente mensajes de WhatsApp"
-            plan=""
-            checked
-            onCheckedChange={() => {}}
+            plan={getFeatureRequiredPlan('ia-assistant')}
+            checked={toggles['ia-assistant'] ?? true}
+            onCheckedChange={(c) => handleToggle('ia-assistant', c)}
             compact
           />
           <ToggleRow
             label="Triaje de urgencias"
             description="Detectar y notificar mensajes urgentes automáticamente"
-            plan=""
-            checked
-            onCheckedChange={() => {}}
+            plan={getFeatureRequiredPlan('ia-assistant')}
+            checked={toggles['ia-assistant'] ?? true}
+            onCheckedChange={(c) => handleToggle('ia-assistant', c)}
             compact
           />
           <ToggleRow
             label="Renovación de recetas automática"
             description="Permitir renovar recetas sin intervención del médico"
-            plan=""
-            checked={false}
-            onCheckedChange={() => {}}
+            plan={getFeatureRequiredPlan('ia-assistant')}
+            checked={toggles['ia-assistant'] ?? true}
+            onCheckedChange={(c) => handleToggle('ia-assistant', c)}
             compact
           />
           <div className="space-y-2">

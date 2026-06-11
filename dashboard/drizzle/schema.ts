@@ -939,6 +939,18 @@ export const onboardingProgress = pgTable('onboarding_progress', {
   idxUsuario: index('idx_onboarding_progress_usuario').on(table.usuarioId),
 }));
 
+// ─── USER FEATURE OVERRIDES ────────────────────────────
+
+export const userFeatureOverrides = pgTable('user_feature_overrides', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  usuarioId: uuid('usuario_id').notNull().references(() => usuarios.id, { onDelete: 'cascade' }),
+  featureId: varchar('feature_id', { length: 50 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  uniqueUsuarioFeature: uniqueIndex('idx_user_feature_overrides_unique').on(table.usuarioId, table.featureId),
+  idxUsuario: index('idx_user_feature_overrides_usuario').on(table.usuarioId),
+}));
+
 // ─── Types ──────────────────────────────────────────────
 export type ListaEspera = InferSelectModel<typeof listaEspera>;
 export type NewListaEspera = InferInsertModel<typeof listaEspera>;

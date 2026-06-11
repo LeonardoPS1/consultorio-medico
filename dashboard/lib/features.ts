@@ -158,6 +158,40 @@ export function canAccessWithToggles(
 }
 
 /**
+ * Verifica acceso considerando también overrides por usuario.
+ * Los overrides permiten que un admin habilite features de planes
+ * superiores para usuarios específicos.
+ *
+ * Orden de precedencia:
+ * 1. User override (feature_id en userOverrideFeatures) → SIEMPRE concede acceso
+ * 2. Plan gating: si el plan del usuario NO alcanza → denegado
+ * 3. Tenant toggle: si está deshabilitado → denegado
+ * 4. Por defecto → concedido
+ *
+ * @param plan - Plan del usuario
+ * @param feature - Feature a verificar
+ * @param disabledFeatures - Set de features deshabilitados a nivel tenant
+ * @param userOverrideFeatures - Set de features override para este usuario (opcional)
+ */
+export function canAccessWithUserOverrides(
+  plan: PlanId | string | undefined,
+  feature: FeatureId,
+  disabledFeatures?: Set<string>,
+  userOverrideFeatures?: Set<string>,
+): boolean {
+  // 1. User override: si tiene override explícito, conceder acceso
+  if (userOverrideFeatures?.has(feature)) return true;
+
+  // 2. Plan gating
+  if (!canAccess(plan, feature)) return false;
+
+  // 3. Tenant toggle
+  if (disabledFeatures?.has(feature)) return false;
+
+  return true;
+}
+
+/**
  * Dado un record de features_enabled del tenant, devuelve
  * el Set de features que están explícitamente deshabilitados.
  *

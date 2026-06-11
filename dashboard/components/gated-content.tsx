@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { canAccess, type FeatureId } from '@/lib/features';
+import { canAccess, canAccessWithUserOverrides, type FeatureId } from '@/lib/features';
+import { useUserOverrides } from '@/lib/feature-flags-context';
 
 /**
  * Mapa de rutas del dashboard a features requeridas.
@@ -40,13 +41,16 @@ export function GatedContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { overrides: userOverrides } = useUserOverrides();
 
   // Derivar blocked SIEMPRE, incluso durante loading (evita que el # de hooks cambie)
   const isAdmin = session?.user?.role === 'admin';
   const plan = session?.user?.plan ?? 'free';
   const required = getRequiredFeature(pathname ?? '');
+
   // Admin tiene acceso a TODO, independientemente del plan
-  const blocked = !isAdmin && !!required && !canAccess(plan, required);
+  // Para no-admins: verificar plan gating + user overrides
+  const blocked = !isAdmin && !!required && !canAccess(plan, required) && !userOverrides.has(required);
 
   // Redirect en useEffect — solo cuando la sesión ya cargó completamente
   // Evita race condition: si redirect durante 'loading', router.replace() se dispara
