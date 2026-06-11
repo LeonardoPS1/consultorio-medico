@@ -10,7 +10,7 @@ import { db } from '@/lib/db';
 import { safeWarn, safeLog } from '@/lib/logger';
 import {
   medicos, pacientes, horariosAtencion, preferenciasNotificaciones,
-  usuarios, onboardingProgress,
+  usuarios, onboardingProgress, tenants,
 } from '@/drizzle/schema';
 import { count, sql, eq, isNull } from 'drizzle-orm';
 import { ONBOARDING_STEPS, FALLBACK_TIPS, type OnboardingState, type AiTipResult } from './onboarding-types';
@@ -56,11 +56,28 @@ export async function getOnboardingState(callerUserId?: string): Promise<Onboard
 
   // Perfil — verificar que los datos del consultorio se hayan personalizado
   try {
+    // ── 1. Chequeo local (archivo organization.json) ──
     const org = getOrganization();
     const hasCustomName = org.nombre !== DEFAULT_ORG.nombre;
-    const hasCustomPhone = org.telefono !== DEFAULT_ORG.telefono || org.whatsapp !== DEFAULT_ORG.whatsapp;
-    // Si al menos el nombre o el teléfono fueron cambiados, consideramos el perfil completo
-    if (hasCustomName || hasCustomPhone) {
+    const hasCustomPhone = org.telefono !== DEFAULT_ORG.telefono
+      || org.whatsapp !== DEFAULT_ORG.whatsapp;
+
+    // ── 2. Chequeo DB (tenants) como respaldo en producción ──
+    // El archivo organization.json es efímero en Docker (se pierde al redeploy),
+    // pero la tabla `tenants` persiste en la BD.
+    let hasDbTenantName = false;
+    if (userId) {
+      const [userTenant] = await db
+        .select({ nombre: tenants.nombre })
+        .from(tenants)
+        .innerJoin(usuarios, eq(usuarios.tenantId, tenants.id))
+        .where(eq(usuarios.id, userId));
+      if (userTenant?.nombre && userTenant.nombre !== DEFAULT_ORG.nombre) {
+        hasDbTenantName = true;
+      }
+    }
+
+    if (hasCustomName || hasCustomPhone || hasDbTenantName) {
       completed.push('perfil');
     }
   } catch (e) {
