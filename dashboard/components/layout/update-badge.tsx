@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { RefreshCw, X, ExternalLink } from 'lucide-react';
 import { useUpdate } from '@/lib/update-context';
 import { CHANGELOG } from '@/lib/changelog-data';
@@ -20,11 +20,16 @@ import { Badge } from '@/components/ui/badge';
  * Se muestra en el header cuando hay una nueva versión disponible.
  */
 export function UpdateBadge() {
-  const { updateReady, handleUpdate, dismissUpdate, changelogOpen, setChangelogOpen, appVersion } = useUpdate();
+  const { updateReady, handleUpdate, changelogOpen, setChangelogOpen, appVersion, hasUnseenChangelog, markChangelogSeen } = useUpdate();
   const [showTooltip, setShowTooltip] = useState(false);
 
+  const handleOpenChangelog = useCallback(() => {
+    markChangelogSeen();
+    setChangelogOpen(true);
+  }, [markChangelogSeen, setChangelogOpen]);
+
   if (!updateReady) {
-    // Mostrar solo un botón para ver novedades (sin badge de actualización)
+    // Mostrar botón Novedades con dot si hay sin leer
     return (
       <>
         <Button
@@ -32,11 +37,22 @@ export function UpdateBadge() {
           size="icon"
           className="h-9 w-9 relative"
           title="Novedades"
-          onClick={() => setChangelogOpen(true)}
+          onClick={handleOpenChangelog}
         >
           <ExternalLink className="h-4 w-4" />
+          {hasUnseenChangelog && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center">
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+            </span>
+          )}
         </Button>
-        <ChangelogModal open={changelogOpen} onOpenChange={setChangelogOpen} />
+        <ChangelogModal
+          open={changelogOpen}
+          onOpenChange={(open) => {
+            if (open) markChangelogSeen();
+            setChangelogOpen(open);
+          }}
+        />
       </>
     );
   }
@@ -48,7 +64,7 @@ export function UpdateBadge() {
         size="icon"
         className="h-9 w-9 relative"
         title="Nueva versión disponible"
-        onClick={() => setChangelogOpen(true)}
+        onClick={handleOpenChangelog}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >
@@ -74,7 +90,13 @@ export function UpdateBadge() {
         </div>
       )}
 
-      <ChangelogModal open={changelogOpen} onOpenChange={setChangelogOpen} />
+      <ChangelogModal
+        open={changelogOpen}
+        onOpenChange={(open) => {
+          if (open) markChangelogSeen();
+          setChangelogOpen(open);
+        }}
+      />
     </>
   );
 }

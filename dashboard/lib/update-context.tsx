@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 
+const LS_CHANGELOG_SEEN = 'pwa_last_changelog_version';
+
 // ============================================================
 // Tipos
 // ============================================================
@@ -20,6 +22,10 @@ interface UpdateContextType {
   setChangelogOpen: (v: boolean) => void;
   /** Versión actual de la app (desde env) */
   appVersion: string;
+  /** Hay novedades sin leer (versión actual ≠ última vista) */
+  hasUnseenChangelog: boolean;
+  /** Marcar el changelog como visto para esta versión */
+  markChangelogSeen: () => void;
 }
 
 // ============================================================
@@ -34,6 +40,8 @@ const UpdateContext = createContext<UpdateContextType>({
   changelogOpen: false,
   setChangelogOpen: () => {},
   appVersion: '1.0.0',
+  hasUnseenChangelog: false,
+  markChangelogSeen: () => {},
 });
 
 // ============================================================
@@ -44,9 +52,23 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
   const [updateReady, setUpdateReady] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
+  const [hasUnseenChangelog, setHasUnseenChangelog] = useState(false);
   const waitingSWRef = useRef<ServiceWorker | null>(null);
 
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0';
+
+  // ─── Changelog tracking por versión ──────────────────────
+  useEffect(() => {
+    const lastSeen = localStorage.getItem(LS_CHANGELOG_SEEN);
+    if (lastSeen !== appVersion) {
+      setHasUnseenChangelog(true);
+    }
+  }, [appVersion]);
+
+  const markChangelogSeen = useCallback(() => {
+    localStorage.setItem(LS_CHANGELOG_SEEN, appVersion);
+    setHasUnseenChangelog(false);
+  }, [appVersion]);
 
   // ─── Ejecutar actualización ──────────────────────────────
   const handleUpdate = useCallback(() => {
@@ -124,6 +146,8 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
         changelogOpen,
         setChangelogOpen,
         appVersion,
+        hasUnseenChangelog,
+        markChangelogSeen,
       }}
     >
       {children}

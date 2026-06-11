@@ -16,6 +16,7 @@ import {
 import Link from 'next/link';
 import { DashboardClient } from './dashboard-client';
 import { DashboardKpisClient } from '@/components/dashboard/dashboard-kpis-client';
+import { PWAInstallPrompt } from '@/components/pwa-install-prompt';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -303,6 +304,9 @@ export default async function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* PWA Install — solo en la pantalla principal del dashboard */}
+      <PWAInstallPrompt />
     </div>
   );
 }
