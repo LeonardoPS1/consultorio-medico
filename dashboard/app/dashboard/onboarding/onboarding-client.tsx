@@ -43,25 +43,33 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   const { toast } = useToast();
 
   // ── Inicializar: server state + localStorage backup ─────
+  //
+  // Estrategia:
+  //  - SIEMPRE mergear server state con localStorage, para que el backup
+  //    local no se pierda aunque el PUT al servidor haya fallado.
+  //  - La flag hasManualInteraction (abajo) evita que se muestre la
+  //    pantalla de éxito sin interacción del usuario, incluso si todos
+  //    los pasos aparecen como completados por el merge.
+  //  - En isForceRestart se ignora localStorage (handleReiniciar ya lo
+  //    limpió, pero si no, no queremos datos viejos).
+  //
   const [completed, setCompleted] = useState<string[]>(() => {
     if (isForceRestart) return [];
-    // Si el servidor dice que NO está completo, usar SOLO server state.
-    // Esto evita que localStorage con datos viejos de una sesión anterior
-    // haga creer que todo está completado prematuramente.
-    if (!isComplete) {
-      return [...initialCompleted];
-    }
-    // Si el servidor dice que está completo, mergear con localStorage
-    // como backup (por si hubo pasos hechos offline).
+    const base = [...initialCompleted];
     try {
       const stored = localStorage.getItem(LS_KEY);
       if (stored) {
         const parsed: string[] = JSON.parse(stored);
-        const merged = new Set([...initialCompleted, ...parsed]);
-        return Array.from(merged);
+        if (Array.isArray(parsed)) {
+          for (const step of parsed) {
+            if (typeof step === 'string' && !base.includes(step)) {
+              base.push(step);
+            }
+          }
+        }
       }
     } catch { /* ignorar */ }
-    return initialCompleted;
+    return base;
   });
 
   const [activeStep, setActiveStep] = useState<string | null>(null);
@@ -181,40 +189,57 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   // ── Marcar paso como completado (persiste en servidor) ──
 
   /**
-   * Marca un paso como completado.
+   * Marca un paso como completado (con persistencia instantánea).
    *
-   * Estrategia de doble capa:
-   *  1. Siempre agrega el paso al estado local (inmediato, nunca se pierde)
-   *  2. Si el servidor responde con estado, lo usa como fuente de verdad
-   *     PERO asegurándose de que el paso actual esté incluido
-   *
-   * Así el paso nunca "desaparece" aunque el servidor tenga un bug
-   * o la respuesta sea inconsistente.
+   * Estrategia:
+   *  1. Agrega al estado local DENTRO del callback de setCompleted,
+   *     donde siempre tenemos el `prev` más actualizado.
+   *  2. Persiste a localStorage DESDE EL MISMO CALLBACK, evitando
+   *     race conditions con closures.
+   *  3. Si el paso YA estaba en el estado, lee localStorage directamente
+   *     para mergear y mantener consistencia.
+   *  4. PUT al servidor en background (si falla, ya tenemos backup local).
    */
   const marcarCompletado = async (stepId: string) => {
+    // No permitir marcar un paso si el anterior no está completado
+    // (evita bug donde saltarPaso + click en "Ya lo configuré" saltea
+    //  la dependencia lineal del flujo).
+    if (isStepPending(stepId)) return;
+
     // Marcar interacción manual en esta sesión
     setHasManualInteraction(true);
 
-    // ── 1. Siempre agregar localmente primero ──
-    let updatedSteps: string[] = [];
+    // ── 1. Agregar al estado local + localStorage atómicamente ──
+    let stepsToSave: string[] = [];
     setCompleted((prev) => {
       if (prev.includes(stepId)) return prev;
-      updatedSteps = [...prev, stepId];
-      return updatedSteps;
+      const updated = [...prev, stepId];
+      stepsToSave = updated;
+      // Persistir a localStorage inmediatamente desde el callback,
+      // donde prev siempre es el último estado (sin race condition).
+      saveToLocalStorage(updated);
+      return updated;
     });
 
-    // ── 2. Persistir a localStorage inmediatamente ──
-    if (updatedSteps.length > 0) {
-      saveToLocalStorage(updatedSteps);
-    } else {
-      // Fallback: leer el estado actual si setCompleted no dio resultado
-      setCompleted((prev) => {
-        saveToLocalStorage(prev);
-        return prev;
-      });
+    // Si el paso ya estaba en prev (setCompleted retornó prev sin cambios),
+    // stepsToSave quedó vacío → persistimos desde lo que haya en localStorage
+    if (stepsToSave.length === 0) {
+      try {
+        const stored = localStorage.getItem(LS_KEY);
+        if (stored) {
+          const parsed: string[] = JSON.parse(stored);
+          if (!parsed.includes(stepId)) {
+            saveToLocalStorage([...parsed, stepId]);
+          }
+        } else {
+          saveToLocalStorage([stepId]);
+        }
+      } catch {
+        saveToLocalStorage([stepId]);
+      }
     }
 
-    // ── 3. Intentar persistir en servidor ──
+    // ── 2. Intentar persistir en servidor ──
     let serverPersisted = false;
     try {
       const res = await fetch('/api/onboarding', {
@@ -222,17 +247,13 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stepId }),
       });
-
       if (res.ok) {
         serverPersisted = true;
-        // No mergeamos el estado completo del servidor porque en un
-        // reinicio (isForceRestart) el servidor todavía tiene todos los pasos
-        // de la sesión anterior en DB, lo que haría que el cliente crea
-        // que ya completó todo y muestre la pantalla de éxito prematuramente.
-        // Local state es la fuente de verdad durante la sesión actual.
+        // No mergeamos respuesta del servidor porque el estado local
+        // es la fuente de verdad durante la sesión actual.
       }
     } catch {
-      // Error de red - ya tenemos localStorage backup
+      // Error de red — ya tenemos localStorage backup
     }
 
     if (!serverPersisted) {
@@ -243,7 +264,7 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
       });
     }
 
-    // ── 4. Avanzar al siguiente paso ──
+    // ── 3. Avanzar al siguiente paso ──
     const currentIdx = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
     const nextStep = ONBOARDING_STEPS[currentIdx + 1];
     if (nextStep) {
@@ -252,15 +273,22 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   };
 
   // ── Saltar paso (no aplica / lo haré después) ───────────
-
+  //
+  // Salta al PRÓXIMO step que NO esté pendiente (es decir, cuyo step
+  // anterior esté completado). Si no hay, colapsa todo (activeStep = null).
+  // Esto evita que se renderice contenido expandido en un step bloqueado.
+  //
   const saltarPaso = (stepId: string) => {
     const currentIdx = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
-    const nextStep = ONBOARDING_STEPS[currentIdx + 1];
-    if (nextStep) {
-      setActiveStep(nextStep.id);
-    } else {
-      setActiveStep(null);
+    for (let i = currentIdx + 1; i < ONBOARDING_STEPS.length; i++) {
+      const candidate = ONBOARDING_STEPS[i];
+      if (!isStepPending(candidate.id)) {
+        setActiveStep(candidate.id);
+        return;
+      }
     }
+    // No hay más steps accesibles → colapsar
+    setActiveStep(null);
   };
 
   // ── Reiniciar ────────────────────────────────────────────
@@ -522,7 +550,7 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
             </button>
 
             {/* ── Expanded content ─────────────────────────── */}
-            {active && !done && (
+            {active && !done && !pending && (
               <CardContent className="px-4 pb-4 pt-0 space-y-3">
                 {/* Separador */}
                 <div className="h-px bg-border/50" />
