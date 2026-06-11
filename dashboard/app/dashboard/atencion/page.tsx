@@ -539,39 +539,40 @@ export default function AtencionPage() {
   return (
     <div className="space-y-6 animate-in">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <PageHeader title="Atención de Turnos" gradient />
-        <div className="flex items-center gap-2">
-          {/* Filtro por médico */}
-          <div className="flex items-center gap-2 rounded-lg border p-1">
-            <Button
-              variant={!filtroMedico ? 'secondary' : 'ghost'}
-              size="sm"
-              className="text-xs h-8"
-              onClick={() => setFiltroMedico(null)}
-            >
-              <Users className="h-3.5 w-3.5 mr-1" />
-              Todos
-            </Button>
-            {medicos.map((m) => (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <PageHeader title="Atención de Turnos" gradient />
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+            {/* Filtro por médico */}
+            <div className="flex items-center gap-1 rounded-lg border p-1 overflow-x-auto flex-1 sm:flex-none">
               <Button
-                key={m}
-                variant={filtroMedico === m ? 'secondary' : 'ghost'}
+                variant={!filtroMedico ? 'secondary' : 'ghost'}
                 size="sm"
-                className="text-xs h-8"
-                onClick={() => setFiltroMedico(m)}
+                className="text-xs h-8 shrink-0"
+                onClick={() => setFiltroMedico(null)}
               >
-                {m}
+                <Users className="h-3.5 w-3.5 mr-1" />
+                Todos
               </Button>
-            ))}
+              {medicos.map((m) => (
+                <Button
+                  key={m}
+                  variant={filtroMedico === m ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="text-xs h-8 shrink-0"
+                  onClick={() => setFiltroMedico(m)}
+                >
+                  {m}
+                </Button>
+              ))}
+            </div>
+            <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/turnos')} className="shrink-0">
+              <Calendar className="h-4 w-4 mr-1.5" />
+              <span className="hidden sm:inline">Ver Agenda</span>
+              <span className="sm:hidden">Agenda</span>
+              <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+            </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/turnos')}>
-            <Calendar className="h-4 w-4 mr-1.5" />
-            Ver Agenda
-            <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-          </Button>
         </div>
-      </div>
 
       {/* Barra de resumen */}
       <Card className="border-primary/10 bg-gradient-to-br from-primary/[0.03] to-transparent">

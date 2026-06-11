@@ -293,10 +293,8 @@ export function Header() {
           </DropdownMenu>
         )}
 
-        {/* Novedades / Actualización — visible desde sm+ */}
-        <div className="hidden sm:inline-flex">
-          <UpdateBadge />
-        </div>
+        {/* Novedades / Actualización */}
+        <UpdateBadge />
 
         {/* Notificaciones */}
         <DropdownMenu open={notifOpen} onOpenChange={setNotifOpen}>

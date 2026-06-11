@@ -37,6 +37,7 @@ import {
   RefreshCw,
   ScrollText,
   Printer,
+  MoreHorizontal,
 } from 'lucide-react';
 import { formatPhone, getInitials, formatDate, getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
@@ -44,6 +45,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Cie10Search } from '@/components/ui/cie10-search';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -763,7 +771,7 @@ export function PacienteDetalleClient({
       {/* Header card */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-start gap-5">
+          <div className="flex items-start gap-5 flex-wrap">
             <Avatar className="h-16 w-16">
               <AvatarFallback className="bg-primary/10 text-primary text-xl">
                 {getInitials(paciente.nombre, paciente.apellido)}
@@ -840,7 +848,48 @@ export function PacienteDetalleClient({
                 )}
               </div>
             </div>
-            <div className="flex gap-2 shrink-0">
+            {/* Acciones — mobile: dropdown, desktop: inline */}
+            <div className="md:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => setEditPacienteOpen(true)}>
+                    <Edit3 className="h-4 w-4 mr-2" /> Editar
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push(`/dashboard/conversaciones`)}>
+                    <MessageSquare className="h-4 w-4 mr-2" /> Mensaje
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowNuevoTurno(true)}>
+                    <Calendar className="h-4 w-4 mr-2" /> Nuevo Turno
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowCertDialog(true)}>
+                    <ScrollText className="h-4 w-4 mr-2" /> Certificado
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportarDatos}>
+                    <Download className="h-4 w-4 mr-2" /> Exportar datos
+                  </DropdownMenuItem>
+                  {!bajaConfirmada && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => (bajaSolicitada ? setBajaConfirmOpen(true) : setBajaDialogOpen(true))}
+                        disabled={bajaLoading}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {bajaSolicitada ? 'Confirmar baja' : 'Solicitar baja'}
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            {/* Desktop: inline buttons */}
+            <div className="hidden md:flex gap-2 shrink-0">
               <Button variant="outline" size="sm" onClick={() => setEditPacienteOpen(true)}>
                 <Edit3 className="h-4 w-4 mr-2" /> Editar
               </Button>
