@@ -57,8 +57,10 @@ export const PUT = apiHandler(async (request: NextRequest) => {
       stepId,
     }).onConflictDoNothing();
 
-    const state = await getOnboardingState(session.user.id!);
-    return ok({ success: true, state });
+    // No devolvemos el estado completo porque en un reinicio (isForceRestart)
+    // el servidor todavía tiene todos los pasos de la sesión anterior en DB.
+    // El cliente maneja el estado localmente, solo confirmamos la persistencia.
+    return ok({ success: true });
   } catch (error) {
     safeWarn('[Onboarding] Error al guardar progreso:', error instanceof Error ? error.message : error);
     throw error;

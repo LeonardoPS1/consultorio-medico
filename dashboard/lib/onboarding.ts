@@ -294,9 +294,15 @@ function buildOnboardingPrompt(stepId: string, state: OnboardingState, ctx: Tena
 
   const { nombre: consultorio, plan, medicosCount, pacientesCount, turnosCount } = ctx;
   const completedCount = state.completedSteps.length;
+  // Usar el índice real del paso en el array (no completedCount) para
+  // que el número de paso sea correcto incluso si el servidor tiene
+  // pasos completados de una sesión anterior (isForceRestart).
+  const stepIndex = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
+  const stepNum = stepIndex + 1;
+  const totalSteps = ONBOARDING_STEPS.length;
 
   const prompts: Record<string, string> = {
-    plan: `Eres el asistente de configuración de "${consultorio}". El usuario está eligiendo su plan (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
+    plan: `Eres el asistente de configuración de "${consultorio}". El usuario está eligiendo su plan (paso ${stepNum} de ${totalSteps}).
 
 CONTEXTO REAL DEL CONSULTORIO:
 - Nombre: ${consultorio}
@@ -315,7 +321,7 @@ INDICACIONES PARA TU RESPUESTA:
 
 FORMATO: Responde en español neutro chileno, cálido, profesional. Máximo 4 oraciones. No uses markdown ni emojis.`,
 
-    perfil: `Eres el asistente de configuración de "${consultorio}". El usuario está completando el perfil del consultorio (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
+    perfil: `Eres el asistente de configuración de "${consultorio}". El usuario está completando el perfil del consultorio (paso ${stepNum} de ${totalSteps}).
 
 CONTEXTO REAL DEL CONSULTORIO:
 - Nombre: ${consultorio}
@@ -333,7 +339,7 @@ INDICACIONES PARA TU RESPUESTA:
 
 FORMATO: Responde en español neutro chileno, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
 
-    medico: `Eres el asistente de configuración de "${consultorio}". El usuario está agregando un médico (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
+    medico: `Eres el asistente de configuración de "${consultorio}". El usuario está agregando un médico (paso ${stepNum} de ${totalSteps}).
 
 CONTEXTO REAL DEL CONSULTORIO:
 - Nombre: ${consultorio}
@@ -351,7 +357,7 @@ INDICACIONES PARA TU RESPUESTA:
 
 FORMATO: Responde en español neutro chileno, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
 
-    horarios: `Eres el asistente de configuración de "${consultorio}". El usuario está configurando los horarios de atención (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
+    horarios: `Eres el asistente de configuración de "${consultorio}". El usuario está configurando los horarios de atención (paso ${stepNum} de ${totalSteps}).
 
 CONTEXTO REAL DEL CONSULTORIO:
 - Nombre: ${consultorio}
@@ -369,7 +375,7 @@ INDICACIONES PARA TU RESPUESTA:
 
 FORMATO: Responde en español neutro chileno, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
 
-    paciente: `Eres el asistente de configuración de "${consultorio}". El usuario está agregando su primer paciente (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}).
+    paciente: `Eres el asistente de configuración de "${consultorio}". El usuario está agregando su primer paciente (paso ${stepNum} de ${totalSteps}).
 
 CONTEXTO REAL DEL CONSULTORIO:
 - Nombre: ${consultorio}
@@ -388,7 +394,7 @@ INDICACIONES PARA TU RESPUESTA:
 
 FORMATO: Responde en español neutro chileno, cálido, práctico. Máximo 4 oraciones. No uses markdown ni emojis.`,
 
-    notificaciones: `Eres el asistente de configuración de "${consultorio}". El usuario está configurando las notificaciones (paso ${completedCount + 1} de ${ONBOARDING_STEPS.length}). Es el ÚLTIMO paso.
+    notificaciones: `Eres el asistente de configuración de "${consultorio}". El usuario está configurando las notificaciones (paso ${stepNum} de ${totalSteps}). Es el ÚLTIMO paso.
 
 CONTEXTO REAL DEL CONSULTORIO:
 - Nombre: ${consultorio}
@@ -407,5 +413,5 @@ INDICACIONES PARA TU RESPUESTA:
 FORMATO: Responde en español neutro chileno, cálido, motivador. Máximo 4 oraciones. No uses markdown ni emojis.`,
   };
 
-  return prompts[stepId] || `Eres el asistente de configuración de "${consultorio}". El usuario está en el paso "${step.title}" (${completedCount + 1}/${ONBOARDING_STEPS.length}). Da una guía práctica y cálida para completar este paso en español neutro chileno. Máximo 4 oraciones. Sin emojis ni markdown.`;
+  return prompts[stepId] || `Eres el asistente de configuración de "${consultorio}". El usuario está en el paso "${step.title}" (${stepNum}/${totalSteps}). Da una guía práctica y cálida para completar este paso en español neutro chileno. Máximo 4 oraciones. Sin emojis ni markdown.`;
 }

@@ -204,17 +204,11 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
 
       if (res.ok) {
         serverPersisted = true;
-        const data = await res.json();
-        if (data.state?.completedSteps) {
-          setCompleted((prev) => {
-            const serverSteps = data.state.completedSteps as string[];
-            const merged = new Set([...serverSteps, stepId, ...prev]);
-            const mergedArr = Array.from(merged);
-            // Actualizar localStorage con el merge final
-            saveToLocalStorage(mergedArr);
-            return mergedArr;
-          });
-        }
+        // No mergeamos el estado completo del servidor porque en un
+        // reinicio (isForceRestart) el servidor todavía tiene todos los pasos
+        // de la sesión anterior en DB, lo que haría que el cliente crea
+        // que ya completó todo y muestre la pantalla de éxito prematuramente.
+        // Local state es la fuente de verdad durante la sesión actual.
       }
     } catch {
       // Error de red - ya tenemos localStorage backup
