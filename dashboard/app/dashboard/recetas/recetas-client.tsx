@@ -518,15 +518,15 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-medium">{receta.paciente}</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="font-medium truncate">{receta.paciente}</p>
+          <p className="text-sm text-muted-foreground truncate">
             {receta.medicamento}
           </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5 truncate">
             {receta.dosis} · {receta.duracion}
           </p>
           {receta.indicaciones && (
-            <p className="text-xs text-muted-foreground/70 mt-0.5 italic">
+            <p className="text-xs text-muted-foreground/70 mt-0.5 italic truncate">
               {receta.indicaciones}
             </p>
           )}
@@ -654,30 +654,32 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
     <>
       {/* Tabs */}
       <Tabs defaultValue="activas">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <TabsList>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <TabsList className="overflow-x-auto">
             <TabsTrigger value="activas">Activas</TabsTrigger>
             <TabsTrigger value="vencidas">Vencidas</TabsTrigger>
             <TabsTrigger value="historial">Historial</TabsTrigger>
           </TabsList>
-          <div className="flex items-center gap-2">
-            {/* Export buttons */}
-            <Button
-              variant="outline"
-              size="icon"
-              title="Exportar Excel"
-              onClick={() => window.open('/api/recetas/exportar?formato=excel', '_blank')}
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              title="Exportar PDF"
-              onClick={() => window.open('/api/recetas/exportar?formato=pdf', '_blank')}
-            >
-              <FileDown className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-auto">
+            {/* Export buttons — solo desktop */}
+            <div className="hidden sm:flex items-center gap-1 sm:gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                title="Exportar Excel"
+                onClick={() => window.open('/api/recetas/exportar?formato=excel', '_blank')}
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                title="Exportar PDF"
+                onClick={() => window.open('/api/recetas/exportar?formato=pdf', '_blank')}
+              >
+                <FileDown className="h-4 w-4" />
+              </Button>
+            </div>
             <Button onClick={() => setShowNewReceta(true)} className="shrink-0">
               <Plus className="h-4 w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Nueva Receta</span>

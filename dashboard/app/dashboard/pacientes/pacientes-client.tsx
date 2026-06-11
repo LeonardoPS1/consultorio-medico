@@ -161,7 +161,7 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
   return (
     <>
       {/* Búsqueda + botón nuevo */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           {searching && (
@@ -174,27 +174,32 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        {/* Export buttons */}
-        <Button
-          variant="outline"
-          size="icon"
-          title="Exportar Excel"
-          onClick={() => window.open('/api/pacientes/exportar?formato=excel', '_blank')}
-        >
-          <FileSpreadsheet className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          title="Exportar PDF"
-          onClick={() => window.open('/api/pacientes/exportar?formato=pdf', '_blank')}
-        >
-          <FileDown className="h-4 w-4" />
-        </Button>
-        <Button onClick={() => setShowNewPaciente(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nuevo Paciente
-        </Button>
+        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+          {/* Export buttons — solo desktop */}
+          <div className="hidden sm:flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              title="Exportar Excel"
+              onClick={() => window.open('/api/pacientes/exportar?formato=excel', '_blank')}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              title="Exportar PDF"
+              onClick={() => window.open('/api/pacientes/exportar?formato=pdf', '_blank')}
+            >
+              <FileDown className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button onClick={() => setShowNewPaciente(true)} className="shrink-0">
+            <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Nuevo Paciente</span>
+            <span className="sm:hidden">Nuevo</span>
+          </Button>
+        </div>
       </div>
 
       {/* Lista */}
@@ -235,7 +240,7 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
                   </Avatar>
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium">
+                    <p className="font-medium truncate">
                       {paciente.nombre} {paciente.apellido}
                     </p>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground mt-0.5">
