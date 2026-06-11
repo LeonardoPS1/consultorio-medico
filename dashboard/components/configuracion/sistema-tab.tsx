@@ -301,6 +301,7 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
           )}
         </CardContent>
       </Card>
+      }
 
       {/* ─── User-specific Feature Overrides ───────────────────────────────── */}
       {(showAll || section === 'toggles') && <Card>
