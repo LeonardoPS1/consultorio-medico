@@ -9,15 +9,18 @@ import { waitlistService } from '@/lib/services/waitlist';
 import { cache } from '@/lib/cache';
 
 export const turnosService = {
-  async list(fechaStr: string, estado?: string, medico?: string, tipo?: string, search?: string, limit = 100, offset = 0, sucursalId?: string, medicoId?: string) {
-    const cacheKey = `turnos:list:${fechaStr}:${estado ?? ''}:${medico ?? ''}:${tipo ?? ''}:${search ?? ''}:${limit}:${offset}:${sucursalId ?? ''}:${medicoId ?? ''}`;
+  async list(fechaStr?: string, estado?: string, medico?: string, tipo?: string, search?: string, limit = 100, offset = 0, sucursalId?: string, medicoId?: string) {
+    const cacheKey = `turnos:list:${fechaStr ?? '*'}:${estado ?? ''}:${medico ?? ''}:${tipo ?? ''}:${search ?? ''}:${limit}:${offset}:${sucursalId ?? ''}:${medicoId ?? ''}`;
     return cache.getOrSet(cacheKey, async () => {
-      const fechaBaseIso = fechaStr + 'T00:00:00.000Z';
-      const fechaFinIso = new Date(new Date(fechaBaseIso).getTime() + 86400000).toISOString();
+      const fechaConditions = fechaStr
+        ? [
+            sql`${turnos.fechaHora} >= ${fechaStr + 'T00:00:00.000Z'}::timestamptz`,
+            sql`${turnos.fechaHora} < ${new Date(new Date(fechaStr + 'T00:00:00.000Z').getTime() + 86400000).toISOString()}::timestamptz`,
+          ]
+        : [];
 
       const whereConditions = and(
-        sql`${turnos.fechaHora} >= ${fechaBaseIso}::timestamptz`,
-        sql`${turnos.fechaHora} < ${fechaFinIso}::timestamptz`,
+        ...fechaConditions,
         sql`${turnos.deletedAt} IS NULL`,
         estado ? eq(turnos.estado, estado) : undefined,
         tipo ? eq(turnos.tipoConsulta, tipo) : undefined,
@@ -28,8 +31,7 @@ export const turnosService = {
       );
 
       const statsWhere = and(
-        sql`${turnos.fechaHora} >= ${fechaBaseIso}::timestamptz`,
-        sql`${turnos.fechaHora} < ${fechaFinIso}::timestamptz`,
+        ...fechaConditions,
         sql`${turnos.deletedAt} IS NULL`,
         sucursalId ? eq(turnos.sucursalId, sucursalId) : undefined,
         medicoId ? eq(turnos.medicoId, medicoId) : undefined,
@@ -50,7 +52,7 @@ export const turnosService = {
       const data = lista.map(t => ({
         id: t.id, hora: t.hora, paciente: `${t.pacienteNombre || ''} ${t.pacienteApellido || ''}`.trim() || 'Paciente',
         tipo: t.motivo || t.tipo || 'Consulta', medico: t.medicoNombre || 'Medico', medicoId: t.medicoId, pacienteId: t.pacienteId,
-        estado: t.estado, fecha: fechaStr,
+        estado: t.estado, fecha: fechaStr || String(t.fecha).split('T')[0],
       }));
 
       return { data, total: Number(totalFiltrados), statsTotal, statsPorEstado, fecha: fechaStr };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -129,6 +129,14 @@ export function TurnosClient({
   } | null>(null);
   const [waitlistLoading, setWaitlistLoading] = useState(false);
 
+  // Confirmación para crear paciente nuevo
+  const [nuevoPacienteConfirm, setNuevoPacienteConfirm] = useState<{
+    nombre: string;
+    apellido: string;
+    sucursalId?: string;
+    onConfirm: () => Promise<void>;
+  } | null>(null);
+
   // Filtros
   const [filtroMedico, setFiltroMedico] = useState('__all__');
   const [filtroEstado, setFiltroEstado] = useState('__all__');
@@ -174,12 +182,16 @@ export function TurnosClient({
 
   // ─── Fetch turnos para una fecha ───────────────────────
 
-  const fetchTurnos = useCallback(async (fecha: Date) => {
+  const fetchTurnos = useCallback(async (fecha: Date, searchTerm?: string) => {
     setLoading(true);
     try {
       const fechaStr = fecha.toISOString().split('T')[0];
       const params = new URLSearchParams();
-      params.set('fecha', fechaStr);
+      if (searchTerm) {
+        params.set('search', searchTerm);
+      } else {
+        params.set('fecha', fechaStr);
+      }
       params.set('limit', '200');
       if (sucursalId) params.set('sucursalId', sucursalId);
 
@@ -198,6 +210,25 @@ export function TurnosClient({
     }
   }, [sucursalId]);
 
+  // ─── Búsqueda server-side con debounce ──────────────────
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    if (searchText.trim()) {
+      searchTimeoutRef.current = setTimeout(() => {
+        fetchTurnos(selectedDate, searchText.trim());
+      }, 400);
+    } else {
+      fetchTurnos(selectedDate);
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [searchText, selectedDate, fetchTurnos]);
+
   // ─── Navegación de fecha ───────────────────────────────
 
   const navigateDate = useCallback(
@@ -205,16 +236,18 @@ export function TurnosClient({
       const newDate = new Date(selectedDate);
       newDate.setDate(newDate.getDate() + delta);
       setSelectedDate(newDate);
-      fetchTurnos(newDate);
+      if (searchText) setSearchText('');
+      else fetchTurnos(newDate);
     },
-    [selectedDate, fetchTurnos],
+    [selectedDate, fetchTurnos, searchText],
   );
 
   const goToToday = useCallback(() => {
     const today = new Date();
     setSelectedDate(today);
-    fetchTurnos(today);
-  }, [fetchTurnos]);
+    if (searchText) setSearchText('');
+    else fetchTurnos(today);
+  }, [fetchTurnos, searchText]);
 
   // ─── Turnos filtrados ──────────────────────────────────
 
@@ -274,29 +307,37 @@ export function TurnosClient({
           pacienteId = pacienteEncontrado.id;
           pacienteNombre = `${pacienteEncontrado.nombre} ${pacienteEncontrado.apellido}`;
         } else {
-          // Crear paciente automáticamente
+          // Preguntar antes de crear paciente nuevo
           const nombreParts = data.paciente.trim().split(/\s+/);
           const nombre = nombreParts[0] || data.paciente.trim();
           const apellido = nombreParts.slice(1).join(' ') || 'Sin apellido';
-          const createRes = await fetch('/api/pacientes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          
+          await new Promise<void>((resolve) => {
+            setNuevoPacienteConfirm({
               nombre,
               apellido,
-              telefono: '0000000000', // Placeholder, el admin puede editarlo después
               sucursalId: sucursalId || undefined,
-            }),
+              onConfirm: async () => {
+                const createRes = await fetch('/api/pacientes', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ nombre, apellido, telefono: '0000000000', sucursalId: sucursalId || undefined }),
+                });
+                if (!createRes.ok) {
+                  const errBody = await createRes.json().catch(() => ({ error: 'Error al crear paciente' }));
+                  toast({ title: 'Error', description: errBody.error || 'No se pudo crear el paciente', variant: 'destructive' });
+                  resolve();
+                  return;
+                }
+                const createdPaciente = await createRes.json();
+                pacienteId = createdPaciente.data?.id || createdPaciente.id;
+                pacienteNombre = `${nombre} ${apellido}`;
+                toast({ title: 'Paciente creado', description: `${pacienteNombre} — recordá completar sus datos después` });
+                resolve();
+              },
+            });
           });
-          if (!createRes.ok) {
-            const errBody = await createRes.json().catch(() => ({ error: 'Error al crear paciente' }));
-            toast({ title: 'Error', description: errBody.error || 'No se pudo crear el paciente', variant: 'destructive' });
-            return;
-          }
-          const createdPaciente = await createRes.json();
-          pacienteId = createdPaciente.data?.id || createdPaciente.id;
-          pacienteNombre = `${nombre} ${apellido}`;
-          toast({ title: 'Paciente creado', description: `${pacienteNombre} — recordá completar sus datos después` });
+          if (!pacienteId) return; // Usuario canceló la creación
         }
       }
 
@@ -1213,6 +1254,46 @@ export function TurnosClient({
               }}
             >
               {waitlistLoading ? 'Agregando...' : 'Sí, agregar a lista de espera'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo confirmar creación de paciente nuevo */}
+      <Dialog
+        open={!!nuevoPacienteConfirm}
+        onOpenChange={(o) => {
+          if (!o) setNuevoPacienteConfirm(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Paciente no encontrado</DialogTitle>
+            <DialogDescription>
+              No se encontró un paciente con ese nombre.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-2">
+            <p className="text-sm">
+              ¿Querés crear un nuevo paciente con los datos <strong>{nuevoPacienteConfirm?.nombre} {nuevoPacienteConfirm?.apellido}</strong>?
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Se va a crear con teléfono placeholder (0000000000). Recordá completar sus datos después desde la ficha del paciente.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setNuevoPacienteConfirm(null)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={async () => {
+                if (nuevoPacienteConfirm) {
+                  await nuevoPacienteConfirm.onConfirm();
+                }
+                setNuevoPacienteConfirm(null);
+              }}
+            >
+              Sí, crear paciente
             </Button>
           </DialogFooter>
         </DialogContent>

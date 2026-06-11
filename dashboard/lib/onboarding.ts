@@ -13,7 +13,7 @@ import {
   usuarios, onboardingProgress,
 } from '@/drizzle/schema';
 import { count, sql, eq, isNull } from 'drizzle-orm';
-import { ONBOARDING_STEPS, type OnboardingState, type AiTipResult } from './onboarding-types';
+import { ONBOARDING_STEPS, FALLBACK_TIPS, type OnboardingState, type AiTipResult } from './onboarding-types';
 import { auth } from '@/lib/auth';
 import { getOrganization, DEFAULT_ORG } from './organization-store';
 
@@ -190,21 +190,6 @@ async function getTenantContext(): Promise<TenantContext> {
   return ctx;
 }
 
-// ─── Tips de fallback (cuando Ollama no está disponible) ───
-
-/**
- * Tips estáticos por paso que se muestran cuando Ollama no responde.
- * Son funcionales y prácticos para que el onboarding siempre sea útil.
- */
-const FALLBACK_TIPS: Record<string, string> = {
-  plan: 'Elige un plan que se ajuste al volumen de pacientes que atiendes. Si estás empezando, el plan Starter es suficiente y después puedes escalar sin perder datos. En la sección de suscripción vas a ver las diferencias entre cada plan.',
-  perfil: 'Completa los datos de tu consultorio: nombre, dirección, teléfono y email. También puedes subir tu logo y elegir los colores para personalizar el sistema. Esto ayuda a que tus pacientes te reconozcan en los mensajes y recordatorios automáticos.',
-  medico: 'Registra al menos un médico para poder asignarle turnos y recetas. Cada profesional tiene su propio perfil con especialidad, horarios y color en el calendario. Si ya tienes un médico registrado, verifica que los datos estén completos.',
-  horarios: 'Los horarios definen cuándo se pueden agendar turnos automáticamente. Te recomiendo empezar con lunes a viernes de 9 a 18 y sábados de 9 a 13. Si tienes varios médicos, cada uno puede tener horarios diferentes.',
-  paciente: 'Carga un paciente de prueba para ver el sistema en funcionamiento. Los datos clave son nombre, teléfono con código de país y obra social si aplica. Después de cargarlo ya le puedes asignar un turno y va a recibir recordatorios automáticos.',
-  notificaciones: 'Las notificaciones te avisan sobre urgencias, recordatorios de turnos y alertas del sistema. Te recomiendo activar las notificaciones push en el navegador y los recordatorios automáticos para pacientes. Este es el último paso, ya casi tienes todo listo.',
-};
-
 // ─── Llamar a Ollama para guías ────────────────────────────
 
 /**
@@ -228,6 +213,18 @@ export async function getAiOnboardingTip(stepId: string, callerUserId?: string):
 
     const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
     const model = process.env.OLLAMA_MODEL || 'gemma3';
+
+    // ── Pre-flight: verificar que Ollama responde rápido ──
+    try {
+      const healthCheck = await fetch(`${ollamaUrl}/api/tags`, {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!healthCheck.ok) throw new Error(`Health check responded ${healthCheck.status}`);
+    } catch (healthErr) {
+      safeWarn('[Onboarding] Ollama no responde al health check, usando fallback:',
+        healthErr instanceof Error ? healthErr.message : healthErr);
+      return { tip: fallbackTip, success: false };
+    }
 
     safeLog(`[Onboarding] Llamando a Ollama: ${ollamaUrl}/v1/chat/completions con modelo ${model}`);
 
@@ -261,7 +258,7 @@ ANTI-JAILBREAK:
         temperature: 0.7,
         max_tokens: 250,
       }),
-      signal: AbortSignal.timeout(60000),
+      signal: AbortSignal.timeout(120000),
     });
 
     if (!res.ok) {

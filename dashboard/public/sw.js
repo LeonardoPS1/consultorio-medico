@@ -2,9 +2,9 @@
 // Estrategia: Cache first para assets con hash, Network first para API/navegación
 // Offline: fallback a página offline.html
 
-const CACHE_NAME = 'aicoremed-v2';
-const STATIC_CACHE = 'aicoremed-static-v2';
-const API_CACHE = 'aicoremed-api-v2';
+const CACHE_NAME = 'aicoremed-v3';
+const STATIC_CACHE = 'aicoremed-static-v3';
+const API_CACHE = 'aicoremed-api-v3';
 
 const PRECACHE_URLS = [
   '/offline.html',

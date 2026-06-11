@@ -11,8 +11,11 @@ import {
   Stethoscope, Clock, UserPlus, Bell,
   Sparkles, RefreshCw, RotateCcw, SkipForward, Building2,
 } from 'lucide-react';
-import { ONBOARDING_STEPS } from '@/lib/onboarding-types';
+import { ONBOARDING_STEPS, FALLBACK_TIPS } from '@/lib/onboarding-types';
 import { useToast } from '@/components/ui/use-toast';
+
+// ─── Clave para localStorage ──────────────────────────────
+const LS_KEY = 'aicoremed_onboarding_completed';
 
 // ─── Props ──────────────────────────────────────────────────
 
@@ -38,21 +41,59 @@ const ICON_MAP: Record<string, React.ElementType> = {
 export function OnboardingClient({ initialCompleted, isComplete, isForceRestart }: OnboardingClientProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const [completed, setCompleted] = useState<string[]>(initialCompleted);
+
+  // ── Inicializar: server state + localStorage backup ─────
+  const [completed, setCompleted] = useState<string[]>(() => {
+    if (isForceRestart) return [];
+    // Merge server state (initialCompleted) con localStorage
+    try {
+      const stored = localStorage.getItem(LS_KEY);
+      if (stored) {
+        const parsed: string[] = JSON.parse(stored);
+        // Unir server + local, evitar duplicados
+        const merged = new Set([...initialCompleted, ...parsed]);
+        return Array.from(merged);
+      }
+    } catch { /* ignorar */ }
+    return initialCompleted;
+  });
+
   const [activeStep, setActiveStep] = useState<string | null>(null);
-  const [tips, setTips] = useState<Record<string, string>>({});
-const [loadingTips, setLoadingTips] = useState<Set<string>>(new Set());
-const [failedTips, setFailedTips] = useState<Set<string>>(new Set());
-const [fallbackTips, setFallbackTips] = useState<Set<string>>(new Set());
+
+  // ── Tips: pre-cargar fallback + actualizar con IA ──────
+  const [tips, setTips] = useState<Record<string, string>>(() => {
+    // Inicializar con fallback tips para todos los pasos
+    // Así el usuario ve contenido útil inmediatamente
+    return Object.fromEntries(
+      ONBOARDING_STEPS.map((s) => [s.id, ''])
+    );
+  });
+  const [loadingTips, setLoadingTips] = useState<Set<string>>(new Set());
+  const [failedTips, setFailedTips] = useState<Set<string>>(new Set());
+  const [fallbackTips, setFallbackTips] = useState<Set<string>>(new Set());
+
+  // ── Persistir a localStorage ─────────────────────────────
+
+  const saveToLocalStorage = (steps: string[]) => {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(steps));
+    } catch { /* ignorar */ }
+  };
 
   // ── Cargar tip IA ───────────────────────────────────────
 
   const loadTip = async (stepId: string) => {
     if (loadingTips.has(stepId)) return;
 
+    // Mostrar fallback INMEDIATAMENTE mientras se carga la IA
+    const fallbackContent = FALLBACK_TIPS[stepId];
+    if (fallbackContent) {
+      setTips((prev) => ({ ...prev, [stepId]: fallbackContent }));
+      setFallbackTips((prev) => new Set(prev).add(stepId));
+    }
+
     setLoadingTips((prev) => new Set(prev).add(stepId));
     setFailedTips((prev) => { const next = new Set(prev); next.delete(stepId); return next; });
-    setFallbackTips((prev) => { const next = new Set(prev); next.delete(stepId); return next; });
     try {
       const res = await fetch('/api/onboarding', {
         method: 'POST',
@@ -61,16 +102,18 @@ const [fallbackTips, setFallbackTips] = useState<Set<string>>(new Set());
       });
       const data = await res.json();
       if (data.tip) {
+        // Si la IA respondió con un tip real y diferente al fallback, usarlo
         setTips((prev) => ({ ...prev, [stepId]: data.tip }));
-        // Si success es false, es un tip de fallback (IA offline)
-        if (data.success === false) {
-          setFallbackTips((prev) => new Set(prev).add(stepId));
+        if (data.success === true) {
+          // IA respondió correctamente → remover marca de fallback
+          setFallbackTips((prev) => { const next = new Set(prev); next.delete(stepId); return next; });
         }
+        // Si success es false, mantener fallback (ya seteado arriba)
       } else {
-        setFailedTips((prev) => new Set(prev).add(stepId));
+        // Mantener el fallback que ya mostramos
       }
     } catch {
-      setFailedTips((prev) => new Set(prev).add(stepId));
+      // Mantener el fallback que ya mostramos
     } finally {
       setLoadingTips((prev) => {
         const next = new Set(prev);
@@ -84,8 +127,19 @@ const [fallbackTips, setFallbackTips] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (isComplete) return;
-    if (activeStep && !tips[activeStep]) {
-      loadTip(activeStep);
+    if (activeStep) {
+      const currentTip = tips[activeStep];
+      // Mostrar fallback inmediato si no hay tip todavía
+      if (!currentTip) {
+        // Setear fallback instantly sin esperar fetch
+        const fb = FALLBACK_TIPS[activeStep];
+        if (fb) {
+          setTips((prev) => ({ ...prev, [activeStep]: fb }));
+          setFallbackTips((prev) => new Set(prev).add(activeStep));
+        }
+        // Cargar IA en background
+        loadTip(activeStep);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStep, isComplete]);
@@ -120,12 +174,27 @@ const [fallbackTips, setFallbackTips] = useState<Set<string>>(new Set());
    * o la respuesta sea inconsistente.
    */
   const marcarCompletado = async (stepId: string) => {
-    // Siempre agregar localmente primero (nunca perder el paso)
+    // ── 1. Siempre agregar localmente primero ──
+    let updatedSteps: string[] = [];
     setCompleted((prev) => {
       if (prev.includes(stepId)) return prev;
-      return [...prev, stepId];
+      updatedSteps = [...prev, stepId];
+      return updatedSteps;
     });
 
+    // ── 2. Persistir a localStorage inmediatamente ──
+    if (updatedSteps.length > 0) {
+      saveToLocalStorage(updatedSteps);
+    } else {
+      // Fallback: leer el estado actual si setCompleted no dio resultado
+      setCompleted((prev) => {
+        saveToLocalStorage(prev);
+        return prev;
+      });
+    }
+
+    // ── 3. Intentar persistir en servidor ──
+    let serverPersisted = false;
     try {
       const res = await fetch('/api/onboarding', {
         method: 'PUT',
@@ -134,38 +203,32 @@ const [fallbackTips, setFallbackTips] = useState<Set<string>>(new Set());
       });
 
       if (res.ok) {
+        serverPersisted = true;
         const data = await res.json();
         if (data.state?.completedSteps) {
-          // Usar el estado del servidor como fuente de verdad,
-          // pero asegurar que el paso actual esté incluido
-          // (previene regresión si el servidor no lo incluye)
           setCompleted((prev) => {
             const serverSteps = data.state.completedSteps as string[];
             const merged = new Set([...serverSteps, stepId, ...prev]);
-            return Array.from(merged);
+            const mergedArr = Array.from(merged);
+            // Actualizar localStorage con el merge final
+            saveToLocalStorage(mergedArr);
+            return mergedArr;
           });
         }
-        // Si data.success es true pero no tiene state, mantener el local
-      } else {
-        // El servidor rechazó la persistencia
-        toast({
-          title: 'Error al guardar',
-          description: 'Marcamos el paso como listo, pero no se pudo guardar en el servidor. Si recargas la página puede que tengas que marcarlo de nuevo.',
-          variant: 'destructive',
-        });
-        // El paso ya está en el estado local (primer setCompleted)
       }
     } catch {
-      // Error de red / servidor caído
-      toast({
-        title: 'Error de conexión',
-        description: 'Marcamos el paso como listo, pero no se pudo contactar al servidor. El progreso está guardado localmente por ahora.',
-        variant: 'destructive',
-      });
-      // El paso ya está en el estado local (primer setCompleted)
+      // Error de red - ya tenemos localStorage backup
     }
 
-    // Avanzar al siguiente paso (en cualquier escenario)
+    if (!serverPersisted) {
+      toast({
+        title: 'Progreso guardado localmente',
+        description: 'No se pudo conectar con el servidor, pero tu progreso está guardado en este navegador.',
+        variant: 'default',
+      });
+    }
+
+    // ── 4. Avanzar al siguiente paso ──
     const currentIdx = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
     const nextStep = ONBOARDING_STEPS[currentIdx + 1];
     if (nextStep) {
@@ -188,6 +251,8 @@ const [fallbackTips, setFallbackTips] = useState<Set<string>>(new Set());
   // ── Reiniciar ────────────────────────────────────────────
 
   const handleReiniciar = () => {
+    // Limpiar localStorage para que el reinicio sea completo
+    try { localStorage.removeItem(LS_KEY); } catch { /* ignorar */ }
     router.push('/dashboard/onboarding?reiniciar=true');
   };
 

@@ -22,7 +22,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const sessionRol = (session?.user as any)?.role;
 
   const { searchParams } = new URL(request.url);
-  const fechaStr = searchParams.get('fecha') || new Date().toISOString().split('T')[0];
+  const fechaStr = searchParams.get('fecha') || undefined;
   const estado = searchParams.get('estado') || undefined;
   const medico = searchParams.get('medico') || undefined;
   const tipo = searchParams.get('tipo') || undefined;
