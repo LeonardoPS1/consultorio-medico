@@ -26,7 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { Save, Loader2, Settings, Brain, Link, Key, Shield, Lock } from 'lucide-react';
+import { Save, Loader2, Settings, Brain, Link, Key, Shield, Lock, Users } from 'lucide-react';
 import IntegracionesDashboard from '@/components/configuracion/integraciones-dashboard';
 import CredencialesTab from '@/components/configuracion/credenciales-tab';
 import ApiKeysTab from '@/components/configuracion/api-keys-tab';
@@ -155,6 +155,72 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
 
   const showAll = !section;
 
+  // ─── User-specific feature overrides ────────────────────────────
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [userOverrides, setUserOverrides] = useState<Record<string, boolean>>({});
+  const [loadingUserOverrides, setLoadingUserOverrides] = useState(false);
+
+  // Cargar overrides de usuario cuando se selecciona un usuario
+  useEffect(() => {
+    if (!selectedUserId) {
+      setUserOverrides({});
+      return;
+    }
+
+    setLoadingUserOverrides(true);
+    fetch(`/api/admin/users/${selectedUserId}/feature-overrides`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.overrides) {
+          const overridesMap: Record<string, boolean> = {};
+          data.overrides.forEach((override: { featureId: string; enabled: boolean }) => {
+            overridesMap[override.featureId] = override.enabled;
+          });
+          setUserOverrides(overridesMap);
+        } else {
+          setUserOverrides({});
+        }
+      })
+      .catch(() => {
+        setUserOverrides({});
+      })
+      .finally(() => {
+        setLoadingUserOverrides(false);
+      });
+  }, [selectedUserId]);
+
+  const handleUserOverrideToggle = (featureId: string, checked: boolean) => {
+    setUserOverrides(prev => ({ ...prev, [featureId]: checked }));
+  };
+
+  const handleSaveUserOverrides = async () => {
+    if (!selectedUserId) return;
+
+    setSaving(true);
+    try {
+      const overrides = Object.entries(userOverrides)
+        .filter(([_, enabled]) => enabled)
+        .map(([featureId]) => ({ featureId }));
+
+      const res = await fetch(`/api/admin/users/${selectedUserId}/feature-overrides`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ overrides }),
+      });
+
+      if (res.ok) {
+        toast({ title: 'Overrides de usuario actualizados', description: 'Los cambios ya están activos para este usuario.' });
+        await refreshFeatureFlags();
+      } else {
+        toast({ title: 'Error al guardar overrides de usuario', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Error de conexión', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* ─── Feature Toggles ───────────────────────────────── */}
@@ -232,6 +298,74 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
                 </Button>
               </div>
             </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ─── User-specific Feature Overrides ───────────────────────────────── */}
+      {(showAll || section === 'toggles') && <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Overrides de Usuario
+          </CardTitle>
+          <CardDescription>
+            Asignar features específicos a usuarios individuales (sobrescribe el plan del usuario)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-4 items-end">
+            <div className="flex-1">
+              <Label htmlFor="user-select">Seleccionar Usuario</Label>
+              <Input
+                id="user-select"
+                placeholder="ID del usuario..."
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+              />
+            </div>
+            <Button 
+              onClick={handleSaveUserOverrides} 
+              disabled={saving || !selectedUserId || loadingUserOverrides}
+              className="mb-0.5"
+            >
+              {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+              Guardar Overrides
+            </Button>
+          </div>
+
+          {loadingUserOverrides ? (
+            <div className="flex items-center gap-2 py-8 justify-center">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="text-muted-foreground">Cargando overrides del usuario...</span>
+            </div>
+          ) : selectedUserId ? (
+            <div className="space-y-3">
+              <div className="text-sm text-muted-foreground">
+                Editando overrides para usuario: <Badge variant="secondary">{selectedUserId}</Badge>
+              </div>
+              <div className="grid gap-2 max-h-96 overflow-y-auto">
+                {TOGGLEABLE_FEATURES.map(f => (
+                  <ToggleRow
+                    key={f.id}
+                    label={f.label}
+                    description={f.description}
+                    plan={getFeatureRequiredPlan(f.id)}
+                    checked={userOverrides[f.id] ?? false}
+                    onCheckedChange={(c) => handleUserOverrideToggle(f.id, c)}
+                    compact
+                  />
+                ))}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Nota: Los overrides de usuario tienen máxima prioridad. Si una feature está habilitada aquí, el usuario puede usarla aunque su plan no la incluya.
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
+              <p>Selecciona un usuario para editar sus overrides de features</p>
+            </div>
           )}
         </CardContent>
       </Card>}
