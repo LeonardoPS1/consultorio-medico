@@ -244,10 +244,20 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
 
   // ── Reiniciar ────────────────────────────────────────────
 
-  const handleReiniciar = () => {
+  const handleReiniciar = async () => {
     // Limpiar localStorage para que el reinicio sea completo
     try { localStorage.removeItem(LS_KEY); } catch { /* ignorar */ }
-    router.push('/dashboard/onboarding?reiniciar=true');
+    // Limpiar progreso en servidor para que al volver más tarde no
+    // aparezcan los pasos viejos como completados
+    try {
+      await fetch('/api/onboarding', { method: 'DELETE' });
+    } catch { /* si falla, igual recargamos */ }
+    // Usar window.location.href en lugar de router.push porque:
+    // router.push a la misma ruta NO desmonta el componente, por lo que
+    // useState no se reinicia y el estado viejo (6 pasos) persiste,
+    // mostrando la pantalla de éxito prematuramente.
+    // window.location.href forza un hard reload que monta todo fresco.
+    window.location.href = '/dashboard/onboarding?reiniciar=true';
   };
 
   // ── Pantalla de éxito (todo completado) ─────────────────

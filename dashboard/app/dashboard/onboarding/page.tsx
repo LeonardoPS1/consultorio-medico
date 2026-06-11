@@ -52,6 +52,7 @@ export default async function OnboardingPage({
       </div>
 
       <OnboardingClient
+        key={isForceRestart ? 'reiniciar' : 'onboarding'}
         initialCompleted={isForceRestart ? [] : state.completedSteps}
         isComplete={showComplete}
         isForceRestart={isForceRestart}

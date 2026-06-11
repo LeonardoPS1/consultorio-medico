@@ -16,6 +16,7 @@ import { db } from '@/lib/db';
 import { onboardingProgress } from '@/drizzle/schema';
 import { getOnboardingState, getAiOnboardingTip } from '@/lib/onboarding';
 import { safeWarn } from '@/lib/logger';
+import { eq } from 'drizzle-orm';
 
 export const GET = apiHandler(async () => {
   const session = await requireAuth();
@@ -31,6 +32,19 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
   const tip = await getAiOnboardingTip(stepId, session.user.id!);
   return ok(tip);
+});
+
+/**
+ * DELETE /api/onboarding — Limpia el progreso del usuario para un reinicio completo.
+ * Se llama desde handleReiniciar() en el cliente antes de recargar la página.
+ */
+export const DELETE = apiHandler(async () => {
+  const session = await requireAuth();
+
+  await db.delete(onboardingProgress)
+    .where(eq(onboardingProgress.usuarioId, session.user.id!));
+
+  return ok({ success: true });
 });
 
 /**
