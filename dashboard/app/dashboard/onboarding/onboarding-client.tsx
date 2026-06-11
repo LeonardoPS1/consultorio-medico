@@ -45,12 +45,18 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   // ── Inicializar: server state + localStorage backup ─────
   const [completed, setCompleted] = useState<string[]>(() => {
     if (isForceRestart) return [];
-    // Merge server state (initialCompleted) con localStorage
+    // Si el servidor dice que NO está completo, usar SOLO server state.
+    // Esto evita que localStorage con datos viejos de una sesión anterior
+    // haga creer que todo está completado prematuramente.
+    if (!isComplete) {
+      return [...initialCompleted];
+    }
+    // Si el servidor dice que está completo, mergear con localStorage
+    // como backup (por si hubo pasos hechos offline).
     try {
       const stored = localStorage.getItem(LS_KEY);
       if (stored) {
         const parsed: string[] = JSON.parse(stored);
-        // Unir server + local, evitar duplicados
         const merged = new Set([...initialCompleted, ...parsed]);
         return Array.from(merged);
       }
@@ -59,6 +65,11 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   });
 
   const [activeStep, setActiveStep] = useState<string | null>(null);
+
+  // ── Flag de interacción manual en esta sesión ────────────
+  // Evita que allLocallyDone (calculado de completed) muestre la
+  // pantalla de éxito si el usuario nunca tocó un botón en esta sesión.
+  const [hasManualInteraction, setHasManualInteraction] = useState(false);
 
   // ── Tips: pre-cargar fallback + actualizar con IA ──────
   const [tips, setTips] = useState<Record<string, string>>(() => {
@@ -160,6 +171,13 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   const allLocallyDone = completed.length >= ONBOARDING_STEPS.length;
   const localProgress = Math.round((completed.length / ONBOARDING_STEPS.length) * 100);
 
+  // ── ¿Mostrar pantalla de éxito? ──────────────────────────
+  // Requiere que el servidor confirme (isComplete) O que el usuario
+  // haya marcado todos los pasos manualmente en esta sesión.
+  // Nunca se muestra si el usuario no interactuó (evita el bug de
+  // "marca todo concluido sin haberlo hecho").
+  const showSuccess = isComplete || (allLocallyDone && hasManualInteraction);
+
   // ── Marcar paso como completado (persiste en servidor) ──
 
   /**
@@ -174,6 +192,9 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
    * o la respuesta sea inconsistente.
    */
   const marcarCompletado = async (stepId: string) => {
+    // Marcar interacción manual en esta sesión
+    setHasManualInteraction(true);
+
     // ── 1. Siempre agregar localmente primero ──
     let updatedSteps: string[] = [];
     setCompleted((prev) => {
@@ -262,7 +283,7 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
 
   // ── Pantalla de éxito (todo completado) ─────────────────
 
-  if (isComplete || allLocallyDone) {
+  if (showSuccess) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4">
         {/* Icono animado */}
@@ -391,6 +412,11 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
             : `Hacé clic en un paso para abrir la guía IA y configurarlo.`}
         </p>
         <div className="flex items-center gap-2">
+          {/* Continuar más tarde — siempre visible */}
+          <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard')}>
+            <SkipForward className="h-3.5 w-3.5 mr-1.5" />
+            Continuar más tarde
+          </Button>
           {isForceRestart ? (
             <Button variant="outline" size="sm" asChild>
               <Link href="/dashboard/onboarding">
@@ -612,6 +638,10 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
           <span>{completed.length}/{ONBOARDING_STEPS.length} completados</span>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard')} className="text-muted-foreground">
+            <SkipForward className="h-3 w-3 mr-1" />
+            Continuar más tarde
+          </Button>
           {isForceRestart && (
             <Button variant="ghost" size="sm" asChild>
               <Link href="/dashboard/onboarding">

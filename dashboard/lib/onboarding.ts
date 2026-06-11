@@ -110,9 +110,10 @@ export async function getOnboardingState(callerUserId?: string): Promise<Onboard
   }
 
   // ─── 2. Combinar con progreso manual (onboarding_progress) ──
+  let manualSteps: { stepId: string }[] = [];
   try {
     if (userId) {
-      const manualSteps = await db
+      manualSteps = await db
         .select({ stepId: onboardingProgress.stepId })
         .from(onboardingProgress)
         .where(eq(onboardingProgress.usuarioId, userId));
@@ -128,7 +129,22 @@ export async function getOnboardingState(callerUserId?: string): Promise<Onboard
   }
 
   const progress = Math.round((completed.length / ONBOARDING_STEPS.length) * 100);
-  const isComplete = completed.length >= ONBOARDING_STEPS.length;
+
+  // ─── isComplete: requiere interacción MANUAL con el asistente ──
+  //
+  // Los chequeos reales de DB (plan, perfil, médicos, horarios,
+  // pacientes, notificaciones) se usan para mostrar visualmente
+  // qué pasos ya están configurados, pero NO deben determinar que
+  // el onboarding esté completo si el usuario nunca interactuó
+  // con el asistente.
+  //
+  // Si el usuario ya tenía datos cargados antes de abrir el onboarding
+  // (ej: médicos, horarios) y nunca tocó el asistente, manualSteps
+  // está vacío → isComplete = false → se muestra el asistente.
+  //
+  // Si el usuario marcó al menos 1 paso manualmente y todos los pasos
+  // están cubiertos (por chequeos reales o manual), está completo.
+  const isComplete = manualSteps.length > 0 && completed.length >= ONBOARDING_STEPS.length;
   const firstIncomplete = ONBOARDING_STEPS.find((s) => !completed.includes(s.id));
 
   return {
