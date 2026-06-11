@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,8 +14,9 @@ import {
 import { ONBOARDING_STEPS, FALLBACK_TIPS } from '@/lib/onboarding-types';
 import { useToast } from '@/components/ui/use-toast';
 
-// ─── Clave para localStorage ──────────────────────────────
+// ─── Claves para localStorage ──────────────────────────────
 const LS_KEY = 'aicoremed_onboarding_completed';
+const LS_ACTIVE_STEP_KEY = 'aicoremed_onboarding_active_step';
 
 // ─── Props ──────────────────────────────────────────────────
 
@@ -72,7 +73,79 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
     return base;
   });
 
-  const [activeStep, setActiveStep] = useState<string | null>(null);
+  // ── Inicializar activeStep: restaurar de localStorage o abrir primer paso incompleto ──
+  //
+  // Estrategia:
+  //  1. Si es forceRestart → null (no abrir nada)
+  //  2. Si hay un activeStep guardado en localStorage y el paso todavía
+  //     no está completado → restaurarlo (el usuario vuelve donde estaba)
+  //  3. Si no hay activeStep guardado → abrir el primer paso incompleto
+  //     automáticamente para que el usuario vea por dónde seguir
+  //  4. Si todos están completos → null (se mostrará la pantalla de éxito)
+  //
+  const [activeStep, setActiveStep] = useState<string | null>(() => {
+    if (isForceRestart) return null;
+
+    // Calcular el set completo de completed (server + localStorage)
+    const baseSteps = [...initialCompleted];
+    try {
+      const stored = localStorage.getItem(LS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          for (const step of parsed) {
+            if (typeof step === 'string' && !baseSteps.includes(step)) {
+              baseSteps.push(step);
+            }
+          }
+        }
+      }
+    } catch { /* ignorar */ }
+
+    // Si todos los pasos están completos, no abrir nada (pantalla de éxito)
+    if (baseSteps.length >= ONBOARDING_STEPS.length) return null;
+
+    // 1. Intentar restaurar activeStep guardado
+    try {
+      const storedActive = localStorage.getItem(LS_ACTIVE_STEP_KEY);
+      if (storedActive) {
+        const parsed = JSON.parse(storedActive);
+        if (typeof parsed === 'string') {
+          const stepExists = ONBOARDING_STEPS.some(s => s.id === parsed);
+          const stepCompleted = baseSteps.includes(parsed);
+          if (stepExists && !stepCompleted) {
+            return parsed;
+          }
+        }
+      }
+    } catch { /* ignorar */ }
+
+    // 2. Abrir el primer paso incompleto (que no esté pendiente)
+    const firstIncomplete = ONBOARDING_STEPS.find(s => !baseSteps.includes(s.id));
+    return firstIncomplete?.id ?? null;
+  });
+
+  // ── Helper: persistir activeStep ─────────────────────────
+  const persistActiveStep = useCallback((stepId: string | null) => {
+    if (isForceRestart) return;
+    try {
+      if (stepId) {
+        localStorage.setItem(LS_ACTIVE_STEP_KEY, JSON.stringify(stepId));
+      } else {
+        localStorage.removeItem(LS_ACTIVE_STEP_KEY);
+      }
+    } catch { /* ignorar */ }
+  }, [isForceRestart]);
+
+  // Al montar, si hay progress guardado pero activeStep se restauró como null,
+  // persistirlo para que al recargar se mantenga
+  useEffect(() => {
+    if (activeStep) {
+      persistActiveStep(activeStep);
+    }
+  // Solo al montar
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Flag de interacción manual en esta sesión ────────────
   // Evita que allLocallyDone (calculado de completed) muestre la
@@ -264,9 +337,11 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
     });
     if (nextIdx !== -1) {
       setActiveStep(ONBOARDING_STEPS[nextIdx].id);
+      persistActiveStep(ONBOARDING_STEPS[nextIdx].id);
     } else {
       // No hay más steps accesibles
       setActiveStep(null);
+      persistActiveStep(null);
     }
   };
 
@@ -282,11 +357,13 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
       const candidate = ONBOARDING_STEPS[i];
       if (!isStepPending(candidate.id)) {
         setActiveStep(candidate.id);
+        persistActiveStep(candidate.id);
         return;
       }
     }
     // No hay más steps accesibles → colapsar
     setActiveStep(null);
+    persistActiveStep(null);
   };
 
   // ── Reiniciar ────────────────────────────────────────────
@@ -294,6 +371,7 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   const handleReiniciar = async () => {
     // Limpiar localStorage para que el reinicio sea completo
     try { localStorage.removeItem(LS_KEY); } catch { /* ignorar */ }
+    try { localStorage.removeItem(LS_ACTIVE_STEP_KEY); } catch { /* ignorar */ }
     // Limpiar progreso en servidor para que al volver más tarde no
     // aparezcan los pasos viejos como completados
     try {
@@ -308,6 +386,13 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   };
 
   // ── Pantalla de éxito (todo completado) ─────────────────
+
+  // Limpiar activeStep del localStorage cuando se muestra la pantalla de éxito
+  useEffect(() => {
+    if (showSuccess) {
+      try { localStorage.removeItem(LS_ACTIVE_STEP_KEY); } catch { /* ignorar */ }
+    }
+  }, [showSuccess]);
 
   if (showSuccess) {
     return (
@@ -388,16 +473,17 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
             const active = isStepActive(step.id);
             const stepNumber = idx + 1;
             return (
-              <button
-                key={step.id}
-                onClick={() => {
-                  if (done || isStepPending(step.id)) return;
-                  setActiveStep(active ? null : step.id);
-                }}
-                disabled={isStepPending(step.id) && !done}
-                className="flex flex-col items-center gap-1 group"
-                title={step.title}
-              >
+                <button
+                  key={step.id}
+                  onClick={() => {
+                    if (done || isStepPending(step.id)) return;
+                    setActiveStep(active ? null : step.id);
+                    persistActiveStep(active ? null : step.id);
+                  }}
+                  disabled={isStepPending(step.id) && !done}
+                  className="flex flex-col items-center gap-1 group"
+                  title={step.title}
+                >
                 <div
                   className={`
                     flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium
@@ -482,14 +568,15 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
             }`}
           >
             {/* ── Header (clickeable) ──────────────────────── */}
-            <button
-              className="w-full text-left"
-              onClick={() => {
-                if (done || pending) return;
-                setActiveStep(active ? null : step.id);
-              }}
-              disabled={done || pending}
-            >
+              <button
+                className="w-full text-left"
+                onClick={() => {
+                  if (done || pending) return;
+                  setActiveStep(active ? null : step.id);
+                  persistActiveStep(active ? null : step.id);
+                }}
+                disabled={done || pending}
+              >
               <CardHeader className={`p-4 transition-colors ${active && !done ? 'pb-3' : 'pb-4'}`}>
                 <div className="flex items-center gap-3">
                   {/* Icon */}

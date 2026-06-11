@@ -104,6 +104,25 @@ export function Sidebar() {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [mobileOpen]);
 
+  // ── Badge de progreso onboarding ──────────────────────────
+  const [onboardingPending, setOnboardingPending] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('aicoremed_onboarding_completed');
+      const activeStored = localStorage.getItem('aicoremed_onboarding_active_step');
+      if (stored && activeStored) {
+        const completed: string[] = JSON.parse(stored);
+        if (Array.isArray(completed)) {
+          // Mostrar "Continuar" si hay al menos 1 paso completado pero no todos
+          setOnboardingPending(completed.length > 0 && completed.length < 6);
+        }
+      }
+    } catch {
+      setOnboardingPending(false);
+    }
+  }, []);
+
   // Prevent body scroll on mobile when sidebar is open
   useEffect(() => {
     if (mobileOpen) {
@@ -246,6 +265,11 @@ export function Sidebar() {
                       {item.badge && (
                         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
                           {item.badge}
+                        </span>
+                      )}
+                      {item.title === 'Asistente IA' && onboardingPending && (
+                        <span className="flex h-5 items-center rounded-full bg-amber-500/15 text-amber-500 dark:text-amber-400 text-[9px] font-semibold px-1.5 uppercase tracking-wider shrink-0 ml-1">
+                          Continuar
                         </span>
                       )}
                     </>
