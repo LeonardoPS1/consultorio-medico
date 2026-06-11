@@ -1,10 +1,11 @@
-// AiCoreMed — Service Worker v2
+// AiCoreMed — Service Worker v4
+// - v4: Fix POST/PUT/DELETE no se cachean (request.body consumido causaba 503)
 // Estrategia: Cache first para assets con hash, Network first para API/navegación
 // Offline: fallback a página offline.html
 
-const CACHE_NAME = 'aicoremed-v3';
-const STATIC_CACHE = 'aicoremed-static-v3';
-const API_CACHE = 'aicoremed-api-v3';
+const CACHE_NAME = 'aicoremed-v4';
+const STATIC_CACHE = 'aicoremed-static-v4';
+const API_CACHE = 'aicoremed-api-v4';
 
 const PRECACHE_URLS = [
   '/offline.html',
@@ -128,24 +129,30 @@ async function cacheFirst(request) {
 async function networkFirst(request) {
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    // Solo cachear GET (idempotente). POST/PUT/DELETE mutan datos,
+    // y su body se consume al hacer fetch, causando error en cache.put.
+    if (response.ok && request.method === 'GET') {
       const cache = await caches.open(API_CACHE);
-      await cache.put(request, response.clone());
+      const cacheKey = request.clone(); // Clonar para no reusar body consumido
+      await cache.put(cacheKey, response.clone());
     }
     return response;
   } catch {
-    try {
-      const cached = await caches.match(request);
-      if (cached) return cached;
-    } catch {
-      // Si falla cache.match, seguir
-    }
-    if (request.mode === 'navigate') {
+    // Solo devolver cache para GET, no para POST/PUT/DELETE
+    if (request.method === 'GET') {
       try {
-        const offline = await caches.match('/offline.html');
-        if (offline) return offline;
+        const cached = await caches.match(request);
+        if (cached) return cached;
       } catch {
-        // Si falla, seguir
+        // Si falla cache.match, seguir
+      }
+      if (request.mode === 'navigate') {
+        try {
+          const offline = await caches.match('/offline.html');
+          if (offline) return offline;
+        } catch {
+          // Si falla, seguir
+        }
       }
     }
     return new Response('Sin conexión', { status: 503, headers: { 'Content-Type': 'text/plain' } });
