@@ -116,6 +116,11 @@ export function TurnosClient({
   const [turnos, setTurnos] = useState<TurnoData[]>(initialTurnos);
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // Waitlist reassignment after cancel
+  const [showWaitlistReassign, setShowWaitlistReassign] = useState<{ turnoId: string; medicoId: string; pacienteNombre: string } | null>(null);
+  const [waitlistCandidates, setWaitlistCandidates] = useState<any[]>([]);
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
 
   // Propuesta de lista de espera cuando hay conflicto de horario
   const [waitlistProposal, setWaitlistProposal] = useState<{
@@ -1166,8 +1171,32 @@ export function TurnosClient({
                     await fetch(`/api/turnos/${showCancelDialog}`, {
                       method: 'PATCH',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ estado: 'cancelada', motivoCancelacion: motivo }),
+                      body: JSON.stringify({ estado: 'cancelada', motivoCancelacion: motivo, skipWaitlist: true }),
                     });
+
+                    // Después de cancelar, verificar si hay pacientes en lista de espera para este médico
+                    const turno = turnos.find((t) => t.id === showCancelDialog);
+                    if (turno?.medicoId) {
+                      setWaitlistLoading(true);
+                      try {
+                        const res = await fetch(`/api/waitlist/candidatos?medicoId=${turno.medicoId}`);
+                        if (res.ok) {
+                          const data = await res.json();
+                          if (data.data && data.data.length > 0) {
+                            setWaitlistCandidates(data.data);
+                            setShowWaitlistReassign({
+                              turnoId: showCancelDialog,
+                              medicoId: turno.medicoId,
+                              pacienteNombre: turno.paciente,
+                            });
+                          }
+                        }
+                      } catch {
+                        // Si falla la verificación, continuar sin reasignación
+                      } finally {
+                        setWaitlistLoading(false);
+                      }
+                    }
                   } catch {
                     toast({
                       title: 'Error',
@@ -1179,6 +1208,83 @@ export function TurnosClient({
               }}
             >
               Confirmar cancelación
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo reasignación desde lista de espera */}
+      <Dialog
+        open={!!showWaitlistReassign}
+        onOpenChange={(o) => {
+          if (!o) {
+            setShowWaitlistReassign(null);
+            setWaitlistCandidates([]);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Hay pacientes en lista de espera</DialogTitle>
+            <DialogDescription>
+              El turno quedó libre. ¿Querés asignarlo a un paciente en lista de espera?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            <p className="text-sm">
+              Paciente: <strong>{showWaitlistReassign?.pacienteNombre}</strong> quedó libre.
+            </p>
+            {waitlistLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                <span className="ml-2 text-sm text-muted-foreground">Buscando candidatos...</span>
+              </div>
+            ) : waitlistCandidates.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Candidatos en lista de espera:</p>
+                {waitlistCandidates.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => {
+                      // TODO: Implementar reasignación
+                      // Por ahora, solo cerrar el diálogo
+                      setShowWaitlistReassign(null);
+                      setWaitlistCandidates([]);
+                    }}
+                  >
+                    <div>
+                      <p className="font-medium text-sm">{c.paciente?.nombre} {c.paciente?.apellido}</p>
+                      <p className="text-xs text-muted-foreground">En lista desde: {new Date(c.fechaInscripcion).toLocaleDateString()}</p>
+                    </div>
+                    <Button size="sm" variant="outline">
+                      Asignar
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">
+                  No hay pacientes en lista de espera para este médico.
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => {
+              setShowWaitlistReassign(null);
+              setWaitlistCandidates([]);
+            }}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                setShowWaitlistReassign(null);
+                setWaitlistCandidates([]);
+              }}
+            >
+              Cerrar
             </Button>
           </DialogFooter>
         </DialogContent>

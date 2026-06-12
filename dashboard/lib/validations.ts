@@ -94,6 +94,7 @@ export const updateTurnoSchema = z.object({
   pacienteId: z.string().uuid().optional(),
   medicoId: z.string().uuid().optional(),
   sucursalId: z.string().uuid().optional().nullable(),
+  skipWaitlist: z.boolean().optional(),
 });
 
 export const createRecetaSchema = z.object({

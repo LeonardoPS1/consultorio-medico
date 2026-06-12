@@ -161,7 +161,7 @@ export const turnosService = {
       return nuevo;
   },
 
-  async update(id: string, input: UpdateTurno) {
+  async update(id: string, input: UpdateTurno & { skipWaitlist?: boolean }) {
     const [existe] = await db.select().from(turnos).where(and(eq(turnos.id, id), sql`${turnos.deletedAt} IS NULL`)).limit(1);
     if (!existe) notFound('Turno no encontrado');
 
@@ -229,7 +229,8 @@ export const turnosService = {
       }
 
       // Si el turno fue cancelado, buscar candidato en lista de espera (fire-and-forget)
-      if (input.estado === 'cancelada') {
+      // Saltar si skipWaitlist es true (para cancelaciones manuales con diálogo explícito)
+      if (input.estado === 'cancelada' && !input.skipWaitlist) {
         waitlistService.buscarCandidato(turnoActualizado.medicoId, turnoActualizado.sucursalId || undefined)
           .then(async (candidato) => {
             if (!candidato) return;

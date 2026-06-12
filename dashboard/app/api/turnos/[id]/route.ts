@@ -94,6 +94,7 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
   }
 
   const body = await parseBody(request, updateTurnoSchema);
+  // Si se quiere skip de la auto-asignación de lista de espera, pasarlo al servicio
   const updated = await turnosService.update(params.id, body);
 
   // Encuesta post-consulta

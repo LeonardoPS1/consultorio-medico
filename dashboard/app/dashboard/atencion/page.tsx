@@ -19,6 +19,8 @@ import {
   Clock,
   Users,
   GripVertical,
+  AlertCircle,
+  Users2,
 } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
@@ -27,47 +29,36 @@ import { PageHeader } from '@/components/page-header';
 // ============================================================
 // Tipos
 // ============================================================
-type TurnoEstado = 'pendiente' | 'confirmada' | 'en_atencion' | 'atendido' | 'cancelada';
+type TurnoEstado = 'pendiente' | 'confirmada' | 'en_atencion' | 'atendido' | 'cancelada' | 'no_asistio';
 
 interface Turno {
   id: string;
   hora: string;
+  fecha: string;
   paciente: string;
+  pacienteId?: string;
   tipo: string;
+  tipoConsulta?: string;
   medico: string;
+  medicoId?: string;
   estado: TurnoEstado;
   atendidoAt?: string;
+  sucursalId?: string;
+  motivo?: string;
+  duracionMinutos?: number;
 }
 
 // ============================================================
 // Columnas del Kanban
 // ============================================================
-type ColumnaId = 'pendientes' | 'en_atencion' | 'atendidos' | 'cancelados';
+type ColumnaId = 'pendientes' | 'en_atencion' | 'atendidos' | 'cancelados' | 'no_asistio';
 
 const COLUMNAS: { id: ColumnaId; titulo: string; estado: TurnoEstado; color: string }[] = [
   { id: 'pendientes', titulo: 'Pendientes', estado: 'pendiente', color: '#F59E0B' },
   { id: 'en_atencion', titulo: 'En Atención', estado: 'en_atencion', color: '#2563EB' },
   { id: 'atendidos', titulo: 'Atendidos', estado: 'atendido', color: '#059669' },
   { id: 'cancelados', titulo: 'Cancelados', estado: 'cancelada', color: '#EF4444' },
-];
-
-// ============================================================
-// Mock data de turnos para hoy
-// ============================================================
-const hoy = new Date();
-const TURNOS_INICIALES: Turno[] = [
-  { id: '1', hora: '09:00', paciente: 'Juan Pérez', tipo: 'Consulta Médica', medico: 'Dr. García', estado: 'pendiente' },
-  { id: '2', hora: '09:30', paciente: 'María Rodríguez', tipo: 'Control', medico: 'Dr. García', estado: 'atendido', atendidoAt: new Date(hoy.getTime() - 30 * 60000).toISOString() },
-  { id: '3', hora: '10:00', paciente: 'Pedro Sánchez', tipo: 'Resultados', medico: 'Dra. López', estado: 'en_atencion', atendidoAt: new Date(hoy.getTime() - 12 * 60000).toISOString() },
-  { id: '4', hora: '10:30', paciente: 'Ana López', tipo: 'Consulta', medico: 'Dr. García', estado: 'confirmada' },
-  { id: '5', hora: '11:00', paciente: 'Carlos Ruiz', tipo: 'Especialista', medico: 'Dra. López', estado: 'en_atencion', atendidoAt: new Date(hoy.getTime() - 5 * 60000).toISOString() },
-  { id: '6', hora: '11:30', paciente: 'Laura Martínez', tipo: 'Control', medico: 'Dr. García', estado: 'pendiente' },
-  { id: '7', hora: '12:00', paciente: 'Sofía Herrera', tipo: 'Primera vez', medico: 'Dra. López', estado: 'cancelada' },
-  { id: '8', hora: '15:00', paciente: 'Diego Torres', tipo: 'Consulta', medico: 'Dr. García', estado: 'confirmada' },
-  { id: '9', hora: '15:30', paciente: 'Elena Martínez', tipo: 'Control', medico: 'Dr. García', estado: 'atendido', atendidoAt: new Date(hoy.getTime() - 180 * 60000).toISOString() },
-  { id: '10', hora: '16:00', paciente: 'Roberto Fernández', tipo: 'Primera vez', medico: 'Dra. López', estado: 'pendiente' },
-  { id: '11', hora: '16:30', paciente: 'Valentina Gómez', tipo: 'Consulta', medico: 'Dr. García', estado: 'pendiente' },
-  { id: '12', hora: '17:00', paciente: 'Luis Martínez', tipo: 'Resultados', medico: 'Dra. López', estado: 'atendido', atendidoAt: new Date(hoy.getTime() - 240 * 60000).toISOString() },
+  { id: 'no_asistio', titulo: 'No Asistió', estado: 'no_asistio', color: '#8B5CF6' },
 ];
 
 // ============================================================
@@ -108,17 +99,20 @@ function TurnoCard({
   onAtender,
   onFinalizar,
   onCancelar,
+  onMoverNoAsistio,
   onDragStart,
 }: {
   turno: Turno;
   onAtender: (id: string) => void;
   onFinalizar: (id: string) => void;
   onCancelar: (id: string) => void;
+  onMoverNoAsistio: (id: string) => void;
   onDragStart: (e: React.DragEvent, turno: Turno) => void;
 }) {
   const color = getTurnoColor(turno.estado);
   const isPending = turno.estado === 'pendiente' || turno.estado === 'confirmada';
   const isInAttention = turno.estado === 'en_atencion';
+  const isNoAsistio = turno.estado === 'no_asistio';
 
   return (
     <div
@@ -232,6 +226,17 @@ function TurnoCard({
               <XCircle className="h-4 w-4" />
             </Button>
           )}
+          {isPending && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-purple-600"
+              onClick={() => onMoverNoAsistio(turno.id)}
+              title="Marcar como no asistió"
+            >
+              <AlertCircle className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {/* Indicador de arrastre */}
@@ -252,6 +257,7 @@ function KanbanColumn({
   onAtender,
   onFinalizar,
   onCancelar,
+  onMoverNoAsistio,
   onDragStart,
   onDropTurno,
   isDragOver,
@@ -263,6 +269,7 @@ function KanbanColumn({
   onAtender: (id: string) => void;
   onFinalizar: (id: string) => void;
   onCancelar: (id: string) => void;
+  onMoverNoAsistio: (id: string) => void;
   onDragStart: (e: React.DragEvent, turno: Turno) => void;
   onDropTurno: (e: React.DragEvent, columnaId: ColumnaId) => void;
   isDragOver: boolean;
@@ -272,7 +279,8 @@ function KanbanColumn({
   const Icono = columna.id === 'pendientes' ? Hourglass
     : columna.id === 'en_atencion' ? Play
     : columna.id === 'atendidos' ? CheckCircle2
-    : XCircle;
+    : columna.id === 'cancelados' ? XCircle
+    : AlertCircle;
 
   return (
     <div
@@ -309,7 +317,7 @@ function KanbanColumn({
       {turnos.length === 0 ? (
         <div className={`flex flex-col items-center justify-center py-8 text-center rounded-xl border-2 border-dashed flex-1 transition-colors
           ${isDragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/10'}
-        `}>
+        }`>
           <Icono className="h-8 w-8 mb-2 opacity-30" style={{ color: columna.color }} />
           <p className="text-xs text-muted-foreground/60">
             {isDragOver ? 'Soltó acá' : 'Sin turnos'}
@@ -324,6 +332,7 @@ function KanbanColumn({
               onAtender={onAtender}
               onFinalizar={onFinalizar}
               onCancelar={onCancelar}
+              onMoverNoAsistio={onMoverNoAsistio}
               onDragStart={onDragStart}
             />
           ))}
@@ -336,11 +345,12 @@ function KanbanColumn({
 // ============================================================
 // Resumen de atención
 // ============================================================
-function ResumenBar({ total, enAtencion, atendidos, pendientes }: {
+function ResumenBar({ total, enAtencion, atendidos, pendientes, noAsistio }: {
   total: number;
   enAtencion: number;
   atendidos: number;
   pendientes: number;
+  noAsistio: number;
 }) {
   return (
     <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
@@ -366,6 +376,11 @@ function ResumenBar({ total, enAtencion, atendidos, pendientes }: {
         <span className="h-2 w-2 rounded-full bg-emerald-500" />
         <strong className="text-foreground">{atendidos}</strong> atendidos
       </span>
+      <span className="hidden sm:inline">&middot;</span>
+      <span className="flex items-center gap-2">
+        <span className="h-2 w-2 rounded-full bg-purple-500" />
+        <strong className="text-foreground">{noAsistio}</strong> no asistió
+      </span>
     </div>
   );
 }
@@ -375,18 +390,49 @@ function ResumenBar({ total, enAtencion, atendidos, pendientes }: {
 // ============================================================
 export default function AtencionPage() {
   const router = useRouter();
-  const [turnos, setTurnos] = useState(TURNOS_INICIALES);
+  const [turnos, setTurnos] = useState<Turno[]>([]);
   const [mounted, setMounted] = useState(false);
   const [filtroMedico, setFiltroMedico] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<ColumnaId | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    fetchTurnos();
+  }, []);
+
+  const fetchTurnos = async () => {
+    try {
+      setLoading(true);
+      const hoy = new Date().toISOString().split('T')[0];
+      const response = await fetch(`/api/turnos?fecha=${hoy}&limit=100`);
+      if (!response.ok) {
+        throw new Error('Error al cargar turnos');
+      }
+      const data = await response.json();
+      setTurnos(data.data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cargar turnos');
+      toast({
+        title: 'Error',
+        description: 'No se pudieron cargar los turnos',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ============================================================
   // Acciones con botones
   // ============================================================
-  const atenderTurno = useCallback((id: string) => {
+  const atenderTurno = useCallback(async (id: string) => {
+    const turno = turnos.find((t) => t.id === id);
+    if (!turno) return;
+
+    // Optimistic update
     setTurnos((prev) =>
       prev.map((t) =>
         t.id === id
@@ -394,11 +440,36 @@ export default function AtencionPage() {
           : t
       )
     );
-    const p = turnos.find((t) => t.id === id);
-    toast({ title: 'En atención', description: `${p?.paciente} está siendo atendido` });
+
+    try {
+      await fetch(`/api/turnos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'en_atencion' }),
+      });
+      toast({ title: 'En atención', description: `${turno.paciente} está siendo atendido` });
+    } catch {
+      // Revert optimistic update on error
+      setTurnos((prev) =>
+        prev.map((t) =>
+          t.id === id
+            ? { ...t, estado: turno.estado as const, atendidoAt: turno.atendidoAt }
+            : t
+        )
+      );
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el turno',
+        variant: 'destructive',
+      });
+    }
   }, [turnos]);
 
-  const finalizarTurno = useCallback((id: string) => {
+  const finalizarTurno = useCallback(async (id: string) => {
+    const turno = turnos.find((t) => t.id === id);
+    if (!turno) return;
+
+    // Optimistic update
     setTurnos((prev) =>
       prev.map((t) =>
         t.id === id
@@ -406,19 +477,94 @@ export default function AtencionPage() {
           : t
       )
     );
-    const p = turnos.find((t) => t.id === id);
-    toast({ title: 'Atendido', description: `${p?.paciente} fue atendido correctamente` });
+
+    try {
+      await fetch(`/api/turnos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'atendido' }),
+      });
+      toast({ title: 'Atendido', description: `${turno.paciente} fue atendido correctamente` });
+    } catch {
+      // Revert optimistic update on error
+      setTurnos((prev) =>
+        prev.map((t) =>
+          t.id === id
+            ? { ...t, estado: turno.estado as const, atendidoAt: turno.atendidoAt }
+            : t
+        )
+      );
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el turno',
+        variant: 'destructive',
+      });
+    }
   }, [turnos]);
 
-  const cancelarTurno = useCallback((id: string) => {
+  const cancelarTurno = useCallback(async (id: string) => {
+    const turno = turnos.find((t) => t.id === id);
+    if (!turno) return;
+
+    // Optimistic update
     setTurnos((prev) =>
       prev.map((t) =>
         t.id === id ? { ...t, estado: 'cancelada' as const } : t
       )
     );
-    const p = turnos.find((t) => t.id === id);
-    if (p) {
-      toast({ title: 'Cancelado', description: `Turno de ${p.paciente} cancelado` });
+
+    try {
+      await fetch(`/api/turnos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'cancelada', motivoCancelacion: 'Cancelado desde dashboard' }),
+      });
+      toast({ title: 'Cancelado', description: `Turno de ${turno.paciente} cancelado` });
+    } catch {
+      // Revert optimistic update on error
+      setTurnos((prev) =>
+        prev.map((t) =>
+          t.id === id ? { ...t, estado: turno.estado as const } : t
+        )
+      );
+      toast({
+        title: 'Error',
+        description: 'No se pudo cancelar el turno',
+        variant: 'destructive',
+      });
+    }
+  }, [turnos]);
+
+  const moverNoAsistio = useCallback(async (id: string) => {
+    const turno = turnos.find((t) => t.id === id);
+    if (!turno) return;
+
+    // Optimistic update
+    setTurnos((prev) =>
+      prev.map((t) =>
+        t.id === id ? { ...t, estado: 'no_asistio' as const } : t
+      )
+    );
+
+    try {
+      await fetch(`/api/turnos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'no_asistio' }),
+      });
+      toast({ title: 'No asistió', description: `Turno de ${turno.paciente} marcado como no asistió` });
+    } catch {
+      // Revert optimistic update on error
+      setTurnos((prev) =>
+        prev.map((t) =>
+          t.id === id ? { ...t, estado: turno.estado as const } : t
+        )
+      );
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el turno',
+        variant: 'destructive',
+      });
     }
   }, [turnos]);
 
@@ -470,6 +616,7 @@ export default function AtencionPage() {
         en_atencion: 'en_atencion',
         atendidos: 'atendido',
         cancelados: 'cancelada',
+        no_asistio: 'no_asistio',
       };
 
       const nuevoEstado = estadoMap[columnaId];
@@ -478,6 +625,7 @@ export default function AtencionPage() {
 
       const now = new Date().toISOString();
 
+      // Optimistic update
       setTurnos((prev) =>
         prev.map((t) => {
           if (t.id !== turnoId) return t;
@@ -485,12 +633,34 @@ export default function AtencionPage() {
           if (nuevoEstado === 'en_atencion' || nuevoEstado === 'atendido') {
             updated.atendidoAt = now;
           }
-          if (nuevoEstado === 'cancelada') {
+          if (nuevoEstado === 'cancelada' || nuevoEstado === 'no_asistio') {
             delete updated.atendidoAt;
           }
           return updated;
         })
       );
+
+      // Persistir en backend
+      fetch(`/api/turnos/${turnoId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      }).catch(() => {
+        // Revert optimistic update on error
+        setTurnos((prev) =>
+          prev.map((t) => {
+            if (t.id !== turnoId) return t;
+            const reverted: Turno = { ...t, estado: turno.estado };
+            if (turno.atendidoAt) reverted.atendidoAt = turno.atendidoAt;
+            return reverted;
+          })
+        );
+        toast({
+          title: 'Error',
+          description: 'No se pudo guardar el cambio de estado',
+          variant: 'destructive',
+        });
+      });
 
       // Toast según el destino
       const label = COLUMNAS.find((c) => c.id === columnaId)?.titulo || nuevoEstado;
@@ -533,6 +703,7 @@ export default function AtencionPage() {
   const enAtencion = agrupar(['en_atencion']);
   const atendidos = agrupar(['atendido']);
   const cancelados = agrupar(['cancelada']);
+  const noAsistio = agrupar(['no_asistio']);
 
   const medicos = Array.from(new Set(turnos.map((t) => t.medico)));
 
@@ -577,12 +748,24 @@ export default function AtencionPage() {
       {/* Barra de resumen */}
       <Card className="border-primary/10 bg-gradient-to-br from-primary/[0.03] to-transparent">
         <CardContent className="p-4">
-          <ResumenBar
-            total={turnosFiltrados.filter((t) => t.estado !== 'cancelada').length}
-            enAtencion={enAtencion.length}
-            atendidos={atendidos.length}
-            pendientes={pendientes.length}
-          />
+          {loading ? (
+            <div className="flex items-center justify-center py-2">
+              <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              <span className="ml-2 text-sm text-muted-foreground">Cargando turnos...</span>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center py-2">
+              <span className="text-sm text-destructive">Error: {error}</span>
+            </div>
+          ) : (
+            <ResumenBar
+              total={turnosFiltrados.filter((t) => t.estado !== 'cancelada' && t.estado !== 'no_asistio').length}
+              enAtencion={enAtencion.length}
+              atendidos={atendidos.length}
+              pendientes={pendientes.length}
+              noAsistio={noAsistio.length}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -614,14 +797,20 @@ export default function AtencionPage() {
             <div className="flex items-center justify-center py-12">
               <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
             </div>
+          ) : loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              <span className="ml-2 text-sm text-muted-foreground">Cargando turnos...</span>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
               {COLUMNAS.map((col) => {
                 const turnosCol =
                   col.id === 'pendientes' ? pendientes
                   : col.id === 'en_atencion' ? enAtencion
                   : col.id === 'atendidos' ? atendidos
-                  : cancelados;
+                  : col.id === 'cancelados' ? cancelados
+                  : noAsistio;
 
                 return (
                   <KanbanColumn
@@ -631,6 +820,7 @@ export default function AtencionPage() {
                     onAtender={atenderTurno}
                     onFinalizar={finalizarTurno}
                     onCancelar={cancelarTurno}
+                    onMoverNoAsistio={moverNoAsistio}
                     onDragStart={handleDragStart}
                     onDropTurno={handleDrop}
                     isDragOver={dragOverColumn === col.id}
@@ -666,7 +856,10 @@ export default function AtencionPage() {
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('atendido') }} /> Atendido
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('cancelada') }} /> Cancelada
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('cancelada') }} /> Cancelado
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('no_asistio') }} /> No asistió
         </span>
         <span className="flex items-center gap-1 text-muted-foreground/50 ml-auto">
           <GripVertical className="h-3 w-3" /> Drag &amp; drop activo
