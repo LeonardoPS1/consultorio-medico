@@ -201,7 +201,7 @@ export function Header() {
     : nameParts[0].charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 sm:px-4 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border/60 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 px-3 sm:px-4 lg:px-6">
       <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 min-w-0">
         {/* Hamburger — mobile only */}
         <Button

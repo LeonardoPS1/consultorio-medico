@@ -20,11 +20,11 @@
     --muted-foreground: 215.4 16.3% 35%;
     --accent: 210 16% 95%;
     --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 210 40% 98%;
-    --success: 142.1 76.2% 36.3%;
+    --success: 142.1 50% 40%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 38 80% 45%;
     --warning-foreground: 0 0% 100%;
     --border: 214.3 20% 88%;
     --input: 214.3 20% 88%;
@@ -64,11 +64,11 @@
     --muted-foreground: 215 18% 72%;
     --accent: 217.2 22% 16%;
     --accent-foreground: 210 40% 94%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62.8% 32%;
     --destructive-foreground: 210 40% 96%;
-    --success: 142.1 70.6% 45.3%;
+    --success: 142.1 60% 40%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 38 85% 42%;
     --warning-foreground: 0 0% 100%;
     --border: 217.2 18% 22%;
     --input: 217.2 18% 22%;
@@ -263,6 +263,16 @@
   box-shadow: 0 0 20px hsl(var(--primary) / 0.15);
 }
 
+/* Origin-aware popovers & dropdowns (Radix UI) — escalan desde el trigger */
+[data-radix-popper-content-wrapper] {
+  transform-origin: var(--radix-popover-content-transform-origin, center);
+}
+
+/* Origin-aware tooltips */
+[data-radix-tooltip-content] {
+  transform-origin: var(--radix-tooltip-content-transform-origin, center);
+}
+
 /* Smooth transitions for all interactive elements */
 a, button, input, select, textarea {
   @apply transition-colors duration-200;
@@ -297,6 +307,149 @@ a, button, input, select, textarea {
 
 .status-badge-no_asistio {
   @apply bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400;
+}
+
+/* ─── Premium Animations ──────────────────────────────── */
+
+/* Page enter: fade + slide up suave */
+.page-enter {
+  animation: pageEnter 0.3s var(--ease-out) both;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger children premium — 30ms entre items, max 200ms */
+.stagger-premium > * {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: staggerFadeIn 0.3s var(--ease-out) forwards;
+}
+
+.stagger-premium > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-premium > *:nth-child(2) { animation-delay: 30ms; }
+.stagger-premium > *:nth-child(3) { animation-delay: 60ms; }
+.stagger-premium > *:nth-child(4) { animation-delay: 90ms; }
+.stagger-premium > *:nth-child(5) { animation-delay: 120ms; }
+.stagger-premium > *:nth-child(6) { animation-delay: 150ms; }
+.stagger-premium > *:nth-child(7) { animation-delay: 180ms; }
+.stagger-premium > *:nth-child(8) { animation-delay: 210ms; }
+
+@keyframes staggerFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Count-up animation for numbers */
+.count-up {
+  display: inline-block;
+  animation: countPop 0.4s var(--ease-out) both;
+}
+
+@keyframes countPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Scale hover for cards (Taste Profile) */
+.hover-card-lift {
+  @apply transition-all duration-200;
+  transition-timing-function: var(--ease-out);
+}
+
+.hover-card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* Sidebar nav active indicator */
+.nav-active-indicator {
+  position: relative;
+}
+
+.nav-active-indicator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  border-radius: 0 3px 3px 0;
+  background: hsl(var(--primary));
+}
+
+/* Sidebar nav item hover — subtle translateX */
+.nav-item-hover {
+  @apply transition-all duration-150;
+  transition-timing-function: var(--ease-out);
+}
+
+.hoverable .nav-item-hover:hover {
+  transform: translateX(3px);
+}
+
+/* Table premium styles */
+.table-premium thead tr {
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.table-premium th {
+  font-weight: 500;
+  font-size: 0.8125rem;
+  color: hsl(var(--muted-foreground));
+  padding: 0.75rem 1rem;
+  text-align: left;
+  background: hsl(var(--muted) / 0.3);
+}
+
+.table-premium td {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid hsl(var(--border) / 0.6);
+}
+
+.table-premium tbody tr {
+  transition: background-color 150ms var(--ease-out);
+}
+
+.hoverable .table-premium tbody tr:hover {
+  background: hsl(var(--muted) / 0.2);
+}
+
+/* Mobile bottom sheet style */
+.bottom-sheet {
+  @apply fixed bottom-0 left-0 right-0 z-50;
+  border-radius: 16px 16px 0 0;
+  animation: sheetUp 0.3s var(--ease-out) both;
+}
+
+@keyframes sheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 /* Reduced motion — respeta preferencias del usuario */

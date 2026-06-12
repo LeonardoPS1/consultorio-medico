@@ -224,7 +224,7 @@ export function Sidebar() {
                     href="/dashboard/configuracion?tab=suscripcion"
                     onClick={closeMobile}
                     className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors',
+                    'nav-item-hover flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors',
                     'text-sidebar-foreground/40 hoverable:hover:bg-sidebar-accent/50 hoverable:hover:text-sidebar-foreground/60'
                     )}
                     title={collapsed ? `${item.title} (Plan ${requiredPlan})` : undefined}
@@ -251,10 +251,11 @@ export function Sidebar() {
                   href={item.href}
                   onClick={closeMobile}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     isActive
-                      ? 'bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      ? 'nav-active-indicator bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover',
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
+                    !isActive && 'hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
                   )}
                   title={collapsed ? item.title : undefined}
                 >
@@ -292,8 +293,8 @@ export function Sidebar() {
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/sistema' || pathname.startsWith('/dashboard/admin/sistema/')
-                      ? 'bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      ? 'nav-active-indicator bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
                   )}
                   title={collapsed ? 'Sistema' : undefined}
                 >
@@ -306,8 +307,8 @@ export function Sidebar() {
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/tenants'
-                      ? 'bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      ? 'nav-active-indicator bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
                   )}
                   title={collapsed ? 'Tenants' : undefined}
                 >
@@ -320,8 +321,8 @@ export function Sidebar() {
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/sucursales'
-                      ? 'bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      ? 'nav-active-indicator bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
                   )}
                   title={collapsed ? 'Sucursales' : undefined}
                 >
@@ -334,8 +335,8 @@ export function Sidebar() {
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/auditoria'
-                      ? 'bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      ? 'nav-active-indicator bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
                   )}
                   title={collapsed ? 'Auditoría' : undefined}
                 >
@@ -348,8 +349,8 @@ export function Sidebar() {
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/backups'
-                      ? 'bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      ? 'nav-active-indicator bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
                   )}
                   title={collapsed ? 'Backups' : undefined}
                 >
@@ -362,8 +363,8 @@ export function Sidebar() {
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/n8n' || pathname.startsWith('/dashboard/admin/n8n/')
-                      ? 'bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      ? 'nav-active-indicator bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
                   )}
                   title={collapsed ? 'n8n' : undefined}
                 >
@@ -376,8 +377,8 @@ export function Sidebar() {
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/webhooks' || pathname.startsWith('/dashboard/webhooks/')
-                      ? 'bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      ? 'nav-active-indicator bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
                   )}
                   title={collapsed ? 'Webhooks' : undefined}
                 >
