@@ -169,6 +169,11 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
+  // ─── User-specific feature overrides ────────────────────────────
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [userOverrides, setUserOverrides] = useState<Record<string, boolean>>({});
+  const [loadingUserOverrides, setLoadingUserOverrides] = useState(false);
+
   // Fetch users on mount
   useEffect(() => {
     setUsersLoading(true);
@@ -199,11 +204,6 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
   );
 
   const selectedUser = users.find(u => u.id === selectedUserId);
-
-  // ─── User-specific feature overrides ────────────────────────────
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [userOverrides, setUserOverrides] = useState<Record<string, boolean>>({});
-  const [loadingUserOverrides, setLoadingUserOverrides] = useState(false);
 
   // Cargar overrides de usuario cuando se selecciona un usuario
   useEffect(() => {
