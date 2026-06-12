@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, TrendingUp, TrendingDown, Minus, MessageSquare, Users, BarChart3 } from 'lucide-react';
+import { Star, TrendingUp, TrendingDown, Minus, MessageSquare, Users, BarChart3, ThumbsUp, ThumbsDown, Meh } from 'lucide-react';
 import { EncuestasClient } from './encuestas-client';
 import { PageHeader } from '@/components/page-header';
+import { EvolucionEncuestasChart } from '@/components/charts/evolucion-encuestas-chart';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -18,10 +19,19 @@ interface EncuestaApiResponse {
       pacienteId: string;
       pacienteNombre: string;
       pacienteApellido: string;
+      medicoNombre?: string;
       puntaje: number;
       comentario: string;
+      sentimiento?: 'positivo' | 'neutral' | 'negativo';
+      sentimientoScore?: number;
       fecha: string;
     }>;
+    evolucionMensual: Array<{ mes: string; promedio: number; cantidad: number }>;
+    sentimientoDistribucion: {
+      positivo: number;
+      neutral: number;
+      negativo: number;
+    };
   };
 }
 
@@ -171,6 +181,82 @@ function DistribucionSection({ distribucion }: { distribucion: Record<number, nu
   );
 }
 
+// ─── Sentimiento ───────────────────────────────────────────
+
+function SentimientoSection({ distribucion }: { distribucion: { positivo: number; neutral: number; negativo: number } }) {
+  const total = distribucion.positivo + distribucion.neutral + distribucion.negativo;
+  const items = [
+    {
+      label: 'Positivo',
+      value: distribucion.positivo,
+      icon: ThumbsUp,
+      color: 'bg-emerald-500',
+      textColor: 'text-emerald-600 dark:text-emerald-400',
+      bgColor: 'bg-emerald-50 dark:bg-emerald-950',
+    },
+    {
+      label: 'Neutral',
+      value: distribucion.neutral,
+      icon: Meh,
+      color: 'bg-amber-400',
+      textColor: 'text-amber-600 dark:text-amber-400',
+      bgColor: 'bg-amber-50 dark:bg-amber-950',
+    },
+    {
+      label: 'Negativo',
+      value: distribucion.negativo,
+      icon: ThumbsDown,
+      color: 'bg-red-400',
+      textColor: 'text-red-600 dark:text-red-400',
+      bgColor: 'bg-red-50 dark:bg-red-950',
+    },
+  ];
+
+  return (
+    <Card className="h-full">
+      <CardHeader>
+        <CardTitle className="text-sm font-medium">Análisis de Sentimiento (IA)</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {total === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <Star className="h-8 w-8 text-muted-foreground/30 mb-2" />
+            <p className="text-xs text-muted-foreground/60">
+              El análisis de sentimiento aparece automáticamente cuando los pacientes dejan comentarios
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {items.map((item) => {
+              const porcentaje = total > 0 ? Math.round((item.value / total) * 100) : 0;
+              return (
+                <div key={item.label}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <item.icon className={`h-4 w-4 ${item.textColor}`} />
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">{item.value}</span>
+                      <span className="text-xs text-muted-foreground">({porcentaje}%)</span>
+                    </div>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${item.color}`}
+                      style={{ width: `${porcentaje}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Page ──────────────────────────────────────────────────
 
 export default async function EncuestasPage() {
@@ -198,11 +284,24 @@ export default async function EncuestasPage() {
           <DistribucionSection distribucion={stats.distribucion} />
         </div>
 
-        {/* Respuestas recientes (client component) */}
+        {/* Sentimiento */}
         <div className="lg:col-span-2">
-          <EncuestasClient respuestas={stats.respuestasRecientes} />
+          <SentimientoSection distribucion={stats.sentimientoDistribucion} />
         </div>
       </div>
+
+      {/* Evolución mensual */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Evolución del Promedio Mensual</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EvolucionEncuestasChart data={stats.evolucionMensual} />
+        </CardContent>
+      </Card>
+
+      {/* Respuestas recientes (client component) */}
+      <EncuestasClient respuestas={stats.respuestasRecientes} />
     </div>
   );
 }

@@ -50,6 +50,8 @@ export const GET = apiHandler(async (_req: NextRequest, { params }) => {
       telefono: pacientes.telefono, email: pacientes.email, dni: pacientes.dni,
       fechaNacimiento: pacientes.fechaNacimiento, direccion: pacientes.direccion,
       obraSocial: pacientes.obraSocial, numeroAfiliado: pacientes.numeroAfiliado,
+      sistemaSalud: pacientes.sistemaSalud, isapreNombre: pacientes.isapreNombre,
+      regionId: pacientes.regionId, comunaId: pacientes.comunaId,
       alergias: pacientes.alergias, medicacionCronica: pacientes.medicacionCronica,
       notasMedicas: pacientes.notasMedicas, tags: pacientes.tags,
       consentimientoWhatsapp: pacientes.consentimientoWhatsapp,

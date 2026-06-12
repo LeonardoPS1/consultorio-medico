@@ -1,7 +1,8 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Star, StarHalf, MessageSquare } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Star, StarHalf, MessageSquare, ThumbsUp, ThumbsDown, Meh, Stethoscope } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -9,8 +10,11 @@ interface Respuesta {
   id: string;
   pacienteNombre: string;
   pacienteApellido: string;
+  medicoNombre?: string;
   puntaje: number;
   comentario: string;
+  sentimiento?: 'positivo' | 'neutral' | 'negativo';
+  sentimientoScore?: number;
   fecha: string;
 }
 
@@ -88,6 +92,27 @@ export function EncuestasClient({ respuestas }: { respuestas: Respuesta[] }) {
                     {resp.pacienteNombre} {resp.pacienteApellido}
                   </span>
                   <StarRating puntaje={resp.puntaje} />
+                </div>
+                <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                  {resp.medicoNombre && (
+                    <span className="text-xs text-muted-foreground/70 flex items-center gap-1">
+                      <Stethoscope className="h-3 w-3" />
+                      {resp.medicoNombre}
+                    </span>
+                  )}
+                  {resp.sentimiento && (
+                    <Badge variant="outline" className={`
+                      text-[10px] px-1.5 py-0 h-4 font-normal
+                      ${resp.sentimiento === 'positivo' ? 'text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800' : ''}
+                      ${resp.sentimiento === 'neutral' ? 'text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800' : ''}
+                      ${resp.sentimiento === 'negativo' ? 'text-red-600 border-red-200 bg-red-50 dark:bg-red-950 dark:text-red-400 dark:border-red-800' : ''}
+                    `}>
+                      {resp.sentimiento === 'positivo' && <ThumbsUp className="h-2.5 w-2.5 mr-0.5" />}
+                      {resp.sentimiento === 'neutral' && <Meh className="h-2.5 w-2.5 mr-0.5" />}
+                      {resp.sentimiento === 'negativo' && <ThumbsDown className="h-2.5 w-2.5 mr-0.5" />}
+                      {resp.sentimiento}
+                    </Badge>
+                  )}
                 </div>
                 {resp.comentario && resp.comentario !== 'Sin comentarios' && (
                   <p className="text-sm text-muted-foreground mt-1 line-clamp-2">

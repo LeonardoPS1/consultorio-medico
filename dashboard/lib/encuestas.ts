@@ -18,9 +18,13 @@ export interface EncuestaResponse {
   pacienteId: string;
   pacienteNombre: string;
   pacienteApellido: string;
+  medicoNombre?: string;
+  medicoId?: string;
   turnoId?: string;
   puntaje: number;
   comentario: string;
+  sentimiento?: 'positivo' | 'neutral' | 'negativo';
+  sentimientoScore?: number;
   fecha: string;
 }
 
@@ -31,6 +35,75 @@ export interface EncuestaStats {
   ultimasSemana: number;
   tendencia: 'subiendo' | 'estable' | 'bajando';
   respuestasRecientes: EncuestaResponse[];
+  evolucionMensual: Array<{ mes: string; promedio: number; cantidad: number }>;
+  sentimientoDistribucion: {
+    positivo: number;
+    neutral: number;
+    negativo: number;
+  };
+}
+
+// ─── SENTIMIENTO: Analizar comentario con Ollama ──────────
+
+/**
+ * Analiza el sentimiento de un comentario usando Ollama (Gemma3).
+ * Returns: { sentimiento, score } o null si falla.
+ */
+export async function analyzeSentiment(comentario: string): Promise<{
+  sentimiento: 'positivo' | 'neutral' | 'negativo';
+  score: number;
+} | null> {
+  if (!comentario || comentario === 'Sin comentarios' || comentario.trim().length < 3) {
+    return null;
+  }
+
+  try {
+    const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+    const model = process.env.OLLAMA_MODEL || 'gemma3';
+
+    const prompt = `Analizá el sentimiento del siguiente comentario de encuesta de satisfacción médica.
+Devuelve solo un JSON con:
+- "sentimiento": "positivo" | "neutral" | "negativo"
+- "score": número del 0 al 1 (0=muy negativo, 1=muy positivo)
+
+Comentario: "${comentario}"
+
+JSON:`;
+
+    const res = await fetch(`${ollamaUrl}/v1/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.1,
+        max_tokens: 50,
+        stream: false,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!res.ok) {
+      safeWarn(`[Encuestas] Ollama sentiment error: ${res.status}`);
+      return null;
+    }
+
+    const json = await res.json();
+    const content = json?.choices?.[0]?.message?.content?.trim() || '';
+    const parsed = JSON.parse(content);
+
+    if (!['positivo', 'neutral', 'negativo'].includes(parsed.sentimiento)) {
+      return null;
+    }
+
+    return {
+      sentimiento: parsed.sentimiento,
+      score: typeof parsed.score === 'number' ? Math.max(0, Math.min(1, parsed.score)) : 0.5,
+    };
+  } catch (e) {
+    safeWarn('[Encuestas] Error analizando sentimiento:', { error: (e as Error).message });
+    return null;
+  }
 }
 
 // ─── ENVIAR: WhatsApp de encuesta post-consulta ────────────
@@ -116,21 +189,35 @@ export async function sendSurveyWhatsApp(turnoId: string): Promise<void> {
  * Almacena una respuesta de encuesta en historial_medico.
  * Se llama tanto desde el endpoint POST como desde el webhook de Twilio
  * cuando detecta una respuesta numérica.
+ * Opcionalmente analiza el sentimiento del comentario vía Ollama.
  */
 export async function storeSurveyResponse(data: {
   pacienteId: string;
+  medicoId?: string;
   turnoId?: string;
   puntaje: number;
   comentario?: string;
 }): Promise<boolean> {
   try {
+    // Analizar sentimiento si hay comentario significativo
+    let archivos: Record<string, unknown> = {};
+    if (data.comentario && data.comentario.trim().length >= 3) {
+      const sentimiento = await analyzeSentiment(data.comentario);
+      if (sentimiento) {
+        archivos.sentimiento = sentimiento.sentimiento;
+        archivos.sentimientoScore = sentimiento.score;
+      }
+    }
+
     await db.insert(historialMedico).values({
       pacienteId: data.pacienteId,
+      medicoId: data.medicoId || null,
       turnoId: data.turnoId || null,
       tipo: 'encuesta',
       titulo: `Encuesta de satisfacción - ${data.puntaje}/5`,
       descripcion: data.comentario || 'Sin comentarios',
       visibleParaPaciente: false,
+      archivos: archivos as any,
     });
     safeLog(`[Encuestas] ✅ Respuesta guardada: paciente ${data.pacienteId}, puntaje ${data.puntaje}`);
     return true;
@@ -176,23 +263,27 @@ export function detectSurveyResponse(body: string): { esEncuesta: boolean; punta
 // ─── ESTADÍSTICAS: Obtener stats desde DB real ─────────────
 
 export async function getSurveyStats(): Promise<EncuestaStats> {
-  // Obtener todas las encuestas de historial_medico
+  // Obtener todas las encuestas de historial_medico con datos completos
   const rows = await db
     .select({
       id: historialMedico.id,
       pacienteId: historialMedico.pacienteId,
       pacienteNombre: pacientes.nombre,
       pacienteApellido: pacientes.apellido,
+      medicoId: historialMedico.medicoId,
+      medicoNombre: medicos.nombre,
       turnoId: historialMedico.turnoId,
       titulo: historialMedico.titulo,
       descripcion: historialMedico.descripcion,
+      archivos: historialMedico.archivos,
       createdAt: historialMedico.createdAt,
     })
     .from(historialMedico)
     .leftJoin(pacientes, eq(historialMedico.pacienteId, pacientes.id))
+    .leftJoin(medicos, eq(historialMedico.medicoId, medicos.id))
     .where(eq(historialMedico.tipo, 'encuesta'))
     .orderBy(desc(historialMedico.createdAt))
-    .limit(200);
+    .limit(500);
 
   const totalEncuestas = rows.length;
 
@@ -200,14 +291,19 @@ export async function getSurveyStats(): Promise<EncuestaStats> {
   const respuestas = rows.map((r) => {
     const match = r.titulo?.match(/(\d+)\/5/);
     const puntaje = match ? parseInt(match[1], 10) : 0;
+    const archivos = (r.archivos as Record<string, unknown>) || {};
     return {
       id: r.id,
       pacienteId: r.pacienteId,
       pacienteNombre: r.pacienteNombre || '',
       pacienteApellido: r.pacienteApellido || '',
+      medicoId: r.medicoId || undefined,
+      medicoNombre: r.medicoNombre || undefined,
       turnoId: r.turnoId || undefined,
       puntaje,
       comentario: r.descripcion || '',
+      sentimiento: archivos.sentimiento as 'positivo' | 'neutral' | 'negativo' | undefined,
+      sentimientoScore: archivos.sentimientoScore as number | undefined,
       fecha: r.createdAt.toISOString(),
     };
   });
@@ -239,6 +335,38 @@ export async function getSurveyStats(): Promise<EncuestaStats> {
   if (ultimasSemana > semanaAnterior * 1.2) tendencia = 'subiendo';
   else if (ultimasSemana < semanaAnterior * 0.8) tendencia = 'bajando';
 
+  // --- Evolución mensual ---
+  const mesesMap = new Map<string, { suma: number; count: number }>();
+  for (const r of respuestas) {
+    if (r.puntaje === 0) continue;
+    // Formato: "2026-06"
+    const mes = r.fecha.substring(0, 7);
+    const existing = mesesMap.get(mes) || { suma: 0, count: 0 };
+    existing.suma += r.puntaje;
+    existing.count += 1;
+    mesesMap.set(mes, existing);
+  }
+  const evolucionMensual = Array.from(mesesMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-12)
+    .map(([mes, data]) => ({
+      mes,
+      promedio: Math.round((data.suma / data.count) * 10) / 10,
+      cantidad: data.count,
+    }));
+
+  // --- Distribución de sentimiento ---
+  const sentimientoDistribucion = {
+    positivo: 0,
+    neutral: 0,
+    negativo: 0,
+  };
+  for (const r of respuestas) {
+    if (r.sentimiento === 'positivo') sentimientoDistribucion.positivo++;
+    else if (r.sentimiento === 'neutral') sentimientoDistribucion.neutral++;
+    else if (r.sentimiento === 'negativo') sentimientoDistribucion.negativo++;
+  }
+
   return {
     totalEncuestas,
     puntajePromedio,
@@ -246,5 +374,7 @@ export async function getSurveyStats(): Promise<EncuestaStats> {
     ultimasSemana,
     tendencia,
     respuestasRecientes: respuestas.slice(0, 20),
+    evolucionMensual,
+    sentimientoDistribucion,
   };
 }

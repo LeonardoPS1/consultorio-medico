@@ -11,9 +11,12 @@ interface Paciente {
   telefono: string;
   email: string | null;
   obraSocial: string | null;
+  sistemaSalud: string | null;
+  isapreNombre: string | null;
   tags: string[];
   ultimoTurno: string | null;
   totalTurnos: number;
+  dni?: string | null;
 }
 
 interface PacientesApiResponse {

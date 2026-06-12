@@ -23,6 +23,7 @@ import {
 
 import { formatPhone, getInitials, formatDate } from '@/lib/utils';
 import { NuevoPacienteModal } from '@/components/modals/nuevo-paciente-modal';
+import { EditarPacienteModal } from '@/components/modals/editar-paciente-modal';
 import { toast } from '@/components/ui/use-toast';
 
 // ─── Types ────────────────────────────────────────────────
@@ -34,11 +35,27 @@ interface Paciente {
   telefono: string;
   email: string | null;
   obraSocial: string | null;
-  sistemaSalud?: string | null;
-  isapreNombre?: string | null;
+  sistemaSalud: string | null;
+  isapreNombre: string | null;
   tags: string[];
   ultimoTurno: string | null;
   totalTurnos: number;
+}
+
+interface PacienteEditData {
+  id: string;
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  email: string | null;
+  dni: string | null;
+  fechaNacimiento: string | null;
+  direccion: string | null;
+  obraSocial: string | null;
+  sistemaSalud: string | null;
+  isapreNombre: string | null;
+  regionId: string | null;
+  comunaId: string | null;
 }
 
 interface PacientesClientProps {
@@ -51,10 +68,63 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
   const { sucursalId } = useSucursal();
   const [search, setSearch] = useState('');
   const [showNewPaciente, setShowNewPaciente] = useState(false);
+  const [showEditPaciente, setShowEditPaciente] = useState(false);
+  const [editPacienteData, setEditPacienteData] = useState<PacienteEditData | null>(null);
+  const [loadingEdit, setLoadingEdit] = useState(false);
   const [pacientesList, setPacientesList] =
     useState<Paciente[]>(initialPacientes);
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleOpenEdit = async (pacienteId: string) => {
+    setLoadingEdit(true);
+    try {
+      const res = await fetch(`/api/pacientes/${pacienteId}`);
+      if (!res.ok) throw new Error('Error al obtener datos del paciente');
+      const json = await res.json();
+      const p = json.data || json;
+      setEditPacienteData({
+        id: p.id,
+        nombre: p.nombre,
+        apellido: p.apellido,
+        telefono: p.telefono,
+        email: p.email,
+        dni: p.dni,
+        fechaNacimiento: p.fechaNacimiento,
+        direccion: p.direccion,
+        obraSocial: p.obraSocial,
+        sistemaSalud: p.sistemaSalud,
+        isapreNombre: p.isapreNombre,
+        regionId: p.regionId,
+        comunaId: p.comunaId,
+      });
+      setShowEditPaciente(true);
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo cargar el paciente', variant: 'destructive' });
+    } finally {
+      setLoadingEdit(false);
+    }
+  };
+
+  const handleEditSaved = (updated: PacienteEditData) => {
+    setPacientesList((prev) =>
+      prev.map((p) =>
+        p.id === updated.id
+          ? {
+              ...p,
+              nombre: updated.nombre,
+              apellido: updated.apellido,
+              telefono: updated.telefono,
+              email: updated.email,
+              obraSocial: updated.obraSocial,
+              sistemaSalud: updated.sistemaSalud,
+              isapreNombre: updated.isapreNombre,
+            }
+          : p,
+      ),
+    );
+    toast({ title: 'Paciente actualizado', description: `${updated.nombre} ${updated.apellido}` });
+  };
 
   // Búsqueda debounced vía API
   useEffect(() => {
@@ -292,6 +362,17 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
                     <Button
                       variant="ghost"
                       size="icon"
+                      title="Editar paciente"
+                      disabled={loadingEdit}
+                      onClick={() => handleOpenEdit(paciente.id)}
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                      </svg>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       title="Recetas"
                       asChild
                     >
@@ -333,6 +414,16 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
         onOpenChange={setShowNewPaciente}
         onSubmit={handleNuevoPaciente}
       />
+
+      {/* Modal Editar Paciente */}
+      {editPacienteData && (
+        <EditarPacienteModal
+          open={showEditPaciente}
+          onOpenChange={setShowEditPaciente}
+          paciente={editPacienteData}
+          onSaved={handleEditSaved}
+        />
+      )}
     </>
   );
 }

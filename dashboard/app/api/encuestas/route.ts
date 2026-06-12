@@ -4,6 +4,7 @@ import { getSurveyStats, storeSurveyResponse } from '@/lib/encuestas';
 
 const encuestaSchema = z.object({
   pacienteId: z.string().uuid(),
+  medicoId: z.string().uuid().optional(),
   turnoId: z.string().uuid().optional(),
   puntaje: z.number().int().min(1).max(5),
   comentario: z.string().max(500).optional(),
@@ -35,7 +36,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = encuestaSchema.parse(body);
 
-    const ok = await storeSurveyResponse(parsed);
+    const ok = await storeSurveyResponse({
+      pacienteId: parsed.pacienteId,
+      medicoId: parsed.medicoId,
+      turnoId: parsed.turnoId,
+      puntaje: parsed.puntaje,
+      comentario: parsed.comentario,
+    });
 
     if (!ok) {
       return NextResponse.json({ error: 'Error al registrar encuesta' }, { status: 500 });
