@@ -44,7 +44,10 @@ export type FeatureId =
   | 'pwa'
   | 'firma-digital'
   | 'exportacion'
-  | 'gcal-sync';
+  | 'gcal-sync'
+  | 'ia-autorespuestas'
+  | 'ia-triaje'
+  | 'ia-renovacion';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -82,6 +85,9 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'firma-digital': 'professional',
   'exportacion': 'professional',
   'gcal-sync': 'premium',
+  'ia-autorespuestas': 'professional',
+  'ia-triaje': 'professional',
+  'ia-renovacion': 'professional',
 };
 
 // ============================================================

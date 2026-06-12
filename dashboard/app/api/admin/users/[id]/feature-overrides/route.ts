@@ -51,7 +51,7 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }: { param
   const body = await parseBody(request, z.object({
     overrides: z.array(z.object({
       featureId: z.string(),
-      enabled: z.boolean(),
+      enabled: z.boolean().optional().default(true),
     })),
   }));
 
@@ -61,7 +61,7 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }: { param
     .where(eq(userFeatureOverrides.usuarioId, userId));
 
   // Luego, insertar los nuevos overrides (solo features habilitadas)
-  const enabledOverrides = body.overrides.filter(o => o.enabled);
+  const enabledOverrides = body.overrides.filter(o => o.enabled !== false);
   if (enabledOverrides.length > 0) {
     const values = enabledOverrides.map(o => ({
       usuarioId: userId,

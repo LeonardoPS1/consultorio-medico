@@ -11,7 +11,7 @@
  * 5. API Keys — Keys para API pública
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -26,7 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { Save, Loader2, Settings, Brain, Link, Key, Shield, Lock, Users } from 'lucide-react';
+import { Save, Loader2, Settings, Brain, Link, Key, Shield, Lock, Users, Search, ChevronDown } from 'lucide-react';
 import IntegracionesDashboard from '@/components/configuracion/integraciones-dashboard';
 import CredencialesTab from '@/components/configuracion/credenciales-tab';
 import ApiKeysTab from '@/components/configuracion/api-keys-tab';
@@ -101,11 +101,12 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
     fetch('/api/admin/features')
       .then(r => r.json())
       .then(data => {
-        if (data.features) {
+        const features = data.data?.features ?? data.features;
+        if (features) {
           // Inicializar: features no listados = true (habilitado por defecto)
           const initial: Record<string, boolean> = {};
           TOGGLEABLE_FEATURES.forEach(f => {
-            initial[f.id] = data.features[f.id] !== false;
+            initial[f.id] = features[f.id] !== false;
           });
           setToggles(initial);
         } else {
@@ -155,6 +156,50 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
 
   const showAll = !section;
 
+  // ─── User list ──────────────────────────────────────────────────
+  interface UserOption {
+    id: string;
+    email: string;
+    nombre: string;
+    plan: string;
+  }
+  const [users, setUsers] = useState<UserOption[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch users on mount
+  useEffect(() => {
+    setUsersLoading(true);
+    fetch('/api/admin/users')
+      .then(r => r.json())
+      .then(data => {
+        const list = data.data?.users ?? data.users ?? [];
+        setUsers(list.map((u: any) => ({ id: u.id, email: u.email, nombre: u.nombre, plan: u.plan })));
+      })
+      .catch(() => {})
+      .finally(() => setUsersLoading(false));
+  }, []);
+
+  // Cerrar dropdown al hacer click fuera
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const filteredUsers = users.filter(u =>
+    u.nombre.toLowerCase().includes(userSearch.toLowerCase()) ||
+    u.email.toLowerCase().includes(userSearch.toLowerCase())
+  );
+
+  const selectedUser = users.find(u => u.id === selectedUserId);
+
   // ─── User-specific feature overrides ────────────────────────────
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [userOverrides, setUserOverrides] = useState<Record<string, boolean>>({});
@@ -171,9 +216,10 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
     fetch(`/api/admin/users/${selectedUserId}/feature-overrides`)
       .then(r => r.json())
       .then(data => {
-        if (data.overrides) {
+        const overridesList = data.data?.overrides ?? data.overrides;
+        if (overridesList) {
           const overridesMap: Record<string, boolean> = {};
-          data.overrides.forEach((override: { featureId: string; enabled: boolean }) => {
+          overridesList.forEach((override: { featureId: string; enabled: boolean }) => {
             overridesMap[override.featureId] = override.enabled;
           });
           setUserOverrides(overridesMap);
@@ -316,14 +362,66 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-4 items-end">
-            <div className="flex-1">
+            <div className="flex-1 relative" ref={userDropdownRef}>
               <Label htmlFor="user-select">Seleccionar Usuario</Label>
-              <Input
-                id="user-select"
-                placeholder="ID del usuario..."
-                value={selectedUserId}
-                onChange={(e) => setSelectedUserId(e.target.value)}
-              />
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  id="user-select"
+                  placeholder="Buscar por nombre o email..."
+                  value={selectedUser ? `${selectedUser.nombre} (${selectedUser.email})` : userSearch}
+                  onChange={(e) => {
+                    setUserSearch(e.target.value);
+                    setSelectedUserId('');
+                    setUserDropdownOpen(true);
+                  }}
+                  onFocus={() => setUserDropdownOpen(true)}
+                  className="pl-8"
+                />
+                {selectedUser && (
+                  <button
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+                    onClick={() => {
+                      setSelectedUserId('');
+                      setUserSearch('');
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {userDropdownOpen && !selectedUserId && (
+                <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md max-h-60 overflow-y-auto">
+                  {usersLoading ? (
+                    <div className="p-3 text-sm text-muted-foreground text-center">
+                      <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
+                      Cargando usuarios...
+                    </div>
+                  ) : filteredUsers.length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground text-center">
+                      {userSearch ? 'Sin resultados' : 'No hay usuarios cargados'}
+                    </div>
+                  ) : (
+                    filteredUsers.map(u => (
+                      <button
+                        key={u.id}
+                        className="w-full px-3 py-2 text-sm text-left hover:bg-accent flex items-center justify-between"
+                        onClick={() => {
+                          setSelectedUserId(u.id);
+                          setUserSearch('');
+                          setUserDropdownOpen(false);
+                        }}
+                      >
+                        <div>
+                          <span className="font-medium">{u.nombre}</span>
+                          <span className="text-muted-foreground ml-2">{u.email}</span>
+                        </div>
+                        <Badge variant="outline" className="text-[10px] capitalize">{u.plan}</Badge>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
             <Button 
               onClick={handleSaveUserOverrides} 
@@ -384,25 +482,25 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
           <ToggleRow
             label="Respuestas automáticas"
             description="La IA responde automáticamente mensajes de WhatsApp"
-            plan={getFeatureRequiredPlan('ia-assistant')}
-            checked={toggles['ia-assistant'] ?? true}
-            onCheckedChange={(c) => handleToggle('ia-assistant', c)}
+            plan={getFeatureRequiredPlan('ia-autorespuestas')}
+            checked={toggles['ia-autorespuestas'] ?? true}
+            onCheckedChange={(c) => handleToggle('ia-autorespuestas', c)}
             compact
           />
           <ToggleRow
             label="Triaje de urgencias"
             description="Detectar y notificar mensajes urgentes automáticamente"
-            plan={getFeatureRequiredPlan('ia-assistant')}
-            checked={toggles['ia-assistant'] ?? true}
-            onCheckedChange={(c) => handleToggle('ia-assistant', c)}
+            plan={getFeatureRequiredPlan('ia-triaje')}
+            checked={toggles['ia-triaje'] ?? true}
+            onCheckedChange={(c) => handleToggle('ia-triaje', c)}
             compact
           />
           <ToggleRow
             label="Renovación de recetas automática"
             description="Permitir renovar recetas sin intervención del médico"
-            plan={getFeatureRequiredPlan('ia-assistant')}
-            checked={toggles['ia-assistant'] ?? true}
-            onCheckedChange={(c) => handleToggle('ia-assistant', c)}
+            plan={getFeatureRequiredPlan('ia-renovacion')}
+            checked={toggles['ia-renovacion'] ?? true}
+            onCheckedChange={(c) => handleToggle('ia-renovacion', c)}
             compact
           />
           <div className="space-y-2">
@@ -492,8 +590,9 @@ function PrivacidadConfigSection() {
     fetch('/api/admin/privacidad-config')
       .then(r => r.json())
       .then(data => {
-        if (data.config) {
-          setConfig(data.config);
+        const configData = data.data?.config ?? data.config;
+        if (configData) {
+          setConfig(configData);
         }
         setLoading(false);
       })

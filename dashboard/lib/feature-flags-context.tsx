@@ -53,8 +53,9 @@ export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
         return;
       }
       const data = await res.json();
-      if (data.features) {
-        setToggles(data.features);
+      const features = data.data?.features ?? data.features;
+      if (features) {
+        setToggles(features);
       }
     } catch {
       // Silently fail — asume todo habilitado

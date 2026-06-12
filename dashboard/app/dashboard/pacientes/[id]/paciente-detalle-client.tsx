@@ -1062,24 +1062,24 @@ export function PacienteDetalleClient({
 
       {/* Tabs */}
       <Tabs defaultValue="turnos">
-        <TabsList className="flex-nowrap overflow-x-auto scrollbar-none w-full justify-start">
-          <TabsTrigger value="turnos">
-            <Calendar className="h-4 w-4 mr-1" /> Turnos ({turnosList.length})
+        <TabsList className="flex-nowrap overflow-x-auto scrollbar-none w-full justify-start gap-1">
+          <TabsTrigger value="turnos" className="shrink-0 whitespace-nowrap">
+            <Calendar className="h-4 w-4 mr-1 shrink-0" /> Turnos ({turnosList.length})
           </TabsTrigger>
-          <TabsTrigger value="recetas">
-            <Syringe className="h-4 w-4 mr-1" /> Recetas ({recetasList.length})
+          <TabsTrigger value="recetas" className="shrink-0 whitespace-nowrap">
+            <Syringe className="h-4 w-4 mr-1 shrink-0" /> Recetas ({recetasList.length})
           </TabsTrigger>
-          <TabsTrigger value="historial">
-            <Activity className="h-4 w-4 mr-1" /> Historial ({historial.length})
+          <TabsTrigger value="historial" className="shrink-0 whitespace-nowrap">
+            <Activity className="h-4 w-4 mr-1 shrink-0" /> Historial ({historial.length})
           </TabsTrigger>
-          <TabsTrigger value="soap" onClick={fetchNotasSoap}>
-            <Stethoscope className="h-4 w-4 mr-1" /> SOAP ({stats.totalNotasSoap})
+          <TabsTrigger value="soap" onClick={fetchNotasSoap} className="shrink-0 whitespace-nowrap">
+            <Stethoscope className="h-4 w-4 mr-1 shrink-0" /> SOAP ({stats.totalNotasSoap})
           </TabsTrigger>
-          <TabsTrigger value="certificados" onClick={fetchCertificados}>
-            <ScrollText className="h-4 w-4 mr-1" /> Certificados ({certificadosList.length})
+          <TabsTrigger value="certificados" onClick={fetchCertificados} className="shrink-0 whitespace-nowrap">
+            <ScrollText className="h-4 w-4 mr-1 shrink-0" /> Certificados ({certificadosList.length})
           </TabsTrigger>
-          <TabsTrigger value="notas">
-            <FileText className="h-4 w-4 mr-1" /> Notas
+          <TabsTrigger value="notas" className="shrink-0 whitespace-nowrap">
+            <FileText className="h-4 w-4 mr-1 shrink-0" /> Notas
           </TabsTrigger>
         </TabsList>
 
@@ -1096,57 +1096,61 @@ export function PacienteDetalleClient({
             <div className="space-y-2">
               {turnosList.map((t) => (
                 <Card key={t.id} className="hoverable:hover:bg-muted/30 transition-colors">
-                  <CardContent className="p-4 flex items-center gap-4">
-                    <div
-                      className="h-10 w-10 rounded-lg flex items-center justify-center text-xs font-bold"
-                      style={{
-                        backgroundColor: `${getTurnoColor(t.estado)}15`,
-                        color: getTurnoColor(t.estado),
-                      }}
-                    >
-                      {t.fechaHora.substring(8, 10)}/{t.fechaHora.substring(5, 7)}
+                  <CardContent className="p-4 flex items-start gap-3 flex-wrap">
+                    <div className="flex items-center gap-3 flex-1 min-w-0 min-[400px]:flex-nowrap flex-wrap">
+                      <div
+                        className="h-10 w-10 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                        style={{
+                          backgroundColor: `${getTurnoColor(t.estado)}15`,
+                          color: getTurnoColor(t.estado),
+                        }}
+                      >
+                        {t.fechaHora.substring(8, 10)}/{t.fechaHora.substring(5, 7)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">
+                          {formatDate(t.fechaHora, "d 'de' MMMM")} a las {t.hora}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {t.motivo || t.tipoConsulta} {t.medicoNombre && `· ${t.medicoNombre}`} · {t.duracionMinutos}min
+                        </p>
+                        {t.notasMedico && (
+                          <p className="text-xs text-muted-foreground/70 mt-0.5 italic">{t.notasMedico}</p>
+                        )}
+                      </div>
+                      <Badge className="shrink-0"
+                        style={{
+                          backgroundColor: `${getTurnoColor(t.estado)}20`,
+                          color: getTurnoColor(t.estado),
+                          borderColor: `${getTurnoColor(t.estado)}40`,
+                        }}
+                        variant="outline"
+                      >
+                        {getTurnoLabel(t.estado)}
+                      </Badge>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">
-                        {formatDate(t.fechaHora, "d 'de' MMMM")} a las {t.hora}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {t.motivo || t.tipoConsulta} {t.medicoNombre && `· ${t.medicoNombre}`} · {t.duracionMinutos}min
-                      </p>
-                      {t.notasMedico && (
-                        <p className="text-xs text-muted-foreground/70 mt-0.5 italic">{t.notasMedico}</p>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      {(t.estado === 'pendiente' || t.estado === 'confirmada') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-7 flex-1 sm:flex-none"
+                          onClick={() => handleEstadoTurno(t.id, 'atendido')}
+                        >
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> Atendido
+                        </Button>
+                      )}
+                      {t.estado !== 'cancelada' && t.estado !== 'atendido' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs h-7 text-destructive flex-1 sm:flex-none"
+                          onClick={() => handleEstadoTurno(t.id, 'cancelada')}
+                        >
+                          <XCircle className="h-3 w-3 mr-1" /> Cancelar
+                        </Button>
                       )}
                     </div>
-                    <Badge
-                      style={{
-                        backgroundColor: `${getTurnoColor(t.estado)}20`,
-                        color: getTurnoColor(t.estado),
-                        borderColor: `${getTurnoColor(t.estado)}40`,
-                      }}
-                      variant="outline"
-                    >
-                      {getTurnoLabel(t.estado)}
-                    </Badge>
-                    {(t.estado === 'pendiente' || t.estado === 'confirmada') && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs h-7"
-                        onClick={() => handleEstadoTurno(t.id, 'atendido')}
-                      >
-                        <CheckCircle2 className="h-3 w-3 mr-1" /> Atendido
-                      </Button>
-                    )}
-                    {t.estado !== 'cancelada' && t.estado !== 'atendido' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs h-7 text-destructive"
-                        onClick={() => handleEstadoTurno(t.id, 'cancelada')}
-                      >
-                        <XCircle className="h-3 w-3 mr-1" /> Cancelar
-                      </Button>
-                    )}
                   </CardContent>
                 </Card>
               ))}
