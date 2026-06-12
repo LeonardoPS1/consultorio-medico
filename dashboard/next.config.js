@@ -11,7 +11,8 @@ const nextConfig = withBundleAnalyzer({
   images: {
     domains: ['localhost'],
   },
-  output: 'standalone',
+  // Solo usar standalone output en Docker/Linux: pnpm symlinks causan EPERM en Windows
+  output: process.env.DISABLE_STANDALONE === 'true' ? undefined : 'standalone',
   // Variables de entorno que expone al cliente
   env: {
     NEXT_PUBLIC_APP_NAME: 'AiCoreMed',
