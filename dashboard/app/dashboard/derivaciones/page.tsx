@@ -169,10 +169,15 @@ export default function DerivacionesPage() {
     }
     setSaving(true);
     try {
+      // Convert empty string to null for medicoDestinoId
+      const payload = {
+        ...form,
+        medicoDestinoId: form.medicoDestinoId === '' ? null : form.medicoDestinoId,
+      };
       const res = await fetch('/api/derivaciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Error al crear');
       toast({ title: 'Derivación creada', description: 'La derivación fue registrada correctamente' });
@@ -410,15 +415,15 @@ export default function DerivacionesPage() {
               </div>
               <div className="space-y-2">
                 <Label>Médico destino</Label>
-                <Select value={form.medicoDestinoId} onValueChange={(v) => setForm(f => ({ ...f, medicoDestinoId: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Sin asignar</SelectItem>
-                    {medicos.filter(m => m.id !== form.medicoOrigenId).map((m) => (
-                      <SelectItem key={m.id} value={m.id}>{m.nombre} — {m.especialidad}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <Select value={form.medicoDestinoId || ""} onValueChange={(v) => setForm(f => ({ ...f, medicoDestinoId: v === "" ? null : v }))}>
+                    <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Sin asignar</SelectItem>
+                      {medicos.filter(m => m.id !== form.medicoOrigenId).map((m) => (
+                        <SelectItem key={m.id} value={m.id}>{m.nombre} — {m.especialidad}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
               </div>
             </div>
 

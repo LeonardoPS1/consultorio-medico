@@ -396,7 +396,7 @@ export const updateDerivacionSchema = z.object({
   diagnostico: z.string().optional().nullable(),
   cie10Codigo: z.string().optional().nullable(),
   fechaRespuesta: z.string().optional().nullable(),
-});
+}).partial();
 
 // ─── Tipos inferidos ─────────────────────────────────────
 
