@@ -9,30 +9,24 @@ export const dynamic = 'force-dynamic';
 import { ListChecks, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { ListaEsperaClient } from './lista-espera-client';
 import { PageHeader } from '@/components/page-header';
+import { waitlistService } from '@/lib/services/waitlist';
 
 interface WaitlistItem {
   id: string;
   pacienteId: string;
   medicoId: string;
-  fechaInscripcion: string;
+  fechaInscripcion: Date;
   estado: string;
   notas: string | null;
-  pacienteNombre: string;
-  pacienteApellido: string;
-  pacienteTelefono: string;
-  medicoNombre: string;
+  pacienteNombre: string | null;
+  pacienteApellido: string | null;
+  pacienteTelefono: string | null;
+  medicoNombre: string | null;
 }
 
 async function getWaitlist(): Promise<WaitlistItem[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/waitlist?estado=activa`, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data || [];
+    return await waitlistService.listar(undefined, 'activa');
   } catch {
     return [];
   }

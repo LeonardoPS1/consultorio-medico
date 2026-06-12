@@ -6,7 +6,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { apiHandler, success, created, fail, conflict } from '@/lib/api-handler';
+import { apiHandler, ok, created, fail, conflict } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
 import { parseBody, createUserSchema } from '@/lib/validations';
 import { db } from '@/lib/db';
@@ -49,7 +49,7 @@ export const GET = apiHandler(async () => {
     .where(eq(usuarios.tenantId, tenantId))
     .orderBy(asc(usuarios.createdAt));
 
-  return success({ users: rows });
+  return ok({ users: rows });
 });
 
 // ─── POST ────────────────────────────────────────────────────

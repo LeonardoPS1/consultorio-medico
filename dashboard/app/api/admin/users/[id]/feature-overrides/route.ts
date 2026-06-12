@@ -9,7 +9,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { apiHandler, success, fail } from '@/lib/api-handler';
+import { apiHandler, ok, fail } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
 import { parseBody } from '@/lib/validations';
 import { db } from '@/lib/db';
@@ -19,11 +19,11 @@ import { z } from 'zod';
 
 // ─── GET ─────────────────────────────────────────────────────
 
-export const GET = apiHandler(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const GET = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const session = await requireAuth();
   if (session.user.role !== 'admin') fail('No autorizado', 403);
 
-  const { id: userId } = params;
+  const { id: userId } = await params;
 
   const overrides = await db
     .select({
@@ -32,27 +32,22 @@ export const GET = apiHandler(async (request: NextRequest, { params }: { params:
     .from(userFeatureOverrides)
     .where(eq(userFeatureOverrides.usuarioId, userId));
 
-  return success({
-    overrides: overrides.map(o => ({
-      featureId: o.featureId,
-      enabled: true, // Por defecto, todos los overrides habilitan la feature
-    })),
+  // El cliente espera un array plano de featureIds
+  return ok({
+    featureIds: overrides.map(o => o.featureId),
   });
 });
 
 // ─── PATCH ───────────────────────────────────────────────────
 
-export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const session = await requireAuth();
   if (session.user.role !== 'admin') fail('No autorizado', 403);
 
-  const { id: userId } = params;
+  const { id: userId } = await params;
 
   const body = await parseBody(request, z.object({
-    overrides: z.array(z.object({
-      featureId: z.string(),
-      enabled: z.boolean().optional().default(true),
-    })),
+    featureIds: z.array(z.string()),
   }));
 
   // Primero, eliminar todos los overrides existentes para este usuario
@@ -60,19 +55,17 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }: { param
     .delete(userFeatureOverrides)
     .where(eq(userFeatureOverrides.usuarioId, userId));
 
-  // Luego, insertar los nuevos overrides (solo features habilitadas)
-  const enabledOverrides = body.overrides.filter(o => o.enabled !== false);
-  if (enabledOverrides.length > 0) {
-    const values = enabledOverrides.map(o => ({
+  // Luego, insertar los nuevos overrides
+  if (body.featureIds.length > 0) {
+    const values = body.featureIds.map(featureId => ({
       usuarioId: userId,
-      featureId: o.featureId,
+      featureId,
     }));
 
     await db.insert(userFeatureOverrides).values(values);
   }
 
-  return success({
-    message: 'Overrides de usuario actualizados',
-    overrides: enabledOverrides,
+  return ok({
+    success: true,
   });
 });

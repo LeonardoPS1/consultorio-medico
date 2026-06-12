@@ -24,13 +24,13 @@ interface WaitlistItem {
   id: string;
   pacienteId: string;
   medicoId: string;
-  fechaInscripcion: string;
+  fechaInscripcion: Date;
   estado: string;
   notas: string | null;
-  pacienteNombre: string;
-  pacienteApellido: string;
-  pacienteTelefono: string;
-  medicoNombre: string;
+  pacienteNombre: string | null;
+  pacienteApellido: string | null;
+  pacienteTelefono: string | null;
+  medicoNombre: string | null;
 }
 
 export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem[] }) {
@@ -55,18 +55,22 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
     try {
       const res = await fetch('/api/waitlist?estado=activa');
       const json = await res.json();
-      setItems(json.data || []);
+      const items = (json.data || []).map((item: Record<string, unknown>) => ({
+        ...item,
+        fechaInscripcion: new Date(item.fechaInscripcion as string),
+      }));
+      setItems(items);
       toast({ title: 'Lista actualizada' });
     } catch {
       toast({ title: 'Error al actualizar', variant: 'destructive' });
     }
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (date: Date) => {
     try {
-      return format(new Date(dateStr), "d 'de' MMMM '·' HH:mm", { locale: es });
+      return format(date, "d 'de' MMMM '·' HH:mm", { locale: es });
     } catch {
-      return dateStr;
+      return date.toISOString();
     }
   };
 

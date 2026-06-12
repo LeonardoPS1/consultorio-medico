@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle2, Loader2, Lightbulb, ExternalLink,
   Stethoscope, Clock, UserPlus, Bell,
+  ListChecks,
   Sparkles, RefreshCw, RotateCcw, SkipForward, Building2,
 } from 'lucide-react';
 import { ONBOARDING_STEPS, FALLBACK_TIPS } from '@/lib/onboarding-types';
@@ -24,6 +25,7 @@ interface OnboardingClientProps {
   initialCompleted: string[];
   isComplete: boolean;
   isForceRestart?: boolean;
+  verProgreso?: boolean;
 }
 
 // ─── Map icon string → component ────────────────────────────
@@ -39,7 +41,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 // ─── Component ──────────────────────────────────────────────
 
-export function OnboardingClient({ initialCompleted, isComplete, isForceRestart }: OnboardingClientProps) {
+export function OnboardingClient({ initialCompleted, isComplete, isForceRestart, verProgreso }: OnboardingClientProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -261,7 +263,11 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
   //   - El usuario completó todo pero al recargar no ve la pantalla de éxito
   // El único caso donde esto podría ser incorrecto es con localStorage stale de un reinicio,
   // pero handleReiniciar() limpia localStorage antes de recargar.
-  const showSuccess = allLocallyDone;
+  //
+  // Si verProgreso=true, NO mostrar la pantalla de éxito aunque todos los pasos
+  // estén completos — así el usuario puede ver el detalle de cada paso.
+  const [showProgressDetail, setShowProgressDetail] = useState(false);
+  const showSuccess = allLocallyDone && !verProgreso && !showProgressDetail;
 
   // ── Marcar paso como completado (persiste en servidor) ──
 
@@ -429,10 +435,16 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
             </Link>
           </Button>
         </div>
-        <Button variant="ghost" onClick={handleReiniciar} className="mt-4 text-muted-foreground">
-          <Sparkles className="h-4 w-4 mr-1.5" />
-          Re-ejecutar asistente IA
-        </Button>
+        <div className="flex items-center gap-3 mt-4">
+          <Button variant="outline" size="sm" onClick={() => setShowProgressDetail(true)}>
+            <ListChecks className="h-4 w-4 mr-1.5" />
+            Ver detalle de pasos
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleReiniciar} className="text-muted-foreground">
+            <Sparkles className="h-4 w-4 mr-1.5" />
+            Re-ejecutar asistente IA
+          </Button>
+        </div>
       </div>
     );
   }
@@ -751,6 +763,13 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
           <span>{completed.length}/{ONBOARDING_STEPS.length} completados</span>
         </div>
         <div className="flex items-center gap-2">
+          {showProgressDetail && allLocallyDone ? (
+            <Button variant="outline" size="sm" onClick={() => setShowProgressDetail(false)}>
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+              Volver a pantalla de éxito
+            </Button>
+          ) : (
+            <>
           <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard')} className="text-muted-foreground">
             <SkipForward className="h-3 w-3 mr-1" />
             Continuar más tarde
@@ -766,6 +785,8 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart 
             <RotateCcw className="h-3 w-3 mr-1" />
             {isForceRestart ? 'Reiniciar de nuevo' : 'Reiniciar'}
           </Button>
+          </>
+          )}
         </div>
       </div>
     </div>

@@ -19,13 +19,14 @@ export const dynamic = 'force-dynamic';
 export default async function OnboardingPage({
   searchParams,
 }: {
-  searchParams?: { reiniciar?: string };
+  searchParams?: { reiniciar?: string; 'ver-progreso'?: string };
 }) {
   // Pasar userId explícitamente para evitar que getOnboardingState()
   // llame a auth() internamente y pueda dar resultados inconsistentes
   const session = await auth();
   const state = await getOnboardingState(session?.user?.id);
   const isForceRestart = searchParams?.reiniciar === 'true';
+  const verProgreso = searchParams?.['ver-progreso'] === 'true';
 
   return (
     <div className="space-y-6 animate-in max-w-3xl mx-auto">
@@ -53,6 +54,7 @@ export default async function OnboardingPage({
         initialCompleted={isForceRestart ? [] : state.completedSteps}
         isComplete={state.isComplete && !isForceRestart}
         isForceRestart={isForceRestart}
+        verProgreso={verProgreso}
       />
     </div>
   );
