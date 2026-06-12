@@ -31,6 +31,7 @@ import {
   BookOpen,
   ListChecks,
   Bell,
+  ArrowRightLeft,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
@@ -59,6 +60,7 @@ const navItems: NavItem[] = [
   { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3, feature: 'reportes' },
   { title: 'Encuestas', href: '/dashboard/encuestas', icon: Star, feature: 'encuestas' },
   { title: 'Lista de Espera', href: '/dashboard/lista-espera', icon: ListChecks, feature: 'lista-espera' },
+  { title: 'Derivaciones', href: '/dashboard/derivaciones', icon: ArrowRightLeft, feature: 'derivaciones' },
   { title: 'Notificaciones', href: '/dashboard/notificaciones', icon: Bell },
   { title: 'Ajustes', href: '/dashboard/configuracion', icon: Sliders },
   { title: 'Ayuda', href: '/dashboard/ayuda', icon: BookOpen },

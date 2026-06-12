@@ -370,6 +370,33 @@ export const setupSchema = z.object({
   nombre: z.string().min(1, 'Nombre es obligatorio'),
 });
 
+// ─── Derivaciones ─────────────────────────────────────────
+
+export const createDerivacionSchema = z.object({
+  pacienteId: z.string().uuid('pacienteId debe ser UUID'),
+  medicoOrigenId: z.string().uuid('medicoOrigenId debe ser UUID'),
+  medicoDestinoId: z.string().uuid('medicoDestinoId debe ser UUID').optional().nullable(),
+  especialidad: z.string().min(1, 'Especialidad es obligatoria'),
+  motivo: z.string().min(1, 'Motivo es obligatorio'),
+  diagnostico: z.string().optional().nullable(),
+  cie10Codigo: z.string().optional().nullable(),
+  gravedad: z.enum(['normal', 'prioritaria', 'urgente']).optional().default('normal'),
+  notasOrigen: z.string().optional().nullable(),
+  sucursalId: z.string().uuid().optional().nullable(),
+});
+
+export const updateDerivacionSchema = z.object({
+  medicoDestinoId: z.string().uuid().optional().nullable(),
+  estado: z.enum(['pendiente', 'aceptada', 'rechazada', 'completada']).optional(),
+  notasDestino: z.string().optional().nullable(),
+  gravedad: z.enum(['normal', 'prioritaria', 'urgente']).optional(),
+  especialidad: z.string().optional(),
+  motivo: z.string().optional(),
+  diagnostico: z.string().optional().nullable(),
+  cie10Codigo: z.string().optional().nullable(),
+  fechaRespuesta: z.string().optional().nullable(),
+});
+
 // ─── Tipos inferidos ─────────────────────────────────────
 
 export type CreatePaciente = z.infer<typeof createPacienteSchema>;
@@ -386,4 +413,6 @@ export type CreateConversacion = z.infer<typeof createConversacionSchema>;
 export type CreateMensaje = z.infer<typeof createMensajeSchema>;
 export type RegisterUser = z.infer<typeof registerSchema>;
 export type CreateUser = z.infer<typeof createUserSchema>;
+export type CreateDerivacion = z.infer<typeof createDerivacionSchema>;
+export type UpdateDerivacion = z.infer<typeof updateDerivacionSchema>;
 export type UpdateUser = z.infer<typeof updateUserSchema>;

@@ -47,7 +47,8 @@ export type FeatureId =
   | 'gcal-sync'
   | 'ia-autorespuestas'
   | 'ia-triaje'
-  | 'ia-renovacion';
+  | 'ia-renovacion'
+  | 'derivaciones';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -88,6 +89,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'ia-autorespuestas': 'professional',
   'ia-triaje': 'professional',
   'ia-renovacion': 'professional',
+  'derivaciones': 'professional',
 };
 
 // ============================================================

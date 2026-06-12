@@ -951,6 +951,39 @@ export const userFeatureOverrides = pgTable('user_feature_overrides', {
   idxUsuario: index('idx_user_feature_overrides_usuario').on(table.usuarioId),
 }));
 
+// ============================================================
+// DERIVACIONES (interconsultas entre médicos/especialistas)
+// ============================================================
+export const derivaciones = pgTable('derivaciones', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pacienteId: uuid('paciente_id').notNull().references(() => pacientes.id),
+  medicoOrigenId: uuid('medico_origen_id').notNull().references(() => medicos.id),
+  medicoDestinoId: uuid('medico_destino_id').references(() => medicos.id),
+  especialidad: varchar('especialidad', { length: 100 }).notNull(),
+  motivo: text('motivo').notNull(),
+  diagnostico: text('diagnostico'),
+  cie10Codigo: varchar('cie10_codigo', { length: 10 }),
+  gravedad: varchar('gravedad', { length: 20 }).notNull().default('normal'), // urgente | prioritaria | normal
+  estado: varchar('estado', { length: 20 }).notNull().default('pendiente'), // pendiente | aceptada | rechazada | completada
+  notasOrigen: text('notas_origen'),
+  notasDestino: text('notas_destino'),
+  fechaRespuesta: timestamp('fecha_respuesta', { withTimezone: true }),
+  sucursalId: uuid('sucursal_id').references(() => sucursales.id),
+  tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (table) => ({
+  idxDerivacionesPaciente: index('idx_derivaciones_paciente').on(table.pacienteId),
+  idxDerivacionesEstado: index('idx_derivaciones_estado').on(table.estado),
+  idxDerivacionesMedicoOrigen: index('idx_derivaciones_medico_origen').on(table.medicoOrigenId),
+  idxDerivacionesMedicoDestino: index('idx_derivaciones_medico_destino').on(table.medicoDestinoId),
+  idxDerivacionesCreatedAt: index('idx_derivaciones_created_at').on(table.createdAt),
+}));
+
+export type Derivation = InferSelectModel<typeof derivaciones>;
+export type NewDerivation = InferInsertModel<typeof derivaciones>;
+
 // ─── Types ──────────────────────────────────────────────
 export type ListaEspera = InferSelectModel<typeof listaEspera>;
 export type NewListaEspera = InferInsertModel<typeof listaEspera>;
