@@ -133,17 +133,22 @@ Twilio → Webhook Dashboard (HMAC validation) →
 |---------------|-------------|
 | **KPIs en Tiempo Real** | 6 métricas con datos reales de DB (server components) |
 | **Gestión de Turnos** | Vista Kanban + calendario + creación/edit/cancelación |
+| **Kanban de Atención** | Arrastrá turnos entre estados, temporizador persistente por paciente |
+| **Derivaciones** | Interconsultas entre especialistas con seguimiento y notificaciones |
+| **Alertas Inteligentes** | Detección automática de cumpleaños, ausentismo recurrente y pacientes críticos |
 | **Ficha del Paciente** | Historia clínica, SOAP, certificados, recetas, conversaciones |
 | **Recetas Digitales** | Firma QR verificable, exportación PDF, autocomplete pacientes |
-| **Notas SOAP** | Evolución clínica estructurada (Subjetivo/Objetivo/Análisis/Plan) |
+| **Notas SOAP** | Evolución clínica estructurada (Subjetivo/Objetivo/Análisis/Plan) con CIE-10 |
 | **Certificados Médicos** | QR de verificación pública, hash SHA-256 |
 | **Reportes** | 4 tabs: ingresos, turnos, pacientes, recetas. Exportación Excel/PDF |
 | **Configuración** | 8 módulos: sucursales, horarios, médicos, servicios, plantillas |
+| **Onboarding IA** | Asistente de configuración con 6 etapas y progreso persistente |
+| **Feature Overrides** | Admin puede otorgar features de planes superiores a usuarios específicos |
 
 ### 🤖 Automatización WhatsApp
 | Característica | Descripción |
 |---------------|-------------|
-| **Triaje IA** | AI Agent clasifica y respunde intenciones automáticamente |
+| **Triaje IA** | AI Agent clasifica y responde intenciones automáticamente |
 | **Recordatorios** | 24h y 1h antes del turno vía WhatsApp |
 | **Confirmación** | Paciente confirma/cancela turno desde WhatsApp |
 | **Agendamiento** | Crear turnos desde WhatsApp vía IA |
@@ -385,27 +390,33 @@ consultorio-medico/
 - [x] Recordatorios automáticos 24h/1h (WF-03)
 - [x] Recetas digitales con firma QR verificable
 - [x] Certificados médicos con QR
-- [x] Notas SOAP + buscador CIE-10
+- [x] Notas SOAP + buscador CIE-10 (~1031 códigos)
 - [x] Reportes avanzados (4 tabs, exportación Excel/PDF)
-- [x] Onboarding asistido por IA (6 etapas)
+- [x] Onboarding asistido por IA (6 etapas con progreso persistente)
 - [x] MercadoPago suscripciones (5 planes)
 - [x] Multi-tenant completo
 - [x] Autenticación 2FA + reset/forgot password
-- [x] Adaptación Chile (Isapre/Fonasa, CLP, regiones)
-- [x] PWA instalable
-- [x] Auditoría de seguridad (0 críticos/0 altos)
+- [x] Adaptación Chile (Isapre/Fonasa, CLP, regiones/comunas)
+- [x] PWA instalable con modo offline
+- [x] Auditoría de seguridad (0 críticos/0 altos/0 medios/0 bajos)
+- [x] Derivaciones entre especialistas con seguimiento completo
+- [x] Alertas inteligentes (cumpleaños, ausentismo recurrente, pacientes críticos)
+- [x] Kanban de atención con temporizador persistente
+- [x] Feature overrides por usuario (admin asigna features cross-plan)
+- [x] Encuestas post-consulta con análisis de sentimiento ML
+- [x] Rediseño Premium (animaciones, cards, popovers, KPIs count-up)
 
 ### 🟡 En Progreso / Próximo
 - [ ] Tests de integración (Playwright)
 - [ ] Correo Inteligente completo (WF-04 — requiere IMAP/SMTP)
+- [ ] Portal del Paciente (turnos, recetas, historial)
 
 ### 🔮 Futuro
-- [ ] Portal del paciente (login para ver turnos/recetas)
 - [ ] Chat en vivo WebSocket
 - [ ] WhatsApp Business API (producción)
 - [ ] Dashboard de analytics avanzados
-- [ ] Sistema de alertas inteligentes
 - [ ] Historial clínico digital expandido
+- [ ] Editar pacientes desde la lista (no solo desde ficha)
 
 ---
 

@@ -292,6 +292,110 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     ],
   },
   {
+    id: 'derivaciones',
+    titulo: 'Derivaciones entre Especialistas',
+    descripcion: 'Interconsultas y derivaciones de pacientes a otros especialistas con seguimiento completo',
+    icono: 'ArrowRightLeft',
+    pasos: [
+      {
+        titulo: 'Crear una derivación',
+        descripcion: 'Derivá un paciente a otro especialista dentro del sistema.',
+        tips: [
+          'Seleccioná el paciente y la especialidad de destino',
+          'Opcional: elegí un médico específico o dejalo abierto',
+          'Indicá gravedad (normal, prioritaria, urgente)',
+          'Incluí motivo, diagnóstico y código CIE-10',
+          'El médico destino recibe una notificación automática',
+        ],
+        enlace: { href: '/dashboard/derivaciones', label: 'Ir a Derivaciones' },
+      },
+      {
+        titulo: 'Gestionar derivaciones recibidas',
+        descripcion: 'Como médico destino, podés aceptar, rechazar o completar derivaciones.',
+        tips: [
+          'Las derivaciones pendientes aparecen en tu lista',
+          'Al aceptar, el paciente se asigna a tu agenda',
+          'Podés agregar notas al aceptar o completar',
+          'El médico origen recibe notificación de cada acción',
+        ],
+      },
+      {
+        titulo: 'Seguimiento',
+        descripcion: 'Todas las derivaciones tienen trazabilidad completa.',
+        tips: [
+          'Cada derivación muestra historial de cambios de estado',
+          'Podés ver el paciente, diagnósticos y notas de ambos médicos',
+          'Las derivaciones completadas quedan en el historial',
+          'Disponible en plan Professional o superior',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Puedo derivar a un médico específico o solo a una especialidad?',
+        respuesta: 'Ambos. Podés elegir un médico destino específico si sabés quién debe atender, o dejar la especialidad abierta para que cualquier médico de esa área pueda tomar el caso.',
+      },
+      {
+        pregunta: '¿El paciente recibe notificación de la derivación?',
+        respuesta: 'Por ahora las notificaciones son internas entre médicos. El paciente puede enterarse cuando el médico destino lo contacte para agendar el turno.',
+      },
+    ],
+  },
+  {
+    id: 'alertas-inteligentes',
+    titulo: 'Alertas Inteligentes',
+    descripcion: 'Detección automática de eventos importantes para mejorar la atención',
+    icono: 'Bell',
+    pasos: [
+      {
+        titulo: 'Alertas de cumpleaños',
+        descripcion: 'El sistema detecta automáticamente pacientes que cumplen años hoy.',
+        tips: [
+          'Las alertas se generan al ejecutar el proceso',
+          'Podés previsualizar antes de enviar',
+          'Ideal para enviar saludos personalizados',
+        ],
+      },
+      {
+        titulo: 'Alertas de ausentismo recurrente',
+        descripcion: 'Detecta pacientes con 2 o más inasistencias en los últimos 30 días.',
+        tips: [
+          'Ayuda a identificar pacientes que necesitan seguimiento',
+          'Los médicos reciben notificación automática',
+          'Podés contactar al paciente para reprogramar',
+        ],
+      },
+      {
+        titulo: 'Alertas de pacientes críticos',
+        descripcion: 'Identifica pacientes con 3 o más consultas en los últimos 60 días.',
+        tips: [
+          'Útil para seguimiento de pacientes con enfermedades crónicas',
+          'Las notificaciones se envían a todos los médicos activos',
+          'Permite coordinar atención temprana',
+        ],
+      },
+      {
+        titulo: 'Ejecutar alertas',
+        descripcion: 'Las alertas se pueden ejecutar manualmente o desde n8n.',
+        tips: [
+          'Usá GET /api/alertas?preview=true para previsualizar sin enviar',
+          'Usá POST /api/alertas para ejecutar y notificar a todos los médicos',
+          'Disponible en plan Professional o superior',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Con qué frecuencia se ejecutan las alertas?',
+        respuesta: 'Actualmente se ejecutan manualmente desde la API. Está planificada la automatización vía n8n para ejecución diaria.',
+      },
+      {
+        pregunta: '¿Quién recibe las notificaciones de alertas?',
+        respuesta: 'Todos los médicos activos del consultorio reciben notificaciones push en el dashboard cuando se ejecutan las alertas.',
+      },
+    ],
+  },
+  {
     id: 'recetas',
     titulo: 'Recetas Digitales',
     descripcion: 'Prescripciones médicas electrónicas con seguimiento',

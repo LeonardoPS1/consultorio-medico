@@ -12,6 +12,33 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.8.0',
+    date: '13/06/2026',
+    title: 'Derivaciones, Alertas Inteligentes y Rediseño Premium',
+    items: [
+      'Derivaciones entre especialistas: creá, aceptá, rechazá y completá interconsultas con notificaciones en tiempo real al médico destino',
+      'Alertas inteligentes: detección automática de cumpleaños, ausentismo recurrente (2+ no asistencias en 30 días), y pacientes críticos (3+ consultas en 60 días)',
+      'Temporizador de atención persistente: el tiempo de atención ahora se guarda en DB y sobrevive a recargas de página',
+      'Rediseño Premium: animaciones suaves, cards con hover-lift, popovers con origen-aware, KPIs con count-up, sidebar con indicador activo y header glass',
+      'Mejora en encuestas post-consulta con análisis de sentimiento usando IA local (Gemma3)',
+      'CIE-10 expandido a ~1031 códigos con búsqueda mejorada',
+      'Onboarding IA: progreso persistente, 6 etapas con re-ejecución y continuar más tarde',
+      'Feature overrides por usuario: admin puede otorgar features de planes superiores a usuarios específicos',
+    ],
+  },
+  {
+    version: '1.7.0',
+    date: '10/06/2026',
+    title: 'Feature Overrides, Onboarding y CIE-10',
+    items: [
+      'Feature overrides por usuario: un admin puede habilitar features de planes superiores para usuarios específicos',
+      'Onboarding IA: progreso persistente entre sesiones, re-ejecución del asistente, continuar más tarde',
+      'Fix importancia: onboarding no se podía completar por error en paso 2; persistencia de pasos mejorada',
+      'CIE-10 expandido con nuevos códigos comunes en Chile',
+      'Encuestas post-consulta con análisis de sentimiento ML usando Gemma3',
+    ],
+  },
+  {
     version: '1.6.0',
     date: '01/06/2026',
     title: 'Mejoras en Turnos, Recetas y Seguridad',

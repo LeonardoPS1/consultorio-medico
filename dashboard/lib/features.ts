@@ -48,7 +48,8 @@ export type FeatureId =
   | 'ia-autorespuestas'
   | 'ia-triaje'
   | 'ia-renovacion'
-  | 'derivaciones';
+  | 'derivaciones'
+  | 'alertas-inteligentes';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -90,6 +91,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'ia-triaje': 'professional',
   'ia-renovacion': 'professional',
   'derivaciones': 'professional',
+  'alertas-inteligentes': 'professional',
 };
 
 // ============================================================

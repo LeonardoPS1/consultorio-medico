@@ -82,6 +82,8 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     features: [
       'Todo lo de Starter +',
       'Asistente IA (triaje + respuestas automáticas)',
+      'Derivaciones entre especialistas con seguimiento completo',
+      'Alertas inteligentes (cumpleaños, ausentismo recurrente, pacientes críticos)',
       'Reportes avanzados + Exportación Excel/PDF',
       'Plantillas WhatsApp personalizables',
       'Autenticación 2FA / Seguridad avanzada',
