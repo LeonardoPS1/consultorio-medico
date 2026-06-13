@@ -433,9 +433,12 @@ export default function AtencionPage() {
     nuevoEstado: TurnoEstado,
     getOptimistic: (turno: Turno) => Partial<Turno>,
     extraBody?: Record<string, unknown>,
-  ): Promise<boolean> => {
+  ): Promise<{ ok: boolean; error?: string }> => {
     const turno = turnos.find((t) => t.id === id);
-    if (!turno) return false;
+    if (!turno) return { ok: false, error: 'Turno no encontrado' };
+
+    // Snapshot para revertir si falla
+    const snapshot = { estado: turno.estado, atendidoAt: turno.atendidoAt };
 
     // Optimistic update
     setTurnos((prev) =>
@@ -454,20 +457,22 @@ export default function AtencionPage() {
       });
 
       if (!res.ok) {
-        throw new Error(res.status >= 500 ? 'Error del servidor' : 'Datos inválidos');
+        const body = await res.json().catch(() => ({}));
+        const msg = body?.error || (res.status >= 500 ? 'Error del servidor' : 'Error al guardar');
+        throw new Error(msg);
       }
 
-      return true;
+      return { ok: true };
     } catch (err) {
       // Revert optimistic update on error
       setTurnos((prev) =>
         prev.map((t) =>
           t.id === id
-            ? { ...t, estado: turno.estado, atendidoAt: turno.atendidoAt }
+            ? { ...t, estado: snapshot.estado, atendidoAt: snapshot.atendidoAt }
             : t
         )
       );
-      return false;
+      return { ok: false, error: err instanceof Error ? err.message : 'Error desconocido' };
     }
   }, [turnos]);
 
@@ -475,7 +480,7 @@ export default function AtencionPage() {
   // Acciones con botones
   // ============================================================
   const atenderTurno = useCallback(async (id: string) => {
-    const ok = await patchTurnoEstado(id, 'en_atencion', (t) => ({
+    const { ok, error } = await patchTurnoEstado(id, 'en_atencion', (t) => ({
       estado: 'en_atencion',
       atendidoAt: new Date().toISOString(),
     }));
@@ -483,12 +488,12 @@ export default function AtencionPage() {
     if (ok) {
       toast({ title: 'En atención', description: `${paciente} está siendo atendido` });
     } else {
-      toast({ title: 'Error', description: 'No se pudo iniciar la atención', variant: 'destructive' });
+      toast({ title: 'Error', description: error || 'No se pudo iniciar la atención', variant: 'destructive' });
     }
   }, [turnos, patchTurnoEstado]);
 
   const finalizarTurno = useCallback(async (id: string) => {
-    const ok = await patchTurnoEstado(id, 'atendido', (t) => ({
+    const { ok, error } = await patchTurnoEstado(id, 'atendido', (t) => ({
       estado: 'atendido',
       atendidoAt: new Date().toISOString(),
     }));
@@ -496,31 +501,31 @@ export default function AtencionPage() {
     if (ok) {
       toast({ title: 'Atendido', description: `${paciente} fue atendido correctamente` });
     } else {
-      toast({ title: 'Error', description: 'No se pudo finalizar el turno', variant: 'destructive' });
+      toast({ title: 'Error', description: error || 'No se pudo finalizar el turno', variant: 'destructive' });
     }
   }, [turnos, patchTurnoEstado]);
 
   const cancelarTurno = useCallback(async (id: string) => {
-    const ok = await patchTurnoEstado(id, 'cancelada', () => ({
+    const { ok, error } = await patchTurnoEstado(id, 'cancelada', () => ({
       estado: 'cancelada',
     }), { motivoCancelacion: 'Cancelado desde dashboard', skipWaitlist: true });
     const paciente = turnos.find((t) => t.id === id)?.paciente;
     if (ok) {
       toast({ title: 'Cancelado', description: `Turno de ${paciente} cancelado` });
     } else {
-      toast({ title: 'Error', description: 'No se pudo cancelar el turno', variant: 'destructive' });
+      toast({ title: 'Error', description: error || 'No se pudo cancelar el turno', variant: 'destructive' });
     }
   }, [turnos, patchTurnoEstado]);
 
   const moverNoAsistio = useCallback(async (id: string) => {
-    const ok = await patchTurnoEstado(id, 'no_asistio', () => ({
+    const { ok, error } = await patchTurnoEstado(id, 'no_asistio', () => ({
       estado: 'no_asistio',
     }));
     const paciente = turnos.find((t) => t.id === id)?.paciente;
     if (ok) {
       toast({ title: 'No asistió', description: `Turno de ${paciente} marcado como no asistió` });
     } else {
-      toast({ title: 'Error', description: 'No se pudo actualizar el turno', variant: 'destructive' });
+      toast({ title: 'Error', description: error || 'No se pudo actualizar el turno', variant: 'destructive' });
     }
   }, [turnos, patchTurnoEstado]);
 
@@ -604,7 +609,10 @@ export default function AtencionPage() {
           body: JSON.stringify({ estado: nuevoEstado }),
         });
 
-        if (!res.ok) throw new Error('Error del servidor');
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body?.error || 'Error del servidor');
+        }
 
         // Toast según el destino
         const label = COLUMNAS.find((c) => c.id === columnaId)?.titulo || nuevoEstado;
@@ -612,7 +620,7 @@ export default function AtencionPage() {
           title: `Movido a ${label}`,
           description: `${turno.paciente} → ${getTurnoLabel(nuevoEstado)}`,
         });
-      } catch {
+      } catch (err) {
         // Revert optimistic update on error
         setTurnos((prev) =>
           prev.map((t) => {
@@ -622,9 +630,10 @@ export default function AtencionPage() {
             return reverted;
           })
         );
+        const msg = err instanceof Error ? err.message : 'Error desconocido';
         toast({
           title: 'Error',
-          description: 'No se pudo guardar el cambio de estado',
+          description: msg,
           variant: 'destructive',
         });
       }
