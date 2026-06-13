@@ -458,7 +458,9 @@ export default function AtencionPage() {
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        const msg = body?.error || (res.status >= 500 ? 'Error del servidor' : 'Error al guardar');
+        // Intentar leer el error real del servidor (prodError para 500, detail para dev)
+        const serverMsg = body?.prodError || body?.detail || body?.error || '';
+        const msg = serverMsg || (res.status >= 500 ? 'Error del servidor' : 'Error al guardar');
         throw new Error(msg);
       }
 
@@ -611,7 +613,8 @@ export default function AtencionPage() {
 
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          throw new Error(body?.error || 'Error del servidor');
+          const serverMsg = body?.prodError || body?.detail || body?.error || '';
+          throw new Error(serverMsg || 'Error del servidor');
         }
 
         // Toast según el destino

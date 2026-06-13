@@ -23,14 +23,14 @@ export function apiHandler(fn: (...args: any[]) => any): (...args: any[]) => any
       const message = error instanceof Error ? error.message : 'Error interno del servidor';
       const status = (error as any)?.status || 500;
       safeError(`[API] ${request.method} ${request.nextUrl.pathname}:`, { error: message });
-      // Mostrar error real si no es 500, o si está habilitado explícitamente
-      // En producción, los 500 se ocultan para no exponer detalles internos
-      // Pero mostramos el mensaje real para facilitar debugging
+      // Mostrar el error real siempre para facilitar debugging
+      // En producción se puede ocultar después de diagnosticar
       const userFacing = status < 500;
       return NextResponse.json(
         { 
           error: userFacing ? message : 'Error interno del servidor',
-          ...(process.env.NODE_ENV !== 'production' ? { detail: message } : {}),
+          detail: process.env.NODE_ENV !== 'production' ? message : undefined,
+          ...(process.env.NODE_ENV === 'production' ? { prodError: message } : {}),
         },
         { status },
       );
