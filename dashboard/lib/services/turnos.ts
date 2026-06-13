@@ -162,28 +162,33 @@ export const turnosService = {
   },
 
   async update(id: string, input: UpdateTurno & { skipWaitlist?: boolean }) {
-    const [existe] = await db.select().from(turnos).where(and(eq(turnos.id, id), sql`${turnos.deletedAt} IS NULL`)).limit(1);
-    if (!existe) notFound('Turno no encontrado');
+    try {
+      const [existe] = await db.select().from(turnos).where(and(eq(turnos.id, id), sql`${turnos.deletedAt} IS NULL`)).limit(1);
+      if (!existe) notFound('Turno no encontrado');
 
-    const data: Record<string, any> = { updatedAt: new Date() };
-    if (input.estado === 'cancelada') {
-      data.estado = 'cancelada'; data.canceladoPor = 'dashboard'; data.motivoCancelacion = input.motivoCancelacion || null;
-    } else if (input.estado) {
-      data.estado = input.estado;
-    }
-    if (input.fecha && input.hora) data.fechaHora = new Date(`${input.fecha}T${input.hora}:00.000Z`);
-    if (input.motivo !== undefined) data.motivo = input.motivo;
-    if (input.tipoConsulta !== undefined) data.tipoConsulta = input.tipoConsulta;
-    if (input.duracionMinutos) data.duracionMinutos = input.duracionMinutos;
+      const data: Record<string, any> = { updatedAt: new Date() };
+      if (input.estado === 'cancelada') {
+        data.estado = 'cancelada'; data.canceladoPor = 'dashboard'; data.motivoCancelacion = input.motivoCancelacion || null;
+      } else if (input.estado) {
+        data.estado = input.estado;
+      }
+      if (input.fecha && input.hora) data.fechaHora = new Date(`${input.fecha}T${input.hora}:00.000Z`);
+      if (input.motivo !== undefined) data.motivo = input.motivo;
+      if (input.tipoConsulta !== undefined) data.tipoConsulta = input.tipoConsulta;
+      if (input.duracionMinutos) data.duracionMinutos = input.duracionMinutos;
 
-     const turnoActualizado = (await db.update(turnos).set(data).where(eq(turnos.id, id)).returning())[0];
+      const [turnoActualizado] = await db.update(turnos).set(data).where(eq(turnos.id, id)).returning();
+
+      if (!turnoActualizado) {
+        safeError(`[Turnos] Update returned empty for id=${id}`, { id, estado: input.estado });
+        fail('No se pudo actualizar el turno (resultado vacío)', 500);
+      }
 
       // Disparar sync a Google Calendar si hubo cambios relevantes (fire-and-forget)
       try {
-         // Solo sync si cambió fechaHora, estado, o si se está cancelando
-         const camposRelevantes = ['fecha', 'hora', 'estado'];
-         const hayCambiosRelevantes = camposRelevantes.some(campo => (input as any)[campo] !== undefined);
-        
+        const camposRelevantes = ['fecha', 'hora', 'estado'];
+        const hayCambiosRelevantes = camposRelevantes.some(campo => (input as any)[campo] !== undefined);
+      
         if (hayCambiosRelevantes) {
           const [paciente] = await db
             .select({ nombre: pacientes.nombre, apellido: pacientes.apellido, telefono: pacientes.telefono })
@@ -204,7 +209,6 @@ export const turnosService = {
           const pacienteNombre = paciente ? `${paciente.nombre} ${paciente.apellido}`.trim() : 'Paciente';
           const medicoNombre = medico?.nombre;
 
-          // Determinar la acción según el estado
           const gcalAction = turnoActualizado.estado === 'cancelada'
             ? 'delete' as const
             : turnoActualizado.googleCalendarEventId
@@ -229,16 +233,11 @@ export const turnosService = {
       }
 
       // Si el turno fue cancelado, buscar candidato en lista de espera (fire-and-forget)
-      // Saltar si skipWaitlist es true (para cancelaciones manuales con diálogo explícito)
       if (input.estado === 'cancelada' && !input.skipWaitlist) {
         waitlistService.buscarCandidato(turnoActualizado.medicoId, turnoActualizado.sucursalId || undefined)
           .then(async (candidato) => {
             if (!candidato) return;
-
-            // Crear oferta para el candidato
             const oferta = await waitlistService.crearOferta(candidato.id, turnoActualizado.id);
-
-            // Notificar al paciente vía WhatsApp (fire-and-forget)
             const { notificarOfertaTurno } = await import('@/lib/whatsapp-waitlist');
             notificarOfertaTurno(oferta.id, turnoActualizado.id, candidato.id).catch(() => {});
           })
@@ -251,6 +250,10 @@ export const turnosService = {
       cache.invalidate('turnos:list:');
 
       return turnoActualizado;
+    } catch (error) {
+      safeError(`[Turnos] Error en update id=${id}:`, error instanceof Error ? { message: error.message, stack: error.stack } : error);
+      throw error; // Re-lanzar para que apiHandler lo capture
+    }
   },
 
   async delete(id: string) {
