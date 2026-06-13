@@ -120,7 +120,7 @@ export function TurnosClient({
   // Waitlist reassignment after cancel
   const [showWaitlistReassign, setShowWaitlistReassign] = useState<{ turnoId: string; medicoId: string; pacienteNombre: string } | null>(null);
   const [waitlistCandidates, setWaitlistCandidates] = useState<any[]>([]);
-  const [waitlistLoading, setWaitlistLoading] = useState(false);
+  const [waitlistReassignLoading, setWaitlistReassignLoading] = useState(false);
 
   // Propuesta de lista de espera cuando hay conflicto de horario
   const [waitlistProposal, setWaitlistProposal] = useState<{
@@ -1177,7 +1177,7 @@ export function TurnosClient({
                     // Después de cancelar, verificar si hay pacientes en lista de espera para este médico
                     const turno = turnos.find((t) => t.id === showCancelDialog);
                     if (turno?.medicoId) {
-                      setWaitlistLoading(true);
+                      setWaitlistReassignLoading(true);
                       try {
                         const res = await fetch(`/api/waitlist/candidatos?medicoId=${turno.medicoId}`);
                         if (res.ok) {
@@ -1194,7 +1194,7 @@ export function TurnosClient({
                       } catch {
                         // Si falla la verificación, continuar sin reasignación
                       } finally {
-                        setWaitlistLoading(false);
+                        setWaitlistReassignLoading(false);
                       }
                     }
                   } catch {
@@ -1234,7 +1234,7 @@ export function TurnosClient({
             <p className="text-sm">
               Paciente: <strong>{showWaitlistReassign?.pacienteNombre}</strong> quedó libre.
             </p>
-            {waitlistLoading ? (
+            {waitlistReassignLoading ? (
               <div className="flex items-center justify-center py-4">
                 <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
                 <span className="ml-2 text-sm text-muted-foreground">Buscando candidatos...</span>

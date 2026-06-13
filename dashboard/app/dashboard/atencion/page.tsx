@@ -315,9 +315,9 @@ function KanbanColumn({
 
       {/* Cards */}
       {turnos.length === 0 ? (
-        <div className={`flex flex-col items-center justify-center py-8 text-center rounded-xl border-2 border-dashed flex-1 transition-colors
-          ${isDragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/10'}
-        }`>
+        <div className={`flex flex-col items-center justify-center py-8 text-center rounded-xl border-2 border-dashed flex-1 transition-colors ${
+          isDragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/10'
+        }`}>
           <Icono className="h-8 w-8 mb-2 opacity-30" style={{ color: columna.color }} />
           <p className="text-xs text-muted-foreground/60">
             {isDragOver ? 'Soltó acá' : 'Sin turnos'}
@@ -426,147 +426,103 @@ export default function AtencionPage() {
   };
 
   // ============================================================
+  // Helper: PATCH con verificación de response.ok
+  // ============================================================
+  const patchTurnoEstado = useCallback(async (
+    id: string,
+    nuevoEstado: TurnoEstado,
+    getOptimistic: (turno: Turno) => Partial<Turno>,
+    extraBody?: Record<string, unknown>,
+  ): Promise<boolean> => {
+    const turno = turnos.find((t) => t.id === id);
+    if (!turno) return false;
+
+    // Optimistic update
+    setTurnos((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? { ...t, ...getOptimistic(t) }
+          : t
+      )
+    );
+
+    try {
+      const res = await fetch(`/api/turnos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: nuevoEstado, ...extraBody }),
+      });
+
+      if (!res.ok) {
+        throw new Error(res.status >= 500 ? 'Error del servidor' : 'Datos inválidos');
+      }
+
+      return true;
+    } catch (err) {
+      // Revert optimistic update on error
+      setTurnos((prev) =>
+        prev.map((t) =>
+          t.id === id
+            ? { ...t, estado: turno.estado, atendidoAt: turno.atendidoAt }
+            : t
+        )
+      );
+      return false;
+    }
+  }, [turnos]);
+
+  // ============================================================
   // Acciones con botones
   // ============================================================
   const atenderTurno = useCallback(async (id: string) => {
-    const turno = turnos.find((t) => t.id === id);
-    if (!turno) return;
-
-    // Optimistic update
-    setTurnos((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? { ...t, estado: 'en_atencion' as const, atendidoAt: new Date().toISOString() }
-          : t
-      )
-    );
-
-    try {
-      await fetch(`/api/turnos/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'en_atencion' }),
-      });
-      toast({ title: 'En atención', description: `${turno.paciente} está siendo atendido` });
-    } catch {
-      // Revert optimistic update on error
-      setTurnos((prev) =>
-        prev.map((t) =>
-          t.id === id
-            ? { ...t, estado: turno.estado as const, atendidoAt: turno.atendidoAt }
-            : t
-        )
-      );
-      toast({
-        title: 'Error',
-        description: 'No se pudo actualizar el turno',
-        variant: 'destructive',
-      });
+    const ok = await patchTurnoEstado(id, 'en_atencion', (t) => ({
+      estado: 'en_atencion',
+      atendidoAt: new Date().toISOString(),
+    }));
+    const paciente = turnos.find((t) => t.id === id)?.paciente;
+    if (ok) {
+      toast({ title: 'En atención', description: `${paciente} está siendo atendido` });
+    } else {
+      toast({ title: 'Error', description: 'No se pudo iniciar la atención', variant: 'destructive' });
     }
-  }, [turnos]);
+  }, [turnos, patchTurnoEstado]);
 
   const finalizarTurno = useCallback(async (id: string) => {
-    const turno = turnos.find((t) => t.id === id);
-    if (!turno) return;
-
-    // Optimistic update
-    setTurnos((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? { ...t, estado: 'atendido' as const, atendidoAt: new Date().toISOString() }
-          : t
-      )
-    );
-
-    try {
-      await fetch(`/api/turnos/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'atendido' }),
-      });
-      toast({ title: 'Atendido', description: `${turno.paciente} fue atendido correctamente` });
-    } catch {
-      // Revert optimistic update on error
-      setTurnos((prev) =>
-        prev.map((t) =>
-          t.id === id
-            ? { ...t, estado: turno.estado as const, atendidoAt: turno.atendidoAt }
-            : t
-        )
-      );
-      toast({
-        title: 'Error',
-        description: 'No se pudo actualizar el turno',
-        variant: 'destructive',
-      });
+    const ok = await patchTurnoEstado(id, 'atendido', (t) => ({
+      estado: 'atendido',
+      atendidoAt: new Date().toISOString(),
+    }));
+    const paciente = turnos.find((t) => t.id === id)?.paciente;
+    if (ok) {
+      toast({ title: 'Atendido', description: `${paciente} fue atendido correctamente` });
+    } else {
+      toast({ title: 'Error', description: 'No se pudo finalizar el turno', variant: 'destructive' });
     }
-  }, [turnos]);
+  }, [turnos, patchTurnoEstado]);
 
   const cancelarTurno = useCallback(async (id: string) => {
-    const turno = turnos.find((t) => t.id === id);
-    if (!turno) return;
-
-    // Optimistic update
-    setTurnos((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, estado: 'cancelada' as const } : t
-      )
-    );
-
-    try {
-      await fetch(`/api/turnos/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'cancelada', motivoCancelacion: 'Cancelado desde dashboard' }),
-      });
-      toast({ title: 'Cancelado', description: `Turno de ${turno.paciente} cancelado` });
-    } catch {
-      // Revert optimistic update on error
-      setTurnos((prev) =>
-        prev.map((t) =>
-          t.id === id ? { ...t, estado: turno.estado as const } : t
-        )
-      );
-      toast({
-        title: 'Error',
-        description: 'No se pudo cancelar el turno',
-        variant: 'destructive',
-      });
+    const ok = await patchTurnoEstado(id, 'cancelada', () => ({
+      estado: 'cancelada',
+    }), { motivoCancelacion: 'Cancelado desde dashboard', skipWaitlist: true });
+    const paciente = turnos.find((t) => t.id === id)?.paciente;
+    if (ok) {
+      toast({ title: 'Cancelado', description: `Turno de ${paciente} cancelado` });
+    } else {
+      toast({ title: 'Error', description: 'No se pudo cancelar el turno', variant: 'destructive' });
     }
-  }, [turnos]);
+  }, [turnos, patchTurnoEstado]);
 
   const moverNoAsistio = useCallback(async (id: string) => {
-    const turno = turnos.find((t) => t.id === id);
-    if (!turno) return;
-
-    // Optimistic update
-    setTurnos((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, estado: 'no_asistio' as const } : t
-      )
-    );
-
-    try {
-      await fetch(`/api/turnos/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'no_asistio' }),
-      });
-      toast({ title: 'No asistió', description: `Turno de ${turno.paciente} marcado como no asistió` });
-    } catch {
-      // Revert optimistic update on error
-      setTurnos((prev) =>
-        prev.map((t) =>
-          t.id === id ? { ...t, estado: turno.estado as const } : t
-        )
-      );
-      toast({
-        title: 'Error',
-        description: 'No se pudo actualizar el turno',
-        variant: 'destructive',
-      });
+    const ok = await patchTurnoEstado(id, 'no_asistio', () => ({
+      estado: 'no_asistio',
+    }));
+    const paciente = turnos.find((t) => t.id === id)?.paciente;
+    if (ok) {
+      toast({ title: 'No asistió', description: `Turno de ${paciente} marcado como no asistió` });
+    } else {
+      toast({ title: 'Error', description: 'No se pudo actualizar el turno', variant: 'destructive' });
     }
-  }, [turnos]);
+  }, [turnos, patchTurnoEstado]);
 
   // ============================================================
   // Drag & Drop handlers
@@ -601,7 +557,7 @@ export default function AtencionPage() {
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent, columnaId: ColumnaId) => {
+  const handleDrop = useCallback(async (e: React.DragEvent, columnaId: ColumnaId) => {
     e.preventDefault();
     setDragOverColumn(null);
     setDraggingId(null);
@@ -640,12 +596,23 @@ export default function AtencionPage() {
         })
       );
 
-      // Persistir en backend
-      fetch(`/api/turnos/${turnoId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: nuevoEstado }),
-      }).catch(() => {
+      // Persistir en backend con verificación de response.ok
+      try {
+        const res = await fetch(`/api/turnos/${turnoId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estado: nuevoEstado }),
+        });
+
+        if (!res.ok) throw new Error('Error del servidor');
+
+        // Toast según el destino
+        const label = COLUMNAS.find((c) => c.id === columnaId)?.titulo || nuevoEstado;
+        toast({
+          title: `Movido a ${label}`,
+          description: `${turno.paciente} → ${getTurnoLabel(nuevoEstado)}`,
+        });
+      } catch {
         // Revert optimistic update on error
         setTurnos((prev) =>
           prev.map((t) => {
@@ -660,19 +627,12 @@ export default function AtencionPage() {
           description: 'No se pudo guardar el cambio de estado',
           variant: 'destructive',
         });
-      });
-
-      // Toast según el destino
-      const label = COLUMNAS.find((c) => c.id === columnaId)?.titulo || nuevoEstado;
-      toast({
-        title: `Movido a ${label}`,
-        description: `${turno.paciente} → ${getTurnoLabel(nuevoEstado)}`,
-      });
+      }
 
       // Remover clase dragging
       document.querySelectorAll('.dragging').forEach((el) => el.classList.remove('dragging'));
     } catch {
-      // Ignorar errores de parseo
+      // Ignorar errores de parseo del dataTransfer
     }
   }, [turnos]);
 

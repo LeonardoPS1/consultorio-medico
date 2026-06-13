@@ -415,7 +415,7 @@ export default function DerivacionesPage() {
               </div>
               <div className="space-y-2">
                 <Label>Médico destino</Label>
-                  <Select value={form.medicoDestinoId || ""} onValueChange={(v) => setForm(f => ({ ...f, medicoDestinoId: v === "" ? null : v }))}>
+                  <Select value={form.medicoDestinoId} onValueChange={(v) => setForm(f => ({ ...f, medicoDestinoId: v }))}>
                     <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">Sin asignar</SelectItem>
