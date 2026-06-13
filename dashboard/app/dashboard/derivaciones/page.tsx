@@ -113,7 +113,7 @@ export default function DerivacionesPage() {
   const [detailLoading, setDetailLoading] = useState(false);
 
   const [form, setForm] = useState({
-    pacienteId: '', medicoOrigenId: '', medicoDestinoId: '',
+    pacienteId: '', medicoOrigenId: '', medicoDestinoId: 'ninguno',
     especialidad: '', motivo: '', diagnostico: '', cie10Codigo: '',
     gravedad: 'normal' as Gravedad, notasOrigen: '',
   });
@@ -172,7 +172,7 @@ export default function DerivacionesPage() {
       // Convert empty string to null for medicoDestinoId
       const payload = {
         ...form,
-        medicoDestinoId: form.medicoDestinoId === '' ? null : form.medicoDestinoId,
+        medicoDestinoId: form.medicoDestinoId === 'ninguno' ? null : form.medicoDestinoId,
       };
       const res = await fetch('/api/derivaciones', {
         method: 'POST',
@@ -182,7 +182,7 @@ export default function DerivacionesPage() {
       if (!res.ok) throw new Error('Error al crear');
       toast({ title: 'Derivación creada', description: 'La derivación fue registrada correctamente' });
       setCreateOpen(false);
-      setForm({ pacienteId: '', medicoOrigenId: '', medicoDestinoId: '', especialidad: '', motivo: '', diagnostico: '', cie10Codigo: '', gravedad: 'normal', notasOrigen: '' });
+      setForm({ pacienteId: '', medicoOrigenId: '', medicoDestinoId: 'ninguno', especialidad: '', motivo: '', diagnostico: '', cie10Codigo: '', gravedad: 'normal', notasOrigen: '' });
       fetchData();
     } catch (err) {
       toast({ title: 'Error', description: 'No se pudo crear la derivación', variant: 'destructive' });
@@ -418,7 +418,7 @@ export default function DerivacionesPage() {
                   <Select value={form.medicoDestinoId} onValueChange={(v) => setForm(f => ({ ...f, medicoDestinoId: v }))}>
                     <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Sin asignar</SelectItem>
+                      <SelectItem value="ninguno">Sin asignar</SelectItem>
                       {medicos.filter(m => m.id !== form.medicoOrigenId).map((m) => (
                         <SelectItem key={m.id} value={m.id}>{m.nombre} — {m.especialidad}</SelectItem>
                       ))}

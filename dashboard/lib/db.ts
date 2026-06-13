@@ -24,7 +24,7 @@ const connectionString = process.env.DATABASE_URL!;
 const migrationClient = postgres(connectionString, { max: 1, idle_timeout: 10 });
 
 // Cliente para queries (pool reducido — pgBouncer maneja la conexión real)
-const queryClient = postgres(connectionString, { max: 5, idle_timeout: 30 });
+const queryClient = postgres(connectionString, { max: 10, idle_timeout: 30, connect_timeout: 15 });
 
 export const db = drizzle(queryClient, { schema });
 export const migrationDb = drizzle(migrationClient, { schema });
