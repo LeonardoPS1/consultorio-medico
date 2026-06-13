@@ -68,7 +68,7 @@ export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
     .limit(1);
 
   if (!turno) notFound('Turno no encontrado');
-  if (sessionRol !== 'admin' && turno.medicoId !== sessionMedicoId) {
+  if (sessionRol !== 'admin' && sessionRol !== 'secretaria' && turno.medicoId !== sessionMedicoId) {
     fail('No autorizado');
   }
 
@@ -89,7 +89,7 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
     .limit(1);
 
   if (!turno) notFound('Turno no encontrado');
-  if (sessionRol !== 'admin' && turno.medicoId !== sessionMedicoId) {
+  if (sessionRol !== 'admin' && sessionRol !== 'secretaria' && turno.medicoId !== sessionMedicoId) {
     fail('No autorizado');
   }
 
