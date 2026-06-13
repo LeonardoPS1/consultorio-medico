@@ -42,7 +42,7 @@ interface Turno {
   medico: string;
   medicoId?: string;
   estado: TurnoEstado;
-  atendidoAt?: string;
+  inicioAtencionAt?: string;
   sucursalId?: string;
   motivo?: string;
   duracionMinutos?: number;
@@ -186,9 +186,9 @@ function TurnoCard({
         </p>
 
         {/* Timer de atención */}
-        {isInAttention && turno.atendidoAt && (
+        {isInAttention && turno.inicioAtencionAt && (
           <div className="flex items-center gap-2 mb-2 text-blue-600 dark:text-blue-400">
-            <AtencionTimer desde={turno.atendidoAt} />
+            <AtencionTimer desde={turno.inicioAtencionAt} />
           </div>
         )}
 
@@ -438,7 +438,7 @@ export default function AtencionPage() {
     if (!turno) return { ok: false, error: 'Turno no encontrado' };
 
     // Snapshot para revertir si falla
-    const snapshot = { estado: turno.estado, atendidoAt: turno.atendidoAt };
+    const snapshot = { estado: turno.estado, inicioAtencionAt: turno.inicioAtencionAt };
 
     // Optimistic update
     setTurnos((prev) =>
@@ -470,7 +470,7 @@ export default function AtencionPage() {
       setTurnos((prev) =>
         prev.map((t) =>
           t.id === id
-            ? { ...t, estado: snapshot.estado, atendidoAt: snapshot.atendidoAt }
+            ? { ...t, estado: snapshot.estado, inicioAtencionAt: snapshot.inicioAtencionAt }
             : t
         )
       );
@@ -484,7 +484,7 @@ export default function AtencionPage() {
   const atenderTurno = useCallback(async (id: string) => {
     const { ok, error } = await patchTurnoEstado(id, 'en_atencion', (t) => ({
       estado: 'en_atencion',
-      atendidoAt: new Date().toISOString(),
+      inicioAtencionAt: new Date().toISOString(),
     }));
     const paciente = turnos.find((t) => t.id === id)?.paciente;
     if (ok) {
@@ -497,7 +497,6 @@ export default function AtencionPage() {
   const finalizarTurno = useCallback(async (id: string) => {
     const { ok, error } = await patchTurnoEstado(id, 'atendido', (t) => ({
       estado: 'atendido',
-      atendidoAt: new Date().toISOString(),
     }));
     const paciente = turnos.find((t) => t.id === id)?.paciente;
     if (ok) {
@@ -593,11 +592,8 @@ export default function AtencionPage() {
         prev.map((t) => {
           if (t.id !== turnoId) return t;
           const updated: Turno = { ...t, estado: nuevoEstado };
-          if (nuevoEstado === 'en_atencion' || nuevoEstado === 'atendido') {
-            updated.atendidoAt = now;
-          }
-          if (nuevoEstado === 'cancelada' || nuevoEstado === 'no_asistio') {
-            delete updated.atendidoAt;
+          if (nuevoEstado === 'en_atencion') {
+            updated.inicioAtencionAt = now;
           }
           return updated;
         })
@@ -629,7 +625,7 @@ export default function AtencionPage() {
           prev.map((t) => {
             if (t.id !== turnoId) return t;
             const reverted: Turno = { ...t, estado: turno.estado };
-            if (turno.atendidoAt) reverted.atendidoAt = turno.atendidoAt;
+            if (turno.inicioAtencionAt) reverted.inicioAtencionAt = turno.inicioAtencionAt;
             return reverted;
           })
         );

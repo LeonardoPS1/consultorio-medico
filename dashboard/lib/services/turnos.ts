@@ -47,12 +47,14 @@ export const turnosService = {
         estado: turnos.estado, tipo: turnos.tipoConsulta, motivo: turnos.motivo,
         pacienteNombre: pacientes.nombre, pacienteApellido: pacientes.apellido,
         medicoNombre: medicos.nombre, medicoId: medicos.id, pacienteId: pacientes.id,
+        inicioAtencionAt: turnos.inicioAtencionAt,
       }).from(turnos).leftJoin(pacientes, eq(turnos.pacienteId, pacientes.id)).leftJoin(medicos, eq(turnos.medicoId, medicos.id)).where(whereConditions).orderBy(turnos.fechaHora).limit(limit).offset(offset);
 
       const data = lista.map(t => ({
         id: t.id, hora: t.hora, paciente: `${t.pacienteNombre || ''} ${t.pacienteApellido || ''}`.trim() || 'Paciente',
         tipo: t.motivo || t.tipo || 'Consulta', medico: t.medicoNombre || 'Medico', medicoId: t.medicoId, pacienteId: t.pacienteId,
         estado: t.estado, fecha: fechaStr || String(t.fecha).split('T')[0],
+        inicioAtencionAt: t.inicioAtencionAt ? (t.inicioAtencionAt instanceof Date ? t.inicioAtencionAt.toISOString() : new Date(t.inicioAtencionAt).toISOString()) : undefined,
       }));
 
       return { data, total: Number(totalFiltrados), statsTotal, statsPorEstado, fecha: fechaStr };
@@ -167,7 +169,10 @@ export const turnosService = {
       if (!existe) notFound('Turno no encontrado');
 
       const data: Record<string, any> = { updatedAt: new Date() };
-      if (input.estado === 'cancelada') {
+      if (input.estado === 'en_atencion') {
+        data.estado = 'en_atencion';
+        data.inicioAtencionAt = new Date();
+      } else if (input.estado === 'cancelada') {
         data.estado = 'cancelada'; data.canceladoPor = 'dashboard'; data.motivoCancelacion = input.motivoCancelacion || null;
       } else if (input.estado) {
         data.estado = input.estado;

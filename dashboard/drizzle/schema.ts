@@ -166,6 +166,7 @@ export const turnos = pgTable('turnos', {
   motivoCancelacion: text('motivo_cancelacion'),
   googleCalendarEventId: varchar('google_calendar_event_id', { length: 500 }),
   n8nWorkflowExecutionId: varchar('n8n_workflow_execution_id', { length: 255 }),
+  inicioAtencionAt: timestamp('inicio_atencion_at', { withTimezone: true }),
   metadata: jsonb('metadata').default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
