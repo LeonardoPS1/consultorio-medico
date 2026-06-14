@@ -543,6 +543,8 @@ export const pacientesRelations = relations(pacientes, ({ many, one }) => ({
   pacienteEventos: many(pacienteEventos),
   tareasPendientes: many(tareasPendientes),
   listaEspera: many(listaEspera),
+  blacklist: many(blacklist),
+  consentimientos: many(consentimientos),
   sucursal: one(sucursales, {
     fields: [pacientes.sucursalId],
     references: [sucursales.id],
@@ -984,6 +986,60 @@ export const derivaciones = pgTable('derivaciones', {
 
 export type Derivation = InferSelectModel<typeof derivaciones>;
 export type NewDerivation = InferInsertModel<typeof derivaciones>;
+
+// ============================================================
+// LISTA NEGRA (blacklist de pacientes)
+// ============================================================
+export const blacklist = pgTable('blacklist', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pacienteId: uuid('paciente_id').notNull().references(() => pacientes.id),
+  motivo: text('motivo').notNull(),
+  activo: boolean('activo').default(true).notNull(),
+  bloqueadoHasta: timestamp('bloqueado_hasta', { withTimezone: true }),
+  creadoPor: uuid('creado_por').references(() => medicos.id),
+  sucursalId: uuid('sucursal_id').references(() => sucursales.id),
+  tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (table) => ({
+  idxBlacklistPaciente: index('idx_blacklist_paciente').on(table.pacienteId),
+  idxBlacklistActivo: index('idx_blacklist_activo').on(table.activo),
+  idxBlacklistCreatedAt: index('idx_blacklist_created_at').on(table.createdAt),
+}));
+
+export type BlacklistEntry = InferSelectModel<typeof blacklist>;
+export type NewBlacklistEntry = InferInsertModel<typeof blacklist>;
+
+// ============================================================
+// CONSENTIMIENTOS INFORMADOS
+// ============================================================
+export const consentimientos = pgTable('consentimientos', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pacienteId: uuid('paciente_id').notNull().references(() => pacientes.id),
+  tipo: varchar('tipo', { length: 50 }).notNull().default('general'),
+  titulo: varchar('titulo', { length: 255 }).notNull(),
+  descripcion: text('descripcion'),
+  fechaFirma: timestamp('fecha_firma', { withTimezone: true }),
+  ipFirma: varchar('ip_firma', { length: 50 }),
+  nombrePaciente: varchar('nombre_paciente', { length: 255 }).notNull(),
+  rutPaciente: varchar('rut_paciente', { length: 20 }),
+  documentoPdf: text('documento_pdf'),
+  metadata: jsonb('metadata').default({}),
+  medicoId: uuid('medico_id').references(() => medicos.id),
+  sucursalId: uuid('sucursal_id').references(() => sucursales.id),
+  tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (table) => ({
+  idxConsentimientosPaciente: index('idx_consentimientos_paciente').on(table.pacienteId),
+  idxConsentimientosTipo: index('idx_consentimientos_tipo').on(table.tipo),
+  idxConsentimientosCreatedAt: index('idx_consentimientos_created_at').on(table.createdAt),
+}));
+
+export type Consentimiento = InferSelectModel<typeof consentimientos>;
+export type NewConsentimiento = InferInsertModel<typeof consentimientos>;
 
 // ─── Types ──────────────────────────────────────────────
 export type ListaEspera = InferSelectModel<typeof listaEspera>;

@@ -792,6 +792,103 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
     ],
   },
+  {
+    id: 'blacklist',
+    titulo: 'Lista Negra de Pacientes',
+    descripcion: 'Gestión de bloqueos por inasistencia o incumplimiento con bloqueo automático',
+    icono: 'Ban',
+    pasos: [
+      {
+        titulo: 'Bloquear un paciente',
+        descripcion: 'Agregá un paciente a la lista negra para impedir que reserve turnos.',
+        tips: [
+          'Ingresá el ID del paciente y el motivo del bloqueo',
+          'Opcional: configurá un bloqueo temporal con fecha de vencimiento',
+          'Los pacientes bloqueados no pueden reservar turnos vía WhatsApp',
+          'El bloqueo puede activarse o desactivarse en cualquier momento',
+        ],
+        enlace: { href: '/dashboard/blacklist', label: 'Ir a Lista Negra' },
+      },
+      {
+        titulo: 'Desbloquear un paciente',
+        descripcion: 'Reactivá a un paciente bloqueado cuando regularice su situación.',
+        tips: [
+          'Desde la lista, hacé clic en "Desbloquear"',
+          'El paciente vuelve a estar habilitado para reservar turnos',
+          'Podés eliminar la entrada si ya no es necesaria',
+        ],
+      },
+      {
+        titulo: 'Bloqueo automático por inasistencia',
+        descripcion: 'El sistema puede bloquear automáticamente pacientes con inasistencias recurrentes.',
+        tips: [
+          'Configurable desde Ajustes del sistema',
+          'Se activa después de N inasistencias en un período',
+          'Disponible en plan Professional o superior',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Qué pasa si un paciente bloqueado intenta agendar un turno?',
+        respuesta: 'El sistema rechazará la solicitud automáticamente y puede enviar un mensaje indicando que debe contactar al consultorio para regularizar su situación.',
+      },
+      {
+        pregunta: '¿El paciente sabe que está bloqueado?',
+        respuesta: 'Por defecto no se le notifica automáticamente, pero podés configurar un mensaje personalizado desde Ajustes.',
+      },
+    ],
+  },
+  {
+    id: 'consentimiento-informado',
+    titulo: 'Consentimiento Informado Digital',
+    descripcion: 'Registro digital de consentimientos informados con respaldo legal (Ley 20.584)',
+    icono: 'FileSignature',
+    pasos: [
+      {
+        titulo: 'Crear un consentimiento',
+        descripcion: 'Registrá un consentimiento informado firmado digitalmente por el paciente.',
+        tips: [
+          'Seleccioná el paciente asociado',
+          'Elegí el tipo de consentimiento (cirugía, tratamiento, procedimiento, etc.)',
+          'Completá el título y la descripción del procedimiento',
+          'Registrá el nombre del paciente tal como firma',
+          'Opcional: agregá RUT e IP de firma para auditoría',
+          'La fecha de firma se registra automáticamente',
+        ],
+        enlace: { href: '/dashboard/consentimientos', label: 'Ir a Consentimientos' },
+      },
+      {
+        titulo: 'Ver detalle de un consentimiento',
+        descripcion: 'Accedé a la información completa de cada consentimiento.',
+        tips: [
+          'Hacé clic en cualquier consentimiento de la lista',
+          'Podés ver paciente, RUT, tipo, fecha, IP y médico responsable',
+          'Si tiene PDF adjunto, podés descargarlo',
+        ],
+      },
+      {
+        titulo: 'Respaldo legal',
+        descripcion: 'Cada consentimiento cumple con la Ley 20.584 de derechos y deberes de los pacientes.',
+        tips: [
+          'La IP de firma permite rastrear dónde se firmó',
+          'El nombre registrado es el que el paciente declara al firmar',
+          'Todo el historial de consentimientos está disponible',
+          'Disponible en plan Professional o superior',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Este consentimiento tiene validez legal?',
+        respuesta: 'Sí. El registro incluye fecha, hora, nombre del paciente, IP de firma y médico responsable, cumpliendo con los requisitos de la Ley 20.584. Para máxima validez, recomendamos adjuntar el PDF firmado.',
+      },
+      {
+        pregunta: '¿Puedo generar un PDF del consentimiento?',
+        respuesta: 'Sí. Podés generar y adjuntar un PDF con la información del consentimiento y la firma del paciente para tener un respaldo físico.',
+      },
+    ],
+  },
 ];
 
 export function getSeccionAyuda(id: string): AyudaSeccion | undefined {

@@ -398,6 +398,58 @@ export const updateDerivacionSchema = z.object({
   fechaRespuesta: z.string().optional().nullable(),
 }).partial();
 
+// ─── Blacklist ───────────────────────────────────────────
+
+export const createBlacklistSchema = z.object({
+  pacienteId: z.string().uuid('pacienteId debe ser UUID'),
+  motivo: z.string().min(1, 'Motivo es obligatorio'),
+  activo: z.boolean().optional().default(true),
+  bloqueadoHasta: z.string().optional().nullable(),
+  creadoPor: z.string().uuid().optional().nullable(),
+  sucursalId: z.string().uuid().optional().nullable(),
+});
+
+export const updateBlacklistSchema = z.object({
+  motivo: z.string().optional(),
+  activo: z.boolean().optional(),
+  bloqueadoHasta: z.string().optional().nullable(),
+}).partial();
+
+export type CreateBlacklistEntry = z.infer<typeof createBlacklistSchema>;
+export type UpdateBlacklistEntry = z.infer<typeof updateBlacklistSchema>;
+
+// ─── Consentimiento Informado ──────────────────────────
+
+export const createConsentimientoSchema = z.object({
+  pacienteId: z.string().uuid('pacienteId debe ser UUID'),
+  tipo: z.string().optional().default('general'),
+  titulo: z.string().min(1, 'Título es obligatorio'),
+  descripcion: z.string().optional().nullable(),
+  fechaFirma: z.string().optional().nullable(),
+  ipFirma: z.string().optional().nullable(),
+  nombrePaciente: z.string().min(1, 'Nombre del paciente es obligatorio'),
+  rutPaciente: z.string().optional().nullable(),
+  documentoPdf: z.string().optional().nullable(),
+  metadata: z.record(z.unknown()).optional().nullable(),
+  medicoId: z.string().uuid().optional().nullable(),
+  sucursalId: z.string().uuid().optional().nullable(),
+});
+
+export const updateConsentimientoSchema = z.object({
+  tipo: z.string().optional(),
+  titulo: z.string().optional(),
+  descripcion: z.string().optional().nullable(),
+  fechaFirma: z.string().optional().nullable(),
+  ipFirma: z.string().optional().nullable(),
+  nombrePaciente: z.string().optional(),
+  rutPaciente: z.string().optional().nullable(),
+  documentoPdf: z.string().optional().nullable(),
+  metadata: z.record(z.unknown()).optional().nullable(),
+}).partial();
+
+export type CreateConsentimiento = z.infer<typeof createConsentimientoSchema>;
+export type UpdateConsentimiento = z.infer<typeof updateConsentimientoSchema>;
+
 // ─── Tipos inferidos ─────────────────────────────────────
 
 export type CreatePaciente = z.infer<typeof createPacienteSchema>;
@@ -417,3 +469,4 @@ export type CreateUser = z.infer<typeof createUserSchema>;
 export type CreateDerivacion = z.infer<typeof createDerivacionSchema>;
 export type UpdateDerivacion = z.infer<typeof updateDerivacionSchema>;
 export type UpdateUser = z.infer<typeof updateUserSchema>;
+// Tipos ya definidos arriba junto a los schemas

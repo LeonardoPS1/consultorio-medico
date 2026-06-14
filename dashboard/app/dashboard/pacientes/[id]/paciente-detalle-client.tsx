@@ -38,6 +38,8 @@ import {
   ScrollText,
   Printer,
   MoreHorizontal,
+  Ban,
+  FileSignature,
 } from 'lucide-react';
 import { formatPhone, getInitials, formatDate, getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
@@ -1081,6 +1083,12 @@ export function PacienteDetalleClient({
           <TabsTrigger value="notas" className="shrink-0 whitespace-nowrap">
             <FileText className="h-4 w-4 mr-1 shrink-0" /> Notas
           </TabsTrigger>
+          <TabsTrigger value="blacklist" className="shrink-0 whitespace-nowrap">
+            <Ban className="h-4 w-4 mr-1 shrink-0" /> Lista Negra
+          </TabsTrigger>
+          <TabsTrigger value="consentimientos" className="shrink-0 whitespace-nowrap">
+            <FileSignature className="h-4 w-4 mr-1 shrink-0" /> Consentimientos
+          </TabsTrigger>
         </TabsList>
 
         {/* Turnos */}
@@ -1835,6 +1843,28 @@ export function PacienteDetalleClient({
                   )}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Lista Negra */}
+        <TabsContent value="blacklist" className="mt-4">
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-sm text-muted-foreground">
+                Sección disponible desde la página de Lista Negra en el panel principal.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Consentimientos */}
+        <TabsContent value="consentimientos" className="mt-4">
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-sm text-muted-foreground">
+                Sección disponible desde la página de Consentimientos Informados en el panel principal.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

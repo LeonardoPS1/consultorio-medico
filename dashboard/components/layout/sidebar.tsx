@@ -32,6 +32,8 @@ import {
   ListChecks,
   Bell,
   ArrowRightLeft,
+  Ban,
+  FileSignature,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
@@ -61,6 +63,8 @@ const navItems: NavItem[] = [
   { title: 'Encuestas', href: '/dashboard/encuestas', icon: Star, feature: 'encuestas' },
   { title: 'Lista de Espera', href: '/dashboard/lista-espera', icon: ListChecks, feature: 'lista-espera' },
   { title: 'Derivaciones', href: '/dashboard/derivaciones', icon: ArrowRightLeft, feature: 'derivaciones' },
+  { title: 'Lista Negra', href: '/dashboard/blacklist', icon: Ban, feature: 'blacklist' },
+  { title: 'Consentimientos', href: '/dashboard/consentimientos', icon: FileSignature, feature: 'consentimiento-informado' },
   { title: 'Notificaciones', href: '/dashboard/notificaciones', icon: Bell },
   { title: 'Ajustes', href: '/dashboard/configuracion', icon: Sliders },
   { title: 'Ayuda', href: '/dashboard/ayuda', icon: BookOpen },

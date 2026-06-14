@@ -134,6 +134,27 @@
       "when": 1780900000000,
       "tag": "0029_derivaciones",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1781441525687,
+      "tag": "0030_fix_turnos_estado_check",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1781441925687,
+      "tag": "0031_inicio_atencion",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1781466725687,
+      "tag": "0032_blacklist_consentimientos",
+      "breakpoints": true
     }
   ]
 }

@@ -26,6 +26,8 @@ const ROUTE_FEATURE_MAP: Record<string, FeatureId> = {
   '/dashboard/admin/backups': 'backup-encriptado',
   '/dashboard/admin/n8n': 'n8n-monitor',
   '/dashboard/webhooks': 'webhooks-log',
+  '/dashboard/blacklist': 'blacklist',
+  '/dashboard/consentimientos': 'consentimiento-informado',
 };
 
 /** Rutas hijas que heredan el feature de la ruta padre */

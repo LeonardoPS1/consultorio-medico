@@ -49,7 +49,9 @@ export type FeatureId =
   | 'ia-triaje'
   | 'ia-renovacion'
   | 'derivaciones'
-  | 'alertas-inteligentes';
+  | 'alertas-inteligentes'
+  | 'blacklist'
+  | 'consentimiento-informado';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -92,6 +94,8 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'ia-renovacion': 'professional',
   'derivaciones': 'professional',
   'alertas-inteligentes': 'professional',
+  'blacklist': 'professional',
+  'consentimiento-informado': 'professional',
 };
 
 // ============================================================
