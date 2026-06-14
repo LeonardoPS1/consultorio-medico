@@ -3,7 +3,17 @@
 import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
 
-const TESTIMONIALS = [
+export interface TestimonialItem {
+  text: string;
+  author: string;
+  role: string;
+}
+
+export interface TestimonialsProps {
+  testimonials?: TestimonialItem[];
+}
+
+const defaultTestimonials: TestimonialItem[] = [
   {
     text: 'Desde que implementamos AiCoreMed, nuestras citas se llenan un 30% más rápido y redujimos los ausentes en un 20%. La IA de WhatsApp responde automáticamente mientras nosotros atendemos pacientes.',
     author: 'Dra. María González',
@@ -60,7 +70,9 @@ function Stars({ delay }: { delay: number }) {
   );
 }
 
-export function Testimonials() {
+export function Testimonials({ testimonials: customTestimonials }: TestimonialsProps = {}) {
+  const items = customTestimonials ?? defaultTestimonials;
+
   return (
     <section className="relative overflow-hidden border-t">
       <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent pointer-events-none" />
@@ -89,7 +101,7 @@ export function Testimonials() {
           viewport={{ once: true, margin: '-60px' }}
           className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
         >
-          {TESTIMONIALS.map((t, idx) => (
+          {items.map((t, idx) => (
             <motion.div
               key={t.author}
               variants={cardVariants}

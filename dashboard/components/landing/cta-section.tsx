@@ -6,7 +6,19 @@ import { Button } from '@/components/ui/button';
 import { ChevronRight, MessageCircle, Sparkles, ShieldCheck, Lock, Server } from 'lucide-react';
 import { RegistroExpressModal } from '@/components/landing/registro-modal';
 
-export function CTASection() {
+export interface CTASectionProps {
+  title?: string;
+  subtitle?: string;
+  badgeText?: string;
+  ctaText?: string;
+  ctaSecondaryText?: string;
+}
+
+export function CTASection({
+  title = '¿Listo para transformar tu consultorio?',
+  subtitle = 'Empieza hoy. En 5 minutos tienes todo configurado. Sin compromisos, sin tarjeta.',
+  badgeText = 'Sin tarjeta de crédito · Sin compromisos',
+}: CTASectionProps = {}) {
   const [registroOpen, setRegistroOpen] = useState(false);
   return (
     <section className="relative overflow-hidden border-t">
@@ -49,14 +61,14 @@ export function CTASection() {
             className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-4 py-1.5 text-xs font-medium mb-6"
           >
             <Sparkles className="h-3.5 w-3.5" />
-            Sin tarjeta de crédito · Sin compromisos
+            {badgeText}
           </motion.div>
 
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            ¿Listo para transformar tu consultorio?
+            {title}
           </h2>
           <p className="text-muted-foreground text-base mb-8">
-            Empieza hoy. En 5 minutos tienes todo configurado. Sin compromisos, sin tarjeta.
+            {subtitle}
             <br />
             <span className="font-medium text-foreground">14 días de prueba gratis.</span>
           </p>

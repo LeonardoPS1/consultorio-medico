@@ -18,6 +18,10 @@ const BENEFITS = [
     title: 'Cotización a medida',
     desc: 'Soluciones escalables según la cantidad de profesionales en tu centro.',
   },
+  {
+    title: 'Horario de atención',
+    desc: 'Lunes a viernes de 9:00 a 18:00 h — respondemos en menos de 1 hora hábil.',
+  },
 ];
 
 export function ContactForm() {

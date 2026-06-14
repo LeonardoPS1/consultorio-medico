@@ -79,7 +79,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Firma digital QR en recetas con verificación pública',
       'Exportación de pacientes y recetas a Excel y PDF',
       'Múltiples médicos con agendas independientes',
-      'n8n Monitoring Dashboard en vivo',
+      'Panel de monitoreo de automatizaciones',
     ],
   },
   {

@@ -4,7 +4,16 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 
-const FAQS = [
+export interface FAQItem {
+  q: string;
+  a: string;
+}
+
+export interface FAQProps {
+  items?: FAQItem[];
+}
+
+const defaultFAQS: FAQItem[] = [
   {
     q: '¿Cómo se integra AiCoreMed con mi agenda actual?',
     a: 'AiCoreMed es un sistema completo que incluye su propia gestión de turnos, pacientes y agenda. No requiere integración con sistemas externos. Si ya usas otro software, podemos migrar tus datos existentes o conectar via API con sistemas como Dentalink, Medilink o Doctoralia mediante nuestros workflows de n8n.',
@@ -31,8 +40,9 @@ const FAQS = [
   },
 ];
 
-export function FAQ() {
+export function FAQ({ items }: FAQProps = {}) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const faqs = items ?? defaultFAQS;
 
   const toggle = (i: number) => setOpenIndex(openIndex === i ? null : i);
 
@@ -62,7 +72,7 @@ export function FAQ() {
           transition={{ delay: 0.15, duration: 0.4 }}
           className="max-w-3xl mx-auto space-y-2"
         >
-          {FAQS.map((faq, i) => (
+          {faqs.map((faq, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 10 }}

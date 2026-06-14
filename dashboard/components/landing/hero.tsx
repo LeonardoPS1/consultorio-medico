@@ -23,7 +23,27 @@ const springTransition = {
   bounce: 0.15,
 };
 
-export function Hero() {
+export interface HeroProps {
+  badgeText?: string;
+  titleNormal?: string;
+  titleHighlight?: string;
+  subtitle?: string;
+  subtitleBold?: string;
+  stats?: { value: string; label: string }[];
+}
+
+export function Hero({
+  badgeText = 'IA local · Sin costos de API · Datos 100% privados',
+  titleNormal = 'Gestiona tu consultorio',
+  titleHighlight = 'con IA',
+  subtitle = 'Turnos, WhatsApp, recetas, reportes y un asistente con IA local.\n              Todo en un solo panel. Sin mensualidades por IA, sin configuraciones complejas.',
+  subtitleBold = 'Ahorra hasta 10 horas por semana.',
+  stats = [
+    { value: '85%', label: 'menos ausentismo' },
+    { value: '10h+', label: 'ahorradas/semana' },
+    { value: '24/7', label: 'atención con IA' },
+  ],
+}: HeroProps = {}) {
   const [registroOpen, setRegistroOpen] = useState(false);
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
@@ -63,7 +83,7 @@ export function Hero() {
             >
               <Bot className="h-3.5 w-3.5 text-primary" />
               <span className="relative after:absolute after:inset-y-0 after:-right-0.5 after:w-px after:bg-border after:mx-2" />
-              IA local · Sin costos de API · Datos 100% privados
+              {badgeText}
             </motion.div>
 
             <motion.h1
@@ -71,9 +91,9 @@ export function Hero() {
               transition={springTransition}
               className="text-[1.75rem] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
             >
-              Gestiona tu consultorio{' '}
+              {titleNormal}{' '}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/60">
-                con IA
+                {titleHighlight}
               </span>
             </motion.h1>
 
@@ -82,9 +102,8 @@ export function Hero() {
               transition={springTransition}
               className="text-lg sm:text-xl text-muted-foreground leading-relaxed mb-8"
             >
-              Turnos, WhatsApp, recetas, reportes y un asistente con IA local.
-              Todo en un solo panel. Sin mensualidades por IA, sin configuraciones complejas.
-              {' '}<span className="font-semibold text-foreground">Ahorra hasta 10 horas por semana.</span>
+              {subtitle}
+              {' '}<span className="font-semibold text-foreground">{subtitleBold}</span>
             </motion.p>
 
             <motion.div
@@ -111,11 +130,7 @@ export function Hero() {
               transition={{ ...springTransition, delay: 0.3 }}
               className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t"
             >
-              {[
-                { value: '85%', label: 'menos ausentismo' },
-                { value: '10h+', label: 'ahorradas/semana' },
-                { value: '24/7', label: 'atención con IA' },
-              ].map((stat, i) => (
+              {stats.map((stat, i) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, scale: 0.9 }}

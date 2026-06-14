@@ -2,10 +2,23 @@
 
 import { motion } from 'framer-motion';
 import { Calendar, MessageSquare, Syringe, BarChart3, Bot, Smartphone, Shield, Users, ChevronRight } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-const features = [
+export interface FeatureItem {
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+}
+
+export interface FeaturesProps {
+  title?: string;
+  subtitle?: string;
+  features?: FeatureItem[];
+}
+
+const defaultFeatures: FeatureItem[] = [
   {
     icon: Calendar,
     title: 'Gestión de Turnos',
@@ -64,7 +77,13 @@ const cardVariants = {
   },
 };
 
-export function Features() {
+export function Features({
+  title = 'Todo lo que necesitas en un solo lugar',
+  subtitle = 'Desde la gestión de turnos hasta reportes avanzados, pasando por WhatsApp con IA local. Todo integrado, sin depender de servicios externos.',
+  features: customFeatures,
+}: FeaturesProps = {}) {
+  const items = customFeatures ?? defaultFeatures;
+
   return (
     <section id="features" className="relative overflow-hidden scroll-mt-20">
       <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-transparent pointer-events-none" />
@@ -78,11 +97,10 @@ export function Features() {
           className="text-center mb-14"
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Todo lo que necesitas en un solo lugar
+            {title}
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-base">
-            Desde la gestión de turnos hasta reportes avanzados, pasando por WhatsApp con IA
-            local. Todo integrado, sin depender de servicios externos.
+            {subtitle}
           </p>
         </motion.div>
 
@@ -93,7 +111,7 @@ export function Features() {
           viewport={{ once: true, margin: '-60px' }}
           className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5"
         >
-          {features.map((feature) => {
+          {items.map((feature) => {
             const Icon = feature.icon;
             return (
               <motion.div

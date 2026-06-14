@@ -155,6 +155,10 @@ export function Footer() {
               <Server className="h-3.5 w-3.5 text-primary" />
               <span>Infraestructura propia en Chile</span>
             </span>
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+              <span>Cumplimiento Ley 19.628 — Protección de datos</span>
+            </span>
           </div>
         </div>
       </div>
