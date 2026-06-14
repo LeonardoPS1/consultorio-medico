@@ -73,7 +73,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
       fail('No tenés permiso para acceder a esta videollamada', 403);
     }
 
-    const token = generateMedicoToken(roomName, identity);
+    const token = await generateMedicoToken(roomName, identity);
     return ok({
       token,
       url: LIVEKIT_URL,
@@ -109,7 +109,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
       fail('No tenés permiso para acceder a esta videollamada', 403);
     }
 
-    const token = generatePacienteToken(roomName, identity);
+    const token = await generatePacienteToken(roomName, identity);
     return ok({
       token,
       url: LIVEKIT_URL,

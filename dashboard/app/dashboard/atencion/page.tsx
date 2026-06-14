@@ -21,6 +21,7 @@ import {
   GripVertical,
   AlertCircle,
   Users2,
+  Video,
 } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
@@ -46,6 +47,7 @@ interface Turno {
   sucursalId?: string;
   motivo?: string;
   duracionMinutos?: number;
+  linkVideollamada?: string;
 }
 
 // ============================================================
@@ -113,6 +115,7 @@ function TurnoCard({
   const isPending = turno.estado === 'pendiente' || turno.estado === 'confirmada';
   const isInAttention = turno.estado === 'en_atencion';
   const isNoAsistio = turno.estado === 'no_asistio';
+  const isVirtual = turno.tipoConsulta === 'virtual';
 
   return (
     <div
@@ -202,6 +205,18 @@ function TurnoCard({
             >
               <Play className="h-3.5 w-3.5" />
               Atender
+            </Button>
+          )}
+          {isVirtual && (isPending || isInAttention) && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1.5 shrink-0"
+              onClick={() => window.open(`/videollamada/${turno.id}`, '_blank')}
+              title="Iniciar videollamada"
+            >
+              <Video className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Video</span>
             </Button>
           )}
           {isInAttention && (

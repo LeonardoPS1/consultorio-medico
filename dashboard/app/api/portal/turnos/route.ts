@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
       tipoConsulta: turnos.tipoConsulta,
       duracionMinutos: turnos.duracionMinutos,
       notasPaciente: turnos.notasPaciente,
+      linkVideollamada: turnos.linkVideollamada,
       medicoNombre: medicos.nombre,
       medicoEspecialidad: medicos.especialidad,
     })

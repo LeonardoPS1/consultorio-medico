@@ -5,7 +5,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, MapPin, Video, Phone, Clock, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, Video, Phone, Clock, XCircle, AlertCircle, ExternalLink } from 'lucide-react';
 
 interface Turno {
   id: string;
@@ -15,6 +15,7 @@ interface Turno {
   motivo?: string;
   tipoConsulta: string;
   duracionMinutos: number;
+  linkVideollamada?: string;
   medicoNombre: string;
   medicoEspecialidad: string;
 }
@@ -116,20 +117,35 @@ export default function PortalTurnosClient({ turnos }: Props) {
                     </div>
                   </div>
 
-                  {!cancelados.has(t.id) && (
-                    <button
-                      onClick={() => cancelarTurno(t.id)}
-                      disabled={loadingId === t.id}
-                      className="text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors p-1"
-                      title="Cancelar turno"
-                    >
-                      {loadingId === t.id ? (
-                        <span className="h-4 w-4 border-2 border-red-300 border-t-red-600 rounded-full animate-spin inline-block" />
-                      ) : (
-                        <XCircle className="h-5 w-5" />
-                      )}
-                    </button>
-                  )}
+                  <div className="flex flex-col gap-1 items-end">
+                    {!cancelados.has(t.id) && t.tipoConsulta === 'virtual' && t.linkVideollamada && (
+                      <a
+                        href={t.linkVideollamada}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        <Video className="h-3.5 w-3.5" />
+                        Ingresar
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+
+                    {!cancelados.has(t.id) && (
+                      <button
+                        onClick={() => cancelarTurno(t.id)}
+                        disabled={loadingId === t.id}
+                        className="text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors p-1"
+                        title="Cancelar turno"
+                      >
+                        {loadingId === t.id ? (
+                          <span className="h-4 w-4 border-2 border-red-300 border-t-red-600 rounded-full animate-spin inline-block" />
+                        ) : (
+                          <XCircle className="h-5 w-5" />
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
