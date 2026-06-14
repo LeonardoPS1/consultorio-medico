@@ -110,6 +110,7 @@ export function TurnosClient({
   const { sucursalId } = useSucursal();
   const [view, setView] = useState<'lista' | 'calendario'>('lista');
   const [selectedDate, setSelectedDate] = useState(() => new Date(initialFecha + 'T12:00:00'));
+  const [calendarViewMode, setCalendarViewMode] = useState<'mes' | 'dia'>('mes');
   const [showNewTurno, setShowNewTurno] = useState(false);
   const [editTurno, setEditTurno] = useState<TurnoData | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState<string | null>(null);
@@ -208,6 +209,36 @@ export function TurnosClient({
       toast({
         title: 'Error',
         description: 'No se pudieron cargar los turnos',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [sucursalId]);
+
+  // ─── Fetch turnos para un mes completo ───────────────────
+
+  const fetchTurnosMes = useCallback(async (fecha: Date) => {
+    setLoading(true);
+    try {
+      const year = fecha.getFullYear();
+      const month = fecha.getMonth();
+      const firstDay = new Date(year, month, 1).toISOString().split('T')[0];
+      const lastDay = new Date(year, month + 1, 0).toISOString().split('T')[0];
+      const params = new URLSearchParams();
+      params.set('fecha_desde', firstDay);
+      params.set('fecha_hasta', lastDay);
+      params.set('limit', '500');
+      if (sucursalId) params.set('sucursalId', sucursalId);
+
+      const res = await fetch(`/api/turnos?${params.toString()}`);
+      if (!res.ok) throw new Error('Error al cargar turnos del mes');
+      const json = await res.json();
+      setTurnos(json.data || []);
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'No se pudieron cargar los turnos del mes',
         variant: 'destructive',
       });
     } finally {
@@ -1011,9 +1042,16 @@ export function TurnosClient({
       {view === 'calendario' && (
         <CalendarView
           turnos={turnosFiltrados as any}
+          viewMode={calendarViewMode}
+          onViewModeChange={setCalendarViewMode}
           onDateChange={(date: Date) => {
             setSelectedDate(date);
-            fetchTurnos(date);
+            // Usar fetch por mes si estamos en vista mes, si no por día
+            if (calendarViewMode === 'mes') {
+              fetchTurnosMes(date);
+            } else {
+              fetchTurnos(date);
+            }
           }}
           onTurnoClick={(turno) => {/* onClick handled by parent */}}
         />

@@ -23,6 +23,8 @@ export const GET = apiHandler(async (request: NextRequest) => {
 
   const { searchParams } = new URL(request.url);
   const fechaStr = searchParams.get('fecha') || undefined;
+  const fechaDesde = searchParams.get('fecha_desde') || undefined;
+  const fechaHasta = searchParams.get('fecha_hasta') || undefined;
   const estado = searchParams.get('estado') || undefined;
   const medico = searchParams.get('medico') || undefined;
   const tipo = searchParams.get('tipo') || undefined;
@@ -32,7 +34,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const sucursalId = searchParams.get('sucursalId') || undefined;
 
   const medicoIdFilter = sessionRol === 'medico' ? sessionMedicoId : undefined;
-  const result = await turnosService.list(fechaStr, estado, medico, tipo, search, limit, offset, sucursalId, medicoIdFilter);
+  const result = await turnosService.list(fechaStr, estado, medico, tipo, search, limit, offset, sucursalId, medicoIdFilter, fechaDesde, fechaHasta);
   return NextResponse.json(result);
 });
 

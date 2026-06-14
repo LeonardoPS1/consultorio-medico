@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,8 @@ interface CalendarViewProps {
   turnos: CalendarioTurno[];
   onDateChange?: (date: Date) => void;
   onTurnoClick?: (turno: CalendarioTurno) => void;
+  viewMode?: 'mes' | 'dia';
+  onViewModeChange?: (mode: 'mes' | 'dia') => void;
 }
 
 // ============================================================
@@ -56,10 +58,22 @@ function isToday(date: Date): boolean {
 // Componente
 // ============================================================
 
-export function CalendarView({ turnos, onDateChange, onTurnoClick }: CalendarViewProps) {
+export function CalendarView({ turnos, onDateChange, onTurnoClick, viewMode: viewModeProp, onViewModeChange }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'mes' | 'dia'>('mes');
+  const [viewMode, setViewMode] = useState<'mes' | 'dia'>(viewModeProp ?? 'mes');
+
+  // Sync with parent if controlled
+  useEffect(() => {
+    if (viewModeProp && viewModeProp !== viewMode) {
+      setViewMode(viewModeProp);
+    }
+  }, [viewModeProp]);
+
+  const setViewModeInternal = useCallback((mode: 'mes' | 'dia') => {
+    setViewMode(mode);
+    onViewModeChange?.(mode);
+  }, [onViewModeChange]);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -159,7 +173,7 @@ export function CalendarView({ turnos, onDateChange, onTurnoClick }: CalendarVie
                     }`}
                     onClick={() => {
                       setSelectedDate(date);
-                      setViewMode('dia');
+                      setViewModeInternal('dia');
                     }}
                   >
                     <div
@@ -224,7 +238,7 @@ export function CalendarView({ turnos, onDateChange, onTurnoClick }: CalendarVie
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setViewMode('mes')}
+                  onClick={() => setViewModeInternal('mes')}
                   className="ml-2"
                 >
                   Ver mes

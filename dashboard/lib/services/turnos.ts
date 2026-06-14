@@ -10,15 +10,21 @@ import { cache } from '@/lib/cache';
 import { telemedicinaService } from '@/lib/services/livekit-telemedicina';
 
 export const turnosService = {
-  async list(fechaStr?: string, estado?: string, medico?: string, tipo?: string, search?: string, limit = 100, offset = 0, sucursalId?: string, medicoId?: string) {
-    const cacheKey = `turnos:list:${fechaStr ?? '*'}:${estado ?? ''}:${medico ?? ''}:${tipo ?? ''}:${search ?? ''}:${limit}:${offset}:${sucursalId ?? ''}:${medicoId ?? ''}`;
+  async list(fechaStr?: string, estado?: string, medico?: string, tipo?: string, search?: string, limit = 100, offset = 0, sucursalId?: string, medicoId?: string, fechaDesde?: string, fechaHasta?: string) {
+    const cacheKey = `turnos:list:${fechaStr ?? fechaDesde ?? fechaHasta ?? '*'}:${estado ?? ''}:${medico ?? ''}:${tipo ?? ''}:${search ?? ''}:${limit}:${offset}:${sucursalId ?? ''}:${medicoId ?? ''}`;
     return cache.getOrSet(cacheKey, async () => {
-      const fechaConditions = fechaStr
-        ? [
-            sql`${turnos.fechaHora} >= ${fechaStr + 'T00:00:00.000Z'}::timestamptz`,
-            sql`${turnos.fechaHora} < ${new Date(new Date(fechaStr + 'T00:00:00.000Z').getTime() + 86400000).toISOString()}::timestamptz`,
-          ]
-        : [];
+      let fechaConditions: any[] = [];
+      if (fechaDesde && fechaHasta) {
+        fechaConditions = [
+          sql`${turnos.fechaHora} >= ${fechaDesde + 'T00:00:00.000Z'}::timestamptz`,
+          sql`${turnos.fechaHora} <= ${fechaHasta + 'T23:59:59.999Z'}::timestamptz`,
+        ];
+      } else if (fechaStr) {
+        fechaConditions = [
+          sql`${turnos.fechaHora} >= ${fechaStr + 'T00:00:00.000Z'}::timestamptz`,
+          sql`${turnos.fechaHora} < ${new Date(new Date(fechaStr + 'T00:00:00.000Z').getTime() + 86400000).toISOString()}::timestamptz`,
+        ];
+      }
 
       const whereConditions = and(
         ...fechaConditions,
