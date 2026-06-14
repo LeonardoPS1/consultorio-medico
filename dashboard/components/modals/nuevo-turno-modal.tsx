@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/select';
-import { Loader2, Search, Plus, User } from 'lucide-react';
+import { Loader2, Search, Plus, User, Video, Phone, MapPin } from 'lucide-react';
 
 interface MedicoOption {
   id: string;
@@ -40,6 +40,7 @@ interface NuevoTurnoModalProps {
     pacienteId?: string;
     paciente: string;
     tipo: string;
+    tipoConsulta: string;
     medicoId: string;
     medico: string;
     hora: string;
@@ -52,6 +53,7 @@ interface NuevoTurnoModalProps {
 export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: propPacienteId, pacienteName }: NuevoTurnoModalProps) {
   const [paciente, setPaciente] = useState(pacienteName || '');
   const [tipo, setTipo] = useState('Consulta');
+  const [tipoConsulta, setTipoConsulta] = useState('presencial');
   const [medicoId, setMedicoId] = useState('');
   const [medicoNombre, setMedicoNombre] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
@@ -220,6 +222,7 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
         pacienteId: propPacienteId || selectedPaciente?.id,
         paciente: pacienteSearch,
         tipo,
+        tipoConsulta,
         medicoId,
         medico: medicoNombre,
         hora,
@@ -233,6 +236,7 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
         setPacienteSearch('');
       }
       setTipo('Consulta');
+      setTipoConsulta('presencial');
       setHora('09:00');
     }, 300);
   };
@@ -329,9 +333,9 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
-              <Label>Tipo de consulta</Label>
+              <Label>Motivo</Label>
               <Select value={tipo} onValueChange={setTipo}>
                 <SelectTrigger>
                   <SelectValue />
@@ -342,6 +346,32 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
                   <SelectItem value="Resultados">Resultados</SelectItem>
                   <SelectItem value="Especialista">Especialista</SelectItem>
                   <SelectItem value="Primera vez">Primera vez</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Modalidad</Label>
+              <Select value={tipoConsulta} onValueChange={setTipoConsulta}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="presencial">
+                    <span className="flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5" /> Presencial
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="virtual">
+                    <span className="flex items-center gap-2">
+                      <Video className="h-3.5 w-3.5" /> Virtual
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="telefonica">
+                    <span className="flex items-center gap-2">
+                      <Phone className="h-3.5 w-3.5" /> Telefónica
+                    </span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

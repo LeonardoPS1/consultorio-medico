@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { safeError } from '@/lib/logger';
+import { safeError, safeLog } from '@/lib/logger';
 import { turnos, pacientes, medicos, bloqueosAgenda, ofertasTurno } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, gte, lt } from 'drizzle-orm';
 import type { CreateTurno, UpdateTurno } from '@/lib/validations';
@@ -7,6 +7,7 @@ import { conflict, notFound, fail } from '@/lib/api-handler';
 import { buildGCalPayload, syncTurnoToGCal } from '@/lib/google-calendar-sync';
 import { waitlistService } from '@/lib/services/waitlist';
 import { cache } from '@/lib/cache';
+import { telemedicinaService } from '@/lib/services/livekit-telemedicina';
 
 export const turnosService = {
   async list(fechaStr?: string, estado?: string, medico?: string, tipo?: string, search?: string, limit = 100, offset = 0, sucursalId?: string, medicoId?: string) {
@@ -156,6 +157,13 @@ export const turnosService = {
      } catch {
        // No bloquear la creación si el sync falla
      }
+
+      // Si es turno virtual, generar sala LiveKit (fire-and-forget)
+      if (input.tipoConsulta === 'virtual') {
+        telemedicinaService.configurarSala(nuevo.id).catch((err) => {
+          safeError('[LiveKit] Error configurando sala virtual:', err instanceof Error ? { message: err.message } : err);
+        });
+      }
 
       // Invalidar cache de listados
       cache.invalidate('turnos:list:');

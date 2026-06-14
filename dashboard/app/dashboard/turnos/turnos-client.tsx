@@ -294,6 +294,7 @@ export function TurnosClient({
     pacienteId?: string;
     paciente: string;
     tipo: string;
+    tipoConsulta: string;
     medicoId: string;
     medico: string;
     hora: string;
@@ -374,6 +375,7 @@ export function TurnosClient({
           fecha: data.fecha,
           hora: data.hora,
           motivo: data.tipo,
+          tipoConsulta: data.tipoConsulta,
           sucursalId: sucursalId || undefined,
         }),
       });
