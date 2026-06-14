@@ -47,7 +47,7 @@ export const telemedicinaService = {
    *
    * @returns SalaResult o null si falla (no bloquea el flujo principal)
    */
-  async configurarSala(turnoId: string): Promise<SalaResult | null> {
+  async configurarSala(turnoId: string, fechaHoraOverride?: Date): Promise<SalaResult | null> {
     try {
       // Validar que LiveKit esté configurado
       if (!LIVEKIT_API_KEY) {
@@ -123,21 +123,22 @@ export const telemedicinaService = {
         })
         .where(eq(turnos.id, turnoId));
 
-      // Formatear fecha y hora para WhatsApp
-      const fecha = turno.fechaHora
+      // Usar fechaHora del parámetro (si se pasó) o de la DB
+      const fechaHoraSource = fechaHoraOverride || turno.fechaHora;
+      const fecha = fechaHoraSource
         ? new Intl.DateTimeFormat('es-CL', {
             day: 'numeric',
             month: 'long',
             year: 'numeric',
             timeZone: 'America/Santiago',
-          }).format(new Date(turno.fechaHora))
+          }).format(new Date(fechaHoraSource))
         : '';
-      const hora = turno.fechaHora
+      const hora = fechaHoraSource
         ? new Intl.DateTimeFormat('es-CL', {
             hour: '2-digit',
             minute: '2-digit',
             timeZone: 'America/Santiago',
-          }).format(new Date(turno.fechaHora))
+          }).format(new Date(fechaHoraSource))
         : '';
 
       // Enviar WhatsApp al paciente
