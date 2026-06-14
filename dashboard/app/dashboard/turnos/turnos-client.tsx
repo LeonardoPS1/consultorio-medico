@@ -246,6 +246,17 @@ export function TurnosClient({
     }
   }, [sucursalId]);
 
+  // ─── Fetch al cambiar vista calendario / modo mes-día ─────
+  useEffect(() => {
+    if (view === 'calendario') {
+      if (calendarViewMode === 'mes') {
+        fetchTurnosMes(selectedDate);
+      } else {
+        fetchTurnos(selectedDate);
+      }
+    }
+  }, [view, calendarViewMode, selectedDate, fetchTurnos, fetchTurnosMes]);
+
   // ─── Búsqueda server-side con debounce ──────────────────
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
