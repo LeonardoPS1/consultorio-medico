@@ -422,12 +422,31 @@ export default function AtencionPage() {
     try {
       setLoading(true);
       const hoy = new Date().toISOString().split('T')[0];
-      const response = await fetch(`/api/turnos?fecha=${hoy}&limit=100`);
-      if (!response.ok) {
-        throw new Error('Error al cargar turnos');
-      }
-      const data = await response.json();
-      setTurnos(data.data || []);
+
+      // Fetch 1: turnos de hoy (todos los estados)
+      const responseHoy = await fetch(`/api/turnos?fecha=${hoy}&limit=100`);
+      if (!responseHoy.ok) throw new Error('Error al cargar turnos de hoy');
+      const dataHoy = await responseHoy.json();
+      const turnosHoy = dataHoy.data || [];
+
+      // Fetch 2: turnos 'en_atencion' de CUALQUIER fecha (para atender turnos pasados/futuros)
+      const responseEnAtencion = await fetch(`/api/turnos?estado=en_atencion&limit=100`);
+      if (!responseEnAtencion.ok) throw new Error('Error al cargar turnos en atención');
+      const dataEnAtencion = await responseEnAtencion.json();
+      const turnosEnAtencion = dataEnAtencion.data || [];
+
+      // Merge sin duplicados (por id)
+      const todosIds = new Set<string>();
+      const merged: Turno[] = [];
+
+      [...turnosHoy, ...turnosEnAtencion].forEach((t) => {
+        if (!todosIds.has(t.id)) {
+          todosIds.add(t.id);
+          merged.push(t);
+        }
+      });
+
+      setTurnos(merged);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar turnos');
       toast({

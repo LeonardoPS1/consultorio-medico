@@ -424,6 +424,10 @@ export function TurnosClient({
   };
 
   const actualizarEstado = async (id: string, nuevoEstado: TurnoEstado, descripcion: string) => {
+    // Snapshot del estado anterior para revertir si falla
+    const prevTurno = turnos.find(t => t.id === id);
+    const prevEstado = prevTurno?.estado;
+
     // Optimistic update + pulsing badge
     setSavingStates(prev => new Set(prev).add(id));
     setTurnos((prev) =>
@@ -432,16 +436,29 @@ export function TurnosClient({
     toast({ title: descripcion });
 
     try {
-      await fetch(`/api/turnos/${id}`, {
+      const res = await fetch(`/api/turnos/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estado: nuevoEstado }),
       });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        const serverMsg = body?.prodError || body?.detail || body?.error || 'Error del servidor';
+        throw new Error(serverMsg);
+      }
     } catch {
-      setTurnos((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, estado: 'pendiente' } : t)),
-      );
-      toast({ title: 'Error', description: 'No se pudo actualizar', variant: 'destructive' });
+      // Revertir optimistic update si falló
+      if (prevEstado) {
+        setTurnos((prev) =>
+          prev.map((t) => (t.id === id ? { ...t, estado: prevEstado } : t)),
+        );
+      }
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el estado del turno',
+        variant: 'destructive',
+      });
     } finally {
       setSavingStates(prev => { const next = new Set(prev); next.delete(id); return next; });
     }
