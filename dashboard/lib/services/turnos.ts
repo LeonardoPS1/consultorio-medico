@@ -52,6 +52,7 @@ export const turnosService = {
       const lista = await db.select({
         id: turnos.id, fecha: sql<string>`TO_CHAR(${turnos.fechaHora}, 'YYYY-MM-DD')`, hora: sql<string>`TO_CHAR(${turnos.fechaHora}, 'HH24:MI')`,
         estado: turnos.estado, tipo: turnos.tipoConsulta, motivo: turnos.motivo,
+        tipoConsulta: turnos.tipoConsulta, linkVideollamada: turnos.linkVideollamada,
         pacienteNombre: pacientes.nombre, pacienteApellido: pacientes.apellido,
         medicoNombre: medicos.nombre, medicoId: medicos.id, pacienteId: pacientes.id,
         inicioAtencionAt: turnos.inicioAtencionAt,
@@ -59,7 +60,8 @@ export const turnosService = {
 
       const data = lista.map(t => ({
         id: t.id, hora: t.hora, paciente: `${t.pacienteNombre || ''} ${t.pacienteApellido || ''}`.trim() || 'Paciente',
-        tipo: t.motivo || t.tipo || 'Consulta', medico: t.medicoNombre || 'Medico', medicoId: t.medicoId, pacienteId: t.pacienteId,
+        tipo: t.motivo || 'Consulta', medico: t.medicoNombre || 'Medico', medicoId: t.medicoId, pacienteId: t.pacienteId,
+        tipoConsulta: t.tipoConsulta, linkVideollamada: t.linkVideollamada,
         estado: t.estado, fecha: fechaStr || t.fecha,
         inicioAtencionAt: t.inicioAtencionAt ? (t.inicioAtencionAt instanceof Date ? t.inicioAtencionAt.toISOString() : new Date(t.inicioAtencionAt).toISOString()) : undefined,
       }));

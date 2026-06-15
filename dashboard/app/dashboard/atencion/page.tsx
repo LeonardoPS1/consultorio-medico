@@ -22,6 +22,8 @@ import {
   AlertCircle,
   Users2,
   Video,
+  Phone,
+  MapPin,
 } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
@@ -183,9 +185,27 @@ function TurnoCard({
         {/* Nombre paciente */}
         <p className="font-semibold text-sm truncate">{turno.paciente}</p>
 
-        {/* Tipo + médico */}
+        {/* Tipo + médico + modalidad */}
         <p className="text-xs text-muted-foreground truncate mb-2">
           {turno.tipo} &middot; {turno.medico}
+          {turno.tipoConsulta === 'virtual' && (
+            <span className="inline-flex items-center gap-0.5 ml-1.5 text-[10px] font-medium text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30 px-1.5 py-0.5 rounded-full align-middle">
+              <Video className="h-2.5 w-2.5" />
+              Virtual
+            </span>
+          )}
+          {turno.tipoConsulta === 'telefonica' && (
+            <span className="inline-flex items-center gap-0.5 ml-1.5 text-[10px] font-medium text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-900/30 px-1.5 py-0.5 rounded-full align-middle">
+              <Phone className="h-2.5 w-2.5" />
+              Telefónica
+            </span>
+          )}
+          {turno.tipoConsulta === 'presencial' && (
+            <span className="inline-flex items-center gap-0.5 ml-1.5 text-[10px] font-medium text-emerald-600 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-full align-middle">
+              <MapPin className="h-2.5 w-2.5" />
+              Presencial
+            </span>
+          )}
         </p>
 
         {/* Timer de atención */}
