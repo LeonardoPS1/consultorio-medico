@@ -12,6 +12,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.9.0',
+    date: '14/06/2026',
+    title: 'Telemedicina en Vivo con LiveKit',
+    items: [
+      'Telemedicina: videoconsultas en vivo con pacientes a través de LiveKit (self-hosted, sin costos por minuto)',
+      'Nueva modalidad "Virtual" al crear turnos: el sistema genera automáticamente una sala de video y envía el link al paciente por WhatsApp',
+      'Botón "Video" en el Kanban de Atención para iniciar videollamadas directo desde el panel',
+      'Portal del Paciente: botón "Ingresar" para pacientes con turnos virtuales (link con token único)',
+      'Feature gating: la telemedicina se habilita automáticamente en el plan Professional o superior',
+      'Videollamada segura: tokens JWT temporales, sala privada médico-paciente, sin grabación',
+      'Infraestructura: LiveKit server self-hosted en Dokploy con Redis, TURN, Ingress y HTTPS con Let\'s Encrypt',
+      'Acceso multiplataforma: funciona en cualquier navegador moderno sin descargar apps',
+    ],
+  },
+  {
     version: '1.8.0',
     date: '13/06/2026',
     title: 'Derivaciones, Alertas Inteligentes y Rediseño Premium',

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Calendar, MessageSquare, Syringe, BarChart3, Bot, Smartphone, Shield, Users, ChevronRight } from 'lucide-react';
+import { Calendar, MessageSquare, Syringe, BarChart3, Bot, Smartphone, Shield, Users, ChevronRight, Video } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,11 @@ const defaultFeatures: FeatureItem[] = [
     icon: Users,
     title: 'Pacientes + Historial Clínico',
     desc: 'Ficha completa con datos de contacto, obra social, notas médicas e historial clínico con CIE-10. Todo sincronizado y accesible desde cualquier dispositivo.',
+  },
+  {
+    icon: Video,
+    title: 'Telemedicina en Vivo',
+    desc: 'Videoconsultas integradas con LiveKit. Creá turnos virtuales, el link se genera automáticamente y el paciente lo recibe por WhatsApp. Sin descargas ni instalaciones.',
   },
   {
     icon: Shield,

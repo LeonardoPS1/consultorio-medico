@@ -34,6 +34,7 @@ import {
   ArrowRightLeft,
   Ban,
   FileSignature,
+  Video,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
@@ -65,6 +66,7 @@ const navItems: NavItem[] = [
   { title: 'Derivaciones', href: '/dashboard/derivaciones', icon: ArrowRightLeft, feature: 'derivaciones' },
   { title: 'Lista Negra', href: '/dashboard/blacklist', icon: Ban, feature: 'blacklist' },
   { title: 'Consentimientos', href: '/dashboard/consentimientos', icon: FileSignature, feature: 'consentimiento-informado' },
+  { title: 'Telemedicina', href: '/dashboard/atencion', icon: Video, feature: 'telemedicina' },
   { title: 'Notificaciones', href: '/dashboard/notificaciones', icon: Bell },
   { title: 'Ajustes', href: '/dashboard/configuracion', icon: Sliders },
   { title: 'Ayuda', href: '/dashboard/ayuda', icon: BookOpen },

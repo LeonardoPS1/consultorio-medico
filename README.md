@@ -22,7 +22,7 @@
 
 <div align="center">
 
-`TypeScript` `Next.js 14` `PostgreSQL` `Drizzle ORM` `n8n` `Ollama` `Mistral` `Twilio` `Docker` `MercadoPago`
+`TypeScript` `Next.js 14` `PostgreSQL` `Drizzle ORM` `n8n` `Ollama` `Mistral` `Twilio` `Docker` `MercadoPago` `LiveKit`
 
 [![Estado](https://img.shields.io/badge/Estado-Producci%C3%B3n-10b981?style=flat-square)](https://med.aicorebots.com)
 [![Next.js](https://img.shields.io/badge/Next.js-14.2-000000?style=flat-square&logo=next.js)](https://nextjs.org/)
@@ -61,6 +61,7 @@
 - **🤖 IA Local**: Toda la inteligencia artificial corre en tu propia infraestructura con Ollama. Sin dependencias externas, sin costos por API, sin riesgos de privacidad.
 - **📱 WhatsApp Automation**: Los pacientes pueden agendar, cancelar y consultar turnos vía WhatsApp con atención automática por IA.
 - **🏗️ Automatización n8n**: 9 workflows n8n que orquestan recordatorios, resúmenes diarios, sincronización con Google Calendar, backups encriptados y más.
+- **📹 Telemedicina integrada**: Videoconsultas en vivo con LiveKit self-hosted. Link automático por WhatsApp al agendar turnos virtuales. Sin costos por minuto ni dependencias externas.
 - **🇨🇱 Hecho para Chile**: Sistema de salud chileno completo (FONASA/Isapre), RUT, regiones/comunas, precios en CLP.
 - **🔒 Seguridad first**: HMAC en webhooks, autenticación 2FA, rate limiting, anti-jailbreak en prompts IA, multi-tenant con tenantId en 22+ tablas.
 
@@ -76,10 +77,10 @@
                                           │
                     ┌─────────────────────▼───────────────────────────────┐
                     │              CAPA DE COMUNICACIÓN                    │
-                    │  ┌──────────┐  ┌──────────┐  ┌──────────────────┐   │
-                    │  │  Twilio  │  │   SMTP   │  │   Webhooks MP    │   │
-                    │  └────┬─────┘  └────┬─────┘  └────────┬─────────┘   │
-                    └───────┼──────────────┼─────────────────┼─────────────┘
+                     │  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  ┌──────────┐   │
+                     │  │  Twilio  │  │   SMTP   │  │   Webhooks MP    │  │ LiveKit  │   │
+                     │  └────┬─────┘  └────┬─────┘  └────────┬─────────┘  └────┬─────┘   │
+                     └───────┼──────────────┼─────────────────┼─────────────────┼─────────┘
                             │              │                 │
                     ┌───────▼──────────────▼─────────────────▼─────────────┐
                     │              CAPA DE AUTOMATIZACIÓN                   │
@@ -143,6 +144,7 @@ Twilio → Webhook Dashboard (HMAC validation) →
 | **Reportes** | 4 tabs: ingresos, turnos, pacientes, recetas. Exportación Excel/PDF |
 | **Configuración** | 8 módulos: sucursales, horarios, médicos, servicios, plantillas |
 | **Onboarding IA** | Asistente de configuración con 6 etapas y progreso persistente |
+| **Telemedicina** | Videoconsultas con LiveKit, link automático por WhatsApp, sin descargas |
 | **Feature Overrides** | Admin puede otorgar features de planes superiores a usuarios específicos |
 
 ### 🤖 Automatización WhatsApp
@@ -181,6 +183,7 @@ Twilio → Webhook Dashboard (HMAC validation) →
 | **Base de Datos** | PostgreSQL 16 | 16 | Almacenamiento principal |
 | **Automatización** | n8n | 2.19.x | Workflows de negocio |
 | **IA Local** | Ollama + Mistral | latest | Asistente virtual y triaje |
+| **Videollamada** | LiveKit (self-hosted) | 1.9.x | Telemedicina en vivo (WSS + TURN) |
 | **WhatsApp** | Twilio API | 5.x | Mensajería con pacientes |
 | **Pagos** | MercadoPago | 2.x | Suscripciones en CLP |
 | **Calendario** | Google Calendar API | — | Sync de turnos |
@@ -353,6 +356,11 @@ consultorio-medico/
 │   │
 │   └── public/                         # Assets, landing page, icons
 │
+├── livekit-server/                     # LiveKit self-hosted (compose + traefik config)
+│   ├── docker-compose.yml               # LiveKit + Redis
+│   ├── livekit.yaml                     # Config del servidor (keys, TURN, Ingress)
+│   └── traefik-livekit.yml              # Routing Traefik para livekit.aicorebots.com
+│
 ├── n8n-workflows/                      # ★ 9 workflows JSON
 │   ├── current/                        # Activos (WF-01 a WF-09)
 │   └── archive/                        # Versiones legacy
@@ -405,6 +413,7 @@ consultorio-medico/
 - [x] Feature overrides por usuario (admin asigna features cross-plan)
 - [x] Encuestas post-consulta con análisis de sentimiento ML
 - [x] Rediseño Premium (animaciones, cards, popovers, KPIs count-up)
+- [x] Telemedicina en vivo con LiveKit (videoconsultas, link WhatsApp, tokens seguros)
 
 ### 🟡 En Progreso / Próximo
 - [ ] Tests de integración (Playwright)

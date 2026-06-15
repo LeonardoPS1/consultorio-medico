@@ -12,6 +12,7 @@ import {
   Sparkles,
   TrendingUp,
   Smartphone,
+  Video,
 } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardClient } from './dashboard-client';
@@ -302,6 +303,29 @@ export default async function DashboardPage() {
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse-soft" />
             <span className="text-[11px] sm:text-xs text-emerald-600 font-medium">Online</span>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Telemedicina */}
+      <Card className="border-primary/10 bg-gradient-to-br from-primary/[0.03] to-transparent">
+        <CardContent className="flex items-center justify-between p-3 sm:p-5">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+              <Video className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-medium">Telemedicina disponible</p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
+                Videoconsultas en vivo con LiveKit · Link automático por WhatsApp
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/atencion"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors shrink-0 ml-2"
+          >
+            Ir a Atención <ArrowRight className="h-3 w-3" />
+          </Link>
         </CardContent>
       </Card>
 
