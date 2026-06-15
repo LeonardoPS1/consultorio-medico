@@ -25,6 +25,18 @@ interface Props {
   searchParams: { token?: string };
 }
 
+/**
+ * Detecta si un error es de redirect() de Next.js.
+ * Necesario para NO atrapar redirect() en try/catch y
+ * permitir que Next.js maneje la redirección.
+ */
+function isNextRedirect(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.message === 'NEXT_REDIRECT' || (error as any).digest?.startsWith('NEXT_REDIRECT'))
+  );
+}
+
 // ─── Página ────────────────────────────────────────────────
 
 export default async function VideollamadaPage({ params, searchParams }: Props) {
@@ -69,7 +81,11 @@ export default async function VideollamadaPage({ params, searchParams }: Props) 
     let session;
     try {
       session = await requireAuth();
-    } catch {
+    } catch (authError) {
+      // Redirect errors deben propagarse (Next.js las maneja)
+      if (isNextRedirect(authError)) throw authError;
+
+      // Error de autenticación → redirigir al login
       redirect('/login?callbackUrl=' + encodeURIComponent(`/videollamada/${turnoId}`));
     }
 
@@ -118,6 +134,9 @@ export default async function VideollamadaPage({ params, searchParams }: Props) 
       />
     );
   } catch (error) {
+    // ⚠️ Re-lanzar redirect errors para que Next.js maneje la redirección
+    if (isNextRedirect(error)) throw error;
+
     const mensaje = error instanceof Error ? error.message : 'Error inesperado';
     return <ErrorExplicacion mensaje={mensaje} />;
   }
