@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  # ─── Redis ────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - livekit
+      - dokploy-network
+
+  # ─── LiveKit Server ───────────────────────────────────
+  livekit:
+    image: livekit/livekit-server:latest
+    restart: unless-stopped
+    ports:
+      # HTTP / WebSocket (for Traefik proxying)
+      - "7880:7880/tcp"
+      # Optional direct WSS (for clients that bypass Traefik)
+      - "7881:7881/tcp"
+      # UDP range for media (audio/video)
+      - "50000-60000:50000-60000/udp"
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./livekit.yaml:/etc/livekit/livekit.yaml:ro
+    networks:
+      - livekit
+      - dokploy-network
+
+volumes:
+  redis_data:
+
+networks:
+  livekit:
+    driver: bridge
+  dokploy-network:
+    external: true

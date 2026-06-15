@@ -1,0 +1,30 @@
+# Traefik Dynamic Config — LiveKit
+# Desplegado por OpenCode
+
+http:
+  routers:
+    # HTTP → HTTPS redirect
+    livekit-router-web:
+      rule: Host(`livekit.aicorebots.com`)
+      service: livekit-service
+      middlewares:
+        - redirect-to-https
+      entryPoints:
+        - web
+
+    # HTTPS with Let's Encrypt
+    livekit-router-websecure:
+      rule: Host(`livekit.aicorebots.com`)
+      service: livekit-service
+      middlewares: []
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    livekit-service:
+      loadBalancer:
+        servers:
+          - url: http://livekit:7880
+        passHostHeader: true
