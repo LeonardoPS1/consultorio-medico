@@ -50,7 +50,7 @@ export const turnosService = {
 
       const [{ totalFiltrados }] = await db.select({ totalFiltrados: count() }).from(turnos).where(whereConditions);
       const lista = await db.select({
-        id: turnos.id, fecha: turnos.fechaHora, hora: sql<string>`TO_CHAR(${turnos.fechaHora}, 'HH24:MI')`,
+        id: turnos.id, fecha: sql<string>`TO_CHAR(${turnos.fechaHora}, 'YYYY-MM-DD')`, hora: sql<string>`TO_CHAR(${turnos.fechaHora}, 'HH24:MI')`,
         estado: turnos.estado, tipo: turnos.tipoConsulta, motivo: turnos.motivo,
         pacienteNombre: pacientes.nombre, pacienteApellido: pacientes.apellido,
         medicoNombre: medicos.nombre, medicoId: medicos.id, pacienteId: pacientes.id,
@@ -60,7 +60,7 @@ export const turnosService = {
       const data = lista.map(t => ({
         id: t.id, hora: t.hora, paciente: `${t.pacienteNombre || ''} ${t.pacienteApellido || ''}`.trim() || 'Paciente',
         tipo: t.motivo || t.tipo || 'Consulta', medico: t.medicoNombre || 'Medico', medicoId: t.medicoId, pacienteId: t.pacienteId,
-        estado: t.estado, fecha: fechaStr || String(t.fecha).split('T')[0],
+        estado: t.estado, fecha: fechaStr || t.fecha,
         inicioAtencionAt: t.inicioAtencionAt ? (t.inicioAtencionAt instanceof Date ? t.inicioAtencionAt.toISOString() : new Date(t.inicioAtencionAt).toISOString()) : undefined,
       }));
 

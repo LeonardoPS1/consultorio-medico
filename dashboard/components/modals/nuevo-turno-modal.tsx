@@ -61,6 +61,7 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
   const [loading, setLoading] = useState(false);
   const [medicos, setMedicos] = useState<MedicoOption[]>([]);
   const [loadingMedicos, setLoadingMedicos] = useState(false);
+  const [medicosError, setMedicosError] = useState<string | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   // ─── Autocomplete paciente ──────────────────────────────
@@ -171,8 +172,15 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
     if (!open) return;
     let cancelled = false;
     setLoadingMedicos(true);
+    setMedicosError(null);
     fetch('/api/medicos')
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}));
+          throw new Error(body?.error || body?.detail || `Error ${r.status}`);
+        }
+        return r.json();
+      })
       .then((json) => {
         if (cancelled) return;
         const lista: MedicoOption[] = json.data || [];
@@ -182,8 +190,11 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
           setMedicoNombre(lista[0].nombre);
         }
       })
-      .catch(() => {
-        if (!cancelled) setMedicos([]);
+      .catch((err) => {
+        if (!cancelled) {
+          setMedicos([]);
+          setMedicosError(err instanceof Error ? err.message : 'Error al cargar médicos');
+        }
       })
       .finally(() => {
         if (!cancelled) setLoadingMedicos(false);
@@ -385,7 +396,7 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
                 </div>
               ) : medicos.length === 0 ? (
                 <div className="flex h-10 w-full items-center rounded-md border border-dashed border-destructive/50 bg-destructive/5 px-3 py-2 text-xs text-destructive">
-                  No hay médicos registrados
+                  {medicosError || 'No hay médicos registrados'}
                 </div>
               ) : (
                 <Select value={medicoId} onValueChange={handleMedicoChange}>
