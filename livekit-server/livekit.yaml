@@ -1,0 +1,48 @@
+# LiveKit Server Configuration
+# Docs: https://docs.livekit.io/server/configuration
+
+port: 7880
+bind_addresses:
+    - ""
+
+# RTC / Media configuration
+rtc:
+    tcp_port: 7881
+    udp_port: 7882
+    use_external_ip: true
+    enable_loopback_candidate: false
+
+# Redis for room state and session management
+redis:
+    address: redis:6379
+    username: ""
+    password: v4iysnslnjdzdiawuzscn70ji8cotsyv
+    db: 0
+    use_tls: false
+    sentinel_master_name: ""
+    sentinel_username: ""
+    sentinel_password: ""
+    sentinel_addresses: []
+    cluster_addresses: []
+    max_redirects: null
+
+# TURN server configuration
+turn:
+    enabled: true
+    domain: livekit-turn.aicore-livekit-0ebfd7-51-222-207-250.sslip.io
+    tls_port: 5349
+    udp_port: 3478
+    external_tls: true
+
+# Ingress configuration
+ingress:
+    rtmp_base_url: rtmp://livekit.aicore-livekit-ac9bb0-51-222-207-250.sslip.io:1935/x
+    whip_base_url: https://livekit-whip.aicore-livekit-e922a2-51-222-207-250.sslip.io/w
+
+# API Keys for token generation
+# Generadas el 15/06/2026 para producción
+keys:
+    "APIWcVKujpt6Wyv": "Mxv4JF2Cc4fsn1pMyfXRxwIFprrhV35k2roACKQexeXA"
+
+# Logging
+log_level: info
