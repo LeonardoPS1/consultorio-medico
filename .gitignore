@@ -63,6 +63,10 @@ scripts/_fix_n8n*.py
 scripts/_diagnose_n8n.py
 scripts/deploy-vps.py
 
+# Scripts de diagnóstico LiveKit (contienen API keys)
+livekit-server/test_*.py
+livekit-server/check_certs.py
+
 # Deploy scripts (contienen credenciales VPS)
 deploy_vps.py
 deploy_vps_api.py
