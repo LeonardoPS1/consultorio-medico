@@ -78,6 +78,7 @@ export default async function VideollamadaPage({ params, searchParams }: Props) 
       .select({
         id: turnos.id,
         medicoId: turnos.medicoId,
+        usuarioId: medicos.usuarioId,
         tipoConsulta: turnos.tipoConsulta,
         pacienteNombre: pacientes.nombre,
         pacienteApellido: pacientes.apellido,
@@ -98,7 +99,9 @@ export default async function VideollamadaPage({ params, searchParams }: Props) 
     }
 
     // Verificar que el médico autenticado es el asignado
-    if (turno.medicoId && session.user.id !== turno.medicoId) {
+    // turno.medicoId → medicos.id, session.user.id → usuarios.id
+    // La relación es: medicos.usuarioId == usuarios.id
+    if (turno.usuarioId && session.user.id !== turno.usuarioId) {
       return <ErrorExplicacion mensaje="No tenés permiso para acceder a esta videollamada" />;
     }
 
