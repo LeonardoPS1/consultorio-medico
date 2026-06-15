@@ -215,12 +215,12 @@ function TurnoCard({
           </div>
         )}
 
-        {/* Acciones */}
-        <div className="flex gap-2">
+        {/* Acciones - responsive con flex-wrap para evitar overflow en columnas estrechas */}
+        <div className="flex flex-wrap gap-2">
           {isPending && (
             <Button
               size="sm"
-              className="flex-1 h-8 text-xs gap-2 font-semibold"
+              className="flex-1 min-w-[100px] h-8 text-xs gap-2 font-semibold"
               onClick={() => onAtender(turno.id)}
             >
               <Play className="h-3.5 w-3.5" />
@@ -231,7 +231,7 @@ function TurnoCard({
             <Button
               size="sm"
               variant="outline"
-              className="h-8 text-xs gap-1.5 shrink-0"
+              className="h-8 text-xs gap-1.5 shrink-0 min-w-[80px]"
               onClick={() => window.open(`/videollamada/${turno.id}`, '_blank')}
               title="Iniciar videollamada"
             >
@@ -254,7 +254,7 @@ function TurnoCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive shrink-0"
               onClick={() => onCancelar(turno.id)}
               title="Cancelar turno"
             >
@@ -265,7 +265,7 @@ function TurnoCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0 text-muted-foreground hover:text-purple-600"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-purple-600 shrink-0"
               onClick={() => onMoverNoAsistio(turno.id)}
               title="Marcar como no asistió"
             >
@@ -825,7 +825,7 @@ export default function AtencionPage() {
               <span className="ml-2 text-sm text-muted-foreground">Cargando turnos...</span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
               {COLUMNAS.map((col) => {
                 const turnosCol =
                   col.id === 'pendientes' ? pendientes

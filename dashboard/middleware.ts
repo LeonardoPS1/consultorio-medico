@@ -39,7 +39,8 @@ const securityHeaders: Record<string, string> = {
   'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  // camera/microphone permitidos para videollamadas con LiveKit (consistente con next.config.js)
+  'Permissions-Policy': 'camera=(self), microphone=(self), geolocation=()',
   'X-DNS-Prefetch-Control': 'off',
 };
 
