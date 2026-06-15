@@ -92,6 +92,7 @@ export const PLANES: Record<PlanId, PlanInfo> = {
       'Certificados médicos con verificación QR',
       'Lista negra de pacientes (bloqueo automático por inasistencia)',
       'Consentimiento informado digital con firma y auditoría',
+      'Telemedicina integrada (videoconsultas con LiveKit)',
       'Bloqueos de agenda por horario',
       'Hasta 10 profesionales con agendas independientes',
     ],

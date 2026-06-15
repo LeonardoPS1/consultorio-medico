@@ -840,6 +840,82 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     ],
   },
   {
+    id: 'telemedicina',
+    titulo: 'Telemedicina',
+    descripcion: 'Videoconsultas en vivo con pacientes a través de LiveKit',
+    icono: 'Video',
+    pasos: [
+      {
+        titulo: 'Agendar una consulta virtual',
+        descripcion: 'Al crear un nuevo turno, seleccioná "Virtual" como modalidad de consulta. El sistema creará automáticamente una sala de videollamada y le enviará el link al paciente por WhatsApp.',
+        tips: [
+          'Disponible solo en plan Professional o superior',
+          'El paciente recibe el link con su token de acceso único',
+          'No requiere que el paciente descargue ninguna aplicación',
+          'Funciona en cualquier navegador moderno (Chrome, Firefox, Safari, Edge)',
+        ],
+        enlace: { href: '/dashboard/turnos', label: 'Ir a Turnos' },
+      },
+      {
+        titulo: 'Iniciar una videoconsulta',
+        descripcion: 'Desde el Kanban de Atención, los turnos virtuales tienen un botón "Video" que abre la sala. También podés iniciarla desde el Portal del Paciente.',
+        tips: [
+          'Hacé clic en "Video" junto al turno en la columna de Pendientes o En Atención',
+          'La sala se abre en una ventana nueva a pantalla completa',
+          'Activá tu cámara y micrófono cuando el navegador lo solicite',
+          'Podés compartir pantalla para mostrar exámenes o resultados',
+        ],
+        enlace: { href: '/dashboard/atencion', label: 'Ir a Atención' },
+      },
+      {
+        titulo: 'Durante la videollamada',
+        descripcion: 'La sala incluye controles de cámara, micrófono, compartir pantalla y finalizar llamada.',
+        tips: [
+          'Usá los controles inferiores para mutearte o apagar la cámara',
+          'Compartí pantalla para mostrar resultados o indicaciones',
+          'Al finalizar, cerrá la ventana o usá el botón "Colgar"',
+          'La llamada no se graba (privacidad del paciente)',
+        ],
+      },
+      {
+        titulo: 'Acceso del paciente',
+        descripcion: 'El paciente recibe un link por WhatsApp con su token de acceso. Solo necesita hacer clic para ingresar.',
+        tips: [
+          'El link incluye un token de acceso único y temporal',
+          'El paciente debe ingresar 5 minutos antes de la hora agendada',
+          'Solo necesita navegador web, no requiere instalar nada',
+          'Si el paciente pierde el link, podés reenviarlo desde la ficha del turno',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Qué necesito para hacer una videoconsulta?',
+        respuesta: 'Solo necesitás un navegador moderno (Chrome, Firefox, Safari o Edge), cámara web y micrófono. No requiere instalar ningún software adicional. Tus pacientes tampoco necesitan descargar nada.',
+      },
+      {
+        pregunta: '¿Cuántos pacientes puedo atender simultáneamente?',
+        respuesta: 'Las videoconsultas son uno a uno (médico-paciente). No hay límite de videoconsultas por día ni por mes.',
+      },
+      {
+        pregunta: '¿Es segura la videollamada?',
+        respuesta: 'Sí. Las salas son privadas y solo pueden acceder el médico y el paciente con su token único. Los tokens son temporales y expiran. La comunicación está encriptada y no se almacena ningún registro de audio o video.',
+      },
+      {
+        pregunta: '¿El paciente necesita crear una cuenta?',
+        respuesta: 'No. El paciente recibe un link directo por WhatsApp con su token de acceso. Solo hace clic y entra a la sala. No requiere registro, contraseña ni descarga de aplicaciones.',
+      },
+      {
+        pregunta: '¿En qué dispositivos funciona?',
+        respuesta: 'Funciona en computadores (Windows, Mac, Linux) y dispositivos móviles (Android, iOS) con cualquier navegador moderno.',
+      },
+      {
+        pregunta: '¿Qué plan incluye telemedicina?',
+        respuesta: 'La telemedicina está disponible en el plan Professional o superior. Incluye videoconsultas ilimitadas con generación automática de sala y notificación al paciente por WhatsApp.',
+      },
+    ],
+  },
+  {
     id: 'consentimiento-informado',
     titulo: 'Consentimiento Informado Digital',
     descripcion: 'Registro digital de consentimientos informados con respaldo legal (Ley 20.584)',

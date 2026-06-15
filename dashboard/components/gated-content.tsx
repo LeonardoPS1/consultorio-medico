@@ -28,6 +28,8 @@ const ROUTE_FEATURE_MAP: Record<string, FeatureId> = {
   '/dashboard/webhooks': 'webhooks-log',
   '/dashboard/blacklist': 'blacklist',
   '/dashboard/consentimientos': 'consentimiento-informado',
+  '/dashboard/videollamada': 'telemedicina',
+  '/videollamada': 'telemedicina',
 };
 
 /** Rutas hijas que heredan el feature de la ruta padre */
