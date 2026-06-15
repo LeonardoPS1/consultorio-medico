@@ -17,10 +17,12 @@ import { turnos, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import {
   getRoomName,
-  generateMedicoToken,
-  generatePacienteToken,
   getSalaLink,
   LIVEKIT_URL,
+} from '@/lib/livekit-client';
+import {
+  generateMedicoToken,
+  generatePacienteToken,
   LIVEKIT_API_KEY,
 } from '@/lib/livekit';
 

@@ -247,3 +247,40 @@ Cada dashboard load, cada listado de agenda, cada reporte, cada verificación de
 - 🟡 WF-04 Correo Inteligente — necesita IMAP/SMTP configurados en n8n
 - 🟡 Portal Paciente MVP — Plan detallado creado, listo para implementar
 - 🟡 Activar webhook google-calendar-sync en n8n (workflow inactivo)
+
+## 📌 15/06 — Telemedicina Dashboard + Videollamada page ✅
+**Commits:** (pendiente)
+
+**Implementado:**
+1. **Página `/dashboard/telemedicina`** — Listado completo de turnos virtuales con:
+   - Filtros por estado (Próximos/En curso/Finalizados/Todos), médico y rango de fechas
+   - Stats rápidos (Próximos, En curso, Atendidos, Cancelados)
+   - Tabla responsive con info: hora, fecha, paciente, médico, modalidad (Virtual badge), estado
+   - Botón "Unirse" para videollamadas próximas/en curso con link generado
+   - Badge "Sin link" si la sala no se generó aún
+   - Botón "Ver enlace" para turnos finalizados
+   - Info contextual sobre cómo funciona la telemedicina
+
+2. **Página `/videollamada/[turnoId]`** — Entrada unificada para médico y paciente:
+   - **Paciente**: recibe token por query param `?token=` (vía WhatsApp) → rol `paciente`
+   - **Médico**: autenticado en dashboard → llama `POST /api/livekit/token` → rol `medico`
+   - Renderiza `VideoRoom` component con LiveKit (livekit-client + @livekit/components-react)
+   - Manejo de estados: loading, error, connected, disconnected
+   - Redirect a `/dashboard/atencion` al desconectar
+
+3. **lib/livekit-client.ts** — Nuevo archivo client-safe con helpers puros:
+   - `getRoomName(turnoId)`, `LIVEKIT_URL`, `getSalaLink()`
+   - NO importa `livekit-server-sdk` (evita error `node:crypto` en client bundle)
+
+4. **Fix sidebar.tsx** — Eliminado import duplicado de `LockKeyhole` de lucide-react
+
+5. **livekit-telemedicina.ts service** — Actualizado imports: funciones puras desde `livekit-client.ts`, funciones server (generateMedicoToken, generatePacienteToken, LIVEKIT_API_KEY) desde `livekit.ts`
+
+**Archivos creados/modificados:**
+- `dashboard/app/dashboard/telemedicina/page.tsx` (nuevo)
+- `dashboard/app/videollamada/[turnoId]/page.tsx` (nuevo)
+- `dashboard/lib/livekit-client.ts` (nuevo)
+- `dashboard/lib/services/livekit-telemedicina.ts` (imports actualizados)
+- `dashboard/components/layout/sidebar.tsx` (fix import duplicado)
+
+**Build:** ✓ Compiled successfully, ✓ Linting, ✓ 117/117 páginas

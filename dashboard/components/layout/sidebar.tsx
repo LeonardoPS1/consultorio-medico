@@ -34,6 +34,8 @@ import {
   ArrowRightLeft,
   Ban,
   FileSignature,
+  LockKeyhole,
+  Video,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
@@ -41,8 +43,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import { canAccess, getFeatureRequiredPlan, type FeatureId } from '@/lib/features';
 import { useFeatureFlags } from '@/lib/feature-flags-context';
-import { LockKeyhole } from 'lucide-react';
-
 interface NavItem {
   title: string;
   href: string;
@@ -55,6 +55,7 @@ const navItems: NavItem[] = [
   { title: 'Panel Principal', href: '/dashboard', icon: LayoutDashboard },
   { title: 'Asistente IA', href: '/dashboard/onboarding', icon: Rocket, feature: 'ia-assistant' },
   { title: 'Atención', href: '/dashboard/atencion', icon: Activity, feature: 'atencion' },
+  { title: 'Telemedicina', href: '/dashboard/telemedicina', icon: Video, feature: 'telemedicina' },
   { title: 'Turnos', href: '/dashboard/turnos', icon: Calendar, feature: 'turnos' },
   { title: 'Pacientes', href: '/dashboard/pacientes', icon: Users, feature: 'pacientes' },
   { title: 'Conversaciones', href: '/dashboard/conversaciones', icon: MessageSquare, feature: 'conversaciones' },

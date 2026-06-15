@@ -1,167 +1,113 @@
-/**
- * /videollamada/[turnoId] — Página de videoconsulta
- *
- * Dos flujos de acceso:
- *   1. Médico: autenticado con NextAuth → genera token server-side
- *   2. Paciente: token JWT en query param (desde WhatsApp)
- *
- * Server Component: valida acceso y genera token antes de renderizar
- * el componente VideoRoom (Client Component).
- */
+'use client';
 
-import { redirect } from 'next/navigation';
-import { eq, and, sql } from 'drizzle-orm';
-import { db } from '@/lib/db';
-import { turnos, pacientes, medicos } from '@/drizzle/schema';
-import { requireAuth } from '@/lib/api-auth';
-import { getPortalSession } from '@/lib/portal-auth';
-import { getRoomName, generateMedicoToken, LIVEKIT_URL } from '@/lib/livekit';
+import { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Loader2, AlertTriangle, Video, Mic, Monitor, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { VideoRoom } from '@/components/videollamada/video-room';
+import { getRoomName, LIVEKIT_URL } from '@/lib/livekit-client';
 
-// ─── Tipos ─────────────────────────────────────────────────
+export default function VideollamadaPage({
+  params,
+}: {
+  params: Promise<{ turnoId: string }>;
+}) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [token, setToken] = useState<string | null>(null);
+  const [role, setRole] = useState<'medico' | 'paciente'>('medico');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [identity, setIdentity] = useState('');
+  const [turnoId, setTurnoId] = useState('');
 
-interface Props {
-  params: { turnoId: string };
-  searchParams: { token?: string };
-}
+  useEffect(() => {
+    const init = async () => {
+      const resolvedParams = await params;
+      const tId = resolvedParams.turnoId;
+      setTurnoId(tId);
 
-/**
- * Detecta si un error es de redirect() de Next.js.
- * Necesario para NO atrapar redirect() en try/catch y
- * permitir que Next.js maneje la redirección.
- */
-function isNextRedirect(error: unknown): boolean {
-  return (
-    error instanceof Error &&
-    (error.message === 'NEXT_REDIRECT' || (error as any).digest?.startsWith('NEXT_REDIRECT'))
-  );
-}
+      // 1. Intentar obtener token de query params (paciente desde WhatsApp)
+      const urlToken = searchParams?.get('token');
+      if (urlToken) {
+        setToken(urlToken);
+        setRole('paciente');
+        // Identidad para paciente: extraer del token o usar placeholder
+        // El token ya contiene la identity, pero podemos usar un nombre genérico
+        setIdentity('Paciente');
+        setLoading(false);
+        return;
+      }
 
-// ─── Página ────────────────────────────────────────────────
+      // 2. Si no hay token en URL, soy médico autenticado -> llamar API
+      try {
+        const roomName = getRoomName(tId);
+        const res = await fetch('/api/livekit/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roomName,
+            identity: 'Médico', // Se validará en el server con la sesión
+            role: 'medico',
+          }),
+        });
 
-export default async function VideollamadaPage({ params, searchParams }: Props) {
-  const { turnoId } = params;
-  const { token: tokenFromUrl } = searchParams;
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.detail || body.error || 'Error al obtener token');
+        }
 
-  if (!turnoId) {
-    redirect('/dashboard/turnos');
+        const data = await res.json();
+        setToken(data.token);
+        setRole('medico');
+        setIdentity('Médico');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Error al conectar');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    init();
+  }, [params, searchParams]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen w-screen bg-black">
+        <Loader2 className="h-10 w-10 animate-spin text-white mb-4" />
+        <p className="text-white text-lg font-medium">Preparando videollamada...</p>
+        <p className="text-white/60 text-sm mt-1">Conectando con LiveKit</p>
+      </div>
+    );
+  }
+
+  if (error || !token) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen w-screen bg-black text-white">
+        <AlertTriangle className="h-12 w-12 text-red-400 mb-4" />
+        <p className="text-lg font-medium">No se pudo iniciar la videollamada</p>
+        <p className="text-white/60 text-sm mt-1 mb-4">{error || 'Token no disponible'}</p>
+        <div className="flex gap-2">
+          <Button variant="default" onClick={() => window.location.reload()}>
+            <Loader2 className="h-4 w-4 mr-2" /> Reintentar
+          </Button>
+          <Button variant="ghost" onClick={() => router.push('/dashboard/atencion')}>
+            <X className="h-4 w-4 mr-2" /> Volver al dashboard
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const roomName = getRoomName(turnoId);
 
-  try {
-    // ─── FLUJO PACIENTE: token en URL ──────────────────
-    if (tokenFromUrl) {
-      // Verificar que el turno existe y es virtual
-      const [turno] = await db
-        .select({ id: turnos.id, tipoConsulta: turnos.tipoConsulta })
-        .from(turnos)
-        .where(and(eq(turnos.id, turnoId), sql`${turnos.deletedAt} IS NULL`))
-        .limit(1);
-
-      if (!turno) {
-        return <ErrorExplicacion mensaje="Turno no encontrado" />;
-      }
-
-      if (turno.tipoConsulta !== 'virtual') {
-        return <ErrorExplicacion mensaje="Este turno no es una consulta virtual" />;
-      }
-
-      return (
-        <VideoRoom
-          roomName={roomName}
-          token={tokenFromUrl}
-          liveKitUrl={LIVEKIT_URL}
-          role="paciente"
-        />
-      );
-    }
-
-    // ─── FLUJO MÉDICO: requiere autenticación ──────────
-    let session;
-    try {
-      session = await requireAuth();
-    } catch (authError) {
-      // Redirect errors deben propagarse (Next.js las maneja)
-      if (isNextRedirect(authError)) throw authError;
-
-      // Error de autenticación → redirigir al login
-      redirect('/login?callbackUrl=' + encodeURIComponent(`/videollamada/${turnoId}`));
-    }
-
-    // Obtener datos del turno y verificar acceso
-    const [turno] = await db
-      .select({
-        id: turnos.id,
-        medicoId: turnos.medicoId,
-        usuarioId: medicos.usuarioId,
-        tipoConsulta: turnos.tipoConsulta,
-        pacienteNombre: pacientes.nombre,
-        pacienteApellido: pacientes.apellido,
-        medicoNombre: medicos.nombre,
-      })
-      .from(turnos)
-      .leftJoin(pacientes, eq(turnos.pacienteId, pacientes.id))
-      .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
-      .where(and(eq(turnos.id, turnoId), sql`${turnos.deletedAt} IS NULL`))
-      .limit(1);
-
-    if (!turno) {
-      return <ErrorExplicacion mensaje="Turno no encontrado" />;
-    }
-
-    if (turno.tipoConsulta !== 'virtual') {
-      return <ErrorExplicacion mensaje="Este turno no es una consulta virtual" />;
-    }
-
-    // Verificar que el médico autenticado es el asignado
-    // turno.medicoId → medicos.id, session.user.id → usuarios.id
-    // La relación es: medicos.usuarioId == usuarios.id
-    if (turno.usuarioId && session.user.id !== turno.usuarioId) {
-      return <ErrorExplicacion mensaje="No tenés permiso para acceder a esta videollamada" />;
-    }
-
-    // Generar token para el médico
-    const identity = turno.medicoNombre || session.user.name || 'Médico';
-    const token = await generateMedicoToken(roomName, identity);
-
-    return (
-      <VideoRoom
-        roomName={roomName}
-        token={token}
-        liveKitUrl={LIVEKIT_URL}
-        role="medico"
-      />
-    );
-  } catch (error) {
-    // ⚠️ Re-lanzar redirect errors para que Next.js maneje la redirección
-    if (isNextRedirect(error)) throw error;
-
-    const mensaje = error instanceof Error ? error.message : 'Error inesperado';
-    return <ErrorExplicacion mensaje={mensaje} />;
-  }
-}
-
-// ─── Componente de error ───────────────────────────────────
-
-function ErrorExplicacion({ mensaje }: { mensaje: string }) {
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-black text-white p-8">
-      <div className="max-w-md text-center">
-        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-red-500/20 flex items-center justify-center">
-          <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-        </div>
-        <h1 className="text-xl font-bold mb-2">No se puede iniciar la videollamada</h1>
-        <p className="text-white/60 mb-6">{mensaje}</p>
-        <a
-          href="/dashboard/atencion"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-medium transition-colors"
-        >
-          Volver al panel de atención
-        </a>
-      </div>
-    </div>
+    <VideoRoom
+      roomName={roomName}
+      token={token}
+      liveKitUrl={LIVEKIT_URL}
+      role={role}
+      onDisconnect={() => router.push('/dashboard/atencion')}
+    />
   );
 }
