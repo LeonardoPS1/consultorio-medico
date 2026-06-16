@@ -1,55 +1,44 @@
 /**
  * VideoRoom — Componente de videollamada con LiveKit
  *
- * Diseñado para ser responsive en PC y celular.
- * Usa VideoConference (con estilos CSS importados) para la grilla
- * de participantes, más una barra de controles personalizada
- * con Tailwind que funciona sin depender de los estilos CSS de LiveKit.
+ * Usa VideoConference (con estilos CSS importados) que ya incluye
+ * su propio ControlBar con micrófono, cámara, pantalla compartida,
+ * chat y colgar. No necesita ControlBar externo.
  *
  * Props:
  *   - roomName: nombre de la sala (ej: consultorio_{turnoId})
  *   - token: JWT generado por livekit-server-sdk
  *   - liveKitUrl: URL del servidor LiveKit (wss://...)
  *   - onDisconnect: callback al salir de la sala
- *   - role: 'medico' | 'paciente' (para UI adaptativa)
+ *   - role: 'medico' | 'paciente' (para mensajes de error personalizados)
  */
 
 'use client';
 
-import { useMemo, useState, useCallback, useEffect } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle, WifiOff, CameraOff, Clock, Ban, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // ─── LiveKit dinámico (solo cliente, sin SSR) ──────────────
 
 const LKLiveKitRoom = dynamic(
-  () =>
-    import('@livekit/components-react').then((mod) => mod.LiveKitRoom),
+  () => import('@livekit/components-react').then((mod) => mod.LiveKitRoom),
   { ssr: false }
 );
 
 const LKVideoConference = dynamic(
-  () =>
-    import('@livekit/components-react').then((mod) => mod.VideoConference),
+  () => import('@livekit/components-react').then((mod) => mod.VideoConference),
   { ssr: false }
 );
 
 const LKRoomAudioRenderer = dynamic(
-  () =>
-    import('@livekit/components-react').then((mod) => mod.RoomAudioRenderer),
+  () => import('@livekit/components-react').then((mod) => mod.RoomAudioRenderer),
   { ssr: false }
 );
 
 const LKConnectionStateToast = dynamic(
-  () =>
-    import('@livekit/components-react').then((mod) => mod.ConnectionStateToast),
-  { ssr: false }
-);
-
-const LKControlBar = dynamic(
-  () =>
-    import('@livekit/components-react').then((mod) => mod.ControlBar),
+  () => import('@livekit/components-react').then((mod) => mod.ConnectionStateToast),
   { ssr: false }
 );
 
@@ -63,6 +52,125 @@ interface VideoRoomProps {
   role?: 'medico' | 'paciente';
 }
 
+// ─── Mapa de errores ──────────────────────────────────────
+
+interface ErrorInfo {
+  icon: React.ReactNode;
+  titulo: string;
+  mensajeMedico: string;
+  mensajePaciente: string;
+  solucionMedico: string;
+  solucionPaciente: string;
+  accion?: 'reload' | 'retry' | 'back';
+}
+
+function analizarError(err: Error | string, role: 'medico' | 'paciente'): ErrorInfo {
+  const msg = typeof err === 'string' ? err : err?.message || '';
+
+  const m = msg.toLowerCase();
+
+  // ── Sin permisos de cámara/micrófono ─────────────────
+  if (
+    m.includes('permission') ||
+    m.includes('denied') ||
+    m.includes('notallowederror') ||
+    m.includes('camera') ||
+    m.includes('microphone') ||
+    m.includes('getusermedia')
+  ) {
+    return {
+      icon: <CameraOff className="h-10 w-10 text-amber-400" />,
+      titulo: 'Permisos de cámara y micrófono',
+      mensajeMedico: 'No se pudieron activar la cámara o el micrófono.',
+      mensajePaciente: 'No se pudieron activar la cámara o el micrófono.',
+      solucionMedico:
+        'Hacé clic en el candado 🔒 de la barra de direcciones y permití "Cámara" y "Micrófono". Si usas Chrome, también revisá chrome://settings/content/camera.',
+      solucionPaciente:
+        'Hacé clic en el candado 🔒 de la barra de direcciones y permití "Cámara" y "Micrófono".',
+      accion: 'reload',
+    };
+  }
+
+  // ── Token expirado / inválido ─────────────────────────
+  if (
+    m.includes('token') &&
+    (m.includes('expir') || m.includes('invalid') || m.includes('not valid') || m.includes('jwt'))
+  ) {
+    return {
+      icon: <Clock className="h-10 w-10 text-orange-400" />,
+      titulo: 'Enlace expirado',
+      mensajeMedico: 'El token de acceso expiró o no es válido.',
+      mensajePaciente: 'El enlace de videollamada expiró o no es válido.',
+      solucionMedico: 'Recargá la página para generar un nuevo token automáticamente.',
+      solucionPaciente:
+        'Solicitá un nuevo enlace a tu médico o contacto a través del WhatsApp del consultorio.',
+      accion: 'reload',
+    };
+  }
+
+  // ── Sala no encontrada ───────────────────────────────
+  if (m.includes('room') && (m.includes('not found') || m.includes('no existe') || m.includes('create'))) {
+    return {
+      icon: <Ban className="h-10 w-10 text-red-400" />,
+      titulo: 'Sala no disponible',
+      mensajeMedico: 'La sala de videollamada no existe o fue eliminada.',
+      mensajePaciente: 'La consulta virtual no está disponible.',
+      solucionMedico:
+        'El turno pudo haber sido cancelado. Verificá el estado del turno en Atención.',
+      solucionPaciente: 'Comunicate con tu médico para reprogramar la consulta.',
+      accion: 'back',
+    };
+  }
+
+  // ── Sala llena ───────────────────────────────────────
+  if ((m.includes('room') && m.includes('full')) || m.includes('max participants')) {
+    return {
+      icon: <Ban className="h-10 w-10 text-orange-400" />,
+      titulo: 'Sala llena',
+      mensajeMedico: 'La sala alcanzó el máximo de participantes.',
+      mensajePaciente: 'La sala alcanzó el máximo de participantes.',
+      solucionMedico:
+        'Esperá a que otro participante salga o aumentá el límite en la configuración de LiveKit.',
+      solucionPaciente: 'Esperá unos minutos e intentá de nuevo.',
+      accion: 'retry',
+    };
+  }
+
+  // ── Error de conexión de red ─────────────────────────
+  if (
+    m.includes('network') ||
+    m.includes('connection') ||
+    m.includes('timeout') ||
+    m.includes('unreachable') ||
+    m.includes('disconnect') ||
+    m.includes('econnrefused') ||
+    m.includes('econnreset') ||
+    m.includes('enotfound')
+  ) {
+    return {
+      icon: <WifiOff className="h-10 w-10 text-red-400" />,
+      titulo: 'Error de conexión',
+      mensajeMedico: 'No se pudo establecer conexión con el servidor de video.',
+      mensajePaciente: 'No se pudo establecer conexión con el servidor de video.',
+      solucionMedico:
+        'Verificá tu conexión a internet. Si el problema persiste, el servidor LiveKit puede estar en mantenimiento. Contactá al administrador.',
+      solucionPaciente: 'Verificá tu conexión a internet y asegurate de tener buena señal WiFi.',
+      accion: 'retry',
+    };
+  }
+
+  // ── Error genérico del servidor ──────────────────────
+  return {
+    icon: <AlertTriangle className="h-10 w-10 text-red-400" />,
+    titulo: 'Error inesperado',
+    mensajeMedico: 'Ocurrió un error al conectar con la videollamada.',
+    mensajePaciente: 'Ocurrió un error al conectar con la videollamada.',
+    solucionMedico: `Intentá recargar la página. Si el error persiste, contactá a soporte técnico. Detalle: ${msg.slice(0, 200)}`,
+    solucionPaciente: 'Intentá recargar la página. Si el error persiste, contactá a tu médico por WhatsApp.',
+    accion: 'retry',
+  };
+}
+
 // ─── Componente ────────────────────────────────────────────
 
 export function VideoRoom({
@@ -74,16 +182,7 @@ export function VideoRoom({
 }: VideoRoomProps) {
   const serverUrl = useMemo(() => liveKitUrl || 'wss://livekit.aicorebots.com', [liveKitUrl]);
   const [connected, setConnected] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Detectar mobile al mount y al resize
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 640);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
+  const [error, setError] = useState<ErrorInfo | null>(null);
 
   const handleDisconnected = useCallback(() => {
     setConnected(false);
@@ -120,19 +219,51 @@ export function VideoRoom({
         </div>
       )}
 
-      {/* Overlay de error */}
+      {/* Overlay de error — se muestra sobre la sala (sin destruir la conexión) */}
       {error && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black p-6">
-          <AlertTriangle className="h-10 w-10 text-red-400 mb-4" />
-          <p className="text-white text-lg font-medium">Error de conexión</p>
-          <p className="text-white/60 text-sm mt-1 mb-4 text-center max-w-md">{error}</p>
-          <div className="flex gap-3">
-            <Button variant="default" onClick={() => window.location.reload()}>
-              Reintentar
-            </Button>
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm p-6">
+          {error.icon}
+          <p className="text-white text-lg font-medium mt-4">{error.titulo}</p>
+          <p className="text-white/80 text-sm mt-1 text-center max-w-md">
+            {role === 'medico' ? error.mensajeMedico : error.mensajePaciente}
+          </p>
+          <div className="mt-3 bg-white/5 rounded-lg p-3 max-w-md w-full">
+            <p className="text-white/60 text-xs font-medium mb-1">💡 Posible solución:</p>
+            <p className="text-white/80 text-sm">
+              {role === 'medico' ? error.solucionMedico : error.solucionPaciente}
+            </p>
+          </div>
+          <div className="flex gap-3 mt-6">
+            {error.accion === 'reload' || error.accion === 'retry' ? (
+              <Button
+                variant="default"
+                className="gap-2"
+                onClick={() => window.location.reload()}
+              >
+                <RefreshCw className="h-4 w-4" />
+                {error.accion === 'reload' ? 'Recargar página' : 'Reintentar'}
+              </Button>
+            ) : null}
+            {error.accion === 'retry' && !error.accion?.includes('reload') && (
+              <Button
+                variant="default"
+                className="gap-2"
+                onClick={() => {
+                  setError(null);
+                  window.location.reload();
+                }}
+              >
+                <RefreshCw className="h-4 w-4" />
+                Reintentar
+              </Button>
+            )}
             {onDisconnect && (
-              <Button variant="outline" className="text-white border-white/20 hover:bg-white/10" onClick={onDisconnect}>
-                Salir
+              <Button
+                variant="outline"
+                className="text-white border-white/20 hover:bg-white/10"
+                onClick={onDisconnect}
+              >
+                Salir de la sala
               </Button>
             )}
           </div>
@@ -151,58 +282,37 @@ export function VideoRoom({
           setError(null);
         }}
         onError={(err) => {
-          const msg = err?.message || 'Error al conectar con el servidor de video';
-          setError(msg);
-          setConnected(false);
+          // No desconectamos la sala, solo mostramos overlay de error
+          // para que LiveKit pueda reconectar automáticamente si es
+          // un error transitorio.
+          const info = analizarError(err, role);
+          setError(info);
         }}
         onDisconnected={handleDisconnected}
         style={{
           height: '100%',
           width: '100%',
-          display: connected ? 'flex' : 'none',
           flexDirection: 'column',
+          // Siempre visible (el overlay se muestra arriba)
+          display: 'flex',
         }}
       >
         {/* Toast de estado de conexión */}
         <LKConnectionStateToast />
 
-        {/* ─── Video principal (responsive) ──────────── */}
+        {/* ─── Video principal — ControlBar y Chat incluidos ── */}
         <div className="flex-1 relative min-h-0">
+          {/*
+           * VideoConference incluye:
+           *   - Grilla de participantes (FocusLayout + GridLayout)
+           *   - ControlBar completo (mic, cámara, pantalla, chat, colgar)
+           *   - Chat toggle nativo con panel de mensajes integrado
+           */}
           <LKVideoConference />
         </div>
 
         {/* Audio en segundo plano */}
         <LKRoomAudioRenderer />
-
-        {/* ─── Barra de controles ────────────────────── */}
-        <div className="relative z-20">
-          {/* Versión Mobile: controles más compactos */}
-          {isMobile ? (
-            <div className="flex justify-center pb-3 pt-1">
-              <LKControlBar
-                controls={{
-                  microphone: true,
-                  camera: true,
-                  screenShare: false,
-                  leave: true,
-                }}
-                className="lk-control-bar--mobile"
-              />
-            </div>
-          ) : (
-            /* Versión Desktop: controles completos con gradient */
-            <div className="flex justify-center pb-4 pt-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-              <LKControlBar
-                controls={{
-                  microphone: true,
-                  camera: true,
-                  screenShare: role === 'medico',
-                  leave: true,
-                }}
-              />
-            </div>
-          )}
-        </div>
       </LKLiveKitRoom>
 
       {/* ─── Indicador de conexión (cuando está conectado) ── */}
