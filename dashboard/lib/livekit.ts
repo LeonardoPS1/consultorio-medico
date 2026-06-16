@@ -51,7 +51,7 @@ export async function generateMedicoToken(
   const at = new AccessToken(apiKey, apiSecret, {
     identity,
     name: identity,
-    ttl: '4h',
+    ttl: '24h',
   });
   at.addGrant({
     roomJoin: true,
@@ -77,7 +77,7 @@ export async function generatePacienteToken(
   const at = new AccessToken(apiKey, apiSecret, {
     identity,
     name: identity,
-    ttl: '4h',
+    ttl: '24h',
   });
   at.addGrant({
     roomJoin: true,
