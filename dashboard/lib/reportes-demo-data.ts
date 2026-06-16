@@ -39,6 +39,10 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
     { estado: 'ausente', valor: ausentes, color: '#6b7280' },
   ];
 
+  // ─── Turnos virtuales (telemedicina) ──────────────────────
+  const virtuales = Math.round(totalTurnos * 0.15 + Math.random() * 5);
+  const virtualesCompletados = Math.round(virtuales * 0.85);
+
   // ─── KPIs de turnos ──────────────────────────────────────
   const asistenciaPct = totalTurnos > 0 ? Math.round((totalCompletados / totalTurnos) * 100) : 85;
   const turnosKpis = {
@@ -46,6 +50,8 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
     asistencia: `${asistenciaPct}%`,
     duracion: '28 min',
     cambioTotal: '+12%',
+    virtuales,
+    virtualesCompletados,
   };
 
   // ─── Pacientes ────────────────────────────────────────────
@@ -105,6 +111,7 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
     { titulo: 'Asistencia', valor: `${asistenciaPct}%`, cambio: `${totalCompletados} completados`, icon: 'users', up: totalCompletados > totalCancelados },
     { titulo: 'Nuevos Pacientes', valor: String(nuevos), cambio: 'en el período', icon: 'trending-up', up: true },
     { titulo: 'Conversaciones Activas', valor: String(Math.max(1, Math.floor(totalRecibidos / 5))), cambio: 'en atención', icon: 'message-square', up: true },
+    { titulo: 'Consultas Virtuales', valor: String(virtuales), cambio: `${virtualesCompletados} realizadas`, icon: 'video', up: true },
   ];
 
   // ─── WhatsApp KPIs ────────────────────────────────────────

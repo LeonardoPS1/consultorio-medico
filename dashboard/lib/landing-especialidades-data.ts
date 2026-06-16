@@ -16,6 +16,7 @@ import {
   Sparkles,
   HeartPulse,
   Syringe,
+  Video,
 } from 'lucide-react';
 
 export interface EspecialidadPageData {
@@ -91,9 +92,9 @@ export const odontologia: EspecialidadPageData = {
       desc: 'Autenticación 2FA, rate limiting, registro de accesos y backup encriptado automático. Cumplimiento de normativas de salud chilenas.',
     },
     {
-      icon: Smartphone,
-      title: 'App Instalable (PWA)',
-      desc: 'Instalá AiCoreMed como app en tu teléfono o tablet. Accedé a la agenda dental, pacientes y reportes desde cualquier lugar, incluso sin conexión.',
+      icon: Stethoscope,
+      title: 'Videoconsultas Odontológicas',
+      desc: 'Consultas virtuales con videollamada integrada vía LiveKit. Creá turnos virtuales, el link se genera automáticamente y el paciente lo recibe por WhatsApp. Sin descargas ni instalaciones.',
     },
   ],
   faq: [
@@ -207,9 +208,9 @@ export const clinicasMedicas: EspecialidadPageData = {
       desc: 'Dashboard con KPIs en tiempo real: ocupación de consultorios, ingresos por médico, tasa de derivaciones y más. Exportá a Excel o PDF.',
     },
     {
-      icon: Users,
-      title: 'Gestión de Médicos y Pacientes',
-      desc: 'Administrá múltiples médicos con sus propias agendas, horarios partidos o corridos, sucursales y especialidades. Fichas de pacientes completas.',
+      icon: Video,
+      title: 'Telemedicina en Vivo',
+      desc: 'Videoconsultas integradas con LiveKit para consultas virtuales. El link se genera automáticamente al crear el turno y el paciente lo recibe por WhatsApp. Acceso multiplataforma sin descargas.',
     },
     {
       icon: Shield,
@@ -333,9 +334,9 @@ export const estetica: EspecialidadPageData = {
       desc: 'Autenticación 2FA, backup encriptado y datos almacenados en tu servidor en Chile. La IA corre localmente sin enviar información a servicios externos.',
     },
     {
-      icon: Smartphone,
-      title: 'App Instalable (PWA)',
-      desc: 'Instalá AiCoreMed como app en tu teléfono. Accedé a la agenda, pacientes y reportes desde cualquier lugar. Notificaciones push de nuevos turnos.',
+      icon: Video,
+      title: 'Telemedicina para Estética',
+      desc: 'Consultas virtuales con videollamada integrada. Creá turnos virtuales para seguimiento de tratamientos, consultas post-procedimiento y evaluación de resultados a distancia.',
     },
   ],
   faq: [
@@ -454,9 +455,9 @@ export const oftalmologia: EspecialidadPageData = {
       desc: 'Autenticación 2FA, backup encriptado y datos almacenados en tu servidor en Chile. La IA corre localmente. Cumplimiento de normativas sanitarias.',
     },
     {
-      icon: Smartphone,
-      title: 'App Instalable (PWA)',
-      desc: 'Instalá AiCoreMed como app en tu teléfono o tablet. Accedé a la agenda oftalmológica, pacientes y reportes desde cualquier lugar.',
+      icon: Video,
+      title: 'Telemedicina Oftalmológica',
+      desc: 'Consultas virtuales con videollamada integrada vía LiveKit. Ideal para controles post-operatorios, lecturas de exámenes y consultas de baja complejidad a distancia.',
     },
   ],
   faq: [

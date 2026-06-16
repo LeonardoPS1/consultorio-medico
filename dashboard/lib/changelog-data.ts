@@ -24,6 +24,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Videollamada segura: tokens JWT temporales, sala privada médico-paciente, sin grabación',
       'Infraestructura: LiveKit server self-hosted en Dokploy con Redis, TURN, Ingress y HTTPS con Let\'s Encrypt',
       'Acceso multiplataforma: funciona en cualquier navegador moderno sin descargar apps',
+      'Lista Negra de pacientes: gestioná restricciones de acceso al consultorio con registro de incidentes y control por tipo de restricción',
     ],
   },
   {
