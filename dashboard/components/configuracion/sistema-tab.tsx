@@ -58,6 +58,7 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
   { id: 'encuestas', label: 'Encuestas Post-Consulta', description: 'Encuestas de satisfacción automáticas por WhatsApp', category: 'modulos' },
   { id: 'pwa', label: 'PWA (App Instalable)', description: 'Progressive Web App con modo offline y actualizaciones automáticas', category: 'modulos' },
   { id: 'notas-soap', label: 'Notas SOAP', description: 'Evolución clínica estructurada con CIE-10 en la ficha del paciente', category: 'modulos' },
+  { id: 'telemedicina', label: 'Telemedicina', description: 'Videoconsultas en vivo con LiveKit y envío automático del link por WhatsApp', category: 'modulos' },
 
   // ─── Funcionalidades avanzadas ──────────────────────────
   { id: 'reportes-avanzados', label: 'Reportes Avanzados', description: 'Gráficos, exportación Excel y PDF', category: 'avanzado' },
@@ -71,6 +72,10 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
   { id: 'certificados-qr', label: 'Certificados Médicos QR', description: 'Certificados médicos con hash SHA-256 y verificación pública', category: 'avanzado' },
   { id: 'lista-espera', label: 'Lista de Espera', description: 'Lista de espera inteligente con ofertas automáticas al cancelar turnos', category: 'avanzado' },
   { id: 'multi-sucursal', label: 'Multi-sucursal', description: 'Múltiples sucursales o consultorios', category: 'avanzado' },
+  { id: 'derivaciones', label: 'Derivaciones', description: 'Derivación de pacientes entre especialistas del equipo', category: 'avanzado' },
+  { id: 'blacklist', label: 'Lista Negra', description: 'Gestión de pacientes bloqueados con motivo y control de acceso', category: 'avanzado' },
+  { id: 'alertas-inteligentes', label: 'Alertas Inteligentes', description: 'Notificaciones proactivas por stock bajo, pacientes críticos y cumpleaños', category: 'avanzado' },
+  { id: 'consentimiento-informado', label: 'Consentimiento Informado', description: 'Registro y gestión de consentimientos informados de pacientes', category: 'avanzado' },
 
   // ─── Sistema ────────────────────────────────────────────
   { id: 'integraciones', label: 'Integraciones n8n', description: 'Workflows de automatización avanzados', category: 'sistema' },
