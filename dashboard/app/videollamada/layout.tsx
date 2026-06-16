@@ -3,6 +3,8 @@
  * Full screen, fondo negro para el video.
  */
 
+import './livekit-styles.css';
+
 export default function VideollamadaLayout({
   children,
 }: {

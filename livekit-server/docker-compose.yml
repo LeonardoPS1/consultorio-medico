@@ -5,11 +5,11 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: redis-server --save 60 1 --loglevel warning
+    command: redis-server --save 60 1 --loglevel warning --requirepass v4iysnslnjdzdiawuzscn70ji8cotsyv
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "v4iysnslnjdzdiawuzscn70ji8cotsyv", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -19,7 +19,7 @@ services:
 
   # ─── LiveKit Server ───────────────────────────────────
   livekit:
-    image: livekit/livekit-server:latest
+    image: livekit/livekit-server:v1.8
     restart: unless-stopped
     ports:
       # HTTP / WebSocket (for Traefik proxying)
@@ -36,6 +36,12 @@ services:
     networks:
       - livekit
       - dokploy-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:7880/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   redis_data:

@@ -1,5 +1,6 @@
 # LiveKit Server Configuration
 # Docs: https://docs.livekit.io/server/configuration
+# Version: v1.8.x
 
 port: 7880
 bind_addresses:
@@ -9,8 +10,13 @@ bind_addresses:
 rtc:
     tcp_port: 7881
     udp_port: 7882
-    use_external_ip: true
+    port_range_start: 50000
+    port_range_end: 60000
+    use_external_ip: false
     enable_loopback_candidate: false
+    external_ip: 51.222.207.250
+    # ICE servers configuration
+    ice_lite: false
 
 # Redis for room state and session management
 redis:
@@ -29,15 +35,15 @@ redis:
 # TURN server configuration
 turn:
     enabled: true
-    domain: livekit-turn.aicore-livekit-0ebfd7-51-222-207-250.sslip.io
+    domain: livekit.aicorebots.com
     tls_port: 5349
     udp_port: 3478
     external_tls: true
 
-# Ingress configuration
+# Ingress configuration (deshabilitado — no usamos ingest streaming)
 ingress:
-    rtmp_base_url: rtmp://livekit.aicore-livekit-ac9bb0-51-222-207-250.sslip.io:1935/x
-    whip_base_url: https://livekit-whip.aicore-livekit-e922a2-51-222-207-250.sslip.io/w
+    rtmp_base_url: ""
+    whip_base_url: ""
 
 # API Keys for token generation
 # Generadas el 15/06/2026 para producción
@@ -46,3 +52,8 @@ keys:
 
 # Logging
 log_level: info
+
+# WebSocket configuration
+websocket:
+    # Timeout de handshake WebSocket en segundos
+    handshake_timeout: 300

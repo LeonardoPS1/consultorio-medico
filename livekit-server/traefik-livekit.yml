@@ -12,19 +12,69 @@ http:
       entryPoints:
         - web
 
-    # HTTPS with Let's Encrypt
+    # HTTPS with Let's Encrypt + WebSocket support
     livekit-router-websecure:
       rule: Host(`livekit.aicorebots.com`)
       service: livekit-service
-      middlewares: []
+      middlewares:
+        - livekit-headers
+        - livekit-cors
       entryPoints:
         - websecure
       tls:
         certResolver: letsencrypt
 
+  middlewares:
+    # Headers necesarios para WebSocket de LiveKit
+    livekit-headers:
+      headers:
+        customRequestHeaders:
+          Connection: "Upgrade"
+          Upgrade: "websocket"
+        customResponseHeaders:
+          Access-Control-Allow-Origin: "*"
+        # Permitir livekit-server-sdk (POST /twirp) + WebSocket
+        accessControlAllowMethods:
+          - "GET"
+          - "POST"
+          - "OPTIONS"
+        accessControlAllowHeaders:
+          - "Content-Type"
+          - "Authorization"
+          - "Upgrade"
+          - "Connection"
+        accessControlAllowOriginList:
+          - "https://med.aicorebots.com"
+          - "https://livekit.aicorebots.com"
+
+    # CORS preflight handling
+    livekit-cors:
+      headers:
+        accessControlAllowOriginList:
+          - "https://med.aicorebots.com"
+          - "https://livekit.aicorebots.com"
+        accessControlAllowMethods:
+          - "GET"
+          - "POST"
+          - "OPTIONS"
+        accessControlAllowHeaders:
+          - "Content-Type"
+          - "Authorization"
+        accessControlMaxAge: 86400
+
   services:
     livekit-service:
       loadBalancer:
         servers:
+          # Usamos 'livekit:7880' (hostname del container LiveKit en la bridge network
+          # 'aicore-livekit-xtzvig'). Traefik está conectado a la misma bridge network
+          # y Docker DNS resuelve el service name automáticamente.
+          # Esto es más robusto que IP fija (cambia al recrear) o gateway (no funciona
+          # desde Swarm overlay).
           - url: http://livekit:7880
         passHostHeader: true
+        # Asegurar que Traefik maneje conexiones largas de WebSocket
+        healthCheck:
+          path: /
+          interval: 30s
+          timeout: 3s

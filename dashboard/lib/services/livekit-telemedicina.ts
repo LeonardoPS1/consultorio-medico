@@ -229,7 +229,7 @@ export const telemedicinaService = {
             'Content-Type': 'application/x-www-form-urlencoded',
           },
           body: formData.toString(),
-          signal: AbortSignal.timeout(10000),
+          signal: AbortSignal.timeout(30000),
         }
       );
 

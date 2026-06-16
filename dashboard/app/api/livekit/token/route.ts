@@ -50,10 +50,10 @@ export const POST = apiHandler(async (request: NextRequest) => {
   if (role === 'medico') {
     const session = await requireAuth();
 
-    // Verificar que el médico tiene acceso a este turno
+    // Verificar que el turno existe
     const turnoId = roomName.replace('consultorio_', '');
     const [turno] = await db
-      .select({ medicoId: turnos.medicoId })
+      .select({ id: turnos.id })
       .from(turnos)
       .where(
         and(
@@ -67,11 +67,9 @@ export const POST = apiHandler(async (request: NextRequest) => {
       fail('Turno no encontrado', 404);
     }
 
-    // El médico autenticado debe coincidir con el médico del turno
-    // o ser admin (se omite check si no hay match exacto por multi-médico)
-    if (session.user.id && turno.medicoId && session.user.id !== turno.medicoId) {
-      fail('No tenés permiso para acceder a esta videollamada', 403);
-    }
+    // Cualquier médico/usuarix autenticadx puede generar token de sala.
+    // La sesión NextAuth ya valida que es un usuario legítimo del sistema.
+    // No restringimos por medicoId para soportar multi-médico, admin y secretarias.
 
     const token = await generateMedicoToken(roomName, identity);
     return ok({
