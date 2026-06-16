@@ -475,63 +475,7 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
       </Card>}
 
       {/* ─── IA ────────────────────────────────────────────── */}
-      {(showAll || section === 'ia') && <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5" />
-            Asistente IA
-          </CardTitle>
-          <CardDescription>Configuración del comportamiento del asistente virtual</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <ToggleRow
-            label="Respuestas automáticas"
-            description="La IA responde automáticamente mensajes de WhatsApp"
-            plan={getFeatureRequiredPlan('ia-autorespuestas')}
-            checked={toggles['ia-autorespuestas'] ?? true}
-            onCheckedChange={(c) => handleToggle('ia-autorespuestas', c)}
-            compact
-          />
-          <ToggleRow
-            label="Triaje de urgencias"
-            description="Detectar y notificar mensajes urgentes automáticamente"
-            plan={getFeatureRequiredPlan('ia-triaje')}
-            checked={toggles['ia-triaje'] ?? true}
-            onCheckedChange={(c) => handleToggle('ia-triaje', c)}
-            compact
-          />
-          <ToggleRow
-            label="Renovación de recetas automática"
-            description="Permitir renovar recetas sin intervención del médico"
-            plan={getFeatureRequiredPlan('ia-renovacion')}
-            checked={toggles['ia-renovacion'] ?? true}
-            onCheckedChange={(c) => handleToggle('ia-renovacion', c)}
-            compact
-          />
-          <div className="space-y-2">
-            <Label>Prompt del sistema</Label>
-            <Textarea
-              defaultValue="Sos el asistente virtual del consultorio médico. Respondés mensajes de WhatsApp de forma amable y profesional en español argentino. Si detectás una urgencia, priorizala y notificá al médico."
-              rows={4}
-              className="font-mono text-sm"
-            />
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-1">
-              <Label>Máx. tokens por respuesta</Label>
-              <Input type="number" defaultValue={300} />
-            </div>
-            <div className="space-y-1">
-              <Label>Temperatura (0-1)</Label>
-              <Input type="number" defaultValue={0.3} step={0.1} min={0} max={1} />
-            </div>
-          </div>
-          <Button>
-            <Save className="h-4 w-4 mr-1" />
-            Guardar configuración de IA
-          </Button>
-        </CardContent>
-      </Card>}
+      {(showAll || section === 'ia') && <IaConfigSection toggles={toggles} handleToggle={handleToggle} />}
 
       {/* ─── Integraciones ─────────────────────────────────── */}
       {(showAll || section === 'integraciones') && <Card>
@@ -690,6 +634,158 @@ function PrivacidadConfigSection() {
                 <Save className="h-4 w-4 mr-1" />
               )}
               Guardar configuración
+            </Button>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── IA Config Section ─────────────────────────────────────────
+
+function IaConfigSection({ toggles, handleToggle }: { toggles: Record<string, boolean>; handleToggle: (id: string, checked: boolean) => void }) {
+  const { toast } = useToast();
+  const [config, setConfig] = useState<{ prompt: string; maxTokens: number; temperatura: number }>({
+    prompt: 'Sos el asistente virtual del consultorio médico. Respondés mensajes de WhatsApp de forma amable y profesional en español argentino. Si detectás una urgencia, priorizala y notificá al médico.',
+    maxTokens: 300,
+    temperatura: 0.3,
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/ia-config')
+      .then(r => r.json())
+      .then(data => {
+        const configData = data.data?.config;
+        if (configData) {
+          setConfig(configData);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/ia-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (res.ok) {
+        toast({ title: 'Configuración guardada', description: 'El prompt y parámetros del asistente IA fueron actualizados.' });
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: 'Error al guardar', description: err.error || 'Error desconocido', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Error de conexión', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Brain className="h-5 w-5" />
+          Asistente IA
+        </CardTitle>
+        <CardDescription>Configuración del comportamiento del asistente virtual</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {loading ? (
+          <div className="flex items-center gap-2 py-4 justify-center">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span className="text-muted-foreground">Cargando configuración...</span>
+          </div>
+        ) : (
+          <>
+            <ToggleRow
+              label="Respuestas automáticas"
+              description="La IA responde automáticamente mensajes de WhatsApp"
+              plan={getFeatureRequiredPlan('ia-autorespuestas')}
+              checked={toggles['ia-autorespuestas'] ?? true}
+              onCheckedChange={(c) => handleToggle('ia-autorespuestas', c)}
+              compact
+            />
+            <ToggleRow
+              label="Triaje de urgencias"
+              description="Detectar y notificar mensajes urgentes automáticamente"
+              plan={getFeatureRequiredPlan('ia-triaje')}
+              checked={toggles['ia-triaje'] ?? true}
+              onCheckedChange={(c) => handleToggle('ia-triaje', c)}
+              compact
+            />
+            <ToggleRow
+              label="Renovación de recetas automática"
+              description="Permitir renovar recetas sin intervención del médico"
+              plan={getFeatureRequiredPlan('ia-renovacion')}
+              checked={toggles['ia-renovacion'] ?? true}
+              onCheckedChange={(c) => handleToggle('ia-renovacion', c)}
+              compact
+            />
+
+            <div className="space-y-2 pt-2">
+              <Label>Prompt del sistema</Label>
+              <p className="text-xs text-muted-foreground">
+                Instrucciones base que determinan el comportamiento y tono del asistente IA.
+              </p>
+              <Textarea
+                value={config.prompt}
+                onChange={(e) => setConfig((prev) => ({ ...prev, prompt: e.target.value }))}
+                rows={5}
+                className="font-mono text-sm"
+              />
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="ia-max-tokens">Máx. tokens por respuesta</Label>
+                <p className="text-xs text-muted-foreground">
+                  Límite de longitud de cada respuesta (50-4000).
+                </p>
+                <Input
+                  id="ia-max-tokens"
+                  type="number"
+                  min={50}
+                  max={4000}
+                  value={config.maxTokens}
+                  onChange={(e) =>
+                    setConfig((prev) => ({ ...prev, maxTokens: parseInt(e.target.value) || 300 }))
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="ia-temperatura">Temperatura (0-1)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Creatividad de las respuestas. Más bajo = más preciso, más alto = más creativo.
+                </p>
+                <Input
+                  id="ia-temperatura"
+                  type="number"
+                  step={0.05}
+                  min={0}
+                  max={2}
+                  value={config.temperatura}
+                  onChange={(e) =>
+                    setConfig((prev) => ({ ...prev, temperatura: parseFloat(e.target.value) || 0.3 }))
+                  }
+                />
+              </div>
+            </div>
+
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-1" />
+              )}
+              Guardar configuración de IA
             </Button>
           </>
         )}

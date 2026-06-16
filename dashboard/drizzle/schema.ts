@@ -649,6 +649,12 @@ export interface ConfigPrivacidad {
   periodoRetencionBajaDias: number;
 }
 
+export interface ConfigIa {
+  prompt: string;
+  maxTokens: number;
+  temperatura: number;
+}
+
 export const tenants = pgTable('tenants', {
   id: uuid('id').defaultRandom().primaryKey(),
   nombre: varchar('nombre', { length: 255 }).notNull(),
@@ -658,6 +664,11 @@ export const tenants = pgTable('tenants', {
   activo: boolean('activo').notNull().default(true),
   featuresEnabled: jsonb('features_enabled').default({} as Record<string, boolean>),
   configPrivacidad: jsonb('config_privacidad').default({ periodoRetencionBajaDias: 90 } satisfies ConfigPrivacidad),
+  configIa: jsonb('config_ia').default({
+    prompt: 'Sos el asistente virtual del consultorio médico. Respondés mensajes de WhatsApp de forma amable y profesional en español argentino. Si detectás una urgencia, priorizala y notificá al médico.',
+    maxTokens: 300,
+    temperatura: 0.3,
+  } satisfies ConfigIa),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
