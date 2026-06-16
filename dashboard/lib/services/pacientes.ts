@@ -32,6 +32,8 @@ export const pacientesService = {
               ilike(pacientes.nombre, `%${search}%`),
               ilike(pacientes.apellido, `%${search}%`),
               ilike(pacientes.telefono, `%${search}%`),
+              ilike(pacientes.rut, `%${search}%`),
+              ilike(pacientes.dni, `%${search}%`),
               sql`${pacientes.nombre} || ' ' || ${pacientes.apellido} ILIKE ${'%' + search + '%'}`,
             )
           : undefined,

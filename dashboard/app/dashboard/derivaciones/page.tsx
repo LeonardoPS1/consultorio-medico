@@ -20,6 +20,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
+import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 import {
   ArrowRightLeft, Loader2, Search, AlertTriangle, AlertCircle,
   Info, CheckCircle2, XCircle, Clock, User, Stethoscope,
@@ -389,9 +390,14 @@ export default function DerivacionesPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>ID del paciente *</Label>
-                <Input placeholder="UUID del paciente" value={form.pacienteId}
-                  onChange={(e) => setForm(f => ({ ...f, pacienteId: e.target.value }))} />
+                <PacienteSearchCombobox
+                  value={form.pacienteId}
+                  onChange={(pacienteId) => setForm(f => ({ ...f, pacienteId }))}
+                  placeholder="Buscar paciente por nombre, RUT o teléfono..."
+                  label="Paciente *"
+                  size="sm"
+                  autoFocus
+                />
               </div>
               <div className="space-y-2">
                 <Label>Médico origen *</Label>

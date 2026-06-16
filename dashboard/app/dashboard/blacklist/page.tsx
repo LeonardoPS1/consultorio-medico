@@ -19,6 +19,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
+import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 import {
   Ban, Loader2, Search, ShieldAlert, ShieldCheck, User,
   Calendar, Clock, AlertTriangle,
@@ -238,12 +239,13 @@ export default function BlacklistPage() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="pacienteId">ID del paciente</Label>
-                <Input
-                  id="pacienteId"
+                <PacienteSearchCombobox
                   value={form.pacienteId}
-                  onChange={(e) => setForm({ ...form, pacienteId: e.target.value })}
-                  placeholder="UUID del paciente"
+                  onChange={(pacienteId) => setForm(f => ({ ...f, pacienteId }))}
+                  placeholder="Buscar paciente por nombre, RUT o teléfono..."
+                  label="Paciente"
+                  size="sm"
+                  autoFocus
                 />
               </div>
               <div className="space-y-2">

@@ -19,6 +19,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
+import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 import {
   FileSignature, Loader2, Search, FileText, User, Calendar,
   Shield, Download, Eye,
@@ -234,12 +235,19 @@ export default function ConsentimientosPage() {
             <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="pacienteId">ID del paciente</Label>
-                  <Input
-                    id="pacienteId"
+                  <PacienteSearchCombobox
                     value={form.pacienteId}
-                    onChange={(e) => setForm({ ...form, pacienteId: e.target.value })}
-                    placeholder="UUID del paciente"
+                    onChange={(pacienteId, pacienteNombre) => {
+                      setForm(prev => ({
+                        ...prev,
+                        pacienteId,
+                        nombrePaciente: pacienteNombre,
+                      }));
+                    }}
+                    placeholder="Buscar paciente por nombre, RUT o teléfono..."
+                    label="Paciente *"
+                    size="sm"
+                    autoFocus
                   />
                 </div>
                 <div className="space-y-2">
