@@ -41,7 +41,7 @@ export const GET = apiHandler(async () => {
     .where(eq(tenants.id, DEFAULT_TENANT_ID))
     .limit(1);
 
-  const config = (tenant?.configIa || DEFAULT_CONFIG) as ConfigIa;
+  const config = (tenant?.configIa && typeof tenant.configIa === 'object' && tenant.configIa.prompt ? tenant.configIa : DEFAULT_CONFIG) as ConfigIa;
 
   return success({ config });
 });
@@ -60,7 +60,7 @@ export const PUT = apiHandler(async (request: NextRequest) => {
     .where(eq(tenants.id, DEFAULT_TENANT_ID))
     .limit(1);
 
-  const current = (tenant?.configIa || DEFAULT_CONFIG) as ConfigIa;
+  const current = (tenant?.configIa && typeof tenant.configIa === 'object' && tenant.configIa.prompt ? tenant.configIa : DEFAULT_CONFIG) as ConfigIa;
 
   const merged: ConfigIa = {
     ...current,
