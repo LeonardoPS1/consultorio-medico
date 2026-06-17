@@ -45,7 +45,6 @@ export default function VideollamadaPage({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             roomName,
-            identity: 'Médico',
             role: 'medico',
           }),
         });
@@ -58,7 +57,7 @@ export default function VideollamadaPage({
         const data = await res.json();
         setToken(data.token);
         setRole('medico');
-        setIdentity('Médico');
+        setIdentity(data.identity || 'Médico');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al conectar');
       } finally {

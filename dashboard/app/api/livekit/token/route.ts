@@ -5,15 +5,15 @@
  *
  * Body:
  *   roomName: string  — nombre de la sala (ej: "consultorio_{turnoId}")
- *   identity: string  — nombre visible del participante
+ *   identity?: string — nombre visible (opcional; si no se envía, se usa el de la sesión)
  *   role: 'medico' | 'paciente'
  *
  * Respuesta:
- *   { token: string, url: string, roomName: string }
+ *   { token: string, url: string, roomName: string, identity: string }
  *
  * Seguridad:
- *   - Médicos: requieren sesión autenticada (requireAuth)
- *   - Pacientes: requieren portal_session (verifica turno asociado)
+ *   - Médicos: requieren sesión autenticada (requireAuth), identity se deriva de session.user.name
+ *   - Pacientes: require portal_session (verifica turno asociado), identity se deriva de session.nombre + apellido
  */
 
 import { NextRequest } from 'next/server';
@@ -38,8 +38,8 @@ export const POST = apiHandler(async (request: NextRequest) => {
     role?: 'medico' | 'paciente';
   };
 
-  if (!roomName || !identity || !role) {
-    fail('Faltan campos requeridos: roomName, identity, role', 400);
+  if (!roomName || !role) {
+    fail('Faltan campos requeridos: roomName, role', 400);
   }
 
   if (!['medico', 'paciente'].includes(role)) {
@@ -71,11 +71,14 @@ export const POST = apiHandler(async (request: NextRequest) => {
     // La sesión NextAuth ya valida que es un usuario legítimo del sistema.
     // No restringimos por medicoId para soportar multi-médico, admin y secretarias.
 
-    const token = await generateMedicoToken(roomName, identity);
+    // Usar el nombre real del usuario desde la sesión como identidad visible
+    const displayName = session.user.name || identity || 'Médico';
+    const token = await generateMedicoToken(roomName, displayName);
     return ok({
       token,
       url: LIVEKIT_URL,
       roomName,
+      identity: displayName,
     });
   }
 
@@ -107,11 +110,14 @@ export const POST = apiHandler(async (request: NextRequest) => {
       fail('No tenés permiso para acceder a esta videollamada', 403);
     }
 
-    const token = await generatePacienteToken(roomName, identity);
+    // Usar el nombre real del paciente desde la sesión del portal
+    const displayName = identity || `${session.nombre} ${session.apellido}`.trim() || 'Paciente';
+    const token = await generatePacienteToken(roomName, displayName);
     return ok({
       token,
       url: LIVEKIT_URL,
       roomName,
+      identity: displayName,
     });
   }
 
