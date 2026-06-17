@@ -1,34 +1,37 @@
 /**
  * VideoRoom — Componente de videollamada con LiveKit
  *
- * Usa VideoConference (con estilos CSS importados) que ya incluye
- * su propio ControlBar con micrófono, cámara, pantalla compartida,
- * chat y colgar. No necesita ControlBar externo.
- *
- * Props:
- *   - roomName: nombre de la sala (ej: consultorio_{turnoId})
- *   - token: JWT generado por livekit-server-sdk
- *   - liveKitUrl: URL del servidor LiveKit (wss://...)
- *   - onDisconnect: callback al salir de la sala
- *   - role: 'medico' | 'paciente' (para mensajes de error personalizados)
+ * Reemplaza VideoConference por composición custom:
+ *   - FocusLayoutContainer + FocusLayout + CarouselLayout
+ *   - CustomControlBar con botones en español + pantalla completa
+ *   - CustomChat tipo bottom drawer
+ *   - Píncheo de participantes por click
  */
 
 'use client';
 
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { Track } from 'livekit-client';
+import {
+  useTracks,
+  useChat,
+  FocusLayout,
+  FocusLayoutContainer,
+  GridLayout,
+  CarouselLayout,
+  ParticipantTile,
+  type ParticipantClickEvent,
+} from '@livekit/components-react';
 import { Loader2, AlertTriangle, WifiOff, CameraOff, Clock, Ban, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { CustomControlBar } from './custom-control-bar';
+import { CustomChat } from './custom-chat';
 
 // ─── LiveKit dinámico (solo cliente, sin SSR) ──────────────
 
 const LKLiveKitRoom = dynamic(
   () => import('@livekit/components-react').then((mod) => mod.LiveKitRoom),
-  { ssr: false }
-);
-
-const LKVideoConference = dynamic(
-  () => import('@livekit/components-react').then((mod) => mod.VideoConference),
   { ssr: false }
 );
 
@@ -66,7 +69,6 @@ interface ErrorInfo {
 
 function analizarError(err: Error | string, role: 'medico' | 'paciente'): ErrorInfo {
   const msg = typeof err === 'string' ? err : err?.message || '';
-
   const m = msg.toLowerCase();
 
   // ── Sin permisos de cámara/micrófono ─────────────────
@@ -184,13 +186,51 @@ export function VideoRoom({
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<ErrorInfo | null>(null);
 
+  // ─── Estado del píncheo de participante ──────────────
+  const [focusedIdentity, setFocusedIdentity] = useState<string | null>(null);
+
+  // ─── Estado del chat (bottom drawer) ─────────────────
+  const [chatOpen, setChatOpen] = useState(false);
+
+  // ─── Estado de pantalla completa ─────────────────────
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Escuchar cambios de fullscreen
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      // Intentar fullscreen en el contenedor raíz
+      const el = containerRef.current?.closest('[data-lk-videoroom]') as HTMLElement | null;
+      (el || document.documentElement).requestFullscreen().catch(() => {
+        // Fallback si falla fullscreen (ej. sin interacción de usuario)
+      });
+    }
+  }, []);
+
+  // ─── Manejo de desconexión ───────────────────────────
   const handleDisconnected = useCallback(() => {
     setConnected(false);
     if (onDisconnect) onDisconnect();
   }, [onDisconnect]);
 
-  // ─── Validación inicial ───────────────────────────────
+  // ─── Píncheo: click en un participante ───────────────
+  const handleParticipantClick = useCallback(
+    (evt: ParticipantClickEvent) => {
+      const identity = evt.participant.identity;
+      setFocusedIdentity((prev) => (prev === identity ? null : identity));
+    },
+    []
+  );
 
+  // ─── Validación inicial ──────────────────────────────
   if (!token || !roomName) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-black text-white p-6">
@@ -207,9 +247,12 @@ export function VideoRoom({
   }
 
   // ─── Render principal ─────────────────────────────────
-
   return (
-    <div className="relative h-full w-full flex flex-col bg-black">
+    <div
+      ref={containerRef}
+      data-lk-videoroom
+      className="relative h-full w-full flex flex-col bg-black"
+    >
       {/* Overlay de conexión */}
       {!connected && !error && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black">
@@ -282,9 +325,6 @@ export function VideoRoom({
           setError(null);
         }}
         onError={(err) => {
-          // No desconectamos la sala, solo mostramos overlay de error
-          // para que LiveKit pueda reconectar automáticamente si es
-          // un error transitorio.
           const info = analizarError(err, role);
           setError(info);
         }}
@@ -292,38 +332,118 @@ export function VideoRoom({
         style={{
           height: '100%',
           width: '100%',
-          flexDirection: 'column',
-          // Siempre visible (el overlay se muestra arriba)
           display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        {/* Toast de estado de conexión */}
         <LKConnectionStateToast />
 
-        {/* ─── Video principal — ControlBar y Chat incluidos ── */}
-        <div className="flex-1 relative min-h-0">
-          {/*
-           * VideoConference incluye:
-           *   - Grilla de participantes (FocusLayout + GridLayout)
-           *   - ControlBar completo (mic, cámara, pantalla, chat, colgar)
-           *   - Chat toggle nativo con panel de mensajes integrado
-           */}
-          <LKVideoConference />
-        </div>
+        {/* ─── Video + Controles + Chat ───────────────── */}
+        <VideoContent
+          focusedIdentity={focusedIdentity}
+          onParticipantClick={handleParticipantClick}
+          chatOpen={chatOpen}
+          onChatToggle={() => setChatOpen((v) => !v)}
+          isFullscreen={isFullscreen}
+          onFullscreenToggle={toggleFullscreen}
+        />
 
         {/* Audio en segundo plano */}
         <LKRoomAudioRenderer />
       </LKLiveKitRoom>
 
-      {/* ─── Indicador de conexión (cuando está conectado) ── */}
+      {/* ─── Indicador de conexión ─────────────────────────── */}
       {connected && (
-        <div className="fixed top-4 left-4 z-40 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1.5 text-xs text-white/70">
+        <div className="fixed top-4 left-4 z-40 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1.5 text-xs text-white/70" data-lk-connection-indicator>
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="hidden sm:inline">En vivo</span>
           <span className="text-white/40">·</span>
           <span className="truncate max-w-[120px] sm:max-w-[200px]">{roomName}</span>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Subcomponente: contenido de video + controles ─────────
+// Separado para que los hooks de LiveKit (useTracks, etc.) estén dentro del LiveKitRoom
+
+function VideoContent({
+  focusedIdentity,
+  onParticipantClick,
+  chatOpen,
+  onChatToggle,
+  isFullscreen,
+  onFullscreenToggle,
+}: {
+  focusedIdentity: string | null;
+  onParticipantClick: (evt: ParticipantClickEvent) => void;
+  chatOpen: boolean;
+  onChatToggle: () => void;
+  isFullscreen: boolean;
+  onFullscreenToggle: () => void;
+}) {
+  // Obtener tracks de cámara (con placeholder para participantes sin cámara)
+  // y de pantalla compartida
+  const tracks = useTracks([
+    { source: Track.Source.Camera, withPlaceholder: true },
+    { source: Track.Source.ScreenShare, withPlaceholder: false },
+  ]);
+
+  // Encontrar el track enfocado y el resto
+  const { focusTrack, otherTracks } = useMemo(() => {
+    if (!focusedIdentity) return { focusTrack: undefined, otherTracks: tracks };
+
+    const focusIdx = tracks.findIndex(
+      (t) => t.participant.identity === focusedIdentity
+    );
+    if (focusIdx === -1) return { focusTrack: undefined, otherTracks: tracks };
+
+    const ft = tracks[focusIdx];
+    const rest = tracks.filter((_, i) => i !== focusIdx);
+    return { focusTrack: ft, otherTracks: rest };
+  }, [tracks, focusedIdentity]);
+
+  return (
+    <div className="flex-1 relative min-h-0 flex flex-col">
+      {/* ─── Área de video ──────────────────────────── */}
+      <div className="flex-1 relative min-h-0">
+        {focusTrack ? (
+          <FocusLayoutContainer className="h-full w-full">
+            <CarouselLayout
+              tracks={otherTracks}
+              className="h-full"
+            >
+              <ParticipantTile onParticipantClick={onParticipantClick} />
+            </CarouselLayout>
+            <FocusLayout
+              trackRef={focusTrack}
+              onParticipantClick={onParticipantClick}
+            />
+          </FocusLayoutContainer>
+        ) : (
+          <GridLayout tracks={tracks} className="h-full w-full">
+            <ParticipantTile onParticipantClick={onParticipantClick} />
+          </GridLayout>
+        )}
+      </div>
+
+      {/* ─── Chat bottom drawer (sobre el video, arriba del control bar) ─── */}
+      {chatOpen && (
+        <div className="absolute bottom-0 left-0 right-0 z-20">
+          <CustomChat onClose={onChatToggle} />
+        </div>
+      )}
+
+      {/* ─── Control bar ──────────────────────────────── */}
+      <div className="relative z-10 shrink-0">
+        <CustomControlBar
+          onChatToggle={onChatToggle}
+          chatOpen={chatOpen}
+          isFullscreen={isFullscreen}
+          onFullscreenToggle={onFullscreenToggle}
+        />
+      </div>
     </div>
   );
 }

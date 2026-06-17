@@ -9,23 +9,6 @@
    Overrides responsive para la videollamada
    ══════════════════════════════════════════════════════════════ */
 
-/* ─── ControlBar mobile (más compacto) ──────────────── */
-.lk-control-bar--mobile .lk-button {
-  width: 44px;
-  height: 44px;
-  padding: 10px;
-  font-size: 14px;
-}
-
-@media (max-width: 420px) {
-  .lk-control-bar--mobile .lk-button {
-    width: 40px;
-    height: 40px;
-    padding: 8px;
-    font-size: 12px;
-  }
-}
-
 /* ─── Focus layout responsive ───────────────────────── */
 .lk-focus-layout {
   width: 100% !important;
@@ -38,9 +21,24 @@
   height: 100% !important;
 }
 
-/* Participantes en móvil: ocupar ancho completo */
+/* ─── Carousel en foco: ocultar scrollbar pero permitir scroll ── */
+.lk-carousel {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.lk-carousel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lk-carousel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+/* ─── Participant tiles con bordes redondeados ───────── */
 .lk-participant-tile {
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
 }
 
@@ -49,69 +47,52 @@
   font-size: 13px;
 }
 
-/* ─── Barra de estado superior ──────────────────────── */
-.lk-room-container {
-  position: relative;
-}
-
-/* ─── Transparencia en la barra de control desktop ──── */
-.lk-control-bar {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.lk-control-bar .lk-button {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: white;
-  border-radius: 10px;
-  transition: all 0.2s ease;
-}
-
-.lk-control-bar .lk-button:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: scale(1.05);
-}
-
-.lk-control-bar .lk-button[data-lk-focused] {
-  background: rgba(59, 130, 246, 0.5);
-  border-color: rgba(59, 130, 246, 0.6);
-}
-
-.lk-control-bar .lk-button[data-lk-source="leave"] {
-  background: rgba(239, 68, 68, 0.6);
-  border-color: rgba(239, 68, 68, 0.7);
-}
-
-.lk-control-bar .lk-button[data-lk-source="leave"]:hover {
-  background: rgba(239, 68, 68, 0.9);
-}
-
-/* ─── Mobile control bar ────────────────────────────── */
-.lk-control-bar--mobile {
+/* ─── FocusLayoutContainer: asegurar que ocupe todo el espacio ── */
+.lk-focus-layout {
+  padding: 6px;
   gap: 6px;
 }
 
-.lk-control-bar--mobile .lk-button {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  border-radius: 50%;
-  transition: all 0.2s ease;
+@media (min-width: 640px) {
+  .lk-focus-layout {
+    padding: 8px;
+    gap: 8px;
+  }
 }
 
-.lk-control-bar--mobile .lk-button:hover {
-  background: rgba(255, 255, 255, 0.25);
+/* ─── Grid layout: padding responsive ────────────────── */
+.lk-grid-layout {
+  padding: 6px;
+  gap: 6px;
 }
 
-.lk-control-bar--mobile .lk-button[data-lk-source="leave"] {
-  background: rgba(239, 68, 68, 0.6);
-  border-color: rgba(239, 68, 68, 0.7);
+@media (min-width: 640px) {
+  .lk-grid-layout {
+    padding: 8px;
+    gap: 8px;
+  }
 }
 
-.lk-control-bar--mobile .lk-button[data-lk-source="leave"]:hover {
-  background: rgba(239, 68, 68, 0.9);
+/* ─── Toast de conexión: posición segura ─────────────── */
+.lk-toast {
+  z-index: 50 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Animaciones custom
+   ══════════════════════════════════════════════════════════════ */
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.2s ease-out;
 }
