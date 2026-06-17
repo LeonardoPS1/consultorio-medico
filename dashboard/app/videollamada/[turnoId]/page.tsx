@@ -32,8 +32,6 @@ export default function VideollamadaPage({
       if (urlToken) {
         setToken(urlToken);
         setRole('paciente');
-        // Identidad para paciente: extraer del token o usar placeholder
-        // El token ya contiene la identity, pero podemos usar un nombre genérico
         setIdentity('Paciente');
         setLoading(false);
         return;
@@ -47,7 +45,7 @@ export default function VideollamadaPage({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             roomName,
-            identity: 'Médico', // Se validará en el server con la sesión
+            identity: 'Médico',
             role: 'medico',
           }),
         });
@@ -107,6 +105,8 @@ export default function VideollamadaPage({
       token={token}
       liveKitUrl={LIVEKIT_URL}
       role={role}
+      identity={identity}
+      turnoId={turnoId}
       onDisconnect={() => router.push('/dashboard/atencion')}
     />
   );
