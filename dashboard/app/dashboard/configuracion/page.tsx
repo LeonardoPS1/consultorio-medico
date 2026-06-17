@@ -967,7 +967,7 @@ function PerfilOrganizacion() {
         >
           {/* Botón para cambiar fondo */}
           <ImageUpload
-            value=""
+            value={data.fondoUrl}
             onChange={(url) => updateField('fondoUrl', url)}
             onRemove={() => updateField('fondoUrl', '')}
             shape="square"

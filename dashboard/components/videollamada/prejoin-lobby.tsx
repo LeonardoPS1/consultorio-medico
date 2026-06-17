@@ -8,7 +8,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Mic, MicOff, Camera, CameraOff, Loader2, Video, Monitor } from 'lucide-react';
+import { Mic, MicOff, Camera, CameraOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // ─── Props ─────────────────────────────────────────────────
@@ -104,11 +104,15 @@ export function PreJoinLobby({ identity, role, onJoin }: PreJoinLobbyProps) {
       <div className="w-full max-w-md space-y-6 animate-fade-in">
         {/* ─── Header ─────────────────────────────────── */}
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm mb-4 ring-1 ring-white/10">
-            <Video className="h-8 w-8 text-blue-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm mb-4 ring-1 ring-white/10 p-2">
+            <img
+              src="/aicoremed_dark_1200.svg"
+              alt="AicoreMed"
+              className="h-full w-full object-contain"
+            />
           </div>
           <h1 className="text-2xl font-bold text-white">
-            Videollamada
+            Telemedicina
           </h1>
           <p className="text-white/50 text-sm mt-1">
             Te estás conectando como{' '}
