@@ -334,12 +334,16 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart,
 
     // ── 4. Auto-avance inteligente ──
     // Buscar el PRÓXIMO step que NO esté completado NI pendiente.
-    // Esto evita que al avanzar caigamos en un step que ya estaba
-    // completado por DB check (ej: paso 3 ya hecho cuando marcamos paso 2).
+    // ⚠️ Usar `updatedCompleted` local en vez de `completed` de React,
+    //    porque el estado React todavía no refleja el nuevo paso.
+    const updatedCompleted = [...completed, stepId];
     const currentIdx = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
     const nextIdx = ONBOARDING_STEPS.findIndex((s, i) => {
       if (i <= currentIdx) return false;
-      return !isStepCompleted(s.id) && !isStepPending(s.id);
+      // Chequear pendiente manual: el step anterior debe estar en updatedCompleted
+      const prevStep = ONBOARDING_STEPS[i - 1];
+      if (!updatedCompleted.includes(prevStep.id)) return false;
+      return !updatedCompleted.includes(s.id);
     });
     if (nextIdx !== -1) {
       setActiveStep(ONBOARDING_STEPS[nextIdx].id);
