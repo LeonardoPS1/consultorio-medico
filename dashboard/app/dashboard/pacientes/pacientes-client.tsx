@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { PageAnimation } from '@/components/dashboard/page-animation';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -229,7 +230,7 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
   };
 
   return (
-    <>
+    <PageAnimation>
       {/* Búsqueda + botón nuevo */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
         <div className="relative flex-1">
@@ -424,6 +425,6 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
           onSaved={handleEditSaved}
         />
       )}
-    </>
+    </PageAnimation>
   );
 }

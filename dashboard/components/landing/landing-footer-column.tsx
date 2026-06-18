@@ -2,14 +2,12 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, ExternalLink } from 'lucide-react';
+import { ChevronDown, ExternalLink, MessageCircle, Mail } from 'lucide-react';
 import Link from 'next/link';
-import type { LucideIcon } from 'lucide-react';
 
 type FooterLink = {
   label: string;
   href: string;
-  icon?: LucideIcon;
   external?: boolean;
 };
 
@@ -53,7 +51,13 @@ export function FooterColumn({
         className="space-y-1 overflow-hidden md:!h-auto md:!opacity-100 mt-3 md:mt-3"
       >
         {section.links.map((link) => {
-          const Icon = link.icon;
+          const Icon = link.href.startsWith('https://wa.me')
+            ? MessageCircle
+            : link.href.startsWith('mailto:')
+              ? Mail
+              : link.external
+                ? ExternalLink
+                : undefined;
           return (
             <li key={link.label}>
               {link.external || link.href.startsWith('mailto:') || link.href.startsWith('https://wa') ? (

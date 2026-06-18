@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { PageAnimation } from '@/components/dashboard/page-animation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -651,7 +652,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
   };
 
   return (
-    <>
+    <PageAnimation>
       {/* Tabs */}
       <Tabs defaultValue="activas">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -792,6 +793,6 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </PageAnimation>
   );
 }

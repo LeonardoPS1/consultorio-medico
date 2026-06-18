@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { CalendarView } from '@/components/calendar/calendar-view';
+import { PageAnimation } from '@/components/dashboard/page-animation';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
 import { descargarICS } from '@/lib/ics';
 import { generateGCalUrl, formatGCalEventText } from '@/lib/google-calendar';
@@ -509,7 +510,7 @@ export function TurnosClient({
   // ─── Render ────────────────────────────────────────────
 
   return (
-    <>
+    <PageAnimation>
       {/* Botones de acción + toggle vista (fuera del condicional de lista) */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
@@ -1472,6 +1473,6 @@ export function TurnosClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </PageAnimation>
   );
 }

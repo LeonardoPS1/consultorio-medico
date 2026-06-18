@@ -24,6 +24,7 @@ import {
 import { getInitials, formatRelative, truncate, formatPhone } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
 import { NuevaConversacionModal } from '@/components/modals/nueva-conversacion-modal';
+import { motion } from 'framer-motion';
 import { PageHeader } from '@/components/page-header';
 
 // ============================================================
@@ -183,7 +184,12 @@ export default function ConversacionesPage() {
   const mensajes = mensajesData || [];
 
   return (
-    <div className="space-y-6 animate-in">
+    <motion.div
+      className="space-y-6 animate-in"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.25 }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between">
         <PageHeader title="Conversaciones" description="Bandeja unificada de WhatsApp, SMS y Email" />
@@ -506,6 +512,6 @@ export default function ConversacionesPage() {
           )}
         </Card>
       </div>
-    </div>
+    </motion.div>
   );
 }

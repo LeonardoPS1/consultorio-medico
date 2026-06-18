@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { MessageCircle, Mail, ExternalLink, ShieldCheck, Lock, Server } from 'lucide-react';
+import { ShieldCheck, Lock, Server } from 'lucide-react';
 import { FooterColumn } from '@/components/landing/landing-footer-column';
 import { ScrollToTop } from '@/components/landing/scroll-to-top';
 
-const footerLinks: Record<string, { label: string; links: Array<{ label: string; href: string; icon?: typeof MessageCircle; external?: boolean }> }> = {
+const footerLinks: Record<string, { label: string; links: Array<{ label: string; href: string; external?: boolean }> }> = {
   product: {
     label: 'Producto',
     links: [
@@ -26,9 +26,9 @@ const footerLinks: Record<string, { label: string; links: Array<{ label: string;
   contact: {
     label: 'Contacto',
     links: [
-      { label: 'WhatsApp', href: 'https://wa.me/56975680702', icon: MessageCircle, external: true },
-      { label: 'info@aicorebots.com', href: 'mailto:info@aicorebots.com', icon: Mail },
-      { label: 'aicorebots.com', href: 'https://aicorebots.com', icon: ExternalLink, external: true },
+      { label: 'WhatsApp', href: 'https://wa.me/56975680702', external: true },
+      { label: 'info@aicorebots.com', href: 'mailto:info@aicorebots.com' },
+      { label: 'aicorebots.com', href: 'https://aicorebots.com', external: true },
     ],
   },
 };

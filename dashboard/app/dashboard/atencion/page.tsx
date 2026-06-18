@@ -1,7 +1,20 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  DndContext,
+  DragOverlay,
+  useDraggable,
+  useDroppable,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent,
+  type DragCancelEvent,
+} from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,18 +22,14 @@ import {
   Play,
   CheckCircle2,
   XCircle,
-  UserCheck,
+  AlertCircle,
   Hourglass,
   Timer,
-  Sparkles,
   Calendar,
   ArrowRight,
   Activity,
-  Clock,
-  Users,
   GripVertical,
-  AlertCircle,
-  Users2,
+  Users,
   Video,
   Phone,
   MapPin,
@@ -65,6 +74,14 @@ const COLUMNAS: { id: ColumnaId; titulo: string; estado: TurnoEstado; color: str
   { id: 'no_asistio', titulo: 'No Asistió', estado: 'no_asistio', color: '#8B5CF6' },
 ];
 
+const COLUMNA_ESTADO_MAP: Record<ColumnaId, TurnoEstado> = {
+  pendientes: 'pendiente',
+  en_atencion: 'en_atencion',
+  atendidos: 'atendido',
+  cancelados: 'cancelada',
+  no_asistio: 'no_asistio',
+};
+
 // ============================================================
 // Componente: Timer de atención
 // ============================================================
@@ -96,7 +113,7 @@ function AtencionTimer({ desde }: { desde: string }) {
 }
 
 // ============================================================
-// Componente: Tarjeta de turno (draggable)
+// Componente: Tarjeta de turno (draggable via @dnd-kit)
 // ============================================================
 function TurnoCard({
   turno,
@@ -104,32 +121,45 @@ function TurnoCard({
   onFinalizar,
   onCancelar,
   onMoverNoAsistio,
-  onDragStart,
 }: {
   turno: Turno;
   onAtender: (id: string) => void;
   onFinalizar: (id: string) => void;
   onCancelar: (id: string) => void;
   onMoverNoAsistio: (id: string) => void;
-  onDragStart: (e: React.DragEvent, turno: Turno) => void;
 }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: turno.id,
+    data: { turno },
+  });
+
+  const style = useMemo(
+    () => ({
+      transform: CSS.Translate.toString(transform),
+      opacity: isDragging ? 0.4 : 1,
+      zIndex: isDragging ? 50 : 'auto' as const,
+      borderColor: isInAttention ? color : undefined,
+    }),
+    [transform, isDragging]
+  );
+
   const color = getTurnoColor(turno.estado);
   const isPending = turno.estado === 'pendiente' || turno.estado === 'confirmada';
   const isInAttention = turno.estado === 'en_atencion';
-  const isNoAsistio = turno.estado === 'no_asistio';
   const isVirtual = turno.tipoConsulta === 'virtual';
 
   return (
     <div
-      draggable
-      onDragStart={(e) => onDragStart(e, turno)}
-      className={`group relative rounded-xl border bg-card p-3 transition-[transform,box-shadow] duration-200
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`group relative rounded-xl border bg-card p-3 transition-[box-shadow] duration-200
         hoverable:hover:shadow-card-hover hoverable:hover:-translate-y-0.5
         ${isInAttention ? 'ring-2 shadow-lg scale-[1.02]' : ''}
         cursor-grab active:cursor-grabbing active:shadow-xl active:scale-[0.97]
-        [&.dragging]:opacity-50 [&.dragging]:ring-2 [&.dragging]:ring-primary
+        touch-none select-none
       `}
-      style={{ borderColor: isInAttention ? color : undefined }}
     >
       {/* Grip indicator (arrastre) */}
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -221,7 +251,7 @@ function TurnoCard({
             <Button
               size="sm"
               className="flex-1 min-w-[100px] h-8 text-xs gap-2 font-semibold"
-              onClick={() => onAtender(turno.id)}
+              onClick={(e) => { e.stopPropagation(); onAtender(turno.id); }}
             >
               <Play className="h-3.5 w-3.5" />
               Atender
@@ -232,7 +262,7 @@ function TurnoCard({
               size="sm"
               variant="outline"
               className="h-8 text-xs gap-1.5 shrink-0 min-w-[80px]"
-              onClick={() => window.open(`/videollamada/${turno.id}`, '_blank')}
+              onClick={(e) => { e.stopPropagation(); window.open(`/videollamada/${turno.id}`, '_blank'); }}
               title="Iniciar videollamada"
             >
               <Video className="h-3.5 w-3.5" />
@@ -244,7 +274,7 @@ function TurnoCard({
               size="sm"
               variant="default"
               className="flex-1 h-8 text-xs gap-2 font-semibold bg-emerald-600 hoverable:hover:bg-emerald-700"
-              onClick={() => onFinalizar(turno.id)}
+              onClick={(e) => { e.stopPropagation(); onFinalizar(turno.id); }}
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
               Finalizar
@@ -255,7 +285,7 @@ function TurnoCard({
               size="sm"
               variant="ghost"
               className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive shrink-0"
-              onClick={() => onCancelar(turno.id)}
+              onClick={(e) => { e.stopPropagation(); onCancelar(turno.id); }}
               title="Cancelar turno"
             >
               <XCircle className="h-4 w-4" />
@@ -266,7 +296,7 @@ function TurnoCard({
               size="sm"
               variant="ghost"
               className="h-8 w-8 p-0 text-muted-foreground hover:text-purple-600 shrink-0"
-              onClick={() => onMoverNoAsistio(turno.id)}
+              onClick={(e) => { e.stopPropagation(); onMoverNoAsistio(turno.id); }}
               title="Marcar como no asistió"
             >
               <AlertCircle className="h-4 w-4" />
@@ -284,7 +314,44 @@ function TurnoCard({
 }
 
 // ============================================================
-// Componente: Columna del Kanban (drop target)
+// DragOverlay: preview de la tarjeta mientras se arrastra
+// ============================================================
+function DragPreview({ turno }: { turno: Turno }) {
+  const color = getTurnoColor(turno.estado);
+  const isVirtual = turno.tipoConsulta === 'virtual';
+
+  return (
+    <div
+      className="relative rounded-xl border bg-card p-3 shadow-2xl rotate-2 scale-105"
+      style={{ width: '280px' }}
+    >
+      <div
+        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
+        style={{ backgroundColor: color }}
+      />
+      <div className="pl-3">
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <span className="inline-flex items-center justify-center h-7 w-14 rounded-lg text-xs font-bold tabular-nums bg-muted text-muted-foreground">
+            {turno.hora}
+          </span>
+          <Badge variant="outline" className="text-[10px] px-2 py-0 font-medium pointer-events-none">
+            {getTurnoLabel(turno.estado)}
+          </Badge>
+        </div>
+        <p className="font-semibold text-sm truncate">{turno.paciente}</p>
+        <p className="text-xs text-muted-foreground truncate">
+          {turno.tipo} &middot; {turno.medico}
+          {isVirtual && (
+            <span className="inline-flex items-center gap-0.5 ml-1 text-[10px] text-blue-600">🎥</span>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Componente: Columna del Kanban (drop target via @dnd-kit)
 // ============================================================
 function KanbanColumn({
   columna,
@@ -293,11 +360,6 @@ function KanbanColumn({
   onFinalizar,
   onCancelar,
   onMoverNoAsistio,
-  onDragStart,
-  onDropTurno,
-  isDragOver,
-  onDragOver,
-  onDragLeave,
 }: {
   columna: typeof COLUMNAS[0];
   turnos: Turno[];
@@ -305,12 +367,12 @@ function KanbanColumn({
   onFinalizar: (id: string) => void;
   onCancelar: (id: string) => void;
   onMoverNoAsistio: (id: string) => void;
-  onDragStart: (e: React.DragEvent, turno: Turno) => void;
-  onDropTurno: (e: React.DragEvent, columnaId: ColumnaId) => void;
-  isDragOver: boolean;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragLeave: (e: React.DragEvent) => void;
 }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: columna.id,
+    data: { columnaId: columna.id },
+  });
+
   const Icono = columna.id === 'pendientes' ? Hourglass
     : columna.id === 'en_atencion' ? Play
     : columna.id === 'atendidos' ? CheckCircle2
@@ -319,15 +381,13 @@ function KanbanColumn({
 
   return (
     <div
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => onDropTurno(e, columna.id)}
+      ref={setNodeRef}
       className={`flex flex-col gap-2 min-h-[250px] rounded-xl p-3 transition-[transform,border-color,background-color,box-shadow] duration-200 border-2
-        ${isDragOver
+        ${isOver
           ? 'border-primary bg-primary/5 shadow-lg scale-[1.01]'
           : 'border-transparent'
         }
-        ${turnos.length === 0 && !isDragOver ? 'bg-muted/10' : ''}
+        ${turnos.length === 0 && !isOver ? 'bg-muted/10' : ''}
       `}
     >
       {/* Header de columna */}
@@ -351,11 +411,11 @@ function KanbanColumn({
       {/* Cards */}
       {turnos.length === 0 ? (
         <div className={`flex flex-col items-center justify-center py-8 text-center rounded-xl border-2 border-dashed flex-1 transition-colors ${
-          isDragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/10'
+          isOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/10'
         }`}>
           <Icono className="h-8 w-8 mb-2 opacity-30" style={{ color: columna.color }} />
           <p className="text-xs text-muted-foreground/60">
-            {isDragOver ? 'Soltó acá' : 'Sin turnos'}
+            {isOver ? 'Soltó acá' : 'Sin turnos'}
           </p>
         </div>
       ) : (
@@ -368,7 +428,6 @@ function KanbanColumn({
               onFinalizar={onFinalizar}
               onCancelar={onCancelar}
               onMoverNoAsistio={onMoverNoAsistio}
-              onDragStart={onDragStart}
             />
           ))}
         </div>
@@ -428,10 +487,17 @@ export default function AtencionPage() {
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [mounted, setMounted] = useState(false);
   const [filtroMedico, setFiltroMedico] = useState<string | null>(null);
-  const [dragOverColumn, setDragOverColumn] = useState<ColumnaId | null>(null);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px de distancia antes de activar el drag (evita conflictos con clicks)
+      },
+    })
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -443,23 +509,20 @@ export default function AtencionPage() {
       setLoading(true);
       const hoy = new Date().toISOString().split('T')[0];
 
-      // Fetch 1: turnos de hoy (todos los estados)
       const responseHoy = await fetch(`/api/turnos?fecha=${hoy}&limit=100`);
       if (!responseHoy.ok) throw new Error('Error al cargar turnos de hoy');
       const dataHoy = await responseHoy.json();
       const turnosHoy = dataHoy.data || [];
 
-      // Fetch 2: turnos 'en_atencion' de CUALQUIER fecha (para atender turnos pasados/futuros)
       const responseEnAtencion = await fetch(`/api/turnos?estado=en_atencion&limit=100`);
       if (!responseEnAtencion.ok) throw new Error('Error al cargar turnos en atención');
       const dataEnAtencion = await responseEnAtencion.json();
       const turnosEnAtencion = dataEnAtencion.data || [];
 
-      // Merge sin duplicados (por id)
       const todosIds = new Set<string>();
       const merged: Turno[] = [];
 
-      [...turnosHoy, ...turnosEnAtencion].forEach((t) => {
+      [...turnosHoy, ...turnosEnAtencion].forEach((t: Turno) => {
         if (!todosIds.has(t.id)) {
           todosIds.add(t.id);
           merged.push(t);
@@ -491,7 +554,6 @@ export default function AtencionPage() {
     const turno = turnos.find((t) => t.id === id);
     if (!turno) return { ok: false, error: 'Turno no encontrado' };
 
-    // Snapshot para revertir si falla
     const snapshot = { estado: turno.estado, inicioAtencionAt: turno.inicioAtencionAt };
 
     // Optimistic update
@@ -512,7 +574,6 @@ export default function AtencionPage() {
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        // Intentar leer el error real del servidor (prodError para 500, detail para dev)
         const serverMsg = body?.prodError || body?.detail || body?.error || '';
         const msg = serverMsg || (res.status >= 500 ? 'Error del servidor' : 'Error al guardar');
         throw new Error(msg);
@@ -537,7 +598,7 @@ export default function AtencionPage() {
   // ============================================================
   const atenderTurno = useCallback(async (id: string) => {
     const { ok, error } = await patchTurnoEstado(id, 'en_atencion', (t) => ({
-      estado: 'en_atencion',
+      estado: 'en_atencion' as const,
       inicioAtencionAt: new Date().toISOString(),
     }));
     const paciente = turnos.find((t) => t.id === id)?.paciente;
@@ -549,8 +610,8 @@ export default function AtencionPage() {
   }, [turnos, patchTurnoEstado]);
 
   const finalizarTurno = useCallback(async (id: string) => {
-    const { ok, error } = await patchTurnoEstado(id, 'atendido', (t) => ({
-      estado: 'atendido',
+    const { ok, error } = await patchTurnoEstado(id, 'atendido', () => ({
+      estado: 'atendido' as const,
     }));
     const paciente = turnos.find((t) => t.id === id)?.paciente;
     if (ok) {
@@ -562,7 +623,7 @@ export default function AtencionPage() {
 
   const cancelarTurno = useCallback(async (id: string) => {
     const { ok, error } = await patchTurnoEstado(id, 'cancelada', () => ({
-      estado: 'cancelada',
+      estado: 'cancelada' as const,
     }), { motivoCancelacion: 'Cancelado desde dashboard', skipWaitlist: true });
     const paciente = turnos.find((t) => t.id === id)?.paciente;
     if (ok) {
@@ -574,7 +635,7 @@ export default function AtencionPage() {
 
   const moverNoAsistio = useCallback(async (id: string) => {
     const { ok, error } = await patchTurnoEstado(id, 'no_asistio', () => ({
-      estado: 'no_asistio',
+      estado: 'no_asistio' as const,
     }));
     const paciente = turnos.find((t) => t.id === id)?.paciente;
     if (ok) {
@@ -585,129 +646,90 @@ export default function AtencionPage() {
   }, [turnos, patchTurnoEstado]);
 
   // ============================================================
-  // Drag & Drop handlers
+  // Drag & Drop handlers (@dnd-kit)
   // ============================================================
-  const handleDragStart = useCallback((e: React.DragEvent, turno: Turno) => {
-    e.dataTransfer.setData('text/plain', JSON.stringify({ id: turno.id, estado: turno.estado }));
-    e.dataTransfer.effectAllowed = 'move';
-    setDraggingId(turno.id);
-    // Capturar referencia antes del setTimeout (evita event pooling en React <18)
-    const el = e.currentTarget as HTMLElement;
-    requestAnimationFrame(() => {
-      if (el) el.classList.add('dragging');
-    });
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
   }, []);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  }, []);
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    setActiveId(null);
 
-  const handleDragEnter = useCallback((e: React.DragEvent, columnaId: ColumnaId) => {
-    e.preventDefault();
-    setDragOverColumn(columnaId);
-  }, []);
+    const { active, over } = event;
+    if (!over) return;
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    // Solo cuando realmente salimos de la zona (no a hijos)
-    const relatedTarget = e.relatedTarget as HTMLElement;
-    const currentTarget = e.currentTarget as HTMLElement;
-    if (!currentTarget.contains(relatedTarget)) {
-      setDragOverColumn(null);
-    }
-  }, []);
+    const turnoId = active.id as string;
+    const columnaDestino = over.id as ColumnaId;
 
-  const handleDrop = useCallback(async (e: React.DragEvent, columnaId: ColumnaId) => {
-    e.preventDefault();
-    setDragOverColumn(null);
-    setDraggingId(null);
+    const turno = turnos.find((t) => t.id === turnoId);
+    if (!turno) return;
 
+    const nuevoEstado = COLUMNA_ESTADO_MAP[columnaDestino];
+    if (!nuevoEstado || turno.estado === nuevoEstado) return;
+
+    const now = new Date().toISOString();
+
+    // Optimistic update
+    setTurnos((prev) =>
+      prev.map((t) => {
+        if (t.id !== turnoId) return t;
+        const updated: Turno = { ...t, estado: nuevoEstado };
+        if (nuevoEstado === 'en_atencion') {
+          updated.inicioAtencionAt = now;
+        }
+        return updated;
+      })
+    );
+
+    // Persistir en backend
     try {
-      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-      const { id: turnoId } = data;
+      const res = await fetch(`/api/turnos/${turnoId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      });
 
-      // Mapa columna → estado
-      const estadoMap: Record<ColumnaId, TurnoEstado> = {
-        pendientes: 'pendiente',
-        en_atencion: 'en_atencion',
-        atendidos: 'atendido',
-        cancelados: 'cancelada',
-        no_asistio: 'no_asistio',
-      };
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        const serverMsg = body?.prodError || body?.detail || body?.error || '';
+        throw new Error(serverMsg || 'Error del servidor');
+      }
 
-      const nuevoEstado = estadoMap[columnaId];
-      const turno = turnos.find((t) => t.id === turnoId);
-      if (!turno || turno.estado === nuevoEstado) return;
-
-      const now = new Date().toISOString();
-
-      // Optimistic update
+      const label = COLUMNAS.find((c) => c.id === columnaDestino)?.titulo || nuevoEstado;
+      toast({
+        title: `Movido a ${label}`,
+        description: `${turno.paciente} → ${getTurnoLabel(nuevoEstado)}`,
+      });
+    } catch (err) {
+      // Revert optimistic update on error
       setTurnos((prev) =>
         prev.map((t) => {
           if (t.id !== turnoId) return t;
-          const updated: Turno = { ...t, estado: nuevoEstado };
-          if (nuevoEstado === 'en_atencion') {
-            updated.inicioAtencionAt = now;
-          }
-          return updated;
+          const reverted: Turno = { ...t, estado: turno.estado };
+          if (turno.inicioAtencionAt) reverted.inicioAtencionAt = turno.inicioAtencionAt;
+          return reverted;
         })
       );
-
-      // Persistir en backend con verificación de response.ok
-      try {
-        const res = await fetch(`/api/turnos/${turnoId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ estado: nuevoEstado }),
-        });
-
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          const serverMsg = body?.prodError || body?.detail || body?.error || '';
-          throw new Error(serverMsg || 'Error del servidor');
-        }
-
-        // Toast según el destino
-        const label = COLUMNAS.find((c) => c.id === columnaId)?.titulo || nuevoEstado;
-        toast({
-          title: `Movido a ${label}`,
-          description: `${turno.paciente} → ${getTurnoLabel(nuevoEstado)}`,
-        });
-      } catch (err) {
-        // Revert optimistic update on error
-        setTurnos((prev) =>
-          prev.map((t) => {
-            if (t.id !== turnoId) return t;
-            const reverted: Turno = { ...t, estado: turno.estado };
-            if (turno.inicioAtencionAt) reverted.inicioAtencionAt = turno.inicioAtencionAt;
-            return reverted;
-          })
-        );
-        const msg = err instanceof Error ? err.message : 'Error desconocido';
-        toast({
-          title: 'Error',
-          description: msg,
-          variant: 'destructive',
-        });
-      }
-
-      // Remover clase dragging
-      document.querySelectorAll('.dragging').forEach((el) => el.classList.remove('dragging'));
-    } catch {
-      // Ignorar errores de parseo del dataTransfer
+      const msg = err instanceof Error ? err.message : 'Error desconocido';
+      toast({
+        title: 'Error',
+        description: msg,
+        variant: 'destructive',
+      });
     }
   }, [turnos]);
 
-  // Limpiar dragging state
-  useEffect(() => {
-    const handleDragEnd = () => {
-      setDragOverColumn(null);
-      setDraggingId(null);
-      document.querySelectorAll('.dragging').forEach((el) => el.classList.remove('dragging'));
-    };
-    document.addEventListener('dragend', handleDragEnd);
-    return () => document.removeEventListener('dragend', handleDragEnd);
+  const handleDragCancel = useCallback((_event: DragCancelEvent) => {
+    setActiveId(null);
   }, []);
+
+  // ============================================================
+  // Active turno para DragOverlay
+  // ============================================================
+  const activeTurno = useMemo(
+    () => turnos.find((t) => t.id === activeId) ?? null,
+    [activeId, turnos]
+  );
 
   // ============================================================
   // Filtrar turnos
@@ -791,7 +813,7 @@ export default function AtencionPage() {
         </CardContent>
       </Card>
 
-      {/* Tablero Kanban con drag & drop */}
+      {/* Tablero Kanban con drag & drop (@dnd-kit) */}
       <Card className="overflow-hidden">
         <CardHeader className="pb-3 border-b bg-muted/20">
           <div className="flex items-center justify-between">
@@ -800,7 +822,7 @@ export default function AtencionPage() {
               Tablero de Atención
             </CardTitle>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {draggingId ? (
+              {activeId ? (
                 <span className="flex items-center gap-2 text-primary font-medium">
                   <span className="h-2 w-2 rounded-full bg-primary animate-pulse-soft" />
                   Arrastrando...
@@ -825,39 +847,46 @@ export default function AtencionPage() {
               <span className="ml-2 text-sm text-muted-foreground">Cargando turnos...</span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
-              {COLUMNAS.map((col) => {
-                const turnosCol =
-                  col.id === 'pendientes' ? pendientes
-                  : col.id === 'en_atencion' ? enAtencion
-                  : col.id === 'atendidos' ? atendidos
-                  : col.id === 'cancelados' ? cancelados
-                  : noAsistio;
+            <DndContext
+              sensors={sensors}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+                {COLUMNAS.map((col) => {
+                  const turnosCol =
+                    col.id === 'pendientes' ? pendientes
+                    : col.id === 'en_atencion' ? enAtencion
+                    : col.id === 'atendidos' ? atendidos
+                    : col.id === 'cancelados' ? cancelados
+                    : noAsistio;
 
-                return (
-                  <KanbanColumn
-                    key={col.id}
-                    columna={col}
-                    turnos={turnosCol}
-                    onAtender={atenderTurno}
-                    onFinalizar={finalizarTurno}
-                    onCancelar={cancelarTurno}
-                    onMoverNoAsistio={moverNoAsistio}
-                    onDragStart={handleDragStart}
-                    onDropTurno={handleDrop}
-                    isDragOver={dragOverColumn === col.id}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                  />
-                );
-              })}
-            </div>
+                  return (
+                    <KanbanColumn
+                      key={col.id}
+                      columna={col}
+                      turnos={turnosCol}
+                      onAtender={atenderTurno}
+                      onFinalizar={finalizarTurno}
+                      onCancelar={cancelarTurno}
+                      onMoverNoAsistio={moverNoAsistio}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* DragOverlay: preview mientras se arrastra */}
+              <DragOverlay dropAnimation={null}>
+                {activeTurno ? <DragPreview turno={activeTurno} /> : null}
+              </DragOverlay>
+            </DndContext>
           )}
         </CardContent>
       </Card>
 
       {/* Indicador de drag activo */}
-      {draggingId && (
+      {activeId && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-primary text-primary-foreground px-5 py-2.5 rounded-full shadow-xl text-sm font-medium animate-in slide-in-from-bottom-4">
           Soltá el turno en la columna deseada
         </div>
@@ -884,7 +913,7 @@ export default function AtencionPage() {
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('no_asistio') }} /> No asistió
         </span>
         <span className="flex items-center gap-1 text-muted-foreground/50 ml-auto">
-          <GripVertical className="h-3 w-3" /> Drag &amp; drop activo
+          <GripVertical className="h-3 w-3" /> Táctil + Mouse
         </span>
       </div>
     </div>
