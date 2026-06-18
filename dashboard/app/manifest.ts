@@ -26,6 +26,14 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
       { src: '/icons/icon-192x192.svg', sizes: '192x192', type: 'image/svg+xml', purpose: 'maskable' },
     ],
-    // screenshots pendientes: agregar cuando tengamos captura del dashboard
+    screenshots: [
+      { src: '/assets/dashboard-real-home.png', sizes: '1440x900', type: 'image/png' },
+      { src: '/assets/dashboard-real-turnos.png', sizes: '1440x900', type: 'image/png' },
+      { src: '/assets/dashboard-real-pacientes.png', sizes: '1440x900', type: 'image/png' },
+      { src: '/assets/dashboard-real-recetas.png', sizes: '1440x900', type: 'image/png' },
+      { src: '/assets/dashboard-real-reportes.png', sizes: '1440x900', type: 'image/png' },
+      { src: '/assets/dashboard-real-atencion.png', sizes: '1440x900', type: 'image/png' },
+      { src: '/assets/dashboard-real-configuracion.png', sizes: '1440x900', type: 'image/png' },
+    ],
   };
 }
