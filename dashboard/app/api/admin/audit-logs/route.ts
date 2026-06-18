@@ -9,13 +9,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getAuditLogs, cleanAuditLogs } from '@/lib/audit-log';
 
+// Forzar dinámico para evitar errores de build en Linux (auth() usa headers/cookies)
+export const dynamic = 'force-dynamic';
+
+async function getSessionSafe() {
+  try {
+    return await auth();
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: NextRequest) {
-  const session = await auth();
+  const session = await getSessionSafe();
   if (!session?.user || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const limit = parseInt(searchParams.get('limit') || '100', 10);
   const offset = parseInt(searchParams.get('offset') || '0', 10);
   const entidad = searchParams.get('entidad') || undefined;
@@ -34,12 +45,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const session = await auth();
+  const session = await getSessionSafe();
   if (!session?.user || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const beforeDays = parseInt(searchParams.get('beforeDays') || '90', 10);
   const all = searchParams.get('all') === 'true';
 
