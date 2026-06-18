@@ -133,6 +133,11 @@ function TurnoCard({
     data: { turno },
   });
 
+  const color = getTurnoColor(turno.estado);
+  const isPending = turno.estado === 'pendiente' || turno.estado === 'confirmada';
+  const isInAttention = turno.estado === 'en_atencion';
+  const isVirtual = turno.tipoConsulta === 'virtual';
+
   const style = useMemo(
     () => ({
       transform: CSS.Translate.toString(transform),
@@ -140,13 +145,8 @@ function TurnoCard({
       zIndex: isDragging ? 50 : 'auto' as const,
       borderColor: isInAttention ? color : undefined,
     }),
-    [transform, isDragging]
+    [transform, isDragging, color, isInAttention]
   );
-
-  const color = getTurnoColor(turno.estado);
-  const isPending = turno.estado === 'pendiente' || turno.estado === 'confirmada';
-  const isInAttention = turno.estado === 'en_atencion';
-  const isVirtual = turno.tipoConsulta === 'virtual';
 
   return (
     <div
