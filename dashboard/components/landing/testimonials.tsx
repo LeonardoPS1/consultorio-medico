@@ -1,7 +1,5 @@
-'use client';
-
-import { motion } from 'framer-motion';
-import { Star } from 'lucide-react';
+import { AnimatedSection } from '@/components/landing/animated-section';
+import { LandingStars } from '@/components/landing/landing-stars';
 
 export interface TestimonialItem {
   text: string;
@@ -36,40 +34,6 @@ const defaultTestimonials: TestimonialItem[] = [
   },
 ];
 
-const containerVariants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.1 },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as const },
-  },
-};
-
-function Stars({ delay }: { delay: number }) {
-  return (
-    <div className="flex gap-0.5 mb-4">
-      {[...Array(5)].map((_, i) => (
-        <motion.div
-          key={i}
-          initial={{ scale: 0, opacity: 0 }}
-          whileInView={{ scale: 1, opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: delay + i * 0.06, type: 'spring', duration: 0.4, bounce: 0.3 }}
-        >
-          <Star className="h-3.5 w-3.5 fill-emerald-200/80 text-emerald-400/60" />
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
 export function Testimonials({ testimonials: customTestimonials }: TestimonialsProps = {}) {
   const items = customTestimonials ?? defaultTestimonials;
 
@@ -78,13 +42,7 @@ export function Testimonials({ testimonials: customTestimonials }: TestimonialsP
       <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent pointer-events-none" />
 
       <div className="container mx-auto px-4 md:px-6 py-20 md:py-28">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center mb-14"
-        >
+        <AnimatedSection className="text-center mb-14">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Lo que dicen nuestros clientes
           </h2>
@@ -92,23 +50,15 @@ export function Testimonials({ testimonials: customTestimonials }: TestimonialsP
             Clínicas y consultorios de toda Latinoamérica ya confían en AiCoreMed
             para transformar su gestión diaria.
           </p>
-        </motion.div>
+        </AnimatedSection>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-60px' }}
-          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
-        >
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 stagger-children">
           {items.map((t, idx) => (
-            <motion.div
+            <div
               key={t.author}
-              variants={cardVariants}
               className="relative rounded-xl border bg-card p-6 testimonial-hover flex flex-col"
             >
-              {/* Animated Stars */}
-              <Stars delay={0.3 + idx * 0.1} />
+              <LandingStars delay={0.3 + idx * 0.1} />
 
               <p className="text-sm text-muted-foreground leading-relaxed flex-1">
                 &ldquo;{t.text}&rdquo;
@@ -118,9 +68,9 @@ export function Testimonials({ testimonials: customTestimonials }: TestimonialsP
                 <p className="text-sm font-semibold">{t.author}</p>
                 <p className="text-xs text-muted-foreground">{t.role}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

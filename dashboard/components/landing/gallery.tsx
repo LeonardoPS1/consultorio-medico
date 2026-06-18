@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 const SCREENSHOTS = [
   { id: 'home', label: 'Panel Principal', src: '/assets/dashboard-real-home.png' },
@@ -12,6 +13,9 @@ const SCREENSHOTS = [
   { id: 'atencion', label: 'Atención', src: '/assets/dashboard-real-atencion.png' },
   { id: 'recetas', label: 'Recetas', src: '/assets/dashboard-real-recetas.png' },
 ];
+
+const IMG_WIDTH = 1440;
+const IMG_HEIGHT = 900;
 
 export function Gallery() {
   const [active, setActive] = useState(SCREENSHOTS[0].id);
@@ -82,9 +86,13 @@ export function Gallery() {
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="pt-8 gallery-img-hover"
             >
-              <img
+              <Image
                 src={SCREENSHOTS.find((s) => s.id === active)!.src}
                 alt={`Captura de ${SCREENSHOTS.find((s) => s.id === active)!.label}`}
+                width={IMG_WIDTH}
+                height={IMG_HEIGHT}
+                sizes="(max-width: 1024px) 100vw, 1024px"
+                priority={active === SCREENSHOTS[0].id}
                 className="w-full h-auto"
               />
             </motion.div>

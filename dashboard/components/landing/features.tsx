@@ -1,6 +1,4 @@
-'use client';
-
-import { motion } from 'framer-motion';
+import { AnimatedSection } from '@/components/landing/animated-section';
 import { Calendar, MessageSquare, Syringe, BarChart3, Bot, Smartphone, Shield, Users, ChevronRight, Video } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -66,22 +64,6 @@ const defaultFeatures: FeatureItem[] = [
   },
 ];
 
-const containerVariants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.06 },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as const },
-  },
-};
-
 export function Features({
   title = 'Todo lo que necesitas en un solo lugar',
   subtitle = 'Desde la gestión de turnos hasta reportes avanzados, pasando por WhatsApp con IA local. Todo integrado, sin depender de servicios externos.',
@@ -94,34 +76,21 @@ export function Features({
       <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-transparent pointer-events-none" />
 
       <div className="container mx-auto px-4 md:px-6 py-20 md:py-28">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center mb-14"
-        >
+        <AnimatedSection className="text-center mb-14">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             {title}
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-base">
             {subtitle}
           </p>
-        </motion.div>
+        </AnimatedSection>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-60px' }}
-          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5"
-        >
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 stagger-children">
           {items.map((feature) => {
             const Icon = feature.icon;
             return (
-              <motion.div
+              <div
                 key={feature.title}
-                variants={cardVariants}
                 className="group relative rounded-xl border bg-card p-6 card-glow-hover"
               >
                 {/* Gradient overlay on hover */}
@@ -132,25 +101,19 @@ export function Features({
                 </div>
                 <h3 className="font-semibold text-sm mb-2 group-hover:text-primary transition-colors duration-200">{feature.title}</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">{feature.desc}</p>
-              </motion.div>
+              </div>
             );
           })}
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center mt-10"
-        >
+        <AnimatedSection className="text-center mt-10" delay={0.3}>
           <Button variant="outline" className="gap-2 btn-press" asChild>
             <Link href="/login?callbackUrl=/dashboard/configuracion%3Ftab%3Dsuscripcion">
               Ver todas las funcionalidades
               <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>
-        </motion.div>
+        </AnimatedSection>
       </div>
     </section>
   );

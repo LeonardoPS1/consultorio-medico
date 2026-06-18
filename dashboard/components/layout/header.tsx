@@ -8,13 +8,14 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { UpdateBadge } from '@/components/layout/update-badge';
 import {
   Bell, Moon, Sun, Monitor, Calendar, MessageSquare, Syringe,
-  AlertTriangle, X, Menu, Store, ChevronDown, Trash2,
+  AlertTriangle, Menu, Store, ChevronDown, Trash2,
   EyeOff, Eye,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getInitials, formatRelative } from '@/lib/utils';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import { useSucursal } from '@/lib/sucursal-context';
+import { useNotifications } from '@/lib/hooks/use-notifications';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +40,8 @@ interface NotificacionData {
   createdAt: string;
   deletedAt: string | null;
 }
+
+
 
 // ============================================================
 // Iconos por tipo
@@ -69,10 +72,17 @@ export function Header() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { sucursalId: activeSucursalId, sucursales, setSucursalId, hasMultiple } = useSucursal();
-  const [notificaciones, setNotificaciones] = useState<NotificacionData[]>([]);
-  const [noLeidas, setNoLeidas] = useState(0);
+  const {
+    notificaciones,
+    noLeidas,
+    isLoading: loadingNotif,
+    marcarLeida,
+    marcarNoLeida,
+    eliminar: eliminarNotificacion,
+    marcarTodasLeidas,
+  } = useNotifications();
+
   const [notifOpen, setNotifOpen] = useState(false);
-  const [loadingNotif, setLoadingNotif] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
@@ -101,89 +111,7 @@ export function Header() {
     return () => window.removeEventListener('organization-updated', cargarOrg);
   }, [cargarOrg]);
 
-  // ─── Cargar notificaciones ─────────────────────────────────
-  const cargarNotificaciones = useCallback(async () => {
-    setLoadingNotif(true);
-    try {
-      const res = await fetch('/api/notificaciones?limit=20&soloNoLeidas=false');
-      if (!res.ok) return;
-      const json = await res.json();
-      setNotificaciones(json.data || []);
-      setNoLeidas(json.noLeidas || 0);
-    } catch {
-      console.warn('[Header] Error al cargar notificaciones');
-    } finally {
-      setLoadingNotif(false);
-    }
-  }, []);
-
-  // Cargar al montar y cada 60s
-  useEffect(() => {
-    cargarNotificaciones();
-    const interval = setInterval(cargarNotificaciones, 60000);
-    return () => clearInterval(interval);
-  }, [cargarNotificaciones]);
-
-  // Recargar al abrir el dropdown
-  useEffect(() => {
-    if (notifOpen) cargarNotificaciones();
-  }, [notifOpen, cargarNotificaciones]);
-
   // ─── Acciones ──────────────────────────────────────────────
-
-  const marcarLeida = async (id: string) => {
-    try {
-      await fetch(`/api/notificaciones/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'read' }),
-      });
-      setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, leido: true } : n));
-      setNoLeidas(prev => Math.max(0, prev - 1));
-    } catch (e) {
-      console.error('Error al marcar leída', e);
-    }
-  };
-
-  const marcarNoLeida = async (id: string) => {
-    try {
-      await fetch(`/api/notificaciones/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'unread' }),
-      });
-      setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, leido: false } : n));
-      setNoLeidas(prev => prev + 1);
-    } catch (e) {
-      console.error('Error al marcar no leída', e);
-    }
-  };
-
-  const marcarTodasLeidas = async () => {
-    try {
-      await fetch('/api/notificaciones', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'leidas' }),
-      });
-      setNotificaciones(prev => prev.map(n => ({ ...n, leido: true })));
-      setNoLeidas(0);
-    } catch (e) {
-      console.error('Error al marcar todas leídas', e);
-    }
-  };
-
-  const eliminarNotificacion = async (id: string) => {
-    try {
-      await fetch(`/api/notificaciones/${id}`, { method: 'DELETE' });
-      setNotificaciones(prev => prev.filter(n => n.id !== id));
-      setNoLeidas(prev =>
-        prev - (notificaciones.find(n => n.id === id)?.leido ? 0 : 1)
-      );
-    } catch (e) {
-      console.error('Error al eliminar notificación', e);
-    }
-  };
 
   const handleNotifClick = (notif: NotificacionData) => {
     if (!notif.leido) marcarLeida(notif.id);
@@ -319,7 +247,7 @@ export function Header() {
               <span className="text-sm font-semibold">Notificaciones</span>
               {noLeidas > 0 && (
                 <button
-                  onClick={marcarTodasLeidas}
+                  onClick={() => marcarTodasLeidas()}
                   className="text-xs text-primary hover:underline font-medium"
                 >
                   Leer todas

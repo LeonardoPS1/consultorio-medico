@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRef, useEffect } from 'react';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -120,37 +121,26 @@ const kpiCardVariants = {
 
 export function DashboardKpisClient({ initialKpis }: DashboardKpisClientProps) {
   const { sucursalId } = useSucursal();
-  const [kpis, setKpis] = useState<DashboardKpi[]>(initialKpis);
-  const [loading, setLoading] = useState(false);
-  const [animKey, setAnimKey] = useState(0);
+  const prevDataRef = useRef<string>('');
 
-  const fetchKpis = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data, isLoading } = useQuery({
+    queryKey: ['dashboard-kpis', sucursalId],
+    queryFn: async () => {
       const params = new URLSearchParams();
       if (sucursalId) params.set('sucursalId', sucursalId);
       const res = await fetch(`/api/dashboard/stats?${params.toString()}`);
       if (!res.ok) throw new Error('Error fetching KPIs');
-      const data = await res.json();
-      if (data?.kpis) setKpis(data.kpis);
-    } catch {
-      // Silently fail — keep showing current data
-    } finally {
-      setLoading(false);
-    }
-  }, [sucursalId]);
+      return res.json();
+    },
+    initialData: { kpis: initialKpis },
+    placeholderData: keepPreviousData,
+    refetchInterval: 30_000,
+    select: (data: { kpis?: DashboardKpi[] }) => data?.kpis ?? [],
+  });
 
-  // Re-fetch cuando cambia la sucursal
-  useEffect(() => {
-    fetchKpis();
-  }, [fetchKpis]);
-
-  // Re-trigger animation when data changes
-  useEffect(() => {
-    if (!loading) {
-      setAnimKey(prev => prev + 1);
-    }
-  }, [kpis, loading]);
+  const kpis = data ?? [];
+  const kpisStr = JSON.stringify(kpis);
+  const animKey = kpisStr !== prevDataRef.current ? (prevDataRef.current = kpisStr, Date.now()) : 0;
 
   if (kpis.length === 0) return null;
 
@@ -160,7 +150,7 @@ export function DashboardKpisClient({ initialKpis }: DashboardKpisClientProps) {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className={`grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 ${loading ? 'opacity-60 transition-opacity' : ''}`}
+      className={`grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 ${isLoading ? 'opacity-60 transition-opacity' : ''}`}
     >
       {kpis.map((kpi) => {
         const Icon = getKpiIcon(kpi.type);
