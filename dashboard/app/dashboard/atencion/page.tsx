@@ -10,6 +10,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  closestCorners,
   type DragStartEvent,
   type DragEndEvent,
   type DragCancelEvent,
@@ -659,12 +660,13 @@ export default function AtencionPage() {
     if (!over) return;
 
     const turnoId = active.id as string;
-    const columnaDestino = over.id as ColumnaId;
+    const columnaDestino = over.id as string;
 
     const turno = turnos.find((t) => t.id === turnoId);
     if (!turno) return;
 
-    const nuevoEstado = COLUMNA_ESTADO_MAP[columnaDestino];
+    // Validar que el destino sea una columna válida
+    const nuevoEstado = COLUMNA_ESTADO_MAP[columnaDestino as ColumnaId];
     if (!nuevoEstado || turno.estado === nuevoEstado) return;
 
     const now = new Date().toISOString();
@@ -849,6 +851,7 @@ export default function AtencionPage() {
           ) : (
             <DndContext
               sensors={sensors}
+              collisionDetection={closestCorners}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               onDragCancel={handleDragCancel}
