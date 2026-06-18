@@ -7,6 +7,7 @@
 import { db } from '@/lib/db';
 import { consentimientos, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, like, or } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 import { notFound } from '@/lib/api-handler';
 import type { CreateConsentimiento, UpdateConsentimiento } from '@/lib/validations';
 
@@ -24,7 +25,7 @@ export const consentimientosService = {
   async list(options: ListConsentimientosOptions = {}) {
     const { limit = 50, offset = 0, tipo, pacienteId, medicoId, search, includeDeleted = false } = options;
 
-    const condList: any[] = [];
+    const condList: (SQL | undefined)[] = [];
     if (!includeDeleted) condList.push(sql`${consentimientos.deletedAt} IS NULL`);
     if (tipo) condList.push(eq(consentimientos.tipo, tipo));
     if (pacienteId) condList.push(eq(consentimientos.pacienteId, pacienteId));
@@ -119,9 +120,9 @@ export const consentimientosService = {
       nombrePaciente: input.nombrePaciente,
       rutPaciente: input.rutPaciente || null,
       documentoPdf: input.documentoPdf || null,
-      metadata: (input.metadata as any) || null,
+      metadata: input.metadata ?? null,
       medicoId: input.medicoId || null,
-      sucursalId: (input.sucursalId as any) || null,
+      sucursalId: input.sucursalId ?? null,
     }).returning();
 
     return nuevo;

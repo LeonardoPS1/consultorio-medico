@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,7 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShieldAlert, UserPlus, Edit, Loader2, ChevronDown, Sparkles } from 'lucide-react';
+import { ShieldAlert, UserPlus, Edit, Loader2, ChevronDown, Sparkles, Trash2, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { FEATURE_PLAN, getFeatureRequiredPlan } from '@/lib/features';
 
 interface Usuario {
@@ -67,6 +68,8 @@ function RolBadge({ rol }: { rol: string }) {
 }
 
 export default function AdminUsuariosTab() {
+  const { data: session } = useSession();
+  const sessionUserId = session?.user?.id;
   const [users, setUsers] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -83,9 +86,21 @@ export default function AdminUsuariosTab() {
 
   // Modal editar
   const [editingUser, setEditingUser] = useState<Usuario | null>(null);
+  const [editNombre, setEditNombre] = useState('');
+  const [editEmail, setEditEmail] = useState('');
   const [editPlan, setEditPlan] = useState('');
   const [editRol, setEditRol] = useState('');
   const [editActivo, setEditActivo] = useState(true);
+
+  // Cambio de contraseña en edición
+  const [editPassword, setEditPassword] = useState('');
+  const [editPasswordConfirm, setEditPasswordConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Confirmación de eliminación
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState('');
 
@@ -168,9 +183,14 @@ export default function AdminUsuariosTab() {
 
   const openEdit = (user: Usuario) => {
     setEditingUser(user);
+    setEditNombre(user.nombre);
+    setEditEmail(user.email);
     setEditPlan(user.plan);
     setEditRol(user.rol);
     setEditActivo(user.activo);
+    setEditPassword('');
+    setEditPasswordConfirm('');
+    setShowPassword(false);
     setEditError('');
     setEditOverridesOpen(false);
     fetchOverrides(user.id);
@@ -182,15 +202,36 @@ export default function AdminUsuariosTab() {
     setEditError('');
 
     try {
+      // Validar contraseña si se quiere cambiar
+      if (editPassword && editPassword.length < 6) {
+        setEditError('La contraseña debe tener al menos 6 caracteres');
+        setEditLoading(false);
+        return;
+      }
+      if (editPassword !== editPasswordConfirm) {
+        setEditError('Las contraseñas no coinciden');
+        setEditLoading(false);
+        return;
+      }
+
       // 1. Guardar datos básicos del usuario
+      const body: Record<string, unknown> = {
+        nombre: editNombre,
+        email: editEmail,
+        plan: editPlan,
+        rol: editRol,
+        activo: editActivo,
+      };
+
+      // Solo enviar password si se especificó una nueva
+      if (editPassword) {
+        body.password = editPassword;
+      }
+
       const res = await fetch(`/api/admin/users/${editingUser.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan: editPlan,
-          rol: editRol,
-          activo: editActivo,
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -220,6 +261,30 @@ export default function AdminUsuariosTab() {
       setEditError('Error de conexión');
     } finally {
       setEditLoading(false);
+    }
+  };
+
+  // ─── Eliminar usuario ──────────────────────────────────────
+  const handleDeleteUser = async () => {
+    if (!editingUser) return;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${editingUser.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEditError(data.error || 'Error al eliminar usuario');
+        setDeleteLoading(false);
+        return;
+      }
+      setShowDeleteConfirm(false);
+      setEditingUser(null);
+      await fetchUsers();
+    } catch {
+      setEditError('Error de conexión');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -406,8 +471,8 @@ export default function AdminUsuariosTab() {
       </Dialog>
 
       {/* ─── Modal Editar Usuario ────────────────────────── */}
-      <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={!!editingUser} onOpenChange={(open) => { if (!open) { setEditingUser(null); setShowDeleteConfirm(false); } }}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar usuario</DialogTitle>
             <DialogDescription>
@@ -415,6 +480,33 @@ export default function AdminUsuariosTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-5">
+            {/* Nombre */}
+            <div className="space-y-2">
+              <Label htmlFor="e-nombre">Nombre</Label>
+              <Input
+                id="e-nombre"
+                value={editNombre}
+                onChange={(e) => setEditNombre(e.target.value)}
+                placeholder="Nombre completo"
+                required
+                minLength={2}
+              />
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="e-email">Email</Label>
+              <Input
+                id="e-email"
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                placeholder="email@consultorio.com"
+                required
+              />
+            </div>
+
+            {/* Plan + Rol */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="e-plan">Plan</Label>
@@ -444,6 +536,7 @@ export default function AdminUsuariosTab() {
               </div>
             </div>
 
+            {/* Activo */}
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
                 <Label htmlFor="e-activo" className="text-sm font-medium cursor-pointer">Usuario activo</Label>
@@ -456,6 +549,62 @@ export default function AdminUsuariosTab() {
                 checked={editActivo}
                 onCheckedChange={setEditActivo}
               />
+            </div>
+
+            {/* ─── Cambiar contraseña ──────────────────────────── */}
+            <div className="rounded-lg border border-primary/10">
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium hover:bg-muted/30 transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <KeyRound className="h-4 w-4 text-muted-foreground" />
+                  Cambiar contraseña
+                </span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${showPassword ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showPassword && (
+                <div className="px-3 pb-3 space-y-3 border-t border-primary/10 pt-3">
+                  <p className="text-xs text-muted-foreground">
+                    Dejá los campos vacíos si no querés cambiar la contraseña.
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="e-password">Nueva contraseña</Label>
+                    <div className="relative">
+                      <Input
+                        id="e-password"
+                        type="password"
+                        value={editPassword}
+                        onChange={(e) => setEditPassword(e.target.value)}
+                        placeholder="Mínimo 6 caracteres"
+                        minLength={6}
+                      />
+                      {editPassword && (
+                        <button
+                          type="button"
+                          onClick={() => setEditPassword('')}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          <EyeOff className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="e-password-confirm">Confirmar nueva contraseña</Label>
+                    <Input
+                      id="e-password-confirm"
+                      type="password"
+                      value={editPasswordConfirm}
+                      onChange={(e) => setEditPasswordConfirm(e.target.value)}
+                      placeholder="Repetí la contraseña"
+                      minLength={6}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ─── Feature Overrides ──────────────────────────── */}
@@ -541,16 +690,50 @@ export default function AdminUsuariosTab() {
               </div>
             )}
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingUser(null)}>
-                Cancelar
+            <DialogFooter className="flex items-center justify-between sm:justify-between gap-2">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="gap-1.5"
+                disabled={editingUser?.id === sessionUserId}
+              >
+                <Trash2 className="h-4 w-4" />
+                Eliminar
               </Button>
-              <Button onClick={handleSaveEdit} disabled={editLoading}>
-                {editLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Guardar cambios
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={() => setEditingUser(null)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveEdit} disabled={editLoading}>
+                  {editLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Guardar cambios
+                </Button>
+              </div>
             </DialogFooter>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Confirmación de eliminación ──────────────────── */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>¿Eliminar usuario?</DialogTitle>
+            <DialogDescription>
+              Esta acción desactivará al usuario <strong>{editingUser?.nombre}</strong> ({editingUser?.email}).
+              No podrá iniciar sesión hasta que un admin lo reactive.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteUser} disabled={deleteLoading}>
+              {deleteLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Sí, eliminar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

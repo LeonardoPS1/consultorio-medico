@@ -3,13 +3,14 @@
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
+import type { TooltipProps } from 'recharts';
 export interface TurnoDia { dia: string; cantidad: number; completados: number; cancelados: number; ausentes: number; }
 
 interface Props {
   data: TurnoDia[];
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
   if (!active || !payload?.length) return null;
   const entry = payload[0]?.payload;
   return (

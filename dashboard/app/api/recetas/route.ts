@@ -16,8 +16,8 @@ const recetasQuerySchema = z.object({
 
 export const GET = apiHandler(async (request: NextRequest) => {
   const session = await auth();
-  const sessionMedicoId = (session?.user as any)?.medicoId;
-  const sessionRol = (session?.user as any)?.role;
+  const sessionMedicoId = session?.user?.medicoId;
+  const sessionRol = session?.user?.role;
   const isMedico = sessionRol === 'medico' && !!sessionMedicoId;
 
   const { estado, limit, offset } = parseQuery(request, recetasQuerySchema);
@@ -54,8 +54,8 @@ export const POST = apiHandler(async (request: NextRequest) => {
   let medicoFinal = medicoId;
   if (!medicoFinal) {
     const session = await auth();
-    const sessionMedicoId = (session?.user as any)?.medicoId;
-    const sessionRol = (session?.user as any)?.role;
+    const sessionMedicoId = session?.user?.medicoId;
+    const sessionRol = session?.user?.role;
     if (sessionRol === 'medico' && sessionMedicoId) {
       medicoFinal = sessionMedicoId;
     } else {

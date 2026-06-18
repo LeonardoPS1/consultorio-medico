@@ -7,7 +7,19 @@ import { Cookie, X } from 'lucide-react';
 
 type ConsentChoice = 'accepted' | 'rejected' | null;
 
-const STORAGE_KEY = 'consultorio_cookie_consent';
+const COOKIE_NAME = 'consultorio_cookie_consent';
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+function setCookie(name: string, value: string, days = 365) {
+  if (typeof document === 'undefined') return;
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
 
 export function CookieConsentBanner() {
   const [consent, setConsent] = useState<ConsentChoice>(null);
@@ -15,7 +27,7 @@ export function CookieConsentBanner() {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = getCookie(COOKIE_NAME);
     if (stored === 'accepted' || stored === 'rejected') {
       setConsent(stored);
       return;
@@ -26,13 +38,13 @@ export function CookieConsentBanner() {
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem(STORAGE_KEY, 'accepted');
+    setCookie(COOKIE_NAME, 'accepted');
     setConsent('accepted');
     setVisible(false);
   };
 
   const handleReject = () => {
-    localStorage.setItem(STORAGE_KEY, 'rejected');
+    setCookie(COOKIE_NAME, 'rejected');
     setConsent('rejected');
     setVisible(false);
   };

@@ -34,8 +34,8 @@ const DEFAULT_STATS_RESPONSE = {
 export async function GET(request: Request) {
   try {
     const session = await auth();
-    const sessionMedicoId = (session?.user as any)?.medicoId;
-    const sessionRol = (session?.user as any)?.role;
+    const sessionMedicoId = session?.user?.medicoId;
+    const sessionRol = session?.user?.role;
     const isMedico = sessionRol === 'medico' && !!sessionMedicoId;
 
     const { searchParams } = new URL(request.url);

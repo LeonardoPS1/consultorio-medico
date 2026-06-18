@@ -20,7 +20,7 @@ const defaultFAQS: FAQItem[] = [
   },
   {
     q: '¿La IA realmente entiende el contexto de mis pacientes?',
-    a: 'Sí. El asistente con Mistral (IA local) se entrena con la información de tu consultorio: horarios, médicos, especialidades, obras sociales aceptadas y más. Cuando un paciente escribe por WhatsApp, la IA entiende el contexto completo: si es paciente nuevo o recurrente, qué médico atiende, y puede agendar, reprogramar o cancelar turnos sin intervención humana.',
+    a: 'Sí. El asistente con Mistral (IA local) se entrena con la información de tu consultorio: horarios, médicos, especialidades, sistemas de salud (FONASA/Isapre) aceptados y más. Cuando un paciente escribe por WhatsApp, la IA entiende el contexto completo: si es paciente nuevo o recurrente, qué médico atiende, y puede agendar, reprogramar o cancelar turnos sin intervención humana.',
   },
   {
     q: '¿Es seguro? ¿Dónde se almacenan los datos médicos?',

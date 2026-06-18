@@ -45,8 +45,8 @@ export const GET = apiHandler(async (request: NextRequest) => {
 
   if (!id) fail('ID de conversación es obligatorio', 400);
 
-  const sessionMedicoId = (session.user as any)?.medicoId;
-  const sessionRol = (session.user as any)?.role;
+  const sessionMedicoId = session.user?.medicoId;
+  const sessionRol = session.user?.role;
   await verifyConversacionAccess(id, sessionMedicoId, sessionRol);
 
   const conversacion = await getConversacionById(id);
@@ -59,8 +59,8 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();
   const id = extractId(request);
 
-  const sessionMedicoId = (session.user as any)?.medicoId;
-  const sessionRol = (session.user as any)?.role;
+  const sessionMedicoId = session.user?.medicoId;
+  const sessionRol = session.user?.role;
   await verifyConversacionAccess(id, sessionMedicoId, sessionRol);
 
   const body = await parseBody(request, conversacionUpdateSchema) as any;

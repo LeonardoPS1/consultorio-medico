@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const sessionMedicoId = (session.user as any)?.medicoId;
-    const sessionRol = (session.user as any)?.role;
+    const sessionMedicoId = session.user?.medicoId;
+    const sessionRol = session.user?.role;
     const isMedico = sessionRol === 'medico' && !!sessionMedicoId;
 
     const { searchParams } = new URL(request.url);

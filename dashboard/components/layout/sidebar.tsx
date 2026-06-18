@@ -53,7 +53,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: 'Panel Principal', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'Asistente IA', href: '/dashboard/onboarding', icon: Rocket, feature: 'ia-assistant' },
+  { title: 'Asistente IA', href: '/dashboard/onboarding', icon: Rocket, feature: 'onboarding' },
   { title: 'Atención', href: '/dashboard/atencion', icon: Activity, feature: 'atencion' },
   { title: 'Telemedicina', href: '/dashboard/telemedicina', icon: Video, feature: 'telemedicina' },
   { title: 'Turnos', href: '/dashboard/turnos', icon: Calendar, feature: 'turnos' },
@@ -112,22 +112,27 @@ export function Sidebar() {
   }, [mobileOpen]);
 
   // ── Badge de progreso onboarding ──────────────────────────
+  // Lee del servidor vía API — única fuente de verdad.
   const [onboardingPending, setOnboardingPending] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('aicoremed_onboarding_completed');
-      const activeStored = localStorage.getItem('aicoremed_onboarding_active_step');
-      if (stored && activeStored) {
-        const completed: string[] = JSON.parse(stored);
-        if (Array.isArray(completed)) {
-          // Mostrar "Continuar" si hay al menos 1 paso completado pero no todos
-          setOnboardingPending(completed.length > 0 && completed.length < 6);
+    const checkProgress = async () => {
+      const totalSteps = 6;
+      try {
+        const res = await fetch('/api/onboarding');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.completedSteps)) {
+            const count = data.completedSteps.length;
+            setOnboardingPending(count > 0 && count < totalSteps);
+          }
         }
+      } catch {
+        // API no disponible — no mostrar badge
+        setOnboardingPending(false);
       }
-    } catch {
-      setOnboardingPending(false);
-    }
+    };
+    checkProgress();
   }, []);
 
   // Prevent body scroll on mobile when sidebar is open

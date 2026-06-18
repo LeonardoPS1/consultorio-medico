@@ -47,8 +47,8 @@ export async function GET(
       );
     }
 
-    const sessionMedicoId = (session.user as any)?.medicoId;
-    const sessionRol = (session.user as any)?.role;
+    const sessionMedicoId = session.user?.medicoId;
+    const sessionRol = session.user?.role;
     await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
 
     const pacienteId = params.id;

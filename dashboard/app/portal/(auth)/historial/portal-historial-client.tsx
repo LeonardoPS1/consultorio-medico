@@ -23,7 +23,7 @@ interface Props {
 
 function formatDate(date: string): string {
   if (!date) return '—';
-  return new Date(date).toLocaleDateString('es-AR', {
+  return new Date(date).toLocaleDateString('es-CL', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

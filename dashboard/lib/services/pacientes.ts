@@ -105,7 +105,7 @@ export const pacientesService = {
         if (input.sistemaSalud === 'particular' || input.obraSocial === 'Particular') return ['Particular'];
         return ['Fonasa'];
       })(),
-      sucursalId: (input as any).sucursalId || null,
+      sucursalId: input.sucursalId ?? null,
     }).returning();
 
     // Evento de registro (fire-and-forget — no bloquea la respuesta)

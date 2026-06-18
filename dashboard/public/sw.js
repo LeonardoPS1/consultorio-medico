@@ -1,11 +1,14 @@
-// AiCoreMed — Service Worker v4
-// - v4: Fix POST/PUT/DELETE no se cachean (request.body consumido causaba 503)
+// AiCoreMed — Service Worker
+// Versión determinada por sw-version.js (auto-generado en cada build)
 // Estrategia: Cache first para assets con hash, Network first para API/navegación
 // Offline: fallback a página offline.html
 
-const CACHE_NAME = 'aicoremed-v4';
-const STATIC_CACHE = 'aicoremed-static-v4';
-const API_CACHE = 'aicoremed-api-v4';
+importScripts('/sw-version.js');
+
+const CACHE_PREFIX = 'aicoremed';
+const CACHE_NAME = `${CACHE_PREFIX}-${SW_VERSION}`;
+const STATIC_CACHE = `${CACHE_PREFIX}-static-${SW_VERSION}`;
+const API_CACHE = `${CACHE_PREFIX}-api-${SW_VERSION}`;
 
 const PRECACHE_URLS = [
   '/offline.html',

@@ -3,6 +3,7 @@
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
+import type { TooltipProps } from 'recharts';
 export interface DistribucionEstado { estado: string; valor: number; color: string; }
 
 interface Props {
@@ -17,7 +18,7 @@ const colorMap: Record<string, string> = {
   'bg-blue-500': '#3b82f6',
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
   if (!active || !payload?.length) return null;
   const entry = payload[0];
   return (

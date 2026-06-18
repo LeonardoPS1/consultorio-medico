@@ -17,8 +17,8 @@ import { privacidadService } from '@/lib/services/privacidad';
 
 export const POST = apiHandler(async (request: NextRequest, { params }) => {
   const session = await requireAuth();
-  const sessionMedicoId = (session.user as any)?.medicoId;
-  const sessionRol = (session.user as any)?.role;
+  const sessionMedicoId = session.user?.medicoId;
+  const sessionRol = session.user?.role;
   await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
 
   const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined;

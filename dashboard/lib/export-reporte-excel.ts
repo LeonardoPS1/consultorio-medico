@@ -19,7 +19,7 @@ export function exportReporteExcel(input: ExcelExportInput): void {
   const wb = XLSX.utils.book_new();
 
   // ─── Hoja 1: Resumen ─────────────────────────────────
-  const resumenRows: any[][] = [
+  const resumenRows: (string | number)[][] = [
     ['Reporte ' + periodoLabel, fecha],
     ['Consultorio Médico — Sistema de Gestión'],
     [],
@@ -51,7 +51,7 @@ export function exportReporteExcel(input: ExcelExportInput): void {
   XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
 
   // ─── Hoja 2: Turnos por día ──────────────────────────
-  const turnosRows: any[][] = [
+  const turnosRows: (string | number)[][] = [
     ['Día', 'Total', 'Completados', 'Cancelados', 'Ausentes'],
     ...datos.turnos.map(t => [t.dia, t.cantidad, t.completados, t.cancelados, t.ausentes]),
   ];
@@ -60,7 +60,7 @@ export function exportReporteExcel(input: ExcelExportInput): void {
   XLSX.utils.book_append_sheet(wb, wsTurnos, 'Turnos');
 
   // ─── Hoja 3: Intenciones ────────────────────────────
-  const intencionesRows: any[][] = [
+  const intencionesRows: (string | number)[][] = [
     ['Intención', 'Cantidad', 'Porcentaje'],
     ...intenciones.map(i => [i.intencion, i.cantidad, `${i.porcentaje}%`]),
   ];
@@ -69,7 +69,7 @@ export function exportReporteExcel(input: ExcelExportInput): void {
   XLSX.utils.book_append_sheet(wb, wsIntenciones, 'Intenciones');
 
   // ─── Hoja 4: Obra Social ─────────────────────────────
-  const osRows: any[][] = [
+  const osRows: (string | number)[][] = [
     ['Obra Social', 'Cantidad'],
     ...pacientesObraSocial.map(p => [p.obra, p.cantidad]),
   ];
@@ -78,7 +78,7 @@ export function exportReporteExcel(input: ExcelExportInput): void {
   XLSX.utils.book_append_sheet(wb, wsOS, 'Obra Social');
 
   // ─── Hoja 5: Canales de Contacto ─────────────────────
-  const canalesRows: any[][] = [
+  const canalesRows: (string | number)[][] = [
     ['Canal', 'Porcentaje'],
     ...datos.canalesContacto.map(c => [c.canal, `${c.porcentaje}%`]),
   ];

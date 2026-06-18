@@ -6,6 +6,7 @@
 import { db } from '@/lib/db';
 import { blacklist, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, like, or } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 import { notFound } from '@/lib/api-handler';
 import type { CreateBlacklistEntry, UpdateBlacklistEntry } from '@/lib/validations';
 
@@ -22,7 +23,7 @@ export const blacklistService = {
   async list(options: ListBlacklistOptions = {}) {
     const { limit = 50, offset = 0, activo, pacienteId, search, includeDeleted = false } = options;
 
-    const condList: any[] = [];
+    const condList: (SQL | undefined)[] = [];
     if (!includeDeleted) condList.push(sql`${blacklist.deletedAt} IS NULL`);
     if (activo !== undefined) condList.push(eq(blacklist.activo, activo));
     if (pacienteId) condList.push(eq(blacklist.pacienteId, pacienteId));
@@ -110,7 +111,7 @@ export const blacklistService = {
       activo: input.activo !== undefined ? input.activo : true,
       bloqueadoHasta: input.bloqueadoHasta ? new Date(input.bloqueadoHasta) : null,
       creadoPor: input.creadoPor || null,
-      sucursalId: (input.sucursalId as any) || null,
+      sucursalId: input.sucursalId ?? null,
     }).returning();
 
     return nueva;

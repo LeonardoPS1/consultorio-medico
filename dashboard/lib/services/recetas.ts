@@ -435,7 +435,7 @@ export function generarExcelRecetas(data: RecetaExportRow[]): Buffer {
   const colWidths = Object.keys(data[0] || {}).map((key) => ({
     wch: Math.max(
       key.length,
-      ...data.map((r) => String((r as any)[key] || '').length),
+      ...data.map((r) => String(r[key as keyof typeof r] ?? '').length),
     ) + 2,
   }));
   ws['!cols'] = colWidths;

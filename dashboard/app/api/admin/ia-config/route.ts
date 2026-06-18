@@ -18,7 +18,7 @@ import { z } from 'zod';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 const DEFAULT_CONFIG: ConfigIa = {
-  prompt: 'Sos el asistente virtual del consultorio médico. Respondés mensajes de WhatsApp de forma amable y profesional en español argentino. Si detectás una urgencia, priorizala y notificá al médico.',
+  prompt: 'Sos el asistente virtual del consultorio médico. Respondés mensajes de WhatsApp de forma amable y profesional en español neutro chileno. Si detectás una urgencia, priorizala y notificá al médico.',
   maxTokens: 300,
   temperatura: 0.3,
 };

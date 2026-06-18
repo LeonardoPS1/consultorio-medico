@@ -47,7 +47,7 @@ const defaultFeatures: FeatureItem[] = [
   {
     icon: Users,
     title: 'Pacientes + Historial Clínico',
-    desc: 'Ficha completa con datos de contacto, obra social, notas médicas e historial clínico con CIE-10. Todo sincronizado y accesible desde cualquier dispositivo.',
+    desc: 'Ficha completa con datos de contacto, sistema de salud (FONASA/Isapre), notas médicas e historial clínico con CIE-10. Todo sincronizado y accesible desde cualquier dispositivo.',
   },
   {
     icon: Video,

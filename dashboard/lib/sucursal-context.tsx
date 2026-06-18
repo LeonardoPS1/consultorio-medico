@@ -76,17 +76,14 @@ export function SucursalProvider({ children }: { children: ReactNode }) {
       if (Array.isArray(data) && data.length > 0) {
         setSucursales(data);
 
-        // Restaurar sucursal activa desde localStorage (prioridad) o cookie
-        const stored = localStorage.getItem(STORAGE_KEY);
+        // Restaurar sucursal activa desde cookie
         const fromCookie = getSucursalCookie();
-        const preferida = stored || fromCookie;
-        const found = preferida ? data.find((s: Sucursal) => s.id === preferida) : null;
+        const found = fromCookie ? data.find((s: Sucursal) => s.id === fromCookie) : null;
 
         const activa = found ? found.id : data[0].id;
         setSucursalIdState(activa);
 
-        // Asegurar consistencia localStorage <> cookie
-        localStorage.setItem(STORAGE_KEY, activa);
+        // Persistir en cookie para server components
         setSucursalCookie(activa);
       } else {
         setSucursales(Array.isArray(data) ? data : []);
@@ -114,10 +111,9 @@ export function SucursalProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('sucursal-cambiada', handler);
   }, []);
 
-  // Setter público: actualiza estado, localStorage, cookie y emite evento
+  // Setter público: actualiza estado, cookie y emite evento
   const setSucursalId = useCallback((id: string) => {
     setSucursalIdState(id);
-    localStorage.setItem(STORAGE_KEY, id);
     setSucursalCookie(id);
     window.dispatchEvent(
       new CustomEvent('sucursal-cambiada', { detail: { sucursalId: id } }),

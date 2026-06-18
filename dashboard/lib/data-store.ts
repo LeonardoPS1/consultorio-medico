@@ -10,6 +10,7 @@ import { db } from '@/lib/db';
 import { safeLog, safeError } from '@/lib/logger';
 import { pacientes, conversaciones, mensajes, usuarios, medicos, tenants } from '@/drizzle/schema';
 import { eq, and, or, like, sql, desc, count, gte, lte, asc, isNull } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 
 // ============================================================
 // Tipos compartidos
@@ -72,9 +73,9 @@ export interface ConversacionData {
   createdAt: string;
   updatedAt: string;
   paciente?: {
-    nombre: string;
-    apellido: string;
-    telefono: string;
+    nombre: string | null;
+    apellido: string | null;
+    telefono: string | null;
   };
   mensajes?: MensajeData[];
 }
@@ -166,7 +167,7 @@ export async function createPaciente(data: Omit<PacienteData, 'id' | 'createdAt'
 export async function getConversaciones(
   options?: { estado?: string; canal?: string; search?: string; limit?: number; offset?: number; medicoId?: string }
 ): Promise<ConversacionData[]> {
-  let query: any = db
+  let query = db
     .select({
       conversacion: conversaciones,
       pacienteNombre: pacientes.nombre,
@@ -175,9 +176,10 @@ export async function getConversaciones(
     })
     .from(conversaciones)
     .leftJoin(pacientes, eq(conversaciones.pacienteId, pacientes.id))
-    .orderBy(desc(conversaciones.ultimaInteraccion));
+    .orderBy(desc(conversaciones.ultimaInteraccion))
+    .$dynamic();
 
-  const conditions: any[] = [];
+  const conditions: (SQL | undefined)[] = [];
   if (options?.estado) {
     conditions.push(eq(conversaciones.estado, options.estado));
   }
@@ -208,7 +210,7 @@ export async function getConversaciones(
     query = query.offset(options.offset);
   }
 
-  const results: any[] = await query;
+  const results = await query;
   return results.map((r) => ({
     id: r.conversacion.id,
     pacienteId: r.conversacion.pacienteId,
@@ -491,7 +493,7 @@ export interface MensajeWithPaciente extends MensajeData {
 export async function getMensajes(
   options: GetMensajesOptions = {}
 ): Promise<{ mensajes: MensajeWithPaciente[]; total: number; porEstado: Record<string, number> }> {
-  const conditions: any[] = [];
+  const conditions: (SQL | undefined)[] = [];
 
   if (options.twilioStatus) {
     conditions.push(eq(mensajes.twilioStatus, options.twilioStatus));

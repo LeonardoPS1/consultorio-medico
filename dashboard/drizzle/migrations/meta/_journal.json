@@ -162,6 +162,13 @@
       "when": 1781500000000,
       "tag": "0033_config_ia",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1781910000000,
+      "tag": "0034_lead_captures",
+      "breakpoints": true
     }
   ]
 }

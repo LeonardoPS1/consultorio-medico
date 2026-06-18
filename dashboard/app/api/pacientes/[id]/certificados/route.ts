@@ -24,8 +24,8 @@ export async function GET(
       );
     }
 
-    const sessionMedicoId = (session.user as any)?.medicoId;
-    const sessionRol = (session.user as any)?.role;
+    const sessionMedicoId = session.user?.medicoId;
+    const sessionRol = session.user?.role;
     await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
 
     const { searchParams } = new URL(_request.url);
@@ -152,7 +152,7 @@ export async function POST(
         { status: 401 },
       );
     }
-    let medicoId = (session.user as any)?.medicoId as string | undefined;
+    let medicoId = session.user?.medicoId as string | undefined;
 
     // Si el usuario no tiene medicoId (ej. admin), buscar el primer médico activo
     if (!medicoId) {

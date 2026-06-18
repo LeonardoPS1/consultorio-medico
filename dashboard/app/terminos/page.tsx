@@ -41,7 +41,7 @@ export default function TerminosPage() {
                 Plataforma 100% segura y conforme a la ley
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                AiCoreMed cumple con la Ley 25.326 de Argentina y la Ley 19.628 de Chile sobre
+                AiCoreMed cumple con la Ley 19.628 de Chile sobre
                 protección de datos personales. Todos los datos de salud se tratan bajo estrictas
                 medidas de seguridad: cifrado AES-256, autenticación con 2FA, IA local sin acceso
                 externo, y backup encriptado diario. Tus pacientes están protegidos.
@@ -185,10 +185,7 @@ export default function TerminosPage() {
               Estos Términos se rigen por las leyes de la República de Chile. Cualquier disputa será resuelta
               ante los tribunales de Santiago de Chile.
             </p>
-            <p className="text-sm mt-2">
-              Para usuarios en Argentina, se aplica la Ley 25.326 de Protección de Datos Personales en lo que
-              corresponda, y el profesional médico se compromete a cumplir con la normativa de su país.
-            </p>
+
           </section>
 
           <section>

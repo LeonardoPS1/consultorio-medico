@@ -13,8 +13,8 @@ import { eq, and, sql } from 'drizzle-orm';
  */
 export const GET = apiHandler(async (_req: NextRequest, { params }) => {
   const session = await auth();
-  const sessionMedicoId = (session?.user as any)?.medicoId;
-  const sessionRol = (session?.user as any)?.role;
+  const sessionMedicoId = session?.user?.medicoId;
+  const sessionRol = session?.user?.role;
 
   const [turno] = await db
     .select({
@@ -57,8 +57,8 @@ export const GET = apiHandler(async (_req: NextRequest, { params }) => {
  */
 export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
   const session = await auth();
-  const sessionMedicoId = (session?.user as any)?.medicoId;
-  const sessionRol = (session?.user as any)?.role;
+  const sessionMedicoId = session?.user?.medicoId;
+  const sessionRol = session?.user?.role;
 
   // Verificar que el turno pertenece al médico (o es admin)
   const [turno] = await db
@@ -78,8 +78,8 @@ export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
 
 export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
   const session = await auth();
-  const sessionMedicoId = (session?.user as any)?.medicoId;
-  const sessionRol = (session?.user as any)?.role;
+  const sessionMedicoId = session?.user?.medicoId;
+  const sessionRol = session?.user?.role;
 
   // Verificar que el turno pertenece al médico (o es admin)
   const [turno] = await db

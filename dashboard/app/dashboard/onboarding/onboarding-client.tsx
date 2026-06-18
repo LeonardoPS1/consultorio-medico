@@ -15,10 +15,6 @@ import {
 import { ONBOARDING_STEPS, FALLBACK_TIPS } from '@/lib/onboarding-types';
 import { useToast } from '@/components/ui/use-toast';
 
-// ─── Claves para localStorage ──────────────────────────────
-const LS_KEY = 'aicoremed_onboarding_completed';
-const LS_ACTIVE_STEP_KEY = 'aicoremed_onboarding_active_step';
-
 // ─── Props ──────────────────────────────────────────────────
 
 interface OnboardingClientProps {
@@ -45,113 +41,36 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart,
   const router = useRouter();
   const { toast } = useToast();
 
-  // ── Inicializar: server state + localStorage backup ─────
-  //
-  // Estrategia:
-  //  - SIEMPRE mergear server state con localStorage, para que el backup
-  //    local no se pierda aunque el PUT al servidor haya fallado.
-  //  - La flag hasManualInteraction (abajo) evita que se muestre la
-  //    pantalla de éxito sin interacción del usuario, incluso si todos
-  //    los pasos aparecen como completados por el merge.
-  //  - En isForceRestart se ignora localStorage (handleReiniciar ya lo
-  //    limpió, pero si no, no queremos datos viejos).
-  //
+  // ── Inicializar: server state como única fuente de verdad ──
+  // No se usa localStorage: toda la persistencia es vía API.
   const [completed, setCompleted] = useState<string[]>(() => {
     if (isForceRestart) return [];
-    const base = [...initialCompleted];
-    try {
-      const stored = localStorage.getItem(LS_KEY);
-      if (stored) {
-        const parsed: string[] = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          for (const step of parsed) {
-            if (typeof step === 'string' && !base.includes(step)) {
-              base.push(step);
-            }
-          }
-        }
-      }
-    } catch { /* ignorar */ }
-    return base;
+    return [...initialCompleted];
   });
 
-  // ── Inicializar activeStep: restaurar de localStorage o abrir primer paso incompleto ──
-  //
-  // Estrategia:
-  //  1. Si es forceRestart → null (no abrir nada)
-  //  2. Si hay un activeStep guardado en localStorage y el paso todavía
-  //     no está completado → restaurarlo (el usuario vuelve donde estaba)
-  //  3. Si no hay activeStep guardado → abrir el primer paso incompleto
-  //     automáticamente para que el usuario vea por dónde seguir
-  //  4. Si todos están completos → null (se mostrará la pantalla de éxito)
-  //
+  // ── Inicializar activeStep: abrir primer paso incompleto ──
+  // No se usa localStorage: el paso activo se pierde al recargar,
+  // y se abre el primer paso incompleto automáticamente.
   const [activeStep, setActiveStep] = useState<string | null>(() => {
     if (isForceRestart) return null;
 
-    // Calcular el set completo de completed (server + localStorage)
-    const baseSteps = [...initialCompleted];
-    try {
-      const stored = localStorage.getItem(LS_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          for (const step of parsed) {
-            if (typeof step === 'string' && !baseSteps.includes(step)) {
-              baseSteps.push(step);
-            }
-          }
-        }
-      }
-    } catch { /* ignorar */ }
-
     // Si todos los pasos están completos, no abrir nada (pantalla de éxito)
-    if (baseSteps.length >= ONBOARDING_STEPS.length) return null;
+    if (initialCompleted.length >= ONBOARDING_STEPS.length) return null;
 
-    // 1. Intentar restaurar activeStep guardado
-    try {
-      const storedActive = localStorage.getItem(LS_ACTIVE_STEP_KEY);
-      if (storedActive) {
-        const parsed = JSON.parse(storedActive);
-        if (typeof parsed === 'string') {
-          const stepExists = ONBOARDING_STEPS.some(s => s.id === parsed);
-          const stepCompleted = baseSteps.includes(parsed);
-          if (stepExists && !stepCompleted) {
-            return parsed;
-          }
-        }
-      }
-    } catch { /* ignorar */ }
-
-    // 2. Abrir el primer paso incompleto (que no esté pendiente)
-    const firstIncomplete = ONBOARDING_STEPS.find(s => !baseSteps.includes(s.id));
+    // Abrir el primer paso incompleto
+    const firstIncomplete = ONBOARDING_STEPS.find(s => !initialCompleted.includes(s.id));
     return firstIncomplete?.id ?? null;
   });
 
-  // ── Helper: persistir activeStep ─────────────────────────
-  const persistActiveStep = useCallback((stepId: string | null) => {
-    if (isForceRestart) return;
-    try {
-      if (stepId) {
-        localStorage.setItem(LS_ACTIVE_STEP_KEY, JSON.stringify(stepId));
-      } else {
-        localStorage.removeItem(LS_ACTIVE_STEP_KEY);
-      }
-    } catch { /* ignorar */ }
-  }, [isForceRestart]);
-
-  // Al montar, si hay progress guardado pero activeStep se restauró como null,
-  // persistirlo para que al recargar se mantenga
-  useEffect(() => {
-    if (activeStep) {
-      persistActiveStep(activeStep);
-    }
-  // Solo al montar
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // ── Helper: persistir activeStep (no-op) ──
+  const persistActiveStep = useCallback((_stepId: string | null) => {
+    // No-op: el estado se maneja solo via API
   }, []);
 
   // ── Flag de interacción manual en esta sesión ────────────
-  // Evita que allLocallyDone (calculado de completed) muestre la
-  // pantalla de éxito si el usuario nunca tocó un botón en esta sesión.
+  // Se usa en showSuccess junto con isComplete para evitar que
+  // datos stale de localStorage muestren la pantalla de éxito
+  // sin que el usuario haya hecho clic en nada en esta sesión.
   const [hasManualInteraction, setHasManualInteraction] = useState(false);
 
   // ── Tips: pre-cargar fallback + actualizar con IA ──────
@@ -165,14 +84,6 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart,
   const [loadingTips, setLoadingTips] = useState<Set<string>>(new Set());
   const [failedTips, setFailedTips] = useState<Set<string>>(new Set());
   const [fallbackTips, setFallbackTips] = useState<Set<string>>(new Set());
-
-  // ── Persistir a localStorage ─────────────────────────────
-
-  const saveToLocalStorage = (steps: string[]) => {
-    try {
-      localStorage.setItem(LS_KEY, JSON.stringify(steps));
-    } catch { /* ignorar */ }
-  };
 
   // ── Cargar tip IA ───────────────────────────────────────
 
@@ -255,31 +166,26 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart,
   const localProgress = Math.round((completed.length / ONBOARDING_STEPS.length) * 100);
 
   // ── ¿Mostrar pantalla de éxito? ──────────────────────────
-  // Solo se basa en el estado mergeado del cliente (server + localStorage).
-  // Si todos los pasos están completados en el estado local, mostramos éxito.
-  // Esto evita el bug donde:
-  //   - isComplete del servidor puede ser false si PUT falló (pero localStorage tiene el backup)
-  //   - hasManualInteraction se resetea en cada reload
-  //   - El usuario completó todo pero al recargar no ve la pantalla de éxito
-  // El único caso donde esto podría ser incorrecto es con localStorage stale de un reinicio,
-  // pero handleReiniciar() limpia localStorage antes de recargar.
-  //
+  // Usa isComplete del servidor como fuente de verdad, combinado con
+  // hasManualInteraction para evitar falsos positivos de localStorage.
   // Si verProgreso=true, NO mostrar la pantalla de éxito aunque todos los pasos
   // estén completos — así el usuario puede ver el detalle de cada paso.
   const [showProgressDetail, setShowProgressDetail] = useState(false);
-  const showSuccess = allLocallyDone && !verProgreso && !showProgressDetail;
+  // Usar hasManualInteraction para evitar mostrar la pantalla de éxito
+  // cuando los datos vienen solo de localStorage (sin interacción real del usuario).
+  // Si isComplete del servidor es true, confiamos en él (es la fuente de verdad).
+  const showSuccess = (isComplete || (allLocallyDone && hasManualInteraction)) && !verProgreso && !showProgressDetail;
 
   // ── Marcar paso como completado (persiste en servidor) ──
 
   /**
-   * Marca un paso como completado con persistencia instantánea.
+   * Marca un paso como completado con persistencia en el servidor.
    *
-   * Estrategia (simplificada, sin race conditions):
-   *  1. Guarda en localStorage SIEMPRE (lee-modifica-escribe directo).
-   *     No depende de variables locales dentro de callbacks de setState.
-   *  2. Actualiza el estado React.
-   *  3. PUT al servidor en background (si falla, ya tenemos backup local).
-   *  4. Auto-avance inteligente: salta pasos ya completados.
+   * Estrategia:
+   *  1. Actualiza el estado React inmediatamente (optimistic UI).
+   *  2. PUT al servidor en background.
+   *  3. Auto-avance inteligente: salta pasos ya completados.
+   *  No usa localStorage: toda la persistencia es vía API.
    */
   const marcarCompletado = async (stepId: string) => {
     // No permitir marcar un paso si el anterior no está completado
@@ -288,28 +194,13 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart,
     // Marcar interacción manual
     setHasManualInteraction(true);
 
-    // ── 1. LocalStorage directo (lee-modifica-escribe) ──
-    // Siempre leer el estado actual de localStorage antes de modificar,
-    // para no perder pasos guardados en otra pestaña o sesión.
-    try {
-      const stored = localStorage.getItem(LS_KEY);
-      const existing: string[] = stored ? JSON.parse(stored) : [];
-      if (!existing.includes(stepId)) {
-        saveToLocalStorage([...existing, stepId]);
-      }
-    } catch {
-      // Si falla JSON.parse o getItem, guardar desde cero
-      const parsed = [stepId];
-      saveToLocalStorage(parsed);
-    }
-
-    // ── 2. Actualizar estado React ──
+    // ── 1. Actualizar estado React (optimistic) ──
     setCompleted((prev) => {
       if (prev.includes(stepId)) return prev;
       return [...prev, stepId];
     });
 
-    // ── 3. PUT al servidor (fire-and-forget) ──
+    // ── 2. PUT al servidor ──
     try {
       const res = await fetch('/api/onboarding', {
         method: 'PUT',
@@ -317,24 +208,23 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart,
         body: JSON.stringify({ stepId }),
       });
       if (!res.ok) {
-        // Error del servidor — mostrar toast
         toast({
-          title: 'Progreso guardado localmente',
-          description: 'No se pudo conectar con el servidor, pero tu progreso está guardado en este navegador.',
-          variant: 'default',
+          title: 'Error al guardar',
+          description: 'No se pudo conectar con el servidor. El progreso se perderá al recargar la página.',
+          variant: 'destructive',
         });
       }
     } catch {
       toast({
-        title: 'Progreso guardado localmente',
-        description: 'No se pudo conectar con el servidor, pero tu progreso está guardado en este navegador.',
-        variant: 'default',
+        title: 'Error al guardar',
+        description: 'No se pudo conectar con el servidor. El progreso se perderá al recargar la página.',
+        variant: 'destructive',
       });
     }
 
-    // ── 4. Auto-avance inteligente ──
+    // ── 3. Auto-avance inteligente ──
     // Buscar el PRÓXIMO step que NO esté completado NI pendiente.
-    // ⚠️ Usar `updatedCompleted` local en vez de `completed` de React,
+    // ⚠️ Usar `updatedCompleted` local en vez de `completed` de React
     //    porque el estado React todavía no refleja el nuevo paso.
     const updatedCompleted = [...completed, stepId];
     const currentIdx = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
@@ -368,41 +258,37 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart,
       if (!isStepPending(candidate.id)) {
         setActiveStep(candidate.id);
         persistActiveStep(candidate.id);
+        // Toast informativo: el paso no se marca como completado
+        toast({
+          title: 'Paso omitido',
+          description: 'Seguirá apareciendo como pendiente hasta que lo marques como completado.',
+          variant: 'default',
+        });
         return;
       }
     }
     // No hay más steps accesibles → colapsar
     setActiveStep(null);
     persistActiveStep(null);
+    toast({
+      title: 'No hay más pasos disponibles',
+      description: 'Completá los pasos pendientes para poder continuar.',
+      variant: 'default',
+    });
   };
 
   // ── Reiniciar ────────────────────────────────────────────
 
   const handleReiniciar = async () => {
-    // Limpiar localStorage para que el reinicio sea completo
-    try { localStorage.removeItem(LS_KEY); } catch { /* ignorar */ }
-    try { localStorage.removeItem(LS_ACTIVE_STEP_KEY); } catch { /* ignorar */ }
-    // Limpiar progreso en servidor para que al volver más tarde no
-    // aparezcan los pasos viejos como completados
+    // Limpiar progreso en servidor
     try {
       await fetch('/api/onboarding', { method: 'DELETE' });
     } catch { /* si falla, igual recargamos */ }
-    // Usar window.location.href en lugar de router.push porque:
-    // router.push a la misma ruta NO desmonta el componente, por lo que
-    // useState no se reinicia y el estado viejo (6 pasos) persiste,
-    // mostrando la pantalla de éxito prematuramente.
-    // window.location.href forza un hard reload que monta todo fresco.
+    // Hard reload para reiniciar useState desde cero
     window.location.href = '/dashboard/onboarding?reiniciar=true';
   };
 
   // ── Pantalla de éxito (todo completado) ─────────────────
-
-  // Limpiar activeStep del localStorage cuando se muestra la pantalla de éxito
-  useEffect(() => {
-    if (showSuccess) {
-      try { localStorage.removeItem(LS_ACTIVE_STEP_KEY); } catch { /* ignorar */ }
-    }
-  }, [showSuccess]);
 
   if (showSuccess) {
     return (
@@ -747,7 +633,7 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart,
                       e.stopPropagation();
                       saltarPaso(step.id);
                     }}
-                    title="Saltar este paso (lo haré después)"
+                    title="Omitir este paso por ahora (sigue pendiente)"
                   >
                     <SkipForward className="h-4 w-4" />
                   </Button>

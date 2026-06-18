@@ -68,7 +68,7 @@ export const pushService = {
       auth: subscription.keys.auth,
       p256dh: subscription.keys.p256dh,
       userAgent: userAgent || null,
-      tenantId: (tenantId as any) || undefined,
+      tenantId: tenantId || undefined,
     });
 
     return { success: true, updated: false };
@@ -181,8 +181,9 @@ export const pushService = {
       await webPush.sendNotification(subscription, pushPayload, {
         TTL: 86400, // 24 horas
       });
-    } catch (error: any) {
-      if (error.statusCode === 410 || error.statusCode === 404) {
+    } catch (error: unknown) {
+      const wpError = error as { statusCode?: number; message?: string };
+      if (wpError.statusCode === 410 || wpError.statusCode === 404) {
         // Endpoint expirado, lo limpiamos
         await this.eliminarEndpoint(sub.endpoint);
       }

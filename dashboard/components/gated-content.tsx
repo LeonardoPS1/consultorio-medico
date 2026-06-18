@@ -19,7 +19,7 @@ const ROUTE_FEATURE_MAP: Record<string, FeatureId> = {
   '/dashboard/reportes': 'reportes',
   '/dashboard/encuestas': 'encuestas',
   '/dashboard/lista-espera': 'lista-espera',
-  '/dashboard/onboarding': 'ia-assistant',
+  '/dashboard/onboarding': 'onboarding',
   '/dashboard/admin/tenants': 'multi-sucursal',
   '/dashboard/admin/auditoria': 'auditoria',
   '/dashboard/admin/sucursales': 'multi-sucursal',

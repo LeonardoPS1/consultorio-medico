@@ -29,8 +29,8 @@ const registrarConsentimientoSchema = z.object({
  */
 export const POST = apiHandler(async (request: NextRequest, { params }) => {
   const session = await requireAuth();
-  const sessionMedicoId = (session.user as any)?.medicoId;
-  const sessionRol = (session.user as any)?.role;
+  const sessionMedicoId = session.user?.medicoId;
+  const sessionRol = session.user?.role;
   await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
 
   const body = await parseBody(request, registrarConsentimientoSchema);
@@ -76,8 +76,8 @@ export const POST = apiHandler(async (request: NextRequest, { params }) => {
  */
 export const GET = apiHandler(async (_request: NextRequest, { params }) => {
   const session = await requireAuth();
-  const sessionMedicoId = (session.user as any)?.medicoId;
-  const sessionRol = (session.user as any)?.role;
+  const sessionMedicoId = session.user?.medicoId;
+  const sessionRol = session.user?.role;
   await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
 
   const historial = await privacidadService.getHistorialConsentimiento(params.id);

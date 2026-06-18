@@ -1,5 +1,6 @@
 /**
- * PATCH /api/admin/users/[id] — Actualizar plan, rol, o activo de un usuario
+ * PATCH /api/admin/users/[id] — Actualizar datos de un usuario
+ * DELETE /api/admin/users/[id] — Eliminar (desactivar) un usuario
  *
  * Admin only — requiere sesión con rol admin
  */
@@ -12,6 +13,7 @@ import { db } from '@/lib/db';
 import { usuarios } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { hash } from 'bcryptjs';
 
 export const PATCH = apiHandler(async (
   request: NextRequest,
@@ -35,7 +37,7 @@ export const PATCH = apiHandler(async (
   const tenantId = adminUser[0]?.tenantId;
 
   const [targetUser] = await db
-    .select({ id: usuarios.id, tenantId: usuarios.tenantId })
+    .select({ id: usuarios.id, tenantId: usuarios.tenantId, email: usuarios.email })
     .from(usuarios)
     .where(eq(usuarios.id, id))
     .limit(1);
@@ -51,6 +53,28 @@ export const PATCH = apiHandler(async (
   }
 
   const updateData: Record<string, unknown> = { updatedAt: new Date() };
+
+  if (body.nombre !== undefined) {
+    updateData.nombre = body.nombre.trim();
+  }
+
+  if (body.email !== undefined) {
+    const normalizedEmail = body.email.toLowerCase().trim();
+    // Verificar que el email no esté en uso por otro usuario
+    const [existingEmail] = await db
+      .select({ id: usuarios.id })
+      .from(usuarios)
+      .where(eq(usuarios.email, normalizedEmail))
+      .limit(1);
+    if (existingEmail && existingEmail.id !== id) {
+      fail('Este email ya está registrado por otro usuario');
+    }
+    updateData.email = normalizedEmail;
+  }
+
+  if (body.password !== undefined && body.password !== '') {
+    updateData.passwordHash = await hash(body.password, 10);
+  }
 
   if (body.rol !== undefined) {
     updateData.rol = body.rol;
@@ -89,4 +113,55 @@ export const PATCH = apiHandler(async (
     .limit(1);
 
   return success({ user: updated });
+});
+
+/**
+ * DELETE /api/admin/users/[id] — Desactivar un usuario (soft delete).
+ * No se permite eliminar al propio admin.
+ */
+export const DELETE = apiHandler(async (
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) => {
+  const session = await requireAuth();
+  if (session.user.role !== 'admin') fail('No autorizado', 403);
+
+  const { id } = await params;
+
+  // No permitir eliminarse a sí mismo
+  if (id === session.user.id) {
+    fail('No puedes eliminar tu propio usuario');
+  }
+
+  // Verificar que el usuario existe y pertenece al mismo tenant
+  const adminUser = await db
+    .select({ tenantId: usuarios.tenantId })
+    .from(usuarios)
+    .where(eq(usuarios.id, session.user.id))
+    .limit(1);
+  const tenantId = adminUser[0]?.tenantId;
+
+  const [targetUser] = await db
+    .select({ id: usuarios.id, tenantId: usuarios.tenantId })
+    .from(usuarios)
+    .where(eq(usuarios.id, id))
+    .limit(1);
+
+  if (!targetUser) notFound('Usuario no encontrado');
+
+  if (tenantId && tenantId !== '00000000-0000-0000-0000-000000000000') {
+    if (targetUser.tenantId !== tenantId) fail('No autorizado — usuario de otro tenant', 403);
+  }
+
+  // Soft delete: desactivar + marcar deletedAt
+  await db
+    .update(usuarios)
+    .set({
+      activo: false,
+      deletedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(usuarios.id, id));
+
+  return success({ success: true, message: 'Usuario desactivado correctamente' });
 });

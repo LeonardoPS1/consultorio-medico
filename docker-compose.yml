@@ -31,6 +31,8 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:6432/consultorio_medico
+      # Conexión directa a PostgreSQL (para migraciones DDL que no pasan por PgBouncer)
+      - DATABASE_URL_DIRECT=postgresql://postgres:postgres@postgres:5432/consultorio_medico
       # PgBouncer monitorea la conexión a PostgreSQL, reduce overhead y permite
       # escalar horizontalmente sin agotar max_connections de PG.
       # 🔴 OBLIGATORIO en producción: generar con `openssl rand -base64 32`

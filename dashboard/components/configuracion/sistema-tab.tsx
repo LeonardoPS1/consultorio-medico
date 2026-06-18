@@ -647,7 +647,7 @@ function PrivacidadConfigSection() {
 function IaConfigSection({ toggles, handleToggle }: { toggles: Record<string, boolean>; handleToggle: (id: string, checked: boolean) => void }) {
   const { toast } = useToast();
   const [config, setConfig] = useState<{ prompt: string; maxTokens: number; temperatura: number }>({
-    prompt: 'Sos el asistente virtual del consultorio médico. Respondés mensajes de WhatsApp de forma amable y profesional en español argentino. Si detectás una urgencia, priorizala y notificá al médico.',
+    prompt: 'Sos el asistente virtual del consultorio médico. Respondés mensajes de WhatsApp de forma amable y profesional en español neutro chileno. Si detectás una urgencia, priorizala y notificá al médico.',
     maxTokens: 300,
     temperatura: 0.3,
   });

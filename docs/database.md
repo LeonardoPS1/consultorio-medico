@@ -290,7 +290,7 @@ Todas las claves primarias usan UUID v4 generados con `gen_random_uuid()`.
 
 ### Timestamps con Zona Horaria
 Todos los timestamps usan `TIMESTAMPTZ` para manejar correctamente husos horarios.
-Zona por defecto: `America/Argentina/Buenos_Aires`.
+Zona por defecto: `America/Santiago`.
 
 ### JSONB para Datos Variables
 Campos como `metadata`, `contexto_ia`, `horarios` usan JSONB para flexibilidad sin modificar el esquema.

@@ -178,7 +178,7 @@ export const SERVICIOS_CONFIG: ServicioCredenciales[] = [
     descripcion: 'Número de WhatsApp personal para recibir alertas de urgencia',
     icon: 'phone',
     campos: [
-      { clave: 'whatsapp', etiqueta: 'WhatsApp', tipo: 'text', requerido: true, placeholder: '+5491155550000' },
+      { clave: 'whatsapp', etiqueta: 'WhatsApp', tipo: 'text', requerido: true, placeholder: '+56955550000' },
       { clave: 'email', etiqueta: 'Email', tipo: 'text', requerido: false, placeholder: 'medico@consultorio.com' },
     ],
     n8nSync: false,

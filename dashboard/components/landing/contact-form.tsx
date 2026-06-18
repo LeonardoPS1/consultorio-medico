@@ -28,6 +28,7 @@ export function ContactForm() {
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -54,8 +55,29 @@ export function ContactForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate submission
-    await new Promise((r) => setTimeout(r, 1500));
+    setError('');
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone || undefined,
+          specialty: form.specialty || undefined,
+          size: form.size || undefined,
+          interests: form.interests,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Error al enviar');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error de conexión');
+      setLoading(false);
+      return;
+    }
     setLoading(false);
     setSubmitted(true);
   };
@@ -272,6 +294,9 @@ export function ContactForm() {
                     </Button>
                   )}
                 </div>
+                {error && (
+                  <p className="text-xs text-destructive text-center">{error}</p>
+                )}
               </form>
             ) : (
               <motion.div

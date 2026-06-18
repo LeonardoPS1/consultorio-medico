@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
+import type { TooltipProps } from 'recharts';
 
 interface EvolucionData {
   mes: string;
@@ -21,7 +22,7 @@ interface Props {
   data: EvolucionData[];
 }
 
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null;
   const item = payload[0].payload;
   return (

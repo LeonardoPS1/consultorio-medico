@@ -3,9 +3,22 @@
 import { useEffect, useState, useCallback } from 'react';
 import { X, Download, Smartphone } from 'lucide-react';
 
-const LS_INSTALLED = 'pwa_installed';
-const LS_DISMISSED = 'pwa_dismissed';
-const LS_LAST_VERSION = 'pwa_last_changelog_version';
+// Cookies en vez de localStorage — la app es de internet, no offline-first.
+// Las cookies se envían con cada request y persisten entre sesiones.
+const COOKIE_INSTALLED = 'pwa_installed';
+const COOKIE_DISMISSED = 'pwa_dismissed';
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+function setCookie(name: string, value: string, days = 365) {
+  if (typeof document === 'undefined') return;
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
 
 /**
  * Banner de instalación PWA.
@@ -13,8 +26,8 @@ const LS_LAST_VERSION = 'pwa_last_changelog_version';
  *
  * Condiciones para NO mostrar:
  *  - Ya está instalada (display-mode: standalone / iOS standalone)
- *  - Ya se instaló anteriormente (localStorage)
- *  - El usuario la descartó (localStorage)
+ *  - Ya se instaló anteriormente (cookie)
+ *  - El usuario la descartó (cookie)
  */
 export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
@@ -30,8 +43,8 @@ export function PWAInstallPrompt() {
         (window.navigator as Navigator & { standalone?: boolean }).standalone === true);
 
     if (isStandalone) return false;
-    if (localStorage.getItem(LS_INSTALLED) === 'true') return false;
-    if (localStorage.getItem(LS_DISMISSED) === 'true') return false;
+    if (getCookie(COOKIE_INSTALLED) === 'true') return false;
+    if (getCookie(COOKIE_DISMISSED) === 'true') return false;
 
     return true;
   }, []);
@@ -45,14 +58,14 @@ export function PWAInstallPrompt() {
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       setDeferredPrompt(null);
-      localStorage.setItem(LS_INSTALLED, 'true');
+      setCookie(COOKIE_INSTALLED, 'true');
     }
     setInstalling(false);
   }, [deferredPrompt]);
 
   const handleDismiss = useCallback(() => {
     setDeferredPrompt(null);
-    localStorage.setItem(LS_DISMISSED, 'true');
+    setCookie(COOKIE_DISMISSED, 'true');
   }, []);
 
   useEffect(() => {
@@ -65,7 +78,7 @@ export function PWAInstallPrompt() {
 
     const handleInstalled = () => {
       setDeferredPrompt(null);
-      localStorage.setItem(LS_INSTALLED, 'true');
+      setCookie(COOKIE_INSTALLED, 'true');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);

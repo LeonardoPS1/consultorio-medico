@@ -93,7 +93,7 @@ export function MedicosSection({ plan }: Props) {
     setSucursalId('');
   }; 
 
-  const openEdit = (m: Medico & { horarios?: any; sucursal_id?: string }) => {
+  const openEdit = (m: Medico & { horarios?: Record<string, unknown>; sucursal_id?: string }) => {
     setEditMedico(m);
     setNombre(m.nombre);
     setEspecialidad(m.especialidad);
@@ -101,7 +101,7 @@ export function MedicosSection({ plan }: Props) {
     setWhatsapp(m.whatsapp || '');
     setEmail(m.email || '');
     setDuracion(m.duracionTurnoMinutos);
-    setSucursalId((m as any).sucursal_id || '');
+    setSucursalId(m.sucursal_id ?? '');
     // Cargar horarios si existen, sino defaults
     if (m.horarios && typeof m.horarios === 'object' && Object.keys(m.horarios).length > 0) {
       const merged = { ...DEFAULT_HORARIOS };
@@ -233,7 +233,7 @@ export function MedicosSection({ plan }: Props) {
               </div>
               <div className="space-y-1">
                 <Label>WhatsApp</Label>
-                <Input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="+54911..." />
+                <Input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="+569..." />
               </div>
             </div>
             <div className="space-y-1">

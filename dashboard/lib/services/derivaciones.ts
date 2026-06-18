@@ -6,6 +6,7 @@
 import { db } from '@/lib/db';
 import { derivaciones, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, like, or } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 import { notFound } from '@/lib/api-handler';
 import type { CreateDerivacion, UpdateDerivacion } from '@/lib/validations';
 
@@ -23,7 +24,7 @@ export const derivacionesService = {
   async list(options: ListDerivacionesOptions = {}) {
     const { limit = 50, offset = 0, estado, pacienteId, medicoId, search, includeDeleted = false } = options;
 
-    const condList: any[] = [];
+    const condList: (SQL | undefined)[] = [];
     if (!includeDeleted) condList.push(sql`${derivaciones.deletedAt} IS NULL`);
     if (estado) condList.push(eq(derivaciones.estado, estado));
     if (pacienteId) condList.push(eq(derivaciones.pacienteId, pacienteId));
@@ -162,9 +163,9 @@ export const derivacionesService = {
       motivo: input.motivo,
       diagnostico: input.diagnostico || null,
       cie10Codigo: input.cie10Codigo || null,
-      gravedad: (input.gravedad as any) || 'normal',
+      gravedad: input.gravedad ?? 'normal',
       notasOrigen: input.notasOrigen || null,
-      sucursalId: (input.sucursalId as any) || null,
+      sucursalId: input.sucursalId ?? null,
     }).returning();
 
     // Notificar al médico destino via sistema de notificaciones (si hay destino)

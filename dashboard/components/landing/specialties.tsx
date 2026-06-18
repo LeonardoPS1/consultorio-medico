@@ -15,7 +15,7 @@ const SPECIALTIES = [
     benefits: [
       'Direccionamiento inteligente al especialista (Cardiólogo, Pediatra, etc.)',
       'Redistribución automática de turnos liberados de última hora',
-      'Respuestas inmediatas sobre obras sociales y convenios',
+      'Respuestas inmediatas sobre sistemas de salud (FONASA/Isapre) y convenios',
       'Recordatorios multicanal (WhatsApp + llamada IA)',
     ],
     caseUse: {

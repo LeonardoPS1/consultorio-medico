@@ -9,8 +9,8 @@ import { z } from 'zod';
 
 async function requireMedicoAccess(medicoId: string) {
   const session = await requireAuth();
-  const sessionMedicoId = (session.user as any)?.medicoId;
-  const sessionRol = (session.user as any)?.role;
+  const sessionMedicoId = session.user?.medicoId;
+  const sessionRol = session.user?.role;
   if (sessionRol === 'admin') return;
   if (sessionMedicoId !== medicoId) fail('No autorizado', 403);
 }

@@ -8,6 +8,7 @@ declare module 'next-auth' {
       role?: string;
       plan?: string;
       medicoId?: string;
+      tenantId?: string;
     } & DefaultSession['user'];
   }
 
@@ -15,6 +16,7 @@ declare module 'next-auth' {
     role?: string;
     plan?: string;
     medicoId?: string;
+    tenantId?: string;
   }
 }
 
@@ -24,5 +26,6 @@ declare module 'next-auth/jwt' {
     id?: string;
     plan?: string;
     medicoId?: string;
+    tenantId?: string;
   }
 }

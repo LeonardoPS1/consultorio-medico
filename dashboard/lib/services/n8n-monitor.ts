@@ -77,7 +77,7 @@ export async function logWorkflowExecution(input: {
     executionId: input.executionId,
     nivel: input.nivel,
     mensaje: input.mensaje,
-    metadata: (input.metadata as any) ?? {},
+    metadata: input.metadata ?? {},
   }).returning({ id: workflowLogs.id });
   return result;
 }

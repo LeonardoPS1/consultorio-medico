@@ -5,6 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 import { sql, desc, eq, and } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { safeError } from '@/lib/logger';
 import { auditoriaAccesos } from '@/drizzle/schema';
@@ -138,7 +139,7 @@ export async function getAuditLogs(options?: {
 
   // Intentar desde PostgreSQL
   try {
-    const conditions: any[] = [];
+    const conditions: (SQL | undefined)[] = [];
     if (options?.entidad) conditions.push(eq(auditoriaAccesos.entidad, options.entidad));
     if (options?.accion) conditions.push(eq(auditoriaAccesos.accion, options.accion));
     if (options?.usuarioId) conditions.push(eq(auditoriaAccesos.usuarioId, options.usuarioId));

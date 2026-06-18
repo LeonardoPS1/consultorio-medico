@@ -18,8 +18,8 @@ import { buildGCalPayload } from '@/lib/google-calendar-sync';
 
 export const GET = apiHandler(async (request: NextRequest) => {
   const session = await auth();
-  const sessionMedicoId = (session?.user as any)?.medicoId;
-  const sessionRol = (session?.user as any)?.role;
+  const sessionMedicoId = session?.user?.medicoId;
+  const sessionRol = session?.user?.role;
 
   const { searchParams } = new URL(request.url);
   const fechaStr = searchParams.get('fecha') || undefined;

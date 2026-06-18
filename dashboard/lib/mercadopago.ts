@@ -27,7 +27,7 @@ export interface CreatePreferenceResult {
 
 /**
  * Crea una preferencia de pago en MercadoPago.
- * La moneda se configura via MERCADOPAGO_CURRENCY (default ARS para Argentina).
+ * La moneda se configura via MERCADOPAGO_CURRENCY (default CLP para Chile).
  */
 export async function createCheckoutPreference(
   planId: string,

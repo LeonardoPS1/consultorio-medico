@@ -459,7 +459,7 @@ consultorio-medico/
 | Número Doctor | `+18453735358` (actualmente mismo, configurable vía `TWILIO_DOCTOR_NUMBER`) |
 | SMS URL | `https://med.aicorebots.com/api/webhooks/twilio` |
 | Status Callback | `https://med.aicorebots.com/api/webhooks/twilio` |
-| Soportados | Chile (+56) — principal, Argentina (+54) — legacy |
+| Soportados | Chile (+56) |
 | Verificación | HMAC-SHA256 via `validateRequest()` de twilio SDK |
 
 ### PostgreSQL
@@ -479,7 +479,7 @@ consultorio-medico/
 ### MercadoPago (Sandbox)
 - 5 planes de suscripción (Free, Starter, Professional, Business, Enterprise)
 - Webhook con validación HMAC-SHA256 (`x-signature`)
-- Moneda: CLP (Chile) por defecto, compatible con ARS/USD legacy
+- Moneda: CLP (Chile)
 - Flujo: checkout → preferencia → webhook → actualiza plan del usuario
 
 ### n8n

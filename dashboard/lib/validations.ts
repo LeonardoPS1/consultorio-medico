@@ -30,9 +30,9 @@ export async function parseBody<T extends z.ZodType>(request: NextRequest, schem
 }
 
 /** Parsea query params y valida con el schema */
-export function parseQuery(request: NextRequest, schema: z.ZodType): Record<string, any> {
+export function parseQuery<T extends z.ZodType>(request: NextRequest, schema: T): z.infer<T> {
   const { searchParams } = new URL(request.url);
-  const params: Record<string, any> = {};
+  const params: Record<string, string> = {};
   searchParams.forEach((value, key) => { params[key] = value; });
   const result = schema.safeParse(params);
   if (!result.success) {
@@ -479,4 +479,18 @@ export type CreateUser = z.infer<typeof createUserSchema>;
 export type CreateDerivacion = z.infer<typeof createDerivacionSchema>;
 export type UpdateDerivacion = z.infer<typeof updateDerivacionSchema>;
 export type UpdateUser = z.infer<typeof updateUserSchema>;
+
+// ─── Contact Form ─────────────────────────────────────────
+const PHONE_REGEX = /^\+?[1-9]\d{6,14}$/;
+
+export const contactFormSchema = z.object({
+  name: z.string().min(2, 'Mínimo 2 caracteres').max(255),
+  email: z.string().email('Email inválido').max(255),
+  phone: z.string().regex(PHONE_REGEX, 'Teléfono inválido').optional().or(z.literal('')),
+  specialty: z.string().max(100).optional().or(z.literal('')),
+  size: z.string().max(50).optional().or(z.literal('')),
+  interests: z.array(z.string()).optional().default([]),
+});
+
+export type ContactFormData = z.infer<typeof contactFormSchema>;
 // Tipos ya definidos arriba junto a los schemas

@@ -14,14 +14,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { safeError } from '@/lib/logger';
 
-export function apiHandler(fn: (...args: any[]) => any): (...args: any[]) => any {
+export function apiHandler(fn: (...args: any[]) => Promise<NextResponse> | NextResponse) {
   return async (...args: any[]) => {
     const request = args[0] as NextRequest;
     try {
       return await fn(...args);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error interno del servidor';
-      const status = (error as any)?.status || 500;
+      const status = error instanceof HttpError ? error.status : 500;
       safeError(`[API] ${request.method} ${request.nextUrl.pathname}:`, { error: message });
       // Mostrar el error real siempre para facilitar debugging
       // En producción se puede ocultar después de diagnosticar
@@ -48,11 +48,19 @@ export function ok<T>(body: T, status = 200) {
   return NextResponse.json(body, { status });
 }
 
+/** Error HTTP con código de estado */
+export class HttpError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+    this.name = 'HttpError';
+  }
+}
+
 /** Respuesta de error con mensaje personalizado */
 export function fail(message: string, status = 400): never {
-  const err = new Error(message);
-  (err as any).status = status;
-  throw err;
+  throw new HttpError(message, status);
 }
 
 /** Respuesta 201 Created (wrappeado en { data } para compatibilidad con clientes) */
@@ -62,14 +70,10 @@ export function created<T>(data: T) {
 
 /** Respuesta 404 Not Found */
 export function notFound(message = 'Recurso no encontrado'): never {
-  const err = new Error(message);
-  (err as any).status = 404;
-  throw err;
+  throw new HttpError(message, 404);
 }
 
 /** Respuesta 409 Conflict */
 export function conflict(message: string): never {
-  const err = new Error(message);
-  (err as any).status = 409;
-  throw err;
+  throw new HttpError(message, 409);
 }

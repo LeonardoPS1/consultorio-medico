@@ -39,8 +39,8 @@ async function verifyPacienteAccess(pacienteId: string, medicoId: string | undef
 
 export const GET = apiHandler(async (_req: NextRequest, { params }) => {
   const session = await auth();
-  const sessionMedicoId = (session?.user as any)?.medicoId;
-  const sessionRol = (session?.user as any)?.role;
+  const sessionMedicoId = session?.user?.medicoId;
+  const sessionRol = session?.user?.role;
 
   await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
 
@@ -66,8 +66,8 @@ export const GET = apiHandler(async (_req: NextRequest, { params }) => {
 
 export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
   const session = await auth();
-  const sessionMedicoId = (session?.user as any)?.medicoId;
-  const sessionRol = (session?.user as any)?.role;
+  const sessionMedicoId = session?.user?.medicoId;
+  const sessionRol = session?.user?.role;
 
   await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
 
@@ -78,8 +78,8 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
 
 export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
   const session = await auth();
-  const sessionMedicoId = (session?.user as any)?.medicoId;
-  const sessionRol = (session?.user as any)?.role;
+  const sessionMedicoId = session?.user?.medicoId;
+  const sessionRol = session?.user?.role;
 
   await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
 

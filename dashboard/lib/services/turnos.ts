@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { safeError, safeLog } from '@/lib/logger';
 import { turnos, pacientes, medicos, bloqueosAgenda, ofertasTurno } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, gte, lt } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 import type { CreateTurno, UpdateTurno } from '@/lib/validations';
 import { conflict, notFound, fail } from '@/lib/api-handler';
 import { buildGCalPayload, syncTurnoToGCal } from '@/lib/google-calendar-sync';
@@ -13,7 +14,7 @@ export const turnosService = {
   async list(fechaStr?: string, estado?: string, medico?: string, tipo?: string, search?: string, limit = 100, offset = 0, sucursalId?: string, medicoId?: string, fechaDesde?: string, fechaHasta?: string) {
     const cacheKey = `turnos:list:${fechaStr ?? fechaDesde ?? fechaHasta ?? '*'}:${estado ?? ''}:${medico ?? ''}:${tipo ?? ''}:${search ?? ''}:${limit}:${offset}:${sucursalId ?? ''}:${medicoId ?? ''}`;
     return cache.getOrSet(cacheKey, async () => {
-      let fechaConditions: any[] = [];
+      let fechaConditions: (SQL | undefined)[] = [];
       if (fechaDesde && fechaHasta) {
         fechaConditions = [
           sql`${turnos.fechaHora} >= ${fechaDesde + 'T00:00:00.000Z'}::timestamptz`,
@@ -131,7 +132,7 @@ export const turnosService = {
        pacienteId: input.pacienteId, medicoId: input.medicoId, fechaHora,
        duracionMinutos: input.duracionMinutos, motivo: input.motivo || null,
        tipoConsulta: input.tipoConsulta, estado: 'pendiente', fuente: 'web',
-       sucursalId: (input as any).sucursalId || null,
+        sucursalId: input.sucursalId ?? null,
      }).returning();
 
      // Disparar sync a Google Calendar (fire-and-forget)
@@ -207,8 +208,7 @@ export const turnosService = {
 
       // Disparar sync a Google Calendar si hubo cambios relevantes (fire-and-forget)
       try {
-        const camposRelevantes = ['fecha', 'hora', 'estado'];
-        const hayCambiosRelevantes = camposRelevantes.some(campo => (input as any)[campo] !== undefined);
+        const hayCambiosRelevantes = input.fecha !== undefined || input.hora !== undefined || input.estado !== undefined;
       
         if (hayCambiosRelevantes) {
           const [paciente] = await db

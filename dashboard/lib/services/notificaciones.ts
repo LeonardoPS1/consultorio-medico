@@ -89,8 +89,8 @@ export const notificacionesService = {
         descripcion: input.descripcion || null,
         tipo: input.tipo || 'sistema',
         href: input.href || null,
-        metadata: (input.metadata as any) || {},
-        tenantId: (input.tenantId as any) || undefined,
+        metadata: input.metadata ?? {},
+        tenantId: input.tenantId ?? undefined,
       })
       .returning();
 

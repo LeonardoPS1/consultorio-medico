@@ -9,8 +9,8 @@ import { parseBody, updateRecetaSchema } from '@/lib/validations';
 
 export const GET = apiHandler(async (request: NextRequest, { params }: { params: { id: string } }) => {
   const session = await requireAuth();
-  const sessionMedicoId = (session?.user as any)?.medicoId;
-  const sessionRol = (session?.user as any)?.role;
+  const sessionMedicoId = session?.user?.medicoId;
+  const sessionRol = session?.user?.role;
 
   const receta = await recetasService.obtener(params.id);
 
@@ -27,8 +27,8 @@ export const GET = apiHandler(async (request: NextRequest, { params }: { params:
 
 export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: { id: string } }) => {
   const session = await requireAuth();
-  const sessionMedicoId = (session?.user as any)?.medicoId;
-  const sessionRol = (session?.user as any)?.role;
+  const sessionMedicoId = session?.user?.medicoId;
+  const sessionRol = session?.user?.role;
 
   const body = await parseBody(request, updateRecetaSchema);
 
@@ -53,8 +53,8 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }: { param
 
 export const DELETE = apiHandler(async (_request: NextRequest, { params }: { params: { id: string } }) => {
   const session = await requireAuth();
-  const sessionMedicoId = (session?.user as any)?.medicoId;
-  const sessionRol = (session?.user as any)?.role;
+  const sessionMedicoId = session?.user?.medicoId;
+  const sessionRol = session?.user?.role;
 
   const existente = await db
     .select({ id: recetas.id, medicoId: recetas.medicoId })

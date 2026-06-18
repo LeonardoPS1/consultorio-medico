@@ -8,7 +8,7 @@ import { pushSubscriptionSchema } from '@/lib/validations';
 // GET /api/notificaciones/push?action=public-key
 export const GET = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();
-  const userId = session.user.id as string;
+  const userId = session.user.id;
 
   const action = request.nextUrl.searchParams.get('action');
 
@@ -40,7 +40,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
 // Body: { action: 'subscribe' | 'unsubscribe' | 'unsubscribe-all' | 'send', ... }
 export const POST = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();
-  const userId = session.user.id as string;
+  const userId = session.user.id;
 
   const body = await request.json();
   const { action } = body;
@@ -58,7 +58,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
         userId,
         subscription,
         userAgent || request.headers.get('user-agent') || undefined,
-        (session.user as any).tenantId,
+        session.user?.tenantId,
       );
 
       return NextResponse.json(result);

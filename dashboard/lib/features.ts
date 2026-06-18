@@ -52,7 +52,8 @@ export type FeatureId =
   | 'alertas-inteligentes'
   | 'blacklist'
   | 'consentimiento-informado'
-  | 'telemedicina';
+  | 'telemedicina'
+  | 'onboarding';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -98,6 +99,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'blacklist': 'professional',
   'consentimiento-informado': 'professional',
   'telemedicina': 'professional',
+  'onboarding': 'free',
 };
 
 // ============================================================

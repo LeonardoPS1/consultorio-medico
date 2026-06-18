@@ -2,7 +2,20 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 
-const LS_CHANGELOG_SEEN = 'pwa_last_changelog_version';
+// Cookie en vez de localStorage — persiste entre sesiones y se envía al servidor.
+const COOKIE_CHANGELOG_SEEN = 'pwa_last_changelog_version';
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+function setCookie(name: string, value: string, days = 365) {
+  if (typeof document === 'undefined') return;
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
 
 // ============================================================
 // Tipos
@@ -59,14 +72,14 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
 
   // ─── Changelog tracking por versión ──────────────────────
   useEffect(() => {
-    const lastSeen = localStorage.getItem(LS_CHANGELOG_SEEN);
+    const lastSeen = getCookie(COOKIE_CHANGELOG_SEEN);
     if (lastSeen !== appVersion) {
       setHasUnseenChangelog(true);
     }
   }, [appVersion]);
 
   const markChangelogSeen = useCallback(() => {
-    localStorage.setItem(LS_CHANGELOG_SEEN, appVersion);
+    setCookie(COOKIE_CHANGELOG_SEEN, appVersion);
     setHasUnseenChangelog(false);
   }, [appVersion]);
 

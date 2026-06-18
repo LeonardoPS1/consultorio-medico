@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
-    "build": "next build",
-    "build:standalone": "next build",
+    "dev": "node scripts/generate-sw-version.mjs && next dev --port 3000",
+    "build": "next build && node scripts/generate-sw-version.mjs",
+    "build:standalone": "next build && node scripts/generate-sw-version.mjs",
     "analyze": "ANALYZE=true next build",
     "start": "node .next/standalone/server.js",
     "start:dev": "next start --port 3000",

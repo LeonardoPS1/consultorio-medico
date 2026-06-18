@@ -665,7 +665,7 @@ export const tenants = pgTable('tenants', {
   featuresEnabled: jsonb('features_enabled').default({} as Record<string, boolean>),
   configPrivacidad: jsonb('config_privacidad').default({ periodoRetencionBajaDias: 90 } satisfies ConfigPrivacidad),
   configIa: jsonb('config_ia').default({
-    prompt: 'Sos el asistente virtual del consultorio médico. Respondés mensajes de WhatsApp de forma amable y profesional en español argentino. Si detectás una urgencia, priorizala y notificá al médico.',
+    prompt: 'Sos el asistente virtual del consultorio médico. Respondés mensajes de WhatsApp de forma amable y profesional en español neutro chileno. Si detectás una urgencia, priorizala y notificá al médico.',
     maxTokens: 300,
     temperatura: 0.3,
   } satisfies ConfigIa),
@@ -1051,6 +1051,31 @@ export const consentimientos = pgTable('consentimientos', {
 
 export type Consentimiento = InferSelectModel<typeof consentimientos>;
 export type NewConsentimiento = InferInsertModel<typeof consentimientos>;
+
+// ============================================================
+// LEAD CAPTURES (Contact Form)
+// ============================================================
+export const leadCaptures = pgTable('lead_captures', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  phone: varchar('phone', { length: 50 }),
+  specialty: varchar('specialty', { length: 100 }),
+  size: varchar('size', { length: 50 }),
+  interests: text('interests').array(),
+  status: varchar('status', { length: 20 }).notNull().default('new'),
+  source: varchar('source', { length: 100 }).notNull().default('landing-contact'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  idxLeadCapturesEmail: index('idx_lead_captures_email').on(table.email),
+  idxLeadCapturesStatus: index('idx_lead_captures_status').on(table.status),
+  idxLeadCapturesCreatedAt: index('idx_lead_captures_created_at').on(table.createdAt),
+}));
+
+export type LeadCapture = InferSelectModel<typeof leadCaptures>;
+export type NewLeadCapture = InferInsertModel<typeof leadCaptures>;
 
 // ─── Types ──────────────────────────────────────────────
 export type ListaEspera = InferSelectModel<typeof listaEspera>;

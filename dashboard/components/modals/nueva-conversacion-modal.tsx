@@ -31,7 +31,7 @@ export function NuevaConversacionModal({ onCreated }: NuevaConversacionModalProp
   const [open, setOpen] = useState(false);
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
-  const [telefono, setTelefono] = useState('+54911');
+  const [telefono, setTelefono] = useState('+569');
   const [mensaje, setMensaje] = useState('');
   const [canal, setCanal] = useState('whatsapp');
   const [loading, setLoading] = useState(false);
@@ -60,7 +60,7 @@ export function NuevaConversacionModal({ onCreated }: NuevaConversacionModalProp
       // Reset form
       setNombre('');
       setApellido('');
-      setTelefono('+54911');
+      setTelefono('+569');
       setMensaje('');
       setCanal('whatsapp');
     } catch (error) {

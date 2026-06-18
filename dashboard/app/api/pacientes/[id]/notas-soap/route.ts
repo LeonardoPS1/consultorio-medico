@@ -13,8 +13,8 @@ async function requireAuthForNotasSoap(request: NextRequest, params: { id: strin
   if (!session?.user?.id) {
     return { session: null, error: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) };
   }
-  const sessionMedicoId = (session.user as any)?.medicoId;
-  const sessionRol = (session.user as any)?.role;
+  const sessionMedicoId = session.user?.medicoId;
+  const sessionRol = session.user?.role;
   try {
     await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
   } catch {
@@ -83,8 +83,8 @@ export async function POST(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const sessionMedicoId = (session.user as any)?.medicoId;
-    const sessionRol = (session.user as any)?.role;
+    const sessionMedicoId = session.user?.medicoId;
+    const sessionRol = session.user?.role;
     try {
       await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
     } catch {
