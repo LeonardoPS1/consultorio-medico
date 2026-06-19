@@ -5,28 +5,99 @@
  * horarios, pacientes y notificaciones. Cada paso tiene un tip
  * contextual generado por Ollama.
  *
- * Server component: renderiza el estado inicial del onboarding.
+ * Client component: obtiene el estado del onboarding vía API
+ * para evitar problemas de auth() en server components (SSR).
  * OnboardingClient: maneja interactividad, progreso y tips de IA.
  */
 
+'use client';
+
+import { useEffect, useState } from 'react';
 import { Sparkles as SparklesIcon } from 'lucide-react';
-import { getOnboardingState } from '@/lib/onboarding';
-import { auth } from '@/lib/auth';
+import { Loader2 } from 'lucide-react';
 import { OnboardingClient } from './onboarding-client';
+import type { OnboardingState } from '@/lib/onboarding-types';
 
-export const dynamic = 'force-dynamic';
-
-export default async function OnboardingPage({
+export default function OnboardingPage({
   searchParams,
 }: {
   searchParams?: { reiniciar?: string; 'ver-progreso'?: string };
 }) {
-  // Pasar userId explícitamente para evitar que getOnboardingState()
-  // llame a auth() internamente y pueda dar resultados inconsistentes
-  const session = await auth();
-  const state = await getOnboardingState(session?.user?.id);
   const isForceRestart = searchParams?.reiniciar === 'true';
   const verProgreso = searchParams?.['ver-progreso'] === 'true';
+
+  const [state, setState] = useState<OnboardingState | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchOnboardingState() {
+      try {
+        const res = await fetch('/api/onboarding', {
+          credentials: 'include',
+        });
+        if (!res.ok) {
+          throw new Error(`Error ${res.status}: ${res.statusText}`);
+        }
+        const data = await res.json();
+        setState(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Error al cargar onboarding');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (!isForceRestart) {
+      fetchOnboardingState();
+    } else {
+      // En modo reiniciar, no necesitamos cargar estado del servidor
+      setState({
+        completedSteps: [],
+        progress: 0,
+        isComplete: false,
+        nextStep: { id: 'plan', title: 'Elige tu plan', description: '', icon: '', actionLink: '', actionLabel: '' },
+      });
+      setLoading(false);
+    }
+  }, [isForceRestart]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-4">
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground">Cargando asistente IA...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+        <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-destructive/10 text-destructive shrink-0 mb-4">
+          <Loader2 className="h-6 w-6" />
+        </div>
+        <h3 className="text-lg font-semibold mb-1">Error al cargar onboarding</h3>
+        <p className="text-sm text-muted-foreground max-w-md mb-4">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-sm text-primary hover:underline"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
+
+  if (!state) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-4">
+        <span className="text-sm text-muted-foreground">Cargando...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in max-w-3xl mx-auto">
