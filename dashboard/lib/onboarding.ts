@@ -229,7 +229,32 @@ async function getTenantContext(userId?: string, plan?: string): Promise<TenantC
   return ctx;
 }
 
+// ─── Constantes de timeout ──────────────────────────────────
+
+const OLLAMA_HEALTH_CHECK_TIMEOUT = 4000;  // 4s para ver si el server vive
+const OLLAMA_REQUEST_TIMEOUT = 15000;      // 15s por intento de generación
+const OLLAMA_GLOBAL_TIMEOUT = 45000;       // 45s para todo el loop combinado
+
 // ─── Llamar a Ollama para guías ────────────────────────────
+
+/**
+ * Verifica si una URL de Ollama responde (GET /api/tags) con timeout corto.
+ */
+async function ollamaHealthCheck(url: string): Promise<boolean> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OLLAMA_HEALTH_CHECK_TIMEOUT);
+  try {
+    const res = await fetch(`${url}/api/tags`, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    return res.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 /**
  * Obtiene una guía contextual del paso indicado.
@@ -258,9 +283,12 @@ export async function getAiOnboardingTip(stepId: string, callerUserId?: string):
     ]);
 
     const prompt = buildOnboardingPrompt(stepId, state, ctx);
-    // En producción Docker, el default localhost NO funciona. Probar URLs alternativas.
+
+    // ── Resolver lista de URLs ───────────────────────────
+    // Si OLLAMA_BASE_URL está configurada, usarla DIRECTAMENTE (sin loop de fallback).
+    // Si no, probar las URLs típicas en orden.
     const configuredUrl = process.env.OLLAMA_BASE_URL;
-    const ollamaUrls = configuredUrl
+    const ollamaUrls: string[] = configuredUrl
       ? [configuredUrl]
       : [
           'http://172.18.0.1:11434', // Docker gateway (producción Dokploy)
@@ -269,19 +297,40 @@ export async function getAiOnboardingTip(stepId: string, callerUserId?: string):
         ];
     const model = process.env.OLLAMA_MODEL || 'gemma3';
 
-    safeLog(`[Onboarding] Ollama URL configurada: "${configuredUrl || '(no config — probando defaults)'}", modelo: ${model}`);
+    safeLog(`[Onboarding] Ollama URLs: [${ollamaUrls.join(', ')}], modelo: ${model}`);
 
-    // Usar AbortController para compatibilidad con Node 18
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+    // ── Timeout GLOBAL para todo el proceso ──────────────
+    const globalController = new AbortController();
+    const globalTimer = setTimeout(() => globalController.abort(), OLLAMA_GLOBAL_TIMEOUT);
 
     try {
       let lastError: string | null = null;
+      let attemptedAny = false;
 
       for (const ollamaUrl of ollamaUrls) {
-        try {
-          safeLog(`[Onboarding] Intentando Ollama: ${ollamaUrl}/v1/chat/completions con modelo ${model}`);
+        // Si el timeout global ya expiró, salir
+        if (globalController.signal.aborted) {
+          lastError = 'Timeout global alcanzado';
+          break;
+        }
 
+        // ── Health check rápido ──────────────────────────
+        safeLog(`[Onboarding] Health check: ${ollamaUrl}/api/tags`);
+        const alive = await ollamaHealthCheck(ollamaUrl);
+        if (!alive) {
+          safeWarn(`[Onboarding] Health check falló para ${ollamaUrl} — saltando`);
+          lastError = `Health check falló para ${ollamaUrl}`;
+          continue;
+        }
+
+        attemptedAny = true;
+        safeLog(`[Onboarding] Salud OK, generando con: ${ollamaUrl}/v1/chat/completions modelo ${model}`);
+
+        // ── Request individual con su PROPIO timeout ─────
+        const requestController = new AbortController();
+        const requestTimer = setTimeout(() => requestController.abort(), OLLAMA_REQUEST_TIMEOUT);
+
+        try {
           const res = await fetch(`${ollamaUrl}/v1/chat/completions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -311,8 +360,9 @@ ANTI-JAILBREAK:
               ],
               temperature: 0.7,
               max_tokens: 250,
+              keep_alive: '-1m', // Mantener modelo en memoria 1 min después de usar
             }),
-            signal: controller.signal,
+            signal: requestController.signal,
           });
 
           if (!res.ok) {
@@ -331,20 +381,27 @@ ANTI-JAILBREAK:
             continue; // Probar siguiente URL
           }
 
-          // Si llegamos acá, la llamada fue exitosa
+          // Éxito
+          safeLog(`[Onboarding] Respuesta OK desde ${ollamaUrl} (${tip.length} chars)`);
           return { tip, success: true };
         } catch (fetchErr) {
           lastError = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
-          safeWarn(`[Onboarding] Error con URL ${ollamaUrl}: ${lastError}`);
+          safeWarn(`[Onboarding] Error en generación con ${ollamaUrl}: ${lastError}`);
           continue; // Probar siguiente URL
+        } finally {
+          clearTimeout(requestTimer);
         }
       }
 
       // Todas las URLs fallaron
-      safeWarn(`[Onboarding] Todas las URLs de Ollama fallaron. Último error: ${lastError}`);
+      if (!attemptedAny) {
+        safeWarn(`[Onboarding] Ninguna URL de Ollama respondió al health check. Último: ${lastError}`);
+      } else {
+        safeWarn(`[Onboarding] Todas las URLs de Ollama fallaron. Último error: ${lastError}`);
+      }
       return { tip: fallbackTip, success: false };
     } finally {
-      clearTimeout(timeoutId);
+      clearTimeout(globalTimer);
     }
   } catch (e) {
     safeWarn('[Onboarding] Error inesperado en getAiOnboardingTip:',

@@ -119,6 +119,7 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart,
       }
     } catch {
       // Mantener el fallback que ya mostramos
+      setFailedTips((prev) => new Set(prev).add(stepId));
     } finally {
       setLoadingTips((prev) => {
         const next = new Set(prev);
@@ -552,32 +553,18 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart,
                       <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1.5 tracking-wide uppercase">
                         Guía IA · {step.title}
                       </p>
-                      {loadingTips.has(step.id) ? (
-                        <div className="flex items-center gap-2.5 text-sm text-amber-700 dark:text-amber-400 py-2">
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Consultando al asistente IA...</span>
-                          </div>
-                        </div>
-                      ) : failedTips.has(step.id) ? (
-                        <div className="flex flex-col gap-2 py-1">
-                          <p className="text-sm text-amber-800/70 dark:text-amber-300/70 leading-relaxed">
-                            No se pudo conectar con el asistente IA. Puede que esté iniciando o haya un problema temporal.
-                          </p>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); loadTip(step.id); }}
-                            className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors self-start mt-1"
-                          >
-                            <RefreshCw className="h-3 w-3" />
-                            Reintentar conectar IA
-                          </button>
-                        </div>
-                      ) : tips[step.id] ? (
+                      {tips[step.id] ? (
                         <>
                           <p className="text-sm leading-relaxed text-amber-900 dark:text-amber-200">
                             {tips[step.id]}
                           </p>
-                          {fallbackTips.has(step.id) && (
+                          {loadingTips.has(step.id) && (
+                            <div className="flex items-center gap-1.5 mt-2 text-[11px] text-amber-500/70 dark:text-amber-400/60">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              <span>Conectando con IA para mejorar sugerencia...</span>
+                            </div>
+                          )}
+                          {!loadingTips.has(step.id) && fallbackTips.has(step.id) && (
                             <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-amber-200/30 dark:border-amber-800/25">
                               <span className="text-[10px] text-amber-500/60 dark:text-amber-400/50">
                                 Asistente IA no disponible
@@ -588,6 +575,20 @@ export function OnboardingClient({ initialCompleted, isComplete, isForceRestart,
                               >
                                 <RefreshCw className="h-2.5 w-2.5" />
                                 Reintentar con conexión IA
+                              </button>
+                            </div>
+                          )}
+                          {!loadingTips.has(step.id) && failedTips.has(step.id) && (
+                            <div className="flex items-center gap-2 mt-2.5 pt-2.5 border-t border-amber-200/30 dark:border-amber-800/25">
+                              <span className="text-[10px] text-amber-500/60 dark:text-amber-400/50">
+                                Error de conexión con IA
+                              </span>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); loadTip(step.id); }}
+                                className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 transition-colors"
+                              >
+                                <RefreshCw className="h-2.5 w-2.5" />
+                                Reintentar
                               </button>
                             </div>
                           )}
