@@ -12,6 +12,22 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.10.0',
+    date: '19/06/2026',
+    title: 'Scoring de Pacientes, Seguridad y Conexión IA Real',
+    items: [
+      'Scoring automático de pacientes (0-100): algoritmo ponderado con no-shows x40, cancelaciones x25, confirmaciones x20, recordatorios x10, asistencia x5',
+      'Badge de riesgo visual en lista de pacientes: verde (<40), amarillo (40-69), rojo (≥70)',
+      'Bloqueo automático a lista negra: pacientes con score ≥80 y 2+ inasistencias',
+      'Alertas de score alto integradas en panel lateral para médicos activos',
+      'CSP Hardening: unsafe-eval solo en desarrollo, worker-src y media-src añadidos',
+      'Cookie Consent: banner con 3 categorías (esencial/funcional/analytics) y hooks tipados',
+      'Rate Limiting específico: register/forgot-password/reset-password/portal-auth (3-5 req/min)',
+      'Logging seguro: webhooks Twilio y MercadoPago migrados a safeLog/safeWarn/safeError',
+      'Onboarding IA: conexión real con Ollama Gemma3, health check previo, timeouts individuales (15s/intento, 45s global), keep_alive para modelo en memoria, fallback inmediato + loading sutil',
+    ],
+  },
+  {
     version: '1.9.0',
     date: '14/06/2026',
     title: 'Telemedicina en Vivo con LiveKit',

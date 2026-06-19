@@ -69,7 +69,7 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
   const [hasUnseenChangelog, setHasUnseenChangelog] = useState(false);
   const waitingSWRef = useRef<ServiceWorker | null>(null);
 
-  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0';
+  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '1.10.0';
 
   // ─── Changelog tracking por versión ──────────────────────
   useEffect(() => {
