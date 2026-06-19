@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { PageAnimation } from '@/components/dashboard/page-animation';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
@@ -89,6 +89,7 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
     useState<Paciente[]>(initialPacientes);
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const [scoresMap, setScoresMap] = useState<Record<string, { score: number; nivel: string }>>({});
 
   // ─── Selección múltiple (estado puro) ──────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -194,6 +195,25 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
           ),
     [pacientesList, search],
   );
+
+  // Fetch scoring para pacientes visibles
+  useEffect(() => {
+    const visibleIds = filtered.map((p) => p.id);
+    if (visibleIds.length === 0) return;
+    const params = new URLSearchParams({ ids: visibleIds.join(',') });
+    fetch(`/api/pacientes/scoring?${params.toString()}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((json) => {
+        if (json?.data?.scores) {
+          const map: Record<string, { score: number; nivel: string }> = {};
+          for (const s of json.data.scores) {
+            map[s.pacienteId] = { score: s.score, nivel: s.nivel || 'bajo' };
+          }
+          setScoresMap(map);
+        }
+      })
+      .catch(() => { /* silencioso */ });
+  }, [filtered]);
 
   // ─── Selección múltiple (helpers) ──────────────────────────
   const selectedArray = useMemo(() => filtered.filter((p) => selectedIds.has(p.id)), [filtered, selectedIds]);
@@ -432,8 +452,20 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
                   </Avatar>
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">
+                    <p className="font-medium truncate flex items-center gap-1.5">
                       {paciente.nombre} {paciente.apellido}
+                      {scoresMap[paciente.id] && (
+                        <span
+                          className={`inline-block w-2 h-2 rounded-full shrink-0 ${
+                            scoresMap[paciente.id].nivel === 'alto'
+                              ? 'bg-red-500'
+                              : scoresMap[paciente.id].nivel === 'medio'
+                                ? 'bg-yellow-500'
+                                : 'bg-green-500'
+                          }`}
+                          title={`Score: ${scoresMap[paciente.id].score} - Riesgo ${scoresMap[paciente.id].nivel}`}
+                        />
+                      )}
                     </p>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground mt-0.5">
                       <span className="flex items-center gap-1">
