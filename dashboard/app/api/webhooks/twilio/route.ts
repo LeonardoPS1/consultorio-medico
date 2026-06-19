@@ -16,6 +16,7 @@ import {
 import { detectSurveyResponse, storeSurveyResponse } from '@/lib/encuestas';
 import { handleWaitlistResponse } from '@/lib/whatsapp-waitlist';
 import { escapeHtml } from '@/lib/html-utils';
+import { safeLog, safeWarn, safeError } from '@/lib/logger';
 
 /**
  * Forwardea el webhook a n8n para procesamiento con IA.
@@ -28,7 +29,7 @@ async function forwardToN8n(params: Record<string, string>) {
   const body = new URLSearchParams(params).toString();
   const webhookSecret = process.env.N8N_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    console.warn('[Twilio] N8N_WEBHOOK_SECRET no configurado — saltando forward a n8n');
+    safeWarn('[Twilio] N8N_WEBHOOK_SECRET no configurado — saltando forward a n8n');
     return;
   }
   try {
@@ -41,9 +42,9 @@ async function forwardToN8n(params: Record<string, string>) {
       body,
       signal: AbortSignal.timeout(5000),
     });
-    console.log('[Twilio] ➡️ Forwardeado a n8n');
+    safeLog('[Twilio] ➡️ Forwardeado a n8n');
   } catch (e) {
-    console.warn('[Twilio] ⚠️ No se pudo forwardear a n8n:', (e as Error).message);
+    safeWarn('[Twilio] ⚠️ No se pudo forwardear a n8n:', (e as Error).message);
   }
 }
 
@@ -58,7 +59,7 @@ async function notifyDoctor(patientName: string, messagePreview: string, telefon
   const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
 
   if (!accountSid || !authToken || !doctorNumber || !fromNumber) {
-    console.warn('[Twilio] ⚠️ notifyDoctor: faltan env vars (TWILIO_ACCOUNT_SID, AUTH_TOKEN, DOCTOR_NUMBER, WHATSAPP_NUMBER)');
+    safeWarn('[Twilio] ⚠️ notifyDoctor: faltan env vars (TWILIO_ACCOUNT_SID, AUTH_TOKEN, DOCTOR_NUMBER, WHATSAPP_NUMBER)');
     return;
   }
 
@@ -99,9 +100,9 @@ async function notifyDoctor(patientName: string, messagePreview: string, telefon
       body: formData.toString(),
       signal: AbortSignal.timeout(8000),
     });
-    console.log('[Twilio] ➡️ Notificación enviada al médico');
+    safeLog('[Twilio] ➡️ Notificación enviada al médico');
   } catch (e) {
-    console.warn('[Twilio] ⚠️ No se pudo notificar al médico:', (e as Error).message);
+    safeWarn('[Twilio] ⚠️ No se pudo notificar al médico:', (e as Error).message);
   }
 }
 
@@ -145,7 +146,7 @@ async function handleReminderResponse(
     .limit(1);
 
   if (!turno) {
-    console.log('[Reminder] No se encontró turno activo para el paciente');
+    safeLog('[Reminder] No se encontró turno activo para el paciente');
     return { handled: true, skipN8n: false };
   }
 
@@ -163,7 +164,7 @@ async function handleReminderResponse(
       metadata: { turnoId: turno.id, fuente: 'recordatorio_whatsapp' },
     });
 
-    console.log(`[Reminder] Turno ${turno.id} confirmado por paciente ${pacienteId}`);
+    safeLog(`[Reminder] Turno ${turno.id} confirmado por paciente ${pacienteId}`);
 
     // Enviar confirmación al paciente
     if (accountSid && authToken && fromNumber) {
@@ -204,7 +205,7 @@ async function handleReminderResponse(
       metadata: { turnoId: turno.id, fuente: 'recordatorio_whatsapp' },
     });
 
-    console.log(`[Reminder] Turno ${turno.id} cancelado por paciente ${pacienteId} desde recordatorio`);
+    safeLog(`[Reminder] Turno ${turno.id} cancelado por paciente ${pacienteId} desde recordatorio`);
 
     // Enviar confirmación
     if (accountSid && authToken && fromNumber) {
@@ -240,7 +241,7 @@ function validateTwilioRequest(
 
   // En producción, la firma es obligatoria
   if (isProduction && !signature) {
-    console.error('[Twilio] ⚠️ Request sin firma en producción — rechazado');
+    safeError('[Twilio] ⚠️ Request sin firma en producción — rechazado');
     return false;
   }
 
@@ -252,10 +253,10 @@ function validateTwilioRequest(
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   if (!authToken) {
     if (isProduction) {
-      console.error('[Twilio] ⚠️ TWILIO_AUTH_TOKEN no configurado en producción');
+      safeError('[Twilio] ⚠️ TWILIO_AUTH_TOKEN no configurado en producción');
       return false;
     }
-    console.warn('[Twilio] TWILIO_AUTH_TOKEN no configurado — saltando validación');
+    safeWarn('[Twilio] TWILIO_AUTH_TOKEN no configurado — saltando validación');
     return true;
   }
 
@@ -322,7 +323,7 @@ export const POST = withRateLimit(async function POST(request: NextRequest) {
 
     // Validar firma de Twilio
     if (!validateTwilioRequest(request, params)) {
-      console.warn('[Twilio] ⚠️ Firma inválida — posible spoofing');
+      safeWarn('[Twilio] ⚠️ Firma inválida — posible spoofing');
       return NextResponse.json({ error: 'Firma inválida' }, { status: 403 });
     }
 
@@ -337,7 +338,7 @@ export const POST = withRateLimit(async function POST(request: NextRequest) {
       const errorCode = params.ErrorCode || null;
       const errorMessage = params.ErrorMessage ? escapeHtml(params.ErrorMessage) : null;
 
-      console.log(
+      safeLog(
         `[Twilio] Status Callback — SID: ${callbackMessageSid}, Estado: ${messageStatus}` +
           (errorCode ? `, Error: ${errorCode} — ${errorMessage}` : '')
       );
@@ -349,18 +350,18 @@ export const POST = withRateLimit(async function POST(request: NextRequest) {
       });
 
       if (updated) {
-        console.log(`[Twilio] Mensaje ${callbackMessageSid} actualizado → ${messageStatus}`);
+        safeLog(`[Twilio] Mensaje ${callbackMessageSid} actualizado → ${messageStatus}`);
 
         // Si el mensaje falló, loguear con más detalle
         if (messageStatus === 'failed' || messageStatus === 'undelivered') {
-          console.error(
+          safeError(
             `[Twilio] ⚠️ Mensaje fallido SID: ${callbackMessageSid}` +
               `, Error: ${errorCode} — ${errorMessage || 'sin detalle'}`
           );
         }
 
       } else {
-        console.warn(`[Twilio] Mensaje ${callbackMessageSid} no encontrado en DB (puede ser de antes del tracking)`);
+        safeWarn(`[Twilio] Mensaje ${callbackMessageSid} no encontrado en DB (puede ser de antes del tracking)`);
       }
 
       // Twilio espera un 200 vacío para status callbacks
@@ -433,7 +434,7 @@ export const POST = withRateLimit(async function POST(request: NextRequest) {
       twilioStatus: 'received',
     });
 
-    console.log(`[Twilio] Mensaje recibido — ${conversacionId ? 'conversación existente' : 'nueva conversación'}`);
+    safeLog(`[Twilio] Mensaje recibido — ${conversacionId ? 'conversación existente' : 'nueva conversación'}`);
 
     // Detectar si es respuesta de encuesta (número 1-5)
     const survey = detectSurveyResponse(body);
@@ -502,7 +503,7 @@ export const POST = withRateLimit(async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[Twilio Webhook] Error:', error);
+    safeError('[Twilio Webhook] Error:', error);
     const isProduction = process.env.NODE_ENV === 'production';
     return NextResponse.json(
       {

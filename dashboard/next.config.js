@@ -35,7 +35,10 @@ const nextConfig = withBundleAnalyzer({
           { key: 'X-DNS-Prefetch-Control', value: 'off' },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' wss://livekit.aicorebots.com https://livekit.aicorebots.com https://api.mercadopago.com https://api.twilio.com https://api.whatsapp.com https://fonts.googleapis.com https://fonts.gstatic.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
+            // unsafe-eval solo en desarrollo (React Refresh/HMR lo requiere)
+            value: process.env.NODE_ENV === 'development'
+              ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' wss://livekit.aicorebots.com https://livekit.aicorebots.com https://api.mercadopago.com https://api.twilio.com https://api.whatsapp.com https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self'; media-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
+              : "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' wss://livekit.aicorebots.com https://livekit.aicorebots.com https://api.mercadopago.com https://api.twilio.com https://api.whatsapp.com https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self'; media-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
           },
         ],
       },

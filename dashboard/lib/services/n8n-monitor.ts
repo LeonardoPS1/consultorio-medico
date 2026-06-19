@@ -143,8 +143,15 @@ export async function getWorkflowErrors(params: {
 }
 
 export async function getN8nStats() {
-  const workflows = await fetchWorkflows();
+  const health = await fetchHealth();
+  const n8nReachable = health?.alive ?? false;
+
+  const workflows = n8nReachable ? await fetchWorkflows() : [];
   const activeCount = workflows.filter((w) => w.active).length;
+  const inactiveWorkflows = workflows.filter((w) => !w.active).map((w) => ({
+    id: w.id,
+    name: w.name,
+  }));
 
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
@@ -163,10 +170,17 @@ export async function getN8nStats() {
       ),
     );
 
+  const healthStatus = !n8nReachable ? 'down'
+    : (inactiveWorkflows.length > 0 || Number(errorsLast24h?.total ?? 0) > 0) ? 'degraded'
+    : 'ok';
+
   return {
     totalWorkflows: workflows.length,
     activeWorkflows: activeCount,
     errorsLast24h: Number(errorsLast24h?.total ?? 0),
     successfulExecutions24h: Number(logsSuccess24h?.total ?? 0),
+    n8nReachable,
+    healthStatus,
+    inactiveWorkflows,
   };
 }

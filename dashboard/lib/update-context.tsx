@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { setCookieWithConsent } from '@/components/landing/cookie-consent';
 
 // Cookie en vez de localStorage — persiste entre sesiones y se envía al servidor.
 const COOKIE_CHANGELOG_SEEN = 'pwa_last_changelog_version';
@@ -79,7 +80,7 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
   }, [appVersion]);
 
   const markChangelogSeen = useCallback(() => {
-    setCookie(COOKIE_CHANGELOG_SEEN, appVersion);
+    setCookieWithConsent(COOKIE_CHANGELOG_SEEN, appVersion);
     setHasUnseenChangelog(false);
   }, [appVersion]);
 

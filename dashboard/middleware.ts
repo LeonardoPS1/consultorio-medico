@@ -102,29 +102,49 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  // ─── 2. Rate limiting global por IP ────────────────────
+  // ─── 2. Rate limiting específico por ruta ──────────────
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')
     || '127.0.0.1';
 
-  // Rate limit para login (autenticación). NextAuth v5 POSTea a /api/auth/callback/credentials
-  if (pathname.startsWith('/api/auth/') && request.method === 'POST') {
-    if (!rateLimit(`login:${ip}`, 5, 60_000)) {
-      const headers = new Headers({
-        'Content-Type': 'application/json',
-        'Retry-After': '60',
-      });
-      Object.entries(securityHeaders).forEach(([k, v]) => headers.set(k, v));
-      return new NextResponse(
-        JSON.stringify({ error: 'Demasiados intentos. Esperá 1 minuto.' }),
-        { status: 429, headers }
-      );
+  function rateLimitedResponse(limitSecs: number): NextResponse {
+    const headers = new Headers({
+      'Content-Type': 'application/json',
+      'Retry-After': String(limitSecs),
+    });
+    Object.entries(securityHeaders).forEach(([k, v]) => headers.set(k, v));
+    return new NextResponse(
+      JSON.stringify({ error: 'Demasiados intentos. Esperá un momento.' }),
+      { status: 429, headers }
+    );
+  }
+
+  if (request.method === 'POST') {
+    // Registro: 3 intentos por minuto
+    if (pathname === '/api/auth/register') {
+      if (!rateLimit(`register:${ip}`, 3, 60_000)) return rateLimitedResponse(60);
+    }
+    // Recuperación de contraseña: 3 intentos por minuto
+    else if (pathname === '/api/auth/forgot-password') {
+      if (!rateLimit(`forgot:${ip}`, 3, 60_000)) return rateLimitedResponse(60);
+    }
+    // Reset de contraseña: 5 intentos por minuto
+    else if (pathname === '/api/auth/reset-password') {
+      if (!rateLimit(`resetpw:${ip}`, 5, 60_000)) return rateLimitedResponse(60);
+    }
+    // Login (NextAuth v5 POSTea a /api/auth/callback/credentials): 5 intentos por minuto
+    else if (pathname.startsWith('/api/auth/')) {
+      if (!rateLimit(`login:${ip}`, 5, 60_000)) return rateLimitedResponse(60);
+    }
+    // Portal auth: 3 solicitudes de magic link por minuto
+    else if (pathname === '/api/portal/auth/request') {
+      if (!rateLimit(`portal-auth:${ip}`, 3, 60_000)) return rateLimitedResponse(60);
     }
   }
 
   // Rate limit general para APIs (120 requests por minuto por IP)
   // Un dashboard hace ~7 llamadas al cargar + polling cada 60s
-  // Excluir /api/v1/ — tienen su propio rate limit por API key
+  // Excluir /api/auth/ (ya tiene rate limit específico), /api/v1/ (API key propio)
   if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/') && !pathname.startsWith('/api/v1/')) {
     if (!rateLimit(`api:${ip}`, 120, 60_000)) {
       const headers = new Headers({

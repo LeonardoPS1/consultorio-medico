@@ -160,6 +160,50 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
     pacientesAnterior: Math.round(totalPac * 0.82),
   };
 
+  // ─── Predicción de demanda (próximos 30 días) ────────────
+  const diasPrediccion = 30;
+  const prediccionBase = esSemana ? 10 : esAnual ? 15 : 12;
+  const prediccion = Array.from({ length: diasPrediccion }, (_, i) => {
+    const real = i < 15 ? prediccionBase + Math.round(Math.sin(i * 0.5) * 3 + Math.random() * 4) : null;
+    const estimado = prediccionBase + Math.round(Math.sin(i * 0.5) * 3 + i * 0.15);
+    return {
+      dia: `Día ${i + 1}`,
+      real,
+      estimado,
+      min: Math.max(0, estimado - 3 - Math.round(Math.random() * 2)),
+      max: estimado + 3 + Math.round(Math.random() * 2),
+    };
+  });
+
+  // ─── Embudo de conversión leads → pacientes ───────────────
+  const conversionLeads = [
+    { etapa: 'Contacto inicial', cantidad: 240, porcentaje: 100 },
+    { etapa: 'Respondió WhatsApp', cantidad: 192, porcentaje: 80 },
+    { etapa: 'Solicitó turno', cantidad: 144, porcentaje: 60 },
+    { etapa: 'Asistió a consulta', cantidad: 108, porcentaje: 45 },
+    { etapa: 'Paciente recurrente', cantidad: 72, porcentaje: 30 },
+  ];
+
+  // ─── Comparativa anual (Y/Y, 12 meses) ────────────────────
+  const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  const comparativaAnual = meses.map((mes, i) => ({
+    mes,
+    actual: 80 + Math.round(Math.sin(i * 0.6) * 15 + Math.random() * 20 + i * 3),
+    anterior: 70 + Math.round(Math.sin(i * 0.6) * 12 + Math.random() * 15 + i * 2),
+  }));
+
+  // ─── Resumen ejecutivo ─────────────────────────────────────
+  const ejecutivo = {
+    totalIngresos: `$${Math.round((totalTurnos * 45 + Math.random() * 1000) / 1000 * 10) / 10}M`,
+    ingresosCambio: '+18% vs año anterior',
+    tasaOcupacion: `${75 + Math.round(Math.random() * 15)}%`,
+    ocupacionCambio: '+5% vs trimestre anterior',
+    satisfaccion: '4.7 / 5.0',
+    nps: 72,
+    leadsConvertidos: conversionLeads[3].cantidad,
+    leadsTotales: conversionLeads[0].cantidad,
+  };
+
   return {
     metricas,
     turnos,
@@ -175,5 +219,9 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
     whatsapp,
     pacientesObraSocial,
     _comparativa,
+    prediccion,
+    conversionLeads,
+    comparativaAnual,
+    ejecutivo,
   };
 }

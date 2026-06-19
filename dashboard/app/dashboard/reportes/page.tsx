@@ -14,7 +14,7 @@ import {
   TrendingUp, TrendingDown, MessageSquare, Calendar, Activity,
   Download, BarChart3, PieChart, Mail, CheckCircle2,
   Clock, ArrowUpRight, Users, Phone, XCircle, FileSpreadsheet,
-  FileText, Loader2, AlertCircle,
+  FileText, Loader2, AlertCircle, Award, DollarSign,
 } from 'lucide-react';
 import { escapeHtml } from '@/lib/html-utils';
 import {
@@ -43,6 +43,13 @@ interface ReporteApiResponse {
   calidadRespuesta: { tasa: string; tiempo: string; msgsPorConv: string };
   intenciones: { intencion: string; cantidad: number; porcentaje: number }[];
   whatsapp: { titulo: string; valor: string; cambio: string; up: boolean }[];
+  prediccion?: { dia: string; real: number | null; estimado: number; min: number; max: number }[];
+  conversionLeads?: { etapa: string; cantidad: number; porcentaje: number }[];
+  ejecutivo?: {
+    totalIngresos: string; ingresosCambio: string; tasaOcupacion: string;
+    ocupacionCambio: string; satisfaccion: string;
+    nps: number; leadsConvertidos: number; leadsTotales: number;
+  };
   _demo?: boolean;
   _comparativa?: ComparativaData;
 }
@@ -66,6 +73,14 @@ const DistribucionEstadosChart = dynamic(() => import('@/components/charts/distr
   loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
 });
 const ComparativaMensual = dynamic(() => import('@/components/reportes/comparativa-mensual'), {
+  ssr: false,
+  loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
+});
+const PrediccionDemanda = dynamic(() => import('@/components/reportes/prediccion-demanda'), {
+  ssr: false,
+  loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
+});
+const ConversionFunnel = dynamic(() => import('@/components/reportes/conversion-funnel'), {
   ssr: false,
   loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
 });
@@ -229,6 +244,24 @@ export default function ReportesPage() {
   <tr><td>Nuevos en el período</td><td style="font-weight:600">${escapeHtml(String(data.pacientesKpis.nuevos))}</td></tr>
   <tr><td>Edad promedio</td><td style="font-weight:600">${escapeHtml(String(data.pacientesKpis.edadPromedio))} años</td></tr>
 </table>
+
+${data.ejecutivo ? `
+<div class="section-title">🏆 Resumen Ejecutivo</div>
+<table>
+  <tr><th>Indicador</th><th>Valor</th></tr>
+  <tr><td>Ingresos Proyectados</td><td style="font-weight:600">${escapeHtml(data.ejecutivo.totalIngresos)}</td></tr>
+  <tr><td>Ocupación</td><td style="font-weight:600">${escapeHtml(data.ejecutivo.tasaOcupacion)}</td></tr>
+  <tr><td>Satisfacción</td><td style="font-weight:600">${escapeHtml(data.ejecutivo.satisfaccion)}</td></tr>
+  <tr><td>NPS</td><td style="font-weight:600">${escapeHtml(String(data.ejecutivo.nps))}</td></tr>
+</table>
+
+<div style="margin-bottom:10px">${data.conversionLeads ? `
+<div class="section-title">🔄 Embudo de Conversión</div>
+<table>
+  <tr><th>Etapa</th><th>Cantidad</th><th>%</th></tr>
+  ${data.conversionLeads.map(c => `<tr><td>${escapeHtml(c.etapa)}</td><td style="font-weight:600">${escapeHtml(String(c.cantidad))}</td><td>${escapeHtml(String(c.porcentaje))}%</td></tr>`).join('')}
+</table>` : ''}</div>
+` : ''}
 
 <div class="footer">
   <strong>Consultorio Médico</strong> · Reporte generado automáticamente el ${fechaHoy}
@@ -429,6 +462,10 @@ export default function ReportesPage() {
           <TabsTrigger value="comparativa" className="px-2 sm:px-3">
             <TrendingUp className="h-4 w-4 sm:mr-1" />
             <span className="hidden sm:inline">Comparativa</span>
+          </TabsTrigger>
+          <TabsTrigger value="ejecutivo" className="px-2 sm:px-3">
+            <Award className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Ejecutivo</span>
           </TabsTrigger>
         </TabsList>
 
@@ -856,6 +893,114 @@ export default function ReportesPage() {
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <AlertCircle className="h-10 w-10 text-muted-foreground mb-3" />
                 <p className="text-sm text-muted-foreground">Datos comparativos no disponibles para este período</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* ============ TAB EJECUTIVO ============ */}
+        <TabsContent value="ejecutivo" className="mt-4 space-y-6">
+          {data?.ejecutivo ? (
+            <>
+              {/* KPIs ejecutivos */}
+              <motion.div
+                className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+                initial="hidden"
+                animate="visible"
+                variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
+              >
+                {[
+                  { label: 'Ingresos Proyectados', valor: data.ejecutivo.totalIngresos, icon: DollarSign, up: true },
+                  { label: 'Ocupación', valor: data.ejecutivo.tasaOcupacion, icon: Calendar, up: true },
+                  { label: 'Satisfacción', valor: data.ejecutivo.satisfaccion, icon: Award, up: true },
+                  { label: 'NPS', valor: data.ejecutivo.nps, icon: TrendingUp, up: data.ejecutivo.nps >= 50 },
+                ].map((kpi) => (
+                  <motion.div
+                    key={kpi.label}
+                    variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+                  >
+                    <Card>
+                      <CardContent className="p-4 sm:p-6">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{kpi.label}</span>
+                          <kpi.icon className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <p className="text-2xl font-bold">{kpi.valor}</p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              {/* Predicción de demanda */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    Predicción de Demanda — Próximos 30 Días
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {data.prediccion ? (
+                    <PrediccionDemanda data={data.prediccion} />
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-8">Datos de predicción no disponibles</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Embudo de conversión */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Embudo de Conversión — Leads a Pacientes Recurrentes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {data.conversionLeads ? (
+                    <ConversionFunnel data={data.conversionLeads} />
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-8">Datos de conversión no disponibles</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Resumen de indicadores */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    Resumen de Indicadores Clave
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">Leads contactados</p>
+                      <p className="font-semibold text-lg">{data.ejecutivo.leadsTotales}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">Leads convertidos</p>
+                      <p className="font-semibold text-lg">{data.ejecutivo.leadsConvertidos}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">Tasa conversión</p>
+                      <p className="font-semibold text-lg">{Math.round((data.ejecutivo.leadsConvertidos / data.ejecutivo.leadsTotales) * 100)}%</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">Pacientes recurrentes</p>
+                      <p className="font-semibold text-lg">{Math.round(data.ejecutivo.leadsConvertidos * 0.67)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <AlertCircle className="h-10 w-10 text-muted-foreground mb-3" />
+                <p className="text-sm text-muted-foreground">Datos ejecutivos no disponibles para este período</p>
               </CardContent>
             </Card>
           )}

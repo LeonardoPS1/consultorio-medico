@@ -22,27 +22,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Teléfono requerido' }, { status: 400 });
   }
 
-  // Rate-limit by IP: máximo 3 requests por minuto
-  const ip = request.headers.get('x-forwarded-for') || 'unknown';
-  // Simple in-memory rate limit (no importamos el rate-limit lib para evitar fs en edge)
-  const now = Date.now();
-  const windowMs = 60_000;
-  const key = `portal-auth:${ip}`;
-  const entry = (globalThis as Record<string, unknown>)[`_rate_${key}`] as { count: number; resetAt: number } | undefined;
-
-  if (entry && now < entry.resetAt && entry.count >= 3) {
-    return NextResponse.json(
-      { error: 'Demasiados intentos. Esperá un minuto.' },
-      { status: 429, headers: { 'Retry-After': '60' } },
-    );
-  }
-
-  if (!entry || now >= (entry?.resetAt || 0)) {
-    (globalThis as Record<string, unknown>)[`_rate_${key}`] = { count: 1, resetAt: now + windowMs };
-  } else {
-    entry.count++;
-  }
-
   // Generar token y magic link
   const result = await generateMagicLink(telefono);
 

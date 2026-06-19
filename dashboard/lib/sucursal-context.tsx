@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
+import { setCookieWithConsent } from '@/components/landing/cookie-consent';
 
 // ============================================================
 // Tipos
@@ -36,15 +37,14 @@ interface SucursalContextType {
 const SucursalContext = createContext<SucursalContextType | null>(null);
 
 const STORAGE_KEY = 'sucursal_activa';
-const COOKIE_MAX_AGE = 31536000; // 1 año
 
 // ============================================================
 // Helpers
 // ============================================================
 
-/** Escribe la cookie para que la lean los server components */
+/** Escribe la cookie para que la lean los server components (con consentimiento) */
 function setSucursalCookie(id: string) {
-  document.cookie = `${STORAGE_KEY}=${id};path=/;max-age=${COOKIE_MAX_AGE};SameSite=Lax`;
+  setCookieWithConsent(STORAGE_KEY, id, 'functional', 365);
 }
 
 /** Lee la cookie (útil al inicio para sincronizar con localStorage) */

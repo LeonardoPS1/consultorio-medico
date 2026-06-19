@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { X, Download, Smartphone } from 'lucide-react';
+import { setCookieWithConsent } from '@/components/landing/cookie-consent';
 
 // Cookies en vez de localStorage — la app es de internet, no offline-first.
 // Las cookies se envían con cada request y persisten entre sesiones.
@@ -58,14 +59,14 @@ export function PWAInstallPrompt() {
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       setDeferredPrompt(null);
-      setCookie(COOKIE_INSTALLED, 'true');
+      setCookieWithConsent(COOKIE_INSTALLED, 'true');
     }
     setInstalling(false);
   }, [deferredPrompt]);
 
   const handleDismiss = useCallback(() => {
     setDeferredPrompt(null);
-    setCookie(COOKIE_DISMISSED, 'true');
+    setCookieWithConsent(COOKIE_DISMISSED, 'true');
   }, []);
 
   useEffect(() => {
@@ -78,7 +79,7 @@ export function PWAInstallPrompt() {
 
     const handleInstalled = () => {
       setDeferredPrompt(null);
-      setCookie(COOKIE_INSTALLED, 'true');
+      setCookieWithConsent(COOKIE_INSTALLED, 'true');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);

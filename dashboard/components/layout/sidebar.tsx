@@ -43,6 +43,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import { canAccess, getFeatureRequiredPlan, type FeatureId } from '@/lib/features';
 import { useFeatureFlags } from '@/lib/feature-flags-context';
+import { N8nStatusIndicator } from '@/components/layout/n8n-status-indicator';
 interface NavItem {
   title: string;
   href: string;
@@ -380,7 +381,10 @@ export function Sidebar() {
                   )}
                   title={collapsed ? 'n8n' : undefined}
                 >
-                  <Network className="h-5 w-5 shrink-0" />
+                  <span className="relative inline-flex shrink-0">
+                    <Network className="h-5 w-5" />
+                    <N8nStatusIndicator />
+                  </span>
                   {!collapsed && <span className="flex-1 truncate">n8n</span>}
                 </Link>
                 <Link

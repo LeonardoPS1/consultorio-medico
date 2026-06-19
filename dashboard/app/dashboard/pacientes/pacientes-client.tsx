@@ -20,11 +20,24 @@ import {
   FileDown,
   Loader2,
   Syringe,
+  CheckCheck,
+  Send,
+  X,
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 import { formatPhone, getInitials, formatDate } from '@/lib/utils';
 import { NuevoPacienteModal } from '@/components/modals/nuevo-paciente-modal';
 import { EditarPacienteModal } from '@/components/modals/editar-paciente-modal';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 
 // ─── Types ────────────────────────────────────────────────
@@ -76,6 +89,12 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
     useState<Paciente[]>(initialPacientes);
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ─── Selección múltiple (estado puro) ──────────────────────
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkWhatsApp, setShowBulkWhatsApp] = useState(false);
+  const [bulkMessage, setBulkMessage] = useState('');
+  const [sendingBulk, setSendingBulk] = useState(false);
 
   const handleOpenEdit = async (pacienteId: string) => {
     setLoadingEdit(true);
@@ -176,6 +195,66 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
     [pacientesList, search],
   );
 
+  // ─── Selección múltiple (helpers) ──────────────────────────
+  const selectedArray = useMemo(() => filtered.filter((p) => selectedIds.has(p.id)), [filtered, selectedIds]);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((p) => p.id)));
+    }
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleBulkWhatsApp = async () => {
+    if (!bulkMessage.trim() || selectedArray.length === 0) return;
+    setSendingBulk(true);
+    try {
+      const res = await fetch('/api/whatsapp/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pacienteIds: selectedArray.map((p) => p.id),
+          mensaje: bulkMessage.trim(),
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast({ title: 'Error', description: err.error || 'Error al enviar', variant: 'destructive' });
+        return;
+      }
+      const json = await res.json();
+      toast({
+        title: 'WhatsApp enviado',
+        description: `${json.data.enviados} enviados, ${json.data.fallidos} fallidos de ${json.data.total}`,
+      });
+      setShowBulkWhatsApp(false);
+      setBulkMessage('');
+      clearSelection();
+    } catch {
+      toast({ title: 'Error', description: 'Error de red al enviar WhatsApp', variant: 'destructive' });
+    } finally {
+      setSendingBulk(false);
+    }
+  };
+
+  const handleBulkExport = () => {
+    const params = new URLSearchParams();
+    selectedArray.forEach((p) => params.append('ids', p.id));
+    window.open(`/api/pacientes/exportar?formato=excel&${params.toString()}`, '_blank');
+  };
+
   const handleNuevoPaciente = async (data: {
     nombre: string;
     apellido: string;
@@ -273,6 +352,27 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
         </div>
       </div>
 
+      {/* Toolbar de selección múltiple */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 text-sm">
+          <CheckCheck className="h-4 w-4 text-primary shrink-0" />
+          <span className="font-medium">{selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''}</span>
+          <div className="flex-1" />
+          <Button variant="ghost" size="sm" onClick={clearSelection} className="h-8 text-xs">
+            <X className="h-3 w-3 mr-1" />
+            Limpiar
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleBulkExport} className="h-8 text-xs">
+            <FileSpreadsheet className="h-3 w-3 mr-1" />
+            Exportar
+          </Button>
+          <Button variant="default" size="sm" onClick={() => setShowBulkWhatsApp(true)} className="h-8 text-xs">
+            <Send className="h-3 w-3 mr-1" />
+            WhatsApp
+          </Button>
+        </div>
+      )}
+
       {/* Lista */}
       <Card>
         <CardContent className="p-0">
@@ -298,12 +398,33 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
             </div>
           ) : (
             <div className="divide-y">
+              {/* Select All header */}
+              <div className="flex items-center gap-4 px-4 py-2 text-xs text-muted-foreground border-b">
+                <Checkbox
+                  checked={filtered.length > 0 && selectedIds.size === filtered.length}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="Seleccionar todo"
+                />
+                <span>{selectedIds.size === filtered.length ? 'Todos seleccionados' : `${filtered.length} pacientes`}</span>
+              </div>
               {filtered.map((paciente) => (
-                <Link
+                <div
                   key={paciente.id}
-                  href={`/dashboard/pacientes/${paciente.id}`}
-                  className="flex items-center gap-4 p-4 hoverable:hover:bg-muted/50 transition-colors no-underline"
+                  className={`flex items-center gap-4 p-4 transition-colors ${
+                    selectedIds.has(paciente.id) ? 'bg-primary/5' : ''
+                  }`}
                 >
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selectedIds.has(paciente.id)}
+                      onCheckedChange={() => toggleSelect(paciente.id)}
+                      aria-label={`Seleccionar ${paciente.nombre} ${paciente.apellido}`}
+                    />
+                  </div>
+                  <Link
+                    href={`/dashboard/pacientes/${paciente.id}`}
+                    className="flex items-center gap-4 flex-1 min-w-0 no-underline hoverable:hover:opacity-80"
+                  >
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-primary/10 text-primary text-sm">
                       {getInitials(paciente.nombre, paciente.apellido)}
@@ -403,6 +524,7 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
                     </Button>
                   </div>
                 </Link>
+                </div>
               ))}
             </div>
           )}
@@ -425,6 +547,46 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
           onSaved={handleEditSaved}
         />
       )}
+
+      {/* Modal WhatsApp Masivo */}
+      <Dialog open={showBulkWhatsApp} onOpenChange={setShowBulkWhatsApp}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enviar WhatsApp masivo</DialogTitle>
+            <DialogDescription>
+              Se enviará un mensaje a {selectedArray.length} paciente{selectedArray.length !== 1 ? 's' : ''}.
+              Usá {'{nombre}'} para personalizar con el nombre del paciente.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Escribí tu mensaje... Ej: Hola {nombre}, recordamos su próximo turno..."
+            className="min-h-[120px]"
+            value={bulkMessage}
+            onChange={(e) => setBulkMessage(e.target.value)}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkWhatsApp(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleBulkWhatsApp}
+              disabled={!bulkMessage.trim() || sendingBulk}
+            >
+              {sendingBulk ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Enviar a {selectedArray.length} paciente{selectedArray.length !== 1 ? 's' : ''}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageAnimation>
   );
 }

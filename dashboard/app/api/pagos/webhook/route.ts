@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { suscripciones, usuarios } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { getUserByEmail } from '@/lib/data-store';
+import { safeLog, safeWarn, safeError } from '@/lib/logger';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { apiHandler, ok } from '@/lib/api-handler';
 
@@ -65,23 +66,23 @@ export const POST = apiHandler(async (request: Request) => {
   const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
   if (!webhookSecret) {
     if (process.env.NODE_ENV === 'production') {
-      console.error('[MP Webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — rechazando');
+      safeError('[MP Webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — rechazando');
       return NextResponse.json({ ok: false, error: 'Server config error' }, { status: 500 });
     }
-    console.warn('[MP Webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — saltando validación (solo desarrollo)');
+    safeWarn('[MP Webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — saltando validación (solo desarrollo)');
   } else {
     const signatureHeader = request.headers.get('x-signature');
     const url = new URL(request.url);
     const querySecret = url.searchParams.get('secret');
     const isValid = verifySignature(signatureHeader, body, querySecret, webhookSecret);
     if (!isValid) {
-      console.warn('[MP Webhook] Firma inválida');
+      safeWarn('[MP Webhook] Firma inválida');
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
     }
   }
   const { type, data } = body;
 
-  console.log('[MP Webhook] Recibido:', { type, data });
+  safeLog('[MP Webhook] Recibido:', { type, data });
 
   if (!type || !data?.id) {
     return NextResponse.json({ ok: false, error: 'Payload inválido' }, { status: 400 });
@@ -96,7 +97,7 @@ export const POST = apiHandler(async (request: Request) => {
       await handleMerchantOrderNotification(String(data.id));
       break;
     default:
-      console.log('[MP Webhook] Tipo no manejado:', type);
+      safeLog('[MP Webhook] Tipo no manejado:', type);
   }
 
   return ok({ ok: true });
@@ -106,7 +107,7 @@ export const POST = apiHandler(async (request: Request) => {
 async function handlePaymentNotification(paymentId: string) {
   const payment = await getPaymentById(paymentId);
   if (!payment) {
-    console.warn('[MP Webhook] Payment no encontrado:', paymentId);
+    safeWarn('[MP Webhook] Payment no encontrado:', paymentId);
     return;
   }
 
@@ -115,11 +116,11 @@ async function handlePaymentNotification(paymentId: string) {
   const payerEmail = payment.payer?.email;
   const merchantOrderId = payment.order?.id;
 
-  console.log('[MP Webhook] Payment:', { paymentId, status, externalRef, payerEmail });
+  safeLog('[MP Webhook] Payment:', { paymentId, status, externalRef, payerEmail });
 
   // Buscar o crear suscripción por external_reference
   if (!externalRef) {
-    console.warn('[MP Webhook] Payment sin external_reference');
+    safeWarn('[MP Webhook] Payment sin external_reference');
     return;
   }
 
@@ -134,7 +135,7 @@ async function handlePaymentNotification(paymentId: string) {
   const plan = PLANES[planId as PlanId];
 
   if (!plan) {
-    console.warn('[MP Webhook] Plan no encontrado:', planId);
+    safeWarn('[MP Webhook] Plan no encontrado:', planId);
     return;
   }
 
@@ -188,14 +189,14 @@ async function handlePaymentNotification(paymentId: string) {
             .update(usuarios)
             .set({ plan: planId, updatedAt: now })
             .where(eq(usuarios.id, user.id));
-          console.log(`[MP Webhook] ✅ Plan actualizado a ${planId} para usuario ${user.email}`);
+          safeLog(`[MP Webhook] ✅ Plan actualizado a ${planId} para usuario ${user.email}`);
         }
       } catch (err) {
-        console.error('[MP Webhook] Error actualizando usuario.plan:', err);
+        safeError('[MP Webhook] Error actualizando usuario.plan:', err);
       }
     }
 
-    console.log(`[MP Webhook] ✅ Suscripción ${planId} activada para ${payerEmail}`);
+    safeLog(`[MP Webhook] ✅ Suscripción ${planId} activada para ${payerEmail}`);
   } else if (['cancelled', 'rejected', 'refunded'].includes(status ?? '')) {
     if (existing.length > 0) {
       await db
@@ -203,7 +204,7 @@ async function handlePaymentNotification(paymentId: string) {
         .set({ estado: 'cancelled', updatedAt: now })
         .where(eq(suscripciones.id, existing[0].id));
     }
-    console.log(`[MP Webhook] ❌ Pago ${status} para ${payerEmail}`);
+    safeLog(`[MP Webhook] ❌ Pago ${status} para ${payerEmail}`);
   }
 }
 
@@ -211,7 +212,7 @@ async function handlePaymentNotification(paymentId: string) {
 async function handleMerchantOrderNotification(orderId: string) {
   const order = await getMerchantOrderById(orderId);
   if (!order) {
-    console.warn('[MP Webhook] Merchant order no encontrada:', orderId);
+    safeWarn('[MP Webhook] Merchant order no encontrada:', orderId);
     return;
   }
 

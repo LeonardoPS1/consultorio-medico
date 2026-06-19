@@ -48,6 +48,37 @@ export interface IntencionMensaje {
   porcentaje: number;
 }
 
+export interface PrediccionDia {
+  dia: string;
+  real: number | null;
+  estimado: number | null;
+  min: number | null;
+  max: number | null;
+}
+
+export interface ConversionLead {
+  etapa: string;
+  cantidad: number;
+  porcentaje: number;
+}
+
+export interface ComparativaAnual {
+  mes: string;
+  actual: number;
+  anterior: number;
+}
+
+export interface EjecutivoResumen {
+  totalIngresos: string;
+  ingresosCambio: string;
+  tasaOcupacion: string;
+  ocupacionCambio: string;
+  satisfaccion: string;
+  nps: number;
+  leadsConvertidos: number;
+  leadsTotales: number;
+}
+
 export interface ReportesData {
   metricas: Metricas[];
   turnos: TurnoDia[];
@@ -60,4 +91,8 @@ export interface ReportesData {
   volumenWhatsApp: WhatsAppVolumen[];
   canalesContacto: { canal: string; porcentaje: number }[];
   calidadRespuesta: { tasa: string; tiempo: string; msgsPorConv: string };
+  prediccion?: PrediccionDia[];
+  conversionLeads?: ConversionLead[];
+  comparativaAnual?: ComparativaAnual[];
+  ejecutivo?: EjecutivoResumen;
 }
