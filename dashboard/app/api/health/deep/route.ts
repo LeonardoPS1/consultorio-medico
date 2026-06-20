@@ -48,7 +48,8 @@ export async function GET() {
   // ─── Ollama ────────────────────────────────────────
   try {
     const ollamaStart = Date.now();
-    const ollamaUrl = process.env.OLLAMA_URL || 'http://172.18.0.1:11434';
+    // Usar OLLAMA_BASE_URL (consistente con el resto de la app)
+    const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://172.18.0.1:11434';
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(`${ollamaUrl}/api/tags`, { signal: controller.signal });
