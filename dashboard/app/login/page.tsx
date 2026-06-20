@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ShieldAlert, Smartphone, ArrowLeft } from 'lucide-react';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import Link from 'next/link';
+import { Logo } from '@/components/layout/logo';
 
 export default function LoginPage() {
   // Leer callbackUrl del query string directamente (evita Suspense boundary)
@@ -100,11 +101,7 @@ export default function LoginPage() {
         <CardHeader className="text-center space-y-2">
           <Link href="/" className="mx-auto block">
             <div className="mx-auto h-36 w-72 flex items-center justify-center">
-              <img
-                src="/aicoremed_dark_1200.svg"
-                alt={orgNombre}
-                className="h-full w-full object-contain"
-              />
+              <Logo className="h-full w-full object-contain" />
             </div>
           </Link>
           <CardTitle className="text-xl font-bold">{orgNombre}</CardTitle>

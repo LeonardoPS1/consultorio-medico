@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/layout/logo';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lock, Loader2, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
@@ -74,7 +75,7 @@ function ResetPasswordContent() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img src="/aicoremed_dark_1200.svg" alt="AiCoreMed" className="h-16 w-auto" />
+            <Logo className="h-16 w-auto" />
           </div>
           <CardTitle>Nueva contraseña</CardTitle>
           <CardDescription>

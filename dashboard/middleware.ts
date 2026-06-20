@@ -41,7 +41,7 @@ const securityHeaders: Record<string, string> = {
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   // camera/microphone permitidos para videollamadas con LiveKit (consistente con next.config.js)
   'Permissions-Policy': 'camera=(self), microphone=(self), geolocation=()',
-  'X-DNS-Prefetch-Control': 'off',
+  'X-DNS-Prefetch-Control': 'on',
 };
 
 // ─── Helper: verificar si hay sesión activa via cookie ───

@@ -46,14 +46,30 @@ export default function LandingPage() {
       <Navbar />
       <main>
         <Hero />
-        <Features />
-        <Specialties />
-        <Gallery />
-        <PainPoints />
-        <Pricing />
-        <FAQ />
-        <ContactForm />
-        <CTASection />
+        <div className="content-visibility-auto">
+          <Features />
+        </div>
+        <div className="content-visibility-auto">
+          <Specialties />
+        </div>
+        <div className="content-visibility-auto">
+          <Gallery />
+        </div>
+        <div className="content-visibility-auto">
+          <PainPoints />
+        </div>
+        <div className="content-visibility-auto">
+          <Pricing />
+        </div>
+        <div className="content-visibility-auto">
+          <FAQ />
+        </div>
+        <div className="content-visibility-auto">
+          <ContactForm />
+        </div>
+        <div className="content-visibility-auto">
+          <CTASection />
+        </div>
       </main>
       <Footer />
       <CookieConsentBanner />

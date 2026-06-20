@@ -4,6 +4,13 @@
 
 /* Google Fonts se cargan via next/font/google en layout.tsx (self-hosted, no CSP issue) */
 
+@layer utilities {
+  .content-visibility-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 400px 600px;
+  }
+}
+
 @layer base {
   :root {
     --background: 210 20% 98%;
@@ -525,10 +532,12 @@ html {
 
 .animate-soft-float {
   animation: softFloat 4s ease-in-out infinite;
+  will-change: transform;
 }
 
 .animate-soft-float-delayed {
   animation: softFloat 4s ease-in-out 1s infinite;
+  will-change: transform;
 }
 
 /* Scroll reveal glass card */

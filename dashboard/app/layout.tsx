@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { PWARegister } from '@/components/pwa-register';
 import { TenantTheme } from '@/components/tenant-theme';
 import { ScrollToTopButton } from '@/components/ui/scroll-to-top';
+import { WebVitals } from '@/components/web-vitals';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -48,8 +49,7 @@ export const viewport: Viewport = {
   themeColor: themeColor,
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -63,6 +63,9 @@ export default function RootLayout({
         {/* Service Worker registration handled in client component */}
         <meta name="application-name" content={tenantName} />
         <meta name="mobile-web-app-capable" content="yes" />
+        <link rel="preconnect" href="https://med.aicorebots.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        <link rel="dns-prefetch" href="https://api.mercadopago.com" />
       </head>
       <body className={inter.className}>
         <Providers>
@@ -72,6 +75,7 @@ export default function RootLayout({
         <PWARegister />
         <TenantTheme />
         <ScrollToTopButton />
+        <WebVitals />
       </body>
     </html>
   );

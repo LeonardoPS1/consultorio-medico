@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldAlert, ArrowLeft, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { Logo } from '@/components/layout/logo';
 
 export default function RegistroPage() {
   const router = useRouter();
@@ -82,11 +83,7 @@ export default function RegistroPage() {
         <CardHeader className="text-center space-y-2">
           <Link href="/" className="mx-auto block">
             <div className="mx-auto h-36 w-72 flex items-center justify-center">
-              <img
-                src="/aicoremed_dark_1200.svg"
-                alt="AiCoreMed"
-                className="h-full w-full object-contain"
-              />
+              <Logo className="h-full w-full object-contain" />
             </div>
           </Link>
           <CardTitle className="text-xl font-bold">Crear cuenta</CardTitle>

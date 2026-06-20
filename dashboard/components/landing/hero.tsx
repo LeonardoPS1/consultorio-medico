@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Bot, Play, MessageCircle, ShieldCheck, Lock, Server } from 'lucide-react';
@@ -169,11 +170,15 @@ export function Hero({
                 <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
                 <span className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
               </div>
-              <img
+              <Image
                 src="/assets/dashboard-real-home.png"
                 alt="Panel principal de AiCoreMed"
+                width={1440}
+                height={900}
                 className="w-full h-auto"
-                loading="eager"
+                priority
+                fetchPriority="high"
+                sizes="(max-width: 1024px) 100vw, 1024px"
               />
             </motion.div>
 

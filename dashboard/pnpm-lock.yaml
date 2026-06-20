@@ -170,6 +170,9 @@ importers:
       web-push:
         specifier: ^3.6.7
         version: 3.6.7
+      web-vitals:
+        specifier: ^5.3.0
+        version: 5.3.0
       xlsx:
         specifier: ^0.18.5
         version: 0.18.5
@@ -4529,6 +4532,9 @@ packages:
     engines: {node: '>= 16'}
     hasBin: true
 
+  web-vitals@5.3.0:
+    resolution: {integrity: sha512-q6LWsLatGYZp5VGBIOvbTj6JBV2nOmC8KvWztXBmwJcfFAzhwKwbOxhUH306XY3CcaZDUlSmSuNPBsCn0bFu+g==}
+
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
 
@@ -8845,6 +8851,8 @@ snapshots:
       minimist: 1.2.8
     transitivePeerDependencies:
       - supports-color
+
+  web-vitals@5.3.0: {}
 
   webidl-conversions@3.0.1: {}
 

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Menu, X, ChevronRight, MessageCircle } from 'lucide-react';
 import { RegistroExpressModal } from '@/components/landing/registro-modal';
+import { Logo } from '@/components/layout/logo';
 
 const NAV_ITEMS = [
   { label: 'Funcionalidades', href: '#features' },
@@ -48,11 +49,7 @@ export function Navbar() {
 
       <div className="container mx-auto flex min-h-20 md:min-h-28 h-auto py-3 md:py-4 items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <img
-            src="/aicoremed_dark_1200.svg"
-            alt="AiCoreMed"
-            className="h-14 md:h-24 w-auto"
-          />
+          <Logo className="h-14 md:h-24 w-auto" />
         </Link>
 
         {/* Desktop nav */}

@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Mic, MicOff, Camera, CameraOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/layout/logo';
 
 // ─── Props ─────────────────────────────────────────────────
 
@@ -105,11 +106,7 @@ export function PreJoinLobby({ identity, role, onJoin }: PreJoinLobbyProps) {
         {/* ─── Header ─────────────────────────────────── */}
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm mb-4 ring-1 ring-white/10 p-2">
-            <img
-              src="/aicoremed_dark_1200.svg"
-              alt="AicoreMed"
-              className="h-full w-full object-contain"
-            />
+            <Logo className="h-full w-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-white">
             Telemedicina

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Logo } from '@/components/layout/logo';
 import {
   LayoutDashboard,
   Calendar,
@@ -177,22 +178,14 @@ export function Sidebar() {
           {!collapsed && (
             <div className="flex flex-col items-center">
               <div className="h-20 w-20 lg:h-40 lg:w-40 shrink-0">
-                <img
-                  src="/aicoremed_dark_1200.svg"
-                  alt={orgNombre}
-                  className="h-full w-full object-cover"
-                />
+                <Logo className="h-full w-full object-cover" />
               </div>
               <span className="font-semibold text-xs lg:text-sm text-center truncate max-w-[120px] lg:max-w-[160px] leading-none -mt-1">{orgNombre}</span>
             </div>
           )}
           {collapsed && (
             <div className="mx-auto">
-              <img
-                src="/aicoremed_dark_1200.svg"
-                alt={orgNombre}
-                className="h-20 w-20 object-cover"
-              />
+              <Logo className="h-20 w-20 object-cover" />
             </div>
           )}
 

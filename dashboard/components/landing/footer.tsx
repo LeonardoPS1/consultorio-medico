@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ShieldCheck, Lock, Server } from 'lucide-react';
 import { FooterColumn } from '@/components/landing/landing-footer-column';
 import { ScrollToTop } from '@/components/landing/scroll-to-top';
+import { Logo } from '@/components/layout/logo';
 
 const footerLinks: Record<string, { label: string; links: Array<{ label: string; href: string; external?: boolean }> }> = {
   product: {
@@ -66,11 +67,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <div>
               <Link href="/" className="inline-flex items-center gap-2 mb-3">
-                <img
-                  src="/aicoremed_dark_1200.svg"
-                  alt="AiCoreMed"
-                  className="h-8 md:h-9 w-auto"
-                />
+                <Logo className="h-8 md:h-9 w-auto" />
               </Link>
               <p className="text-xs text-muted-foreground/70 leading-relaxed max-w-xs mb-3">
                 Sistema de gestión para consultorios médicos con IA local, WhatsApp integrado
