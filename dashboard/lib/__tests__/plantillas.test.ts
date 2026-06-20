@@ -167,7 +167,7 @@ describe('Plantillas WhatsApp - Extracción de variables', () => {
   it('debe detectar variables en el contenido', () => {
     const extractVars = (content: string): string[] => {
       const matches = content.match(/\{\{(\w+)\}\}/g) || [];
-      return [...new Set(matches.map((v) => v.replace(/[{}]/g, '')))];
+      return Array.from(new Set(matches.map((v) => v.replace(/[{}]/g, ''))));
     };
 
     expect(extractVars('Hola {{nombre}}! Turno con {{medico_nombre}}')).toEqual([

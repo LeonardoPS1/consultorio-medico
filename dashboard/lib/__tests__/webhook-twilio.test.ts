@@ -154,20 +154,21 @@ async function handleWebhookRequest(req: any): Promise<{
       telefono,
       nombre: profileName || `Paciente ${telefono.slice(-4)}`,
       apellido: '',
-      consentimiento_whatsapp: true,
-      canal_preferido: 'whatsapp',
+      consentimientoWhatsapp: true,
+      canalPreferido: 'whatsapp',
       fuente: 'whatsapp',
     });
   }
 
   // 6. Buscar/crear conversación
-  const conversaciones = await getConversaciones({ pacienteId: paciente.id });
+  const todas = await getConversaciones();
+  const conversaciones = todas.filter((c: any) => c.pacienteId === paciente.id);
   let conversacion = conversaciones[0];
   if (!conversacion) {
     conversacion = await createConversacion({
       pacienteId: paciente.id,
       canal: 'whatsapp',
-    });
+    } as any);
   }
 
   // 7. Guardar mensaje
@@ -226,7 +227,7 @@ describe('Webhook Twilio — Integración', () => {
     mockConsoleError.mockClear();
 
     // Set environment
-    process.env.NODE_ENV = 'development';
+    (process.env as any).NODE_ENV = 'development';
     process.env.TWILIO_AUTH_TOKEN = 'test-token';
     process.env.N8N_WEBHOOK_INBOUND_URL = 'http://n8n:5678/webhook/consultorio-inbound';
     process.env.N8N_WEBHOOK_SECRET = 'test-secret-2026';
@@ -252,9 +253,13 @@ describe('Webhook Twilio — Integración', () => {
         nombre: 'Juan',
         apellido: 'Perez',
         telefono: '+5491155550101',
-      });
+        canalPreferido: 'whatsapp',
+        fuente: 'whatsapp',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any);
       vi.mocked(getConversaciones).mockResolvedValue([
-        { id: 'conv-1', pacienteId: 'pac-1', estado: 'activa' },
+        { id: 'conv-1', pacienteId: 'pac-1', estado: 'activa', canal: 'whatsapp', optOut: false, ultimaInteraccion: new Date(), contextoIa: null, tenantId: null, sucursalId: null, medicoId: null } as any,
       ]);
       vi.mocked(createMensaje).mockResolvedValue({
         id: 'msg-1',
@@ -263,7 +268,10 @@ describe('Webhook Twilio — Integración', () => {
         contenido: 'Hola doctor',
         twilioSid: 'SM123',
         twilioStatus: 'received',
-      });
+        tipo: 'texto',
+        metadata: null,
+        createdAt: new Date(),
+      } as any);
 
       const body = new URLSearchParams({
         From: 'whatsapp:+5491155550101',
@@ -298,13 +306,24 @@ describe('Webhook Twilio — Integración', () => {
         nombre: 'Nuevo Paciente',
         apellido: '',
         telefono: '+5491155559999',
-      });
+        canalPreferido: 'whatsapp',
+        fuente: 'whatsapp',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any);
       vi.mocked(getConversaciones).mockResolvedValue([]);
       vi.mocked(createConversacion).mockResolvedValue({
         id: 'conv-new',
         pacienteId: 'pac-new',
         estado: 'activa',
-      });
+        canal: 'whatsapp',
+        optOut: false,
+        ultimaInteraccion: new Date(),
+        contextoIa: null,
+        tenantId: null,
+        sucursalId: null,
+        medicoId: null,
+      } as any);
 
       const body = new URLSearchParams({
         From: 'whatsapp:+5491155559999',
@@ -333,9 +352,10 @@ describe('Webhook Twilio — Integración', () => {
 
       vi.mocked(getPacienteByTelefono).mockResolvedValue({
         id: 'pac-1', nombre: 'Juan', apellido: 'Perez', telefono: '+5491155550101',
-      });
+        canalPreferido: 'whatsapp', fuente: 'whatsapp', createdAt: new Date(), updatedAt: new Date(),
+      } as any);
       vi.mocked(getConversaciones).mockResolvedValue([
-        { id: 'conv-1', pacienteId: 'pac-1', estado: 'activa' },
+        { id: 'conv-1', pacienteId: 'pac-1', estado: 'activa', canal: 'whatsapp', optOut: false, ultimaInteraccion: new Date(), contextoIa: null, tenantId: null, sucursalId: null, medicoId: null } as any,
       ]);
 
       const body = new URLSearchParams({
@@ -350,8 +370,8 @@ describe('Webhook Twilio — Integración', () => {
       );
 
       expect(n8nCall).toBeDefined();
-      expect(n8nCall[1].headers['x-webhook-secret']).toBe('test-secret-2026');
-      expect(n8nCall[1].method).toBe('POST');
+      expect(n8nCall![1].headers['x-webhook-secret']).toBe('test-secret-2026');
+      expect(n8nCall![1].method).toBe('POST');
     });
 
     it('no debe forwardear si N8N_WEBHOOK_INBOUND_URL no esta configurada', async () => {
@@ -360,9 +380,10 @@ describe('Webhook Twilio — Integración', () => {
       const { getPacienteByTelefono, getConversaciones } = await import('@/lib/data-store');
       vi.mocked(getPacienteByTelefono).mockResolvedValue({
         id: 'pac-1', nombre: 'X', apellido: 'Y', telefono: '+5491155550101',
-      });
+        canalPreferido: 'whatsapp', fuente: 'whatsapp', createdAt: new Date(), updatedAt: new Date(),
+      } as any);
       vi.mocked(getConversaciones).mockResolvedValue([
-        { id: 'conv-1', pacienteId: 'pac-1', estado: 'activa' },
+        { id: 'conv-1', pacienteId: 'pac-1', estado: 'activa', canal: 'whatsapp', optOut: false, ultimaInteraccion: new Date(), contextoIa: null, tenantId: null, sucursalId: null, medicoId: null } as any,
       ]);
 
       await handleWebhookRequest(createMockRequest({
@@ -432,9 +453,10 @@ describe('Webhook Twilio — Integración', () => {
       const { getPacienteByTelefono, getConversaciones } = await import('@/lib/data-store');
       vi.mocked(getPacienteByTelefono).mockResolvedValue({
         id: 'pac-1', nombre: 'Juan', apellido: 'Perez', telefono: '+5491155550101',
-      });
+        canalPreferido: 'whatsapp', fuente: 'whatsapp', createdAt: new Date(), updatedAt: new Date(),
+      } as any);
       vi.mocked(getConversaciones).mockResolvedValue([
-        { id: 'conv-1', pacienteId: 'pac-1', estado: 'activa' },
+        { id: 'conv-1', pacienteId: 'pac-1', estado: 'activa', canal: 'whatsapp', optOut: false, ultimaInteraccion: new Date(), contextoIa: null, tenantId: null, sucursalId: null, medicoId: null } as any,
       ]);
 
       await handleWebhookRequest(createMockRequest({
@@ -458,9 +480,10 @@ describe('Webhook Twilio — Integración', () => {
       const { getPacienteByTelefono, getConversaciones } = await import('@/lib/data-store');
       vi.mocked(getPacienteByTelefono).mockResolvedValue({
         id: 'med-1', nombre: 'Doctor', apellido: '', telefono: doctorPhone,
-      });
+        canalPreferido: 'whatsapp', fuente: 'whatsapp', createdAt: new Date(), updatedAt: new Date(),
+      } as any);
       vi.mocked(getConversaciones).mockResolvedValue([
-        { id: 'conv-1', pacienteId: 'med-1', estado: 'activa' },
+        { id: 'conv-1', pacienteId: 'med-1', estado: 'activa', canal: 'whatsapp', optOut: false, ultimaInteraccion: new Date(), contextoIa: null, tenantId: null, sucursalId: null, medicoId: null } as any,
       ]);
 
       mockFetch.mockClear();
@@ -481,7 +504,7 @@ describe('Webhook Twilio — Integración', () => {
 
   describe('Validación firma Twilio', () => {
     it('debe rechazar en producción sin firma', async () => {
-      process.env.NODE_ENV = 'production';
+      (process.env as any).NODE_ENV = 'production';
       const req = createMockRequest({
         body: 'From=whatsapp:+5491155550101&Body=Hola',
         headers: {},
@@ -491,7 +514,7 @@ describe('Webhook Twilio — Integración', () => {
     });
 
     it('debe aceptar en desarrollo sin firma', async () => {
-      process.env.NODE_ENV = 'development';
+      (process.env as any).NODE_ENV = 'development';
       const req = createMockRequest({
         body: 'From=whatsapp:+5491155550101&Body=Hola',
         headers: {},
@@ -499,9 +522,10 @@ describe('Webhook Twilio — Integración', () => {
       const { getPacienteByTelefono, getConversaciones } = await import('@/lib/data-store');
       vi.mocked(getPacienteByTelefono).mockResolvedValue({
         id: 'pac-1', nombre: 'X', apellido: 'Y', telefono: '+5491155550101',
-      });
+        canalPreferido: 'whatsapp', fuente: 'whatsapp', createdAt: new Date(), updatedAt: new Date(),
+      } as any);
       vi.mocked(getConversaciones).mockResolvedValue([
-        { id: 'conv-1', pacienteId: 'pac-1', estado: 'activa' },
+        { id: 'conv-1', pacienteId: 'pac-1', estado: 'activa', canal: 'whatsapp', optOut: false, ultimaInteraccion: new Date(), contextoIa: null, tenantId: null, sucursalId: null, medicoId: null } as any,
       ]);
       const res = await handleWebhookRequest(req);
       expect(res.status).toBe(200);
@@ -534,8 +558,10 @@ describe('Webhook Twilio — Integración', () => {
         await import('@/lib/data-store');
       vi.mocked(getPacienteByTelefono).mockResolvedValue(null);
       vi.mocked(createPaciente).mockResolvedValue({
-        id: 'pac-new', nombre: 'Paciente 9999', apellido: '', telefono: '+5491155559999',
-      });
+        id: 'pac-new', nombre: 'Paciente 9999', apellido: '',
+        telefono: '+5491155559999', canalPreferido: 'whatsapp',
+        fuente: 'whatsapp', createdAt: new Date(), updatedAt: new Date(),
+      } as any);
       vi.mocked(getConversaciones).mockResolvedValue([]);
 
       await handleWebhookRequest(createMockRequest({
