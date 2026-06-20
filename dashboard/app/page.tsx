@@ -5,7 +5,7 @@ import { Hero } from '@/components/landing/hero';
 import { Features } from '@/components/landing/features';
 import { Specialties } from '@/components/landing/specialties';
 import { Gallery } from '@/components/landing/gallery';
-import { Testimonials } from '@/components/landing/testimonials';
+import { PainPoints } from '@/components/landing/pain-points';
 import { Pricing } from '@/components/landing/pricing';
 import { FAQ } from '@/components/landing/faq';
 import { ContactForm } from '@/components/landing/contact-form';
@@ -49,7 +49,7 @@ export default function LandingPage() {
         <Features />
         <Specialties />
         <Gallery />
-        <Testimonials />
+        <PainPoints />
         <Pricing />
         <FAQ />
         <ContactForm />
