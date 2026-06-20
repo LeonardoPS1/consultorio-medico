@@ -338,8 +338,10 @@ export const createTenantSchema = z.object({
 
 // ─── Portal Auth ─────────────────────────────────────────
 
+const PORTAL_PHONE_REGEX = /^\+?[1-9]\d{6,14}$/;
+
 export const portalAuthRequestSchema = z.object({
-  telefono: z.string().min(1, 'Teléfono es obligatorio'),
+  telefono: z.string().regex(PORTAL_PHONE_REGEX, 'Teléfono inválido'),
 });
 
 export const portalAuthVerifySchema = z.object({
@@ -512,13 +514,6 @@ export const setup2faSchema = z.object({
   backupCodes: z.array(z.string()).optional(),
 });
 
-// ─── Portal Auth ──────────────────────────────────────────
-const PHONE_REGEX = /^\+?[1-9]\d{6,14}$/;
-
-export const portalAuthRequestSchema = z.object({
-  telefono: z.string().regex(PHONE_REGEX, 'Teléfono inválido'),
-});
-
 export type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
 export type ChangePasswordData = z.infer<typeof changePasswordSchema>;
@@ -526,6 +521,7 @@ export type Setup2faData = z.infer<typeof setup2faSchema>;
 export type PortalAuthRequestData = z.infer<typeof portalAuthRequestSchema>;
 
 // ─── Bulk Operations ──────────────────────────────────────
+
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const bulkWhatsAppSchema = z.object({
@@ -542,20 +538,14 @@ export type BulkWhatsAppData = z.infer<typeof bulkWhatsAppSchema>;
 export type BulkStatusData = z.infer<typeof bulkStatusSchema>;
 
 // ─── LiveKit ──────────────────────────────────────────────
+
 export const liveKitTokenSchema = z.object({
   roomName: z.string().min(1, 'Room requerida').max(100),
   role: z.enum(['participant', 'publisher', 'subscriber']).default('participant'),
 });
 
-// ─── Bloqueos ─────────────────────────────────────────────
-export const createBloqueoSchema = z.object({
-  fechaInicio: z.string().datetime('Fecha de inicio inválida'),
-  fechaFin: z.string().datetime('Fecha de fin inválida'),
-  titulo: z.string().max(200).optional().default(''),
-  motivo: z.string().max(500).optional().default(''),
-});
-
 // ─── Notas SOAP ───────────────────────────────────────────
+
 export const createNotaSoapSchema = z.object({
   turnoId: z.string().uuid('ID de turno inválido').optional(),
   subjetivo: z.string().max(5000).optional().default(''),
@@ -577,7 +567,7 @@ export type UpdateNotaSoapData = z.infer<typeof updateNotaSoapSchema>;
 export const contactFormSchema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres').max(255),
   email: z.string().email('Email inválido').max(255),
-  phone: z.string().regex(PHONE_REGEX, 'Teléfono inválido').optional().or(z.literal('')),
+  phone: z.string().regex(PORTAL_PHONE_REGEX, 'Teléfono inválido').optional().or(z.literal('')),
   specialty: z.string().max(100).optional().or(z.literal('')),
   size: z.string().max(50).optional().or(z.literal('')),
   interests: z.array(z.string()).optional().default([]),

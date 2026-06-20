@@ -629,7 +629,7 @@ export async function getUserByEmail(email: string): Promise<UsuarioData | null>
     activo: u.activo,
     plan: u.plan || 'free',
     medicoId,
-    tenantId: u.tenantId,
+    tenantId: u.tenantId ?? undefined,
     secreto2fa: u.secreto2fa,
     activo2fa: u.activo2fa,
     backupCodes: u.backupCodes,

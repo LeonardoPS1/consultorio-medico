@@ -20,7 +20,7 @@ function checkAlertRate(ip: string): boolean {
 // Cleanup cada 5 min
 setInterval(() => {
   const now = Date.now();
-  for (const [k, v] of alertRateMap) {
+  for (const [k, v] of Array.from(alertRateMap)) {
     if (now > v.resetAt) alertRateMap.delete(k);
   }
 }, 5 * 60_000);
