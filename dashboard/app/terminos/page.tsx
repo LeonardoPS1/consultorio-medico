@@ -14,7 +14,7 @@ export default function TerminosPage() {
       <header className="border-b bg-background/95 backdrop-blur-xl">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/aicoremed_dark_1200.svg" alt="AiCoreMed" className="h-9 md:h-11 w-auto" />
+            <img src="/aicoremed_dark_1200.svg" alt="AiCoreMed" className="h-14 md:h-24 w-auto" />
           </Link>
           <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             ← Volver al inicio

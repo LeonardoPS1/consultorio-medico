@@ -46,12 +46,12 @@ export function Navbar() {
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       />
 
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+      <div className="container mx-auto flex min-h-20 md:min-h-28 h-auto py-3 md:py-4 items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <img
             src="/aicoremed_dark_1200.svg"
             alt="AiCoreMed"
-            className="h-9 md:h-11 w-auto"
+            className="h-14 md:h-24 w-auto"
           />
         </Link>
 
