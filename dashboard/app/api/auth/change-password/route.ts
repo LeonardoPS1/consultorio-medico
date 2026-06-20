@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { usuarios } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { changePasswordSchema } from '@/lib/validations';
 
 // POST /api/auth/change-password
 // Cambia la contraseña del usuario autenticado
@@ -14,15 +15,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const { currentPassword, newPassword } = await request.json();
-
-    if (!currentPassword || !newPassword) {
-      return NextResponse.json({ error: 'Ambas contraseñas son requeridas' }, { status: 400 });
+    const parsed = changePasswordSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0]?.message || 'Datos inválidos';
+      return NextResponse.json({ error: firstError }, { status: 400 });
     }
-
-    if (newPassword.length < 8) {
-      return NextResponse.json({ error: 'La nueva contraseña debe tener al menos 8 caracteres' }, { status: 400 });
-    }
+    const { currentPassword, newPassword } = parsed.data;
 
     // Buscar usuario
     const result = await db

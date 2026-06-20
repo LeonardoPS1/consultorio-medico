@@ -6,6 +6,7 @@ import { auth } from '@/lib/auth';
 import { createHash } from 'crypto';
 import { generate2faSecret, generateQRCodeBase64, generateBackupCodes, verify2faToken } from '@/lib/mfa';
 import { updateUser2FA, getUserByEmail, storeBackupCodes } from '@/lib/data-store';
+import { setup2faSchema } from '@/lib/validations';
 
 export async function GET() {
   try {
@@ -36,11 +37,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
-    const { secret, token, backupCodes } = await request.json();
-
-    if (!secret || !token) {
-      return NextResponse.json({ error: 'Faltan secret o token' }, { status: 400 });
+    const parsed = setup2faSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Datos inválidos para 2FA' }, { status: 400 });
     }
+    const { secret, token, backupCodes } = parsed.data;
 
     // Verificar el código TOTP
     if (!verify2faToken(token, secret)) {

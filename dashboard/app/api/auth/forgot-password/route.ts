@@ -3,16 +3,18 @@ import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { usuarios } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { forgotPasswordSchema } from '@/lib/validations';
 
 // POST /api/auth/forgot-password
 // Genera un token de recuperación y lo devuelve (modo dev)
 // En producción se enviaría por email
 export async function POST(request: Request) {
   try {
-    const { email } = await request.json();
-    if (!email) {
-      return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
+    const parsed = forgotPasswordSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Email inválido' }, { status: 400 });
     }
+    const { email } = parsed.data;
 
     // Buscar usuario
     const result = await db

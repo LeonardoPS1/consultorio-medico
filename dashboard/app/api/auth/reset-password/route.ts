@@ -4,29 +4,18 @@ import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { usuarios } from '@/drizzle/schema';
 import { eq, sql } from 'drizzle-orm';
+import { resetPasswordSchema } from '@/lib/validations';
 
 // POST /api/auth/reset-password
 // Valida el token (comparando contra SHA-256 almacenado) y actualiza la contraseña
 export async function POST(request: Request) {
   try {
-    const { token, password } = await request.json();
-
-    if (!token || !password) {
-      return NextResponse.json({ error: 'Token y contraseña requeridos' }, { status: 400 });
+    const parsed = resetPasswordSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0]?.message || 'Datos inválidos';
+      return NextResponse.json({ error: firstError }, { status: 400 });
     }
-
-    if (password.length < 8) {
-      return NextResponse.json({ error: 'La contraseña debe tener al menos 8 caracteres' }, { status: 400 });
-    }
-    if (!/[A-Z]/.test(password)) {
-      return NextResponse.json({ error: 'La contraseña debe contener al menos una mayúscula' }, { status: 400 });
-    }
-    if (!/[0-9]/.test(password)) {
-      return NextResponse.json({ error: 'La contraseña debe contener al menos un número' }, { status: 400 });
-    }
-    if (!/[^A-Za-z0-9]/.test(password)) {
-      return NextResponse.json({ error: 'La contraseña debe contener al menos un carácter especial' }, { status: 400 });
-    }
+    const { token, password } = parsed.data;
 
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 

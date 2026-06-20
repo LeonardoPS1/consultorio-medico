@@ -37,3 +37,26 @@ export async function setTenantContext(tenantId: string | null | undefined): Pro
     console.warn('[RLS] No se pudo establecer contexto tenant:', error instanceof Error ? error.message : error);
   }
 }
+
+/**
+ * Helper para API routes: establece el contexto tenant desde la sesión activa.
+ * Debe llamarse al inicio de cada request protegido.
+ *
+ * Uso:
+ *   import { withTenantScope } from '@/lib/rls';
+ *   await withTenantScope();
+ */
+export async function withTenantScope(): Promise<string | undefined> {
+  try {
+    const { auth } = await import('@/lib/auth');
+    const session = await auth();
+    const tenantId = session?.user?.tenantId;
+    if (tenantId) {
+      await setTenantContext(tenantId);
+    }
+    return tenantId;
+  } catch {
+    // Si auth() falla (ej: ruta pública sin sesión), continuar sin RLS
+    return undefined;
+  }
+}

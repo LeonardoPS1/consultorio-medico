@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { bulkWhatsApp } from '@/lib/services/bulk-operations';
 import { safeWarn } from '@/lib/logger';
+import { bulkWhatsAppSchema } from '@/lib/validations';
 
 const BULK_MAX = 100;
 
@@ -12,21 +13,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
-    const { pacienteIds, mensaje } = body;
-
-    if (!Array.isArray(pacienteIds) || pacienteIds.length === 0) {
-      return NextResponse.json({ error: 'pacienteIds es requerido (array no vacío)' }, { status: 400 });
+    const parsed = bulkWhatsAppSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0]?.message || 'Datos inválidos' }, { status: 400 });
     }
-    if (!mensaje || typeof mensaje !== 'string') {
-      return NextResponse.json({ error: 'mensaje es requerido' }, { status: 400 });
-    }
-    if (pacienteIds.length > BULK_MAX) {
-      return NextResponse.json(
-        { error: `Máximo ${BULK_MAX} pacientes por lote` },
-        { status: 400 },
-      );
-    }
+    const { pacienteIds, mensaje } = parsed.data;
 
     const sucursalId = (session.user as Record<string, unknown>)?.sucursalId as string | undefined;
     const result = await bulkWhatsApp(pacienteIds, mensaje, sucursalId);

@@ -134,6 +134,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.plan = user.plan;
         token.medicoId = user.medicoId;
+        token.tenantId = user.tenantId;
       }
       // Refrescar plan y medicoId desde DB para que cambios post-pago apliquen sin re-login
       if (token.email && !user) {
@@ -142,6 +143,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (dbUser) {
             if (dbUser.plan) token.plan = dbUser.plan;
             if (dbUser.medicoId) token.medicoId = dbUser.medicoId;
+            if (dbUser.tenantId) token.tenantId = dbUser.tenantId;
           }
         } catch {
           // Si falla la consulta, mantenemos los valores actuales del token
@@ -155,6 +157,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (token.id) session.user.id = token.id;
         if (token.plan) session.user.plan = token.plan;
         if (token.medicoId) session.user.medicoId = token.medicoId;
+        if (token.tenantId) session.user.tenantId = token.tenantId;
       }
       return session;
     },

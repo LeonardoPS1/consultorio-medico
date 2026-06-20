@@ -480,8 +480,99 @@ export type CreateDerivacion = z.infer<typeof createDerivacionSchema>;
 export type UpdateDerivacion = z.infer<typeof updateDerivacionSchema>;
 export type UpdateUser = z.infer<typeof updateUserSchema>;
 
-// ─── Contact Form ─────────────────────────────────────────
+// ─── Auth (Forgot/Reset/Change Password) ──────────────────
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Email inválido'),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Token requerido'),
+  password: z
+    .string()
+    .min(8, 'Mínimo 8 caracteres')
+    .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
+    .regex(/[0-9]/, 'Debe contener al menos un número')
+    .regex(/[^A-Za-z0-9]/, 'Debe contener al menos un carácter especial'),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Contraseña actual requerida'),
+  newPassword: z
+    .string()
+    .min(8, 'Mínimo 8 caracteres')
+    .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
+    .regex(/[0-9]/, 'Debe contener al menos un número')
+    .regex(/[^A-Za-z0-9]/, 'Debe contener al menos un carácter especial'),
+});
+
+// ─── 2FA ──────────────────────────────────────────────────
+export const setup2faSchema = z.object({
+  secret: z.string().min(1, 'Secret requerido'),
+  token: z.string().length(6, 'Token debe tener 6 dígitos').regex(/^\d{6}$/, 'Token debe ser numérico'),
+  backupCodes: z.array(z.string()).optional(),
+});
+
+// ─── Portal Auth ──────────────────────────────────────────
 const PHONE_REGEX = /^\+?[1-9]\d{6,14}$/;
+
+export const portalAuthRequestSchema = z.object({
+  telefono: z.string().regex(PHONE_REGEX, 'Teléfono inválido'),
+});
+
+export type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
+export type ChangePasswordData = z.infer<typeof changePasswordSchema>;
+export type Setup2faData = z.infer<typeof setup2faSchema>;
+export type PortalAuthRequestData = z.infer<typeof portalAuthRequestSchema>;
+
+// ─── Bulk Operations ──────────────────────────────────────
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export const bulkWhatsAppSchema = z.object({
+  pacienteIds: z.array(z.string().regex(UUID_REGEX, 'ID de paciente inválido')).min(1).max(500),
+  mensaje: z.string().min(1, 'Mensaje requerido').max(2000, 'Máximo 2000 caracteres'),
+});
+
+export const bulkStatusSchema = z.object({
+  turnoIds: z.array(z.string().regex(UUID_REGEX, 'ID de turno inválido')).min(1).max(500),
+  estado: z.enum(['pendiente', 'confirmado', 'en_curso', 'completado', 'cancelado', 'no_asistio']),
+});
+
+export type BulkWhatsAppData = z.infer<typeof bulkWhatsAppSchema>;
+export type BulkStatusData = z.infer<typeof bulkStatusSchema>;
+
+// ─── LiveKit ──────────────────────────────────────────────
+export const liveKitTokenSchema = z.object({
+  roomName: z.string().min(1, 'Room requerida').max(100),
+  role: z.enum(['participant', 'publisher', 'subscriber']).default('participant'),
+});
+
+// ─── Bloqueos ─────────────────────────────────────────────
+export const createBloqueoSchema = z.object({
+  fechaInicio: z.string().datetime('Fecha de inicio inválida'),
+  fechaFin: z.string().datetime('Fecha de fin inválida'),
+  titulo: z.string().max(200).optional().default(''),
+  motivo: z.string().max(500).optional().default(''),
+});
+
+// ─── Notas SOAP ───────────────────────────────────────────
+export const createNotaSoapSchema = z.object({
+  turnoId: z.string().uuid('ID de turno inválido').optional(),
+  subjetivo: z.string().max(5000).optional().default(''),
+  objetivo: z.string().max(5000).optional().default(''),
+  evaluacion: z.string().max(5000).optional().default(''),
+  plan: z.string().max(5000).optional().default(''),
+  cie10: z.array(z.string()).optional().default([]),
+});
+
+export const updateNotaSoapSchema = createNotaSoapSchema.partial();
+
+export type LiveKitTokenData = z.infer<typeof liveKitTokenSchema>;
+export type CreateBloqueoData = z.infer<typeof createBloqueoSchema>;
+export type CreateNotaSoapData = z.infer<typeof createNotaSoapSchema>;
+export type UpdateNotaSoapData = z.infer<typeof updateNotaSoapSchema>;
+
+// ─── Contact Form ─────────────────────────────────────────
 
 export const contactFormSchema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres').max(255),

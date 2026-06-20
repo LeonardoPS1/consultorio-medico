@@ -13,11 +13,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { safeError } from '@/lib/logger';
+import { withTenantScope } from '@/lib/rls';
 
 export function apiHandler(fn: (...args: any[]) => Promise<NextResponse> | NextResponse) {
   return async (...args: any[]) => {
     const request = args[0] as NextRequest;
     try {
+      // Establecer contexto tenant automáticamente (si hay sesión activa)
+      await withTenantScope();
       return await fn(...args);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error interno del servidor';
@@ -29,8 +32,7 @@ export function apiHandler(fn: (...args: any[]) => Promise<NextResponse> | NextR
       return NextResponse.json(
         { 
           error: userFacing ? message : 'Error interno del servidor',
-          detail: process.env.NODE_ENV !== 'production' ? message : undefined,
-          ...(process.env.NODE_ENV === 'production' ? { prodError: message } : {}),
+          ...(process.env.NODE_ENV !== 'production' ? { detail: message } : {}),
         },
         { status },
       );

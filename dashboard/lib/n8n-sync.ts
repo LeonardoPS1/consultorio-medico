@@ -308,14 +308,37 @@ export async function getN8nCredentials(): Promise<{
  * Prueba la conexión con un servicio verificando las credenciales.
  * Hace un request mínimo al servicio para validar.
  */
+/**
+ * Valida que una URL no apunte a IP privada/reservada (protección SSRF).
+ */
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const blockedHosts = ['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]', '169.254.169.254'];
+    const hostname = parsed.hostname.toLowerCase();
+    if (blockedHosts.includes(hostname)) return false;
+    // Bloquear rangos privados IPv4
+    if (/^10\./.test(hostname) || /^172\.(1[6-9]|2\d|3[01])\./.test(hostname) || /^192\.168\./.test(hostname)) {
+      return false;
+    }
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export async function testCredentialConnection(
   servicio: string,
   credenciales: Record<string, string>
 ): Promise<{ success: boolean; message: string }> {
   switch (servicio) {
     case 'ollama': {
+      const baseUrl = credenciales['base_url'] || 'http://localhost:11434';
+      if (!isSafeUrl(baseUrl)) {
+        return { success: false, message: '❌ URL de Ollama no válida (IP privada bloqueada)' };
+      }
       try {
-        const res = await fetch(`${credenciales['base_url'] || 'http://localhost:11434'}/api/tags`, {
+        const res = await fetch(`${baseUrl}/api/tags`, {
           signal: AbortSignal.timeout(5000),
         });
         if (res.ok) {

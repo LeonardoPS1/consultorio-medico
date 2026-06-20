@@ -40,8 +40,8 @@ function verifySignature(
     }
   }
 
-  // Método 2: Query param ?secret= (fallback para testing manual)
-  if (querySecret && querySecret === secret) {
+  // Método 2 (SÓLO DEV): Query param ?secret= (para testing manual con ngrok/localhost)
+  if (process.env.NODE_ENV !== 'production' && querySecret && querySecret === secret) {
     return true;
   }
 

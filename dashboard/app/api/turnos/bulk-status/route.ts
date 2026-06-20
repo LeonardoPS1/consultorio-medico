@@ -21,6 +21,9 @@ export async function PATCH(request: Request) {
     if (!Array.isArray(turnoIds) || turnoIds.length === 0) {
       return NextResponse.json({ error: 'turnoIds es requerido (array no vacío)' }, { status: 400 });
     }
+    if (!turnoIds.every((id: unknown) => typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id))) {
+      return NextResponse.json({ error: 'IDs de turno inválidos' }, { status: 400 });
+    }
     if (!estado || typeof estado !== 'string') {
       return NextResponse.json({ error: 'estado es requerido' }, { status: 400 });
     }

@@ -4,7 +4,33 @@ import { safeWarn } from '@/lib/logger';
 
 const WEBHOOK_SECRET = process.env.N8N_WEBHOOK_SECRET;
 
+// Rate limiter en memoria para este webhook
+const alertRateMap = new Map<string, { count: number; resetAt: number }>();
+function checkAlertRate(ip: string): boolean {
+  const now = Date.now();
+  const entry = alertRateMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    alertRateMap.set(ip, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  if (entry.count >= 10) return false;
+  entry.count++;
+  return true;
+}
+// Cleanup cada 5 min
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of alertRateMap) {
+    if (now > v.resetAt) alertRateMap.delete(k);
+  }
+}, 5 * 60_000);
+
 export async function POST(request: Request) {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  if (!checkAlertRate(ip)) {
+    return NextResponse.json({ error: 'Demasiadas solicitudes' }, { status: 429 });
+  }
+
   const secret = request.headers.get('x-webhook-secret');
   if (!WEBHOOK_SECRET || secret !== WEBHOOK_SECRET) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });

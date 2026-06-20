@@ -7,20 +7,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generateMagicLink, sendPortalMagicLinkWhatsApp } from '@/lib/portal-auth';
+import { portalAuthRequestSchema } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
-  let body: Record<string, unknown>;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Body inválido' }, { status: 400 });
+  const parsed = portalAuthRequestSchema.safeParse(await request.json());
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Teléfono inválido' }, { status: 400 });
   }
-
-  const telefono = (body.telefono as string)?.trim();
-
-  if (!telefono) {
-    return NextResponse.json({ error: 'Teléfono requerido' }, { status: 400 });
-  }
+  const { telefono } = parsed.data;
 
   // Generar token y magic link
   const result = await generateMagicLink(telefono);

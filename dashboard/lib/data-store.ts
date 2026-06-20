@@ -48,6 +48,7 @@ export interface UsuarioData {
   activo: boolean;
   plan?: string;
   medicoId?: string;
+  tenantId?: string;
   ultimoAcceso?: string;
   secreto2fa?: string | null;
   activo2fa?: boolean;
@@ -628,6 +629,7 @@ export async function getUserByEmail(email: string): Promise<UsuarioData | null>
     activo: u.activo,
     plan: u.plan || 'free',
     medicoId,
+    tenantId: u.tenantId,
     secreto2fa: u.secreto2fa,
     activo2fa: u.activo2fa,
     backupCodes: u.backupCodes,

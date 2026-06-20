@@ -198,8 +198,95 @@ export async function calcularScorePaciente(
 }
 
 /**
+ * Calcula score 0-100 con una sola query agregada por paciente.
+ * Usa FILTER (WHERE ...) para contar múltiples condiciones sin subqueries.
+ */
+export async function calcularScoreBulk(
+  pacienteIds: string[],
+  opts?: { sucursalId?: string },
+): Promise<ScoringResult[]> {
+  if (pacienteIds.length === 0) return [];
+
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - VENTANA_DIAS);
+
+  const filtros = [
+    inArray(turnos.pacienteId, pacienteIds),
+    gte(turnos.fechaHora, startDate),
+    isNull(turnos.deletedAt),
+  ];
+  if (opts?.sucursalId) {
+    filtros.push(eq(turnos.sucursalId, opts.sucursalId));
+  }
+
+  const rows = await db
+    .select({
+      pacienteId: turnos.pacienteId,
+      totalTurnos: count().mapWith(Number),
+      noShows: sql`count(*) FILTER (WHERE ${turnos.estado} = 'no_asistio')`.mapWith(Number),
+      cancelacionesSinAviso: sql`count(*) FILTER (WHERE ${turnos.estado} = 'cancelada' AND ${turnos.canceladoPor} = 'dashboard' AND ${turnos.confirmoAsistencia} IS DISTINCT FROM true)`.mapWith(Number),
+      turnosConfirmados: sql`count(*) FILTER (WHERE ${turnos.confirmoAsistencia} = true)`.mapWith(Number),
+      recordatoriosLeidos: sql`count(*) FILTER (WHERE ${turnos.recordatorio24hLeido} = true OR ${turnos.recordatorio1hLeido} = true)`.mapWith(Number),
+      recordatoriosEnviados: sql`count(*) FILTER (WHERE ${turnos.recordatorio24hEnviado} = true OR ${turnos.recordatorio1hEnviado} = true)`.mapWith(Number),
+    })
+    .from(turnos)
+    .where(and(...filtros))
+    .groupBy(turnos.pacienteId);
+
+  const scores: ScoringResult[] = [];
+  for (const row of rows) {
+    const {
+      pacienteId, totalTurnos, noShows, cancelacionesSinAviso,
+      turnosConfirmados, recordatoriosLeidos, recordatoriosEnviados,
+    } = row;
+
+    if (totalTurnos === 0) continue;
+
+    // Cálculos (misma lógica que calcularScorePaciente)
+    const ratioNoShows = noShows / totalTurnos;
+    const scoreNoShows = Math.min(ratioNoShows * PESOS.noShows * 2, PESOS.noShows);
+
+    const ratioCancel = cancelacionesSinAviso / totalTurnos;
+    const scoreCancel = Math.min(ratioCancel * PESOS.cancelaciones * 2, PESOS.cancelaciones);
+
+    const ratioConfirm = turnosConfirmados / totalTurnos;
+    const scoreConfirm = (1 - ratioConfirm) * PESOS.confirmacion;
+
+    const ratioLectura = recordatoriosEnviados > 0
+      ? recordatoriosLeidos / recordatoriosEnviados
+      : 0;
+    const scoreRecordatorios = (1 - ratioLectura) * PESOS.recordatorios;
+
+    const asistencias = totalTurnos - noShows;
+    const bonificacion = Math.min(asistencias * 0.5, PESOS.asistencia);
+
+    const score = Math.max(0, Math.min(100,
+      scoreNoShows + scoreCancel + scoreConfirm + scoreRecordatorios - bonificacion,
+    ));
+
+    scores.push({
+      pacienteId,
+      score: Math.round(score * 10) / 10,
+      nivel: calcularNivel(score),
+      factores: {
+        noShows,
+        cancelacionesSinAviso,
+        totalTurnos,
+        turnosConfirmados,
+        recordatoriosLeidos,
+        recordatoriosEnviados,
+      },
+      fechaCalculo: new Date().toISOString(),
+    });
+  }
+
+  return scores;
+}
+
+/**
  * Calcula el score para todos los pacientes activos de una sucursal.
  * Retorna un Map para lookup rápido.
+ * Refactorizada: usa calcularScoreBulk() en vez de loop N+1.
  */
 export async function calcularTodosLosScores(opts?: { sucursalId?: string; limit?: number }): Promise<Map<string, ScoringResult>> {
   // Obtener IDs de pacientes con turnos en la ventana
@@ -221,12 +308,16 @@ export async function calcularTodosLosScores(opts?: { sucursalId?: string; limit
     .groupBy(turnos.pacienteId)
     .limit(opts?.limit ?? 500);
 
-  const scores = new Map<string, ScoringResult>();
+  const pacienteIds = rows.map(r => r.pacienteId);
+  if (pacienteIds.length === 0) return new Map();
 
-  for (const row of rows) {
-    const result = await calcularScorePaciente(row.pacienteId, { sucursalId: opts?.sucursalId });
-    scores.set(row.pacienteId, result);
+  // Una sola query para todos
+  const scores = await calcularScoreBulk(pacienteIds, { sucursalId: opts?.sucursalId });
+
+  const scoresMap = new Map<string, ScoringResult>();
+  for (const s of scores) {
+    scoresMap.set(s.pacienteId, s);
   }
 
-  return scores;
+  return scoresMap;
 }
