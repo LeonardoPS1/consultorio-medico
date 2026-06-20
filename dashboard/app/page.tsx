@@ -1,18 +1,21 @@
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 // SEO — Homepage
 import { Navbar } from '@/components/landing/navbar';
 import { Hero } from '@/components/landing/hero';
-import { Features } from '@/components/landing/features';
-import { Specialties } from '@/components/landing/specialties';
-import { Gallery } from '@/components/landing/gallery';
-import { PainPoints } from '@/components/landing/pain-points';
-import { Pricing } from '@/components/landing/pricing';
-import { FAQ } from '@/components/landing/faq';
-import { ContactForm } from '@/components/landing/contact-form';
-import { CTASection } from '@/components/landing/cta-section';
-import { Footer } from '@/components/landing/footer';
 import { WhatsAppFloat } from '@/components/landing/whatsapp-float';
 import { CookieConsentBanner } from '@/components/landing/cookie-consent';
+
+// Below-fold components: dynamic imports para deferir framer-motion (~35KB) del bundle inicial
+const Features = dynamic(() => import('@/components/landing/features'));
+const Specialties = dynamic(() => import('@/components/landing/specialties'));
+const Gallery = dynamic(() => import('@/components/landing/gallery'));
+const PainPoints = dynamic(() => import('@/components/landing/pain-points'));
+const Pricing = dynamic(() => import('@/components/landing/pricing'));
+const FAQ = dynamic(() => import('@/components/landing/faq'));
+const ContactForm = dynamic(() => import('@/components/landing/contact-form'));
+const CTASection = dynamic(() => import('@/components/landing/cta-section'));
+const Footer = dynamic(() => import('@/components/landing/footer'));
 
 export const metadata: Metadata = {
   title: {
