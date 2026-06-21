@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { crearTurnoPortal, sendTurnoConfirmacionWhatsApp } = await import('@/lib/services/portal-booking');
+    const { crearTurnoPortal, sendTurnoConfirmacionWhatsApp, notifyDoctorWhatsApp } = await import('@/lib/services/portal-booking');
     const turno = await crearTurnoPortal({
       pacienteId: session.pacienteId,
       medicoId,
@@ -84,6 +84,26 @@ export async function POST(request: NextRequest) {
       turno.precio ? Number(turno.precio) : null,
       turno.id,
     ).catch(() => {});
+
+    // Notificar al médico si es un reagendamiento
+    if (rescheduleTurnoId && turno.medicoTelefono) {
+      const fechaAntigua = turno.oldTurnoFecha
+        ? new Date(turno.oldTurnoFecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })
+        : '';
+      const horaAntigua = turno.oldTurnoHora || '';
+      const fechaNueva = turno.fechaHora
+        ? new Date(turno.fechaHora).toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })
+        : '';
+      const horaNueva = turno.horaFormateada || '';
+
+      notifyDoctorWhatsApp(
+        turno.medicoTelefono,
+        turno.medicoNombre,
+        turno.pacienteNombre,
+        'reagendado',
+        { fechaVieja: fechaAntigua, horaVieja: horaAntigua, fechaNueva, horaNueva },
+      ).catch(() => {});
+    }
 
     return NextResponse.json({ success: true, turno }, { status: 201 });
   } catch (err) {

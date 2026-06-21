@@ -306,7 +306,25 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
     .returning();
 
   // 4. Si es un reagendamiento, cancelar el turno anterior
+  let oldTurnoFecha: string | null = null;
+  let oldTurnoHora: string | null = null;
   if (input.rescheduleTurnoId) {
+    // Obtener fecha/hora del turno anterior para la notificación
+    const [oldTurno] = await db
+      .select({ fechaHora: turnos.fechaHora })
+      .from(turnos)
+      .where(
+        and(
+          eq(turnos.id, input.rescheduleTurnoId),
+          eq(turnos.pacienteId, input.pacienteId),
+        ),
+      )
+      .limit(1);
+    if (oldTurno) {
+      oldTurnoFecha = oldTurno.fechaHora.toISOString();
+      oldTurnoHora = oldTurno.fechaHora.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+    }
+
     await db
       .update(turnos)
       .set({
@@ -331,7 +349,7 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
     .limit(1);
 
   const [medicoRow] = await db
-    .select({ nombre: medicos.nombre, especialidad: medicos.especialidad })
+    .select({ nombre: medicos.nombre, especialidad: medicos.especialidad, telefono: medicos.telefono })
     .from(medicos)
     .where(eq(medicos.id, input.medicoId))
     .limit(1);
@@ -342,7 +360,11 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
     pacienteTelefono: pacienteRow?.telefono || '',
     medicoNombre: medicoRow?.nombre || '',
     medicoEspecialidad: medicoRow?.especialidad || '',
+    medicoTelefono: medicoRow?.telefono || '',
     servicioNombre: servicio.nombre || '',
+    oldTurnoFecha,
+    oldTurnoHora,
+    horaFormateada: fechaHora.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
   };
 }
 
@@ -415,6 +437,65 @@ Hola ${pacienteNombre}, tu turno fue agendado correctamente:
     }
   } catch (e) {
     safeError('[PortalBooking] Error enviando confirmación WhatsApp:', e instanceof Error ? { message: e.message } : e);
+  }
+}
+
+// ─── Notificar médico (WhatsApp) ─────────────────────────────
+
+/**
+ * Envía notificación WhatsApp al médico sobre cancelación/traslado de turno.
+ * Fire-and-forget.
+ */
+export async function notifyDoctorWhatsApp(
+  medicoTelefono: string,
+  medicoNombre: string,
+  pacienteNombre: string,
+  mensajeTipo: 'cancelado' | 'reagendado',
+  detalles: { fechaVieja?: string; fechaNueva?: string; horaVieja?: string; horaNueva?: string },
+): Promise<void> {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+  if (!accountSid || !authToken || !fromNumber || !medicoTelefono) return;
+
+  const emoji = mensajeTipo === 'cancelado' ? '❌' : '🔄';
+  const titulo = mensajeTipo === 'cancelado' ? 'Turno cancelado' : 'Turno reagendado';
+
+  let message = `${emoji} *${titulo} - ${medicoNombre}*
+
+Paciente: ${pacienteNombre}`;
+
+  if (mensajeTipo === 'reagendado' && detalles.fechaVieja && detalles.fechaNueva) {
+    message += `\n\n*Anterior:* ${detalles.fechaVieja} ${detalles.horaVieja ? `· ${detalles.horaVieja}` : ''}`;
+    message += `\n*Nuevo:* ${detalles.fechaNueva} ${detalles.horaNueva ? `· ${detalles.horaNueva}` : ''}`;
+  }
+
+  message += '\n\nRevisá tu agenda en el dashboard.';
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const body: any = {
+    To: medicoTelefono.startsWith('whatsapp:') ? medicoTelefono : `whatsapp:${medicoTelefono.startsWith('+') ? medicoTelefono : `+${medicoTelefono}`}`,
+    From: fromNumber.startsWith('whatsapp:') ? fromNumber : `whatsapp:${fromNumber}`,
+    Body: message,
+  };
+
+  try {
+    const response = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(body),
+      },
+    );
+    if (!response.ok) {
+      safeWarn('[PortalBooking] Error notificando al médico:', { status: response.status, tipo: mensajeTipo });
+    }
+  } catch (e) {
+    safeError('[PortalBooking] Error notificando al médico:', e instanceof Error ? { message: e.message } : e);
   }
 }
 
