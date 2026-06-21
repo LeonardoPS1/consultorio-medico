@@ -23,6 +23,7 @@ export interface MedicoPortal {
   servicios: ServicioPortal[];
   duracionTurnoMinutos: number;
   colorEvento: string | null;
+  fotoUrl?: string | null; // Si tiene foto subida, se muestra. Sino, iniciales.
 }
 
 export interface ServicioPortal {
