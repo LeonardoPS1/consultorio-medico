@@ -1231,3 +1231,31 @@ export const ofertasTurnoRelations = relations(ofertasTurno, ({ one }) => ({
     references: [turnos.id],
   }),
 }));
+
+// ============================================================
+// ÓRDENES DE ESTUDIO
+// ============================================================
+export const ordenesEstudio = pgTable('ordenes_estudio', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pacienteId: uuid('paciente_id').notNull().references(() => pacientes.id),
+  medicoId: uuid('medico_id').references(() => medicos.id),
+  turnoId: uuid('turno_id').references(() => turnos.id),
+  titulo: varchar('titulo', { length: 255 }).notNull(),
+  descripcion: text('descripcion'),
+  tipo: varchar('tipo', { length: 50 }).notNull().default('laboratorio'), // laboratorio, imagen, otros
+  estado: varchar('estado', { length: 30 }).notNull().default('pendiente'), // pendiente, completada, cancelada
+  resultadoUrl: text('resultado_url'),
+  observaciones: text('observaciones'),
+  tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (table) => ({
+  idxOrdenesPaciente: index('idx_ordenes_estudio_paciente').on(table.pacienteId),
+  idxOrdenesMedico: index('idx_ordenes_estudio_medico').on(table.medicoId),
+  idxOrdenesEstado: index('idx_ordenes_estudio_estado').on(table.estado),
+  idxOrdenesCreatedAt: index('idx_ordenes_estudio_created_at').on(table.createdAt),
+}));
+
+export type OrdenEstudio = InferSelectModel<typeof ordenesEstudio>;
+export type NewOrdenEstudio = InferInsertModel<typeof ordenesEstudio>;
