@@ -351,6 +351,7 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
 /**
  * Envía confirmación de turno por WhatsApp al paciente.
  * Fire-and-forget: no bloquea el flujo principal.
+ * Incluye archivo .ics para agregar al calendario.
  */
 export async function sendTurnoConfirmacionWhatsApp(
   telefono: string,
@@ -360,10 +361,12 @@ export async function sendTurnoConfirmacionWhatsApp(
   fechaHora: string,
   motivo: string | null,
   precio: number | null,
+  turnoId?: string,
 ): Promise<void> {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://med.aicorebots.com';
   if (!accountSid || !authToken || !fromNumber) return;
 
   const fecha = new Date(fechaHora);
@@ -381,7 +384,19 @@ Hola ${pacienteNombre}, tu turno fue agendado correctamente:
   if (motivo) message += `\n📝 *Motivo:* ${motivo}`;
   if (precio && precio > 0) message += `\n💰 *Pendiente de pago:* $${precio.toLocaleString('es-CL')}`;
   message += `\n\nSi no puedes asistir, cancelá con anticipación desde el portal.
-🔗 ${process.env.NEXT_PUBLIC_APP_URL || 'https://med.aicorebots.com'}/portal`;
+🔗 ${appUrl}/portal`;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const body: any = {
+    To: telefono.startsWith('+') ? telefono : `+${telefono}`,
+    From: fromNumber,
+    Body: message,
+  };
+
+  // Adjuntar archivo .ics si tenemos turnoId
+  if (turnoId) {
+    body.MediaUrl = `${appUrl}/api/portal/turnos/${turnoId}/ics`;
+  }
 
   try {
     const response = await fetch(
@@ -392,11 +407,7 @@ Hola ${pacienteNombre}, tu turno fue agendado correctamente:
           Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-          To: telefono.startsWith('+') ? telefono : `+${telefono}`,
-          From: fromNumber,
-          Body: message,
-        }),
+        body: new URLSearchParams(body),
       },
     );
     if (!response.ok) {

@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       rescheduleTurnoId: rescheduleTurnoId || undefined,
     });
 
-    // WhatsApp confirmation (fire-and-forget)
+    // WhatsApp confirmation (fire-and-forget) con .ics adjunto
     sendTurnoConfirmacionWhatsApp(
       turno.pacienteTelefono,
       turno.pacienteNombre,
@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
       turno.fechaHora.toISOString(),
       turno.motivo,
       turno.precio ? Number(turno.precio) : null,
+      turno.id,
     ).catch(() => {});
 
     return NextResponse.json({ success: true, turno }, { status: 201 });
