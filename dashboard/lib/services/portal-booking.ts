@@ -10,7 +10,7 @@
 
 import { db } from '@/lib/db';
 import { medicos, servicios, horariosAtencion, bloqueosAgenda, turnos, pacientes } from '@/drizzle/schema';
-import { eq, and, sql, gte, lte, inArray, notInArray } from 'drizzle-orm';
+import { eq, and, ne, sql, gte, lte, inArray, notInArray } from 'drizzle-orm';
 import { safeWarn, safeError } from '@/lib/logger';
 
 // ─── Tipos públicos ──────────────────────────────────────────
@@ -218,7 +218,61 @@ export interface CrearTurnoPortalInput {
 export type TurnoCreadoPortal = Awaited<ReturnType<typeof crearTurnoPortal>>;
 
 export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
-  // 1. Validar servicio
+  const ahora = new Date();
+  const fechaHoraTurno = new Date(input.fechaHora);
+  const diffMs = fechaHoraTurno.getTime() - ahora.getTime();
+
+  // ── Validaciones de negocio ─────────────────────────────────
+
+  // 1. Mínimo 1 hora de anticipación
+  if (diffMs < 60 * 60 * 1000) {
+    throw new Error('El turno debe agendarse con al menos 1 hora de anticipación');
+  }
+
+  // 2. Máximo 30 días vista
+  if (diffMs > 30 * 24 * 60 * 60 * 1000) {
+    throw new Error('No se pueden agendar turnos con más de 30 días de anticipación');
+  }
+
+  // 3. Límite de turnos activos simultáneos (máx 3)
+  // Excluir el turno que se está reagendando (si aplica)
+  const activosCond = and(
+    eq(turnos.pacienteId, input.pacienteId),
+    inArray(turnos.estado, ['pendiente', 'confirmada']),
+    sql`${turnos.deletedAt} IS NULL`,
+    input.rescheduleTurnoId ? ne(turnos.id, input.rescheduleTurnoId) : sql`TRUE`,
+  );
+  const [{ count: activos }] = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(turnos)
+    .where(activosCond);
+  if (activos >= 3) {
+    throw new Error('Ya tienes 3 turnos activos. Cancelá uno antes de agendar otro.');
+  }
+
+  // 4. Detección de duplicados (mismo paciente, mismo médico, < 2h de diferencia)
+  const dosHorasAntes = new Date(fechaHoraTurno.getTime() - 2 * 60 * 60 * 1000);
+  const dosHorasDespues = new Date(fechaHoraTurno.getTime() + 2 * 60 * 60 * 1000);
+  const [duplicado] = await db
+    .select({ id: turnos.id })
+    .from(turnos)
+    .where(
+      and(
+        eq(turnos.pacienteId, input.pacienteId),
+        eq(turnos.medicoId, input.medicoId),
+        gte(turnos.fechaHora, dosHorasAntes),
+        lte(turnos.fechaHora, dosHorasDespues),
+        inArray(turnos.estado, ['pendiente', 'confirmada']),
+        sql`${turnos.deletedAt} IS NULL`,
+        input.rescheduleTurnoId ? ne(turnos.id, input.rescheduleTurnoId) : sql`TRUE`,
+      ),
+    )
+    .limit(1);
+  if (duplicado) {
+    throw new Error('Ya tienes un turno con este médico cerca de esa fecha/hora');
+  }
+
+  // 5. Validar servicio
   const [servicio] = await db
     .select({ duracionMinutos: servicios.duracionMinutos, precio: servicios.precio, nombre: servicios.nombre })
     .from(servicios)
@@ -226,13 +280,13 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
     .limit(1);
   if (!servicio) throw new Error('Servicio no encontrado');
 
-  // 2. Verificar que el slot esté disponible
+  // 6. Verificar que el slot esté disponible
   const fecha = input.fechaHora.split('T')[0];
   const slots = await slotsDisponibles(input.medicoId, fecha, input.servicioId);
   const slotValido = slots.some((s) => s.fechaHora === input.fechaHora);
   if (!slotValido) throw new Error('El horario seleccionado no está disponible');
 
-  // 3. Crear turno
+  // 7. Crear turno
   const fechaHora = new Date(input.fechaHora);
   const [turno] = await db
     .insert(turnos)
