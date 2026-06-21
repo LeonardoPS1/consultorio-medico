@@ -10,6 +10,7 @@
 import { useState, useEffect } from 'react';
 import { User, Mail, Phone, Shield, Save, MapPin, Heart } from 'lucide-react';
 import { ISAPRES_CHILENAS } from '@/lib/isapres';
+import { PushNotificationToggle } from '@/components/portal/PushNotificationToggle';
 
 interface Region {
   id: string;
@@ -326,6 +327,11 @@ export default function PortalPerfilClient({ paciente }: Props) {
               onChange={(e) => setConsentimientoEmail(e.target.checked)}
               className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
+          </div>
+
+          {/* Push Notifications */}
+          <div className="pt-2 border-t border-gray-100">
+            <PushNotificationToggle />
           </div>
 
           <button

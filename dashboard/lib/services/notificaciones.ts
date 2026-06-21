@@ -95,20 +95,20 @@ export const notificacionesService = {
       .returning();
 
     // Enviar push notification (fire-and-forget)
-    try {
-      const { pushService } = await import('@/lib/services/push');
-      if (pushService.isConfigured()) {
-        pushService.sendToUser(input.usuarioId, {
-          title: input.titulo,
-          body: input.descripcion || input.titulo,
-          url: input.href || '/',
-          id: nueva.id,
-          tipo: input.tipo || 'sistema',
-        }).catch(() => {});
+      try {
+        const { pushService } = await import('@/lib/services/push');
+        if (pushService.isConfigured()) {
+          pushService.sendToUser({ usuarioId: input.usuarioId }, {
+            title: input.titulo,
+            body: input.descripcion || input.titulo,
+            url: input.href || '/',
+            id: nueva.id,
+            tipo: input.tipo || 'sistema',
+          }).catch(() => {});
+        }
+      } catch {
+        // No bloquear si push falla
       }
-    } catch {
-      // No bloquear si push falla
-    }
 
     return nueva;
   },

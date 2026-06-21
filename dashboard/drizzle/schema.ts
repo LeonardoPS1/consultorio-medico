@@ -815,10 +815,11 @@ export type NewNotificacion = InferInsertModel<typeof notificaciones>;
 
 // ============================================================
 // PUSH SUBSCRIPTIONS (Web Push API)
-// ============================================================
+/// ============================================================
 export const pushSubscriptions = pgTable('push_subscriptions', {
   id: uuid('id').defaultRandom().primaryKey(),
-  usuarioId: uuid('usuario_id').notNull(),
+  usuarioId: uuid('usuario_id').references(() => usuarios.id),
+  pacienteId: uuid('paciente_id').references(() => pacientes.id),
   endpoint: text('endpoint').notNull(),
   auth: varchar('auth', { length: 255 }).notNull(),
   p256dh: varchar('p256dh', { length: 255 }).notNull(),
@@ -829,6 +830,7 @@ export const pushSubscriptions = pgTable('push_subscriptions', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   idxPushUsuario: index('idx_push_usuario').on(table.usuarioId),
+  idxPushPaciente: index('idx_push_paciente').on(table.pacienteId),
   idxPushEndpoint: uniqueIndex('idx_push_endpoint').on(table.endpoint),
 }));
 

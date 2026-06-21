@@ -20,7 +20,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
   }
 
   if (action === 'subscriptions') {
-    const subs = await pushService.getSubscriptions(userId);
+    const subs = await pushService.getSubscriptions({ usuarioId: userId });
     return NextResponse.json({
       data: subs.map((s) => ({
         id: s.id,
@@ -55,10 +55,9 @@ export const POST = apiHandler(async (request: NextRequest) => {
       }
 
       const result = await pushService.subscribe(
-        userId,
         subscription,
         userAgent || request.headers.get('user-agent') || undefined,
-        session.user?.tenantId,
+        { usuarioId: userId, tenantId: session.user?.tenantId },
       );
 
       return NextResponse.json(result);
@@ -70,12 +69,12 @@ export const POST = apiHandler(async (request: NextRequest) => {
         fail('Endpoint requerido');
       }
 
-      const result = await pushService.unsubscribe(userId, endpoint);
+      const result = await pushService.unsubscribe(endpoint, { usuarioId: userId });
       return NextResponse.json(result);
     }
 
     case 'unsubscribe-all': {
-      const result = await pushService.unsubscribeAll(userId);
+      const result = await pushService.unsubscribeAll({ usuarioId: userId });
       return NextResponse.json(result);
     }
 
@@ -100,7 +99,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
       });
 
       // Enviar push
-      const result = await pushService.sendToUser(usuarioId, {
+      const result = await pushService.sendToUser({ usuarioId }, {
         title,
         body: pushBody || '',
         url,

@@ -33,14 +33,17 @@ export interface SendPushOptions {
 
 export const pushService = {
   /**
-   * Guardar o actualizar una suscripción push
+   * Guardar o actualizar una suscripción push (usuario o paciente)
    */
   async subscribe(
-    usuarioId: string,
     subscription: PushSubscriptionData,
     userAgent?: string,
-    tenantId?: string,
+    options?: { usuarioId?: string; pacienteId?: string; tenantId?: string },
   ) {
+    if (!options?.usuarioId && !options?.pacienteId) {
+      throw new Error('Debe proporcionar usuarioId o pacienteId');
+    }
+
     const existente = await db
       .select({ id: pushSubscriptions.id })
       .from(pushSubscriptions)
@@ -63,12 +66,13 @@ export const pushService = {
     }
 
     await db.insert(pushSubscriptions).values({
-      usuarioId,
+      usuarioId: options.usuarioId || null,
+      pacienteId: options.pacienteId || null,
       endpoint: subscription.endpoint,
       auth: subscription.keys.auth,
       p256dh: subscription.keys.p256dh,
       userAgent: userAgent || null,
-      tenantId: tenantId || undefined,
+      tenantId: options.tenantId || undefined,
     });
 
     return { success: true, updated: false };
@@ -77,25 +81,33 @@ export const pushService = {
   /**
    * Desuscribir (soft delete / marcar inactiva)
    */
-  async unsubscribe(usuarioId: string, endpoint: string) {
+  async unsubscribe(endpoint: string, options?: { usuarioId?: string; pacienteId?: string }) {
+    const conditions = [eq(pushSubscriptions.endpoint, endpoint)];
+    if (options?.usuarioId) conditions.push(eq(pushSubscriptions.usuarioId, options.usuarioId));
+    if (options?.pacienteId) conditions.push(eq(pushSubscriptions.pacienteId, options.pacienteId));
+
     await db
       .update(pushSubscriptions)
       .set({ activa: false, updatedAt: new Date() })
-      .where(and(
-        eq(pushSubscriptions.usuarioId, usuarioId),
-        eq(pushSubscriptions.endpoint, endpoint),
-      ));
+      .where(and(...conditions));
     return { success: true };
   },
 
   /**
-   * Desuscribir todas las suscripciones de un usuario
+   * Desuscribir todas las suscripciones de un usuario o paciente
    */
-  async unsubscribeAll(usuarioId: string) {
+  async unsubscribeAll(options: { usuarioId?: string; pacienteId?: string }) {
+    if (!options?.usuarioId && !options?.pacienteId) {
+      throw new Error('Debe proporcionar usuarioId o pacienteId');
+    }
+    const conditions = [];
+    if (options.usuarioId) conditions.push(eq(pushSubscriptions.usuarioId, options.usuarioId));
+    if (options.pacienteId) conditions.push(eq(pushSubscriptions.pacienteId, options.pacienteId));
+
     await db
       .update(pushSubscriptions)
       .set({ activa: false, updatedAt: new Date() })
-      .where(eq(pushSubscriptions.usuarioId, usuarioId));
+      .where(and(...conditions));
     return { success: true };
   },
 
@@ -110,23 +122,30 @@ export const pushService = {
   },
 
   /**
-   * Obtener suscripciones activas de un usuario
+   * Obtener suscripciones activas de un usuario o paciente
    */
-  async getSubscriptions(usuarioId: string) {
+  async getSubscriptions(options: { usuarioId?: string; pacienteId?: string }) {
+    if (!options?.usuarioId && !options?.pacienteId) {
+      throw new Error('Debe proporcionar usuarioId o pacienteId');
+    }
+    const conditions = [eq(pushSubscriptions.activa, true)];
+    if (options.usuarioId) conditions.push(eq(pushSubscriptions.usuarioId, options.usuarioId));
+    if (options.pacienteId) conditions.push(eq(pushSubscriptions.pacienteId, options.pacienteId));
+
     return db
       .select()
       .from(pushSubscriptions)
-      .where(and(
-        eq(pushSubscriptions.usuarioId, usuarioId),
-        eq(pushSubscriptions.activa, true),
-      ));
+      .where(and(...conditions));
   },
 
   /**
-   * Enviar push a todas las suscripciones activas de un usuario
+   * Enviar push a todas las suscripciones activas de un usuario o paciente
    */
-  async sendToUser(usuarioId: string, payload: SendPushOptions) {
-    const subs = await this.getSubscriptions(usuarioId);
+  async sendToUser(
+    options: { usuarioId?: string; pacienteId?: string },
+    payload: SendPushOptions,
+  ) {
+    const subs = await this.getSubscriptions(options);
     if (subs.length === 0) return { sent: 0, failed: 0 };
 
     const results = await Promise.allSettled(
