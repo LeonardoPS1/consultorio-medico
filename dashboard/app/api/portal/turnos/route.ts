@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
       linkVideollamada: turnos.linkVideollamada,
       medicoNombre: medicos.nombre,
       medicoEspecialidad: medicos.especialidad,
+      pagado: turnos.pagado,
     })
     .from(turnos)
     .leftJoin(medicos, eq(turnos.medicoId, medicos.id))

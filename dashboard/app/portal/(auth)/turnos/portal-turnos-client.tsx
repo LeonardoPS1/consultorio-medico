@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, MapPin, Video, Phone, Clock, XCircle, AlertCircle, ExternalLink, RefreshCw } from 'lucide-react';
+import { Calendar, MapPin, Video, Phone, Clock, XCircle, AlertCircle, ExternalLink, RefreshCw, Receipt } from 'lucide-react';
 
 interface Turno {
   id: string;
@@ -19,6 +19,7 @@ interface Turno {
   linkVideollamada?: string;
   medicoNombre: string;
   medicoEspecialidad: string;
+  pagado: boolean;
 }
 
 interface Props {
@@ -187,17 +188,30 @@ export default function PortalTurnosClient({ turnos }: Props) {
                       Dr/a. {t.medicoNombre} · {t.tipoConsulta}
                     </div>
                   </div>
-                  <span
-                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      t.estado === 'atendido'
-                        ? 'bg-green-100 text-green-700'
-                        : t.estado === 'cancelada'
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-yellow-100 text-yellow-700'
-                    }`}
-                  >
-                    {t.estado}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {t.pagado && (
+                      <a
+                        href={`/api/portal/recibos/${t.id}`}
+                        target="_blank"
+                        className="text-xs font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                        title="Ver recibo"
+                      >
+                        <Receipt className="h-3.5 w-3.5" />
+                        Recibo
+                      </a>
+                    )}
+                    <span
+                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        t.estado === 'atendido'
+                          ? 'bg-green-100 text-green-700'
+                          : t.estado === 'cancelada'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                      }`}
+                    >
+                      {t.estado}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
