@@ -40,3 +40,40 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({ turnos: data });
 }
+
+/**
+ * POST /api/portal/turnos — Crear turno desde el portal
+ * Protegido: requiere cookie portal_session + validaciones.
+ */
+export async function POST(request: NextRequest) {
+  const session = await getPortalSession();
+  if (!session) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { medicoId, servicioId, fechaHora, motivo } = body;
+
+    if (!medicoId || !servicioId || !fechaHora) {
+      return NextResponse.json(
+        { error: 'medicoId, servicioId y fechaHora son requeridos' },
+        { status: 400 },
+      );
+    }
+
+    const { crearTurnoPortal } = await import('@/lib/services/portal-booking');
+    const turno = await crearTurnoPortal({
+      pacienteId: session.pacienteId,
+      medicoId,
+      servicioId,
+      fechaHora,
+      motivo: motivo || null,
+    });
+
+    return NextResponse.json({ success: true, turno }, { status: 201 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Error al crear turno';
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
