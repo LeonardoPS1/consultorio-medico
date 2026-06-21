@@ -169,7 +169,7 @@ export function middleware(request: NextRequest) {
   }
 
   // ─── 4. Proteger rutas del portal (rutas autenticadas) ──
-  const PORTAL_AUTH_ROUTES = ['/portal/dashboard', '/portal/turnos', '/portal/recetas', '/portal/historial', '/portal/perfil'];
+  const PORTAL_AUTH_ROUTES = ['/portal/dashboard', '/portal/agendar', '/portal/turnos', '/portal/recetas', '/portal/historial', '/portal/perfil'];
   if (PORTAL_AUTH_ROUTES.some(route => pathname.startsWith(route))) {
     if (!request.cookies.get('portal_session')) {
       return NextResponse.redirect(new URL('/portal', request.url));

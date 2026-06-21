@@ -169,6 +169,13 @@
       "when": 1781910000000,
       "tag": "0034_lead_captures",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1782001164133,
+      "tag": "0035_portal_booking",
+      "breakpoints": true
     }
   ]
 }
