@@ -183,6 +183,13 @@
       "when": 1782004761033,
       "tag": "0036_portal_paquetes",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1782005810638,
+      "tag": "0037_portal_notificaciones",
+      "breakpoints": true
     }
   ]
 }

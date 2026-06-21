@@ -11,6 +11,7 @@ const navItems = [
   { href: '/portal/paquetes', label: 'Paquetes', icon: Package },
   { href: '/portal/mensajes', label: 'Chat', icon: MessageSquare },
   { href: '/portal/recetas', label: 'Recetas', icon: FileText },
+  { href: '/portal/certificados', label: 'Certificados', icon: FileText },
   { href: '/portal/perfil', label: 'Perfil', icon: User },
 ];
 

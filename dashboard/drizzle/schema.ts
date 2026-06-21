@@ -795,6 +795,7 @@ export const notificaciones = pgTable('notificaciones', {
   tipo: varchar('tipo', { length: 20 }).notNull().default('sistema'), // turno | mensaje | receta | urgencia | sistema
   leido: boolean('leido').notNull().default(false),
   href: varchar('href', { length: 500 }),
+  pacienteId: uuid('paciente_id'), // portal patient (nullable)
   metadata: jsonb('metadata').default({}),
   tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -804,7 +805,10 @@ export const notificaciones = pgTable('notificaciones', {
   idxNotificacionesUsuario: index('idx_notificaciones_usuario').on(table.usuarioId),
   idxNotificacionesLeido: index('idx_notificaciones_leido').on(table.usuarioId, table.leido),
   idxNotificacionesCreatedAt: index('idx_notificaciones_created_at').on(table.createdAt),
+  idxNotificacionesPaciente: index('idx_notificaciones_paciente').on(table.pacienteId),
 }));
+
+
 
 export type Notificacion = InferSelectModel<typeof notificaciones>;
 export type NewNotificacion = InferInsertModel<typeof notificaciones>;
