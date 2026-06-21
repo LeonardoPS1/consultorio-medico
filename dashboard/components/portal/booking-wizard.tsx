@@ -10,10 +10,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { Loader2, ArrowLeft, Check, CalendarIcon, Stethoscope, CreditCard, ExternalLink } from 'lucide-react';
+import { Loader2, ArrowLeft, Check, CalendarIcon, Stethoscope, CreditCard, ExternalLink, Stethoscope as MotivoIcon } from 'lucide-react';
 import type { MedicoPortal, SlotDisponible, TurnoCreadoPortal } from '@/lib/services/portal-booking';
 
 type Step = 'medico' | 'slot' | 'confirmar' | 'pago' | 'completado';
+
+const MOTIVOS_PREDEFINIDOS = [
+  'Control general',
+  'Dolor agudo',
+  'Chequeo preventivo',
+  'Resultados de exámenes',
+  'Renovación de receta',
+  'Licencia médica',
+  'Derivación a especialista',
+  'Segunda opinión',
+];
 
 interface BookingWizardProps {
   medicos: MedicoPortal[];
@@ -304,11 +315,27 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
               </div>
             )}
             <div>
-              <label className="text-sm font-medium mb-1 block">Motivo (opcional)</label>
+              <label className="text-sm font-medium mb-2 block">Motivo (opcional)</label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {MOTIVOS_PREDEFINIDOS.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMotivo(motivo === m ? '' : m)}
+                    className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                      motivo === m
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background text-muted-foreground border-border hover:border-primary hover:text-primary'
+                    }`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
               <Textarea
                 value={motivo}
                 onChange={(e) => setMotivo(e.target.value)}
-                placeholder="Breve descripción del motivo de la consulta"
+                placeholder="O escribí tu propio motivo..."
                 rows={2}
               />
             </div>
