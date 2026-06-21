@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import { getPaymentById, getMerchantOrderById } from '@/lib/mercadopago';
 import { PLANES, type PlanId } from '@/lib/planes';
 import { db } from '@/lib/db';
-import { suscripciones, usuarios } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { suscripciones, usuarios, portalPagos, turnos } from '@/drizzle/schema';
+import { eq, desc } from 'drizzle-orm';
 import { getUserByEmail } from '@/lib/data-store';
 import { safeLog, safeWarn, safeError } from '@/lib/logger';
 import { createHmac, timingSafeEqual } from 'crypto';
@@ -118,12 +118,18 @@ async function handlePaymentNotification(paymentId: string) {
 
   safeLog('[MP Webhook] Payment:', { paymentId, status, externalRef, payerEmail });
 
-  // Buscar o crear suscripción por external_reference
   if (!externalRef) {
     safeWarn('[MP Webhook] Payment sin external_reference');
     return;
   }
 
+  // ── Detectar si es pago de turno (external_reference = "turno:{turnoId}") ──
+  if (externalRef.startsWith('turno:')) {
+    await handleTurnoPayment(externalRef.slice(6), paymentId, status, merchantOrderId);
+    return;
+  }
+
+  // ── Pago de suscripción (formato original) ──
   let refData: Record<string, string> = {};
   try {
     refData = JSON.parse(externalRef);
@@ -205,6 +211,66 @@ async function handlePaymentNotification(paymentId: string) {
         .where(eq(suscripciones.id, existing[0].id));
     }
     safeLog(`[MP Webhook] ❌ Pago ${status} para ${payerEmail}`);
+  }
+}
+
+// ─── Manejar pago de turno individual ────────────────────────
+async function handleTurnoPayment(
+  turnoId: string,
+  paymentId: string,
+  status: string | undefined,
+  merchantOrderId: string | number | undefined,
+) {
+  const now = new Date();
+
+  // Buscar el pago en portal_pagos
+  const [pago] = await db
+    .select()
+    .from(portalPagos)
+    .where(eq(portalPagos.turnoId, turnoId))
+    .orderBy(desc(portalPagos.createdAt))
+    .limit(1);
+
+  if (status === 'approved') {
+    // Actualizar portal_pagos
+    if (pago) {
+      await db
+        .update(portalPagos)
+        .set({
+          estado: 'aprobado',
+          mercadopagoPaymentId: paymentId,
+          pagadoAt: now,
+          updatedAt: now,
+          metadata: {
+            ...(pago.metadata as Record<string, unknown>),
+            merchantOrderId: merchantOrderId ? String(merchantOrderId) : null,
+          },
+        })
+        .where(eq(portalPagos.id, pago.id));
+    }
+
+    // Marcar turno como pagado
+    await db
+      .update(turnos)
+      .set({
+        pagado: true,
+        metodoPago: 'mercadopago',
+        pagadoAt: now,
+      })
+      .where(eq(turnos.id, turnoId));
+
+    safeLog(`[MP Webhook] ✅ Turno ${turnoId} pagado (MP payment ${paymentId})`);
+  } else if (['cancelled', 'rejected', 'refunded'].includes(status ?? '')) {
+    if (pago) {
+      await db
+        .update(portalPagos)
+        .set({
+          estado: status,
+          updatedAt: now,
+        })
+        .where(eq(portalPagos.id, pago.id));
+    }
+    safeLog(`[MP Webhook] ❌ Pago turno ${turnoId}: ${status}`);
   }
 }
 
