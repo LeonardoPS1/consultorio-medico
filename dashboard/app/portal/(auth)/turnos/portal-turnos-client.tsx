@@ -5,7 +5,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, MapPin, Video, Phone, Clock, XCircle, AlertCircle, ExternalLink } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Calendar, MapPin, Video, Phone, Clock, XCircle, AlertCircle, ExternalLink, RefreshCw } from 'lucide-react';
 
 interface Turno {
   id: string;
@@ -40,9 +41,14 @@ function formatDate(date: string): string {
 }
 
 export default function PortalTurnosClient({ turnos }: Props) {
+  const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [cancelados, setCancelados] = useState<Set<string>>(new Set());
   const [error, setError] = useState('');
+
+  function reagendarTurno(turnoId: string) {
+    router.push(`/portal/agendar?reschedule=${turnoId}`);
+  }
 
   async function cancelarTurno(turnoId: string) {
     if (!confirm('¿Estás seguro de cancelar este turno?')) return;
@@ -132,18 +138,28 @@ export default function PortalTurnosClient({ turnos }: Props) {
                     )}
 
                     {!cancelados.has(t.id) && (
-                      <button
-                        onClick={() => cancelarTurno(t.id)}
-                        disabled={loadingId === t.id}
-                        className="text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors p-1"
-                        title="Cancelar turno"
-                      >
-                        {loadingId === t.id ? (
-                          <span className="h-4 w-4 border-2 border-red-300 border-t-red-600 rounded-full animate-spin inline-block" />
-                        ) : (
-                          <XCircle className="h-5 w-5" />
-                        )}
-                      </button>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => reagendarTurno(t.id)}
+                          disabled={loadingId === t.id}
+                          className="text-blue-500 hover:text-blue-700 disabled:opacity-50 transition-colors p-1"
+                          title="Reagendar turno"
+                        >
+                          <RefreshCw className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => cancelarTurno(t.id)}
+                          disabled={loadingId === t.id}
+                          className="text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors p-1"
+                          title="Cancelar turno"
+                        >
+                          {loadingId === t.id ? (
+                            <span className="h-4 w-4 border-2 border-red-300 border-t-red-600 rounded-full animate-spin inline-block" />
+                          ) : (
+                            <XCircle className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>

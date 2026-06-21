@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { medicoId, servicioId, fechaHora, motivo } = body;
+    const { medicoId, servicioId, fechaHora, motivo, rescheduleTurnoId } = body;
 
     if (!medicoId || !servicioId || !fechaHora) {
       return NextResponse.json(
@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
       servicioId,
       fechaHora,
       motivo: motivo || null,
+      rescheduleTurnoId: rescheduleTurnoId || undefined,
     });
 
     // WhatsApp confirmation (fire-and-forget)

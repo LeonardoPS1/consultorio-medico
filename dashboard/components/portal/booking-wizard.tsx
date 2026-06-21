@@ -17,9 +17,10 @@ type Step = 'medico' | 'slot' | 'confirmar' | 'pago' | 'completado';
 
 interface BookingWizardProps {
   medicos: MedicoPortal[];
+  rescheduleTurnoId?: string;
 }
 
-export function BookingWizard({ medicos }: BookingWizardProps) {
+export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>('medico');
   const [selectedMedico, setSelectedMedico] = useState<MedicoPortal | null>(null);
@@ -102,6 +103,7 @@ export function BookingWizard({ medicos }: BookingWizardProps) {
           servicioId: selectedServicio,
           fechaHora: selectedSlot.fechaHora,
           motivo: motivo || undefined,
+          ...(rescheduleTurnoId ? { rescheduleTurnoId } : {}),
         }),
       });
 
@@ -109,7 +111,10 @@ export function BookingWizard({ medicos }: BookingWizardProps) {
       if (!res.ok) throw new Error(data.error || 'Error al agendar');
 
       setUltimoTurno(data.turno);
-      toast({ title: 'Turno agendado', description: 'Recibirás la confirmación por WhatsApp.' });
+      toast({
+        title: rescheduleTurnoId ? 'Turno reagendado' : 'Turno agendado',
+        description: 'Recibirás la confirmación por WhatsApp.',
+      });
 
       // Si tiene precio, ir a paso de pago
       const precio = Number(data.turno.precio);

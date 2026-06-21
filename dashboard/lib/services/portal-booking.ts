@@ -212,6 +212,7 @@ export interface CrearTurnoPortalInput {
   fechaHora: string; // ISO
   motivo?: string;
   sucursalId?: string;
+  rescheduleTurnoId?: string; // Si se está reagendando, ID del turno anterior
 }
 
 export type TurnoCreadoPortal = Awaited<ReturnType<typeof crearTurnoPortal>>;
@@ -249,7 +250,25 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
     })
     .returning();
 
-  // 4. Obtener datos del paciente y médico para la respuesta
+  // 4. Si es un reagendamiento, cancelar el turno anterior
+  if (input.rescheduleTurnoId) {
+    await db
+      .update(turnos)
+      .set({
+        estado: 'cancelada',
+        motivoCancelacion: 'Reagendado por el paciente',
+        canceladoPor: 'paciente',
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(turnos.id, input.rescheduleTurnoId),
+          eq(turnos.pacienteId, input.pacienteId),
+        ),
+      );
+  }
+
+  // 5. Obtener datos del paciente y médico para la respuesta
   const [pacienteRow] = await db
     .select({ nombre: pacientes.nombre, telefono: pacientes.telefono })
     .from(pacientes)
