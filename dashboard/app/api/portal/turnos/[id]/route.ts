@@ -1,5 +1,5 @@
 /**
- * PATCH /api/portal/turnos/[id] — Cancelar turno
+ * PATCH /api/portal/turnos/[id] — Cancelar turno + reembolso si aplica
  * Protegido: requiere cookie portal_session
  */
 
@@ -28,7 +28,7 @@ export const PATCH = apiHandler(async (
   }
 
   const [turno] = await db
-    .select({ id: turnos.id, estado: turnos.estado })
+    .select({ id: turnos.id, estado: turnos.estado, fechaHora: turnos.fechaHora, pagado: turnos.pagado })
     .from(turnos)
     .where(and(eq(turnos.id, turnoId), eq(turnos.pacienteId, session.pacienteId)))
     .limit(1);
@@ -54,5 +54,55 @@ export const PATCH = apiHandler(async (
     })
     .where(eq(turnos.id, turnoId));
 
-  return ok({ success: true, estado: 'cancelada' });
+  // ─── Reembolso si el turno estaba pagado ────────────────
+  let reembolso = null;
+  if (turno.pagado && turno.fechaHora) {
+    try {
+      const { calcularReembolso, getRefundPolicy, procesarReembolso } = await import('@/lib/services/portal-reembolsos');
+      const policy = getRefundPolicy();
+      const refundCalc = calcularReembolso(turno.fechaHora, -1, policy); // monto se obtiene aparte
+
+      // Necesitamos el monto real del pago
+      const { portalPagos } = await import('@/drizzle/schema');
+      const [pago] = await db
+        .select({ monto: portalPagos.monto })
+        .from(portalPagos)
+        .where(and(eq(portalPagos.turnoId, turnoId), eq(portalPagos.pacienteId, session.pacienteId)))
+        .limit(1);
+
+      if (pago) {
+        const montoPagado = Number(pago.monto);
+        const refundFinal = calcularReembolso(turno.fechaHora, montoPagado, policy);
+
+        if (refundFinal.eligible && refundFinal.montoReembolso > 0) {
+          const result = await procesarReembolso(turnoId, session.pacienteId, refundFinal);
+          reembolso = {
+            tipo: refundFinal.tipo,
+            monto: refundFinal.montoReembolso,
+            mensaje: refundFinal.mensaje,
+            procesado: result.success,
+            error: result.error || null,
+          };
+        } else {
+          reembolso = {
+            tipo: refundFinal.tipo,
+            monto: 0,
+            mensaje: refundFinal.mensaje,
+            procesado: false,
+            error: null,
+          };
+        }
+      }
+    } catch (e) {
+      reembolso = {
+        tipo: 'ninguno',
+        monto: 0,
+        mensaje: 'Error al procesar reembolso',
+        procesado: false,
+        error: e instanceof Error ? e.message : 'Error interno',
+      };
+    }
+  }
+
+  return ok({ success: true, estado: 'cancelada', reembolso });
 });

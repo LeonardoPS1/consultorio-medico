@@ -46,14 +46,15 @@ export default function PortalTurnosClient({ turnos }: Props) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [cancelados, setCancelados] = useState<Set<string>>(new Set());
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   function reagendarTurno(turnoId: string) {
     router.push(`/portal/agendar?reschedule=${turnoId}`);
   }
 
   async function cancelarTurno(turnoId: string) {
-    if (!confirm('¿Estás seguro de cancelar este turno?')) return;
     setError('');
+    setSuccessMsg('');
     setLoadingId(turnoId);
 
     try {
@@ -63,11 +64,22 @@ export default function PortalTurnosClient({ turnos }: Props) {
         body: JSON.stringify({ estado: 'cancelada', motivo: 'Cancelado por el paciente' }),
       });
 
+      const data = await res.json();
       if (res.ok) {
         setCancelados((prev) => new Set(prev).add(turnoId));
+        setError('');
+        if (data.reembolso) {
+          if (data.reembolso.procesado) {
+            setSuccessMsg(`✅ Turno cancelado. ${data.reembolso.mensaje} — Monto reembolsado: $${Number(data.reembolso.monto).toLocaleString('es-CL')}`);
+          } else {
+            setSuccessMsg(`Turno cancelado. ${data.reembolso.mensaje}`);
+          }
+        } else {
+          setSuccessMsg('Turno cancelado correctamente');
+        }
       } else {
-        const data = await res.json();
         setError(data.error || 'Error al cancelar');
+        setSuccessMsg('');
       }
     } catch {
       setError('Error de conexión');
@@ -86,6 +98,11 @@ export default function PortalTurnosClient({ turnos }: Props) {
       {error && (
         <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-2 rounded-lg text-sm mb-4">
           <AlertCircle className="h-4 w-4" /> {error}
+        </div>
+      )}
+      {successMsg && (
+        <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg text-sm mb-4">
+          <span>{successMsg}</span>
         </div>
       )}
 
