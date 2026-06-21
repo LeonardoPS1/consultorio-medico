@@ -1,7 +1,8 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Calendar, FileText, MessageSquare, User, PlusCircle, LogOut, Package } from 'lucide-react';
+import { Calendar, FileText, MessageSquare, User, PlusCircle, LogOut, Package, Bell } from 'lucide-react';
 
 const navItems = [
   { href: '/portal/dashboard', label: 'Inicio', icon: User },
@@ -14,6 +15,26 @@ const navItems = [
 ];
 
 export default function PortalNav() {
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchCount = useCallback(async () => {
+    try {
+      const res = await fetch('/api/portal/notificaciones?count=true');
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.count ?? 0);
+      }
+    } catch {
+      // silently fail
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCount();
+    const interval = setInterval(fetchCount, 30000);
+    return () => clearInterval(interval);
+  }, [fetchCount]);
+
   async function handleLogout() {
     await fetch('/api/portal/logout', { method: 'POST' });
     window.location.href = '/portal';
@@ -32,6 +53,18 @@ export default function PortalNav() {
             <span>{item.label}</span>
           </Link>
         ))}
+        <Link
+          href="/portal/notificaciones"
+          className="flex flex-col items-center gap-1 text-xs text-gray-500 hover:text-blue-600 transition-colors px-2 py-1 relative"
+        >
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+          <span>Alertas</span>
+        </Link>
         <button
           onClick={handleLogout}
           className="flex flex-col items-center gap-1 text-xs text-red-400 hover:text-red-600 transition-colors px-2 py-1"
