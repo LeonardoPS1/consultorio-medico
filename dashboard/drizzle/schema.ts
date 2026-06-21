@@ -118,6 +118,8 @@ export const pacientes = pgTable('pacientes', {
   metadata: jsonb('metadata').default({}),
   portalToken: varchar('portal_token', { length: 255 }),
   portalTokenExpires: timestamp('portal_token_expires', { withTimezone: true }),
+  ultimoAccesoPortal: timestamp('ultimo_acceso_portal', { withTimezone: true }),
+  maxCancelacionesMes: integer('max_cancelaciones_mes').notNull().default(3),
   bajaSolicitadaAt: timestamp('baja_solicitada_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -167,6 +169,11 @@ export const turnos = pgTable('turnos', {
   googleCalendarEventId: varchar('google_calendar_event_id', { length: 500 }),
   n8nWorkflowExecutionId: varchar('n8n_workflow_execution_id', { length: 255 }),
   inicioAtencionAt: timestamp('inicio_atencion_at', { withTimezone: true }),
+  // Portal booking — payment fields
+  pagado: boolean('pagado').notNull().default(false),
+  precio: decimal('precio', { precision: 10, scale: 2 }),
+  metodoPago: varchar('metodo_pago', { length: 30 }),
+  pagadoAt: timestamp('pagado_at', { withTimezone: true }),
   metadata: jsonb('metadata').default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -1051,6 +1058,63 @@ export const consentimientos = pgTable('consentimientos', {
 
 export type Consentimiento = InferSelectModel<typeof consentimientos>;
 export type NewConsentimiento = InferInsertModel<typeof consentimientos>;
+
+// ============================================================
+// PORTAL PAGOS (pagos desde el portal del paciente)
+// ============================================================
+export const portalPagos = pgTable('portal_pagos', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  turnoId: uuid('turno_id').notNull().references(() => turnos.id),
+  pacienteId: uuid('paciente_id').notNull().references(() => pacientes.id),
+  monto: decimal('monto', { precision: 10, scale: 2 }).notNull(),
+  moneda: varchar('moneda', { length: 10 }).notNull().default('CLP'),
+  metodoPago: varchar('metodo_pago', { length: 30 }).notNull().default('mercadopago'),
+  estado: varchar('estado', { length: 20 }).notNull().default('pendiente'),
+  mercadopagoPreferenceId: varchar('mercadopago_preference_id', { length: 255 }),
+  mercadopagoPaymentId: varchar('mercadopago_payment_id', { length: 255 }),
+  metadata: jsonb('metadata').default({}),
+  pagadoAt: timestamp('pagado_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  idxPortalPagosTurno: index('idx_portal_pagos_turno').on(table.turnoId),
+  idxPortalPagosPaciente: index('idx_portal_pagos_paciente').on(table.pacienteId),
+  idxPortalPagosEstado: index('idx_portal_pagos_estado').on(table.estado),
+}));
+
+export type PortalPago = InferSelectModel<typeof portalPagos>;
+export type NewPortalPago = InferInsertModel<typeof portalPagos>;
+
+export const portalPagosRelations = relations(portalPagos, ({ one }) => ({
+  turno: one(turnos, {
+    fields: [portalPagos.turnoId],
+    references: [turnos.id],
+  }),
+  paciente: one(pacientes, {
+    fields: [portalPagos.pacienteId],
+    references: [pacientes.id],
+  }),
+}));
+
+// ============================================================
+// PORTAL CONFIG (configuración por tenant)
+// ============================================================
+export const portalConfig = pgTable('portal_config', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenantId: uuid('tenant_id').notNull().unique().references(() => tenants.id),
+  allowBooking: boolean('allow_booking').notNull().default(true),
+  allowPayments: boolean('allow_payments').notNull().default(false),
+  maxCancelacionesMes: integer('max_cancelaciones_mes').notNull().default(3),
+  bookingLeadTimeHours: integer('booking_lead_time_hours').notNull().default(24),
+  bookingWindowDays: integer('booking_window_days').notNull().default(30),
+  depositRequired: boolean('deposit_required').notNull().default(false),
+  depositAmount: decimal('deposit_amount', { precision: 10, scale: 2 }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type PortalConfig = InferSelectModel<typeof portalConfig>;
+export type NewPortalConfig = InferInsertModel<typeof portalConfig>;
 
 // ============================================================
 // LEAD CAPTURES (Contact Form)
