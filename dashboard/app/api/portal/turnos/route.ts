@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { crearTurnoPortal } = await import('@/lib/services/portal-booking');
+    const { crearTurnoPortal, sendTurnoConfirmacionWhatsApp } = await import('@/lib/services/portal-booking');
     const turno = await crearTurnoPortal({
       pacienteId: session.pacienteId,
       medicoId,
@@ -70,6 +70,17 @@ export async function POST(request: NextRequest) {
       fechaHora,
       motivo: motivo || null,
     });
+
+    // WhatsApp confirmation (fire-and-forget)
+    sendTurnoConfirmacionWhatsApp(
+      turno.pacienteTelefono,
+      turno.pacienteNombre,
+      turno.medicoNombre,
+      turno.medicoEspecialidad,
+      turno.fechaHora.toISOString(),
+      turno.motivo,
+      turno.precio ? Number(turno.precio) : null,
+    ).catch(() => {});
 
     return NextResponse.json({ success: true, turno }, { status: 201 });
   } catch (err) {

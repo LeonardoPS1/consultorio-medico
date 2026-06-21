@@ -11,6 +11,7 @@
 import { db } from '@/lib/db';
 import { medicos, servicios, horariosAtencion, bloqueosAgenda, turnos, pacientes } from '@/drizzle/schema';
 import { eq, and, sql, gte, lte, inArray, notInArray } from 'drizzle-orm';
+import { safeWarn, safeError } from '@/lib/logger';
 
 // ─── Tipos públicos ──────────────────────────────────────────
 
@@ -213,10 +214,12 @@ export interface CrearTurnoPortalInput {
   sucursalId?: string;
 }
 
+export type TurnoCreadoPortal = Awaited<ReturnType<typeof crearTurnoPortal>>;
+
 export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
   // 1. Validar servicio
   const [servicio] = await db
-    .select({ duracionMinutos: servicios.duracionMinutos, precio: servicios.precio })
+    .select({ duracionMinutos: servicios.duracionMinutos, precio: servicios.precio, nombre: servicios.nombre })
     .from(servicios)
     .where(and(eq(servicios.id, input.servicioId), eq(servicios.activo, true)))
     .limit(1);
@@ -246,7 +249,88 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
     })
     .returning();
 
-  return turno;
+  // 4. Obtener datos del paciente y médico para la respuesta
+  const [pacienteRow] = await db
+    .select({ nombre: pacientes.nombre, telefono: pacientes.telefono })
+    .from(pacientes)
+    .where(eq(pacientes.id, input.pacienteId))
+    .limit(1);
+
+  const [medicoRow] = await db
+    .select({ nombre: medicos.nombre, especialidad: medicos.especialidad })
+    .from(medicos)
+    .where(eq(medicos.id, input.medicoId))
+    .limit(1);
+
+  return {
+    ...turno,
+    pacienteNombre: pacienteRow?.nombre || '',
+    pacienteTelefono: pacienteRow?.telefono || '',
+    medicoNombre: medicoRow?.nombre || '',
+    medicoEspecialidad: medicoRow?.especialidad || '',
+    servicioNombre: servicio.nombre || '',
+  };
+}
+
+// ─── WhatsApp confirmation ───────────────────────────────────
+
+/**
+ * Envía confirmación de turno por WhatsApp al paciente.
+ * Fire-and-forget: no bloquea el flujo principal.
+ */
+export async function sendTurnoConfirmacionWhatsApp(
+  telefono: string,
+  pacienteNombre: string,
+  medicoNombre: string,
+  especialidad: string,
+  fechaHora: string,
+  motivo: string | null,
+  precio: number | null,
+): Promise<void> {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+  if (!accountSid || !authToken || !fromNumber) return;
+
+  const fecha = new Date(fechaHora);
+  const fechaStr = fecha.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+  const horaStr = fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+
+  let message = `✅ *Turno confirmado - Consultorio Médico*
+
+Hola ${pacienteNombre}, tu turno fue agendado correctamente:
+
+🩺 *Médico:* ${medicoNombre} (${especialidad})
+📅 *Fecha:* ${fechaStr}
+⏰ *Hora:* ${horaStr}`;
+
+  if (motivo) message += `\n📝 *Motivo:* ${motivo}`;
+  if (precio && precio > 0) message += `\n💰 *Pendiente de pago:* $${precio.toLocaleString('es-CL')}`;
+  message += `\n\nSi no puedes asistir, cancelá con anticipación desde el portal.
+🔗 ${process.env.NEXT_PUBLIC_APP_URL || 'https://med.aicorebots.com'}/portal`;
+
+  try {
+    const response = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          To: telefono.startsWith('+') ? telefono : `+${telefono}`,
+          From: fromNumber,
+          Body: message,
+        }),
+      },
+    );
+    if (!response.ok) {
+      safeWarn('[PortalBooking] Error enviando confirmación WhatsApp:', { status: response.status });
+    }
+  } catch (e) {
+    safeError('[PortalBooking] Error enviando confirmación WhatsApp:', e instanceof Error ? { message: e.message } : e);
+  }
 }
 
 // ─── Helpers ─────────────────────────────────────────────────
