@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Calendar, FileText, MessageSquare, User, PlusCircle, LogOut, Package, Bell } from 'lucide-react';
+import { Calendar, FileText, MessageSquare, User, PlusCircle, LogOut, Package, Bell, PenTool } from 'lucide-react';
 
 const navItems = [
   { href: '/portal/dashboard', label: 'Inicio', icon: User },
@@ -12,6 +12,7 @@ const navItems = [
   { href: '/portal/mensajes', label: 'Chat', icon: MessageSquare },
   { href: '/portal/recetas', label: 'Recetas', icon: FileText },
   { href: '/portal/certificados', label: 'Certificados', icon: FileText },
+  { href: '/portal/consentimientos', label: 'Consentimientos', icon: PenTool },
   { href: '/portal/perfil', label: 'Perfil', icon: User },
 ];
 
