@@ -1,18 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { DoctorCard } from './doctor-card';
 import { SlotPicker } from './slot-picker';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { Loader2, ArrowLeft, Check, CalendarIcon, Stethoscope, CreditCard } from 'lucide-react';
-import type { MedicoPortal, SlotDisponible } from '@/lib/services/portal-booking';
+import { Loader2, ArrowLeft, Check, CalendarIcon, Stethoscope, CreditCard, ExternalLink } from 'lucide-react';
+import type { MedicoPortal, SlotDisponible, TurnoCreadoPortal } from '@/lib/services/portal-booking';
 
-type Step = 'medico' | 'slot' | 'confirmar' | 'completado';
+type Step = 'medico' | 'slot' | 'confirmar' | 'pago' | 'completado';
 
 interface BookingWizardProps {
   medicos: MedicoPortal[];
@@ -26,6 +27,25 @@ export function BookingWizard({ medicos }: BookingWizardProps) {
   const [selectedSlot, setSelectedSlot] = useState<SlotDisponible | null>(null);
   const [motivo, setMotivo] = useState('');
   const [loading, setLoading] = useState(false);
+  const [ultimoTurno, setUltimoTurno] = useState<TurnoCreadoPortal | null>(null);
+  const [pagoInfo, setPagoInfo] = useState<{
+    preferenceId: string;
+    initPoint: string;
+    sandboxInitPoint: string;
+  } | null>(null);
+  const [pagando, setPagando] = useState(false);
+  const [pagoCompletado, setPagoCompletado] = useState(false);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => stopPolling, [stopPolling]);
 
   const handleSelectMedico = (m: MedicoPortal) => {
     setSelectedMedico(m);
@@ -48,6 +68,27 @@ export function BookingWizard({ medicos }: BookingWizardProps) {
     setStep('confirmar');
   };
 
+  const iniciarPago = async (turno: TurnoCreadoPortal) => {
+    try {
+      const res = await fetch('/api/portal/pagos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ turnoId: turno.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al iniciar pago');
+      setPagoInfo(data);
+      return data;
+    } catch (e) {
+      toast({
+        title: 'Error',
+        description: e instanceof Error ? e.message : 'Error al iniciar pago',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
   const handleConfirmar = async () => {
     if (!selectedMedico || !selectedSlot || !selectedServicio) return;
     setLoading(true);
@@ -67,8 +108,17 @@ export function BookingWizard({ medicos }: BookingWizardProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al agendar');
 
-      setStep('completado');
+      setUltimoTurno(data.turno);
       toast({ title: 'Turno agendado', description: 'Recibirás la confirmación por WhatsApp.' });
+
+      // Si tiene precio, ir a paso de pago
+      const precio = Number(data.turno.precio);
+      if (precio > 0) {
+        setStep('pago');
+        await iniciarPago(data.turno);
+      } else {
+        setStep('completado');
+      }
     } catch (e) {
       toast({
         title: 'Error',
@@ -78,6 +128,35 @@ export function BookingWizard({ medicos }: BookingWizardProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePagarAhora = () => {
+    if (!pagoInfo) return;
+    const url = pagoInfo.initPoint || pagoInfo.sandboxInitPoint;
+    if (!url) return;
+    setPagando(true);
+    window.open(url, '_blank');
+
+    // Poll every 5s to check payment status
+    pollingRef.current = setInterval(async () => {
+      if (!ultimoTurno) return;
+      try {
+        const res = await fetch(`/api/portal/pagos/${ultimoTurno.id}`);
+        const data = await res.json();
+        if (data.turnoPagado) {
+          setPagoCompletado(true);
+          stopPolling();
+          toast({ title: 'Pago confirmado', description: 'El pago fue procesado correctamente.' });
+        }
+      } catch {
+        // keep polling
+      }
+    }, 5000);
+  };
+
+  const handleOmitirPago = () => {
+    stopPolling();
+    setStep('completado');
   };
 
   const formatDate = (iso: string) => {
@@ -241,6 +320,73 @@ export function BookingWizard({ medicos }: BookingWizardProps) {
               <p className="text-xs text-muted-foreground text-center">
                 El pago se procesará al confirmar
               </p>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  if (step === 'pago') {
+    return (
+      <div className="max-w-md mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Pago pendiente
+            </CardTitle>
+            <CardDescription>
+              Completá el pago para confirmar tu turno. Podés pagar ahora o hacerlo después desde el portal.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {ultimoTurno && (
+              <div className="text-sm space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Monto</span>
+                  <span className="font-semibold text-lg">
+                    ${Number(ultimoTurno.precio).toLocaleString('es-CL')}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Médico</span>
+                  <span>{ultimoTurno.medicoNombre}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Fecha</span>
+                  <span>{formatDate(ultimoTurno.fechaHora as unknown as string)}</span>
+                </div>
+              </div>
+            )}
+
+            {pagoCompletado ? (
+              <div className="text-center py-4">
+                <div className="rounded-full bg-green-100 w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                  <Check className="h-6 w-6 text-green-600" />
+                </div>
+                <p className="font-medium text-green-700">Pago confirmado</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <Button onClick={handlePagarAhora} disabled={!pagoInfo || pagando} className="w-full" size="lg">
+                  {pagando ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Esperando pago...</>
+                  ) : (
+                    <><ExternalLink className="mr-2 h-4 w-4" /> Pagar con MercadoPago</>
+                  )}
+                </Button>
+                <Button onClick={handleOmitirPago} variant="ghost" className="w-full">
+                  Pagar después
+                </Button>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter className="flex-col">
+            {pagoCompletado && (
+              <Button onClick={() => setStep('completado')} className="w-full">
+                <Check className="mr-2 h-4 w-4" /> Continuar
+              </Button>
             )}
           </CardFooter>
         </Card>
