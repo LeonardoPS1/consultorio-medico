@@ -28,6 +28,7 @@ export async function GET() {
       fechaFin: recetas.fechaFin,
       medicoNombre: medicos.nombre,
       medicoEspecialidad: medicos.especialidad,
+      hashVerificacion: recetas.hashVerificacion,
     })
     .from(recetas)
     .leftJoin(medicos, eq(recetas.medicoId, medicos.id))

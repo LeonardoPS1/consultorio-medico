@@ -4,7 +4,7 @@
 
 'use client';
 
-import { FileText, Pill, Clock, User } from 'lucide-react';
+import { FileText, Pill, Clock, User, Download } from 'lucide-react';
 
 interface Receta {
   id: string;
@@ -90,9 +90,20 @@ export default function PortalRecetasClient({ recetas }: Props) {
                 </div>
               )}
 
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <User className="h-3 w-3" />
-                Dr/a. {r.medicoNombre} · {r.medicoEspecialidad}
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <User className="h-3 w-3" />
+                  Dr/a. {r.medicoNombre} · {r.medicoEspecialidad}
+                </div>
+                <a
+                  href={`/api/portal/recetas/${r.id}`}
+                  target="_blank"
+                  className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  title="Descargar PDF"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  PDF
+                </a>
               </div>
             </div>
           ))}
