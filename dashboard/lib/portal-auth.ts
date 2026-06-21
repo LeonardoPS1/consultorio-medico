@@ -12,22 +12,94 @@
 
 import { db } from '@/lib/db';
 import { safeWarn, safeError } from '@/lib/logger';
-import { pacientes } from '@/drizzle/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { pacientes, blacklist } from '@/drizzle/schema';
+import { eq, and, sql, lte, gte } from 'drizzle-orm';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
+import { turnos } from '@/drizzle/schema';
 
 // ─── Config ──────────────────────────────────────────────────
 
-const PORTAL_TOKEN_EXPIRY_MINUTES = 10; // Magic link expira en 10 min
-const PORTAL_SESSION_HOURS = 24; // La sesión dura 24 horas
+const PORTAL_TOKEN_EXPIRY_MINUTES = 10;
+const PORTAL_SESSION_HOURS = 24;
 const SESSION_COOKIE_NAME = 'portal_session';
+const RATE_LIMIT_MAX = 3; // intentos de magic link
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutos
+const RATE_LIMIT_CANCELACIONES = 3; // cancelaciones permitidas por mes
 const AUTH_SECRET = () => {
   const secret = process.env.AUTH_SECRET;
   if (!secret) throw new Error('AUTH_SECRET no configurado');
   return new TextEncoder().encode(secret);
 };
+
+// ─── Rate limiting en memoria (por teléfono) ────────────────
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkPhoneRate(telefono: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(telefono);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(telefono, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count++;
+  return true;
+}
+
+// Cleanup cada 10 min
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of Array.from(rateLimitMap)) {
+    if (now > v.resetAt) rateLimitMap.delete(k);
+  }
+}, 10 * 60_000);
+
+// ─── Blacklist check ─────────────────────────────────────────
+
+export async function checkBlacklist(pacienteId: string): Promise<{ bloqueado: boolean; motivo?: string }> {
+  const [entry] = await db
+    .select({ motivo: blacklist.motivo, bloqueadoHasta: blacklist.bloqueadoHasta })
+    .from(blacklist)
+    .where(
+      and(
+        eq(blacklist.pacienteId, pacienteId),
+        eq(blacklist.activo, true),
+        sql`(${blacklist.bloqueadoHasta} IS NULL OR ${blacklist.bloqueadoHasta} > NOW())`,
+      ),
+    )
+    .limit(1);
+
+  if (entry) {
+    return {
+      bloqueado: true,
+      motivo: entry.motivo || 'Paciente bloqueado',
+    };
+  }
+  return { bloqueado: false };
+}
+
+// ─── Cancelaciones del mes ──────────────────────────────────
+
+export async function contarCancelacionesMes(pacienteId: string): Promise<number> {
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const [result] = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(turnos)
+    .where(
+      and(
+        eq(turnos.pacienteId, pacienteId),
+        eq(turnos.estado, 'cancelada'),
+        gte(turnos.updatedAt, startOfMonth),
+      ),
+    );
+
+  return result?.count ?? 0;
+}
 
 // ─── Tipos ───────────────────────────────────────────────────
 
@@ -47,9 +119,16 @@ export interface GenerateTokenResult {
 
 /**
  * Genera un token de magic link y lo almacena en la DB.
+ * Incluye rate limiting por teléfono y verificación de blacklist.
  * Devuelve el token y la URL completa del magic link.
  */
 export async function generateMagicLink(telefono: string): Promise<GenerateTokenResult | null> {
+  // 0. Rate limiting por teléfono
+  if (!checkPhoneRate(telefono)) {
+    safeWarn(`[PortalAuth] Rate limit excedido para ${telefono}`);
+    return null;
+  }
+
   // 1. Buscar paciente
   const [paciente] = await db
     .select({ id: pacientes.id, nombre: pacientes.nombre })
@@ -58,6 +137,13 @@ export async function generateMagicLink(telefono: string): Promise<GenerateToken
     .limit(1);
 
   if (!paciente) return null;
+
+  // 1b. Verificar blacklist
+  const bl = await checkBlacklist(paciente.id);
+  if (bl.bloqueado) {
+    safeWarn(`[PortalAuth] Paciente bloqueado intenta acceso: ${paciente.id} — ${bl.motivo}`);
+    return null;
+  }
 
   // 2. Generar token criptográfico
   const token = crypto.randomBytes(32).toString('hex');
@@ -84,6 +170,7 @@ export async function generateMagicLink(telefono: string): Promise<GenerateToken
 /**
  * Verifica un token de magic link y devuelve el paciente si es válido.
  * Invalida el token después de usarlo (one-time use).
+ * Actualiza ultimoAccesoPortal al iniciar sesión.
  */
 export async function verifyMagicToken(token: string): Promise<PortalSession | null> {
   const [paciente] = await db
@@ -104,10 +191,14 @@ export async function verifyMagicToken(token: string): Promise<PortalSession | n
 
   if (!paciente) return null;
 
-  // One-time use: invalidar token
+  // One-time use: invalidar token + actualizar último acceso
   await db
     .update(pacientes)
-    .set({ portalToken: null, portalTokenExpires: null })
+    .set({
+      portalToken: null,
+      portalTokenExpires: null,
+      ultimoAccesoPortal: sql`NOW()`,
+    })
     .where(eq(pacientes.id, paciente.id));
 
   return {
