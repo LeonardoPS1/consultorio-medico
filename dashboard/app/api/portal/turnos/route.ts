@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { crearTurnoPortal, sendTurnoConfirmacionWhatsApp, notifyDoctorWhatsApp } = await import('@/lib/services/portal-booking');
+    const { consumirTurnoSuscripcion, tienePaqueteDisponible } = await import('@/lib/services/portal-paquetes');
     const turno = await crearTurnoPortal({
       pacienteId: session.pacienteId,
       medicoId,
@@ -72,6 +73,14 @@ export async function POST(request: NextRequest) {
       motivo: motivo || null,
       rescheduleTurnoId: rescheduleTurnoId || undefined,
     });
+
+    // Si el turno tiene precio y el paciente tiene paquete, consumir automáticamente
+    if (turno.precio && Number(turno.precio) > 0) {
+      const disponible = await tienePaqueteDisponible(session.pacienteId);
+      if (disponible) {
+        await consumirTurnoSuscripcion(session.pacienteId, turno.id);
+      }
+    }
 
     // WhatsApp confirmation (fire-and-forget) con .ics adjunto
     sendTurnoConfirmacionWhatsApp(

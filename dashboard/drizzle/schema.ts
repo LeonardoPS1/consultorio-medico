@@ -1097,6 +1097,60 @@ export const portalPagosRelations = relations(portalPagos, ({ one }) => ({
 }));
 
 // ============================================================
+// PAQUETES PORTAL (paquetes de turnos disponibles)
+// ============================================================
+export const paquetesPortal = pgTable('paquetes_portal', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenantId: uuid('tenant_id').notNull().default('00000000-0000-0000-0000-000000000000').references(() => tenants.id),
+  nombre: varchar('nombre', { length: 100 }).notNull(),
+  descripcion: text('descripcion'),
+  cantidadTurnos: integer('cantidad_turnos').notNull(),
+  precio: integer('precio').notNull(),
+  activo: boolean('activo').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  idxActivo: index('idx_paquetes_portal_activo').on(table.activo),
+}));
+
+export type PaquetePortal = InferSelectModel<typeof paquetesPortal>;
+export type NewPaquetePortal = InferInsertModel<typeof paquetesPortal>;
+
+// ============================================================
+// SUSCRIPCIONES PACIENTE (paquetes comprados)
+// ============================================================
+export const suscripcionesPaciente = pgTable('suscripciones_paciente', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pacienteId: uuid('paciente_id').notNull().references(() => pacientes.id),
+  paqueteId: uuid('paquete_id').notNull().references(() => paquetesPortal.id),
+  turnosRestantes: integer('turnos_restantes').notNull(),
+  turnosTotales: integer('turnos_totales').notNull(),
+  activa: boolean('activa').notNull().default(true),
+  vencimiento: timestamp('vencimiento', { withTimezone: true }),
+  pagado: boolean('pagado').notNull().default(false),
+  mercadopagoPaymentId: varchar('mercadopago_payment_id', { length: 255 }),
+  metadata: jsonb('metadata').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  idxPacienteActiva: index('idx_susc_paciente_activa').on(table.pacienteId, table.activa),
+}));
+
+export type SuscripcionPaciente = InferSelectModel<typeof suscripcionesPaciente>;
+export type NewSuscripcionPaciente = InferInsertModel<typeof suscripcionesPaciente>;
+
+export const suscripcionesPacienteRelations = relations(suscripcionesPaciente, ({ one }) => ({
+  paciente: one(pacientes, {
+    fields: [suscripcionesPaciente.pacienteId],
+    references: [pacientes.id],
+  }),
+  paquete: one(paquetesPortal, {
+    fields: [suscripcionesPaciente.paqueteId],
+    references: [paquetesPortal.id],
+  }),
+}));
+
+// ============================================================
 // PORTAL CONFIG (configuración por tenant)
 // ============================================================
 export const portalConfig = pgTable('portal_config', {

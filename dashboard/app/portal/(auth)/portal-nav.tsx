@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Calendar, FileText, ClipboardList, User, PlusCircle, LogOut } from 'lucide-react';
+import { Calendar, FileText, ClipboardList, User, PlusCircle, LogOut, Package } from 'lucide-react';
 
 const navItems = [
   { href: '/portal/dashboard', label: 'Inicio', icon: User },
   { href: '/portal/agendar', label: 'Agendar', icon: PlusCircle },
   { href: '/portal/turnos', label: 'Turnos', icon: Calendar },
+  { href: '/portal/paquetes', label: 'Paquetes', icon: Package },
   { href: '/portal/recetas', label: 'Recetas', icon: FileText },
   { href: '/portal/perfil', label: 'Perfil', icon: User },
 ];

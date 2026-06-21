@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getPaymentById, getMerchantOrderById } from '@/lib/mercadopago';
 import { PLANES, type PlanId } from '@/lib/planes';
 import { db } from '@/lib/db';
-import { suscripciones, usuarios, portalPagos, turnos } from '@/drizzle/schema';
+import { suscripciones, usuarios, portalPagos, turnos, suscripcionesPaciente } from '@/drizzle/schema';
 import { eq, desc } from 'drizzle-orm';
 import { getUserByEmail } from '@/lib/data-store';
 import { safeLog, safeWarn, safeError } from '@/lib/logger';
@@ -126,6 +126,12 @@ async function handlePaymentNotification(paymentId: string) {
   // ── Detectar si es pago de turno (external_reference = "turno:{turnoId}") ──
   if (externalRef.startsWith('turno:')) {
     await handleTurnoPayment(externalRef.slice(6), paymentId, status, merchantOrderId);
+    return;
+  }
+
+  // ── Detectar si es pago de paquete (external_reference = "paquete:{suscripcionId}") ──
+  if (externalRef.startsWith('paquete:')) {
+    await handlePaquetePayment(externalRef.slice(8), paymentId, status);
     return;
   }
 
@@ -271,6 +277,41 @@ async function handleTurnoPayment(
         .where(eq(portalPagos.id, pago.id));
     }
     safeLog(`[MP Webhook] ❌ Pago turno ${turnoId}: ${status}`);
+  }
+}
+
+// ─── Manejar pago de paquete de turnos ───────────────────────
+async function handlePaquetePayment(
+  suscripcionId: string,
+  paymentId: string,
+  status: string | undefined,
+) {
+  const now = new Date();
+
+  if (status === 'approved') {
+    // Activar suscripción (marcar pagada)
+    await db
+      .update(suscripcionesPaciente)
+      .set({
+        pagado: true,
+        activa: true,
+        mercadopagoPaymentId: paymentId,
+        updatedAt: now,
+      })
+      .where(eq(suscripcionesPaciente.id, suscripcionId));
+
+    safeLog(`[MP Webhook] ✅ Paquete suscripción ${suscripcionId} activada (MP payment ${paymentId})`);
+  } else if (['cancelled', 'rejected', 'refunded'].includes(status ?? '')) {
+    await db
+      .update(suscripcionesPaciente)
+      .set({
+        pagado: false,
+        activa: false,
+        updatedAt: now,
+      })
+      .where(eq(suscripcionesPaciente.id, suscripcionId));
+
+    safeLog(`[MP Webhook] ❌ Pago paquete ${suscripcionId}: ${status}`);
   }
 }
 
