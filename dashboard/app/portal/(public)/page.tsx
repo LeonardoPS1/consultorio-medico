@@ -5,8 +5,8 @@
 
 'use client';
 
-import { useState } from 'react';
-import { Phone, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Phone, ArrowRight, CheckCircle, AlertCircle, Bug } from 'lucide-react';
 import { isValidPhone } from '@/lib/utils';
 
 export default function PortalLogin() {
@@ -14,6 +14,29 @@ export default function PortalLogin() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [isDev, setIsDev] = useState(false);
+
+  useEffect(() => {
+    setIsDev(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  }, []);
+
+  async function handleTestAccess() {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/portal/auth/test', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.redirect) {
+        window.location.href = data.redirect;
+      } else {
+        setError(data.error || 'Error al acceder en modo prueba');
+      }
+    } catch {
+      setError('Error de conexión');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -116,6 +139,22 @@ export default function PortalLogin() {
             )}
           </button>
         </form>
+
+        {isDev && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <button
+              onClick={handleTestAccess}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-600 font-medium py-3 rounded-xl hover:bg-gray-200 disabled:opacity-50 transition-colors"
+            >
+              <Bug className="h-5 w-5" />
+              {loading ? 'Ingresando...' : 'Acceso de prueba (dev)'}
+            </button>
+            <p className="text-xs text-gray-400 text-center mt-2">
+              Solo disponible en desarrollo. Ingresa con un paciente de prueba.
+            </p>
+          </div>
+        )}
 
         <p className="text-xs text-gray-400 text-center mt-6">
           Solo se muestran datos asociados a tu número. No compartas tu enlace de acceso.

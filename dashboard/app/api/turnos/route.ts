@@ -42,7 +42,5 @@ export const POST = apiHandler(async (request: NextRequest) => {
   const body = await parseBody(request, createTurnoSchema);
   const turno = await turnosService.create(body);
 
-// El sync a Google Calendar ahora lo maneja turnosService.create()
-
   return created(turno);
 });

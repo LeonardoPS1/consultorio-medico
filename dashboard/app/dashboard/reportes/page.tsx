@@ -14,7 +14,7 @@ import {
   TrendingUp, TrendingDown, MessageSquare, Calendar, Activity,
   Download, BarChart3, PieChart, Mail, CheckCircle2,
   Clock, ArrowUpRight, Users, Phone, XCircle, FileSpreadsheet,
-  FileText, Loader2, AlertCircle, Award, DollarSign,
+  FileText, Loader2, AlertCircle, Award, DollarSign, CalendarX, AlertTriangle,
 } from 'lucide-react';
 import { escapeHtml } from '@/lib/html-utils';
 import {
@@ -902,7 +902,7 @@ ${data.ejecutivo ? `
         <TabsContent value="ejecutivo" className="mt-4 space-y-6">
           {data?.ejecutivo ? (
             <>
-              {/* KPIs ejecutivos */}
+              {/* KPIs ejecutivos: 2 filas de 4 */}
               <motion.div
                 className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
                 initial="hidden"
@@ -910,10 +910,10 @@ ${data.ejecutivo ? `
                 variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
               >
                 {[
-                  { label: 'Ingresos Proyectados', valor: data.ejecutivo.totalIngresos, icon: DollarSign, up: true },
+                  { label: 'Ingresos Proyectados', valor: data.ejecutivo.totalIngresos, icon: DollarSign, up: data.ejecutivo.ingresosCambio !== '-100%' },
                   { label: 'Ocupación', valor: data.ejecutivo.tasaOcupacion, icon: Calendar, up: true },
                   { label: 'Satisfacción', valor: data.ejecutivo.satisfaccion, icon: Award, up: true },
-                  { label: 'NPS', valor: data.ejecutivo.nps, icon: TrendingUp, up: data.ejecutivo.nps >= 50 },
+                  { label: 'NPS', valor: String(data.ejecutivo.nps), icon: TrendingUp, up: (data.ejecutivo.nps ?? 0) >= 50 },
                 ].map((kpi) => (
                   <motion.div
                     key={kpi.label}
@@ -923,7 +923,7 @@ ${data.ejecutivo ? `
                       <CardContent className="p-4 sm:p-6">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{kpi.label}</span>
-                          <kpi.icon className="h-4 w-4 text-muted-foreground" />
+                          <kpi.icon className={`h-4 w-4 ${kpi.up ? 'text-green-500' : 'text-muted-foreground'}`} />
                         </div>
                         <p className="text-2xl font-bold">{kpi.valor}</p>
                       </CardContent>
@@ -931,6 +931,45 @@ ${data.ejecutivo ? `
                   </motion.div>
                 ))}
               </motion.div>
+
+              {/* KPIs operativos: segunda fila */}
+              {(() => {
+                const canceladas = data.distribucionEstados?.find(e => e.estado === 'cancelada')?.valor ?? 0;
+                const noAsistio = data.distribucionEstados?.find(e => e.estado === 'no_asistio')?.valor ?? 0;
+                const atendidas = data.distribucionEstados?.find(e => e.estado === 'atendido')?.valor ?? 0;
+                const totalEstado = canceladas + noAsistio + atendidas + (data.distribucionEstados?.find(e => e.estado === 'pendiente')?.valor ?? 0);
+                const tasaAusentismo = totalEstado > 0 ? Math.round(((canceladas + noAsistio) / totalEstado) * 100) : 0;
+                return (
+                  <motion.div
+                    className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+                    initial="hidden"
+                    animate="visible"
+                    variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
+                  >
+                    {[
+                      { label: 'Turnos Atendidos', valor: String(atendidas), icon: CheckCircle2, up: true },
+                      { label: 'Cancelaciones', valor: String(canceladas), icon: XCircle, up: false },
+                      { label: 'No Asistieron', valor: String(noAsistio), icon: CalendarX, up: false },
+                      { label: 'Ausentismo', valor: `${tasaAusentismo}%`, icon: AlertTriangle, up: tasaAusentismo < 20 },
+                    ].map((kpi) => (
+                      <motion.div
+                        key={kpi.label}
+                        variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+                      >
+                        <Card>
+                          <CardContent className="p-4 sm:p-6">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{kpi.label}</span>
+                              <kpi.icon className={`h-4 w-4 ${kpi.up ? 'text-green-500' : 'text-red-400'}`} />
+                            </div>
+                            <p className="text-2xl font-bold">{kpi.valor}</p>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                );
+              })()}
 
               {/* Predicción de demanda */}
               <Card>
@@ -986,11 +1025,31 @@ ${data.ejecutivo ? `
                     </div>
                     <div className="space-y-1">
                       <p className="text-muted-foreground">Tasa conversión</p>
-                      <p className="font-semibold text-lg">{Math.round((data.ejecutivo.leadsConvertidos / data.ejecutivo.leadsTotales) * 100)}%</p>
+                      <p className="font-semibold text-lg">
+                        {data.ejecutivo.leadsTotales > 0
+                          ? `${Math.round((data.ejecutivo.leadsConvertidos / data.ejecutivo.leadsTotales) * 100)}%`
+                          : '—'}
+                      </p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-muted-foreground">Pacientes recurrentes</p>
-                      <p className="font-semibold text-lg">{Math.round(data.ejecutivo.leadsConvertidos * 0.67)}</p>
+                      <p className="text-muted-foreground">Pacientes frecuentes</p>
+                      <p className="font-semibold text-lg">{data.pacientesKpis?.frecuentes ?? '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">Edad promedio</p>
+                      <p className="font-semibold text-lg">{data.pacientesKpis?.edadPromedio ? `${data.pacientesKpis.edadPromedio} años` : '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">Duración promedio</p>
+                      <p className="font-semibold text-lg">{data.turnosKpis?.duracion ?? '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">Tasa asistencia</p>
+                      <p className="font-semibold text-lg">{data.turnosKpis?.asistencia ?? '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">Total pacientes</p>
+                      <p className="font-semibold text-lg">{data.pacientesKpis?.total ?? '—'}</p>
                     </div>
                   </div>
                 </CardContent>

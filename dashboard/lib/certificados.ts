@@ -211,6 +211,12 @@ export function generarHTMLCertificado(
 <body>
   <div class="sello-agua">CERTIFICADO MÉDICO</div>
 
+  <div class="no-print" style="text-align:center;margin-bottom:20px;">
+    <button onclick="window.print()" style="background:#2563eb;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;cursor:pointer;">
+      🖨️ Imprimir / Guardar PDF
+    </button>
+  </div>
+
   <div class="header">
     <h1>${safe.medicoNombre.toUpperCase()}</h1>
     <p>${safe.medicoMatricula ? `Matrícula: ${safe.medicoMatricula}` : 'Médico Matriculado'}</p>

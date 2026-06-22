@@ -46,8 +46,22 @@ export const notificacionesService = {
       .from(notificaciones)
       .where(whereConditions);
 
+    // Seleccionar columnas explícitamente para evitar errores si faltan
+    // columnas agregadas en migrations no aplicadas en producción
     const rows = await db
-      .select()
+      .select({
+        id: notificaciones.id,
+        usuarioId: notificaciones.usuarioId,
+        titulo: notificaciones.titulo,
+        descripcion: notificaciones.descripcion,
+        tipo: notificaciones.tipo,
+        leido: notificaciones.leido,
+        href: notificaciones.href,
+        metadata: notificaciones.metadata,
+        createdAt: notificaciones.createdAt,
+        updatedAt: notificaciones.updatedAt,
+        deletedAt: notificaciones.deletedAt,
+      })
       .from(notificaciones)
       .where(whereConditions)
       .orderBy(desc(notificaciones.createdAt))

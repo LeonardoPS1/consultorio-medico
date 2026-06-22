@@ -89,13 +89,13 @@ export default function ApiKeysTab() {
     }
   };
 
-  // Revocar key
+  // Revocar key — elimina de la lista inmediatamente
   const revokeKey = async (id: string) => {
     if (!confirm('¿Revocar esta API key? Dejará de funcionar inmediatamente.')) return;
     try {
       await fetch(`/api/api-keys?id=${id}`, { method: 'DELETE' });
-      setKeys(prev => prev.map(k => k.id === id ? { ...k, activa: false } : k));
-      toast({ title: 'API key revocada' });
+      setKeys(prev => prev.filter(k => k.id !== id));
+      toast({ title: 'API key revocada y eliminada' });
     } catch {
       toast({ title: 'Error al revocar', variant: 'destructive' });
     }

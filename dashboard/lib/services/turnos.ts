@@ -72,6 +72,7 @@ export const turnosService = {
   },
 
   async create(input: CreateTurno) {
+    try {
     const fechaHora = new Date(`${input.fecha}T${input.hora}:00.000Z`);
     if (isNaN(fechaHora.getTime())) fail('Fecha u hora inválida', 400);
 
@@ -128,12 +129,16 @@ export const turnosService = {
     const conflicto = await db.select({ id: turnos.id }).from(turnos).where(and(eq(turnos.medicoId, input.medicoId), eq(turnos.fechaHora, fechaHora), sql`${turnos.deletedAt} IS NULL`, sql`${turnos.estado} NOT IN ('cancelada', 'no_asistio')`)).limit(1);
     if (conflicto.length > 0) conflict('El medico ya tiene un turno en ese horario');
 
-     const [nuevo] = await db.insert(turnos).values({
+     const insertValues: Record<string, unknown> = {
        pacienteId: input.pacienteId, medicoId: input.medicoId, fechaHora,
        duracionMinutos: input.duracionMinutos, motivo: input.motivo || null,
        tipoConsulta: input.tipoConsulta, estado: 'pendiente', fuente: 'web',
-        sucursalId: input.sucursalId ?? null,
-     }).returning();
+     };
+     // Solo incluir sucursalId si está definido (evita error si migration no aplicada)
+     if (input.sucursalId) {
+       insertValues.sucursalId = input.sucursalId;
+     }
+     const [nuevo] = await db.insert(turnos).values(insertValues as any).returning();
 
      // Disparar sync a Google Calendar (fire-and-forget)
      try {
@@ -178,6 +183,10 @@ export const turnosService = {
       cache.invalidate('turnos:list:');
 
       return nuevo;
+    } catch (error) {
+      safeError('[Turnos] Error en create:', error instanceof Error ? { message: error.message, stack: error.stack } : error);
+      throw error; // Re-lanzar para que apiHandler lo capture y devuelva 500
+    }
   },
 
   async update(id: string, input: UpdateTurno & { skipWaitlist?: boolean }) {
