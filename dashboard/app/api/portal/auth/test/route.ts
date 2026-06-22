@@ -1,8 +1,8 @@
 /**
- * POST /api/portal/auth/test — Acceso de prueba al portal (solo desarrollo)
+ * POST /api/portal/auth/test — Acceso de prueba al portal
  *
  * Permite ingresar al portal sin necesidad de número de teléfono ni magic link.
- * Solo funciona en NODE_ENV=development o localhost.
+ * Funciona en desarrollo O si PORTAL_BYPASS=true está configurado.
  */
 
 import { NextResponse } from 'next/server';
@@ -13,9 +13,9 @@ import { setPortalSessionCookie } from '@/lib/portal-auth';
 import { safeError } from '@/lib/logger';
 
 export async function POST() {
-  // Solo permitir en desarrollo
+  const bypass = process.env.PORTAL_BYPASS === 'true';
   const isDev = process.env.NODE_ENV !== 'production';
-  if (!isDev) {
+  if (!isDev && !bypass) {
     return NextResponse.json({ error: 'No disponible en producción' }, { status: 403 });
   }
 
