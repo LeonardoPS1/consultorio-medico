@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Calendar, FileText, MessageSquare, User, PlusCircle, LogOut, Package, Bell, PenTool, FlaskConical } from 'lucide-react';
+import { Calendar, FileText, MessageSquare, User, PlusCircle, LogOut, Package, Bell, PenTool, FlaskConical, ClipboardCheck } from 'lucide-react';
 
 const navItems = [
   { href: '/portal/dashboard', label: 'Inicio', icon: User },
@@ -13,6 +13,7 @@ const navItems = [
   { href: '/portal/recetas', label: 'Recetas', icon: FileText },
   { href: '/portal/certificados', label: 'Certificados', icon: FileText },
   { href: '/portal/consentimientos', label: 'Consentimientos', icon: PenTool },
+  { href: '/portal/encuestas', label: 'Encuestas', icon: ClipboardCheck },
   { href: '/portal/ordenes-estudio', label: 'Estudios', icon: FlaskConical },
   { href: '/portal/perfil', label: 'Perfil', icon: User },
 ];

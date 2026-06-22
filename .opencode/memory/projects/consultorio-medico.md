@@ -245,8 +245,9 @@ Cada dashboard load, cada listado de agenda, cada reporte, cada verificación de
 ### Pendientes
 - 🟡 Tests de integración
 - 🟡 WF-04 Correo Inteligente — necesita IMAP/SMTP configurados en n8n
-- 🟡 Portal Paciente MVP — Plan detallado creado, listo para implementar
 - 🟡 Activar webhook google-calendar-sync en n8n (workflow inactivo)
+- 🟡 A3 Encuesta post-consulta portal (API + UI + trigger en turno "atendido")
+- 🟡 A4 Confirmación asistencia interactiva WhatsApp (procesar SÍ/NO vía webhook Twilio)
 
 ## 📌 15/06 — Telemedicina Dashboard + Videollamada page ✅
 **Commits:** (pendiente)
@@ -284,3 +285,32 @@ Cada dashboard load, cada listado de agenda, cada reporte, cada verificación de
 - `dashboard/components/layout/sidebar.tsx` (fix import duplicado)
 
 **Build:** ✓ Compiled successfully, ✓ Linting, ✓ 117/117 páginas
+
+---
+
+## 📌 21/06 — Portal Paciente Fase 3 (Casi completa) ✅
+
+**Estado:** Fase 3 Portal Paciente — 8 de 10 items completados, push a origin/main
+
+### Items completados (último commit 0d881e0, 0c8f802, 03bfc97, 3c47969, etc.):
+- **B1 Chat portal**: API GET/POST `/api/portal/chat`, UI mensajes con burbujas, auto-refresh 10s, nav link
+- **B2 Auto-respuestas**: `getAutoReplyIfOutsideHours()` Lun-Vie 9-18 Chile, respuesta automática
+- **A1 Notificaciones in-app**: migration 0037, service, API, badge+count, página con filtros
+- **C1 Recetas PDF portal**: endpoint HTML imprimible con hash, botón descarga en nueva pestaña
+- **C2 Certificados portal**: API list + HTML con QR, UI página, nav link "Certificados"
+- **C3 Consentimientos portal**: API list/detail/firmar digital, UI página, nav link "Consentimientos"
+- **C4 Órdenes de estudio**: tabla `ordenes_estudio` + service + API + UI página + nav link
+- **A2 Push pacientes**: `pacienteId` en push_subscriptions, service actualizado, API suscribir/desuscribir/estado, componente PushNotificationToggle en perfil
+
+### Pendientes Fase 3:
+- **A3 Encuesta post-consulta portal**: API GET/POST `/api/portal/encuestas` creada, falta UI página + trigger automático al pasar turno a "atendido" (lib/encuestas.ts ya tiene `sendSurveyWhatsApp()` y `detectSurveyResponse()`)
+- **A4 Confirmación asistencia interactiva WhatsApp**: Turno tiene campos `recordatorio_24h_leido`, `recordatorio_1h_leido`, `confirmoAsistencia`. n8n WF-03 marca flags. Falta: procesar respuesta SÍ/NO vía webhook Twilio → actualizar `confirmoAsistencia` en turno.
+
+### Build:
+- 0 TS errors en todos los commits
+- Push a `origin/main` ✅
+- Rama: `main`
+
+### Migraciones pendientes en producción:
+- Migration 0036: `paquetes_portal`, `suscripciones_paciente`
+- Migration 0037: `pacienteId` en `notificaciones`

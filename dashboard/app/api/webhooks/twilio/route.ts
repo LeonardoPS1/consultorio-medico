@@ -447,24 +447,42 @@ export const POST = withRateLimit(async function POST(request: NextRequest) {
     }
 
     // ─── Detección rápida de respuestas (regex, sin DB) ───────────
-    // Estas son respuestas a recordatorios (CONFIRMAR/CANCELAR) u
+    // Estas son respuestas a recordatorios (SÍ/CONFIRMAR/NO/CANCELAR) u
     // ofertas de waitlist (ACEPTAR/RECHAZAR). Se procesan en segundo
     // plano para no bloquear la respuesta a Twilio.
     const upperBody = body.trim().toUpperCase().replace(/[.!¡¿?]/g, '');
     const textExact = body.trim().toUpperCase();
-    const esConfirmar = /^(SI\s*)?(CONFIRMAR|CONFIRMO|CONFIRMÓ)$/.test(upperBody);
-    const esCancelar = /^(CANCELAR|CANCELO|CANCELAR\s*TURNO)$/.test(upperBody);
+
+    // Recordatorio: SÍ, SI + CONFIRMAR, o solo CONFIRMAR
+    const esConfirmar = /^(SÍ|SI)(\s+(CONFIRMAR|CONFIRMO|CONFIRMÓ))?$/.test(upperBody)
+      || /^CONFIRMAR$/.test(upperBody)
+      || /^CONFIRMO$/.test(upperBody)
+      || /^CONFIRMÓ$/.test(upperBody);
+    // Recordatorio: NO + CANCELAR, o solo CANCELAR
+    const esCancelar = /^NO(\s+(CANCELAR|CANCELO))?$/.test(upperBody)
+      || /^(CANCELAR|CANCELO|CANCELÓ)$/.test(upperBody);
     const esReminder = (esConfirmar || esCancelar) && !!paciente;
-    const esAceptarWl = textExact === 'ACEPTAR' || textExact === 'SI' || textExact === 'OK';
-    const esRechazarWl = textExact === 'RECHAZAR' || textExact === 'NO' || textExact === 'RECHAZO';
+
+    // Waitlist: detección exacta de palabras clave
+    const esAceptarWl = textExact === 'ACEPTAR' || textExact === 'OK';
+    const esRechazarWl = textExact === 'RECHAZAR' || textExact === 'RECHAZO';
     const esRespWaitlist = (esAceptarWl || esRechazarWl) && !!paciente;
 
-    // Fire handlers en segundo plano (fire-and-forget)
-    if (esReminder) handleReminderResponse(body, paciente!.id, telefono).catch(() => {});
-    if (esRespWaitlist) handleWaitlistResponse(paciente!.id, body, telefono).catch(() => {});
+    // SÍ/NO pueden ser respuesta a recordatorio O a waitlist.
+    // Ejecutamos ambos handlers — cada uno valida internamente si aplica
+    // (handleReminderResponse busca turno pendiente, handleWaitlistResponse busca oferta pendiente).
+    const esSiNoSimple = /^(SÍ|SI|NO)$/i.test(textExact);
 
-    // Si es respuesta a recordatorio u oferta, responder 200 inmediato
-    if (esReminder || esRespWaitlist) {
+    // Fire handlers en segundo plano (fire-and-forget)
+    if (esReminder) {
+      handleReminderResponse(body, paciente!.id, telefono).catch(() => {});
+    }
+    if (esRespWaitlist || esSiNoSimple) {
+      handleWaitlistResponse(paciente!.id, body, telefono).catch(() => {});
+    }
+
+    // Si es respuesta a recordatorio u oferta, responder 200 inmediato (no forward a n8n)
+    if (esReminder || esRespWaitlist || esSiNoSimple) {
       return new NextResponse(null, { status: 200 });
     }
 

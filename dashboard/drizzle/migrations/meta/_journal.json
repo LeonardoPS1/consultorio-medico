@@ -190,6 +190,20 @@
       "when": 1782005810638,
       "tag": "0037_portal_notificaciones",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1782007256001,
+      "tag": "0038_ordenes_estudio",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1782007867432,
+      "tag": "0039_push_paciente_id",
+      "breakpoints": true
     }
   ]
 }
