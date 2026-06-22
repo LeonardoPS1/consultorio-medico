@@ -287,23 +287,25 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
   const slotValido = slots.some((s) => s.fechaHora === input.fechaHora);
   if (!slotValido) throw new Error('El horario seleccionado no está disponible');
 
-  // 7. Crear turno
+  // 7. Crear turno (con columnas condicionales para survival sin migraciones)
   const fechaHora = new Date(input.fechaHora);
-  const [turno] = await db
-    .insert(turnos)
-    .values({
-      pacienteId: input.pacienteId,
-      medicoId: input.medicoId,
-      fechaHora,
-      duracionMinutos: servicio.duracionMinutos || 30,
-      estado: 'pendiente',
-      tipoConsulta: 'presencial',
-      motivo: input.motivo || null,
-      fuente: 'portal',
-      sucursalId: input.sucursalId || null,
-      precio: servicio.precio || null,
-    })
-    .returning();
+  const insertValues: Record<string, unknown> = {
+    pacienteId: input.pacienteId,
+    medicoId: input.medicoId,
+    fechaHora,
+    duracionMinutos: servicio.duracionMinutos || 30,
+    estado: 'pendiente',
+    tipoConsulta: 'presencial',
+    motivo: input.motivo || null,
+    fuente: 'portal',
+  };
+  if (input.sucursalId) {
+    insertValues.sucursalId = input.sucursalId;
+  }
+  if (servicio.precio != null) {
+    insertValues.precio = servicio.precio;
+  }
+  const [turno] = await db.insert(turnos).values(insertValues as any).returning();
 
   // 4. Si es un reagendamiento, cancelar el turno anterior
   let oldTurnoFecha: string | null = null;

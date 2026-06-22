@@ -8,6 +8,7 @@ import { getPortalSession } from '@/lib/portal-auth';
 import { db } from '@/lib/db';
 import { turnos, medicos } from '@/drizzle/schema';
 import { eq, desc, sql } from 'drizzle-orm';
+import { safeError } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   const session = await getPortalSession();
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { medicoId, servicioId, fechaHora, motivo, rescheduleTurnoId } = body;
+    const { medicoId, servicioId, fechaHora, motivo, rescheduleTurnoId, sucursalId } = body;
 
     if (!medicoId || !servicioId || !fechaHora) {
       return NextResponse.json(
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
       servicioId,
       fechaHora,
       motivo: motivo || null,
+      sucursalId: sucursalId || undefined,
       rescheduleTurnoId: rescheduleTurnoId || undefined,
     });
 
@@ -117,6 +119,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, turno }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error al crear turno';
+    safeError('[PortalBooking] Error en POST /api/portal/turnos:', err instanceof Error ? { message: err.message, stack: err.stack } : err);
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
