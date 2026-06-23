@@ -1,17 +1,59 @@
 /**
  * Portal del Paciente — Login / Landing público
  *
- * Muestra una pantalla de bienvenida con información del consultorio
- * y opción de ingresar vía magic link por WhatsApp.
- * Si PORTAL_BYPASS=true, muestra botón de acceso directo de prueba.
+ * Rediseño premium con transiciones fluidas vía framer-motion.
+ * Estados: landing → formulario → enlace enviado.
  */
 
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Phone, ArrowRight, CheckCircle, AlertCircle, Bug, Activity, Calendar, Shield } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Phone, ArrowRight, CheckCircle, AlertCircle, Bug,
+  Activity, Calendar, Shield, Stethoscope, Loader2,
+} from 'lucide-react';
 import { isValidPhone } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
+/* ─── Variants ─────────────────────────────────────────── */
+const fadeSlideUp = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const } },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.2 } },
+};
+
+const scaleIn = {
+  initial: { opacity: 0, scale: 0.94 },
+  animate: { opacity: 1, scale: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] as const } },
+  exit: { opacity: 0, scale: 0.94, transition: { duration: 0.15 } },
+};
+
+const springPop = {
+  initial: { scale: 0 },
+  animate: { scale: 1, transition: { type: 'spring' as const, stiffness: 300, damping: 18 } },
+};
+
+/* ─── Beneficios ───────────────────────────────────────── */
+const BENEFICIOS = [
+  {
+    icon: Calendar,
+    titulo: 'Agendá tus horas',
+    desc: 'Sin llamar, desde tu celular',
+  },
+  {
+    icon: Shield,
+    titulo: 'Documentos siempre disponibles',
+    desc: 'Recetas, certificados y más',
+  },
+  {
+    icon: Stethoscope,
+    titulo: 'Seguimiento de tu salud',
+    desc: 'Historial clínico en un solo lugar',
+  },
+];
+
+/* ─── Componente principal ─────────────────────────────── */
 export default function PortalLogin() {
   const [telefono, setTelefono] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,12 +66,8 @@ export default function PortalLogin() {
   useEffect(() => {
     fetch('/api/portal/auth/status')
       .then((r) => r.json())
-      .then((data) => {
-        setBypassActivo(data.bypass === true);
-      })
-      .catch(() => {
-        // si falla, no mostrar bypass
-      })
+      .then((data) => setBypassActivo(data.bypass === true))
+      .catch(() => {})
       .finally(() => setStatusChecked(true));
   }, []);
 
@@ -83,167 +121,218 @@ export default function PortalLogin() {
     }
   }
 
+  /* ─── Sent ───────────────────────────────────────────── */
   if (sent) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
-        <div className="max-w-sm w-full text-center animate-fade-in-up">
-          <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-6">
-            <CheckCircle className="h-10 w-10 text-green-500" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">¡Enlace enviado!</h1>
-          <p className="text-gray-600 mb-6 leading-relaxed">
+      <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background flex items-center justify-center p-4">
+        <motion.div
+          key="sent"
+          variants={fadeSlideUp}
+          initial="initial"
+          animate="animate"
+          className="max-w-sm w-full text-center"
+        >
+          <motion.div variants={springPop} initial="initial" animate="animate" className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-success/10 mb-6">
+            <CheckCircle className="h-10 w-10 text-success" />
+          </motion.div>
+
+          <h1 className="text-2xl font-bold mb-2">Enlace enviado</h1>
+          <p className="text-muted-foreground mb-6 leading-relaxed">
             Te enviamos un enlace de acceso por WhatsApp al número{' '}
-            <strong className="text-gray-900">{telefono}</strong>.
+            <strong className="text-foreground">{telefono}</strong>.
           </p>
-          <div className="bg-blue-50 rounded-xl p-4 mb-6 text-left">
-            <p className="text-sm text-blue-800 font-medium mb-1">📱 No te llega el mensaje?</p>
-            <p className="text-xs text-blue-600">
+
+          <div className="bg-accent/50 rounded-xl p-4 mb-6 text-left border border-border/50">
+            <p className="text-sm font-medium mb-1">¿No te llega el mensaje?</p>
+            <p className="text-xs text-muted-foreground">
               Verificá que el número ingresado sea el mismo que registraste en el consultorio.
               Si el problema persiste, contactanos por WhatsApp.
             </p>
           </div>
-          <p className="text-sm text-gray-400">
+
+          <p className="text-sm text-muted-foreground">
             El enlace expira en <strong>10 minutos</strong> y solo funciona una vez.
           </p>
-          <button
+
+          <Button
+            variant="link"
             onClick={() => { setSent(false); setTelefono(''); }}
-            className="mt-6 text-sm text-blue-600 hover:text-blue-700 underline transition-colors"
+            className="mt-6"
           >
             Ingresar otro número
-          </button>
-        </div>
+          </Button>
+        </motion.div>
       </div>
     );
   }
 
+  /* ─── Landing / Form ─────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-600 via-blue-500 to-blue-400 flex flex-col">
-      {/* Hero section */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-8 text-center">
+    <div className="min-h-screen bg-gradient-to-br from-primary via-primary/90 to-primary/80 flex flex-col relative overflow-hidden">
+      {/* Decoración de fondo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-white/5 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-white/[0.04] blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.07)_0%,transparent_70%)]" />
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-8 text-center relative z-10">
         <div className="max-w-sm w-full">
-          {/* Logo / Brand */}
-          <div className="mb-8">
-            <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-white/20 backdrop-blur-sm mb-4 shadow-lg">
-              <Activity className="h-8 w-8 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-white mb-1">AicoreMed</h1>
-            <p className="text-blue-100 text-sm">Portal del Paciente</p>
-          </div>
-
-          {!mostrarForm ? (
-            <>
-              {/* Landing cards */}
-              <div className="space-y-3 mb-8">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-left flex items-start gap-3">
-                  <Calendar className="h-5 w-5 text-blue-200 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-white font-medium text-sm">Agendá tus horas</p>
-                    <p className="text-blue-200 text-xs">Sin llamar, desde tu celular</p>
-                  </div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-left flex items-start gap-3">
-                  <Shield className="h-5 w-5 text-blue-200 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-white font-medium text-sm">Tus documentos siempre disponibles</p>
-                    <p className="text-blue-200 text-xs">Recetas, certificados y más</p>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setMostrarForm(true)}
-                className="w-full bg-white text-blue-700 font-semibold py-3.5 rounded-xl hover:bg-blue-50 transition-all shadow-lg shadow-blue-700/20 active:scale-[0.98]"
-              >
-                Ingresar al Portal
-              </button>
-            </>
-          ) : (
-            <>
-              {/* Login form */}
-              <div className="bg-white rounded-2xl shadow-xl p-6 text-left">
-                <h2 className="text-lg font-bold text-gray-900 mb-1">Ingresá al Portal</h2>
-                <p className="text-sm text-gray-500 mb-5">
-                  Recibí un enlace mágico por WhatsApp
-                </p>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {error && (
-                    <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-2 rounded-lg text-sm">
-                      <AlertCircle className="h-4 w-4 shrink-0" />
-                      {error}
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Número de teléfono
-                    </label>
-                    <input
-                      type="tel"
-                      value={telefono}
-                      onChange={(e) => setTelefono(e.target.value)}
-                      placeholder="+56 9 1234 5678"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg outline-none transition-shadow"
-                      autoFocus
-                      disabled={loading}
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading || !isValidPhone(telefono.replace(/[\s\-()]/g, ''))}
-                    className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+          <AnimatePresence mode="wait">
+            {!mostrarForm ? (
+              /* ── Landing ─────────────────────────────── */
+              <motion.div key="landing" variants={fadeSlideUp} initial="initial" animate="animate" exit="exit">
+                {/* Brand */}
+                <div className="mb-10">
+                  <motion.div
+                    variants={springPop}
+                    initial="initial"
+                    animate="animate"
+                    className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-white/15 backdrop-blur-sm mb-5 shadow-lg ring-1 ring-white/10"
                   >
-                    {loading ? (
-                      <span className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        Enviar enlace <ArrowRight className="h-5 w-5" />
-                      </>
+                    <Activity className="h-8 w-8 text-white" />
+                  </motion.div>
+                  <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">AicoreMed</h1>
+                  <p className="text-white/70 text-sm font-medium tracking-wide">Portal del Paciente</p>
+                </div>
+
+                {/* Beneficios */}
+                <div className="space-y-3 mb-10 text-left">
+                  {BENEFICIOS.map((b, i) => (
+                    <motion.div
+                      key={b.titulo}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 + i * 0.08, duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
+                      className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex items-start gap-3 ring-1 ring-white/10"
+                    >
+                      <div className="shrink-0 w-10 h-10 rounded-lg bg-white/15 flex items-center justify-center">
+                        <b.icon className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-white font-medium text-sm">{b.titulo}</p>
+                        <p className="text-white/60 text-xs">{b.desc}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <Button
+                  onClick={() => setMostrarForm(true)}
+                  size="lg"
+                  className="w-full h-12 text-base bg-white text-primary hover:bg-white/90 shadow-lg shadow-primary/30"
+                >
+                  Ingresar al Portal
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </motion.div>
+            ) : (
+              /* ── Formulario ──────────────────────────── */
+              <motion.div key="form" variants={scaleIn} initial="initial" animate="animate" exit="exit">
+                <div className="bg-white rounded-2xl shadow-xl shadow-primary/10 p-6 text-left">
+                  <h2 className="text-xl font-bold text-gray-900 mb-1">Ingresá al Portal</h2>
+                  <p className="text-sm text-gray-500 mb-6">
+                    Recibí un enlace mágico por WhatsApp
+                  </p>
+
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="flex items-center gap-2 text-destructive bg-destructive/10 px-3 py-2.5 rounded-lg text-sm"
+                      >
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        {error}
+                      </motion.div>
                     )}
-                  </button>
-                </form>
 
-                <button
-                  onClick={() => setMostrarForm(false)}
-                  className="mt-4 text-sm text-gray-400 hover:text-gray-600 transition-colors text-center w-full"
-                >
-                  ← Volver
-                </button>
-              </div>
-            </>
-          )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Número de teléfono
+                      </label>
+                      <div className="relative">
+                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="tel"
+                          value={telefono}
+                          onChange={(e) => setTelefono(e.target.value)}
+                          placeholder="+56 9 1234 5678"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary text-base outline-none transition-all"
+                          autoFocus
+                          disabled={loading}
+                        />
+                      </div>
+                    </div>
 
-          {/* Bypass button */}
-          {bypassActivo && statusChecked && (
-            <div className="mt-6">
-              <div className="border-t border-white/20 pt-6">
-                <p className="text-xs text-blue-200 text-center mb-3">
-                  🛠️ Modo desarrollo — acceso directo sin autenticación
-                </p>
-                <button
-                  onClick={handleTestAccess}
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white font-medium py-3 rounded-xl hover:bg-white/20 disabled:opacity-50 transition-all border border-white/20"
-                >
-                  <Bug className="h-5 w-5" />
-                  {loading ? 'Ingresando...' : 'Acceder sin autenticación (prueba)'}
-                </button>
-              </div>
-            </div>
-          )}
+                    <Button
+                      type="submit"
+                      disabled={loading || !isValidPhone(telefono.replace(/[\s\-()]/g, ''))}
+                      className="w-full h-11"
+                    >
+                      {loading ? (
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</>
+                      ) : (
+                        <>
+                          Enviar enlace
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  </form>
+
+                  <Button
+                    variant="ghost"
+                    onClick={() => setMostrarForm(false)}
+                    className="mt-4 text-gray-400 hover:text-gray-600 w-full"
+                  >
+                    ← Volver
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Bypass — solo si está activo */}
+          <AnimatePresence>
+            {bypassActivo && statusChecked && (
+              <motion.div
+                key="bypass"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] as const }}
+                className="mt-6"
+              >
+                <div className="border-t border-white/20 pt-6">
+                  <p className="text-xs text-white/60 text-center mb-3">
+                    Modo desarrollo — acceso directo sin autenticación
+                  </p>
+                  <Button
+                    onClick={handleTestAccess}
+                    disabled={loading}
+                    variant="secondary"
+                    className="w-full bg-white/10 text-white hover:bg-white/20 border border-white/20"
+                  >
+                    <Bug className="mr-2 h-4 w-4" />
+                    {loading ? 'Ingresando...' : 'Acceder sin autenticación (prueba)'}
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {!statusChecked && (
-            <div className="mt-8">
-              <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="mt-8 flex justify-center">
+              <Loader2 className="h-5 w-5 text-white/60 animate-spin" />
             </div>
           )}
         </div>
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-4 text-center">
-        <p className="text-xs text-blue-200">
+      <div className="px-6 py-4 text-center relative z-10">
+        <p className="text-xs text-white/50">
           Solo se muestran datos asociados a tu número registrado.
         </p>
       </div>

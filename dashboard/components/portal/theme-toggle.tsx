@@ -33,7 +33,7 @@ export function PortalThemeToggle() {
             initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
             animate={{ opacity: 1, rotate: 0, scale: 1 }}
             exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] as const }}
           >
             <Sun className="h-4 w-4" />
           </motion.span>
@@ -43,7 +43,7 @@ export function PortalThemeToggle() {
             initial={{ opacity: 0, rotate: 90, scale: 0.5 }}
             animate={{ opacity: 1, rotate: 0, scale: 1 }}
             exit={{ opacity: 0, rotate: -90, scale: 0.5 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] as const }}
           >
             <Moon className="h-4 w-4" />
           </motion.span>

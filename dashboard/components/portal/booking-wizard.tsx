@@ -11,7 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { Loader2, ArrowLeft, Check, CalendarIcon, Stethoscope, CreditCard, ExternalLink } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  Loader2, ArrowLeft, Check, CalendarIcon, Stethoscope,
+  CreditCard, ExternalLink, Circle,
+} from 'lucide-react';
 import type { MedicoPortal, SlotDisponible, TurnoCreadoPortal } from '@/lib/services/portal-booking';
 
 type Step = 'medico' | 'slot' | 'confirmar' | 'pago' | 'completado';
@@ -32,6 +36,86 @@ interface BookingWizardProps {
   rescheduleTurnoId?: string;
 }
 
+/* ─── Variants ─────────────────────────────────────────── */
+const stepVariants = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] as const } },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.18 } },
+};
+
+const springPop = {
+  initial: { scale: 0, opacity: 0 },
+  animate: { scale: 1, opacity: 1, transition: { type: 'spring' as const, stiffness: 250, damping: 16 } },
+};
+
+/* ─── Step indicator ───────────────────────────────────── */
+const STEP_LABELS: Record<Step, string> = {
+  medico: 'Médico',
+  slot: 'Horario',
+  confirmar: 'Confirmar',
+  pago: 'Pago',
+  completado: 'Listo',
+};
+
+const STEPS_ORDER: Step[] = ['medico', 'slot', 'confirmar', 'pago', 'completado'];
+
+function StepIndicator({
+  currentStep,
+  showPago,
+}: {
+  currentStep: Step;
+  showPago: boolean;
+}) {
+  const visibleSteps = showPago ? STEPS_ORDER : STEPS_ORDER.filter((s) => s !== 'pago');
+  const currentIdx = visibleSteps.indexOf(currentStep);
+
+  return (
+    <nav aria-label="Progreso del agendamiento" className="mb-8">
+      <ol className="flex items-center justify-center gap-1">
+        {visibleSteps.map((s, i) => {
+          const isActive = i <= currentIdx;
+          const isCurrent = i === currentIdx;
+          return (
+            <li key={s} className="flex items-center gap-1">
+              {i > 0 && (
+                <div
+                  className={cn(
+                    'h-px w-6 sm:w-10 transition-colors duration-300',
+                    isActive ? 'bg-primary' : 'bg-border',
+                  )}
+                />
+              )}
+              <div className="flex flex-col items-center gap-1">
+                <div
+                  className={cn(
+                    'flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium transition-all duration-300',
+                    isCurrent
+                      ? 'bg-primary text-primary-foreground ring-2 ring-primary/30 ring-offset-2 ring-offset-background'
+                      : isActive
+                        ? 'bg-primary/15 text-primary'
+                        : 'bg-muted text-muted-foreground',
+                  )}
+                >
+                  {isActive && !isCurrent ? <Check className="h-3.5 w-3.5" /> : i + 1}
+                </div>
+                <span
+                  className={cn(
+                    'hidden sm:block text-[11px] font-medium transition-colors duration-300',
+                    isActive ? 'text-foreground' : 'text-muted-foreground',
+                  )}
+                >
+                  {STEP_LABELS[s]}
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+/* ─── Componente principal ─────────────────────────────── */
 export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>('medico');
@@ -48,6 +132,7 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
   } | null>(null);
   const [pagando, setPagando] = useState(false);
   const [pagoCompletado, setPagoCompletado] = useState(false);
+  const [necesitaPago, setNecesitaPago] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopPolling = useCallback(() => {
@@ -131,9 +216,11 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
       // Si tiene precio, ir a paso de pago
       const precio = Number(data.turno.precio);
       if (precio > 0) {
+        setNecesitaPago(true);
         setStep('pago');
         await iniciarPago(data.turno);
       } else {
+        setNecesitaPago(false);
         setStep('completado');
       }
     } catch (e) {
@@ -187,275 +274,299 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
     });
   };
 
-  let stepContent: React.ReactNode;
-
-  if (step === 'medico') {
-    stepContent = (
-      <motion.div key="medico" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="space-y-6">
-        <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Stethoscope className="h-5 w-5 text-primary" />
-            Seleccioná un médico
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Elegí el profesional con quien querés agendar tu consulta.
-          </p>
-        </div>
-        <div className="grid gap-4 stagger-premium">
-          {medicos.map((m) => (
-            <DoctorCard
-              key={m.id}
-              medico={m}
-              selected={selectedMedico?.id === m.id}
-              onSelect={handleSelectMedico}
-            />
-          ))}
-        </div>
-        {selectedMedico && (
-          <div className="flex flex-col gap-3">
-            {selectedMedico.servicios.length > 1 && (
-              <div>
-                <label className="text-sm font-medium mb-1 block">Tipo de consulta</label>
-                <div className="flex gap-2 flex-wrap">
-                  {selectedMedico.servicios.map((s) => (
-                    <Button
-                      key={s.id}
-                      variant={selectedServicio === s.id ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setSelectedServicio(s.id)}
-                    >
-                      {s.nombre}
-                      {s.precio != null ? ` · $${s.precio.toLocaleString('es-CL')}` : ''}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {selectedMedico.servicios.length === 0 ? (
-              <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
-                Este médico no tiene servicios configurados. Contactá al administrador para asignar servicios.
-              </div>
-            ) : (
-              <Button onClick={handleIrASlots} className="w-full sm:w-auto">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                Ver horarios disponibles
-              </Button>
-            )}
-            </div>
-          )}
-      </motion.div>
-    );
-  }
-
-  if (step === 'slot') {
-    stepContent = (
-      <motion.div key="slot" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="space-y-4">
-        <Button variant="ghost" onClick={() => setStep('medico')} className="mb-2">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver a médicos
-        </Button>
-        <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5 text-primary" />
-            Seleccioná un horario
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {selectedMedico?.nombre} · {selectedServicio && selectedMedico?.servicios.find((s) => s.id === selectedServicio)?.nombre}
-          </p>
-        </div>
-        {selectedMedico && selectedServicio && (
-          <SlotPicker
-            medicoId={selectedMedico.id}
-            servicioId={selectedServicio}
-            onSelectSlot={handleSelectSlot}
-            selectedSlot={selectedSlot}
+  /* ─── Step: Médico ──────────────────────────────────── */
+  const stepMedico = (
+    <motion.div key="medico" variants={stepVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <Stethoscope className="h-5 w-5 text-primary" />
+          Seleccioná un médico
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Elegí el profesional con quien querés agendar tu consulta.
+        </p>
+      </div>
+      <div className="grid gap-4 stagger-premium">
+        {medicos.map((m) => (
+          <DoctorCard
+            key={m.id}
+            medico={m}
+            selected={selectedMedico?.id === m.id}
+            onSelect={handleSelectMedico}
           />
-        )}
-        {selectedSlot && (
-          <Button onClick={handleIrAConfirmar} className="w-full sm:w-auto">
-            Continuar
-          </Button>
-          )}
-      </motion.div>
-    );
-  }
-
-  if (step === 'confirmar') {
-    stepContent = (
-      <motion.div key="confirmar" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="max-w-md mx-auto">
-        <Button variant="ghost" onClick={() => setStep('slot')} className="mb-2">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver
-        </Button>
-        <Card>
-          <CardHeader>
-            <CardTitle>Confirmar turno</CardTitle>
-            <CardDescription>Revisá los detalles antes de confirmar</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Médico</span>
-              <span className="font-medium">{selectedMedico?.nombre}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Especialidad</span>
-              <span>{selectedMedico?.especialidad}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Servicio</span>
-              <span>{selectedMedico?.servicios.find((s) => s.id === selectedServicio)?.nombre}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Fecha y hora</span>
-              <span className="font-medium">{selectedSlot && formatDate(selectedSlot.fechaHora)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Duración</span>
-              <span>{selectedSlot?.duracionMinutos} min</span>
-            </div>
-            {selectedSlot?.precio != null && selectedSlot.precio > 0 && (
-              <div className="flex justify-between text-sm border-t pt-2">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <CreditCard className="h-4 w-4" /> Valor
-                </span>
-                <span className="font-semibold text-lg">
-                  ${selectedSlot.precio.toLocaleString('es-CL')}
-                </span>
-              </div>
-            )}
+        ))}
+      </div>
+      {selectedMedico && (
+        <div className="flex flex-col gap-3">
+          {selectedMedico.servicios.length > 1 && (
             <div>
-              <label className="text-sm font-medium mb-2 block">Motivo (opcional)</label>
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {MOTIVOS_PREDEFINIDOS.map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setMotivo(motivo === m ? '' : m)}
-                    className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                      motivo === m
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background text-muted-foreground border-border hover:border-primary hover:text-primary'
-                    }`}
+              <label className="text-sm font-medium mb-1 block">Tipo de consulta</label>
+              <div className="flex gap-2 flex-wrap">
+                {selectedMedico.servicios.map((s) => (
+                  <Button
+                    key={s.id}
+                    variant={selectedServicio === s.id ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedServicio(s.id)}
                   >
-                    {m}
-                  </button>
+                    {s.nombre}
+                    {s.precio != null ? ` · $${s.precio.toLocaleString('es-CL')}` : ''}
+                  </Button>
                 ))}
               </div>
-              <Textarea
-                value={motivo}
-                onChange={(e) => setMotivo(e.target.value)}
-                placeholder="O escribí tu propio motivo..."
-                rows={2}
-              />
             </div>
-          </CardContent>
-          <CardFooter className="flex-col gap-2">
-            <Button onClick={handleConfirmar} disabled={loading} className="w-full">
-              {loading ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirmando...</>
-              ) : (
-                <><Check className="mr-2 h-4 w-4" /> Confirmar turno</>
-              )}
+          )}
+          {selectedMedico.servicios.length === 0 ? (
+            <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
+              Este médico no tiene servicios configurados. Contactá al administrador para asignar servicios.
+            </div>
+          ) : (
+            <Button onClick={handleIrASlots} className="w-full sm:w-auto">
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              Ver horarios disponibles
             </Button>
-            {selectedSlot?.precio != null && selectedSlot.precio > 0 && (
-              <p className="text-xs text-muted-foreground text-center">
-                El pago se procesará al confirmar
-              </p>
-            )}
-            </CardFooter>
-          </Card>
-      </motion.div>
-    );
-  }
-
-  if (step === 'pago') {
-    stepContent = (
-      <motion.div key="pago" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="max-w-md mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-primary" />
-              Pago pendiente
-            </CardTitle>
-            <CardDescription>
-              Completá el pago para confirmar tu turno. Podés pagar ahora o hacerlo después desde el portal.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {ultimoTurno && (
-              <div className="text-sm space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Monto</span>
-                  <span className="font-semibold text-lg">
-                    ${Number(ultimoTurno.precio).toLocaleString('es-CL')}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Médico</span>
-                  <span>{ultimoTurno.medicoNombre}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Fecha</span>
-                  <span>{formatDate(ultimoTurno.fechaHora as unknown as string)}</span>
-                </div>
-              </div>
-            )}
-
-            {pagoCompletado ? (
-              <div className="text-center py-4">
-                <div className="rounded-full bg-green-100 w-12 h-12 flex items-center justify-center mx-auto mb-2">
-                  <Check className="h-6 w-6 text-green-600" />
-                </div>
-                <p className="font-medium text-green-700">Pago confirmado</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <Button onClick={handlePagarAhora} disabled={!pagoInfo || pagando} className="w-full" size="lg">
-                  {pagando ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Esperando pago...</>
-                  ) : (
-                    <><ExternalLink className="mr-2 h-4 w-4" /> Pagar con MercadoPago</>
-                  )}
-                </Button>
-                <Button onClick={handleOmitirPago} variant="ghost" className="w-full">
-                  Pagar después
-                </Button>
-              </div>
-            )}
-          </CardContent>
-          <CardFooter className="flex-col">
-            {pagoCompletado && (
-              <Button onClick={() => setStep('completado')} className="w-full">
-                <Check className="mr-2 h-4 w-4" /> Continuar
-              </Button>
-            )}
-            </CardFooter>
-          </Card>
-      </motion.div>
-    );
-  }
-
-  // Completado (default)
-  stepContent = (
-    <motion.div key="completado" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="text-center py-12 max-w-md mx-auto">
-      <div className="rounded-full bg-primary/10 w-16 h-16 flex items-center justify-center mx-auto mb-4">
-        <Check className="h-8 w-8 text-primary" />
-      </div>
-      <h2 className="text-xl font-semibold mb-2">Turno agendado con éxito</h2>
-      <p className="text-muted-foreground mb-6">
-        Te enviamos los detalles por WhatsApp. Recordá que podés cancelar con hasta 24h de anticipación.
-      </p>
-      <div className="space-y-2">
-        <Button onClick={() => router.push('/portal/dashboard')} variant="outline" className="w-full">
-          Volver al inicio
-        </Button>
-      </div>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 
+  /* ─── Step: Slot ────────────────────────────────────── */
+  const stepSlot = (
+    <motion.div key="slot" variants={stepVariants} initial="initial" animate="animate" exit="exit" className="space-y-4">
+      <Button variant="ghost" onClick={() => setStep('medico')} className="mb-2">
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Volver a médicos
+      </Button>
+      <div>
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <CalendarIcon className="h-5 w-5 text-primary" />
+          Seleccioná un horario
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          {selectedMedico?.nombre} · {selectedServicio && selectedMedico?.servicios.find((s) => s.id === selectedServicio)?.nombre}
+        </p>
+      </div>
+      {selectedMedico && selectedServicio && (
+        <SlotPicker
+          medicoId={selectedMedico.id}
+          servicioId={selectedServicio}
+          onSelectSlot={handleSelectSlot}
+          selectedSlot={selectedSlot}
+        />
+      )}
+      {selectedSlot && (
+        <Button onClick={handleIrAConfirmar} className="w-full sm:w-auto">
+          Continuar
+        </Button>
+      )}
+    </motion.div>
+  );
+
+  /* ─── Step: Confirmar ───────────────────────────────── */
+  const stepConfirmar = (
+    <motion.div key="confirmar" variants={stepVariants} initial="initial" animate="animate" exit="exit" className="max-w-md mx-auto">
+      <Button variant="ghost" onClick={() => setStep('slot')} className="mb-2">
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Volver
+      </Button>
+      <Card>
+        <CardHeader>
+          <CardTitle>Confirmar turno</CardTitle>
+          <CardDescription>Revisá los detalles antes de confirmar</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Médico</span>
+            <span className="font-medium">{selectedMedico?.nombre}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Especialidad</span>
+            <span>{selectedMedico?.especialidad}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Servicio</span>
+            <span>{selectedMedico?.servicios.find((s) => s.id === selectedServicio)?.nombre}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Fecha y hora</span>
+            <span className="font-medium">{selectedSlot && formatDate(selectedSlot.fechaHora)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Duración</span>
+            <span>{selectedSlot?.duracionMinutos} min</span>
+          </div>
+          {selectedSlot?.precio != null && selectedSlot.precio > 0 && (
+            <div className="flex justify-between text-sm border-t pt-2">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <CreditCard className="h-4 w-4" /> Valor
+              </span>
+              <span className="font-semibold text-lg">
+                ${selectedSlot.precio.toLocaleString('es-CL')}
+              </span>
+            </div>
+          )}
+          <div>
+            <label className="text-sm font-medium mb-2 block">Motivo (opcional)</label>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {MOTIVOS_PREDEFINIDOS.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMotivo(motivo === m ? '' : m)}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                    motivo === m
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-background text-muted-foreground border-border hover:border-primary hover:text-primary'
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            <Textarea
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="O escribí tu propio motivo..."
+              rows={2}
+            />
+          </div>
+        </CardContent>
+        <CardFooter className="flex-col gap-2">
+          <Button onClick={handleConfirmar} disabled={loading} className="w-full">
+            {loading ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirmando...</>
+            ) : (
+              <><Check className="mr-2 h-4 w-4" /> Confirmar turno</>
+            )}
+          </Button>
+          {selectedSlot?.precio != null && selectedSlot.precio > 0 && (
+            <p className="text-xs text-muted-foreground text-center">
+              El pago se procesará al confirmar
+            </p>
+          )}
+        </CardFooter>
+      </Card>
+    </motion.div>
+  );
+
+  /* ─── Step: Pago ────────────────────────────────────── */
+  const stepPago = (
+    <motion.div key="pago" variants={stepVariants} initial="initial" animate="animate" exit="exit" className="max-w-md mx-auto">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-primary" />
+            Pago pendiente
+          </CardTitle>
+          <CardDescription>
+            Completá el pago para confirmar tu turno. Podés pagar ahora o hacerlo después desde el portal.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {ultimoTurno && (
+            <div className="text-sm space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Monto</span>
+                <span className="font-semibold text-lg">
+                  ${Number(ultimoTurno.precio).toLocaleString('es-CL')}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Médico</span>
+                <span>{ultimoTurno.medicoNombre}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Fecha</span>
+                <span>{formatDate(ultimoTurno.fechaHora as unknown as string)}</span>
+              </div>
+            </div>
+          )}
+
+          {pagoCompletado ? (
+            <motion.div variants={springPop} initial="initial" animate="animate" className="text-center py-4">
+              <div className="rounded-full bg-success/10 w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                <Check className="h-6 w-6 text-success" />
+              </div>
+              <p className="font-medium text-success">Pago confirmado</p>
+            </motion.div>
+          ) : (
+            <div className="space-y-3">
+              <Button onClick={handlePagarAhora} disabled={!pagoInfo || pagando} className="w-full" size="lg">
+                {pagando ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Esperando pago...</>
+                ) : (
+                  <><ExternalLink className="mr-2 h-4 w-4" /> Pagar con MercadoPago</>
+                )}
+              </Button>
+              <Button onClick={handleOmitirPago} variant="ghost" className="w-full">
+                Pagar después
+              </Button>
+            </div>
+          )}
+        </CardContent>
+        <CardFooter className="flex-col">
+          {pagoCompletado && (
+            <Button onClick={() => setStep('completado')} className="w-full">
+              <Check className="mr-2 h-4 w-4" /> Continuar
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
+    </motion.div>
+  );
+
+  /* ─── Step: Completado ──────────────────────────────── */
+  const stepCompletado = (
+    <motion.div
+      key="completado"
+      variants={stepVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="text-center py-12 max-w-md mx-auto"
+    >
+      <motion.div
+        variants={springPop}
+        initial="initial"
+        animate="animate"
+        className="rounded-full bg-primary/10 w-20 h-20 flex items-center justify-center mx-auto mb-6"
+      >
+        <Check className="h-10 w-10 text-primary" />
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
+      >
+        <h2 className="text-xl font-semibold mb-2">Turno agendado con éxito</h2>
+        <p className="text-muted-foreground mb-8">
+          Te enviamos los detalles por WhatsApp. Recordá que podés cancelar con hasta 24h de anticipación.
+        </p>
+        <Button onClick={() => router.push('/portal/dashboard')} variant="outline" className="w-full sm:w-auto">
+          Volver al inicio
+        </Button>
+      </motion.div>
+    </motion.div>
+  );
+
+  /* ─── Render ────────────────────────────────────────── */
+  const stepMap: Record<Step, React.ReactNode> = {
+    medico: stepMedico,
+    slot: stepSlot,
+    confirmar: stepConfirmar,
+    pago: stepPago,
+    completado: stepCompletado,
+  };
+
+  const showPago = necesitaPago || step === 'pago';
+
   return (
-    <AnimatePresence mode="wait">
-      {stepContent}
-    </AnimatePresence>
+    <div>
+      <StepIndicator currentStep={step} showPago={showPago} />
+      <AnimatePresence mode="wait">
+        {stepMap[step]}
+      </AnimatePresence>
+    </div>
   );
 }

@@ -109,12 +109,37 @@ export async function slotsDisponibles(
   const diaSemana = getDiaSemana(fecha); // "lunes", "martes", etc.
   const fechaDate = new Date(fecha + 'T00:00:00');
 
-  // 1. Obtener horario del día
-  const [horario] = await db
+  // 0. Obtener datos del médico (sucursal y horarios individuales)
+  const [medicoData] = await db
+    .select({ sucursalId: medicos.sucursalId, horarios: medicos.horarios })
+    .from(medicos)
+    .where(and(eq(medicos.id, medicoId), sql`${medicos.deletedAt} IS NULL`))
+    .limit(1);
+
+  if (!medicoData) return [];
+
+  // 1. Obtener horario del día: priorizar horarios_atencion del médico (por sucursalId)
+  const horarioConditions = [
+    eq(horariosAtencion.dia, diaSemana),
+    eq(horariosAtencion.activo, true),
+  ];
+  if (medicoData.sucursalId) {
+    horarioConditions.push(eq(horariosAtencion.sucursalId, medicoData.sucursalId));
+  }
+  let [horario] = await db
     .select()
     .from(horariosAtencion)
-    .where(and(eq(horariosAtencion.dia, diaSemana), eq(horariosAtencion.activo, true)))
+    .where(and(...horarioConditions))
     .limit(1);
+
+  // Fallback: si no hay horario con sucursalId, intentar sin filtro
+  if (!horario) {
+    [horario] = await db
+      .select()
+      .from(horariosAtencion)
+      .where(and(eq(horariosAtencion.dia, diaSemana), eq(horariosAtencion.activo, true)))
+      .limit(1);
+  }
 
   if (!horario) return []; // No atiende este día
 
@@ -503,7 +528,7 @@ Paciente: ${pacienteNombre}`;
 
 // ─── Helpers ─────────────────────────────────────────────────
 
-const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 function getDiaSemana(fechaISO: string): string {
   const d = new Date(fechaISO + 'T12:00:00');
