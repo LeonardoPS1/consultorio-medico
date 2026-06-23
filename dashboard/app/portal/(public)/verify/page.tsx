@@ -25,17 +25,24 @@ function PortalVerifyContent() {
 
   useEffect(() => {
     const token = searchParams?.get('token');
+    const redirect = searchParams?.get('redirect');
+
     if (!token) {
       setError('Enlace inválido: falta el token de acceso.');
       return;
     }
+
+    // Validar redirect (solo rutas del portal)
+    const destino = redirect && redirect.startsWith('/portal/')
+      ? redirect
+      : '/portal/dashboard';
 
     fetch(`/api/portal/auth/verify?token=${encodeURIComponent(token)}`)
       .then((res) => {
         if (res.redirected) {
           window.location.href = res.url;
         } else if (res.ok) {
-          router.push('/portal/dashboard');
+          router.push(destino);
         } else {
           return res.json().then((d) => d.error || 'Token inválido');
         }

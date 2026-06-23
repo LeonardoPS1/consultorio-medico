@@ -342,6 +342,7 @@ const PORTAL_PHONE_REGEX = /^\+?[1-9]\d{6,14}$/;
 
 export const portalAuthRequestSchema = z.object({
   telefono: z.string().regex(PORTAL_PHONE_REGEX, 'Teléfono inválido'),
+  redirect: z.string().startsWith('/portal/').optional(),
 });
 
 export const portalAuthVerifySchema = z.object({

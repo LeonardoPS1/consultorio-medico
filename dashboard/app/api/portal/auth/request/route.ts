@@ -15,10 +15,10 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'Teléfono inválido' }, { status: 400 });
   }
-  const { telefono } = parsed.data;
+  const { telefono, redirect } = parsed.data;
 
   // Generar token y magic link (incluye rate limit + blacklist internos)
-  const result = await generateMagicLink(telefono);
+  const result = await generateMagicLink(telefono, redirect);
 
   if (!result) {
     // Ver si existe (vs rate limit / blacklist)

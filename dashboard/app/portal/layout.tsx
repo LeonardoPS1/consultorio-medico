@@ -1,6 +1,7 @@
 /**
- * Portal Layout — Fuerza modo claro para evitar pantalla negra por tema oscuro.
- * Corre ANTES del ThemeProvider global para prevenir que el modo oscuro afecte al portal.
+ * Portal Layout — Permite que el ThemeProvider global maneje el modo.
+ * Ya no forza modo claro, el portal se adapta al tema del sistema/usuario.
+ * Se aplica un reset mínimo para evitar flickers.
  */
 import Script from 'next/script';
 
@@ -11,38 +12,27 @@ export default function PortalLayout({
 }) {
   return (
     <>
-      {/* Ojito: este script se ejectuta antes de que el theme script global
-          prevenga que se aplique dark mode al portal. */}
+      {/* Prevenir flicker: preserva el tema actual del sistema sin forzarlo */}
       <Script
-        id="portal-light-mode"
+        id="portal-theme-guard"
         strategy="beforeInteractive"
         dangerouslySetInnerHTML={{
           __html: `
             (function() {
-              document.documentElement.classList.remove('dark');
-              document.documentElement.style.colorScheme = 'light';
-              try { localStorage.removeItem('theme'); } catch(e) {}
+              try {
+                var theme = localStorage.getItem('theme');
+                if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark');
+                  document.documentElement.style.colorScheme = 'dark';
+                } else {
+                  document.documentElement.classList.remove('dark');
+                  document.documentElement.style.colorScheme = 'light';
+                }
+              } catch(e) {}
             })();
           `,
         }}
       />
-      <style>{`
-        /* Forzar modo claro en todo el portal independientemente del tema global */
-        body {
-          background-color: #f8fafc !important;
-          color: #0f172a !important;
-        }
-
-        .dark body, .dark & {
-          background-color: #f8fafc !important;
-          color: #0f172a !important;
-        }
-
-        /* Cualquier contenedor directo del portal */
-        [class*="portal"] {
-          background-color: #f8fafc;
-        }
-      `}</style>
       {children}
     </>
   );

@@ -9,7 +9,7 @@ import { getPortalSession } from '@/lib/portal-auth';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { pacientes, turnos, recetas, historialMedico, medicos } from '@/drizzle/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import PortalDashboardClient from './portal-dashboard-client';
 
 export const dynamic = 'force-dynamic';
@@ -89,12 +89,36 @@ export default async function PortalDashboardPage() {
     )
     .orderBy(desc(historialMedico.createdAt));
 
+  // 5. Turnos atendidos sin encuesta (para Calificá tu atención)
+  const turnosSinEncuesta = await db
+    .select({
+      id: turnos.id,
+      fechaHora: sql<string>`${turnos.fechaHora}::text`,
+      hora: sql<string>`TO_CHAR(${turnos.fechaHora}, 'HH24:MI')`,
+      medicoNombre: medicos.nombre,
+    })
+    .from(turnos)
+    .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
+    .leftJoin(historialMedico, and(
+      eq(historialMedico.turnoId, turnos.id),
+      eq(historialMedico.tipo, 'encuesta'),
+    ))
+    .where(and(
+      eq(turnos.pacienteId, session.pacienteId),
+      eq(turnos.estado, 'atendido'),
+      sql`${turnos.deletedAt} IS NULL`,
+      sql`${historialMedico.id} IS NULL`,
+    ))
+    .orderBy(desc(turnos.fechaHora))
+    .limit(5);
+
   return (
     <PortalDashboardClient
       paciente={paciente}
       turnos={turnosData}
       recetas={recetasData}
       historial={historialData}
+      turnosSinEncuesta={turnosSinEncuesta}
     />
   );
 }

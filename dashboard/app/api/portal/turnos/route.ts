@@ -6,8 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPortalSession } from '@/lib/portal-auth';
 import { db } from '@/lib/db';
-import { turnos, medicos } from '@/drizzle/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { turnos, medicos, historialMedico } from '@/drizzle/schema';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { safeError } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
@@ -18,6 +18,34 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const limit = parseInt(searchParams.get('limit') || '50');
+  const pendientesEncuesta = searchParams.get('pendientesEncuesta') === 'true';
+
+  // Query especial: turnos atendidos sin encuesta (para encuestas pendientes)
+  if (pendientesEncuesta) {
+    const turnosPendientes = await db
+      .select({
+        id: turnos.id,
+        fechaHora: sql<string>`${turnos.fechaHora}::text`,
+        hora: sql<string>`TO_CHAR(${turnos.fechaHora}, 'HH24:MI')`,
+        medicoNombre: medicos.nombre,
+      })
+      .from(turnos)
+      .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
+      .leftJoin(historialMedico, and(
+        eq(historialMedico.turnoId, turnos.id),
+        eq(historialMedico.tipo, 'encuesta'),
+      ))
+      .where(and(
+        eq(turnos.pacienteId, session.pacienteId),
+        eq(turnos.estado, 'atendido'),
+        sql`${turnos.deletedAt} IS NULL`,
+        sql`${historialMedico.id} IS NULL`,
+      ))
+      .orderBy(desc(turnos.fechaHora))
+      .limit(10);
+
+    return NextResponse.json({ turnos: turnosPendientes });
+  }
 
   const data = await db
     .select({

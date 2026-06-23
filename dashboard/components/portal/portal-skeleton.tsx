@@ -5,14 +5,14 @@ import { motion } from 'framer-motion';
 function Pulse({ className }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded-xl bg-gray-200/70 ${className ?? ''}`}
+      className={`animate-pulse rounded-xl bg-gray-200/70 dark:bg-gray-800/60 ${className ?? ''}`}
     />
   );
 }
 
 function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 space-y-3">
+    <div className="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-3">
       <Pulse className="h-4 w-24" />
       <Pulse className="h-8 w-32" />
       <Pulse className="h-3 w-40" />
@@ -63,7 +63,7 @@ export function PortalSkeleton() {
       </div>
 
       {/* List items */}
-      <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 divide-y divide-gray-50 dark:divide-gray-800/50">
         <SkeletonListItem />
         <SkeletonListItem />
         <SkeletonListItem />

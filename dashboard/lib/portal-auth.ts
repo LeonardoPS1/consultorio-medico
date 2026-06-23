@@ -122,7 +122,7 @@ export interface GenerateTokenResult {
  * Incluye rate limiting por teléfono y verificación de blacklist.
  * Devuelve el token y la URL completa del magic link.
  */
-export async function generateMagicLink(telefono: string): Promise<GenerateTokenResult | null> {
+export async function generateMagicLink(telefono: string, redirect?: string): Promise<GenerateTokenResult | null> {
   // 0. Rate limiting por teléfono
   if (!checkPhoneRate(telefono)) {
     safeWarn(`[PortalAuth] Rate limit excedido para ${telefono}`);
@@ -158,9 +158,16 @@ export async function generateMagicLink(telefono: string): Promise<GenerateToken
     })
     .where(eq(pacientes.id, paciente.id));
 
-  // 4. Construir magic link
+  // 4. Construir magic link (con redirect opcional)
   const baseUrl = process.env.NEXTAUTH_URL || 'https://med.aicorebots.com';
-  const magicLink = `${baseUrl}/portal/verify?token=${token}`;
+  let magicLink = `${baseUrl}/portal/verify?token=${token}`;
+  if (redirect) {
+    // Solo permitir URLs relativas del portal (seguridad anti-open-redirect)
+    const cleanRedirect = redirect.startsWith('/portal/') ? redirect : null;
+    if (cleanRedirect) {
+      magicLink += `&redirect=${encodeURIComponent(cleanRedirect)}`;
+    }
+  }
 
   return { token, magicLink };
 }

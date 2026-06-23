@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar, FileText, MessageSquare, User, PlusCircle,
   Package, Bell, PenTool, FlaskConical, ClipboardCheck,
-  LogOut, ChevronLeft, ChevronRight,
+  LogOut, ChevronLeft, ChevronRight, TrendingUp,
 } from 'lucide-react';
 
 const navItems = [
@@ -16,6 +16,7 @@ const navItems = [
   { href: '/portal/turnos', label: 'Turnos', icon: Calendar },
   { href: '/portal/mensajes', label: 'Chat', icon: MessageSquare },
   { href: '/portal/recetas', label: 'Recetas', icon: FileText },
+  { href: '/portal/reportes', label: 'Reportes', icon: TrendingUp },
   { href: '/portal/certificados', label: 'Certificados', icon: FileText },
   { href: '/portal/consentimientos', label: 'Docs', icon: PenTool },
   { href: '/portal/encuestas', label: 'Encuestas', icon: ClipboardCheck },
@@ -88,7 +89,7 @@ export default function PortalNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-gray-200/60 z-20" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-t border-gray-200/60 dark:border-gray-800/60 z-20 transition-colors duration-300" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       <div className="relative max-w-lg mx-auto">
         {/* Scroll indicator left */}
         <AnimatePresence>
@@ -97,9 +98,9 @@ export default function PortalNav() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 flex items-center justify-start pl-1 pointer-events-none"
+              className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white dark:from-gray-900 to-transparent z-10 flex items-center justify-start pl-1 pointer-events-none"
             >
-              <ChevronLeft className="h-4 w-4 text-gray-400" />
+              <ChevronLeft className="h-4 w-4 text-gray-400 dark:text-gray-600" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -119,15 +120,15 @@ export default function PortalNav() {
                   relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[64px] shrink-0
                   transition-all duration-200
                   ${active
-                    ? 'text-blue-600 bg-blue-50/80'
-                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100/60'
+                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40'
+                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100/60 dark:hover:bg-gray-800/60'
                   }
                 `}
               >
                 {active && (
                   <motion.div
                     layoutId="nav-active"
-                    className="absolute inset-0 rounded-xl bg-blue-50/80"
+                    className="absolute inset-0 rounded-xl bg-blue-50/80 dark:bg-blue-950/40"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -148,15 +149,15 @@ export default function PortalNav() {
               relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[64px] shrink-0
               transition-all duration-200
               ${pathname === '/portal/notificaciones'
-                ? 'text-blue-600 bg-blue-50/80'
-                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100/60'
+                ? 'text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40'
+                : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100/60 dark:hover:bg-gray-800/60'
               }
             `}
           >
             {pathname === '/portal/notificaciones' && (
               <motion.div
                 layoutId="nav-active"
-                className="absolute inset-0 rounded-xl bg-blue-50/80"
+                className="absolute inset-0 rounded-xl bg-blue-50/80 dark:bg-blue-950/40"
                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
               />
             )}
@@ -184,7 +185,7 @@ export default function PortalNav() {
           {/* Logout */}
           <button
             onClick={handleLogout}
-            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[64px] shrink-0 text-gray-400 hover:text-red-500 hover:bg-red-50/60 transition-all duration-200"
+            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[64px] shrink-0 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50/60 dark:hover:bg-red-950/30 transition-all duration-200"
           >
             <LogOut className="h-5 w-5" />
             <span className="text-[10px] font-medium leading-tight">Salir</span>
@@ -198,9 +199,9 @@ export default function PortalNav() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 flex items-center justify-end pr-1 pointer-events-none"
+              className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white dark:from-gray-900 to-transparent z-10 flex items-center justify-end pr-1 pointer-events-none"
             >
-              <ChevronRight className="h-4 w-4 text-gray-400" />
+              <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-600" />
             </motion.div>
           )}
         </AnimatePresence>
