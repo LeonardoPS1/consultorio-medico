@@ -26,6 +26,8 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { staggerContainer, itemVariants } from '@/components/portal/page-transition';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -162,6 +164,17 @@ function getSistemaSaludBadge(s: string | null) {
     particular_convenio: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800',
   };
   return colors[s] || 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+}
+
+function getEstadoIcon(estado: string) {
+  switch (estado) {
+    case 'pendiente': return Clock;
+    case 'confirmada': return CheckCircle2;
+    case 'atendido': return CheckCircle2;
+    case 'cancelada': return XCircle;
+    case 'no_asistio': return AlertCircle;
+    default: return Clock;
+  }
 }
 
 // ─── Animations (CSS only) ────────────────────────────────
@@ -310,10 +323,10 @@ function QuickSurveyCard({
                   <p className="text-xs text-red-500 dark:text-red-400 mb-2">{error}</p>
                 )}
 
-                <button
+                <Button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-all duration-150 shadow-sm"
+                  className="w-full rounded-xl shadow-sm"
                 >
                   {submitting ? (
                     <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -323,7 +336,7 @@ function QuickSurveyCard({
                       Enviar calificación
                     </>
                   )}
-                </button>
+                </Button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -492,10 +505,10 @@ export default function PortalDashboardClient({
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-3">
-                {turnosProximos.map((t, i) => (
-                  <div key={t.id} className={`animate-fade-in-up`} style={{ animationDelay: `${i * 0.08}s`, animationFillMode: 'both' }}>
-                    <Card className="border-l-4 overflow-hidden shadow-sm border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" style={{ borderLeftColor: getTurnoColor(t.estado) }}>
+              <motion.div className="space-y-3" variants={staggerContainer} initial="hidden" animate="animate">
+                {turnosProximos.map((t) => (
+                  <motion.div key={t.id} variants={itemVariants}>
+                    <Card className="border-l-4 overflow-hidden shadow-sm border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-200 hover:shadow-md hoverable:hover:-translate-y-0.5" style={{ borderLeftColor: getTurnoColor(t.estado) }}>
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-2">
                           <div>
@@ -524,9 +537,9 @@ export default function PortalDashboardClient({
                         )}
                       </CardContent>
                     </Card>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
           </TabsContent>
 
@@ -543,58 +556,62 @@ export default function PortalDashboardClient({
             ) : (
               <div className="space-y-3">
                 {/* Turnos pasados */}
-                {turnosPasados.length > 0 && (
-                  <div>
-                    <h3 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Visitas</h3>
-                    {turnosPasados.map((t, i) => {
-                      const Icon = getEstadoIcon(t.estado);
-                      return (
-                        <div key={t.id} className={`mb-2 animate-fade-in-up`} style={{ animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }}>
-                          <Card className="opacity-80 transition-all duration-200 hover:opacity-100 hover:shadow-sm bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800">
-                            <CardContent className="p-3 flex items-center gap-3">
-                              <Icon className="h-5 w-5 text-gray-400 dark:text-gray-500 shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                  {formatCLDate(t.fechaHora, "d 'de' MMMM")} · {t.hora}
-                                </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{t.motivo || t.tipoConsulta}</p>
-                              </div>
-                              <Badge variant="outline" className="text-[10px] dark:border-gray-700 dark:text-gray-400">
-                                {getTurnoLabel(t.estado)}
-                              </Badge>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      );
-                    })}
-                  </div>
+                    {turnosPasados.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Visitas</h3>
+                        <motion.div variants={staggerContainer} initial="hidden" animate="animate">
+                          {turnosPasados.map((t) => {
+                            const Icon = getEstadoIcon(t.estado);
+                            return (
+                              <motion.div key={t.id} variants={itemVariants} className="mb-2">
+                                <Card className="opacity-80 transition-all duration-200 hover:opacity-100 hover:shadow-sm bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800">
+                                  <CardContent className="p-3 flex items-center gap-3">
+                                    <Icon className="h-5 w-5 text-gray-400 dark:text-gray-500 shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        {formatCLDate(t.fechaHora, "d 'de' MMMM")} · {t.hora}
+                                      </p>
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{t.motivo || t.tipoConsulta}</p>
+                                    </div>
+                                    <Badge variant="outline" className="text-[10px] dark:border-gray-700 dark:text-gray-400">
+                                      {getTurnoLabel(t.estado)}
+                                    </Badge>
+                                  </CardContent>
+                                </Card>
+                              </motion.div>
+                            );
+                          })}
+                        </motion.div>
+                      </div>
                 )}
 
                 {/* Historial médico */}
-                {historial.length > 0 && (
-                  <div>
-                    <h3 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
-                      Registros médicos
-                    </h3>
-                    {historial.map((h, i) => (
-                      <div key={h.id} className={`mb-2 animate-fade-in-up`} style={{ animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }}>
-                        <Card className="transition-all duration-200 hover:shadow-sm bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800">
-                          <CardContent className="p-3">
-                            <div className="flex items-start justify-between">
-                              <p className="font-medium text-sm text-gray-900 dark:text-gray-100">{h.titulo}</p>
-                              <span className="text-[10px] text-gray-400 dark:text-gray-500">{formatCLShort(h.createdAt)}</span>
-                            </div>
-                            {h.descripcion && (
-                              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{h.descripcion}</p>
-                            )}
-                            <Badge variant="outline" className="mt-1 text-[10px] dark:border-gray-700 dark:text-gray-400">
-                              {h.tipo}
-                            </Badge>
-                          </CardContent>
-                        </Card>
+                    {historial.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
+                          Registros médicos
+                        </h3>
+                        <motion.div variants={staggerContainer} initial="hidden" animate="animate">
+                          {historial.map((h) => (
+                            <motion.div key={h.id} variants={itemVariants} className="mb-2">
+                              <Card className="transition-all duration-200 hover:shadow-sm bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800">
+                                <CardContent className="p-3">
+                                  <div className="flex items-start justify-between">
+                                    <p className="font-medium text-sm text-gray-900 dark:text-gray-100">{h.titulo}</p>
+                                    <span className="text-[10px] text-gray-400 dark:text-gray-500">{formatCLShort(h.createdAt)}</span>
+                                  </div>
+                                  {h.descripcion && (
+                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{h.descripcion}</p>
+                                  )}
+                                  <Badge variant="outline" className="mt-1 text-[10px] dark:border-gray-700 dark:text-gray-400">
+                                    {h.tipo}
+                                  </Badge>
+                                </CardContent>
+                              </Card>
+                            </motion.div>
+                          ))}
+                        </motion.div>
                       </div>
-                    ))}
-                  </div>
                 )}
               </div>
             )}
@@ -611,9 +628,9 @@ export default function PortalDashboardClient({
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-3">
-                {recetas.map((r, i) => (
-                  <div key={r.id} className={`animate-fade-in-up`} style={{ animationDelay: `${i * 0.06}s`, animationFillMode: 'both' }}>
+              <motion.div className="space-y-3" variants={staggerContainer} initial="hidden" animate="animate">
+                {recetas.map((r) => (
+                  <motion.div key={r.id} variants={itemVariants}>
                     <Card className="transition-all duration-200 hover:shadow-sm bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-2">
@@ -643,9 +660,9 @@ export default function PortalDashboardClient({
                         </div>
                       </CardContent>
                     </Card>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
           </TabsContent>
         </Tabs>
@@ -657,15 +674,4 @@ export default function PortalDashboardClient({
       </p>
     </div>
   );
-}
-
-function getEstadoIcon(estado: string) {
-  switch (estado) {
-    case 'pendiente': return Clock;
-    case 'confirmada': return CheckCircle2;
-    case 'atendido': return CheckCircle2;
-    case 'cancelada': return XCircle;
-    case 'no_asistio': return AlertCircle;
-    default: return Clock;
-  }
 }
