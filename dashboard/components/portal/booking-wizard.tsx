@@ -228,10 +228,16 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
                 </div>
               </div>
             )}
-            <Button onClick={handleIrASlots} className="w-full sm:w-auto">
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              Ver horarios disponibles
-            </Button>
+            {selectedMedico.servicios.length === 0 ? (
+              <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
+                Este médico no tiene servicios configurados. Contactá al administrador para asignar servicios.
+              </div>
+            ) : (
+              <Button onClick={handleIrASlots} className="w-full sm:w-auto">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                Ver horarios disponibles
+              </Button>
+            )}
           </div>
         )}
       </div>
