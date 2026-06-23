@@ -103,7 +103,6 @@ export async function GET() {
     .where(and(
       eq(recetas.pacienteId, pacienteId),
       eq(recetas.estado, 'activa'),
-      sql`${recetas.deletedAt} IS NULL`,
     ));
 
   const recetasActivas = Number(recetasData?.value || 0);
