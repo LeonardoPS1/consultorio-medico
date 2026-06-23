@@ -9,7 +9,7 @@ import {
   TrendingUp, TrendingDown, Minus,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import type { Periodo } from '@/app/dashboard/reportes/reportes-data';
+import type { Periodo } from '@/app/dashboard/reportes/types';
 
 export type ComparativaData = { kpis: { titulo: string; actual: string; anterior: string; cambio: string; cambioPct: string; up: boolean }[]; turnos: { label: string; actual: number; anterior: number }[]; intenciones: { intencion: string; actual: number; anterior: number; cambioPct: number }[]; whatsapp: { titulo: string; actual: string; anterior: string; cambio: string; up: boolean }[]; pacientesActual: number; pacientesAnterior: number; };
 

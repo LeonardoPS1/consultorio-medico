@@ -2,7 +2,7 @@
 // Exportación a Excel de Reportes
 // ============================================================
 import * as XLSX from 'xlsx';
-import type { ReportesData, Periodo, IntencionMensaje } from '@/app/dashboard/reportes/reportes-data';
+import type { ReportesData, Periodo, IntencionMensaje } from '@/app/dashboard/reportes/types';
 
 export interface ExcelExportInput {
   periodo: Periodo;

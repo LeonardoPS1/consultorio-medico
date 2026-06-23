@@ -1,13 +1,28 @@
 {
   "name": "consultorio-medico",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "scripts": {
     "dev": "pnpm --filter ./dashboard dev",
     "build": "pnpm --filter ./dashboard build",
     "test": "pnpm --filter ./dashboard test",
+    "test:watch": "pnpm --filter ./dashboard test:watch",
     "lint": "pnpm --filter ./dashboard lint",
-    "type-check": "pnpm --filter ./dashboard type-check"
+    "lint:fix": "pnpm --filter ./dashboard lint --fix",
+    "format": "pnpm --filter ./dashboard format",
+    "format:check": "pnpm --filter ./dashboard format:check",
+    "type-check": "pnpm --filter ./dashboard type-check",
+    "db:generate": "pnpm --filter ./dashboard db:generate",
+    "db:push": "pnpm --filter ./dashboard db:push",
+    "db:studio": "pnpm --filter ./dashboard db:studio",
+    "setup": "pnpm install",
+    "clean": "pnpm store prune",
+    "ci": "pnpm lint && pnpm format:check && pnpm type-check && pnpm test && pnpm build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:build": "docker compose build --no-cache dashboard",
+    "deploy": "python deploy_vps.py",
+    "deploy:api": "python deploy_vps_api.py"
   },
   "dependencies": {
     "pdfkit": "^0.18.0"
