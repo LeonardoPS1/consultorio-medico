@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { DoctorCard } from './doctor-card';
 import { SlotPicker } from './slot-picker';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { Loader2, ArrowLeft, Check, CalendarIcon, Stethoscope, CreditCard, ExternalLink, Stethoscope as MotivoIcon } from 'lucide-react';
+import { Loader2, ArrowLeft, Check, CalendarIcon, Stethoscope, CreditCard, ExternalLink } from 'lucide-react';
 import type { MedicoPortal, SlotDisponible, TurnoCreadoPortal } from '@/lib/services/portal-booking';
 
 type Step = 'medico' | 'slot' | 'confirmar' | 'pago' | 'completado';
@@ -186,9 +187,11 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
     });
   };
 
+  let stepContent: React.ReactNode;
+
   if (step === 'medico') {
-    return (
-      <div className="space-y-6">
+    stepContent = (
+      <motion.div key="medico" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="space-y-6">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Stethoscope className="h-5 w-5 text-primary" />
@@ -198,7 +201,7 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
             Elegí el profesional con quien querés agendar tu consulta.
           </p>
         </div>
-        <div className="grid gap-4">
+        <div className="grid gap-4 stagger-premium">
           {medicos.map((m) => (
             <DoctorCard
               key={m.id}
@@ -238,15 +241,15 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
                 Ver horarios disponibles
               </Button>
             )}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+      </motion.div>
     );
   }
 
   if (step === 'slot') {
-    return (
-      <div className="space-y-4">
+    stepContent = (
+      <motion.div key="slot" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="space-y-4">
         <Button variant="ghost" onClick={() => setStep('medico')} className="mb-2">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Volver a médicos
@@ -272,14 +275,14 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
           <Button onClick={handleIrAConfirmar} className="w-full sm:w-auto">
             Continuar
           </Button>
-        )}
-      </div>
+          )}
+      </motion.div>
     );
   }
 
   if (step === 'confirmar') {
-    return (
-      <div className="max-w-md mx-auto">
+    stepContent = (
+      <motion.div key="confirmar" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="max-w-md mx-auto">
         <Button variant="ghost" onClick={() => setStep('slot')} className="mb-2">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Volver
@@ -359,15 +362,15 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
                 El pago se procesará al confirmar
               </p>
             )}
-          </CardFooter>
-        </Card>
-      </div>
+            </CardFooter>
+          </Card>
+      </motion.div>
     );
   }
 
   if (step === 'pago') {
-    return (
-      <div className="max-w-md mx-auto">
+    stepContent = (
+      <motion.div key="pago" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="max-w-md mx-auto">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -426,15 +429,15 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
                 <Check className="mr-2 h-4 w-4" /> Continuar
               </Button>
             )}
-          </CardFooter>
-        </Card>
-      </div>
+            </CardFooter>
+          </Card>
+      </motion.div>
     );
   }
 
-  // Completado
-  return (
-    <div className="text-center py-12 max-w-md mx-auto">
+  // Completado (default)
+  stepContent = (
+    <motion.div key="completado" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="text-center py-12 max-w-md mx-auto">
       <div className="rounded-full bg-primary/10 w-16 h-16 flex items-center justify-center mx-auto mb-4">
         <Check className="h-8 w-8 text-primary" />
       </div>
@@ -447,6 +450,12 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
           Volver al inicio
         </Button>
       </div>
-    </div>
+    </motion.div>
+  );
+
+  return (
+    <AnimatePresence mode="wait">
+      {stepContent}
+    </AnimatePresence>
   );
 }

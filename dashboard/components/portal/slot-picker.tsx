@@ -121,7 +121,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
               disabled={!canBook}
               onClick={() => canBook && setSelectedDate(dateStr)}
               className={cn(
-                'rounded-lg text-center py-2 text-sm transition-colors',
+                'rounded-lg text-center py-2 text-sm transition-all duration-150 active:scale-90',
                 isSelected && 'bg-primary text-primary-foreground',
                 !isSelected && canBook && 'hover:bg-muted',
                 isToday && !isSelected && 'ring-1 ring-primary/30',
@@ -157,7 +157,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
               {manana.length > 0 && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1.5">MAÑANA</p>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-2 flex-wrap stagger-premium">
                     {manana.map((slot) => (
                       <SlotButton
                         key={slot.fechaHora}
@@ -173,7 +173,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
               {tarde.length > 0 && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1.5">TARDE</p>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-2 flex-wrap stagger-premium">
                     {tarde.map((slot) => (
                       <SlotButton
                         key={slot.fechaHora}

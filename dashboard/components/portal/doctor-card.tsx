@@ -39,7 +39,7 @@ function getAvatarColor(nombre: string): string {
 export function DoctorCard({ medico, selected, onSelect }: DoctorCardProps) {
   return (
     <Card
-      className={`cursor-pointer transition-all hoverable:hover:shadow-card-hover ${
+      className={`cursor-pointer transition-all duration-200 hoverable:hover:-translate-y-0.5 hoverable:hover:shadow-card-hover active:scale-[0.98] ${
         selected ? 'ring-2 ring-primary shadow-card-hover' : ''
       }`}
       onClick={() => onSelect(medico)}

@@ -33,8 +33,8 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 80% 45%;
     --warning-foreground: 0 0% 100%;
-    --border: 214.3 20% 88%;
-    --input: 214.3 20% 88%;
+    --border: 214.3 16% 90%;
+    --input: 214.3 16% 90%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.75rem;
 
@@ -48,12 +48,12 @@
     --chart-1: 221.2 83.2% 53.3%;
     --chart-2: 142.1 76.2% 36.3%;
     --chart-3: 38 92% 50%;
-    --chart-4: 271 81% 56%;
-    --chart-5: 0 84.2% 60.2%;
+    --chart-4: 271 75% 56%;
+    --chart-5: 0 72% 55%;
 
-    /* Card shadows */
-    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
-    --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+    /* Card shadows — taste profile: ultra-subtle default, soft on hover */
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.06);
   }
 
   .dark {
@@ -77,8 +77,8 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 85% 42%;
     --warning-foreground: 0 0% 100%;
-    --border: 217.2 18% 22%;
-    --input: 217.2 18% 22%;
+    --border: 217.2 16% 18%;
+    --input: 217.2 16% 18%;
     --ring: 224.3 76.3% 50%;
 
     --sidebar-background: 225 25% 6%;
@@ -90,11 +90,11 @@
     --chart-1: 217.2 85% 62%;
     --chart-2: 142.1 70.6% 45.3%;
     --chart-3: 38 92% 50%;
-    --chart-4: 271 75% 60%;
-    --chart-5: 0 72% 50%;
+    --chart-4: 271 72% 58%;
+    --chart-5: 0 68% 48%;
 
     /* Card shadows for dark mode */
-    --shadow-card: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
     --shadow-card-hover: 0 4px 16px rgba(0,0,0,0.4);
   }
 }
@@ -104,9 +104,32 @@
     @apply border-border;
   }
 
+  /* Selection color consistente */
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+    color: hsl(var(--foreground));
+  }
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Press effect base para interactive elements */
+  button:active:not(:disabled),
+  a:active:not(:disabled),
+  [role="button"]:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  /* @starting-style para animaciones de entrada modernas */
+  @starting-style {
+    [data-entering] {
+      opacity: 0;
+      transform: translateY(4px);
+    }
   }
 }
 
@@ -282,8 +305,11 @@
 
 /* Smooth transitions for all interactive elements */
 a, button, input, select, textarea {
-  @apply transition-colors duration-200;
-  transition-timing-function: var(--ease-out);
+  transition: transform 150ms var(--ease-out), 
+              color 200ms var(--ease-out), 
+              background-color 200ms var(--ease-out), 
+              border-color 200ms var(--ease-out), 
+              box-shadow 200ms var(--ease-out);
 }
 
 /* Better focus styles */
