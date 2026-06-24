@@ -31,6 +31,7 @@ services:
       - auth_secret
     environment:
       - NODE_ENV=production
+      - TZ=America/Santiago
     depends_on:
       - postgres
     healthcheck:
@@ -80,6 +81,7 @@ services:
       - POSTGRES_DB=consultorio_medico
       - POSTGRES_USER=dashboard_user
       - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - TZ=America/Santiago
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U dashboard_user -d consultorio_medico']
       interval: 10s
@@ -120,6 +122,7 @@ services:
       - DB_POSTGRESDB_PASSWORD=${N8N_DB_PASSWORD}
       - EXECUTIONS_DATA_PRUNE=true
       - EXECUTIONS_DATA_MAX_AGE=168
+      - TZ=America/Santiago
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:

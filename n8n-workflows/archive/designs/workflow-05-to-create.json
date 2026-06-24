@@ -21,7 +21,7 @@
       "position": [250, 100],
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT t.fecha_hora, t.estado, t.motivo, t.tipo_consulta, p.nombre || ' ' || p.apellido as paciente_nombre, p.telefono as paciente_telefono, p.obra_social, 'turnos' as fuente FROM turnos t JOIN pacientes p ON p.id = t.paciente_id WHERE DATE(t.fecha_hora AT TIME ZONE 'America/Argentina/Buenos_Aires') = CURRENT_DATE AND t.medico_id = $1 ORDER BY t.fecha_hora;",
+        "query": "SELECT t.fecha_hora, t.estado, t.motivo, t.tipo_consulta, p.nombre || ' ' || p.apellido as paciente_nombre, p.telefono as paciente_telefono, p.obra_social, 'turnos' as fuente FROM turnos t JOIN pacientes p ON p.id = t.paciente_id WHERE DATE(t.fecha_hora AT TIME ZONE 'America/Santiago') = CURRENT_DATE AND t.medico_id = $1 ORDER BY t.fecha_hora;",
         "additionalFields": {
           "queryParams": "={{ ['00000000-0000-0000-0000-000000000001'] }}"
         },

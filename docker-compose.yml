@@ -11,6 +11,7 @@ services:
       - ./dashboard/.env
     environment:
       - NODE_ENV=development
+      - TZ=America/Santiago
       - DATABASE_URL=${DATABASE_URL:-postgres://dashboard_user:${DB_PASSWORD}@postgres:5432/consultorio_medico}
     depends_on:
       postgres:
@@ -33,6 +34,7 @@ services:
       - POSTGRES_DB=consultorio_medico
       - POSTGRES_USER=dashboard_user
       - POSTGRES_PASSWORD=${DB_PASSWORD:-changeme}
+      - TZ=America/Santiago
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U dashboard_user -d consultorio_medico']
       interval: 10s
@@ -58,6 +60,7 @@ services:
       - DB_POSTGRESDB_PASSWORD=${N8N_DB_PASSWORD:-n8npass}
       - EXECUTIONS_DATA_PRUNE=true
       - EXECUTIONS_DATA_MAX_AGE=168
+      - TZ=America/Santiago
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
