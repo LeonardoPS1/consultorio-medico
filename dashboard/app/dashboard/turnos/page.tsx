@@ -1,51 +1,11 @@
 import { cookies } from 'next/headers';
 import { TurnosClient } from './turnos-client';
 import { PageHeader } from '@/components/page-header';
-
-// ─── Types ────────────────────────────────────────────────
-
-interface TurnoData {
-  id: string;
-  hora: string;
-  paciente: string;
-  tipo: string;
-  medico: string;
-  medicoId: string;
-  pacienteId: string;
-  estado: string;
-  fecha: string;
-}
-
-interface TurnosApiResponse {
-  data: TurnoData[];
-  total: number;
-  statsTotal: number;
-  statsPorEstado: Record<string, number>;
-  medicos: string[];
-  tipos: string[];
-  fecha: string;
-}
+import { getServerTurnos } from '@/lib/server-page-data';
 
 // ─── Data fetching ─────────────────────────────────────────
 
 export const dynamic = 'force-dynamic';
-
-async function getTurnos(sucursalId?: string, fecha?: string): Promise<TurnosApiResponse | null> {
-  try {
-    const params = new URLSearchParams();
-    if (fecha) params.set('fecha', fecha);
-    params.set('limit', '200');
-    if (sucursalId) params.set('sucursalId', sucursalId);
-
-    const res = await fetch(`http://localhost:3000/api/turnos?${params.toString()}`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
-  }
-}
 
 // ─── Helpers ──────────────────────────────────────────────
 
@@ -74,7 +34,7 @@ const LABELS_ESTADO: Record<string, string> = {
 export default async function TurnosPage() {
   const cookieStore = cookies();
   const sucursalId = cookieStore.get('sucursal_activa')?.value;
-  const apiData = await getTurnos(sucursalId);
+  const apiData = await getServerTurnos(sucursalId);
 
   const turnos = apiData?.data ?? [];
   const statsPorEstado = apiData?.statsPorEstado ?? {};

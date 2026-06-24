@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS "idx_pacientes_rut" ON "pacientes" USING btree ("rut");

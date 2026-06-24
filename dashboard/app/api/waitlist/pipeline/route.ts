@@ -15,11 +15,12 @@
 import { NextRequest } from 'next/server';
 import { apiHandler, success } from '@/lib/api-handler';
 import { waitlistService } from '@/lib/services/waitlist';
+import { verifyRequestSecret } from '@/lib/verify-webhook-secret';
+import { withRateLimit } from '@/lib/rate-limit';
 
-export const POST = apiHandler(async (request: NextRequest) => {
-  // Verificar webhook secret
-  const secret = request.headers.get('x-webhook-secret');
-  if (secret !== process.env.N8N_WEBHOOK_SECRET) {
+const postHandler = apiHandler(async (request: NextRequest) => {
+  // Verificar webhook secret (timing-safe)
+  if (!verifyRequestSecret(request)) {
     return success({ error: 'No autorizado' }, 401);
   }
 
@@ -33,3 +34,6 @@ export const POST = apiHandler(async (request: NextRequest) => {
         : 'No hay ofertas pendientes por expirar',
   });
 });
+
+// n8n ejecuta pipeline cada 5 min — rate limit generoso como safety net
+export const POST = withRateLimit(postHandler, { maxRequests: 30, windowMs: 60_000 });

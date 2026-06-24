@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { logWorkflowExecution } from '@/lib/services/n8n-monitor';
 import { safeWarn } from '@/lib/logger';
-
-const WEBHOOK_SECRET = process.env.N8N_WEBHOOK_SECRET;
+import { verifyRequestSecret } from '@/lib/verify-webhook-secret';
 
 // Rate limiter en memoria para este webhook
 const alertRateMap = new Map<string, { count: number; resetAt: number }>();
@@ -31,8 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Demasiadas solicitudes' }, { status: 429 });
   }
 
-  const secret = request.headers.get('x-webhook-secret');
-  if (!WEBHOOK_SECRET || secret !== WEBHOOK_SECRET) {
+  if (!verifyRequestSecret(request)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 

@@ -25,27 +25,10 @@ const nextConfig = withBundleAnalyzer({
     NEXT_PUBLIC_TENANT_PRIMARY: process.env.NEXT_PUBLIC_TENANT_PRIMARY || '#2563eb',
     NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY: process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || '',
   },
-  // ─── Headers de seguridad + Service Worker ─────────────
+  // ─── Headers de Service Worker ─────────────────────────
+  // Seguridad vía middleware.ts (todo centralizado allá)
   async headers() {
     return [
-      {
-        source: '/(.*)',
-        headers: [
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          // camera/microphone permitidos para videollamadas con LiveKit
-          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=()' },
-          { key: 'X-DNS-Prefetch-Control', value: 'off' },
-          {
-            key: 'Content-Security-Policy',
-            // unsafe-eval solo en desarrollo (React Refresh/HMR lo requiere)
-            value: process.env.NODE_ENV === 'development'
-              ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' wss://livekit.aicorebots.com https://livekit.aicorebots.com https://api.mercadopago.com https://api.twilio.com https://api.whatsapp.com https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self'; media-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; report-uri /api/csp-report"
-              : "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' wss://livekit.aicorebots.com https://livekit.aicorebots.com https://api.mercadopago.com https://api.twilio.com https://api.whatsapp.com https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self'; media-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; report-uri /api/csp-report",
-          },
-        ],
-      },
       // Cache service worker para que siempre esté fresco
       {
         source: '/sw.js',

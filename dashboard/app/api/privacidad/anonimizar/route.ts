@@ -18,11 +18,12 @@ import {
   getPeriodoRetencionConfig,
   PERIODO_RETENCION_BAJA_DIAS,
 } from '@/lib/services/privacidad';
+import { verifyRequestSecret } from '@/lib/verify-webhook-secret';
+import { withRateLimit } from '@/lib/rate-limit';
 
-export const POST = apiHandler(async (request: NextRequest) => {
-  // Verificar webhook secret
-  const secret = request.headers.get('x-webhook-secret');
-  if (secret !== process.env.N8N_WEBHOOK_SECRET) {
+const postHandler = apiHandler(async (request: NextRequest) => {
+  // Verificar webhook secret (timing-safe)
+  if (!verifyRequestSecret(request)) {
     return success({ error: 'No autorizado' }, 401);
   }
 
@@ -44,3 +45,6 @@ export const POST = apiHandler(async (request: NextRequest) => {
         : 'No hay pacientes pendientes de anonimización',
   });
 });
+
+// Rate limit: 5 requests/min por IP (n8n llama cada 24h, esto es safety net)
+export const POST = withRateLimit(postHandler, { maxRequests: 5, windowMs: 60_000 });

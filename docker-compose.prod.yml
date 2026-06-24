@@ -1,5 +1,15 @@
 version: '3.8'
 
+# ─── Secreto compartido para x-webhook-secret ──────────────
+# Crear en Swarm:
+#   echo "mi-secreto-aqui" | docker secret create n8n_webhook_secret -
+#   echo "${DB_PASSWORD}" | docker secret create db_password -
+#   echo "${N8N_DB_PASSWORD}" | docker secret create n8n_db_password -
+#   echo "${DATABASE_URL}" | docker secret create database_url -
+#
+# Para desarrollo sin Swarm: usar env_file (Dokploy compatible)
+# ─────────────────────────────────────────────────────────
+
 services:
   dashboard:
     image: ghcr.io/leonardops1/consultorio-medico-dashboard:latest
@@ -8,8 +18,17 @@ services:
         published: 3000
         protocol: tcp
         mode: host
-    env_file:
-      - ./dashboard/.env
+    # ⚠️ Dokploy usa env_file para las variables de entorno.
+    # En producción con Swarm puro, reemplazar por secrets:
+    # env_file:
+    #   - ./dashboard/.env
+    secrets:
+      - database_url
+      - n8n_webhook_secret
+      - twilio_account_sid
+      - twilio_auth_token
+      - mercadopago_webhook_secret
+      - auth_secret
     environment:
       - NODE_ENV=production
     depends_on:
@@ -140,6 +159,20 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+
+secrets:
+  database_url:
+    external: true
+  n8n_webhook_secret:
+    external: true
+  twilio_account_sid:
+    external: true
+  twilio_auth_token:
+    external: true
+  mercadopago_webhook_secret:
+    external: true
+  auth_secret:
+    external: true
 
 volumes:
   postgres_data:

@@ -1,57 +1,18 @@
 import { cookies } from 'next/headers';
 import { PacientesClient } from './pacientes-client';
 import { PageHeader } from '@/components/page-header';
-
-// ─── Types ────────────────────────────────────────────────
-
-interface Paciente {
-  id: string;
-  nombre: string;
-  apellido: string;
-  telefono: string;
-  email: string | null;
-  obraSocial: string | null;
-  sistemaSalud: string | null;
-  isapreNombre: string | null;
-  tags: string[];
-  ultimoTurno: string | null;
-  totalTurnos: number;
-  dni?: string | null;
-}
-
-interface PacientesApiResponse {
-  data: Paciente[];
-  total: number;
-  conTurnos: number;
-  nuevos: number;
-}
+import { getServerPacientes } from '@/lib/server-page-data';
 
 // ─── Data fetching ─────────────────────────────────────────
 
 export const dynamic = 'force-dynamic';
-
-async function getPacientes(sucursalId?: string): Promise<PacientesApiResponse | null> {
-  try {
-    const params = new URLSearchParams();
-    params.set('limit', '100');
-    params.set('offset', '0');
-    if (sucursalId) params.set('sucursalId', sucursalId);
-    const res = await fetch(`http://localhost:3000/api/pacientes?${params.toString()}`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
-  }
-}
 
 // ─── Page ──────────────────────────────────────────────────
 
 export default async function PacientesPage() {
   const cookieStore = cookies();
   const sucursalId = cookieStore.get('sucursal_activa')?.value;
-  const apiData = await getPacientes(sucursalId);
+  const apiData = await getServerPacientes(sucursalId);
 
   const pacientes = apiData?.data ?? [];
   const total = apiData?.total ?? 0;

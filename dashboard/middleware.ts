@@ -35,13 +35,19 @@ if (typeof setInterval !== 'undefined') {
 }
 
 // ─── Headers de seguridad ──────────────────────────────────
+// Todos centralizados AQUÍ (middleware corre después de next.config.js).
+// next.config.js solo mantiene headers para caching del SW y CSP report.
 const securityHeaders: Record<string, string> = {
   'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
-  // camera/microphone permitidos para videollamadas con LiveKit (consistente con next.config.js)
+  // camera/microphone permitidos para videollamadas con LiveKit
   'Permissions-Policy': 'camera=(self), microphone=(self), geolocation=()',
   'X-DNS-Prefetch-Control': 'on',
+  // Cross-Origin isolation (previene side-channel attacks)
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Embedder-Policy': 'require-corp',
+  'Cross-Origin-Resource-Policy': 'same-origin',
 };
 
 // ─── Helper: verificar si hay sesión activa via cookie ───
@@ -103,6 +109,15 @@ export function middleware(request: NextRequest) {
   if (process.env.NODE_ENV === 'production') {
     response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
   }
+
+  // Content-Security-Policy (CSP)
+  // Centralizado aquí con next.config.js como fallback
+  const cspBase =
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' wss://livekit.aicorebots.com https://livekit.aicorebots.com https://api.mercadopago.com https://api.twilio.com https://api.whatsapp.com https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self'; media-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; report-uri /api/csp-report";
+  const csp = process.env.NODE_ENV === 'development'
+    ? cspBase.replace("script-src 'self' 'unsafe-inline'", "script-src 'self' 'unsafe-inline' 'unsafe-eval'")
+    : cspBase;
+  response.headers.set('Content-Security-Policy', csp);
 
   // ─── 2. Rate limiting específico por ruta ──────────────
   const ip =

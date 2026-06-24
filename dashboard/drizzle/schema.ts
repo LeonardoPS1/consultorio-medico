@@ -138,6 +138,7 @@ export const pacientes = pgTable(
   (table) => ({
     idxPacientesSucursalId: index('idx_pacientes_sucursal_id').on(table.sucursalId),
     idxPacientesCreatedAt: index('idx_pacientes_created_at').on(table.createdAt),
+    idxPacientesRut: index('idx_pacientes_rut').on(table.rut),
   }),
 );
 

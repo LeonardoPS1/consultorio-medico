@@ -204,6 +204,13 @@
       "when": 1782007867432,
       "tag": "0039_push_paciente_id",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1782264214662,
+      "tag": "0040_rut_index",
+      "breakpoints": true
     }
   ]
 }

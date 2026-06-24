@@ -5,11 +5,11 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: redis-server --save 60 1 --loglevel warning --requirepass v4iysnslnjdzdiawuzscn70ji8cotsyv
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${LIVEKIT_REDIS_PASSWORD:-}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "v4iysnslnjdzdiawuzscn70ji8cotsyv", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${LIVEKIT_REDIS_PASSWORD:-}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
