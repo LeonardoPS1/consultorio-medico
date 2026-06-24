@@ -4,241 +4,239 @@
 
 El sistema integra cinco capas principales que trabajan juntas para automatizar la comunicación y gestión de un consultorio médico:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    USUARIOS (Pacientes)                      │
-│         WhatsApp ─── Twilio ─── Email ─── Web               │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────┐
-│              CAPA DE SEGURIDAD (Middleware)                   │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
-│  │  Headers │ │   Rate   │ │ 2FA/MFA │ │  Cookie  │      │
-│  │  HTTP    │ │ Limiting │ │  Login   │ │  Verify  │      │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐                    │
-│  │  Twilio  │ │ Auditoría│ │ Password │                    │
-│  │ Signature│ │ Accesos  │ │ Lockout  │                    │
-│  └──────────┘ └──────────┘ └──────────┘                    │
-│  ┌──────────┐ ┌──────────┐ ┌─────────────────────┐        │
-│  │  Forgot/ │ │  Token   │ │  Feature Gating     │        │
-│  │  Reset   │ │  Expiry  │ │  (Plan-based)       │        │
-│  │  Password│ │   (1h)   │ │                     │        │
-│  └──────────┘ └──────────┘ └─────────────────────┘        │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────┐
-│                   n8n (Automatización)                       │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
-│  │  AI Agent │ │ Gestión  │ │ Recorda- │ │ Correo   │      │
-│  │ WhatsApp  │ │ Turnos   │ │ torios   │ │ Intelig. │      │
-│  │ (WF-01)   │ │ (WF-02)  │ │ (WF-03)  │ │ (WF-04)  │      │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
-│  ┌──────────┐ ┌──────────┐                                  │
-│  │ Resumen  │ │ Recetas  │                                  │
-│  │ (WF-05)  │ │ (WF-06)  │                                  │
-│  └──────────┘ └──────────┘                                  │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────┐
-│              IA Local (Ollama + Mistral)                     │
-│  • Clasificación de intenciones • Generación de respuestas  │
-│  • Extracción de entidades    • Triaje de urgencias         │
-│  • Redacción de borradores    • Memoria conversacional      │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────┐
-│               PostgreSQL (Base de Datos)                     │
-│  pacientes │ turnos │ conversaciones │ mensajes             │
-│  medicos   │ recetas │ historial │ logs │ usuarios          │
-│  suscripciones │ credenciales │ auditoria                   │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────┐
-│            Dashboard Web (Next.js 14 + shadcn/ui)           │
-│  KPIs │ Turnos │ Pacientes │ Conversaciones │ Recetas       │
-│  Reportes │ Configuración │ FullCalendar                    │
-│  Perfil │ Suscripción │ Credenciales │ Equipo               │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    USUARIOS["👥 Usuarios (Pacientes)"]
+    USUARIOS -->|WhatsApp / Twilio / Email / Web| SEG["🔒 Seguridad (Middleware)"]
+
+    subgraph SEG [Capa de Seguridad]
+        H1[Headers HTTP]
+        H2[Rate Limiting]
+        H3[2FA / MFA]
+        H4[Cookie Verify]
+        H5[Twilio Signature]
+        H6[Auditoría Accesos]
+        H7[Password Lockout]
+        H8[Tokens]
+    end
+
+    SEG --> N8N["⚙️ n8n (Automatización)"]
+
+    subgraph N8N [n8n Workflows]
+        WF1[WF-01: AI Agent WhatsApp]
+        WF2[WF-02: Gestión Turnos]
+        WF3[WF-03: Recordatorios]
+        WF4[WF-04: Correo Inteligente]
+        WF5[WF-05: Resumen Diario]
+        WF6[WF-06: Recetas]
+    end
+
+    N8N --> OLLAMA["🧠 IA Local (Ollama + Gemma3)"]
+
+    subgraph OLLAMA [Ollama]
+        CLASIF[Clasificación de intenciones]
+        GENERA[Generación de respuestas]
+        EXTRAE[Extracción de entidades]
+        TRIAJE[Triaje de urgencias]
+        MEMORIA[Memoria conversacional]
+    end
+
+    OLLAMA --> PG["🗄️ PostgreSQL"]
+
+    subgraph PG [Base de Datos]
+        T1[pacientes]
+        T2[turnos]
+        T3[conversaciones]
+        T4[mensajes]
+        T5[médicos]
+        T6[recetas]
+        T7[historial]
+        T8[logs]
+        T9[usuarios]
+        T10[suscripciones]
+        T11[credenciales]
+        T12[auditoría]
+    end
+
+    PG --> DASH["📊 Dashboard Web (Next.js 14 + shadcn/ui)"]
+
+    subgraph DASH [Dashboard]
+        D1[KPIs]
+        D2[Turnos]
+        D3[Pacientes]
+        D4[Conversaciones]
+        D5[Recetas]
+        D6[Reportes]
+        D7[Configuración]
+        D8[Admin]
+    end
 ```
 
 ## Flujo de Datos
 
 ### 1. Mensaje de WhatsApp entrante
 
-```
-Paciente envía WhatsApp
-        │
-        ▼
-Twilio Webhook ──────────────────────────────┐
-        │                                     │
-        ▼                                     │
-n8n WF-01: AI Agent WhatsApp                  │
-  │                                           │
-  ├─ Busca paciente en DB por teléfono        │
-  ├─ Carga turnos próximos y recetas activas  │
-  ├─ Genera contexto dinámico para el prompt  │
-  ├─ AI Agent (Ollama) clasifica y responde   │
-  ├─ Parsea acciones estructuradas            │
-  ├─ Si es acción → ejecuta (crear/cancelar   │
-  │  turno, receta, urgencia)                 │
-  └─ Responde al paciente por Twilio          │
-        │                                     │
-        ▼                                     │
-Registro en PostgreSQL (mensajes, logs)       │
-        │                                     │
-        ▼                                     │
-Dashboard ← ← ← ← ← ← ← ← ← ← ← ← ← ← ← ← ┘
-  (vía API / Base de datos)
+```mermaid
+sequenceDiagram
+    participant P as Paciente
+    participant T as Twilio
+    participant D as Dashboard
+    participant N as n8n WF-01
+    participant O as Ollama Agent
+    participant PG as PostgreSQL
+    participant TW as Twilio API
+
+    P->>T: Envía WhatsApp
+    T->>D: POST /api/webhooks/twilio
+    D->>D: Validar firma HMAC
+    D->>PG: Guardar mensaje
+    D->>N: Forward con x-webhook-secret
+    N->>PG: Buscar paciente por teléfono
+    N->>PG: Cargar turnos próximos + recetas activas
+    N->>N: Construir contexto dinámico
+    N->>O: AI Agent clasifica y responde
+    O-->>N: Acción estructurada + respuesta
+    alt Acción detectada
+        N->>PG: Ejecutar (crear/cancelar turno, receta, etc.)
+    end
+    N->>TW: Enviar respuesta WhatsApp
+    TW->>P: Mensaje recibido
+    N->>PG: Loggear todo
+    D->>D: Dashboard ← PG (vía API)
 ```
 
 ### 2. Correo electrónico entrante
 
-```
-Email entrante
-        │
-        ▼
-IMAP (n8n WF-04)
-        │
-        ▼
-AI Agent (Ollama)
-  ├─ Lee contenido del email
-  ├─ Clasifica: urgente / spam / responder
-  └─ Decide acción
-        │
-        ├─ URGENTE → Notifica al médico por WhatsApp (Twilio)
-        ├─ SPAM    → Mueve a carpeta de spam
-        └─ Normal  → Redacta borrador de respuesta y lo guarda
+```mermaid
+graph TD
+    EMAIL["📧 Email entrante"] --> IMAP["IMAP (n8n WF-04)"]
+    IMAP --> AGENT["AI Agent (Ollama)"]
+    AGENT --> CLASIF{"Clasificar"}
+    CLASIF -->|URGENTE| WHATSAPP["Notificar médico vía Twilio WhatsApp"]
+    CLASIF -->|SPAM| SPAMF["Mover a carpeta spam"]
+    CLASIF -->|Normal| BORRADOR["Redactar borrador de respuesta"]
+    BORRADOR --> LOG["Guardar en PostgreSQL"]
 ```
 
 ### 3. Recordatorios automáticos
 
-```
-Cron (cada hora)
-        │
-        ▼
-n8n WF-03: Recordatorios
-  ├─ Busca turnos pendientes/confirmados
-  ├─ 24h antes → envía recordatorio
-  ├─ 1h antes  → envía recordatorio
-  ├─ Pide confirmación al paciente
-  └─ Si no confirma → notifica al médico
+```mermaid
+graph LR
+    CRON["⏰ Cron (cada hora, 8-20)"] --> QUERY["Consultar turnos próximos"]
+    QUERY --> CHECK24{"¿24h antes?"}
+    CHECK24 -->|Sí| MSG24["Enviar recordatorio 24h"]
+    QUERY --> CHECK1{"¿1h antes?"}
+    CHECK1 -->|Sí| MSG1["Enviar recordatorio 1h"]
+    MSG24 --> CONFIRMA["Pedir confirmación"]
+    MSG1 --> CONFIRMA
+    CONFIRMA -->|No confirma| NOTIFICA["Notificar al médico"]
+    CONFIRMA -->|Confirma| OK["✓ Marcado como confirmado"]
 ```
 
 ### 4. Dashboard Web
 
-```
-Next.js 14 (App Router)
-        │
-        ├─ Páginas públicas: Login, Recuperar contraseña
-        │
-        └─ Páginas protegidas (dashboard/):
-            ├─ Panel principal (KPIs)
-            ├─ Turnos (lista + FullCalendar)
-            ├─ Pacientes (CRUD + historial)
-            ├─ Conversaciones (bandeja unificada)
-            ├─ Recetas (activas + vencidas)
-            ├─ Reportes (gráficos + métricas)
-            └─ Configuración (perfil, suscripción, integraciones, equipo)
-                │
-                ▼
-        API Routes (app/api/)
-                │
-                ▼
-        Data Store (capa dual)
-            ├─ PostgreSQL (producción) vía Drizzle ORM
-            └─ JSON local (desarrollo) con seed data
+```mermaid
+graph TD
+    NEXT["Next.js 14 (App Router)"] --> PUBLIC["Páginas públicas"]
+    NEXT --> PRIV["Páginas protegidas dashboard/"]
+
+    subgraph PUBLIC [Públicas]
+        LOGIN["/login"]
+        RECUP["/recuperar"]
+        REG["/registro"]
+    end
+
+    subgraph PRIV [Dashboard]
+        KPIS["Panel principal (KPIs)"]
+        TURNOS["Turnos + FullCalendar"]
+        PACI["Pacientes (CRUD + historial)"]
+        CONV["Conversaciones (bandeja unificada)"]
+        RECE["Recetas (activas + vencidas)"]
+        REPORT["Reportes (gráficos + métricas)"]
+        CONFIG["Configuración (perfil, suscripción, equipo)"]
+    end
+
+    PRIV --> API["API Routes (app/api/)"]
+    API --> DB["Data Store (capa dual)"]
+
+    subgraph DB [Dual Storage]
+        PG["PostgreSQL (producción) vía Drizzle ORM"]
+        JSON["JSON local (desarrollo) con seed data"]
+    end
 ```
 
 ### 5. Recuperación de Contraseña
 
-```
-Usuario hace clic en "Olvidé mi contraseña"
-        │
-        ▼
-Formulario /recuperar
-  ├─ Ingresa email
-  ├─ POST /api/auth/forgot-password
-  │     ├─ Genera token criptográfico (crypto.randomBytes)
-  │     ├─ Guarda token + expiry (1 hora) en BD
-  │     └─ Modo dev: devuelve link en JSON
-  │     └─ Producción: enviar por email (SMTP pendiente)
-  │
-  ▼
-Usuario recibe link → /reset-password?token=...
-        │
-        ▼
-Formulario /reset-password
-  ├─ Ingresa nueva contraseña + confirmación
-  ├─ POST /api/auth/reset-password
-  │     ├─ Valida token y expiry
-  │     ├─ Hashea nueva contraseña (bcrypt)
-  │     ├─ Actualiza en BD
-  │     └─ Limpia token
-  │
-  ▼
-Redirect a /login
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant F as /recuperar
+    participant API as POST /api/auth/forgot-password
+    participant DB as PostgreSQL
+    participant R as /reset-password
+    participant RAPI as POST /api/auth/reset-password
 
-También desde Configuración → Perfil:
-  ├─ Formulario "Cambiar contraseña"
-  ├─ POST /api/auth/change-password
-  │     ├─ Requiere contraseña actual
-  │     ├─ Valida nueva contraseña (8+ chars)
-  │     └─ Actualiza en BD
+    U->>F: Ingresa email
+    F->>API: Solicitar reset
+    API->>API: Generar token criptográfico
+    API->>DB: Guardar token + expiry (1h)
+    API-->>F: Link con token (dev: JSON / prod: email)
+    F-->>U: Enlace recibido
+    U->>R: Ingresar nueva contraseña
+    R->>RAPI: POST con token + password
+    RAPI->>DB: Validar token y expiry
+    RAPI->>DB: Hash nueva password (bcrypt)
+    RAPI->>DB: Actualizar + limpiar token
+    RAPI-->>R: Redirect a /login
+    R-->>U: Login exitoso
 ```
 
 ### 6. Multi-Sucursal Scoping
 
-```
-Usuario selecciona sucursal en el Header
-        │
-        ▼
-SucursalContext (lib/sucursal-context.tsx)
-  ├─ Persiste en localStorage + cookie (sucursal_activa)
-  ├─ Emite evento 'sucursal-cambiada' para re-fetcheo
-  └─ Disponible via useSucursal() hook en toda la app
-        │
-        ▼
-Server Components leen cookie sucursal_activa
-        │
-        ▼
-Client Components pasan sucursalId del context a APIs
-        │
-        ▼
-Service Layer (lib/services/*.ts)
-  ├─ turnosService.list(sucursalId?) → filtra por sucursal
-  ├─ pacientesService.list(sucursalId?) → filtra por sucursal
-  └─ dashboard/stats → KPIs scoped a sucursal
-        │
-        ▼
-API Routes (app/api/*)
-  ├─ /api/turnos?sucursalId=
-  ├─ /api/pacientes?sucursalId=
-  ├─ /api/medicos?sucursalId=
-  └─ /api/dashboard/stats?sucursalId=
+```mermaid
+graph LR
+    USER["👤 Usuario"] -->|Selecciona sucursal| HEADER["Header (SucursalSelector)"]
+    HEADER --> CONTEXT["SucursalContext (lib/sucursal-context.tsx)"]
+    CONTEXT --> COOKIE["Cookie: sucursal_activa"]
+    CONTEXT --> LOCAL["localStorage"]
+
+    COOKIE --> SCOMP["Server Components"]
+    LOCAL --> CCOMP["Client Components → APIs"]
+
+    SCOMP --> SL["Service Layer (lib/services/*.ts)"]
+    CCOMP --> SL
+    SL --> TUR["turnosService.list(sucursalId?)"]
+    SL --> PAC["pacientesService.list(sucursalId?)"]
+    SL --> STATS["dashboard/stats → KPIs scoped"]
+
+    TUR --> API["/api/turnos?sucursalId="]
+    PAC --> API2["/api/pacientes?sucursalId="]
+    STATS --> API3["/api/dashboard/stats?sucursalId="]
 ```
 
 ### 7. Feature Gating por Plan
 
-```
-Usuario accede al dashboard
-        │
-        ▼
-Sidebar renderiza items según plan del usuario
-  ├─ Si el usuario TIENE acceso al feature → link habilitado
-  └─ Si el usuario NO tiene acceso:
-        ├─ Item visible con candado 🔒
-        ├─ Badge con nombre del plan requerido
-        └─ Click → redirige a Configuración → Suscripción
+```mermaid
+graph TD
+    USER["👤 Usuario accede al dashboard"] --> PLANES["lib/planes.ts (canon)"]
+    PLANES --> FEATURES["lib/features.ts (gating)"]
 
-Acceso directo por URL (protegido por GatedContent):
-  ├─ Layout verifica plan vs ruta
-  ├─ Si no tiene permiso → redirect al Panel Principal
-  └─ Si tiene permiso → renderiza el contenido
+    FEATURES --> SIDEBAR["Sidebar renderiza items según plan"]
+    SIDEBAR --> CHECK{"¿Tiene acceso?"}
+    CHECK -->|Sí| LINK["Link habilitado"]
+    CHECK -->|No| LOCKED["Item visible con candado 🔒"]
 
-Planes:
-  free (0 USD), starter ($49/mes), professional ($99/mes),
-  premium ($199/mes), enterprise ($499/mes)
+    LOCKED --> CLICK["Click → Config → Suscripción"]
+    CLICK --> UPSELL["Ofrece plan superior"]
+
+    LINK --> GATED["GatedContent (protección por URL)"]
+    GATED --> PERM{"¿Tiene permiso?"}
+    PERM -->|Sí| RENDER["Renderiza contenido"]
+    PERM -->|No| REDIR["Redirect al Panel Principal"]
+
+    PLANES --> MP["lib/mercadopago.ts (pagos CLP)"]
+    PLANES --> LANDING["Landing page /planes"]
+    PLANES --> CONFIGUI["Config → Suscripción (UI)"]
 ```
 
 ## Stack Tecnológico
@@ -252,7 +250,7 @@ Planes:
 | **ORM** | Drizzle ORM | 0.31+ |
 | **Base de Datos** | PostgreSQL | 15+ |
 | **Automatización** | n8n (self-hosted) | Última |
-| **IA Local** | Ollama + Mistral | - |
+| **IA Local** | Ollama + Gemma3 | - |
 | **Mensajería** | Twilio (WhatsApp, SMS) | - |
 | **Autenticación** | NextAuth v5 + bcrypt | - |
 | **Pagos** | MercadoPago SDK | 2.12+ |
@@ -326,8 +324,12 @@ En lugar de una tabla separada, se agregaron columnas `reset_token` y `reset_tok
 - Logs de auditoría de todas las acciones (multi-tenant con tenantId)
 - Logout tracking via events.signOut()
 - Cleanup de auditoría (API DELETE con antigüedad o total)
-- Verificación de firmas Twilio
+- Verificación de firmas Twilio (HMAC-SHA256) y MercadoPago
+- HMAC timingSafeEqual en webhooks n8n
 - Sanitización de prompts IA anti-jailbreak
 - Consentimiento explícito para comunicación por WhatsApp/email
+- CSP centralizado en middleware + COOP/COEP/CORP
+- Docker secrets en producción (credenciales no en .env)
+- Mínimo privilegio PostgreSQL (REVOKE CREATE post-migración)
 - Variables de entorno para todas las credenciales
 - Tokens de recuperación con expiración (1 hora) y un solo uso
