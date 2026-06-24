@@ -1,183 +1,86 @@
-# =============================================================================
-# docker-compose.yml — Consultorio Médico (desarrollo local completo)
-#
-# IMPORTANTE: Este archivo es para DESARROLLO LOCAL. Las contraseñas y
-# secretos aquí definidos son DÉBILES y no deben usarse en producción.
-#
-# Para producción, usar Dokploy con variables de entorno seguras.
-# Ver docs/security.md para el checklist de seguridad.
-#
-# Uso:   docker compose up -d
-#        docker compose down
-#
-# Servicios:
-#   dashboard  → Next.js 14 (puerto 3000)
-#   pgbouncer  → Pool de conexiones PostgreSQL (puerto 6432)
-#   postgres   → PostgreSQL 16 (puerto 5432)
-#   n8n        → Workflow automation (puerto 5678)
-#   ollama     → IA local (puerto 11434, solo LAN)
-# =============================================================================
+version: '3.8'
 
 services:
-  # ─── Dashboard Web ─────────────────────────────────────────────────────────
   dashboard:
     build:
-      context: .
-      dockerfile: dashboard/Dockerfile
-    container_name: consultorio-medico-dashboard
-    restart: unless-stopped
+      context: ./dashboard
+      dockerfile: Dockerfile
     ports:
       - '3000:3000'
+    env_file:
+      - ./dashboard/.env
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:6432/consultorio_medico
-      # Conexión directa a PostgreSQL (para migraciones DDL que no pasan por PgBouncer)
-      - DATABASE_URL_DIRECT=postgresql://postgres:postgres@postgres:5432/consultorio_medico
-      # PgBouncer monitorea la conexión a PostgreSQL, reduce overhead y permite
-      # escalar horizontalmente sin agotar max_connections de PG.
-      # 🔴 OBLIGATORIO en producción: generar con `openssl rand -base64 32`
-      - AUTH_SECRET=${AUTH_SECRET:-}
-      - AUTH_URL=http://localhost:3000
-      - NEXT_PUBLIC_APP_URL=http://localhost:3000
-      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
-      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
-      - TWILIO_WHATSAPP_NUMBER=${TWILIO_WHATSAPP_NUMBER:-}
-      - TWILIO_DOCTOR_NUMBER=${TWILIO_DOCTOR_NUMBER:-}
-      - OLLAMA_BASE_URL=http://ollama:11434
-      - OLLAMA_MODEL=mistral
-      - N8N_BASE_URL=${N8N_BASE_URL:-http://n8n:5678}
-      - N8N_API_KEY=${N8N_API_KEY:-}
-      - N8N_WEBHOOK_INBOUND_URL=${N8N_WEBHOOK_INBOUND_URL:-http://n8n:5678/webhook/consultorio-inbound}
-      # ─── MercadoPago ──────────────────────────────────────────────────
-      - MERCADOPAGO_ACCESS_TOKEN=${MERCADOPAGO_ACCESS_TOKEN:-}
-      - NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY=${NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY:-}
-      - MERCADOPAGO_WEBHOOK_SECRET=${MERCADOPAGO_WEBHOOK_SECRET:-}
-      # ─── Web Push / VAPID (notificaciones push) ───────────────────────
-      - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
-      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
-      - VAPID_CONTACT_EMAIL=${VAPID_CONTACT_EMAIL:-mailto:notificaciones@aicoremed.com}
-    depends_on:
-      pgbouncer:
-        condition: service_healthy
-    networks:
-      - consultorio-net
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-
-  # ─── PostgreSQL ────────────────────────────────────────────────────────────
-  postgres:
-    image: postgres:16-alpine
-    container_name: consultorio-medico-postgres
-    restart: unless-stopped
-    ports:
-      - '127.0.0.1:5432:5432'
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: consultorio_medico
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - consultorio-net
-
-  # ─── PgBouncer (Pool de Conexiones PostgreSQL) ──────────────────────────────
-  pgbouncer:
-    image: edoburu/pgbouncer:latest
-    container_name: consultorio-medico-pgbouncer
-    restart: unless-stopped
-    ports:
-      - '6432:6432'
-    volumes:
-      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini
-      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt
+      - NODE_ENV=development
+      - DATABASE_URL=${DATABASE_URL:-postgres://dashboard_user:${DB_PASSWORD}@postgres:5432/consultorio_medico}
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -h localhost -p 6432 -U postgres || exit 1']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - consultorio-net
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 128M
-
-  # ─── n8n (Workflow Automation) ────────────────────────────────────────────
-  n8n:
-    image: n8nio/n8n:latest
-    container_name: consultorio-medico-n8n
-    restart: unless-stopped
-    ports:
-      - '127.0.0.1:5678:5678'
-    environment:
-      - N8N_PORT=5678
-      - N8N_PROTOCOL=http
-      - N8N_HOST=localhost:5678
-      # 🔴 OBLIGATORIO en producción
-      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-}
-      - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=postgres
-      - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_DATABASE=consultorio_medico
-      - DB_POSTGRESDB_USER=postgres
-      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - N8N_METRICS=false
-      - N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN=true
-    volumes:
-      - n8n-data:/home/node/.n8n
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ['CMD-SHELL', 'wget -qO- http://localhost:5678/healthz || exit 1']
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/api/health']
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-    networks:
-      - consultorio-net
+    restart: unless-stopped
 
-  # ─── Ollama (IA Local) ────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=consultorio_medico
+      - POSTGRES_USER=dashboard_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-changeme}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U dashboard_user -d consultorio_medico']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - '5678:5678'
+    environment:
+      - N8N_HOST=n8n.aicorebots.com
+      - N8N_PROTOCOL=https
+      - N8N_PORT=5678
+      - WEBHOOK_URL=https://n8n.aicorebots.com
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n_user
+      - DB_POSTGRESDB_PASSWORD=${N8N_DB_PASSWORD:-n8npass}
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=168
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   ollama:
     image: ollama/ollama:latest
-    container_name: consultorio-medico-ollama
-    restart: unless-stopped
     ports:
-      - '127.0.0.1:11434:11434'
+      - '11434:11434'
     volumes:
-      - ollama-data:/root/.ollama
+      - ollama_data:/root/.ollama
     deploy:
       resources:
-        limits:
-          memory: 8G
-    networks:
-      - consultorio-net
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
 
 volumes:
-  postgres-data:
-    driver: local
-  n8n-data:
-    driver: local
-  ollama-data:
-    driver: local
-
-networks:
-  consultorio-net:
-    driver: bridge
+  postgres_data:
+  n8n_data:
+  ollama_data:

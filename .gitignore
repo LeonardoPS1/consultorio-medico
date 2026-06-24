@@ -50,6 +50,10 @@ dashboard/next-env.d.ts
 # TypeScript build info
 *.tsbuildinfo
 
+# Test artifacts
+dashboard/playwright-report/
+dashboard/test-results/
+
 # Artifacts
 dashboard/conversaciones
 

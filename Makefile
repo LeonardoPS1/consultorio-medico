@@ -47,7 +47,12 @@ test-watch: ## Tests en modo watch
 
 # ─── CI / Validación completa ──────────────────────────────────────────────
 
-ci: lint format-check type-check test build ## Pipeline CI completo
+ci: lint format-check type-check test build ## Pipeline CI básico (sin E2E)
+
+ci-full: lint format-check type-check test build e2e ## Pipeline CI completo con E2E
+
+e2e: ## Ejecuta tests E2E (Playwright)
+	pnpm --filter ./dashboard e2e
 
 # ─── Base de datos ─────────────────────────────────────────────────────────
 
@@ -62,17 +67,26 @@ db-studio: ## Abre Drizzle Studio
 
 # ─── Docker ────────────────────────────────────────────────────────────────
 
-docker-up: ## Levanta servicios con Docker Compose
+docker-up: ## Levanta servicios con Docker Compose (dev)
 	docker compose up -d
+
+docker-up-prod: ## Levanta servicios con overlay de producción
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 docker-down: ## Detiene servicios
 	docker compose down
 
-docker-build: ## Build de imagen Docker sin caché
+docker-build: ## Build de imagen Docker sin caché (dev)
 	docker compose build --no-cache dashboard
 
 docker-logs: ## Logs de servicios Docker
 	docker compose logs -f
+
+docker-stack: ## Deploy stack a Docker Swarm (producción)
+	docker stack deploy -c docker-compose.yml -c docker-compose.prod.yml consultorio
+
+docker-stack-rm: ## Remueve stack de Docker Swarm
+	docker stack rm consultorio
 
 # ─── Deploy ────────────────────────────────────────────────────────────────
 
