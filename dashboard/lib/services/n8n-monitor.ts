@@ -42,7 +42,10 @@ async function n8nFetch<T>(path: string): Promise<T | null> {
     }
     return res.json() as Promise<T>;
   } catch (err) {
-    safeError(`[n8n-monitor] Error fetching ${path}:`, err instanceof Error ? { message: err.message } : err);
+    safeError(
+      `[n8n-monitor] Error fetching ${path}:`,
+      err instanceof Error ? { message: err.message } : err,
+    );
     return null;
   }
 }
@@ -71,14 +74,17 @@ export async function logWorkflowExecution(input: {
   mensaje: string;
   metadata?: Record<string, unknown>;
 }) {
-  const [result] = await db.insert(workflowLogs).values({
-    workflowId: input.workflowId,
-    workflowName: input.workflowName,
-    executionId: input.executionId,
-    nivel: input.nivel,
-    mensaje: input.mensaje,
-    metadata: input.metadata ?? {},
-  }).returning({ id: workflowLogs.id });
+  const [result] = await db
+    .insert(workflowLogs)
+    .values({
+      workflowId: input.workflowId,
+      workflowName: input.workflowName,
+      executionId: input.executionId,
+      nivel: input.nivel,
+      mensaje: input.mensaje,
+      metadata: input.metadata ?? {},
+    })
+    .returning({ id: workflowLogs.id });
   return result;
 }
 
@@ -99,10 +105,7 @@ export async function getWorkflowLogs(params: {
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const [totalResult] = await db
-    .select({ total: count() })
-    .from(workflowLogs)
-    .where(where);
+  const [totalResult] = await db.select({ total: count() }).from(workflowLogs).where(where);
 
   const rows = await db
     .select()
@@ -126,10 +129,7 @@ export async function getWorkflowErrors(params: {
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const [totalResult] = await db
-    .select({ total: count() })
-    .from(workflowErrors)
-    .where(where);
+  const [totalResult] = await db.select({ total: count() }).from(workflowErrors).where(where);
 
   const rows = await db
     .select()
@@ -148,10 +148,12 @@ export async function getN8nStats() {
 
   const workflows = n8nReachable ? await fetchWorkflows() : [];
   const activeCount = workflows.filter((w) => w.active).length;
-  const inactiveWorkflows = workflows.filter((w) => !w.active).map((w) => ({
-    id: w.id,
-    name: w.name,
-  }));
+  const inactiveWorkflows = workflows
+    .filter((w) => !w.active)
+    .map((w) => ({
+      id: w.id,
+      name: w.name,
+    }));
 
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
@@ -163,16 +165,13 @@ export async function getN8nStats() {
   const [logsSuccess24h] = await db
     .select({ total: count() })
     .from(workflowLogs)
-    .where(
-      and(
-        gte(workflowLogs.createdAt, twentyFourHoursAgo),
-        eq(workflowLogs.nivel, 'info'),
-      ),
-    );
+    .where(and(gte(workflowLogs.createdAt, twentyFourHoursAgo), eq(workflowLogs.nivel, 'info')));
 
-  const healthStatus = !n8nReachable ? 'down'
-    : (inactiveWorkflows.length > 0 || Number(errorsLast24h?.total ?? 0) > 0) ? 'degraded'
-    : 'ok';
+  const healthStatus = !n8nReachable
+    ? 'down'
+    : inactiveWorkflows.length > 0 || Number(errorsLast24h?.total ?? 0) > 0
+      ? 'degraded'
+      : 'ok';
 
   return {
     totalWorkflows: workflows.length,

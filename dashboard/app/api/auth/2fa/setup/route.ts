@@ -4,7 +4,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { createHash } from 'crypto';
-import { generate2faSecret, generateQRCodeBase64, generateBackupCodes, verify2faToken } from '@/lib/mfa';
+import {
+  generate2faSecret,
+  generateQRCodeBase64,
+  generateBackupCodes,
+  verify2faToken,
+} from '@/lib/mfa';
 import { updateUser2FA, getUserByEmail, storeBackupCodes } from '@/lib/data-store';
 import { setup2faSchema } from '@/lib/validations';
 
@@ -45,7 +50,10 @@ export async function POST(request: NextRequest) {
 
     // Verificar el código TOTP
     if (!verify2faToken(token, secret)) {
-      return NextResponse.json({ error: 'Código inválido. Verifica que la hora de tu teléfono esté sincronizada.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Código inválido. Verifica que la hora de tu teléfono esté sincronizada.' },
+        { status: 400 },
+      );
     }
 
     // Guardar el secreto y los backup codes hasheados en el store del usuario

@@ -4,8 +4,14 @@ import { bulkUpdateTurnoStatus } from '@/lib/services/bulk-operations';
 import { safeWarn } from '@/lib/logger';
 
 const ESTADOS_VALIDOS = [
-  'pendiente', 'confirmada', 'en_atencion', 'atendido',
-  'cancelada', 'en_consulta', 'completada', 'no_asistio',
+  'pendiente',
+  'confirmada',
+  'en_atencion',
+  'atendido',
+  'cancelada',
+  'en_consulta',
+  'completada',
+  'no_asistio',
 ];
 
 export async function PATCH(request: Request) {
@@ -19,7 +25,10 @@ export async function PATCH(request: Request) {
     const { turnoIds, estado } = body;
 
     if (!Array.isArray(turnoIds) || turnoIds.length === 0) {
-      return NextResponse.json({ error: 'turnoIds es requerido (array no vacío)' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'turnoIds es requerido (array no vacío)' },
+        { status: 400 },
+      );
     }
     if (!turnoIds.every((id: unknown) => typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id))) {
       return NextResponse.json({ error: 'IDs de turno inválidos' }, { status: 400 });

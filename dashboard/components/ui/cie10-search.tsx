@@ -111,13 +111,9 @@ export function Cie10Search({
               onClick={() => handleSelect(entry)}
               onMouseEnter={() => setHighlightedIdx(idx)}
             >
-              <span className="font-mono font-bold text-primary shrink-0 w-14">
-                {entry.codigo}
-              </span>
+              <span className="font-mono font-bold text-primary shrink-0 w-14">{entry.codigo}</span>
               <span className="flex-1 truncate">{entry.descripcion}</span>
-              <span className="text-[10px] text-muted-foreground shrink-0">
-                {entry.categoria}
-              </span>
+              <span className="text-[10px] text-muted-foreground shrink-0">{entry.categoria}</span>
             </button>
           ))}
         </div>

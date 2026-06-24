@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
         error: 'Error al obtener logs de webhooks',
         ...(process.env.NODE_ENV === 'development' ? { details: (error as Error).message } : {}),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -12,11 +12,7 @@ import { PortalDashboardClient } from './portal-dashboard-client';
 
 export const dynamic = 'force-dynamic';
 
-export default async function PortalDashboardPage({
-  params,
-}: {
-  params: { telefono: string };
-}) {
+export default async function PortalDashboardPage({ params }: { params: { telefono: string } }) {
   const session = await getPortalSession();
   if (!session) {
     redirect('/portal');

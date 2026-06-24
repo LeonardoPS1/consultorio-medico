@@ -62,20 +62,29 @@ interface PortalData {
 
 function getEstadoRecetaColor(estado: string) {
   switch (estado) {
-    case 'activa': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-    case 'vencida': return 'bg-red-100 text-red-800 border-red-200';
-    default: return 'bg-muted text-muted-foreground';
+    case 'activa':
+      return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    case 'vencida':
+      return 'bg-red-100 text-red-800 border-red-200';
+    default:
+      return 'bg-muted text-muted-foreground';
   }
 }
 
 function getEstadoIcon(estado: string) {
   switch (estado) {
-    case 'pendiente': return Clock;
-    case 'confirmada': return CheckCircle2;
-    case 'atendido': return CheckCircle2;
-    case 'cancelada': return XCircle;
-    case 'no_asistio': return AlertCircle;
-    default: return Clock;
+    case 'pendiente':
+      return Clock;
+    case 'confirmada':
+      return CheckCircle2;
+    case 'atendido':
+      return CheckCircle2;
+    case 'cancelada':
+      return XCircle;
+    case 'no_asistio':
+      return AlertCircle;
+    default:
+      return Clock;
   }
 }
 
@@ -85,16 +94,14 @@ export function PortalDashboardClient({ data }: { data: PortalData }) {
   const router = useRouter();
   const { paciente, turnos, recetas, stats } = data;
 
-  const turnosProximos = turnos.filter((t) =>
-    new Date(t.fechaHora) >= new Date() &&
-    t.estado !== 'cancelada' &&
-    t.estado !== 'no_asistio'
+  const turnosProximos = turnos.filter(
+    (t) =>
+      new Date(t.fechaHora) >= new Date() && t.estado !== 'cancelada' && t.estado !== 'no_asistio',
   );
 
-  const turnosPasados = turnos.filter((t) =>
-    new Date(t.fechaHora) < new Date() ||
-    t.estado === 'cancelada' ||
-    t.estado === 'no_asistio'
+  const turnosPasados = turnos.filter(
+    (t) =>
+      new Date(t.fechaHora) < new Date() || t.estado === 'cancelada' || t.estado === 'no_asistio',
   );
 
   return (
@@ -107,9 +114,7 @@ export function PortalDashboardClient({ data }: { data: PortalData }) {
               <User className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">
-                Hola, {paciente.nombre}
-              </h1>
+              <h1 className="text-xl font-bold">Hola, {paciente.nombre}</h1>
               <p className="text-sm text-muted-foreground flex items-center gap-1">
                 <Phone className="h-3 w-3" /> {formatPhone(paciente.telefono)}
               </p>
@@ -145,7 +150,9 @@ export function PortalDashboardClient({ data }: { data: PortalData }) {
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
                 <p className="text-muted-foreground text-xs">Nombre</p>
-                <p className="font-medium">{paciente.nombre} {paciente.apellido}</p>
+                <p className="font-medium">
+                  {paciente.nombre} {paciente.apellido}
+                </p>
               </div>
               <div>
                 <p className="text-muted-foreground text-xs">Telefono</p>
@@ -193,14 +200,19 @@ export function PortalDashboardClient({ data }: { data: PortalData }) {
             ) : (
               <div className="space-y-2">
                 {turnosProximos.map((t) => (
-                  <Card key={t.id} className="border-l-4" style={{ borderLeftColor: getTurnoColor(t.estado) }}>
+                  <Card
+                    key={t.id}
+                    className="border-l-4"
+                    style={{ borderLeftColor: getTurnoColor(t.estado) }}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="font-medium">
-                          {formatDate(t.fechaHora, "EEEE d 'de' MMMM")}
-                        </p>
+                        <p className="font-medium">{formatDate(t.fechaHora, "EEEE d 'de' MMMM")}</p>
                         <Badge
-                          style={{ backgroundColor: `${getTurnoColor(t.estado)}20`, color: getTurnoColor(t.estado) }}
+                          style={{
+                            backgroundColor: `${getTurnoColor(t.estado)}20`,
+                            color: getTurnoColor(t.estado),
+                          }}
                           variant="outline"
                         >
                           {getTurnoLabel(t.estado)}
@@ -239,8 +251,12 @@ export function PortalDashboardClient({ data }: { data: PortalData }) {
                       <CardContent className="p-4 flex items-center gap-3">
                         <Icon className="h-5 w-5 text-muted-foreground shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">{formatDate(t.fechaHora, "d 'de' MMMM")} · {t.hora}</p>
-                          <p className="text-xs text-muted-foreground">{t.motivo || t.tipoConsulta}</p>
+                          <p className="text-sm font-medium">
+                            {formatDate(t.fechaHora, "d 'de' MMMM")} · {t.hora}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {t.motivo || t.tipoConsulta}
+                          </p>
                         </div>
                         <Badge variant="outline" className="text-xs">
                           {getTurnoLabel(t.estado)}
@@ -280,10 +296,14 @@ export function PortalDashboardClient({ data }: { data: PortalData }) {
                         {r.dosis} · {r.duracion || r.frecuencia}
                       </p>
                       {r.indicaciones && (
-                        <p className="text-xs text-muted-foreground/70 mt-1 italic">{r.indicaciones}</p>
+                        <p className="text-xs text-muted-foreground/70 mt-1 italic">
+                          {r.indicaciones}
+                        </p>
                       )}
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        {r.fechaInicio && <span>Desde: {formatDate(r.fechaInicio, 'dd/MM/yy')}</span>}
+                        {r.fechaInicio && (
+                          <span>Desde: {formatDate(r.fechaInicio, 'dd/MM/yy')}</span>
+                        )}
                         {r.fechaFin && <span>Hasta: {formatDate(r.fechaFin, 'dd/MM/yy')}</span>}
                         {r.medicoNombre && <span>Dr/a. {r.medicoNombre}</span>}
                       </div>

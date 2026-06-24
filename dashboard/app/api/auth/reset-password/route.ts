@@ -23,15 +23,16 @@ export async function POST(request: Request) {
     const result = await db
       .select()
       .from(usuarios)
-      .where(
-        sql`${usuarios.resetToken} = ${tokenHash} AND ${usuarios.resetTokenExpires} > NOW()`
-      )
+      .where(sql`${usuarios.resetToken} = ${tokenHash} AND ${usuarios.resetTokenExpires} > NOW()`)
       .limit(1);
 
     if (result.length === 0) {
-      return NextResponse.json({
-        error: 'Token inválido o expirado. Solicitá uno nuevo.',
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Token inválido o expirado. Solicitá uno nuevo.',
+        },
+        { status: 400 },
+      );
     }
 
     const user = result[0];

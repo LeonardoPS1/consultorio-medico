@@ -33,7 +33,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     pasos: [
       {
         titulo: '1. Conecta WhatsApp',
-        descripcion: 'Vinculá tu número de WhatsApp empresarial para que los pacientes puedan comunicarse con el consultorio.',
+        descripcion:
+          'Vinculá tu número de WhatsApp empresarial para que los pacientes puedan comunicarse con el consultorio.',
         tips: [
           'Necesitas una cuenta de Twilio con WhatsApp habilitado',
           'Ingresá las credenciales en Sistema → Credenciales → Twilio',
@@ -79,17 +80,22 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
           'El resumen diario por email ayuda a planificar el día',
           'Las alertas de ausentismo avisan si un paciente no asiste',
         ],
-        enlace: { href: '/dashboard/configuracion?tab=notificaciones', label: 'Ir a Ajustes → Notificaciones' },
+        enlace: {
+          href: '/dashboard/configuracion?tab=notificaciones',
+          label: 'Ir a Ajustes → Notificaciones',
+        },
       },
     ],
     preguntas: [
       {
         pregunta: '¿Cuánto tiempo toma la configuración inicial?',
-        respuesta: 'Aproximadamente 15-20 minutos si ya tienes las credenciales de Twilio. El asistente IA te guía paso a paso con sugerencias personalizadas.',
+        respuesta:
+          'Aproximadamente 15-20 minutos si ya tienes las credenciales de Twilio. El asistente IA te guía paso a paso con sugerencias personalizadas.',
       },
       {
         pregunta: '¿Puedo cambiar la configuración después?',
-        respuesta: 'Sí, todas las configuraciones se pueden modificar en cualquier momento desde Ajustes o Sistema (admin).',
+        respuesta:
+          'Sí, todas las configuraciones se pueden modificar en cualquier momento desde Ajustes o Sistema (admin).',
       },
     ],
   },
@@ -111,7 +117,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Gestionar estados',
-        descripcion: 'Los turnos pasan por varios estados: pendiente → en_curso → atendido / cancelado.',
+        descripcion:
+          'Los turnos pasan por varios estados: pendiente → en_curso → atendido / cancelado.',
         tips: [
           'Usa la vista Kanban (Atención) para arrastrar turnos entre estados',
           'Los estados se actualizan automáticamente desde WhatsApp',
@@ -131,11 +138,13 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Cómo cancelo un turno?',
-        respuesta: 'Desde la lista de turnos, haz clic en el turno y selecciona "Cancelar". También podés cancelar desde el Kanban de Atención arrastrando a la columna "Cancelados".',
+        respuesta:
+          'Desde la lista de turnos, haz clic en el turno y selecciona "Cancelar". También podés cancelar desde el Kanban de Atención arrastrando a la columna "Cancelados".',
       },
       {
         pregunta: '¿Los pacientes pueden pedir turno por WhatsApp?',
-        respuesta: 'Sí, el asistente IA puede gestionar solicitudes de turno automáticamente. Si está habilitado, el paciente pide turno y el sistema agenda según disponibilidad.',
+        respuesta:
+          'Sí, el asistente IA puede gestionar solicitudes de turno automáticamente. Si está habilitado, el paciente pide turno y el sistema agenda según disponibilidad.',
       },
     ],
   },
@@ -167,7 +176,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Portal del Paciente (Premium+)',
-        descripcion: 'Los pacientes acceden a su información desde consultorio.aicorebots.com/portal (disponible en plan Premium+).',
+        descripcion:
+          'Los pacientes acceden a su información desde consultorio.aicorebots.com/portal (disponible en plan Premium+).',
         tips: [
           'Ingresan con su número de teléfono +569',
           'Reciben un magic link por WhatsApp para acceder',
@@ -179,11 +189,13 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Se puede importar una lista de pacientes?',
-        respuesta: 'Actualmente la carga es manual desde el panel. Está planificada la importación por Excel/CSV.',
+        respuesta:
+          'Actualmente la carga es manual desde el panel. Está planificada la importación por Excel/CSV.',
       },
       {
         pregunta: '¿Los pacientes pueden actualizar sus datos?',
-        respuesta: 'Sí, desde el Portal del Paciente pueden editar email, región, comuna y sistema de salud.',
+        respuesta:
+          'Sí, desde el Portal del Paciente pueden editar email, región, comuna y sistema de salud.',
       },
     ],
   },
@@ -217,7 +229,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Qué pasa si un paciente no asiste?',
-        respuesta: 'Puedes marcar el turno como "Cancelado" con motivo "ausente". El sistema enviará una notificación para reagendar.',
+        respuesta:
+          'Puedes marcar el turno como "Cancelado" con motivo "ausente". El sistema enviará una notificación para reagendar.',
       },
     ],
   },
@@ -229,7 +242,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     pasos: [
       {
         titulo: 'Crear una nota SOAP',
-        descripcion: 'Registrá la evolución del paciente usando el formato Subjetivo/Objetivo/Análisis/Plan.',
+        descripcion:
+          'Registrá la evolución del paciente usando el formato Subjetivo/Objetivo/Análisis/Plan.',
         tips: [
           'Accedé desde la ficha del paciente',
           'Subjetivo: síntomas que reporta el paciente',
@@ -252,7 +266,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Qué es el código CIE-10?',
-        respuesta: 'La Clasificación Internacional de Enfermedades (CIE-10) es el estándar mundial para diagnósticos. El sistema incluye un buscador con ~900 códigos para facilitar la selección.',
+        respuesta:
+          'La Clasificación Internacional de Enfermedades (CIE-10) es el estándar mundial para diagnósticos. El sistema incluye un buscador con ~900 códigos para facilitar la selección.',
       },
     ],
   },
@@ -264,7 +279,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     pasos: [
       {
         titulo: 'Agregar paciente a lista de espera',
-        descripcion: 'Cuando un paciente necesita turno pero no hay disponibilidad, podés inscribirlo en la lista.',
+        descripcion:
+          'Cuando un paciente necesita turno pero no hay disponibilidad, podés inscribirlo en la lista.',
         tips: [
           'Disponible en plan Professional o superior',
           'Se asigna al médico y especialidad deseada',
@@ -275,7 +291,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Ofertas automáticas',
-        descripcion: 'Cuando se cancela un turno, el sistema busca automáticamente el primer paciente en espera.',
+        descripcion:
+          'Cuando se cancela un turno, el sistema busca automáticamente el primer paciente en espera.',
         tips: [
           'El paciente recibe un WhatsApp con la oferta del turno',
           'Tiene 15 minutos para aceptar o rechazar',
@@ -287,14 +304,16 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Cuánto tiempo espera un paciente en la lista?',
-        respuesta: 'No hay límite de tiempo. Puede esperar hasta que haya una oferta disponible o hasta que el consultorio lo retire manualmente.',
+        respuesta:
+          'No hay límite de tiempo. Puede esperar hasta que haya una oferta disponible o hasta que el consultorio lo retire manualmente.',
       },
     ],
   },
   {
     id: 'derivaciones',
     titulo: 'Derivaciones entre Especialistas',
-    descripcion: 'Interconsultas y derivaciones de pacientes a otros especialistas con seguimiento completo',
+    descripcion:
+      'Interconsultas y derivaciones de pacientes a otros especialistas con seguimiento completo',
     icono: 'ArrowRightLeft',
     pasos: [
       {
@@ -333,11 +352,13 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Puedo derivar a un médico específico o solo a una especialidad?',
-        respuesta: 'Ambos. Podés elegir un médico destino específico si sabés quién debe atender, o dejar la especialidad abierta para que cualquier médico de esa área pueda tomar el caso.',
+        respuesta:
+          'Ambos. Podés elegir un médico destino específico si sabés quién debe atender, o dejar la especialidad abierta para que cualquier médico de esa área pueda tomar el caso.',
       },
       {
         pregunta: '¿El paciente recibe notificación de la derivación?',
-        respuesta: 'Por ahora las notificaciones son internas entre médicos. El paciente puede enterarse cuando el médico destino lo contacte para agendar el turno.',
+        respuesta:
+          'Por ahora las notificaciones son internas entre médicos. El paciente puede enterarse cuando el médico destino lo contacte para agendar el turno.',
       },
     ],
   },
@@ -387,11 +408,13 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Con qué frecuencia se ejecutan las alertas?',
-        respuesta: 'Actualmente se ejecutan manualmente desde la API. Está planificada la automatización vía n8n para ejecución diaria.',
+        respuesta:
+          'Actualmente se ejecutan manualmente desde la API. Está planificada la automatización vía n8n para ejecución diaria.',
       },
       {
         pregunta: '¿Quién recibe las notificaciones de alertas?',
-        respuesta: 'Todos los médicos activos del consultorio reciben notificaciones push en el dashboard cuando se ejecutan las alertas.',
+        respuesta:
+          'Todos los médicos activos del consultorio reciben notificaciones push en el dashboard cuando se ejecutan las alertas.',
       },
     ],
   },
@@ -425,7 +448,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿La receta tiene validez legal?',
-        respuesta: 'Las recetas son electrónicas con respaldo en base de datos. Consultá la normativa local para recetas digitales.',
+        respuesta:
+          'Las recetas son electrónicas con respaldo en base de datos. Consultá la normativa local para recetas digitales.',
       },
     ],
   },
@@ -450,7 +474,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Qué datos muestra la verificación QR?',
-        respuesta: 'Muestra paciente, médico, medicamentos, fecha de emisión y vigencia. Confirma que la receta fue emitida por el consultorio.',
+        respuesta:
+          'Muestra paciente, médico, medicamentos, fecha de emisión y vigencia. Confirma que la receta fue emitida por el consultorio.',
       },
     ],
   },
@@ -475,7 +500,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿El certificado QR tiene validez oficial?',
-        respuesta: 'El QR verifica que el certificado fue emitido por el consultorio. Cada certificado tiene un hash único que garantiza su integridad.',
+        respuesta:
+          'El QR verifica que el certificado fue emitido por el consultorio. Cada certificado tiene un hash único que garantiza su integridad.',
       },
     ],
   },
@@ -509,7 +535,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿La IA responde todos los mensajes?',
-        respuesta: 'Solo si está habilitado en Sistema → Asistente IA. Las urgencias siempre se derivan al médico. Las respuestas automáticas están limitadas a mensajes no urgentes.',
+        respuesta:
+          'Solo si está habilitado en Sistema → Asistente IA. Las urgencias siempre se derivan al médico. Las respuestas automáticas están limitadas a mensajes no urgentes.',
       },
     ],
   },
@@ -534,7 +561,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Puedo tener plantillas en distintos idiomas?',
-        respuesta: 'Sí, las plantillas son texto libre. Podés crear versiones en español, inglés o cualquier idioma que necesites.',
+        respuesta:
+          'Sí, las plantillas son texto libre. Podés crear versiones en español, inglés o cualquier idioma que necesites.',
       },
     ],
   },
@@ -587,7 +615,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Se puede desactivar la encuesta?',
-        respuesta: 'Sí, desde Ajustes → Notificaciones podés desactivar el envío automático de encuestas.',
+        respuesta:
+          'Sí, desde Ajustes → Notificaciones podés desactivar el envío automático de encuestas.',
       },
     ],
   },
@@ -620,7 +649,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿La PWA consume muchos datos?',
-        respuesta: 'No, la PWA almacena en caché los recursos necesarios y solo descarga datos cuando es necesario. Es más liviana que una app nativa.',
+        respuesta:
+          'No, la PWA almacena en caché los recursos necesarios y solo descarga datos cuando es necesario. Es más liviana que una app nativa.',
       },
     ],
   },
@@ -703,15 +733,18 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Quién puede acceder a Sistema?',
-        respuesta: 'Solo usuarios con rol de administrador. Los médicos y staff no ven esta sección.',
+        respuesta:
+          'Solo usuarios con rol de administrador. Los médicos y staff no ven esta sección.',
       },
       {
         pregunta: '¿Los feature toggles afectan a todos los usuarios?',
-        respuesta: 'Sí, los cambios se aplican a todo el consultorio (todos los médicos y pacientes).',
+        respuesta:
+          'Sí, los cambios se aplican a todo el consultorio (todos los médicos y pacientes).',
       },
       {
         pregunta: '¿Los backups son automáticos?',
-        respuesta: 'Sí, n8n ejecuta un backup diario a las 3:00 AM. También podés generar backups manuales desde Sistema.',
+        respuesta:
+          'Sí, n8n ejecuta un backup diario a las 3:00 AM. También podés generar backups manuales desde Sistema.',
       },
     ],
   },
@@ -744,7 +777,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Puedo probar features Premium antes de contratar?',
-        respuesta: 'Los features bloqueados muestran el plan requerido. No hay período de prueba automático, contactanos para evaluar tu caso.',
+        respuesta:
+          'Los features bloqueados muestran el plan requerido. No hay período de prueba automático, contactanos para evaluar tu caso.',
       },
     ],
   },
@@ -788,7 +822,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Qué hago si no me llega el magic link?',
-        respuesta: 'Verifica que el número esté escrito correctamente con +569. Si sigue sin llegar, contacta al consultorio para verificar tus datos.',
+        respuesta:
+          'Verifica que el número esté escrito correctamente con +569. Si sigue sin llegar, contacta al consultorio para verificar tus datos.',
       },
     ],
   },
@@ -820,7 +855,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Bloqueo automático por inasistencia',
-        descripcion: 'El sistema puede bloquear automáticamente pacientes con inasistencias recurrentes.',
+        descripcion:
+          'El sistema puede bloquear automáticamente pacientes con inasistencias recurrentes.',
         tips: [
           'Configurable desde Ajustes del sistema',
           'Se activa después de N inasistencias en un período',
@@ -831,11 +867,13 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Qué pasa si un paciente bloqueado intenta agendar un turno?',
-        respuesta: 'El sistema rechazará la solicitud automáticamente y puede enviar un mensaje indicando que debe contactar al consultorio para regularizar su situación.',
+        respuesta:
+          'El sistema rechazará la solicitud automáticamente y puede enviar un mensaje indicando que debe contactar al consultorio para regularizar su situación.',
       },
       {
         pregunta: '¿El paciente sabe que está bloqueado?',
-        respuesta: 'Por defecto no se le notifica automáticamente, pero podés configurar un mensaje personalizado desde Ajustes.',
+        respuesta:
+          'Por defecto no se le notifica automáticamente, pero podés configurar un mensaje personalizado desde Ajustes.',
       },
     ],
   },
@@ -847,7 +885,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     pasos: [
       {
         titulo: 'Agendar una consulta virtual',
-        descripcion: 'Al crear un nuevo turno, seleccioná "Virtual" como modalidad de consulta. El sistema creará automáticamente una sala de videollamada y le enviará el link al paciente por WhatsApp.',
+        descripcion:
+          'Al crear un nuevo turno, seleccioná "Virtual" como modalidad de consulta. El sistema creará automáticamente una sala de videollamada y le enviará el link al paciente por WhatsApp.',
         tips: [
           'Disponible solo en plan Professional o superior',
           'El paciente recibe el link con su token de acceso único',
@@ -858,7 +897,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Iniciar una videoconsulta',
-        descripcion: 'Desde el Kanban de Atención, los turnos virtuales tienen un botón "Video" que abre la sala. También podés iniciarla desde el Portal del Paciente.',
+        descripcion:
+          'Desde el Kanban de Atención, los turnos virtuales tienen un botón "Video" que abre la sala. También podés iniciarla desde el Portal del Paciente.',
         tips: [
           'Hacé clic en "Video" junto al turno en la columna de Pendientes o En Atención',
           'La sala se abre en una ventana nueva a pantalla completa',
@@ -869,7 +909,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Durante la videollamada',
-        descripcion: 'La sala incluye controles de cámara, micrófono, compartir pantalla y finalizar llamada.',
+        descripcion:
+          'La sala incluye controles de cámara, micrófono, compartir pantalla y finalizar llamada.',
         tips: [
           'Usá los controles inferiores para mutearte o apagar la cámara',
           'Compartí pantalla para mostrar resultados o indicaciones',
@@ -879,7 +920,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Acceso del paciente',
-        descripcion: 'El paciente recibe un link por WhatsApp con su token de acceso. Solo necesita hacer clic para ingresar.',
+        descripcion:
+          'El paciente recibe un link por WhatsApp con su token de acceso. Solo necesita hacer clic para ingresar.',
         tips: [
           'El link incluye un token de acceso único y temporal',
           'El paciente debe ingresar 5 minutos antes de la hora agendada',
@@ -891,27 +933,33 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Qué necesito para hacer una videoconsulta?',
-        respuesta: 'Solo necesitás un navegador moderno (Chrome, Firefox, Safari o Edge), cámara web y micrófono. No requiere instalar ningún software adicional. Tus pacientes tampoco necesitan descargar nada.',
+        respuesta:
+          'Solo necesitás un navegador moderno (Chrome, Firefox, Safari o Edge), cámara web y micrófono. No requiere instalar ningún software adicional. Tus pacientes tampoco necesitan descargar nada.',
       },
       {
         pregunta: '¿Cuántos pacientes puedo atender simultáneamente?',
-        respuesta: 'Las videoconsultas son uno a uno (médico-paciente). No hay límite de videoconsultas por día ni por mes.',
+        respuesta:
+          'Las videoconsultas son uno a uno (médico-paciente). No hay límite de videoconsultas por día ni por mes.',
       },
       {
         pregunta: '¿Es segura la videollamada?',
-        respuesta: 'Sí. Las salas son privadas y solo pueden acceder el médico y el paciente con su token único. Los tokens son temporales y expiran. La comunicación está encriptada y no se almacena ningún registro de audio o video.',
+        respuesta:
+          'Sí. Las salas son privadas y solo pueden acceder el médico y el paciente con su token único. Los tokens son temporales y expiran. La comunicación está encriptada y no se almacena ningún registro de audio o video.',
       },
       {
         pregunta: '¿El paciente necesita crear una cuenta?',
-        respuesta: 'No. El paciente recibe un link directo por WhatsApp con su token de acceso. Solo hace clic y entra a la sala. No requiere registro, contraseña ni descarga de aplicaciones.',
+        respuesta:
+          'No. El paciente recibe un link directo por WhatsApp con su token de acceso. Solo hace clic y entra a la sala. No requiere registro, contraseña ni descarga de aplicaciones.',
       },
       {
         pregunta: '¿En qué dispositivos funciona?',
-        respuesta: 'Funciona en computadores (Windows, Mac, Linux) y dispositivos móviles (Android, iOS) con cualquier navegador moderno.',
+        respuesta:
+          'Funciona en computadores (Windows, Mac, Linux) y dispositivos móviles (Android, iOS) con cualquier navegador moderno.',
       },
       {
         pregunta: '¿Qué plan incluye telemedicina?',
-        respuesta: 'La telemedicina está disponible en el plan Professional o superior. Incluye videoconsultas ilimitadas con generación automática de sala y notificación al paciente por WhatsApp.',
+        respuesta:
+          'La telemedicina está disponible en el plan Professional o superior. Incluye videoconsultas ilimitadas con generación automática de sala y notificación al paciente por WhatsApp.',
       },
     ],
   },
@@ -945,7 +993,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Respaldo legal',
-        descripcion: 'Cada consentimiento cumple con la Ley 20.584 de derechos y deberes de los pacientes.',
+        descripcion:
+          'Cada consentimiento cumple con la Ley 20.584 de derechos y deberes de los pacientes.',
         tips: [
           'La IP de firma permite rastrear dónde se firmó',
           'El nombre registrado es el que el paciente declara al firmar',
@@ -957,22 +1006,24 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Este consentimiento tiene validez legal?',
-        respuesta: 'Sí. El registro incluye fecha, hora, nombre del paciente, IP de firma y médico responsable, cumpliendo con los requisitos de la Ley 20.584. Para máxima validez, recomendamos adjuntar el PDF firmado.',
+        respuesta:
+          'Sí. El registro incluye fecha, hora, nombre del paciente, IP de firma y médico responsable, cumpliendo con los requisitos de la Ley 20.584. Para máxima validez, recomendamos adjuntar el PDF firmado.',
       },
       {
         pregunta: '¿Puedo generar un PDF del consentimiento?',
-        respuesta: 'Sí. Podés generar y adjuntar un PDF con la información del consentimiento y la firma del paciente para tener un respaldo físico.',
+        respuesta:
+          'Sí. Podés generar y adjuntar un PDF con la información del consentimiento y la firma del paciente para tener un respaldo físico.',
       },
     ],
   },
 ];
 
 export function getSeccionAyuda(id: string): AyudaSeccion | undefined {
-  return SECCIONES_AYUDA.find(s => s.id === id);
+  return SECCIONES_AYUDA.find((s) => s.id === id);
 }
 
 export function getAyudaSidebarLinks() {
-  return SECCIONES_AYUDA.map(s => ({
+  return SECCIONES_AYUDA.map((s) => ({
     id: s.id,
     titulo: s.titulo,
     icono: s.icono,

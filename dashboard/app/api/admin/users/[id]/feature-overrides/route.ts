@@ -19,53 +19,58 @@ import { z } from 'zod';
 
 // ─── GET ─────────────────────────────────────────────────────
 
-export const GET = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
-  const session = await requireAuth();
-  if (session.user.role !== 'admin') fail('No autorizado', 403);
+export const GET = apiHandler(
+  async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    const session = await requireAuth();
+    if (session.user.role !== 'admin') fail('No autorizado', 403);
 
-  const { id: userId } = await params;
+    const { id: userId } = await params;
 
-  const overrides = await db
-    .select({
-      featureId: userFeatureOverrides.featureId,
-    })
-    .from(userFeatureOverrides)
-    .where(eq(userFeatureOverrides.usuarioId, userId));
+    const overrides = await db
+      .select({
+        featureId: userFeatureOverrides.featureId,
+      })
+      .from(userFeatureOverrides)
+      .where(eq(userFeatureOverrides.usuarioId, userId));
 
-  // El cliente espera un array plano de featureIds
-  return ok({
-    featureIds: overrides.map(o => o.featureId),
-  });
-});
+    // El cliente espera un array plano de featureIds
+    return ok({
+      featureIds: overrides.map((o) => o.featureId),
+    });
+  },
+);
 
 // ─── PATCH ───────────────────────────────────────────────────
 
-export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
-  const session = await requireAuth();
-  if (session.user.role !== 'admin') fail('No autorizado', 403);
+export const PATCH = apiHandler(
+  async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    const session = await requireAuth();
+    if (session.user.role !== 'admin') fail('No autorizado', 403);
 
-  const { id: userId } = await params;
+    const { id: userId } = await params;
 
-  const body = await parseBody(request, z.object({
-    featureIds: z.array(z.string()),
-  }));
+    const body = await parseBody(
+      request,
+      z.object({
+        featureIds: z.array(z.string()),
+      }),
+    );
 
-  // Primero, eliminar todos los overrides existentes para este usuario
-  await db
-    .delete(userFeatureOverrides)
-    .where(eq(userFeatureOverrides.usuarioId, userId));
+    // Primero, eliminar todos los overrides existentes para este usuario
+    await db.delete(userFeatureOverrides).where(eq(userFeatureOverrides.usuarioId, userId));
 
-  // Luego, insertar los nuevos overrides
-  if (body.featureIds.length > 0) {
-    const values = body.featureIds.map(featureId => ({
-      usuarioId: userId,
-      featureId,
-    }));
+    // Luego, insertar los nuevos overrides
+    if (body.featureIds.length > 0) {
+      const values = body.featureIds.map((featureId) => ({
+        usuarioId: userId,
+        featureId,
+      }));
 
-    await db.insert(userFeatureOverrides).values(values);
-  }
+      await db.insert(userFeatureOverrides).values(values);
+    }
 
-  return ok({
-    success: true,
-  });
-});
+    return ok({
+      success: true,
+    });
+  },
+);

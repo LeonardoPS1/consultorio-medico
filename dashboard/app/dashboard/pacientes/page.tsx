@@ -36,10 +36,9 @@ async function getPacientes(sucursalId?: string): Promise<PacientesApiResponse |
     params.set('limit', '100');
     params.set('offset', '0');
     if (sucursalId) params.set('sucursalId', sucursalId);
-    const res = await fetch(
-      `http://localhost:3000/api/pacientes?${params.toString()}`,
-      { cache: 'no-store' },
-    );
+    const res = await fetch(`http://localhost:3000/api/pacientes?${params.toString()}`, {
+      cache: 'no-store',
+    });
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -64,20 +63,20 @@ export default async function PacientesPage() {
       <PageHeader title="Pacientes" description="Historial y datos de tus pacientes" />
 
       {/* Estadísticas (server-rendered) */}
-<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-  <div className="rounded-lg bg-primary/5 p-3 text-center">
-    <p className="text-xl sm:text-2xl font-bold text-primary">{total}</p>
-    <p className="text-xs text-muted-foreground">Total pacientes</p>
-  </div>
-  <div className="rounded-lg bg-emerald-500/5 p-3 text-center">
-    <p className="text-xl sm:text-2xl font-bold text-emerald-600">{conTurnos}</p>
-    <p className="text-xs text-muted-foreground">Con turnos</p>
-  </div>
-  <div className="rounded-lg bg-amber-500/5 p-3 text-center">
-    <p className="text-xl sm:text-2xl font-bold text-amber-600">{nuevos}</p>
-    <p className="text-xs text-muted-foreground">Nuevos</p>
-  </div>
-</div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-lg bg-primary/5 p-3 text-center">
+          <p className="text-xl sm:text-2xl font-bold text-primary">{total}</p>
+          <p className="text-xs text-muted-foreground">Total pacientes</p>
+        </div>
+        <div className="rounded-lg bg-emerald-500/5 p-3 text-center">
+          <p className="text-xl sm:text-2xl font-bold text-emerald-600">{conTurnos}</p>
+          <p className="text-xs text-muted-foreground">Con turnos</p>
+        </div>
+        <div className="rounded-lg bg-amber-500/5 p-3 text-center">
+          <p className="text-xl sm:text-2xl font-bold text-amber-600">{nuevos}</p>
+          <p className="text-xs text-muted-foreground">Nuevos</p>
+        </div>
+      </div>
 
       {/* Lista + búsqueda + modal (client) */}
       <PacientesClient initialPacientes={pacientes} />

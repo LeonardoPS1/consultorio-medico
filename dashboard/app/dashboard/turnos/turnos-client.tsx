@@ -3,13 +3,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useSucursal } from '@/lib/sucursal-context';
-import {
-  Calendar,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  List,
-} from 'lucide-react';
+import { Calendar, Plus, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { PageAnimation } from '@/components/dashboard/page-animation';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
@@ -26,10 +20,7 @@ import { Input } from '@/components/ui/input';
 import { TurnosFilters } from '@/components/turnos/turnos-filters';
 import { TurnosTable } from '@/components/turnos/turnos-table';
 import { TurnosCalendar } from '@/components/turnos/turnos-calendar';
-import {
-  TurnoDetailModal,
-  CancelTurnoDialog,
-} from '@/components/turnos/turno-detail-modal';
+import { TurnoDetailModal, CancelTurnoDialog } from '@/components/turnos/turno-detail-modal';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -84,7 +75,11 @@ export function TurnosClient({
   const [loading, setLoading] = useState(false);
 
   // Waitlist reassignment after cancel
-  const [showWaitlistReassign, setShowWaitlistReassign] = useState<{ turnoId: string; medicoId: string; pacienteNombre: string } | null>(null);
+  const [showWaitlistReassign, setShowWaitlistReassign] = useState<{
+    turnoId: string;
+    medicoId: string;
+    pacienteNombre: string;
+  } | null>(null);
   const [waitlistCandidates, setWaitlistCandidates] = useState<any[]>([]);
   const [waitlistReassignLoading, setWaitlistReassignLoading] = useState(false);
 
@@ -137,7 +132,9 @@ export function TurnosClient({
         e.preventDefault();
         setShowFilters(true);
         setTimeout(() => {
-          const input = document.querySelector<HTMLInputElement>('[placeholder="Nombre del paciente..."]');
+          const input = document.querySelector<HTMLInputElement>(
+            '[placeholder="Nombre del paciente..."]',
+          );
           input?.focus();
         }, 100);
       }
@@ -152,63 +149,69 @@ export function TurnosClient({
 
   // ─── Fetch turnos for a date ───────────────────────
 
-  const fetchTurnos = useCallback(async (fecha: Date, searchTerm?: string) => {
-    setLoading(true);
-    try {
-      const fechaStr = fecha.toISOString().split('T')[0];
-      const params = new URLSearchParams();
-      if (searchTerm) {
-        params.set('search', searchTerm);
-      } else {
-        params.set('fecha', fechaStr);
-      }
-      params.set('limit', '200');
-      if (sucursalId) params.set('sucursalId', sucursalId);
+  const fetchTurnos = useCallback(
+    async (fecha: Date, searchTerm?: string) => {
+      setLoading(true);
+      try {
+        const fechaStr = fecha.toISOString().split('T')[0];
+        const params = new URLSearchParams();
+        if (searchTerm) {
+          params.set('search', searchTerm);
+        } else {
+          params.set('fecha', fechaStr);
+        }
+        params.set('limit', '200');
+        if (sucursalId) params.set('sucursalId', sucursalId);
 
-      const res = await fetch(`/api/turnos?${params.toString()}`);
-      if (!res.ok) throw new Error('Error al cargar turnos');
-      const json = await res.json();
-      setTurnos(json.data || []);
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'No se pudieron cargar los turnos',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [sucursalId]);
+        const res = await fetch(`/api/turnos?${params.toString()}`);
+        if (!res.ok) throw new Error('Error al cargar turnos');
+        const json = await res.json();
+        setTurnos(json.data || []);
+      } catch {
+        toast({
+          title: 'Error',
+          description: 'No se pudieron cargar los turnos',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [sucursalId],
+  );
 
   // ─── Fetch turnos for a full month ───────────────────
 
-  const fetchTurnosMes = useCallback(async (fecha: Date) => {
-    setLoading(true);
-    try {
-      const year = fecha.getFullYear();
-      const month = fecha.getMonth();
-      const firstDay = new Date(year, month, 1).toISOString().split('T')[0];
-      const lastDay = new Date(year, month + 1, 0).toISOString().split('T')[0];
-      const params = new URLSearchParams();
-      params.set('fecha_desde', firstDay);
-      params.set('fecha_hasta', lastDay);
-      params.set('limit', '500');
-      if (sucursalId) params.set('sucursalId', sucursalId);
+  const fetchTurnosMes = useCallback(
+    async (fecha: Date) => {
+      setLoading(true);
+      try {
+        const year = fecha.getFullYear();
+        const month = fecha.getMonth();
+        const firstDay = new Date(year, month, 1).toISOString().split('T')[0];
+        const lastDay = new Date(year, month + 1, 0).toISOString().split('T')[0];
+        const params = new URLSearchParams();
+        params.set('fecha_desde', firstDay);
+        params.set('fecha_hasta', lastDay);
+        params.set('limit', '500');
+        if (sucursalId) params.set('sucursalId', sucursalId);
 
-      const res = await fetch(`/api/turnos?${params.toString()}`);
-      if (!res.ok) throw new Error('Error al cargar turnos del mes');
-      const json = await res.json();
-      setTurnos(json.data || []);
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'No se pudieron cargar los turnos del mes',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [sucursalId]);
+        const res = await fetch(`/api/turnos?${params.toString()}`);
+        if (!res.ok) throw new Error('Error al cargar turnos del mes');
+        const json = await res.json();
+        setTurnos(json.data || []);
+      } catch {
+        toast({
+          title: 'Error',
+          description: 'No se pudieron cargar los turnos del mes',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [sucursalId],
+  );
 
   // ─── Fetch on calendar view change ─────────────────────
   useEffect(() => {
@@ -306,9 +309,15 @@ export function TurnosClient({
       let pacienteId = data.pacienteId;
       let pacienteNombre = data.paciente;
       if (!pacienteId) {
-        const busquedaPaciente = await fetch(`/api/pacientes?search=${encodeURIComponent(data.paciente)}&limit=5`);
+        const busquedaPaciente = await fetch(
+          `/api/pacientes?search=${encodeURIComponent(data.paciente)}&limit=5`,
+        );
         let pacientesJson;
-        try { pacientesJson = await busquedaPaciente.json(); } catch { pacientesJson = { data: [] }; }
+        try {
+          pacientesJson = await busquedaPaciente.json();
+        } catch {
+          pacientesJson = { data: [] };
+        }
         const pacienteEncontrado = pacientesJson.data?.[0];
         if (pacienteEncontrado) {
           pacienteId = pacienteEncontrado.id;
@@ -327,18 +336,32 @@ export function TurnosClient({
                 const createRes = await fetch('/api/pacientes', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ nombre, apellido, telefono: '0000000000', sucursalId: sucursalId || undefined }),
+                  body: JSON.stringify({
+                    nombre,
+                    apellido,
+                    telefono: '0000000000',
+                    sucursalId: sucursalId || undefined,
+                  }),
                 });
                 if (!createRes.ok) {
-                  const errBody = await createRes.json().catch(() => ({ error: 'Error al crear paciente' }));
-                  toast({ title: 'Error', description: errBody.error || 'No se pudo crear el paciente', variant: 'destructive' });
+                  const errBody = await createRes
+                    .json()
+                    .catch(() => ({ error: 'Error al crear paciente' }));
+                  toast({
+                    title: 'Error',
+                    description: errBody.error || 'No se pudo crear el paciente',
+                    variant: 'destructive',
+                  });
                   resolve();
                   return;
                 }
                 const createdPaciente = await createRes.json();
                 pacienteId = createdPaciente.data?.id || createdPaciente.id;
                 pacienteNombre = `${nombre} ${apellido}`;
-                toast({ title: 'Paciente creado', description: `${pacienteNombre} — recordá completar sus datos después` });
+                toast({
+                  title: 'Paciente creado',
+                  description: `${pacienteNombre} — recordá completar sus datos después`,
+                });
                 resolve();
               },
             });
@@ -358,7 +381,11 @@ export function TurnosClient({
             data.medico.toLowerCase().includes(m.nombre.toLowerCase()),
         );
         if (!medicoEncontrado) {
-          toast({ title: 'Error', description: 'Médico no encontrado. Verificá la lista de médicos.', variant: 'destructive' });
+          toast({
+            title: 'Error',
+            description: 'Médico no encontrado. Verificá la lista de médicos.',
+            variant: 'destructive',
+          });
           return;
         }
         medicoId = medicoEncontrado.id;
@@ -421,13 +448,11 @@ export function TurnosClient({
   };
 
   const actualizarEstado = async (id: string, nuevoEstado: TurnoEstado, descripcion: string) => {
-    const prevTurno = turnos.find(t => t.id === id);
+    const prevTurno = turnos.find((t) => t.id === id);
     const prevEstado = prevTurno?.estado;
 
-    setSavingStates(prev => new Set(prev).add(id));
-    setTurnos((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, estado: nuevoEstado } : t)),
-    );
+    setSavingStates((prev) => new Set(prev).add(id));
+    setTurnos((prev) => prev.map((t) => (t.id === id ? { ...t, estado: nuevoEstado } : t)));
     toast({ title: descripcion });
 
     try {
@@ -443,9 +468,7 @@ export function TurnosClient({
       }
     } catch {
       if (prevEstado) {
-        setTurnos((prev) =>
-          prev.map((t) => (t.id === id ? { ...t, estado: prevEstado } : t)),
-        );
+        setTurnos((prev) => prev.map((t) => (t.id === id ? { ...t, estado: prevEstado } : t)));
       }
       toast({
         title: 'Error',
@@ -453,7 +476,11 @@ export function TurnosClient({
         variant: 'destructive',
       });
     } finally {
-      setSavingStates(prev => { const next = new Set(prev); next.delete(id); return next; });
+      setSavingStates((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -472,7 +499,11 @@ export function TurnosClient({
       toast({ title: 'Turno actualizado' });
       setEditTurno(null);
     } catch {
-      toast({ title: 'Error', description: 'No se pudo actualizar el turno', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el turno',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -481,9 +512,7 @@ export function TurnosClient({
 
     // Optimistic update
     setTurnos((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, estado: 'cancelada' as const } : t,
-      ),
+      prev.map((t) => (t.id === id ? { ...t, estado: 'cancelada' as const } : t)),
     );
     setShowCancelDialog(null);
     toast({ title: 'Turno cancelado', description: 'El turno fue cancelado correctamente' });
@@ -492,7 +521,11 @@ export function TurnosClient({
       await fetch(`/api/turnos/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'cancelada', motivoCancelacion: motivo, skipWaitlist: true }),
+        body: JSON.stringify({
+          estado: 'cancelada',
+          motivoCancelacion: motivo,
+          skipWaitlist: true,
+        }),
       });
 
       // Check for waitlist candidates
@@ -526,14 +559,17 @@ export function TurnosClient({
     }
   };
 
-  const handleCalendarDateChange = useCallback((date: Date) => {
-    setSelectedDate(date);
-    if (calendarViewMode === 'mes') {
-      fetchTurnosMes(date);
-    } else {
-      fetchTurnos(date);
-    }
-  }, [calendarViewMode, fetchTurnos, fetchTurnosMes]);
+  const handleCalendarDateChange = useCallback(
+    (date: Date) => {
+      setSelectedDate(date);
+      if (calendarViewMode === 'mes') {
+        fetchTurnosMes(date);
+      } else {
+        fetchTurnos(date);
+      }
+    },
+    [calendarViewMode, fetchTurnos, fetchTurnosMes],
+  );
 
   // ─── Render ────────────────────────────────────────────
 
@@ -580,12 +616,17 @@ export function TurnosClient({
               <h3 className="text-sm sm:text-lg font-semibold min-w-[120px] sm:min-w-[200px] text-center truncate">
                 <span className="hidden sm:inline">
                   {selectedDate.toLocaleDateString('es-CL', {
-                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
                   })}
                 </span>
                 <span className="sm:hidden">
                   {selectedDate.toLocaleDateString('es-CL', {
-                    weekday: 'short', day: 'numeric', month: 'short',
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
                   })}
                 </span>
               </h3>
@@ -648,7 +689,10 @@ export function TurnosClient({
       <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
         {['pendiente', 'confirmada', 'en_atencion', 'atendido', 'cancelada'].map((estado) => (
           <span key={estado} className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor(estado) }} />
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: getTurnoColor(estado) }}
+            />
             {getTurnoLabel(estado)}
           </span>
         ))}
@@ -670,13 +714,17 @@ export function TurnosClient({
 
       <TurnoDetailModal
         editTurno={editTurno}
-        onOpenChange={(open) => { if (!open) setEditTurno(null); }}
+        onOpenChange={(open) => {
+          if (!open) setEditTurno(null);
+        }}
         onSaveEdit={handleSaveEdit}
       />
 
       <CancelTurnoDialog
         showCancelDialog={showCancelDialog}
-        onOpenChange={(open) => { if (!open) setShowCancelDialog(null); }}
+        onOpenChange={(open) => {
+          if (!open) setShowCancelDialog(null);
+        }}
         onConfirmCancel={handleConfirmCancel}
       />
 
@@ -684,7 +732,10 @@ export function TurnosClient({
       <Dialog
         open={!!showWaitlistReassign}
         onOpenChange={(o) => {
-          if (!o) { setShowWaitlistReassign(null); setWaitlistCandidates([]); }
+          if (!o) {
+            setShowWaitlistReassign(null);
+            setWaitlistCandidates([]);
+          }
         }}
       >
         <DialogContent className="sm:max-w-[500px]">
@@ -710,27 +761,49 @@ export function TurnosClient({
                   <div
                     key={c.id}
                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={() => { setShowWaitlistReassign(null); setWaitlistCandidates([]); }}
+                    onClick={() => {
+                      setShowWaitlistReassign(null);
+                      setWaitlistCandidates([]);
+                    }}
                   >
                     <div>
-                      <p className="font-medium text-sm">{c.paciente?.nombre} {c.paciente?.apellido}</p>
-                      <p className="text-xs text-muted-foreground">En lista desde: {new Date(c.fechaInscripcion).toLocaleDateString()}</p>
+                      <p className="font-medium text-sm">
+                        {c.paciente?.nombre} {c.paciente?.apellido}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        En lista desde: {new Date(c.fechaInscripcion).toLocaleDateString()}
+                      </p>
                     </div>
-                    <Button size="sm" variant="outline">Asignar</Button>
+                    <Button size="sm" variant="outline">
+                      Asignar
+                    </Button>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">No hay pacientes en lista de espera para este médico.</p>
+                <p className="text-sm text-muted-foreground">
+                  No hay pacientes en lista de espera para este médico.
+                </p>
               </div>
             )}
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => { setShowWaitlistReassign(null); setWaitlistCandidates([]); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowWaitlistReassign(null);
+                setWaitlistCandidates([]);
+              }}
+            >
               Cancelar
             </Button>
-            <Button onClick={() => { setShowWaitlistReassign(null); setWaitlistCandidates([]); }}>
+            <Button
+              onClick={() => {
+                setShowWaitlistReassign(null);
+                setWaitlistCandidates([]);
+              }}
+            >
               Cerrar
             </Button>
           </DialogFooter>
@@ -740,7 +813,9 @@ export function TurnosClient({
       {/* Waitlist proposal dialog */}
       <Dialog
         open={!!waitlistProposal}
-        onOpenChange={(o) => { if (!o) setWaitlistProposal(null); }}
+        onOpenChange={(o) => {
+          if (!o) setWaitlistProposal(null);
+        }}
       >
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
@@ -749,8 +824,9 @@ export function TurnosClient({
           </DialogHeader>
           <div className="py-4 space-y-2">
             <p className="text-sm">
-              No se puede crear el turno para <strong>{waitlistProposal?.pacienteNombre}</strong> con{' '}
-              <strong>{waitlistProposal?.medicoNombre}</strong> el {waitlistProposal?.fecha} a las {waitlistProposal?.hora}.
+              No se puede crear el turno para <strong>{waitlistProposal?.pacienteNombre}</strong>{' '}
+              con <strong>{waitlistProposal?.medicoNombre}</strong> el {waitlistProposal?.fecha} a
+              las {waitlistProposal?.hora}.
             </p>
             <p className="text-sm text-muted-foreground">
               ¿Querés agregar al paciente a la lista de espera? Cuando haya un turno disponible,
@@ -758,7 +834,9 @@ export function TurnosClient({
             </p>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setWaitlistProposal(null)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setWaitlistProposal(null)}>
+              Cancelar
+            </Button>
             <Button
               disabled={waitlistLoading}
               onClick={async () => {
@@ -775,13 +853,24 @@ export function TurnosClient({
                     }),
                   });
                   if (res.ok) {
-                    toast({ title: 'Agregado a lista de espera', description: `${waitlistProposal.pacienteNombre} recibirá una oferta cuando haya disponibilidad.` });
+                    toast({
+                      title: 'Agregado a lista de espera',
+                      description: `${waitlistProposal.pacienteNombre} recibirá una oferta cuando haya disponibilidad.`,
+                    });
                   } else {
                     const err = await res.json().catch(() => ({ error: 'Error al agregar' }));
-                    toast({ title: 'Error', description: err.error || 'No se pudo agregar a la lista de espera', variant: 'destructive' });
+                    toast({
+                      title: 'Error',
+                      description: err.error || 'No se pudo agregar a la lista de espera',
+                      variant: 'destructive',
+                    });
                   }
                 } catch {
-                  toast({ title: 'Error', description: 'Error de red al procesar solicitud', variant: 'destructive' });
+                  toast({
+                    title: 'Error',
+                    description: 'Error de red al procesar solicitud',
+                    variant: 'destructive',
+                  });
                 } finally {
                   setWaitlistLoading(false);
                   setWaitlistProposal(null);
@@ -797,7 +886,9 @@ export function TurnosClient({
       {/* New patient confirm dialog */}
       <Dialog
         open={!!nuevoPacienteConfirm}
-        onOpenChange={(o) => { if (!o) setNuevoPacienteConfirm(null); }}
+        onOpenChange={(o) => {
+          if (!o) setNuevoPacienteConfirm(null);
+        }}
       >
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
@@ -806,18 +897,27 @@ export function TurnosClient({
           </DialogHeader>
           <div className="py-4 space-y-2">
             <p className="text-sm">
-              ¿Querés crear un nuevo paciente con los datos <strong>{nuevoPacienteConfirm?.nombre} {nuevoPacienteConfirm?.apellido}</strong>?
+              ¿Querés crear un nuevo paciente con los datos{' '}
+              <strong>
+                {nuevoPacienteConfirm?.nombre} {nuevoPacienteConfirm?.apellido}
+              </strong>
+              ?
             </p>
             <p className="text-xs text-muted-foreground">
-              Se va a crear con teléfono placeholder (0000000000). Recordá completar sus datos después desde la ficha del paciente.
+              Se va a crear con teléfono placeholder (0000000000). Recordá completar sus datos
+              después desde la ficha del paciente.
             </p>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setNuevoPacienteConfirm(null)}>Cancelar</Button>
-            <Button onClick={async () => {
-              if (nuevoPacienteConfirm) await nuevoPacienteConfirm.onConfirm();
-              setNuevoPacienteConfirm(null);
-            }}>
+            <Button variant="outline" onClick={() => setNuevoPacienteConfirm(null)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={async () => {
+                if (nuevoPacienteConfirm) await nuevoPacienteConfirm.onConfirm();
+                setNuevoPacienteConfirm(null);
+              }}
+            >
               Sí, crear paciente
             </Button>
           </DialogFooter>

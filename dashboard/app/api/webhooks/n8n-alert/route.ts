@@ -62,7 +62,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    safeWarn('[n8n-alert] Error procesando alerta:', err instanceof Error ? { message: err.message } : err);
+    safeWarn(
+      '[n8n-alert] Error procesando alerta:',
+      err instanceof Error ? { message: err.message } : err,
+    );
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
   }
 }

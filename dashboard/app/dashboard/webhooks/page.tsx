@@ -34,10 +34,9 @@ export const dynamic = 'force-dynamic';
 
 async function getInitialData(): Promise<WebhooksApiResponse | null> {
   try {
-    const res = await fetch(
-      'http://localhost:3000/api/webhooks/logs?limit=50&offset=0',
-      { cache: 'no-store' },
-    );
+    const res = await fetch('http://localhost:3000/api/webhooks/logs?limit=50&offset=0', {
+      cache: 'no-store',
+    });
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -47,13 +46,7 @@ async function getInitialData(): Promise<WebhooksApiResponse | null> {
 
 // ─── KPI card component (server-rendered) ─────────────────
 
-function KpiCards({
-  total,
-  porEstado,
-}: {
-  total: number;
-  porEstado: Record<string, number>;
-}) {
+function KpiCards({ total, porEstado }: { total: number; porEstado: Record<string, number> }) {
   const kpis = [
     {
       label: 'Total mensajes',
@@ -111,10 +104,7 @@ export default async function WebhooksLogsPage() {
       <KpiCards total={total} porEstado={porEstado} />
 
       {/* Tabla + filtros (client — recibe data inicial del server) */}
-      <WebhooksClient
-        initialMensajes={initialMensajes}
-        initialTotal={total}
-      />
+      <WebhooksClient initialMensajes={initialMensajes} initialTotal={total} />
     </div>
   );
 }

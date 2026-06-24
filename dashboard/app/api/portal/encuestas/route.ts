@@ -29,10 +29,7 @@ export async function GET() {
     .leftJoin(turnos, eq(historialMedico.turnoId, turnos.id))
     .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
     .where(
-      and(
-        eq(historialMedico.pacienteId, session.pacienteId),
-        eq(historialMedico.tipo, 'encuesta'),
-      ),
+      and(eq(historialMedico.pacienteId, session.pacienteId), eq(historialMedico.tipo, 'encuesta')),
     )
     .orderBy(desc(historialMedico.createdAt));
 

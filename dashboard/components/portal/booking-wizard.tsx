@@ -6,17 +6,40 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { DoctorCard } from './doctor-card';
 import { SlotPicker } from './slot-picker';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import {
-  Loader2, ArrowLeft, Check, CalendarIcon, Stethoscope,
-  CreditCard, ExternalLink, Circle,
+  Loader2,
+  ArrowLeft,
+  Check,
+  CalendarIcon,
+  Stethoscope,
+  CreditCard,
+  ExternalLink,
+  Circle,
 } from 'lucide-react';
-import type { MedicoPortal, SlotDisponible, TurnoCreadoPortal } from '@/lib/services/portal-booking';
+import type {
+  MedicoPortal,
+  SlotDisponible,
+  TurnoCreadoPortal,
+} from '@/lib/services/portal-booking';
 
 type Step = 'medico' | 'slot' | 'confirmar' | 'pago' | 'completado';
 
@@ -45,7 +68,11 @@ const stepVariants = {
 
 const springPop = {
   initial: { scale: 0, opacity: 0 },
-  animate: { scale: 1, opacity: 1, transition: { type: 'spring' as const, stiffness: 250, damping: 16 } },
+  animate: {
+    scale: 1,
+    opacity: 1,
+    transition: { type: 'spring' as const, stiffness: 250, damping: 16 },
+  },
 };
 
 /* ─── Step indicator ───────────────────────────────────── */
@@ -59,13 +86,7 @@ const STEP_LABELS: Record<Step, string> = {
 
 const STEPS_ORDER: Step[] = ['medico', 'slot', 'confirmar', 'pago', 'completado'];
 
-function StepIndicator({
-  currentStep,
-  showPago,
-}: {
-  currentStep: Step;
-  showPago: boolean;
-}) {
+function StepIndicator({ currentStep, showPago }: { currentStep: Step; showPago: boolean }) {
   const visibleSteps = showPago ? STEPS_ORDER : STEPS_ORDER.filter((s) => s !== 'pago');
   const currentIdx = visibleSteps.indexOf(currentStep);
 
@@ -276,7 +297,14 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
 
   /* ─── Step: Médico ──────────────────────────────────── */
   const stepMedico = (
-    <motion.div key="medico" variants={stepVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+    <motion.div
+      key="medico"
+      variants={stepVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="space-y-6"
+    >
       <div>
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <Stethoscope className="h-5 w-5 text-primary" />
@@ -318,7 +346,8 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
           )}
           {selectedMedico.servicios.length === 0 ? (
             <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
-              Este médico no tiene servicios configurados. Contactá al administrador para asignar servicios.
+              Este médico no tiene servicios configurados. Contactá al administrador para asignar
+              servicios.
             </div>
           ) : (
             <Button onClick={handleIrASlots} className="w-full sm:w-auto">
@@ -333,7 +362,14 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
 
   /* ─── Step: Slot ────────────────────────────────────── */
   const stepSlot = (
-    <motion.div key="slot" variants={stepVariants} initial="initial" animate="animate" exit="exit" className="space-y-4">
+    <motion.div
+      key="slot"
+      variants={stepVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="space-y-4"
+    >
       <Button variant="ghost" onClick={() => setStep('medico')} className="mb-2">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Volver a médicos
@@ -344,7 +380,9 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
           Seleccioná un horario
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          {selectedMedico?.nombre} · {selectedServicio && selectedMedico?.servicios.find((s) => s.id === selectedServicio)?.nombre}
+          {selectedMedico?.nombre} ·{' '}
+          {selectedServicio &&
+            selectedMedico?.servicios.find((s) => s.id === selectedServicio)?.nombre}
         </p>
       </div>
       {selectedMedico && selectedServicio && (
@@ -365,7 +403,14 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
 
   /* ─── Step: Confirmar ───────────────────────────────── */
   const stepConfirmar = (
-    <motion.div key="confirmar" variants={stepVariants} initial="initial" animate="animate" exit="exit" className="max-w-md mx-auto">
+    <motion.div
+      key="confirmar"
+      variants={stepVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="max-w-md mx-auto"
+    >
       <Button variant="ghost" onClick={() => setStep('slot')} className="mb-2">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Volver
@@ -390,7 +435,9 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Fecha y hora</span>
-            <span className="font-medium">{selectedSlot && formatDate(selectedSlot.fechaHora)}</span>
+            <span className="font-medium">
+              {selectedSlot && formatDate(selectedSlot.fechaHora)}
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Duración</span>
@@ -435,9 +482,13 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
         <CardFooter className="flex-col gap-2">
           <Button onClick={handleConfirmar} disabled={loading} className="w-full">
             {loading ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirmando...</>
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirmando...
+              </>
             ) : (
-              <><Check className="mr-2 h-4 w-4" /> Confirmar turno</>
+              <>
+                <Check className="mr-2 h-4 w-4" /> Confirmar turno
+              </>
             )}
           </Button>
           {selectedSlot?.precio != null && selectedSlot.precio > 0 && (
@@ -452,7 +503,14 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
 
   /* ─── Step: Pago ────────────────────────────────────── */
   const stepPago = (
-    <motion.div key="pago" variants={stepVariants} initial="initial" animate="animate" exit="exit" className="max-w-md mx-auto">
+    <motion.div
+      key="pago"
+      variants={stepVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="max-w-md mx-auto"
+    >
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -460,7 +518,8 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
             Pago pendiente
           </CardTitle>
           <CardDescription>
-            Completá el pago para confirmar tu turno. Podés pagar ahora o hacerlo después desde el portal.
+            Completá el pago para confirmar tu turno. Podés pagar ahora o hacerlo después desde el
+            portal.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -484,7 +543,12 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
           )}
 
           {pagoCompletado ? (
-            <motion.div variants={springPop} initial="initial" animate="animate" className="text-center py-4">
+            <motion.div
+              variants={springPop}
+              initial="initial"
+              animate="animate"
+              className="text-center py-4"
+            >
               <div className="rounded-full bg-success/10 w-12 h-12 flex items-center justify-center mx-auto mb-2">
                 <Check className="h-6 w-6 text-success" />
               </div>
@@ -492,11 +556,20 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
             </motion.div>
           ) : (
             <div className="space-y-3">
-              <Button onClick={handlePagarAhora} disabled={!pagoInfo || pagando} className="w-full" size="lg">
+              <Button
+                onClick={handlePagarAhora}
+                disabled={!pagoInfo || pagando}
+                className="w-full"
+                size="lg"
+              >
                 {pagando ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Esperando pago...</>
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Esperando pago...
+                  </>
                 ) : (
-                  <><ExternalLink className="mr-2 h-4 w-4" /> Pagar con MercadoPago</>
+                  <>
+                    <ExternalLink className="mr-2 h-4 w-4" /> Pagar con MercadoPago
+                  </>
                 )}
               </Button>
               <Button onClick={handleOmitirPago} variant="ghost" className="w-full">
@@ -541,9 +614,14 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
       >
         <h2 className="text-xl font-semibold mb-2">Turno agendado con éxito</h2>
         <p className="text-muted-foreground mb-8">
-          Te enviamos los detalles por WhatsApp. Recordá que podés cancelar con hasta 24h de anticipación.
+          Te enviamos los detalles por WhatsApp. Recordá que podés cancelar con hasta 24h de
+          anticipación.
         </p>
-        <Button onClick={() => router.push('/portal/dashboard')} variant="outline" className="w-full sm:w-auto">
+        <Button
+          onClick={() => router.push('/portal/dashboard')}
+          variant="outline"
+          className="w-full sm:w-auto"
+        >
           Volver al inicio
         </Button>
       </motion.div>
@@ -564,9 +642,7 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
   return (
     <div>
       <StepIndicator currentStep={step} showPago={showPago} />
-      <AnimatePresence mode="wait">
-        {stepMap[step]}
-      </AnimatePresence>
+      <AnimatePresence mode="wait">{stepMap[step]}</AnimatePresence>
     </div>
   );
 }

@@ -15,10 +15,7 @@ function getPortalSession(request: Request): { pacienteId: string } | null {
 }
 
 // ─── GET /api/portal/pagos/[turnoId] — Estado del pago ──────
-export async function GET(
-  _request: Request,
-  { params }: { params: { turnoId: string } },
-) {
+export async function GET(_request: Request, { params }: { params: { turnoId: string } }) {
   const session = getPortalSession(_request);
   if (!session?.pacienteId) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });

@@ -9,10 +9,7 @@ import { recetas, medicos, pacientes } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 import { escapeHtml } from '@/lib/html-utils';
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -38,9 +35,7 @@ export async function GET(
     .from(recetas)
     .leftJoin(medicos, eq(recetas.medicoId, medicos.id))
     .leftJoin(pacientes, eq(recetas.pacienteId, pacientes.id))
-    .where(
-      and(eq(recetas.id, params.id), eq(recetas.pacienteId, session.pacienteId)),
-    )
+    .where(and(eq(recetas.id, params.id), eq(recetas.pacienteId, session.pacienteId)))
     .limit(1);
 
   if (!receta) {
@@ -51,7 +46,9 @@ export async function GET(
   const orgRut = process.env.ORGANIZATION_RUT || '76.123.456-7';
 
   const formatFecha = (d: string | Date | null) =>
-    d ? new Date(d).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+    d
+      ? new Date(d).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
+      : '—';
 
   const h = (s: string | null) => escapeHtml(s ?? '');
 
@@ -115,17 +112,25 @@ export async function GET(
       <div class="row"><span class="label">Fin</span><span class="value">${formatFecha(receta.fechaFin)}</span></div>
     </div>
 
-    ${receta.indicaciones ? `
+    ${
+      receta.indicaciones
+        ? `
     <div class="section">
       <h2>Indicaciones</h2>
       <div class="indicaciones">${h(receta.indicaciones)}</div>
-    </div>` : ''}
+    </div>`
+        : ''
+    }
 
-    ${receta.hashVerificacion ? `
+    ${
+      receta.hashVerificacion
+        ? `
     <div class="hash">
       Código de verificación: <strong>${h(receta.hashVerificacion)}</strong><br>
       Verifique en: ${h(process.env.NEXT_PUBLIC_APP_URL || '')}/verificar-receta
-    </div>` : ''}
+    </div>`
+        : ''
+    }
 
     <div class="footer">
       Documento generado el ${new Date().toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}

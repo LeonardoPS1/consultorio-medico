@@ -154,10 +154,7 @@ export function validateRut(rut: string): boolean {
     multiplo = multiplo === 7 ? 2 : multiplo + 1;
   }
   const dvEsperado = 11 - (suma % 11);
-  const dvCalculado =
-    dvEsperado === 11 ? '0' :
-    dvEsperado === 10 ? 'K' :
-    dvEsperado.toString();
+  const dvCalculado = dvEsperado === 11 ? '0' : dvEsperado === 10 ? 'K' : dvEsperado.toString();
 
   return dv === dvCalculado;
 }

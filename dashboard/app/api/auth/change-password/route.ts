@@ -43,10 +43,7 @@ export async function POST(request: Request) {
 
     // Actualizar contraseña
     const hash = await bcrypt.hash(newPassword, 10);
-    await db
-      .update(usuarios)
-      .set({ passwordHash: hash })
-      .where(eq(usuarios.id, user.id));
+    await db.update(usuarios).set({ passwordHash: hash }).where(eq(usuarios.id, user.id));
 
     return NextResponse.json({
       ok: true,

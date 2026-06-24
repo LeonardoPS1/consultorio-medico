@@ -7,13 +7,7 @@
 
 import { db } from '@/lib/db';
 import { safeLog, safeWarn, safeError } from '@/lib/logger';
-import {
-  turnos,
-  pacientes,
-  medicos,
-  ofertasTurno,
-  listaEspera,
-} from '@/drizzle/schema';
+import { turnos, pacientes, medicos, ofertasTurno, listaEspera } from '@/drizzle/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import { waitlistService } from '@/lib/services/waitlist';
 
@@ -38,15 +32,18 @@ async function enviarWhatsApp(telefono: string, mensaje: string): Promise<boolea
       Body: mensaje,
     });
 
-    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
+    const res = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+        signal: AbortSignal.timeout(10000),
       },
-      body: formData.toString(),
-      signal: AbortSignal.timeout(10000),
-    });
+    );
 
     if (!res.ok) {
       const body = await res.text();
@@ -56,7 +53,10 @@ async function enviarWhatsApp(telefono: string, mensaje: string): Promise<boolea
 
     return true;
   } catch (error) {
-    safeError('[WhatsApp-Waitlist] Error al enviar WhatsApp:', error instanceof Error ? { message: error.message } : error);
+    safeError(
+      '[WhatsApp-Waitlist] Error al enviar WhatsApp:',
+      error instanceof Error ? { message: error.message } : error,
+    );
     return false;
   }
 }
@@ -136,7 +136,10 @@ export async function notificarOfertaTurno(
         .where(eq(ofertasTurno.id, ofertaId));
     }
   } catch (error) {
-    safeError('[WhatsApp-Waitlist] Error notificarOfertaTurno:', error instanceof Error ? { message: error.message } : error);
+    safeError(
+      '[WhatsApp-Waitlist] Error notificarOfertaTurno:',
+      error instanceof Error ? { message: error.message } : error,
+    );
   }
 }
 
@@ -182,14 +185,20 @@ export async function notificarMedicoReasignacion(turnoId: string): Promise<void
 
     await enviarWhatsApp(medico.whatsapp, mensaje);
   } catch (error) {
-    safeError('[WhatsApp-Waitlist] Error notificarMedicoReasignacion:', error instanceof Error ? { message: error.message } : error);
+    safeError(
+      '[WhatsApp-Waitlist] Error notificarMedicoReasignacion:',
+      error instanceof Error ? { message: error.message } : error,
+    );
   }
 }
 
 /**
  * Notifica al paciente que su oferta fue aceptada y el turno está confirmado.
  */
-export async function notificarConfirmacionReasignacion(turnoId: string, pacienteId: string): Promise<void> {
+export async function notificarConfirmacionReasignacion(
+  turnoId: string,
+  pacienteId: string,
+): Promise<void> {
   try {
     const [turno] = await db
       .select({ fechaHora: turnos.fechaHora })
@@ -216,7 +225,10 @@ export async function notificarConfirmacionReasignacion(turnoId: string, pacient
 
     await enviarWhatsApp(paciente.telefono, mensaje);
   } catch (error) {
-    safeError('[WhatsApp-Waitlist] Error notificarConfirmacionReasignacion:', error instanceof Error ? { message: error.message } : error);
+    safeError(
+      '[WhatsApp-Waitlist] Error notificarConfirmacionReasignacion:',
+      error instanceof Error ? { message: error.message } : error,
+    );
   }
 }
 
@@ -234,7 +246,8 @@ export async function handleWaitlistResponse(
   const texto = body.trim().toUpperCase();
 
   // Detectar ACEPTAR o RECHAZAR
-  const esAceptar = texto === 'ACEPTAR' || texto === 'SI' || texto === 'OK' || texto === 'CONFIRMAR';
+  const esAceptar =
+    texto === 'ACEPTAR' || texto === 'SI' || texto === 'OK' || texto === 'CONFIRMAR';
   const esRechazar = texto === 'RECHAZAR' || texto === 'NO' || texto === 'RECHAZO';
 
   if (!esAceptar && !esRechazar) return false;
@@ -251,12 +264,7 @@ export async function handleWaitlistResponse(
       })
       .from(ofertasTurno)
       .leftJoin(listaEspera, eq(ofertasTurno.listaEsperaId, listaEspera.id))
-      .where(
-        and(
-          eq(listaEspera.pacienteId, pacienteId),
-          eq(ofertasTurno.estado, 'pendiente'),
-        ),
-      )
+      .where(and(eq(listaEspera.pacienteId, pacienteId), eq(ofertasTurno.estado, 'pendiente')))
       .orderBy(desc(ofertasTurno.fechaOferta))
       .limit(1);
 
@@ -291,7 +299,10 @@ export async function handleWaitlistResponse(
 
     return true;
   } catch (error) {
-    safeError('[WhatsApp-Waitlist] Error handleWaitlistResponse:', error instanceof Error ? { message: error.message } : error);
+    safeError(
+      '[WhatsApp-Waitlist] Error handleWaitlistResponse:',
+      error instanceof Error ? { message: error.message } : error,
+    );
     return false;
   }
 }

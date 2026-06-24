@@ -169,14 +169,18 @@ export default function AdminTenantsPage() {
                 <Input
                   placeholder="clinica-paz"
                   value={newSubdomain}
-                  onChange={(e) => setNewSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  onChange={(e) =>
+                    setNewSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
+                  }
                 />
                 <span className="text-xs text-muted-foreground shrink-0">.aicoremed.com</span>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowModal(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setShowModal(false)}>
+              Cancelar
+            </Button>
             <Button onClick={handleCreate} disabled={saving || !newNombre || !newSubdomain}>
               {saving ? 'Creando...' : 'Crear tenant'}
             </Button>

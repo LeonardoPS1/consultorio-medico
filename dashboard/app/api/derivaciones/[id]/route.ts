@@ -6,32 +6,29 @@ import { parseBody } from '@/lib/validations';
 import { updateDerivacionSchema } from '@/lib/validations';
 
 // GET /api/derivaciones/[id]
-export const GET = apiHandler(async (
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
-  await requireAuth();
-  const derivacion = await derivacionesService.getById(params.id);
-  return ok({ data: derivacion });
-});
+export const GET = apiHandler(
+  async (_request: NextRequest, { params }: { params: { id: string } }) => {
+    await requireAuth();
+    const derivacion = await derivacionesService.getById(params.id);
+    return ok({ data: derivacion });
+  },
+);
 
 // PATCH /api/derivaciones/[id]
-export const PATCH = apiHandler(async (
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
-  await requireAuth();
-  const body = await parseBody(request, updateDerivacionSchema);
-  const updated = await derivacionesService.update(params.id, body);
-  return ok({ data: updated });
-});
+export const PATCH = apiHandler(
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
+    await requireAuth();
+    const body = await parseBody(request, updateDerivacionSchema);
+    const updated = await derivacionesService.update(params.id, body);
+    return ok({ data: updated });
+  },
+);
 
 // DELETE /api/derivaciones/[id]
-export const DELETE = apiHandler(async (
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
-  await requireAuth();
-  const result = await derivacionesService.eliminar(params.id);
-  return ok(result);
-});
+export const DELETE = apiHandler(
+  async (_request: NextRequest, { params }: { params: { id: string } }) => {
+    await requireAuth();
+    const result = await derivacionesService.eliminar(params.id);
+    return ok(result);
+  },
+);

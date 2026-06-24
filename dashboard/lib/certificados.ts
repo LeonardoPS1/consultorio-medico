@@ -10,7 +10,9 @@ function getCertificadoSecret(): string {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('CERTIFICADO_HASH_SECRET es obligatorio en producción');
     }
-    safeWarn('[Certificados] CERTIFICADO_HASH_SECRET no configurado — usando fallback de desarrollo');
+    safeWarn(
+      '[Certificados] CERTIFICADO_HASH_SECRET no configurado — usando fallback de desarrollo',
+    );
     return 'dev-fallback-not-for-production-cert';
   }
   return s;
@@ -61,14 +63,8 @@ export function generarHTMLCertificado(
   qrDataUrl: string,
   baseUrl: string,
 ): string {
-  const {
-    pacienteNombre,
-    pacienteApellido,
-    pacienteDni,
-    medicoNombre,
-    medicoMatricula,
-    data,
-  } = params;
+  const { pacienteNombre, pacienteApellido, pacienteDni, medicoNombre, medicoMatricula, data } =
+    params;
 
   const safe = {
     pacienteNombre: escapeHtml(pacienteNombre),
@@ -234,19 +230,27 @@ export function generarHTMLCertificado(
       ${safe.cie10Codigo ? `<br><span style="font-size:12px;color:#666;">CIE-10: ${safe.cie10Codigo}</span>` : ''}
     </div>
 
-    ${safe.reposoDesde ? `
+    ${
+      safe.reposoDesde
+        ? `
     <div class="reposo-box">
       <strong>Reposo médico:</strong><br>
       Desde: ${safe.reposoDesde}<br>
       Hasta: ${safe.reposoHasta}<br>
       ${safe.reposoDias ? `Duración: ${safe.reposoDias} días` : ''}
-    </div>` : ''}
+    </div>`
+        : ''
+    }
 
-    ${safe.indicaciones ? `
+    ${
+      safe.indicaciones
+        ? `
     <div class="indicaciones">
       <strong>Indicaciones:</strong><br>
       ${safe.indicaciones}
-    </div>` : ''}
+    </div>`
+        : ''
+    }
   </div>
 
   <div class="footer">

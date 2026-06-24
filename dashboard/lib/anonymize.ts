@@ -135,7 +135,12 @@ export function maskPII<T extends Record<string, unknown>>(obj: T): T {
         (result as Record<string, unknown>)[key] = anonymizeEmail(value);
       } else if (lowerKey === 'telefono' || lowerKey === 'phone' || lowerKey === 'whatsapp') {
         (result as Record<string, unknown>)[key] = anonymizeTelefono(value);
-      } else if (lowerKey === 'dni' || lowerKey === 'rut' || lowerKey === 'documento' || lowerKey === 'document') {
+      } else if (
+        lowerKey === 'dni' ||
+        lowerKey === 'rut' ||
+        lowerKey === 'documento' ||
+        lowerKey === 'document'
+      ) {
         (result as Record<string, unknown>)[key] = anonymizeDocumento(value);
       }
     } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {

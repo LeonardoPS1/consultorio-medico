@@ -13,7 +13,12 @@ import { safeError } from '@/lib/logger';
 import { apiKeys } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import crypto from 'crypto';
-import { API_SCOPES, type ApiScope, type ApiKeyData, type ApiKeyValidation } from './public-api-types';
+import {
+  API_SCOPES,
+  type ApiScope,
+  type ApiKeyData,
+  type ApiKeyValidation,
+} from './public-api-types';
 
 // Re-export para que los endpoints puedan importar de un solo lugar
 export { API_SCOPES, type ApiScope, type ApiKeyData, type ApiKeyValidation };

@@ -29,10 +29,7 @@ interface WebhooksClientProps {
 
 // ─── Constants ────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; color: string; bg: string }
-> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   received: {
     label: 'Recibido',
     color: 'text-blue-700 dark:text-blue-300',
@@ -90,10 +87,7 @@ function StatusBadge({ status }: { status?: string }) {
 
 // ─── WebhooksClient ───────────────────────────────────────
 
-export function WebhooksClient({
-  initialMensajes,
-  initialTotal,
-}: WebhooksClientProps) {
+export function WebhooksClient({ initialMensajes, initialTotal }: WebhooksClientProps) {
   const router = useRouter();
   const [mensajes, setMensajes] = useState<MensajeLog[]>(initialMensajes);
   const [total, setTotal] = useState(initialTotal);
@@ -223,10 +217,7 @@ export function WebhooksClient({
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {loading && mensajes.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={8}
-                    className="px-4 py-12 text-center text-gray-400"
-                  >
+                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
                     <div className="animate-pulse space-y-2">
                       <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mx-auto" />
                       <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mx-auto" />
@@ -235,10 +226,7 @@ export function WebhooksClient({
                 </tr>
               ) : mensajes.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={8}
-                    className="px-4 py-12 text-center text-gray-400 text-sm"
-                  >
+                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400 text-sm">
                     {estadoFilter || searchFilter
                       ? 'No se encontraron mensajes con los filtros aplicados'
                       : 'No hay mensajes registrados. Los mensajes apareceran cuando lleguen a traves del webhook de Twilio.'}
@@ -250,9 +238,7 @@ export function WebhooksClient({
                     key={msg.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
                     onClick={() =>
-                      router.push(
-                        `/dashboard/conversaciones?id=${msg.conversacionId}`,
-                      )
+                      router.push(`/dashboard/conversaciones?id=${msg.conversacionId}`)
                     }
                   >
                     <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
@@ -307,9 +293,7 @@ export function WebhooksClient({
         {/* Paginacion */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {total} mensajes en total
-            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{total} mensajes en total</p>
             <div className="flex gap-1">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}

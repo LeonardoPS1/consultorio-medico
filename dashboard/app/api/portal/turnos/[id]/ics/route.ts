@@ -10,10 +10,7 @@ import { turnos, medicos, pacientes } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 import { generateIcs } from '@/lib/ics';
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });

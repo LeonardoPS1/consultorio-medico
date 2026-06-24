@@ -33,37 +33,58 @@ interface DashboardKpisClientProps {
 
 function getKpiIcon(type: string) {
   switch (type) {
-    case 'calendar': return Calendar;
-    case 'users': return Users;
-    case 'messages': return MessageSquare;
-    case 'alert': return AlertTriangle;
-    case 'response': return TrendingUp;
-    case 'today': return Smartphone;
-    default: return Activity;
+    case 'calendar':
+      return Calendar;
+    case 'users':
+      return Users;
+    case 'messages':
+      return MessageSquare;
+    case 'alert':
+      return AlertTriangle;
+    case 'response':
+      return TrendingUp;
+    case 'today':
+      return Smartphone;
+    default:
+      return Activity;
   }
 }
 
 function getKpiGradient(type: string) {
   switch (type) {
-    case 'calendar': return 'from-blue-500 to-blue-600';
-    case 'users': return 'from-emerald-500 to-emerald-600';
-    case 'messages': return 'from-amber-500 to-amber-600';
-    case 'alert': return 'from-red-500 to-red-600';
-    case 'response': return 'from-purple-500 to-purple-600';
-    case 'today': return 'from-cyan-500 to-cyan-600';
-    default: return 'from-gray-500 to-gray-600';
+    case 'calendar':
+      return 'from-blue-500 to-blue-600';
+    case 'users':
+      return 'from-emerald-500 to-emerald-600';
+    case 'messages':
+      return 'from-amber-500 to-amber-600';
+    case 'alert':
+      return 'from-red-500 to-red-600';
+    case 'response':
+      return 'from-purple-500 to-purple-600';
+    case 'today':
+      return 'from-cyan-500 to-cyan-600';
+    default:
+      return 'from-gray-500 to-gray-600';
   }
 }
 
 function getKpiBg(type: string) {
   switch (type) {
-    case 'calendar': return 'bg-blue-50 dark:bg-blue-950/30';
-    case 'users': return 'bg-emerald-50 dark:bg-emerald-950/30';
-    case 'messages': return 'bg-amber-50 dark:bg-amber-950/30';
-    case 'alert': return 'bg-red-50 dark:bg-red-950/30';
-    case 'response': return 'bg-purple-50 dark:bg-purple-950/30';
-    case 'today': return 'bg-cyan-50 dark:bg-cyan-950/30';
-    default: return 'bg-gray-50 dark:bg-gray-950/30';
+    case 'calendar':
+      return 'bg-blue-50 dark:bg-blue-950/30';
+    case 'users':
+      return 'bg-emerald-50 dark:bg-emerald-950/30';
+    case 'messages':
+      return 'bg-amber-50 dark:bg-amber-950/30';
+    case 'alert':
+      return 'bg-red-50 dark:bg-red-950/30';
+    case 'response':
+      return 'bg-purple-50 dark:bg-purple-950/30';
+    case 'today':
+      return 'bg-cyan-50 dark:bg-cyan-950/30';
+    default:
+      return 'bg-gray-50 dark:bg-gray-950/30';
   }
 }
 
@@ -140,7 +161,8 @@ export function DashboardKpisClient({ initialKpis }: DashboardKpisClientProps) {
 
   const kpis = data ?? [];
   const kpisStr = JSON.stringify(kpis);
-  const animKey = kpisStr !== prevDataRef.current ? (prevDataRef.current = kpisStr, Date.now()) : 0;
+  const animKey =
+    kpisStr !== prevDataRef.current ? ((prevDataRef.current = kpisStr), Date.now()) : 0;
 
   if (kpis.length === 0) return null;
 
@@ -159,19 +181,25 @@ export function DashboardKpisClient({ initialKpis }: DashboardKpisClientProps) {
         return (
           <motion.div key={kpi.title} variants={kpiCardVariants}>
             <Card className="hover-card overflow-hidden relative">
-              <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-[0.03] dark:opacity-[0.08]`} />
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-[0.03] dark:opacity-[0.08]`}
+              />
               <CardHeader className="flex flex-row items-center justify-between pb-1 md:pb-2 space-y-0 px-2.5 sm:px-3 md:px-6 pt-2.5 sm:pt-3 md:pt-6 relative">
                 <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground truncate pr-1">
                   {kpi.title}
                 </CardTitle>
                 <div className={`rounded-lg ${bg} p-1 sm:p-1.5 md:p-2 shrink-0`}>
-                  <Icon className={`h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 ${kpi.urgent ? 'text-red-500 animate-pulse-soft' : ''}`} />
+                  <Icon
+                    className={`h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 ${kpi.urgent ? 'text-red-500 animate-pulse-soft' : ''}`}
+                  />
                 </div>
               </CardHeader>
               <CardContent className="px-2.5 sm:px-3 md:px-6 pb-2.5 sm:pb-3 md:pb-6 relative">
                 <div className="flex items-baseline gap-1.5 sm:gap-2">
                   <KpiValue value={kpi.value} />
-                  <span className={`text-xs sm:text-sm font-medium ${kpi.urgent ? 'text-red-500' : 'text-emerald-500'}`}>
+                  <span
+                    className={`text-xs sm:text-sm font-medium ${kpi.urgent ? 'text-red-500' : 'text-emerald-500'}`}
+                  >
                     {kpi.change}
                   </span>
                 </div>

@@ -22,7 +22,9 @@ export function PWARegister() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900">Nueva versión disponible</p>
-              <p className="text-xs text-gray-500 mt-0.5">Actualizá la app para tener la última versión</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Actualizá la app para tener la última versión
+              </p>
               <button
                 onClick={handleUpdate}
                 className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors"
@@ -46,7 +48,9 @@ export function PWARegister() {
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in fade-in duration-300">
           <div className="bg-amber-50 border border-amber-200 rounded-full px-4 py-1.5 flex items-center gap-2 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-xs font-medium text-amber-700">Sin conexión — algunos datos pueden no estar disponibles</span>
+            <span className="text-xs font-medium text-amber-700">
+              Sin conexión — algunos datos pueden no estar disponibles
+            </span>
           </div>
         </div>
       )}

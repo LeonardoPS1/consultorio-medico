@@ -1,6 +1,15 @@
 'use client';
 
-import { Shield, ShieldCheck, ShieldAlert, Calendar, User, Stethoscope, FileText, Clock } from 'lucide-react';
+import {
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
+  Calendar,
+  User,
+  Stethoscope,
+  FileText,
+  Clock,
+} from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
 interface CertificadoData {
@@ -44,11 +53,13 @@ export function VerificarCertificadoClient({ data, certId }: Props) {
 
   return (
     <div className="w-full max-w-lg">
-      <div className={`rounded-2xl shadow-lg border p-8 ${
-        valido
-          ? 'bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-900'
-          : 'bg-white dark:bg-slate-900 border-amber-200 dark:border-amber-900'
-      }`}>
+      <div
+        className={`rounded-2xl shadow-lg border p-8 ${
+          valido
+            ? 'bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-900'
+            : 'bg-white dark:bg-slate-900 border-amber-200 dark:border-amber-900'
+        }`}
+      >
         {/* Header */}
         <div className="text-center mb-6">
           {valido ? (
@@ -133,11 +144,13 @@ export function VerificarCertificadoClient({ data, certId }: Props) {
 
         {/* Badge */}
         <div className="mt-6 pt-4 border-t text-center">
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
-            valido
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-              : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-          }`}>
+          <div
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
+              valido
+                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+            }`}
+          >
             <Shield className="h-4 w-4" />
             {valido ? 'Documento auténtico' : 'Documento alterado'}
           </div>

@@ -22,10 +22,12 @@ export async function GET() {
         activo: usuarios.activo,
       })
       .from(usuarios)
-      .where(and(
-        eq(usuarios.activo, true),
-        ne(usuarios.id, session.user.id), // no incluir al usuario actual
-      ))
+      .where(
+        and(
+          eq(usuarios.activo, true),
+          ne(usuarios.id, session.user.id), // no incluir al usuario actual
+        ),
+      )
       .orderBy(usuarios.nombre);
 
     const formatted = miembros.map((m) => ({
@@ -33,9 +35,7 @@ export async function GET() {
       nombre: m.nombre,
       email: m.email,
       rol: m.rol === 'admin' ? 'Administrador' : m.rol === 'medico' ? 'Médico' : m.rol,
-      ultimo: m.ultimoAcceso
-        ? formatoTiempoRelativo(new Date(m.ultimoAcceso))
-        : 'Nunca',
+      ultimo: m.ultimoAcceso ? formatoTiempoRelativo(new Date(m.ultimoAcceso)) : 'Nunca',
     }));
 
     return NextResponse.json({ data: formatted });

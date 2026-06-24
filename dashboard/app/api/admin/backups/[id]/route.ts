@@ -24,10 +24,7 @@ function findBackupFile(id: string): string | null {
 // GET /api/admin/backups/[id] — Descargar backup
 // ============================================================
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await auth();
     if (!session?.user?.id || session?.user?.role !== 'admin') {
@@ -51,10 +48,7 @@ export async function GET(
     });
   } catch (error) {
     console.error('[Backup] Error al descargar:', error);
-    return NextResponse.json(
-      { error: 'Error al descargar backup' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Error al descargar backup' }, { status: 500 });
   }
 }
 
@@ -62,10 +56,7 @@ export async function GET(
 // DELETE /api/admin/backups/[id] — Eliminar backup
 // ============================================================
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await auth();
     if (!session?.user?.id || session?.user?.role !== 'admin') {
@@ -81,9 +72,6 @@ export async function DELETE(
     return NextResponse.json({ message: 'Backup eliminado' });
   } catch (error) {
     console.error('[Backup] Error al eliminar:', error);
-    return NextResponse.json(
-      { error: 'Error al eliminar backup' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Error al eliminar backup' }, { status: 500 });
   }
 }

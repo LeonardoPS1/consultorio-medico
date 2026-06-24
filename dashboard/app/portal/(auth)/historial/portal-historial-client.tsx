@@ -38,10 +38,7 @@ export default function PortalHistorialClient({ historial }: Props) {
       {historial.length > 0 ? (
         <div className="space-y-3">
           {historial.map((h) => (
-            <div
-              key={h.id}
-              className="bg-white rounded-xl border border-gray-200 p-4"
-            >
+            <div key={h.id} className="bg-white rounded-xl border border-gray-200 p-4">
               <div className="flex items-start gap-3 mb-2">
                 <div className="mt-1">
                   {h.tipo === 'consulta' ? (
@@ -57,9 +54,7 @@ export default function PortalHistorialClient({ historial }: Props) {
                   <div className="text-sm text-gray-500 mb-2">
                     {formatDate(h.createdAt)} · Dr/a. {h.medicoNombre}
                   </div>
-                  {h.descripcion && (
-                    <p className="text-sm text-gray-600 mb-2">{h.descripcion}</p>
-                  )}
+                  {h.descripcion && <p className="text-sm text-gray-600 mb-2">{h.descripcion}</p>}
                   {h.diagnosticoDescripcion && (
                     <div className="inline-block bg-gray-50 rounded-lg px-3 py-1.5 text-sm text-gray-600">
                       <span className="text-gray-400 text-xs">Diagnóstico: </span>

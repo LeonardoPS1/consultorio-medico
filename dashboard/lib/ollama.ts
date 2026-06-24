@@ -33,11 +33,7 @@ function getConfig(): OllamaConfig {
  * URLs de fallback cuando OLLAMA_BASE_URL no está configurada.
  * Orden: Docker gateway (producción Dokploy) → service name → localhost.
  */
-const FALLBACK_URLS = [
-  'http://172.18.0.1:11434',
-  'http://ollama:11434',
-  'http://localhost:11434',
-];
+const FALLBACK_URLS = ['http://172.18.0.1:11434', 'http://ollama:11434', 'http://localhost:11434'];
 
 // ─── Tipos ─────────────────────────────────────────────────────
 

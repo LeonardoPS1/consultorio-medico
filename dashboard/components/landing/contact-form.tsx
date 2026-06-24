@@ -38,8 +38,7 @@ export function ContactForm() {
     interests: [] as string[],
   });
 
-  const update = (field: string, value: string) =>
-    setForm((prev) => ({ ...prev, [field]: value }));
+  const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
   const toggleInterest = (v: string) =>
     setForm((prev) => ({
@@ -99,7 +98,7 @@ export function ContactForm() {
               Transforma la gestión de tu consultorio hoy
             </h2>
             <p className="text-muted-foreground mb-6 md:mb-8">
-               Completa el formulario y obtén una demostración personalizada con un agente de IA
+              Completa el formulario y obtén una demostración personalizada con un agente de IA
               adaptado a tu especialidad.
             </p>
 
@@ -126,7 +125,10 @@ export function ContactForm() {
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
             {!submitted ? (
-              <form onSubmit={handleSubmit} className="rounded-xl border bg-card p-5 sm:p-6 space-y-5 shadow-sm">
+              <form
+                onSubmit={handleSubmit}
+                className="rounded-xl border bg-card p-5 sm:p-6 space-y-5 shadow-sm"
+              >
                 {/* Progress bar */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs text-muted-foreground">
@@ -152,7 +154,9 @@ export function ContactForm() {
                   >
                     <h3 className="text-sm font-semibold">Cuéntanos sobre ti</h3>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">Nombre Completo</label>
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Nombre Completo
+                      </label>
                       <input
                         type="text"
                         required
@@ -163,7 +167,9 @@ export function ContactForm() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">Correo Electrónico</label>
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Correo Electrónico
+                      </label>
                       <input
                         type="email"
                         required
@@ -185,14 +191,18 @@ export function ContactForm() {
                   >
                     <h3 className="text-sm font-semibold">Detalles de tu consultorio</h3>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">Especialidad</label>
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Especialidad
+                      </label>
                       <select
                         required
                         value={form.specialty}
                         onChange={(e) => update('specialty', e.target.value)}
                         className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-all"
                       >
-                        <option value="" disabled>Selecciona una opción</option>
+                        <option value="" disabled>
+                          Selecciona una opción
+                        </option>
                         <option value="general">Clínica Médica / Especialidades</option>
                         <option value="odontologia">Clínica Odontológica</option>
                         <option value="oftalmologia">Centro Oftalmológico</option>
@@ -201,14 +211,18 @@ export function ContactForm() {
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">Tamaño del equipo</label>
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Tamaño del equipo
+                      </label>
                       <select
                         required
                         value={form.size}
                         onChange={(e) => update('size', e.target.value)}
                         className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-all"
                       >
-                        <option value="" disabled>Selecciona cantidad</option>
+                        <option value="" disabled>
+                          Selecciona cantidad
+                        </option>
                         <option value="1">1 Profesional</option>
                         <option value="2-5">2 a 5 Profesionales</option>
                         <option value="6-15">6 a 15 Profesionales</option>
@@ -227,7 +241,9 @@ export function ContactForm() {
                   >
                     <h3 className="text-sm font-semibold">Contacto final</h3>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">WhatsApp / Teléfono</label>
+                      <label className="text-xs font-medium text-muted-foreground">
+                        WhatsApp / Teléfono
+                      </label>
                       <input
                         type="tel"
                         required
@@ -274,12 +290,22 @@ export function ContactForm() {
                     </Button>
                   )}
                   {step < 3 ? (
-                    <Button type="button" size="default" className="ml-auto gap-1.5" onClick={nextStep}>
+                    <Button
+                      type="button"
+                      size="default"
+                      className="ml-auto gap-1.5"
+                      onClick={nextStep}
+                    >
                       Siguiente
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button type="submit" size="default" className="ml-auto gap-1.5" disabled={loading}>
+                    <Button
+                      type="submit"
+                      size="default"
+                      className="ml-auto gap-1.5"
+                      disabled={loading}
+                    >
                       {loading ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -294,9 +320,7 @@ export function ContactForm() {
                     </Button>
                   )}
                 </div>
-                {error && (
-                  <p className="text-xs text-destructive text-center">{error}</p>
-                )}
+                {error && <p className="text-xs text-destructive text-center">{error}</p>}
               </form>
             ) : (
               <motion.div
@@ -309,8 +333,8 @@ export function ContactForm() {
                 </div>
                 <h3 className="text-lg font-semibold">¡Solicitud recibida!</h3>
                 <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  Te contactaremos en menos de 24 horas hábiles con una demo personalizada
-                  para tu especialidad.
+                  Te contactaremos en menos de 24 horas hábiles con una demo personalizada para tu
+                  especialidad.
                 </p>
                 <p className="text-xs text-primary">
                   Mientras tanto, probá el simulador interactivo o escribinos por WhatsApp.

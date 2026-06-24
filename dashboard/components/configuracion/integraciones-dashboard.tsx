@@ -6,8 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Bot, Globe, Database, Mail, Phone, Calendar, Calendar as CalendarIcon,
-  CheckCircle2, XCircle, RefreshCw, Lock, Key, Wifi,
+  Bot,
+  Globe,
+  Database,
+  Mail,
+  Phone,
+  Calendar,
+  Calendar as CalendarIcon,
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
+  Lock,
+  Key,
+  Wifi,
 } from 'lucide-react';
 
 // ============================================================
@@ -73,14 +84,38 @@ export default function IntegracionesDashboard({ isAdmin }: IntegracionesDashboa
 
   // Mapa de iconos y colores por servicio
   const iconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
-    twilio: { icon: <Phone className="h-5 w-5 text-red-600 dark:text-red-400" />, bg: 'bg-red-100 dark:bg-red-900/30' },
-    ollama: { icon: <Bot className="h-5 w-5 text-purple-600 dark:text-purple-400" />, bg: 'bg-purple-100 dark:bg-purple-900/30' },
-    n8n: { icon: <Globe className="h-5 w-5 text-orange-600 dark:text-orange-400" />, bg: 'bg-orange-100 dark:bg-orange-900/30' },
-    smtp: { icon: <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />, bg: 'bg-blue-100 dark:bg-blue-900/30' },
-    imap: { icon: <Mail className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />, bg: 'bg-cyan-100 dark:bg-cyan-900/30' },
-    postgres: { icon: <Database className="h-5 w-5 text-blue-600 dark:text-blue-400" />, bg: 'bg-blue-100 dark:bg-blue-900/30' },
-    google_calendar: { icon: <CalendarIcon className="h-5 w-5 text-green-600 dark:text-green-400" />, bg: 'bg-green-100 dark:bg-green-900/30' },
-    telefono_doctor: { icon: <Phone className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />, bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
+    twilio: {
+      icon: <Phone className="h-5 w-5 text-red-600 dark:text-red-400" />,
+      bg: 'bg-red-100 dark:bg-red-900/30',
+    },
+    ollama: {
+      icon: <Bot className="h-5 w-5 text-purple-600 dark:text-purple-400" />,
+      bg: 'bg-purple-100 dark:bg-purple-900/30',
+    },
+    n8n: {
+      icon: <Globe className="h-5 w-5 text-orange-600 dark:text-orange-400" />,
+      bg: 'bg-orange-100 dark:bg-orange-900/30',
+    },
+    smtp: {
+      icon: <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
+      bg: 'bg-blue-100 dark:bg-blue-900/30',
+    },
+    imap: {
+      icon: <Mail className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />,
+      bg: 'bg-cyan-100 dark:bg-cyan-900/30',
+    },
+    postgres: {
+      icon: <Database className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
+      bg: 'bg-blue-100 dark:bg-blue-900/30',
+    },
+    google_calendar: {
+      icon: <CalendarIcon className="h-5 w-5 text-green-600 dark:text-green-400" />,
+      bg: 'bg-green-100 dark:bg-green-900/30',
+    },
+    telefono_doctor: {
+      icon: <Phone className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />,
+      bg: 'bg-emerald-100 dark:bg-emerald-900/30',
+    },
   };
 
   const displayNames: Record<string, string> = {
@@ -165,23 +200,37 @@ export default function IntegracionesDashboard({ isAdmin }: IntegracionesDashboa
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`h-9 w-9 rounded-xl ${style.bg} flex items-center justify-center`}>
+                    <div
+                      className={`h-9 w-9 rounded-xl ${style.bg} flex items-center justify-center`}
+                    >
                       {style.icon}
                     </div>
                     <div>
                       <CardTitle className="text-sm">{displayNames[srv] || srv}</CardTitle>
-                      <CardDescription className="text-xs">{descripciones[srv] || ''}</CardDescription>
+                      <CardDescription className="text-xs">
+                        {descripciones[srv] || ''}
+                      </CardDescription>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <span className={`h-2 w-2 rounded-full ${
-                      status === 'success' ? 'bg-emerald-500' :
-                      status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
-                    }`} />
-                    <span className={`text-[11px] font-medium ${
-                      status === 'success' ? 'text-emerald-600' :
-                      status === 'warning' ? 'text-amber-600' : 'text-red-600'
-                    }`}>
+                    <span
+                      className={`h-2 w-2 rounded-full ${
+                        status === 'success'
+                          ? 'bg-emerald-500'
+                          : status === 'warning'
+                            ? 'bg-amber-500'
+                            : 'bg-red-500'
+                      }`}
+                    />
+                    <span
+                      className={`text-[11px] font-medium ${
+                        status === 'success'
+                          ? 'text-emerald-600'
+                          : status === 'warning'
+                            ? 'text-amber-600'
+                            : 'text-red-600'
+                      }`}
+                    >
                       {statusLabel}
                     </span>
                   </div>
@@ -191,15 +240,19 @@ export default function IntegracionesDashboard({ isAdmin }: IntegracionesDashboa
                 {totalCampos > 0 && (
                   <div className="mb-3">
                     <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                      <span>{completados} de {totalCampos} campos</span>
+                      <span>
+                        {completados} de {totalCampos} campos
+                      </span>
                       <span>{porcentaje}%</span>
                     </div>
                     <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
-                          porcentaje === 100 ? 'bg-emerald-500' :
-                          porcentaje > 50 ? 'bg-amber-500' :
-                          'bg-red-500'
+                          porcentaje === 100
+                            ? 'bg-emerald-500'
+                            : porcentaje > 50
+                              ? 'bg-amber-500'
+                              : 'bg-red-500'
                         }`}
                         style={{ width: `${porcentaje}%` }}
                       />
@@ -247,7 +300,10 @@ export default function IntegracionesDashboard({ isAdmin }: IntegracionesDashboa
             )}
           </div>
           {isAdmin && (
-            <Button size="sm" onClick={() => router.push('/dashboard/admin/sistema?tab=credenciales')}>
+            <Button
+              size="sm"
+              onClick={() => router.push('/dashboard/admin/sistema?tab=credenciales')}
+            >
               <Key className="h-4 w-4 mr-1" />
               Ir a Credenciales
             </Button>

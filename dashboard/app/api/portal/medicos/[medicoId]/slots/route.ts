@@ -24,10 +24,7 @@ export async function GET(
   const servicioId = searchParams.get('servicioId');
 
   if (!fecha || !servicioId) {
-    return NextResponse.json(
-      { error: 'fecha y servicioId son requeridos' },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: 'fecha y servicioId son requeridos' }, { status: 400 });
   }
 
   const slots = await slotsDisponibles(medicoId, fecha, servicioId);

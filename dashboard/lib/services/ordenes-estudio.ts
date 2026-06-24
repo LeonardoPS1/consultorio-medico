@@ -20,7 +20,15 @@ export interface ListOrdenesEstudioOptions {
 
 export const ordenesEstudioService = {
   async list(options: ListOrdenesEstudioOptions = {}) {
-    const { limit = 50, offset = 0, pacienteId, medicoId, estado, tipo, includeDeleted = false } = options;
+    const {
+      limit = 50,
+      offset = 0,
+      pacienteId,
+      medicoId,
+      estado,
+      tipo,
+      includeDeleted = false,
+    } = options;
 
     const condList: (SQL | undefined)[] = [];
     if (!includeDeleted) condList.push(sql`${ordenesEstudio.deletedAt} IS NULL`);
@@ -33,21 +41,22 @@ export const ordenesEstudioService = {
 
     const [{ total }] = await db.select({ total: count() }).from(ordenesEstudio).where(where);
 
-    const rows = await db.select({
-      id: ordenesEstudio.id,
-      pacienteId: ordenesEstudio.pacienteId,
-      medicoId: ordenesEstudio.medicoId,
-      turnoId: ordenesEstudio.turnoId,
-      titulo: ordenesEstudio.titulo,
-      descripcion: ordenesEstudio.descripcion,
-      tipo: ordenesEstudio.tipo,
-      estado: ordenesEstudio.estado,
-      resultadoUrl: ordenesEstudio.resultadoUrl,
-      observaciones: ordenesEstudio.observaciones,
-      createdAt: ordenesEstudio.createdAt,
-      updatedAt: ordenesEstudio.updatedAt,
-      medicoNombre: medicos.nombre,
-    })
+    const rows = await db
+      .select({
+        id: ordenesEstudio.id,
+        pacienteId: ordenesEstudio.pacienteId,
+        medicoId: ordenesEstudio.medicoId,
+        turnoId: ordenesEstudio.turnoId,
+        titulo: ordenesEstudio.titulo,
+        descripcion: ordenesEstudio.descripcion,
+        tipo: ordenesEstudio.tipo,
+        estado: ordenesEstudio.estado,
+        resultadoUrl: ordenesEstudio.resultadoUrl,
+        observaciones: ordenesEstudio.observaciones,
+        createdAt: ordenesEstudio.createdAt,
+        updatedAt: ordenesEstudio.updatedAt,
+        medicoNombre: medicos.nombre,
+      })
       .from(ordenesEstudio)
       .leftJoin(medicos, eq(ordenesEstudio.medicoId, medicos.id))
       .where(where)
@@ -55,7 +64,7 @@ export const ordenesEstudioService = {
       .limit(limit)
       .offset(offset);
 
-    const data = rows.map(r => ({
+    const data = rows.map((r) => ({
       id: r.id,
       pacienteId: r.pacienteId,
       medicoId: r.medicoId,
@@ -75,12 +84,13 @@ export const ordenesEstudioService = {
   },
 
   async getById(id: string) {
-    const [row] = await db.select({
-      orden: ordenesEstudio,
-      pacienteNombre: pacientes.nombre,
-      pacienteApellido: pacientes.apellido,
-      medicoNombre: medicos.nombre,
-    })
+    const [row] = await db
+      .select({
+        orden: ordenesEstudio,
+        pacienteNombre: pacientes.nombre,
+        pacienteApellido: pacientes.apellido,
+        medicoNombre: medicos.nombre,
+      })
       .from(ordenesEstudio)
       .leftJoin(pacientes, eq(ordenesEstudio.pacienteId, pacientes.id))
       .leftJoin(medicos, eq(ordenesEstudio.medicoId, medicos.id))
@@ -91,7 +101,10 @@ export const ordenesEstudioService = {
 
     return {
       ...row.orden,
-      pacienteNombre: row.pacienteNombre && row.pacienteApellido ? `${row.pacienteNombre} ${row.pacienteApellido}` : '—',
+      pacienteNombre:
+        row.pacienteNombre && row.pacienteApellido
+          ? `${row.pacienteNombre} ${row.pacienteApellido}`
+          : '—',
       medicoNombre: row.medicoNombre || '—',
     };
   },

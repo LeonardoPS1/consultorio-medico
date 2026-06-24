@@ -1,7 +1,7 @@
 /**
  * GET  /api/turnos  -  Lista con filtros y stats
  * POST /api/turnos  -  Crea turno con validación de bloqueos
- * 
+ *
  * Refactorizado con: apiHandler + Zod + service layer
  */
 
@@ -34,7 +34,19 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const sucursalId = searchParams.get('sucursalId') || undefined;
 
   const medicoIdFilter = sessionRol === 'medico' ? sessionMedicoId : undefined;
-  const result = await turnosService.list(fechaStr, estado, medico, tipo, search, limit, offset, sucursalId, medicoIdFilter, fechaDesde, fechaHasta);
+  const result = await turnosService.list(
+    fechaStr,
+    estado,
+    medico,
+    tipo,
+    search,
+    limit,
+    offset,
+    sucursalId,
+    medicoIdFilter,
+    fechaDesde,
+    fechaHasta,
+  );
   return NextResponse.json(result);
 });
 

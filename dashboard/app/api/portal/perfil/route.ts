@@ -14,16 +14,21 @@ import { eq } from 'drizzle-orm';
 
 export const PATCH = apiHandler(async (request: NextRequest) => {
   const session = await getPortalSession();
-  if (!session) { fail('No autorizado', 401); }
+  if (!session) {
+    fail('No autorizado', 401);
+  }
 
   const body = await parseBody(request, updatePortalPerfilSchema);
 
   const updates: Record<string, unknown> = {};
 
   if (body.email !== undefined && body.email !== null) updates.email = body.email;
-  if (body.consentimientoWhatsapp !== undefined && body.consentimientoWhatsapp !== null) updates.consentimientoWhatsapp = body.consentimientoWhatsapp;
-  if (body.consentimientoEmail !== undefined && body.consentimientoEmail !== null) updates.consentimientoEmail = body.consentimientoEmail;
-  if (body.sistemaSalud !== undefined && body.sistemaSalud !== null) updates.sistemaSalud = body.sistemaSalud;
+  if (body.consentimientoWhatsapp !== undefined && body.consentimientoWhatsapp !== null)
+    updates.consentimientoWhatsapp = body.consentimientoWhatsapp;
+  if (body.consentimientoEmail !== undefined && body.consentimientoEmail !== null)
+    updates.consentimientoEmail = body.consentimientoEmail;
+  if (body.sistemaSalud !== undefined && body.sistemaSalud !== null)
+    updates.sistemaSalud = body.sistemaSalud;
   if (body.regionId !== undefined && body.regionId !== null) updates.regionId = body.regionId;
   if (body.comunaId !== undefined && body.comunaId !== null) updates.comunaId = body.comunaId;
 
@@ -31,10 +36,7 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
     fail('Sin campos para actualizar', 400);
   }
 
-  await db
-    .update(pacientes)
-    .set(updates)
-    .where(eq(pacientes.id, session.pacienteId));
+  await db.update(pacientes).set(updates).where(eq(pacientes.id, session.pacienteId));
 
   return ok({ success: true });
 });

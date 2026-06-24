@@ -64,12 +64,7 @@ export async function listarNotificaciones(
   return db
     .select(SELECT_COLS)
     .from(notificaciones)
-    .where(
-      and(
-        eq(notificaciones.pacienteId, pacienteId),
-        isNull(notificaciones.deletedAt),
-      ),
-    )
+    .where(and(eq(notificaciones.pacienteId, pacienteId), isNull(notificaciones.deletedAt)))
     .orderBy(desc(notificaciones.createdAt))
     .limit(limit);
 }
@@ -94,19 +89,11 @@ export async function noLeidasCount(pacienteId: string): Promise<number> {
 /**
  * Marca una notificación como leída.
  */
-export async function marcarLeida(
-  id: string,
-  pacienteId: string,
-): Promise<void> {
+export async function marcarLeida(id: string, pacienteId: string): Promise<void> {
   await db
     .update(notificaciones)
     .set({ leido: true })
-    .where(
-      and(
-        eq(notificaciones.id, id),
-        eq(notificaciones.pacienteId, pacienteId),
-      ),
-    );
+    .where(and(eq(notificaciones.id, id), eq(notificaciones.pacienteId, pacienteId)));
 }
 
 /**

@@ -5,13 +5,7 @@ import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -97,7 +91,12 @@ function BackupsContent() {
   };
 
   const handleDelete = async (backup: BackupInfo) => {
-    if (!confirm(`¿Eliminar backup del ${format(new Date(backup.createdAt), "dd/MM/yy HH:mm", { locale: es })}?`)) return;
+    if (
+      !confirm(
+        `¿Eliminar backup del ${format(new Date(backup.createdAt), 'dd/MM/yy HH:mm', { locale: es })}?`,
+      )
+    )
+      return;
     try {
       await fetch(`/api/admin/backups/${backup.id}`, { method: 'DELETE' });
       await fetchBackups();
@@ -158,7 +157,9 @@ function BackupsContent() {
             <div className="text-center py-16 text-muted-foreground">
               <Database className="h-10 w-10 mx-auto mb-3 opacity-30" />
               <p className="font-medium">No hay backups todavía</p>
-              <p className="text-sm mt-1">Generá tu primer backup haciendo clic en &quot;Generar Backup&quot;</p>
+              <p className="text-sm mt-1">
+                Generá tu primer backup haciendo clic en &quot;Generar Backup&quot;
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -171,7 +172,9 @@ function BackupsContent() {
                     <div className="flex items-center gap-2">
                       <Database className="h-4 w-4 text-muted-foreground shrink-0" />
                       <span className="text-sm font-medium truncate">
-                        {format(new Date(backup.createdAt), "dd/MM/yyyy 'a las' HH:mm", { locale: es })}
+                        {format(new Date(backup.createdAt), "dd/MM/yyyy 'a las' HH:mm", {
+                          locale: es,
+                        })}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">

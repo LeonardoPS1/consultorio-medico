@@ -115,9 +115,7 @@ export const pushService = {
    * Eliminar una suscripción expirada (endpoint ya no válido)
    */
   async eliminarEndpoint(endpoint: string) {
-    await db
-      .delete(pushSubscriptions)
-      .where(eq(pushSubscriptions.endpoint, endpoint));
+    await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
     return { success: true };
   },
 
@@ -141,16 +139,11 @@ export const pushService = {
   /**
    * Enviar push a todas las suscripciones activas de un usuario o paciente
    */
-  async sendToUser(
-    options: { usuarioId?: string; pacienteId?: string },
-    payload: SendPushOptions,
-  ) {
+  async sendToUser(options: { usuarioId?: string; pacienteId?: string }, payload: SendPushOptions) {
     const subs = await this.getSubscriptions(options);
     if (subs.length === 0) return { sent: 0, failed: 0 };
 
-    const results = await Promise.allSettled(
-      subs.map((sub) => this._enviar(sub, payload)),
-    );
+    const results = await Promise.allSettled(subs.map((sub) => this._enviar(sub, payload)));
 
     // Limpiar suscripciones expiradas
     for (let i = 0; i < results.length; i++) {

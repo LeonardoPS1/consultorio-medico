@@ -5,7 +5,8 @@ import { Logo } from '@/components/layout/logo';
 
 export const metadata: Metadata = {
   title: 'Política de Privacidad — AiCoreMed',
-  description: 'Política de privacidad y protección de datos de AiCoreMed, sistema de gestión para consultorios médicos.',
+  description:
+    'Política de privacidad y protección de datos de AiCoreMed, sistema de gestión para consultorios médicos.',
 };
 
 export default function PrivacidadPage() {
@@ -17,7 +18,10 @@ export default function PrivacidadPage() {
           <Link href="/" className="flex items-center gap-2">
             <Logo className="h-14 md:h-24 w-auto" />
           </Link>
-          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Link
+            href="/"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
             ← Volver al inicio
           </Link>
         </div>
@@ -42,9 +46,10 @@ export default function PrivacidadPage() {
                 Tus datos están 100% protegidos
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                En AiCoreMed la seguridad es nuestra prioridad. Todos los datos de salud se almacenan
-                en infraestructura propia en Chile con cifrado AES-256, autenticación reforzada (2FA),
-                y un asistente de IA que corre 100% local — tus datos nunca salen de tu servidor.
+                En AiCoreMed la seguridad es nuestra prioridad. Todos los datos de salud se
+                almacenan en infraestructura propia en Chile con cifrado AES-256, autenticación
+                reforzada (2FA), y un asistente de IA que corre 100% local — tus datos nunca salen
+                de tu servidor.
               </p>
             </div>
           </div>
@@ -54,27 +59,43 @@ export default function PrivacidadPage() {
           <section>
             <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">1. Introducción</h2>
             <p>
-              En AiCoreMed (en adelante, &laquo;la Plataforma&raquo;), operada por <strong>Aicore</strong> (aicorebots.com),
-              nos comprometemos a proteger la privacidad y confidencialidad de los datos de salud de los pacientes.
-              Esta Política de Privacidad describe cómo recopilamos, usamos, almacenamos y protegemos la información
-              personal y médica en nuestra plataforma.
+              En AiCoreMed (en adelante, &laquo;la Plataforma&raquo;), operada por{' '}
+              <strong>Aicore</strong> (aicorebots.com), nos comprometemos a proteger la privacidad y
+              confidencialidad de los datos de salud de los pacientes. Esta Política de Privacidad
+              describe cómo recopilamos, usamos, almacenamos y protegemos la información personal y
+              médica en nuestra plataforma.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">2. Responsable del Tratamiento</h2>
+            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">
+              2. Responsable del Tratamiento
+            </h2>
             <p>
-              <strong>Aicore</strong> — Agencia especializada en automatizaciones, agentes de IA y chatbots.
-              Contacto:{' '}
-              <a href="mailto:info@aicorebots.com" className="text-primary hover:underline">info@aicorebots.com</a>
-              {' '}|{' '}
-              <a href="https://aicorebots.com" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">aicorebots.com</a>
+              <strong>Aicore</strong> — Agencia especializada en automatizaciones, agentes de IA y
+              chatbots. Contacto:{' '}
+              <a href="mailto:info@aicorebots.com" className="text-primary hover:underline">
+                info@aicorebots.com
+              </a>{' '}
+              |{' '}
+              <a
+                href="https://aicorebots.com"
+                className="text-primary hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                aicorebots.com
+              </a>
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">3. Datos que Recopilamos</h2>
-            <h3 className="text-base font-medium text-foreground mt-4 mb-2">3.1 Datos de la Cuenta</h3>
+            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">
+              3. Datos que Recopilamos
+            </h2>
+            <h3 className="text-base font-medium text-foreground mt-4 mb-2">
+              3.1 Datos de la Cuenta
+            </h3>
             <ul className="list-disc pl-5 space-y-1 text-sm">
               <li>Nombre y apellido del profesional médico</li>
               <li>Dirección de correo electrónico</li>
@@ -82,12 +103,17 @@ export default function PrivacidadPage() {
               <li>Número de teléfono profesional</li>
             </ul>
 
-            <h3 className="text-base font-medium text-foreground mt-4 mb-2">3.2 Datos de Pacientes</h3>
+            <h3 className="text-base font-medium text-foreground mt-4 mb-2">
+              3.2 Datos de Pacientes
+            </h3>
             <ul className="list-disc pl-5 space-y-1 text-sm">
               <li>Nombre completo</li>
               <li>Número de teléfono y/o email</li>
               <li>RUT / documento de identidad</li>
-              <li>Datos de salud: historial médico, diagnósticos, recetas, alergias, medicación crónica</li>
+              <li>
+                Datos de salud: historial médico, diagnósticos, recetas, alergias, medicación
+                crónica
+              </li>
               <li>Obra social / sistema de salud y número de afiliado</li>
               <li>Historial de turnos y consultas</li>
               <li>Conversaciones por WhatsApp con el consultorio</li>
@@ -103,7 +129,9 @@ export default function PrivacidadPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">4. Finalidad del Tratamiento</h2>
+            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">
+              4. Finalidad del Tratamiento
+            </h2>
             <p>Utilizamos los datos recopilados para:</p>
             <ul className="list-disc pl-5 space-y-1 text-sm">
               <li>Gestionar turnos médicos y recordatorios</li>
@@ -117,29 +145,48 @@ export default function PrivacidadPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">5. Base Legal para el Tratamiento</h2>
+            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">
+              5. Base Legal para el Tratamiento
+            </h2>
             <p>El tratamiento de sus datos se basa en:</p>
             <ul className="list-disc pl-5 space-y-1 text-sm">
-              <li><strong>Consentimiento explícito</strong> del paciente (para comunicación por WhatsApp/email)</li>
-              <li><strong>Ejecución de un contrato</strong> de servicios médicos entre el profesional y el paciente</li>
-              <li><strong>Interés legítimo</strong> del profesional médico para gestionar su consultorio</li>
-              <li><strong>Cumplimiento de obligaciones legales</strong> (historia clínica, recetas, auditoría)</li>
+              <li>
+                <strong>Consentimiento explícito</strong> del paciente (para comunicación por
+                WhatsApp/email)
+              </li>
+              <li>
+                <strong>Ejecución de un contrato</strong> de servicios médicos entre el profesional
+                y el paciente
+              </li>
+              <li>
+                <strong>Interés legítimo</strong> del profesional médico para gestionar su
+                consultorio
+              </li>
+              <li>
+                <strong>Cumplimiento de obligaciones legales</strong> (historia clínica, recetas,
+                auditoría)
+              </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">6. IA Local y Confidencialidad</h2>
+            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">
+              6. IA Local y Confidencialidad
+            </h2>
             <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 my-4">
               <p className="text-sm font-medium text-foreground mb-1">
                 🛡️ Diferenciador clave: IA 100% Local
               </p>
               <p className="text-sm">
-                A diferencia de otros softwares médicos, el asistente de inteligencia artificial de AiCoreMed
-                (<strong>Mistral</strong>) corre <strong>exclusivamente en su propia infraestructura</strong>
+                A diferencia de otros softwares médicos, el asistente de inteligencia artificial de
+                AiCoreMed (<strong>Mistral</strong>) corre{' '}
+                <strong>exclusivamente en su propia infraestructura</strong>
                 (Ollama en su VPS). Esto significa que:
               </p>
               <ul className="list-disc pl-5 space-y-1 text-sm mt-2">
-                <li>Los datos de los pacientes <strong>nunca salen</strong> de su servidor</li>
+                <li>
+                  Los datos de los pacientes <strong>nunca salen</strong> de su servidor
+                </li>
                 <li>No se envían datos a APIs externas como OpenAI, Google Cloud o Anthropic</li>
                 <li>No se usan datos de pacientes para reentrenar modelos de IA</li>
                 <li>No hay costos adicionales por API de IA</li>
@@ -149,13 +196,20 @@ export default function PrivacidadPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">7. Compartición de Datos con Terceros</h2>
-            <p>No compartimos datos personales de pacientes con terceros, excepto en los siguientes casos:</p>
+            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">
+              7. Compartición de Datos con Terceros
+            </h2>
+            <p>
+              No compartimos datos personales de pacientes con terceros, excepto en los siguientes
+              casos:
+            </p>
             <table className="w-full text-sm border-collapse mt-3">
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-2 pr-4 font-medium text-foreground">Servicio</th>
-                  <th className="text-left py-2 font-medium text-foreground">Qué datos se comparten</th>
+                  <th className="text-left py-2 font-medium text-foreground">
+                    Qué datos se comparten
+                  </th>
                   <th className="text-left py-2 pl-4 font-medium text-foreground">Propósito</th>
                 </tr>
               </thead>
@@ -183,95 +237,192 @@ export default function PrivacidadPage() {
               </tbody>
             </table>
             <p className="text-sm mt-3">
-              Todos estos servicios operan bajo acuerdos de confidencialidad y cumplen con estándares de seguridad.
-              En ningún caso se venden, alquilan o comercializan datos personales o médicos.
+              Todos estos servicios operan bajo acuerdos de confidencialidad y cumplen con
+              estándares de seguridad. En ningún caso se venden, alquilan o comercializan datos
+              personales o médicos.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">8. Medidas de Seguridad</h2>
+            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">
+              8. Medidas de Seguridad
+            </h2>
             <p>Implementamos las siguientes medidas técnicas y organizativas:</p>
             <ul className="list-disc pl-5 space-y-1 text-sm">
-              <li><strong>Cifrado en tránsito:</strong> HTTPS/TLS 1.3 en todas las comunicaciones</li>
-              <li><strong>Cifrado en reposo:</strong> AES-256-GCM para credenciales y backups</li>
-              <li><strong>Autenticación:</strong> JWT + 2FA TOTP + bloqueo por intentos fallidos</li>
-              <li><strong>Multi-tenant:</strong> Aislamiento completo de datos entre consultorios</li>
-              <li><strong>Auditoría:</strong> Registro de todos los accesos a datos médicos con trazabilidad</li>
-              <li><strong>Borrado lógico:</strong> Soft-delete en todas las tablas (nada se pierde accidentalmente)</li>
-              <li><strong>Firewall:</strong> Puerto de base de datos bloqueado a acceso externo</li>
-              <li><strong>Backup encriptado:</strong> Copias de seguridad diarias con cifrado</li>
-              <li><strong>Sanitización de prompts:</strong> Protección contra jailbreak en asistentes IA</li>
+              <li>
+                <strong>Cifrado en tránsito:</strong> HTTPS/TLS 1.3 en todas las comunicaciones
+              </li>
+              <li>
+                <strong>Cifrado en reposo:</strong> AES-256-GCM para credenciales y backups
+              </li>
+              <li>
+                <strong>Autenticación:</strong> JWT + 2FA TOTP + bloqueo por intentos fallidos
+              </li>
+              <li>
+                <strong>Multi-tenant:</strong> Aislamiento completo de datos entre consultorios
+              </li>
+              <li>
+                <strong>Auditoría:</strong> Registro de todos los accesos a datos médicos con
+                trazabilidad
+              </li>
+              <li>
+                <strong>Borrado lógico:</strong> Soft-delete en todas las tablas (nada se pierde
+                accidentalmente)
+              </li>
+              <li>
+                <strong>Firewall:</strong> Puerto de base de datos bloqueado a acceso externo
+              </li>
+              <li>
+                <strong>Backup encriptado:</strong> Copias de seguridad diarias con cifrado
+              </li>
+              <li>
+                <strong>Sanitización de prompts:</strong> Protección contra jailbreak en asistentes
+                IA
+              </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">9. Retención de Datos</h2>
-            <p>Conservamos los datos durante el tiempo necesario para cumplir con las finalidades descritas:</p>
+            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">
+              9. Retención de Datos
+            </h2>
+            <p>
+              Conservamos los datos durante el tiempo necesario para cumplir con las finalidades
+              descritas:
+            </p>
             <ul className="list-disc pl-5 space-y-1 text-sm">
-              <li><strong>Datos de cuenta:</strong> Mientras la cuenta esté activa</li>
-              <li><strong>Historial clínico:</strong> Mínimo 5 años desde la última consulta (según normativa local)</li>
-              <li><strong>Logs de auditoría:</strong> 90 días (configurable)</li>
-              <li><strong>Conversaciones:</strong> 1 año desde la última interacción</li>
-              <li><strong>Backups:</strong> 30 días rotativos</li>
+              <li>
+                <strong>Datos de cuenta:</strong> Mientras la cuenta esté activa
+              </li>
+              <li>
+                <strong>Historial clínico:</strong> Mínimo 5 años desde la última consulta (según
+                normativa local)
+              </li>
+              <li>
+                <strong>Logs de auditoría:</strong> 90 días (configurable)
+              </li>
+              <li>
+                <strong>Conversaciones:</strong> 1 año desde la última interacción
+              </li>
+              <li>
+                <strong>Backups:</strong> 30 días rotativos
+              </li>
             </ul>
-            <p className="text-sm">Al cancelar la cuenta, los datos se conservan por 90 días antes de ser anonimizados definitivamente.</p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">10. Derechos del Paciente (ARCO)</h2>
-            <p>Todo paciente tiene derecho a:</p>
-            <ul className="list-disc pl-5 space-y-1 text-sm">
-              <li><strong>Acceso:</strong> Solicitar una copia de todos sus datos personales y médicos</li>
-              <li><strong>Rectificación:</strong> Corregir datos inexactos o incompletos</li>
-              <li><strong>Cancelación:</strong> Solicitar la eliminación o anonimización de sus datos</li>
-              <li><strong>Oposición:</strong> Oponerse al tratamiento de sus datos para fines específicos</li>
-              <li><strong>Portabilidad:</strong> Recibir sus datos en formato estructurado (JSON/PDF)</li>
-              <li><strong>Revocar consentimiento:</strong> En cualquier momento, sin afectar la licitud del tratamiento previo</li>
-            </ul>
-            <p className="text-sm mt-3">
-              Para ejercer estos derechos, el paciente puede contactar directamente a su médico o escribirnos a{' '}
-              <a href="mailto:info@aicorebots.com" className="text-primary hover:underline">info@aicorebots.com</a>.
+            <p className="text-sm">
+              Al cancelar la cuenta, los datos se conservan por 90 días antes de ser anonimizados
+              definitivamente.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">11. Consentimiento para Comunicaciones</h2>
+            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">
+              10. Derechos del Paciente (ARCO)
+            </h2>
+            <p>Todo paciente tiene derecho a:</p>
+            <ul className="list-disc pl-5 space-y-1 text-sm">
+              <li>
+                <strong>Acceso:</strong> Solicitar una copia de todos sus datos personales y médicos
+              </li>
+              <li>
+                <strong>Rectificación:</strong> Corregir datos inexactos o incompletos
+              </li>
+              <li>
+                <strong>Cancelación:</strong> Solicitar la eliminación o anonimización de sus datos
+              </li>
+              <li>
+                <strong>Oposición:</strong> Oponerse al tratamiento de sus datos para fines
+                específicos
+              </li>
+              <li>
+                <strong>Portabilidad:</strong> Recibir sus datos en formato estructurado (JSON/PDF)
+              </li>
+              <li>
+                <strong>Revocar consentimiento:</strong> En cualquier momento, sin afectar la
+                licitud del tratamiento previo
+              </li>
+            </ul>
+            <p className="text-sm mt-3">
+              Para ejercer estos derechos, el paciente puede contactar directamente a su médico o
+              escribirnos a{' '}
+              <a href="mailto:info@aicorebots.com" className="text-primary hover:underline">
+                info@aicorebots.com
+              </a>
+              .
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">
+              11. Consentimiento para Comunicaciones
+            </h2>
             <p>
-              La plataforma requiere consentimiento explícito del paciente para enviar comunicaciones por WhatsApp y email.
-              El paciente puede gestionar sus preferencias en cualquier momento desde su perfil en el Portal del Paciente.
-              Cada cambio de consentimiento queda registrado en el historial de auditoría.
+              La plataforma requiere consentimiento explícito del paciente para enviar
+              comunicaciones por WhatsApp y email. El paciente puede gestionar sus preferencias en
+              cualquier momento desde su perfil en el Portal del Paciente. Cada cambio de
+              consentimiento queda registrado en el historial de auditoría.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">12. Cookies</h2>
             <p>
-              AiCoreMed utiliza únicamente cookies técnicas esenciales para el funcionamiento de la plataforma
-              (autenticación, sesión, seguridad). No utilizamos cookies de tracking, publicidad ni de terceros.
-              Al utilizar la plataforma, usted acepta el uso de estas cookies técnicas.
+              AiCoreMed utiliza únicamente cookies técnicas esenciales para el funcionamiento de la
+              plataforma (autenticación, sesión, seguridad). No utilizamos cookies de tracking,
+              publicidad ni de terceros. Al utilizar la plataforma, usted acepta el uso de estas
+              cookies técnicas.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">13. Cambios en esta Política</h2>
+            <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">
+              13. Cambios en esta Política
+            </h2>
             <p>
-              Nos reservamos el derecho de actualizar esta Política de Privacidad en cualquier momento.
-              Los cambios serán notificados a través de la plataforma y, cuando sea relevante, por correo electrónico.
-              La fecha de la última actualización aparece al inicio de este documento.
+              Nos reservamos el derecho de actualizar esta Política de Privacidad en cualquier
+              momento. Los cambios serán notificados a través de la plataforma y, cuando sea
+              relevante, por correo electrónico. La fecha de la última actualización aparece al
+              inicio de este documento.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mt-8 mb-3">14. Contacto</h2>
             <p>
-              Si tienes preguntas sobre esta Política de Privacidad o sobre el tratamiento de tus datos,
-              podés contactarnos en:
+              Si tienes preguntas sobre esta Política de Privacidad o sobre el tratamiento de tus
+              datos, podés contactarnos en:
             </p>
             <div className="bg-muted/50 rounded-lg p-4 mt-2 text-sm">
-              <p><strong>Aicore</strong></p>
-              <p>Email: <a href="mailto:info@aicorebots.com" className="text-primary hover:underline">info@aicorebots.com</a></p>
-              <p>Web: <a href="https://aicorebots.com" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">aicorebots.com</a></p>
-              <p>WhatsApp: <a href="https://wa.me/56975680702" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">+56 9 7568 0702</a></p>
+              <p>
+                <strong>Aicore</strong>
+              </p>
+              <p>
+                Email:{' '}
+                <a href="mailto:info@aicorebots.com" className="text-primary hover:underline">
+                  info@aicorebots.com
+                </a>
+              </p>
+              <p>
+                Web:{' '}
+                <a
+                  href="https://aicorebots.com"
+                  className="text-primary hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  aicorebots.com
+                </a>
+              </p>
+              <p>
+                WhatsApp:{' '}
+                <a
+                  href="https://wa.me/56975680702"
+                  className="text-primary hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  +56 9 7568 0702
+                </a>
+              </p>
             </div>
           </section>
         </div>

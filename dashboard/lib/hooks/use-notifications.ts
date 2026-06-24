@@ -47,9 +47,7 @@ export function useNotifications() {
       if (previous) {
         queryClient.setQueryData<NotificacionesResponse>(['notificaciones'], {
           ...previous,
-          data: previous.data.map((n) =>
-            n.id === id ? { ...n, leido: true } : n
-          ),
+          data: previous.data.map((n) => (n.id === id ? { ...n, leido: true } : n)),
           noLeidas: Math.max(0, previous.noLeidas - 1),
         });
       }
@@ -80,9 +78,7 @@ export function useNotifications() {
       if (previous) {
         queryClient.setQueryData<NotificacionesResponse>(['notificaciones'], {
           ...previous,
-          data: previous.data.map((n) =>
-            n.id === id ? { ...n, leido: false } : n
-          ),
+          data: previous.data.map((n) => (n.id === id ? { ...n, leido: false } : n)),
           noLeidas: previous.noLeidas + 1,
         });
       }
@@ -113,9 +109,8 @@ export function useNotifications() {
         queryClient.setQueryData<NotificacionesResponse>(['notificaciones'], {
           ...previous,
           data: previous.data.filter((n) => n.id !== id),
-          noLeidas: removed && !removed.leido
-            ? Math.max(0, previous.noLeidas - 1)
-            : previous.noLeidas,
+          noLeidas:
+            removed && !removed.leido ? Math.max(0, previous.noLeidas - 1) : previous.noLeidas,
         });
       }
       return { previous };

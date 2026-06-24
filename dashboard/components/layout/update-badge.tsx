@@ -20,7 +20,15 @@ import { Badge } from '@/components/ui/badge';
  * Se muestra en el header cuando hay una nueva versión disponible.
  */
 export function UpdateBadge() {
-  const { updateReady, handleUpdate, changelogOpen, setChangelogOpen, appVersion, hasUnseenChangelog, markChangelogSeen } = useUpdate();
+  const {
+    updateReady,
+    handleUpdate,
+    changelogOpen,
+    setChangelogOpen,
+    appVersion,
+    hasUnseenChangelog,
+    markChangelogSeen,
+  } = useUpdate();
   const [showTooltip, setShowTooltip] = useState(false);
 
   const handleOpenChangelog = useCallback(() => {
@@ -79,9 +87,14 @@ export function UpdateBadge() {
       {showTooltip && (
         <div className="absolute top-full mt-1 right-0 z-50 bg-popover border rounded-lg shadow-lg p-3 max-w-[220px] text-xs animate-in fade-in slide-in-from-top-1">
           <p className="font-medium text-foreground mb-1">Nueva versión disponible</p>
-          <p className="text-muted-foreground mb-2">Mirá las novedades y actualizá cuando quieras.</p>
+          <p className="text-muted-foreground mb-2">
+            Mirá las novedades y actualizá cuando quieras.
+          </p>
           <button
-            onClick={(e) => { e.stopPropagation(); handleUpdate(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleUpdate();
+            }}
             className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:bg-primary/90 transition-colors"
           >
             <RefreshCw className="w-3 h-3" />
@@ -124,9 +137,7 @@ function ChangelogModal({
               v{appVersion}
             </Badge>
           </DialogTitle>
-          <DialogDescription>
-            Últimas actualizaciones y mejoras del sistema
-          </DialogDescription>
+          <DialogDescription>Últimas actualizaciones y mejoras del sistema</DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="max-h-[55vh] pr-4">
@@ -140,9 +151,7 @@ function ChangelogModal({
 
                 <div className="mb-2">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold">
-                      {entry.title}
-                    </h3>
+                    <h3 className="text-sm font-semibold">{entry.title}</h3>
                     {entry.version === CHANGELOG[0].version && (
                       <Badge className="text-[9px] h-4 px-1.5">Última</Badge>
                     )}
@@ -177,7 +186,13 @@ function ChangelogModal({
               Cerrar
             </Button>
             {updateReady && (
-              <Button size="sm" onClick={() => { handleUpdate(); onOpenChange(false); }}>
+              <Button
+                size="sm"
+                onClick={() => {
+                  handleUpdate();
+                  onOpenChange(false);
+                }}
+              >
                 <RefreshCw className="h-3 w-3 mr-1" />
                 Actualizar
               </Button>

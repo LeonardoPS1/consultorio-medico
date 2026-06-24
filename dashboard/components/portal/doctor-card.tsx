@@ -14,8 +14,14 @@ interface DoctorCardProps {
 }
 
 const AVATAR_COLORS = [
-  'bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-amber-500',
-  'bg-rose-500', 'bg-cyan-500', 'bg-pink-500', 'bg-indigo-500',
+  'bg-blue-500',
+  'bg-emerald-500',
+  'bg-violet-500',
+  'bg-amber-500',
+  'bg-rose-500',
+  'bg-cyan-500',
+  'bg-pink-500',
+  'bg-indigo-500',
 ];
 
 function getInitials(nombre: string): string {
@@ -48,7 +54,9 @@ export function DoctorCard({ medico, selected, onSelect }: DoctorCardProps) {
         <div className="flex items-start gap-3">
           <Avatar className="h-12 w-12 shrink-0">
             <AvatarImage src={medico.fotoUrl || undefined} alt={medico.nombre} />
-            <AvatarFallback className={`${getAvatarColor(medico.nombre)} text-white text-sm font-semibold`}>
+            <AvatarFallback
+              className={`${getAvatarColor(medico.nombre)} text-white text-sm font-semibold`}
+            >
               {getInitials(medico.nombre)}
             </AvatarFallback>
           </Avatar>
@@ -76,7 +84,10 @@ export function DoctorCard({ medico, selected, onSelect }: DoctorCardProps) {
           variant={selected ? 'default' : 'outline'}
           size="sm"
           className="w-full"
-          onClick={(e) => { e.stopPropagation(); onSelect(medico); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(medico);
+          }}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {selected ? 'Seleccionado' : 'Agendar turno'}

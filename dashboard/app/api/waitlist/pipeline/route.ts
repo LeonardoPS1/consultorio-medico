@@ -27,8 +27,9 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
   return success({
     ...results,
-    mensaje: results.expiradas > 0
-      ? `${results.expiradas} oferta(s) expirada(s), ${results.nuevasOfertas} nueva(s) oferta(s) creada(s)`
-      : 'No hay ofertas pendientes por expirar',
+    mensaje:
+      results.expiradas > 0
+        ? `${results.expiradas} oferta(s) expirada(s), ${results.nuevasOfertas} nueva(s) oferta(s) creada(s)`
+        : 'No hay ofertas pendientes por expirar',
   });
 });

@@ -25,25 +25,29 @@ export const medicosService = {
   async list(sucursalId?: string): Promise<{ data: MedicoRow[]; total: number }> {
     const cacheKey = `${CACHE_PREFIX}:list:${sucursalId ?? 'todas'}`;
 
-    return cache.getOrSet(cacheKey, async () => {
-      const whereConditions = and(
-        sql`${medicos.deletedAt} IS NULL`,
-        sucursalId ? eq(medicos.sucursalId, sucursalId) : undefined,
-      );
+    return cache.getOrSet(
+      cacheKey,
+      async () => {
+        const whereConditions = and(
+          sql`${medicos.deletedAt} IS NULL`,
+          sucursalId ? eq(medicos.sucursalId, sucursalId) : undefined,
+        );
 
-      const lista = await db
-        .select()
-        .from(medicos)
-        .where(whereConditions)
-        .orderBy(medicos.nombre);
+        const lista = await db
+          .select()
+          .from(medicos)
+          .where(whereConditions)
+          .orderBy(medicos.nombre);
 
-      const [{ total }] = await db
-        .select({ total: count() })
-        .from(medicos)
-        .where(whereConditions);
+        const [{ total }] = await db
+          .select({ total: count() })
+          .from(medicos)
+          .where(whereConditions);
 
-      return { data: lista, total: Number(total) };
-    }, CACHE_TTL);
+        return { data: lista, total: Number(total) };
+      },
+      CACHE_TTL,
+    );
   },
 
   /**

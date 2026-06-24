@@ -59,7 +59,13 @@ export const PUT = apiHandler(async (request: NextRequest) => {
   const userId = session.user.id as string;
 
   const body = await request.json();
-  const { urgenciasWhatsapp, resumenDiarioEmail, alertasAusentismo, nuevosPacientes, whatsappPersonal } = body;
+  const {
+    urgenciasWhatsapp,
+    resumenDiarioEmail,
+    alertasAusentismo,
+    nuevosPacientes,
+    whatsappPersonal,
+  } = body;
 
   const existing = await db
     .select()
@@ -114,7 +120,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     const nueva = await notificacionesService.create({
       ...data,
       usuarioId: userId,
-    } as any);
+    });
     return created(nueva);
   }
 

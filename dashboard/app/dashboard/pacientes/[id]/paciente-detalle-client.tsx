@@ -179,19 +179,27 @@ interface Props {
 
 function getEstadoRecetaColor(estado: string) {
   switch (estado) {
-    case 'activa': return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400';
-    case 'vencida': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-    default: return 'bg-muted text-muted-foreground';
+    case 'activa':
+      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400';
+    case 'vencida':
+      return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+    default:
+      return 'bg-muted text-muted-foreground';
   }
 }
 
 function getHistorialIcon(tipo: string) {
   switch (tipo) {
-    case 'consulta': return Activity;
-    case 'diagnostico': return Shield;
-    case 'procedimiento': return Syringe;
-    case 'estudio': return FileText;
-    default: return FileText;
+    case 'consulta':
+      return Activity;
+    case 'diagnostico':
+      return Shield;
+    case 'procedimiento':
+      return Syringe;
+    case 'estudio':
+      return FileText;
+    default:
+      return FileText;
   }
 }
 
@@ -300,7 +308,12 @@ export function PacienteDetalleClient({
   };
 
   const handleCreateSoap = async () => {
-    if (!soapForm.subjetivo.trim() && !soapForm.objetivo.trim() && !soapForm.assessment.trim() && !soapForm.plan.trim()) {
+    if (
+      !soapForm.subjetivo.trim() &&
+      !soapForm.objetivo.trim() &&
+      !soapForm.assessment.trim() &&
+      !soapForm.plan.trim()
+    ) {
       toast({ title: 'Completá al menos un campo', variant: 'destructive' });
       return;
     }
@@ -331,9 +344,15 @@ export function PacienteDetalleClient({
       toast({ title: 'Nota SOAP guardada' });
       setShowNewSoap(false);
       setSoapForm({
-        subjetivo: '', objetivo: '', assessment: '', plan: '',
-        cie10Codigo: '', cie10Descripcion: '',
-        derivarA: '', requiereControl: false, controlEnDias: '',
+        subjetivo: '',
+        objetivo: '',
+        assessment: '',
+        plan: '',
+        cie10Codigo: '',
+        cie10Descripcion: '',
+        derivarA: '',
+        requiereControl: false,
+        controlEnDias: '',
       });
     } catch {
       toast({ title: 'Error', description: 'No se pudo guardar', variant: 'destructive' });
@@ -366,9 +385,7 @@ export function PacienteDetalleClient({
       );
       if (!res.ok) throw new Error();
       const data = await res.json();
-      setNotasSoapList((prev) =>
-        prev.map((n) => (n.id === data.id ? { ...n, ...data } : n)),
-      );
+      setNotasSoapList((prev) => prev.map((n) => (n.id === data.id ? { ...n, ...data } : n)));
       toast({ title: 'Nota SOAP actualizada' });
       setEditSoapDialog(null);
     } catch {
@@ -381,10 +398,9 @@ export function PacienteDetalleClient({
   const handleDeleteSoap = async () => {
     if (!deleteSoapId) return;
     try {
-      const res = await fetch(
-        `/api/pacientes/${paciente.id}/notas-soap?entryId=${deleteSoapId}`,
-        { method: 'DELETE' },
-      );
+      const res = await fetch(`/api/pacientes/${paciente.id}/notas-soap?entryId=${deleteSoapId}`, {
+        method: 'DELETE',
+      });
       if (!res.ok) throw new Error();
       setNotasSoapList((prev) => prev.filter((n) => n.id !== deleteSoapId));
       toast({ title: 'Nota SOAP eliminada' });
@@ -431,8 +447,12 @@ export function PacienteDetalleClient({
 
       setShowCertDialog(false);
       setCertForm({
-        diagnostico: '', cie10Codigo: '', reposoDesde: '', reposoHasta: '',
-        reposoDias: '', indicaciones: '',
+        diagnostico: '',
+        cie10Codigo: '',
+        reposoDesde: '',
+        reposoHasta: '',
+        reposoDias: '',
+        indicaciones: '',
       });
       // Refrescar lista de certificados para que aparezca el nuevo
       setCertLoaded(false);
@@ -558,9 +578,7 @@ export function PacienteDetalleClient({
   };
 
   const handleEstadoTurno = async (id: string, nuevoEstado: string) => {
-    setTurnosList((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, estado: nuevoEstado } : t)),
-    );
+    setTurnosList((prev) => prev.map((t) => (t.id === id ? { ...t, estado: nuevoEstado } : t)));
     try {
       await fetch(`/api/turnos/${id}`, {
         method: 'PATCH',
@@ -722,7 +740,11 @@ export function PacienteDetalleClient({
       toast({ title: 'Notas actualizadas' });
       setEditandoNotas(false);
     } catch {
-      toast({ title: 'Error', description: 'No se pudieron guardar las notas', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'No se pudieron guardar las notas',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -738,7 +760,11 @@ export function PacienteDetalleClient({
       toast({ title: 'Alergias actualizadas' });
       setEditandoAlergias(false);
     } catch {
-      toast({ title: 'Error', description: 'No se pudieron actualizar las alergias', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'No se pudieron actualizar las alergias',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -754,7 +780,11 @@ export function PacienteDetalleClient({
       toast({ title: 'Medicación actualizada' });
       setEditandoMedicacion(false);
     } catch {
-      toast({ title: 'Error', description: 'No se pudo actualizar la medicación', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar la medicación',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -816,7 +846,8 @@ export function PacienteDetalleClient({
                 )}
                 {(paciente.regionNombre || paciente.comunaNombre) && (
                   <span className="flex items-center gap-1 text-muted-foreground">
-                    <MapPin className="h-3.5 w-3.5" /> {[paciente.comunaNombre, paciente.regionNombre].filter(Boolean).join(', ')}
+                    <MapPin className="h-3.5 w-3.5" />{' '}
+                    {[paciente.comunaNombre, paciente.regionNombre].filter(Boolean).join(', ')}
                   </span>
                 )}
               </div>
@@ -824,7 +855,12 @@ export function PacienteDetalleClient({
                 <Badge variant="secondary" className="text-xs" title="Sistema de Salud">
                   {paciente.sistemaSalud
                     ? (() => {
-                        const saludMap: Record<string, string> = { fonasa: 'FONASA', isapre: 'ISAPRE', particular: 'Particular', otro: 'Otro' };
+                        const saludMap: Record<string, string> = {
+                          fonasa: 'FONASA',
+                          isapre: 'ISAPRE',
+                          particular: 'Particular',
+                          otro: 'Otro',
+                        };
                         const base = saludMap[paciente.sistemaSalud] || paciente.sistemaSalud;
                         return paciente.sistemaSalud === 'isapre' && paciente.isapreNombre
                           ? `${base} · ${paciente.isapreNombre}`
@@ -878,7 +914,9 @@ export function PacienteDetalleClient({
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => (bajaSolicitada ? setBajaConfirmOpen(true) : setBajaDialogOpen(true))}
+                        onClick={() =>
+                          bajaSolicitada ? setBajaConfirmOpen(true) : setBajaDialogOpen(true)
+                        }
                         disabled={bajaLoading}
                         className="text-destructive"
                       >
@@ -895,10 +933,18 @@ export function PacienteDetalleClient({
               <Button variant="outline" size="sm" onClick={() => setEditPacienteOpen(true)}>
                 <Edit3 className="h-4 w-4 mr-2" /> Editar
               </Button>
-              <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/conversaciones`)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(`/dashboard/conversaciones`)}
+              >
                 <MessageSquare className="h-4 w-4 mr-2" /> Mensaje
               </Button>
-              <Button size="sm" onClick={() => setShowNuevoTurno(true)} title="Nuevo Turno (Ctrl+T)">
+              <Button
+                size="sm"
+                onClick={() => setShowNuevoTurno(true)}
+                title="Nuevo Turno (Ctrl+T)"
+              >
                 <Calendar className="h-4 w-4 mr-2" /> Nuevo Turno
               </Button>
               <Button variant="outline" size="sm" onClick={() => setShowCertDialog(true)}>
@@ -912,7 +958,9 @@ export function PacienteDetalleClient({
                   variant="outline"
                   size="sm"
                   className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                  onClick={() => (bajaSolicitada ? setBajaConfirmOpen(true) : setBajaDialogOpen(true))}
+                  onClick={() =>
+                    bajaSolicitada ? setBajaConfirmOpen(true) : setBajaDialogOpen(true)
+                  }
                   disabled={bajaLoading}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
@@ -1077,8 +1125,13 @@ export function PacienteDetalleClient({
           <TabsTrigger value="soap" onClick={fetchNotasSoap} className="shrink-0 whitespace-nowrap">
             <Stethoscope className="h-4 w-4 mr-1 shrink-0" /> SOAP ({stats.totalNotasSoap})
           </TabsTrigger>
-          <TabsTrigger value="certificados" onClick={fetchCertificados} className="shrink-0 whitespace-nowrap">
-            <ScrollText className="h-4 w-4 mr-1 shrink-0" /> Certificados ({certificadosList.length})
+          <TabsTrigger
+            value="certificados"
+            onClick={fetchCertificados}
+            className="shrink-0 whitespace-nowrap"
+          >
+            <ScrollText className="h-4 w-4 mr-1 shrink-0" /> Certificados ({certificadosList.length}
+            )
           </TabsTrigger>
           <TabsTrigger value="notas" className="shrink-0 whitespace-nowrap">
             <FileText className="h-4 w-4 mr-1 shrink-0" /> Notas
@@ -1120,13 +1173,17 @@ export function PacienteDetalleClient({
                           {formatDate(t.fechaHora, "d 'de' MMMM")} a las {t.hora}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {t.motivo || t.tipoConsulta} {t.medicoNombre && `· ${t.medicoNombre}`} · {t.duracionMinutos}min
+                          {t.motivo || t.tipoConsulta} {t.medicoNombre && `· ${t.medicoNombre}`} ·{' '}
+                          {t.duracionMinutos}min
                         </p>
                         {t.notasMedico && (
-                          <p className="text-xs text-muted-foreground/70 mt-0.5 italic">{t.notasMedico}</p>
+                          <p className="text-xs text-muted-foreground/70 mt-0.5 italic">
+                            {t.notasMedico}
+                          </p>
                         )}
                       </div>
-                      <Badge className="shrink-0"
+                      <Badge
+                        className="shrink-0"
                         style={{
                           backgroundColor: `${getTurnoColor(t.estado)}20`,
                           color: getTurnoColor(t.estado),
@@ -1272,13 +1329,13 @@ export function PacienteDetalleClient({
                         {r.medicoNombre && ` · ${r.medicoNombre}`}
                       </p>
                       {r.indicaciones && (
-                        <p className="text-xs text-muted-foreground/70 mt-0.5 italic">{r.indicaciones}</p>
+                        <p className="text-xs text-muted-foreground/70 mt-0.5 italic">
+                          {r.indicaciones}
+                        </p>
                       )}
                     </div>
                     <div className="text-right text-xs">
-                      <Badge className={getEstadoRecetaColor(r.estado)}>
-                        {r.estado}
-                      </Badge>
+                      <Badge className={getEstadoRecetaColor(r.estado)}>{r.estado}</Badge>
                       {r.fechaInicio && (
                         <p className="text-muted-foreground mt-1">
                           {formatDate(r.fechaInicio, 'dd/MM/yy')}
@@ -1328,7 +1385,9 @@ export function PacienteDetalleClient({
                     <Label className="text-xs">Código CIE-10</Label>
                     <Cie10Search
                       value={historialForm.codigo}
-                      onSelect={(entry) => setHistorialForm((f) => ({ ...f, codigo: entry.codigo }))}
+                      onSelect={(entry) =>
+                        setHistorialForm((f) => ({ ...f, codigo: entry.codigo }))
+                      }
                       onChange={(v) => setHistorialForm((f) => ({ ...f, codigo: v }))}
                       placeholder="Buscar CIE-10..."
                     />
@@ -1350,7 +1409,9 @@ export function PacienteDetalleClient({
                     className="min-h-[60px] text-xs"
                     placeholder="Detalles de la entrada..."
                     value={historialForm.descripcion}
-                    onChange={(e) => setHistorialForm((f) => ({ ...f, descripcion: e.target.value }))}
+                    onChange={(e) =>
+                      setHistorialForm((f) => ({ ...f, descripcion: e.target.value }))
+                    }
                   />
                 </div>
                 <div className="flex gap-2 justify-end">
@@ -1360,7 +1421,12 @@ export function PacienteDetalleClient({
                     className="h-7 text-xs"
                     onClick={() => {
                       setShowNewHistorial(false);
-                      setHistorialForm({ tipo: 'consulta', titulo: '', descripcion: '', codigo: '' });
+                      setHistorialForm({
+                        tipo: 'consulta',
+                        titulo: '',
+                        descripcion: '',
+                        codigo: '',
+                      });
                     }}
                   >
                     Cancelar
@@ -1398,14 +1464,17 @@ export function PacienteDetalleClient({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-medium text-sm">{h.titulo}</p>
-                          <Badge variant="outline" className="text-[10px]">{h.tipo}</Badge>
+                          <Badge variant="outline" className="text-[10px]">
+                            {h.tipo}
+                          </Badge>
                         </div>
                         {h.descripcion && (
                           <p className="text-xs text-muted-foreground mt-1">{h.descripcion}</p>
                         )}
                         {h.diagnosticoCodigo && (
                           <p className="text-xs text-muted-foreground/70 mt-0.5 font-mono">
-                            {h.diagnosticoCodigo} {h.diagnosticoDescripcion && `— ${h.diagnosticoDescripcion}`}
+                            {h.diagnosticoCodigo}{' '}
+                            {h.diagnosticoDescripcion && `— ${h.diagnosticoDescripcion}`}
                           </p>
                         )}
                       </div>
@@ -1524,7 +1593,11 @@ export function PacienteDetalleClient({
                     <Cie10Search
                       value={soapForm.cie10Codigo}
                       onSelect={(entry) => {
-                        setSoapForm((f) => ({ ...f, cie10Codigo: entry.codigo, cie10Descripcion: entry.descripcion }));
+                        setSoapForm((f) => ({
+                          ...f,
+                          cie10Codigo: entry.codigo,
+                          cie10Descripcion: entry.descripcion,
+                        }));
                       }}
                       onChange={(v) => setSoapForm((f) => ({ ...f, cie10Codigo: v }))}
                       placeholder="Buscar CIE-10..."
@@ -1536,7 +1609,9 @@ export function PacienteDetalleClient({
                       className="h-8 text-xs"
                       placeholder="ej: Cefalea tensional"
                       value={soapForm.cie10Descripcion}
-                      onChange={(e) => setSoapForm((f) => ({ ...f, cie10Descripcion: e.target.value }))}
+                      onChange={(e) =>
+                        setSoapForm((f) => ({ ...f, cie10Descripcion: e.target.value }))
+                      }
                     />
                   </div>
                   <div className="space-y-1">
@@ -1556,7 +1631,9 @@ export function PacienteDetalleClient({
                       type="checkbox"
                       className="rounded border-gray-300"
                       checked={soapForm.requiereControl}
-                      onChange={(e) => setSoapForm((f) => ({ ...f, requiereControl: e.target.checked }))}
+                      onChange={(e) =>
+                        setSoapForm((f) => ({ ...f, requiereControl: e.target.checked }))
+                      }
                     />
                     <span className="text-xs">Requiere control</span>
                   </label>
@@ -1568,7 +1645,9 @@ export function PacienteDetalleClient({
                         className="h-7 w-20 text-xs"
                         placeholder="días"
                         value={soapForm.controlEnDias}
-                        onChange={(e) => setSoapForm((f) => ({ ...f, controlEnDias: e.target.value }))}
+                        onChange={(e) =>
+                          setSoapForm((f) => ({ ...f, controlEnDias: e.target.value }))
+                        }
                       />
                       <span className="text-xs text-muted-foreground">días</span>
                     </div>
@@ -1583,9 +1662,15 @@ export function PacienteDetalleClient({
                     onClick={() => {
                       setShowNewSoap(false);
                       setSoapForm({
-                        subjetivo: '', objetivo: '', assessment: '', plan: '',
-                        cie10Codigo: '', cie10Descripcion: '',
-                        derivarA: '', requiereControl: false, controlEnDias: '',
+                        subjetivo: '',
+                        objetivo: '',
+                        assessment: '',
+                        plan: '',
+                        cie10Codigo: '',
+                        cie10Descripcion: '',
+                        derivarA: '',
+                        requiereControl: false,
+                        controlEnDias: '',
                       });
                     }}
                   >
@@ -1662,7 +1747,9 @@ export function PacienteDetalleClient({
                           <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider flex items-center gap-1">
                             <Brain className="h-3 w-3" /> S — Subjetivo
                           </p>
-                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">{n.subjetivo}</p>
+                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                            {n.subjetivo}
+                          </p>
                         </div>
                       )}
                       {n.objetivo && (
@@ -1670,7 +1757,9 @@ export function PacienteDetalleClient({
                           <p className="text-[10px] font-semibold text-green-600 uppercase tracking-wider flex items-center gap-1">
                             <Activity className="h-3 w-3" /> O — Objetivo
                           </p>
-                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">{n.objetivo}</p>
+                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                            {n.objetivo}
+                          </p>
                         </div>
                       )}
                       {n.assessment && (
@@ -1678,7 +1767,9 @@ export function PacienteDetalleClient({
                           <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider flex items-center gap-1">
                             <AlertCircle className="h-3 w-3" /> A — Assessment
                           </p>
-                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">{n.assessment}</p>
+                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                            {n.assessment}
+                          </p>
                         </div>
                       )}
                       {n.plan && (
@@ -1686,7 +1777,9 @@ export function PacienteDetalleClient({
                           <p className="text-[10px] font-semibold text-purple-600 uppercase tracking-wider flex items-center gap-1">
                             <ClipboardList className="h-3 w-3" /> P — Plan
                           </p>
-                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">{n.plan}</p>
+                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                            {n.plan}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -1706,7 +1799,10 @@ export function PacienteDetalleClient({
                         </Badge>
                       )}
                       {n.requiereControl && n.controlEnDias && (
-                        <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-300">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] text-amber-600 border-amber-300"
+                        >
                           <RefreshCw className="h-2.5 w-2.5 mr-1" />
                           Control en {n.controlEnDias} días
                         </Badge>
@@ -1747,7 +1843,15 @@ export function PacienteDetalleClient({
           ) : (
             <div className="space-y-2">
               {certificadosList.map((c) => {
-                const data = c.descripcion ? (() => { try { return JSON.parse(c.descripcion); } catch { return null; } })() : null;
+                const data = c.descripcion
+                  ? (() => {
+                      try {
+                        return JSON.parse(c.descripcion);
+                      } catch {
+                        return null;
+                      }
+                    })()
+                  : null;
                 return (
                   <Card key={c.id} className="hoverable:hover:bg-muted/30 transition-colors group">
                     <CardContent className="p-4 flex items-center gap-4">
@@ -1761,7 +1865,9 @@ export function PacienteDetalleClient({
                           {c.diagnosticoCodigo && ` · CIE-10: ${c.diagnosticoCodigo}`}
                         </p>
                         {data?.indicaciones && (
-                          <p className="text-xs text-muted-foreground/70 mt-0.5 italic truncate">{data.indicaciones}</p>
+                          <p className="text-xs text-muted-foreground/70 mt-0.5 italic truncate">
+                            {data.indicaciones}
+                          </p>
                         )}
                       </div>
                       <Button
@@ -1826,11 +1932,7 @@ export function PacienteDetalleClient({
                         >
                           Cancelar
                         </Button>
-                        <Button
-                          size="sm"
-                          className="h-7 text-xs"
-                          onClick={handleSaveNotas}
-                        >
+                        <Button size="sm" className="h-7 text-xs" onClick={handleSaveNotas}>
                           <Save className="h-3.5 w-3.5 mr-1" />
                           Guardar notas
                         </Button>
@@ -1863,7 +1965,8 @@ export function PacienteDetalleClient({
           <Card>
             <CardContent className="p-6">
               <p className="text-sm text-muted-foreground">
-                Sección disponible desde la página de Consentimientos Informados en el panel principal.
+                Sección disponible desde la página de Consentimientos Informados en el panel
+                principal.
               </p>
             </CardContent>
           </Card>
@@ -1879,7 +1982,11 @@ export function PacienteDetalleClient({
               <div>
                 <p className="text-sm font-medium">Conversacion activa</p>
                 <p className="text-xs text-muted-foreground">
-                  Ultima interaccion: {formatDate(ultimaConversacion.estado === 'activa' ? paciente.createdAt : '', "d 'de' MMMM, HH:mm")}
+                  Ultima interaccion:{' '}
+                  {formatDate(
+                    ultimaConversacion.estado === 'activa' ? paciente.createdAt : '',
+                    "d 'de' MMMM, HH:mm",
+                  )}
                 </p>
               </div>
             </div>
@@ -1895,7 +2002,10 @@ export function PacienteDetalleClient({
       )}
 
       {/* ─── Historial Edit Dialog ──────────────── */}
-      <Dialog open={!!editHistorialDialog} onOpenChange={(open) => !open && setEditHistorialDialog(null)}>
+      <Dialog
+        open={!!editHistorialDialog}
+        onOpenChange={(open) => !open && setEditHistorialDialog(null)}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Editar entrada de historial</DialogTitle>
@@ -1924,8 +2034,15 @@ export function PacienteDetalleClient({
                   <Label className="text-xs">Código CIE-10</Label>
                   <Cie10Search
                     value={editHistorialDialog.diagnosticoCodigo || ''}
-                    onSelect={(entry) => setEditHistorialDialog({ ...editHistorialDialog, diagnosticoCodigo: entry.codigo })}
-                    onChange={(v) => setEditHistorialDialog({ ...editHistorialDialog, diagnosticoCodigo: v })}
+                    onSelect={(entry) =>
+                      setEditHistorialDialog({
+                        ...editHistorialDialog,
+                        diagnosticoCodigo: entry.codigo,
+                      })
+                    }
+                    onChange={(v) =>
+                      setEditHistorialDialog({ ...editHistorialDialog, diagnosticoCodigo: v })
+                    }
                     placeholder="Buscar CIE-10..."
                   />
                 </div>
@@ -1978,7 +2095,9 @@ export function PacienteDetalleClient({
                 <Textarea
                   className="min-h-[60px] text-xs"
                   value={editSoapDialog.subjetivo || ''}
-                  onChange={(e) => setEditSoapDialog({ ...editSoapDialog, subjetivo: e.target.value })}
+                  onChange={(e) =>
+                    setEditSoapDialog({ ...editSoapDialog, subjetivo: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-1">
@@ -1988,7 +2107,9 @@ export function PacienteDetalleClient({
                 <Textarea
                   className="min-h-[60px] text-xs"
                   value={editSoapDialog.objetivo || ''}
-                  onChange={(e) => setEditSoapDialog({ ...editSoapDialog, objetivo: e.target.value })}
+                  onChange={(e) =>
+                    setEditSoapDialog({ ...editSoapDialog, objetivo: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-1">
@@ -1998,7 +2119,9 @@ export function PacienteDetalleClient({
                 <Textarea
                   className="min-h-[60px] text-xs"
                   value={editSoapDialog.assessment || ''}
-                  onChange={(e) => setEditSoapDialog({ ...editSoapDialog, assessment: e.target.value })}
+                  onChange={(e) =>
+                    setEditSoapDialog({ ...editSoapDialog, assessment: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-1">
@@ -2016,7 +2139,13 @@ export function PacienteDetalleClient({
                   <Label className="text-xs">CIE-10</Label>
                   <Cie10Search
                     value={editSoapDialog.cie10Codigo || ''}
-                    onSelect={(entry) => setEditSoapDialog({ ...editSoapDialog, cie10Codigo: entry.codigo, cie10Descripcion: entry.descripcion })}
+                    onSelect={(entry) =>
+                      setEditSoapDialog({
+                        ...editSoapDialog,
+                        cie10Codigo: entry.codigo,
+                        cie10Descripcion: entry.descripcion,
+                      })
+                    }
                     onChange={(v) => setEditSoapDialog({ ...editSoapDialog, cie10Codigo: v })}
                     placeholder="Buscar CIE-10..."
                   />
@@ -2026,7 +2155,9 @@ export function PacienteDetalleClient({
                   <Input
                     className="h-8 text-xs"
                     value={editSoapDialog.cie10Descripcion || ''}
-                    onChange={(e) => setEditSoapDialog({ ...editSoapDialog, cie10Descripcion: e.target.value })}
+                    onChange={(e) =>
+                      setEditSoapDialog({ ...editSoapDialog, cie10Descripcion: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-1">
@@ -2034,7 +2165,9 @@ export function PacienteDetalleClient({
                   <Input
                     className="h-8 text-xs"
                     value={editSoapDialog.derivarA || ''}
-                    onChange={(e) => setEditSoapDialog({ ...editSoapDialog, derivarA: e.target.value })}
+                    onChange={(e) =>
+                      setEditSoapDialog({ ...editSoapDialog, derivarA: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -2044,7 +2177,9 @@ export function PacienteDetalleClient({
                     type="checkbox"
                     className="rounded border-gray-300"
                     checked={editSoapDialog.requiereControl}
-                    onChange={(e) => setEditSoapDialog({ ...editSoapDialog, requiereControl: e.target.checked })}
+                    onChange={(e) =>
+                      setEditSoapDialog({ ...editSoapDialog, requiereControl: e.target.checked })
+                    }
                   />
                   <span className="text-xs">Requiere control</span>
                 </label>
@@ -2055,7 +2190,12 @@ export function PacienteDetalleClient({
                       type="number"
                       className="h-7 w-20 text-xs"
                       value={editSoapDialog.controlEnDias || ''}
-                      onChange={(e) => setEditSoapDialog({ ...editSoapDialog, controlEnDias: parseInt(e.target.value) || null })}
+                      onChange={(e) =>
+                        setEditSoapDialog({
+                          ...editSoapDialog,
+                          controlEnDias: parseInt(e.target.value) || null,
+                        })
+                      }
                     />
                     <span className="text-xs text-muted-foreground">días</span>
                   </div>
@@ -2085,7 +2225,10 @@ export function PacienteDetalleClient({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteSoap} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction
+              onClick={handleDeleteSoap}
+              className="bg-destructive text-destructive-foreground"
+            >
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -2137,7 +2280,9 @@ export function PacienteDetalleClient({
                     if (dias && parseInt(dias) > 0) {
                       const hoy = new Date();
                       const desde = hoy.toISOString().split('T')[0];
-                      const hasta = new Date(hoy.getTime() + parseInt(dias) * 86400000).toISOString().split('T')[0];
+                      const hasta = new Date(hoy.getTime() + parseInt(dias) * 86400000)
+                        .toISOString()
+                        .split('T')[0];
                       setCertForm((f) => ({ ...f, reposoDesde: desde, reposoHasta: hasta }));
                     }
                   }}
@@ -2185,7 +2330,9 @@ export function PacienteDetalleClient({
               onClick={handleCreateCertificado}
               disabled={savingCert || !certForm.diagnostico.trim()}
             >
-              {savingCert ? 'Generando...' : (
+              {savingCert ? (
+                'Generando...'
+              ) : (
                 <>
                   <Printer className="h-4 w-4 mr-1" /> Generar y Ver
                 </>
@@ -2196,20 +2343,40 @@ export function PacienteDetalleClient({
       </Dialog>
 
       {/* ─── Baja — Solicitar (Primer paso) ───── */}
-      <AlertDialog open={bajaDialogOpen} onOpenChange={(open) => !open && !bajaLoading && setBajaDialogOpen(false)}>
+      <AlertDialog
+        open={bajaDialogOpen}
+        onOpenChange={(open) => !open && !bajaLoading && setBajaDialogOpen(false)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Solicitar baja de datos</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
-              <p>Se va a iniciar el proceso de baja de datos de <strong>{paciente.nombre} {paciente.apellido}</strong>.</p>
+              <p>
+                Se va a iniciar el proceso de baja de datos de{' '}
+                <strong>
+                  {paciente.nombre} {paciente.apellido}
+                </strong>
+                .
+              </p>
               <ul className="list-disc pl-4 text-sm space-y-1">
-                <li>El paciente quedará marcado como <strong>baja solicitada</strong></li>
-                <li>Los datos clínicos se conservarán por <strong>90 días</strong> (período de retención legal)</li>
-                <li>Luego del período de retención, los datos se <strong>anonimizarán irreversiblemente</strong></li>
-                <li>Se notificará al sistema de automatización (n8n) para limpiar datos asociados</li>
+                <li>
+                  El paciente quedará marcado como <strong>baja solicitada</strong>
+                </li>
+                <li>
+                  Los datos clínicos se conservarán por <strong>90 días</strong> (período de
+                  retención legal)
+                </li>
+                <li>
+                  Luego del período de retención, los datos se{' '}
+                  <strong>anonimizarán irreversiblemente</strong>
+                </li>
+                <li>
+                  Se notificará al sistema de automatización (n8n) para limpiar datos asociados
+                </li>
               </ul>
               <p className="text-xs text-muted-foreground mt-2">
-                Esta acción cumple con los derechos ARCO (Acceso, Rectificación, Cancelación, Oposición).
+                Esta acción cumple con los derechos ARCO (Acceso, Rectificación, Cancelación,
+                Oposición).
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -2227,12 +2394,20 @@ export function PacienteDetalleClient({
       </AlertDialog>
 
       {/* ─── Baja — Confirmar (Segundo paso) ──── */}
-      <AlertDialog open={bajaConfirmOpen} onOpenChange={(open) => !open && !bajaLoading && setBajaConfirmOpen(false)}>
+      <AlertDialog
+        open={bajaConfirmOpen}
+        onOpenChange={(open) => !open && !bajaLoading && setBajaConfirmOpen(false)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-destructive">¿Confirmar baja definitiva?</AlertDialogTitle>
+            <AlertDialogTitle className="text-destructive">
+              ¿Confirmar baja definitiva?
+            </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
-              <p>Esta acción es <strong>irreversible</strong>. Se ejecutará la cascada completa de eliminación:</p>
+              <p>
+                Esta acción es <strong>irreversible</strong>. Se ejecutará la cascada completa de
+                eliminación:
+              </p>
               <ul className="list-disc pl-4 text-sm space-y-1">
                 <li>Anonimización de datos personales (nombre, email, teléfono, documento)</li>
                 <li>Soft-delete en cascada de: turnos, recetas, conversaciones, mensajes</li>
@@ -2255,17 +2430,24 @@ export function PacienteDetalleClient({
       </AlertDialog>
 
       {/* ─── Delete Confirmation (historial) ───── */}
-      <AlertDialog open={!!deleteHistorialId} onOpenChange={(open) => !open && setDeleteHistorialId(null)}>
+      <AlertDialog
+        open={!!deleteHistorialId}
+        onOpenChange={(open) => !open && setDeleteHistorialId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar entrada?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. La entrada de historial se eliminará permanentemente.
+              Esta acción no se puede deshacer. La entrada de historial se eliminará
+              permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteHistorial} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction
+              onClick={handleDeleteHistorial}
+              className="bg-destructive text-destructive-foreground"
+            >
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -2302,7 +2484,11 @@ export function PacienteDetalleClient({
             );
 
             if (!medicoEncontrado) {
-              toast({ title: 'Error', description: 'Médico no encontrado. Verificá la lista de médicos.', variant: 'destructive' });
+              toast({
+                title: 'Error',
+                description: 'Médico no encontrado. Verificá la lista de médicos.',
+                variant: 'destructive',
+              });
               return;
             }
 

@@ -28,8 +28,26 @@ export interface AuditEntry {
   createdAt: string;
 }
 
-export type AccionAudit = 'login' | 'logout' | 'view' | 'create' | 'edit' | 'delete' | 'export' | 'config';
-export type EntidadAudit = 'paciente' | 'turno' | 'conversacion' | 'mensaje' | 'receta' | 'credencial' | 'usuario' | 'reporte' | 'historial_medico' | 'configuracion';
+export type AccionAudit =
+  | 'login'
+  | 'logout'
+  | 'view'
+  | 'create'
+  | 'edit'
+  | 'delete'
+  | 'export'
+  | 'config';
+export type EntidadAudit =
+  | 'paciente'
+  | 'turno'
+  | 'conversacion'
+  | 'mensaje'
+  | 'receta'
+  | 'credencial'
+  | 'usuario'
+  | 'reporte'
+  | 'historial_medico'
+  | 'configuracion';
 
 /**
  * Registra un evento de auditoría
@@ -94,7 +112,10 @@ export async function logAudit(entry: {
 
     fs.writeFileSync(AUDIT_FILE, JSON.stringify(logs, null, 2));
   } catch (err) {
-    safeError('[AuditLog] Error al guardar:', err instanceof Error ? { message: err.message } : err);
+    safeError(
+      '[AuditLog] Error al guardar:',
+      err instanceof Error ? { message: err.message } : err,
+    );
   }
 }
 
@@ -121,7 +142,10 @@ export async function cleanAuditLogs(options: {
 
     return { deleted: result.length };
   } catch (err) {
-    safeError('[AuditLog] Error al limpiar:', err instanceof Error ? { message: err.message } : err);
+    safeError(
+      '[AuditLog] Error al limpiar:',
+      err instanceof Error ? { message: err.message } : err,
+    );
     return { deleted: 0 };
   }
 }
@@ -161,7 +185,7 @@ export async function getAuditLogs(options?: {
       .where(where);
 
     return {
-      logs: result.map(r => ({
+      logs: result.map((r) => ({
         id: r.id,
         tenantId: r.tenantId || undefined,
         usuarioId: r.usuarioId || undefined,
@@ -190,10 +214,10 @@ export async function getAuditLogs(options?: {
     let logs: AuditEntry[] = JSON.parse(raw);
 
     // Aplicar filtros
-    if (options?.entidad) logs = logs.filter(l => l.entidad === options.entidad);
-    if (options?.accion) logs = logs.filter(l => l.accion === options.accion);
-    if (options?.usuarioId) logs = logs.filter(l => l.usuarioId === options.usuarioId);
-    if (options?.tenantId) logs = logs.filter(l => l.tenantId === options.tenantId);
+    if (options?.entidad) logs = logs.filter((l) => l.entidad === options.entidad);
+    if (options?.accion) logs = logs.filter((l) => l.accion === options.accion);
+    if (options?.usuarioId) logs = logs.filter((l) => l.usuarioId === options.usuarioId);
+    if (options?.tenantId) logs = logs.filter((l) => l.tenantId === options.tenantId);
 
     // Ordenar descendente por fecha
     logs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

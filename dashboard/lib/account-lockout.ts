@@ -15,7 +15,9 @@ const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutos
 /**
  * Verifica si una cuenta está bloqueada.
  */
-export async function isAccountLocked(email: string): Promise<{ locked: boolean; remainingMinutes?: number }> {
+export async function isAccountLocked(
+  email: string,
+): Promise<{ locked: boolean; remainingMinutes?: number }> {
   const key = email.toLowerCase().trim();
 
   const [entry] = await db
@@ -31,9 +33,7 @@ export async function isAccountLocked(email: string): Promise<{ locked: boolean;
 
   // Si ya pasó el tiempo de bloqueo, limpiar y permitir
   if (now >= lockedUntil) {
-    await db
-      .delete(accountLockouts)
-      .where(eq(accountLockouts.email, key));
+    await db.delete(accountLockouts).where(eq(accountLockouts.email, key));
     return { locked: false };
   }
 
@@ -47,7 +47,9 @@ export async function isAccountLocked(email: string): Promise<{ locked: boolean;
  * Incrementa el contador de intentos fallidos.
  * Devuelve el estado de bloqueo.
  */
-export async function incrementFailedAttempts(email: string): Promise<{ locked: boolean; remainingMinutes?: number }> {
+export async function incrementFailedAttempts(
+  email: string,
+): Promise<{ locked: boolean; remainingMinutes?: number }> {
   const key = email.toLowerCase().trim();
   const now = new Date();
 
@@ -86,12 +88,10 @@ export async function incrementFailedAttempts(email: string): Promise<{ locked: 
   }
 
   // Primer intento fallido
-  await db
-    .insert(accountLockouts)
-    .values({
-      email: key,
-      attempts: 1,
-    });
+  await db.insert(accountLockouts).values({
+    email: key,
+    attempts: 1,
+  });
 
   return { locked: false };
 }
@@ -101,9 +101,7 @@ export async function incrementFailedAttempts(email: string): Promise<{ locked: 
  */
 export async function resetFailedAttempts(email: string): Promise<void> {
   const key = email.toLowerCase().trim();
-  await db
-    .delete(accountLockouts)
-    .where(eq(accountLockouts.email, key));
+  await db.delete(accountLockouts).where(eq(accountLockouts.email, key));
 }
 
 /**

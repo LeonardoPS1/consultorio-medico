@@ -105,14 +105,19 @@ export function descargarICS(turno: {
   const fin = new Date(inicio.getTime() + (turno.duracionMinutos || 30) * 60000);
 
   const formatICSDate = (d: Date) =>
-    d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    d
+      .toISOString()
+      .replace(/[-:]/g, '')
+      .replace(/\.\d{3}/, '');
 
   const paciente = turno.paciente || 'Paciente';
   const medico = turno.medico || 'Médico';
   const descripcion = [
     turno.motivo || turno.tipoConsulta || 'Consulta médica',
     medico ? `Dr/a. ${medico}` : '',
-  ].filter(Boolean).join(' | ');
+  ]
+    .filter(Boolean)
+    .join(' | ');
 
   const uid = `${turno.id}@consultorio-medico`;
 

@@ -39,7 +39,17 @@ const recetaBodySchema = createRecetaSchema.extend({
 
 export const POST = apiHandler(async (request: NextRequest) => {
   const body = await parseBody(request, recetaBodySchema);
-  const { pacienteId, medicamento, dosis, frecuencia, duracion, indicaciones, presentacion, cantidadTotal, medicoId } = body;
+  const {
+    pacienteId,
+    medicamento,
+    dosis,
+    frecuencia,
+    duracion,
+    indicaciones,
+    presentacion,
+    cantidadTotal,
+    medicoId,
+  } = body;
 
   const paciente = await db
     .select({ id: pacientes.id })

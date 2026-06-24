@@ -108,12 +108,9 @@ export function PreJoinLobby({ identity, role, onJoin }: PreJoinLobbyProps) {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm mb-4 ring-1 ring-white/10 p-2">
             <Logo className="h-full w-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-white">
-            Telemedicina
-          </h1>
+          <h1 className="text-2xl font-bold text-white">Telemedicina</h1>
           <p className="text-white/50 text-sm mt-1">
-            Te estás conectando como{' '}
-            <span className="text-white/80 font-medium">{roleLabel}</span>
+            Te estás conectando como <span className="text-white/80 font-medium">{roleLabel}</span>
           </p>
         </div>
 
@@ -164,11 +161,7 @@ export function PreJoinLobby({ identity, role, onJoin }: PreJoinLobbyProps) {
             } disabled:opacity-40 disabled:cursor-not-allowed`}
             title={micEnabled ? 'Apagar micrófono' : 'Encender micrófono'}
           >
-            {micEnabled ? (
-              <Mic className="h-4 w-4" />
-            ) : (
-              <MicOff className="h-4 w-4" />
-            )}
+            {micEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
             <span className="text-sm font-medium">
               {micEnabled ? 'Micrófono activo' : 'Micrófono apagado'}
             </span>
@@ -206,20 +199,17 @@ export function PreJoinLobby({ identity, role, onJoin }: PreJoinLobbyProps) {
         {/* Tips */}
         <div className="flex justify-center gap-4 text-white/30 text-xs">
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-white/5 text-[10px] font-mono">M</kbd>
-            {' '}Mic
+            <kbd className="px-1.5 py-0.5 rounded bg-white/5 text-[10px] font-mono">M</kbd> Mic
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-white/5 text-[10px] font-mono">C</kbd>
-            {' '}Cámara
+            <kbd className="px-1.5 py-0.5 rounded bg-white/5 text-[10px] font-mono">C</kbd> Cámara
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-white/5 text-[10px] font-mono">F</kbd>
-            {' '}Fullscreen
+            <kbd className="px-1.5 py-0.5 rounded bg-white/5 text-[10px] font-mono">F</kbd>{' '}
+            Fullscreen
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-white/5 text-[10px] font-mono">V</kbd>
-            {' '}Chat
+            <kbd className="px-1.5 py-0.5 rounded bg-white/5 text-[10px] font-mono">V</kbd> Chat
           </span>
         </div>
 

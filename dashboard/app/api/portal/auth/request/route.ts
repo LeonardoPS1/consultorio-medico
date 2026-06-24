@@ -7,7 +7,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateMagicLink, sendPortalMagicLinkWhatsApp, contarCancelacionesMes } from '@/lib/portal-auth';
+import {
+  generateMagicLink,
+  sendPortalMagicLinkWhatsApp,
+  contarCancelacionesMes,
+} from '@/lib/portal-auth';
 import { portalAuthRequestSchema } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
@@ -32,10 +36,7 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (!existe) {
-      return NextResponse.json(
-        { error: 'Paciente no encontrado con ese número' },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: 'Paciente no encontrado con ese número' }, { status: 404 });
     }
 
     return NextResponse.json(

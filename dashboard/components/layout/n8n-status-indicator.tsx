@@ -61,9 +61,7 @@ export function N8nStatusIndicator() {
         ? 'bg-amber-500'
         : 'bg-emerald-500';
 
-  const pulseClass = error || stats.healthStatus === 'down'
-    ? 'animate-pulse'
-    : '';
+  const pulseClass = error || stats.healthStatus === 'down' ? 'animate-pulse' : '';
 
   const tooltipText = error
     ? 'Error al conectar con n8n'
@@ -74,10 +72,7 @@ export function N8nStatusIndicator() {
         : `${stats.activeWorkflows}/${stats.totalWorkflows} workflows activos`;
 
   return (
-    <span
-      className="relative inline-flex items-center"
-      title={tooltipText}
-    >
+    <span className="relative inline-flex items-center" title={tooltipText}>
       <span
         className={cn(
           'absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full ring-1 ring-background',

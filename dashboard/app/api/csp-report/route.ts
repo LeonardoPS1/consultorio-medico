@@ -12,7 +12,10 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ ok: true });
   } catch (err) {
-    safeWarn('[CSP Report] Error parsing report:', err instanceof Error ? { message: err.message } : err);
+    safeWarn(
+      '[CSP Report] Error parsing report:',
+      err instanceof Error ? { message: err.message } : err,
+    );
     return NextResponse.json({ ok: true }); // Siempre 200 para no alertar al atacante
   }
 }

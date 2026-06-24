@@ -13,7 +13,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { safeError } from '@/lib/logger';
 import { withRateLimit } from '@/lib/rate-limit';
-import { extractApiKey, validateApiKey, hasScope, type ApiKeyData, type ApiScope } from '@/lib/public-api-auth';
+import {
+  extractApiKey,
+  validateApiKey,
+  hasScope,
+  type ApiKeyData,
+  type ApiScope,
+} from '@/lib/public-api-auth';
 
 // ─── Extender Request con datos de auth ──────────────────────
 
@@ -51,10 +57,13 @@ export function jsonResponse(data: unknown, status = 200) {
 }
 
 export function errorResponse(message: string, status = 400) {
-  return NextResponse.json({ error: message }, {
-    status,
-    headers: corsHeaders(),
-  });
+  return NextResponse.json(
+    { error: message },
+    {
+      status,
+      headers: corsHeaders(),
+    },
+  );
 }
 
 // ─── OPTIONS handler para CORS preflight ─────────────────────
@@ -77,7 +86,10 @@ interface PublicApiHandlerOptions {
   windowMs?: number;
 }
 
-type HandlerFn = (request: AuthenticatedRequest, context?: { params: Record<string, string> }) => Promise<NextResponse>;
+type HandlerFn = (
+  request: AuthenticatedRequest,
+  context?: { params: Record<string, string> },
+) => Promise<NextResponse>;
 
 /**
  * Crea un handler para endpoints públicos. Se encarga de:
@@ -87,15 +99,8 @@ type HandlerFn = (request: AuthenticatedRequest, context?: { params: Record<stri
  * 4. Verificación de scopes
  * 5. Inyección de tenantId y apiKey en request
  */
-export function publicApiHandler(
-  handler: HandlerFn,
-  options: PublicApiHandlerOptions = {},
-) {
-  const {
-    scopes = [],
-    maxRequests = 60,
-    windowMs = 60_000,
-  } = options;
+export function publicApiHandler(handler: HandlerFn, options: PublicApiHandlerOptions = {}) {
+  const { scopes = [], maxRequests = 60, windowMs = 60_000 } = options;
 
   // Encapso en withRateLimit para tener rate limiting configurable
   return withRateLimit(
@@ -103,7 +108,10 @@ export function publicApiHandler(
       // 1. Extraer API key
       const apiKey = extractApiKey(request);
       if (!apiKey) {
-        return errorResponse('API key requerida. Enviar via header x-api-key o Authorization: Bearer', 401);
+        return errorResponse(
+          'API key requerida. Enviar via header x-api-key o Authorization: Bearer',
+          401,
+        );
       }
 
       // 2. Validar API key

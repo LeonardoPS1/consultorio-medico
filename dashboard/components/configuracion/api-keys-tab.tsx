@@ -23,7 +23,17 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Plus, Key, Trash2, Copy, Eye, EyeOff, Clock, ExternalLink, ShieldCheck } from 'lucide-react';
+import {
+  Plus,
+  Key,
+  Trash2,
+  Copy,
+  Eye,
+  EyeOff,
+  Clock,
+  ExternalLink,
+  ShieldCheck,
+} from 'lucide-react';
 import { API_SCOPES } from '@/lib/public-api-types';
 
 interface ApiKeyItem {
@@ -65,7 +75,9 @@ export default function ApiKeysTab() {
     }
   };
 
-  useEffect(() => { loadKeys(); }, []);
+  useEffect(() => {
+    loadKeys();
+  }, []);
 
   // Formatear fecha relativa
   const relativeTime = (dateStr: string | null) => {
@@ -94,7 +106,7 @@ export default function ApiKeysTab() {
     if (!confirm('¿Revocar esta API key? Dejará de funcionar inmediatamente.')) return;
     try {
       await fetch(`/api/api-keys?id=${id}`, { method: 'DELETE' });
-      setKeys(prev => prev.filter(k => k.id !== id));
+      setKeys((prev) => prev.filter((k) => k.id !== id));
       toast({ title: 'API key revocada y eliminada' });
     } catch {
       toast({ title: 'Error al revocar', variant: 'destructive' });
@@ -107,7 +119,9 @@ export default function ApiKeysTab() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-muted-foreground">
-            {loading ? 'Cargando...' : `${keys.length} key${keys.length !== 1 ? 's' : ''} configurada${keys.length !== 1 ? 's' : ''}`}
+            {loading
+              ? 'Cargando...'
+              : `${keys.length} key${keys.length !== 1 ? 's' : ''} configurada${keys.length !== 1 ? 's' : ''}`}
           </p>
         </div>
         <Button onClick={() => setShowCreateModal(true)}>
@@ -121,13 +135,19 @@ export default function ApiKeysTab() {
         <CardContent className="p-4 flex items-start gap-3">
           <ShieldCheck className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
           <div className="space-y-1 text-sm">
-            <p className="font-medium text-blue-800 dark:text-blue-300">API pública para integraciones</p>
-            <p className="text-blue-700/80 dark:text-blue-400/80">
-              Las API keys permiten que sistemas externos (apps, sitios web, otros consultorios)
-              se conecten a tu consultorio de forma segura. Cada key tiene scopes que limitan qué puede hacer.
+            <p className="font-medium text-blue-800 dark:text-blue-300">
+              API pública para integraciones
             </p>
             <p className="text-blue-700/80 dark:text-blue-400/80">
-              URL base: <code className="bg-blue-100 dark:bg-blue-900/30 px-1.5 py-0.5 rounded text-xs">https://med.aicorebots.com/api/v1</code>
+              Las API keys permiten que sistemas externos (apps, sitios web, otros consultorios) se
+              conecten a tu consultorio de forma segura. Cada key tiene scopes que limitan qué puede
+              hacer.
+            </p>
+            <p className="text-blue-700/80 dark:text-blue-400/80">
+              URL base:{' '}
+              <code className="bg-blue-100 dark:bg-blue-900/30 px-1.5 py-0.5 rounded text-xs">
+                https://med.aicorebots.com/api/v1
+              </code>
             </p>
           </div>
         </CardContent>
@@ -136,7 +156,9 @@ export default function ApiKeysTab() {
       {/* Keys list */}
       {loading ? (
         <div className="space-y-3">
-          {[1, 2].map(i => <div key={i} className="h-24 skeleton rounded-xl" />)}
+          {[1, 2].map((i) => (
+            <div key={i} className="h-24 skeleton rounded-xl" />
+          ))}
         </div>
       ) : keys.length === 0 ? (
         <Card>
@@ -144,7 +166,9 @@ export default function ApiKeysTab() {
             <div className="text-center">
               <Key className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
               <p className="text-sm font-medium text-muted-foreground">Sin API keys</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Creá tu primera key para habilitar integraciones</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                Creá tu primera key para habilitar integraciones
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -158,18 +182,18 @@ export default function ApiKeysTab() {
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-sm truncate">{key.nombre}</p>
                       {!key.activa && (
-                        <Badge variant="destructive" className="text-[10px]">Revocada</Badge>
+                        <Badge variant="destructive" className="text-[10px]">
+                          Revocada
+                        </Badge>
                       )}
                     </div>
-                    <p className="text-xs font-mono text-muted-foreground">
-                      {key.keyPrefix}...
-                    </p>
+                    <p className="text-xs font-mono text-muted-foreground">{key.keyPrefix}...</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
                       <span>Último uso: {relativeTime(key.ultimoUso)}</span>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {key.scopes.map(scope => (
+                      {key.scopes.map((scope) => (
                         <Badge key={scope} variant="outline" className="text-[10px] py-0 h-4">
                           {scope}
                         </Badge>
@@ -233,15 +257,21 @@ export default function ApiKeysTab() {
                   className="h-10 w-10 shrink-0"
                   onClick={() => {
                     if (createdKey) {
-                      setRevealedKeys(prev => {
+                      setRevealedKeys((prev) => {
                         const next = new Set(prev);
-                        next.has(createdKey.id) ? next.delete(createdKey.id) : next.add(createdKey.id);
+                        next.has(createdKey.id)
+                          ? next.delete(createdKey.id)
+                          : next.add(createdKey.id);
                         return next;
                       });
                     }
                   }}
                 >
-                  {revealedKeys.has(createdKey?.id || '') ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {revealedKeys.has(createdKey?.id || '') ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
                 <Button
                   variant="outline"
@@ -254,8 +284,10 @@ export default function ApiKeysTab() {
               </div>
             </div>
             <div className="flex flex-wrap gap-1">
-              {createdKey?.scopes.map(s => (
-                <Badge key={s} variant="secondary" className="text-[10px]">{s}</Badge>
+              {createdKey?.scopes.map((s) => (
+                <Badge key={s} variant="secondary" className="text-[10px]">
+                  {s}
+                </Badge>
               ))}
             </div>
           </div>
@@ -283,12 +315,12 @@ function CreateApiKeyModal({
 }) {
   const [nombre, setNombre] = useState('');
   const [selectedScopes, setSelectedScopes] = useState<Set<string>>(
-    new Set([API_SCOPES.TURNOS_READ, API_SCOPES.MEDICOS_READ, API_SCOPES.HORARIOS_READ])
+    new Set([API_SCOPES.TURNOS_READ, API_SCOPES.MEDICOS_READ, API_SCOPES.HORARIOS_READ]),
   );
   const [creating, setCreating] = useState(false);
 
   const toggleScope = (scope: string) => {
-    setSelectedScopes(prev => {
+    setSelectedScopes((prev) => {
       const next = new Set(prev);
       next.has(scope) ? next.delete(scope) : next.add(scope);
       return next;
@@ -333,7 +365,7 @@ function CreateApiKeyModal({
             <Label>Nombre</Label>
             <Input
               value={nombre}
-              onChange={e => setNombre(e.target.value)}
+              onChange={(e) => setNombre(e.target.value)}
               placeholder="Ej: App de turnos, Sistema de facturación"
             />
           </div>
@@ -341,7 +373,7 @@ function CreateApiKeyModal({
             <Label>Scopes (permisos)</Label>
             <p className="text-xs text-muted-foreground">Seleccioná qué puede hacer esta key</p>
             <div className="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto">
-              {Object.values(API_SCOPES).map(scope => (
+              {Object.values(API_SCOPES).map((scope) => (
                 <label
                   key={scope}
                   className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 cursor-pointer"
@@ -359,7 +391,9 @@ function CreateApiKeyModal({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
           <Button onClick={handleCreate} disabled={!nombre.trim() || creating}>
             {creating ? 'Creando...' : 'Crear API Key'}
           </Button>

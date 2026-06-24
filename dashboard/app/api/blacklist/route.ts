@@ -23,7 +23,11 @@ export const GET = apiHandler(async (request: NextRequest) => {
   }
 
   const result = await blacklistService.list({
-    limit, offset, activo, pacienteId, search,
+    limit,
+    offset,
+    activo,
+    pacienteId,
+    search,
   });
   return ok(result);
 });

@@ -116,16 +116,12 @@ export default function PortalChatPage() {
           <MessageSquare className="h-5 w-5 text-blue-500" />
           Mensajes
         </h1>
-        <p className="text-xs text-gray-500 mt-0.5">
-          Consultá con el equipo médico por este canal
-        </p>
+        <p className="text-xs text-gray-500 mt-0.5">Consultá con el equipo médico por este canal</p>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
-        {error && (
-          <div className="text-center text-red-500 text-sm py-8">{error}</div>
-        )}
+        {error && <div className="text-center text-red-500 text-sm py-8">{error}</div>}
 
         {mensajes.length === 0 && !error && (
           <div className="text-center text-gray-400 py-12">
@@ -149,7 +145,11 @@ export default function PortalChatPage() {
             >
               {msg.rol !== 'paciente' && (
                 <div className="text-[10px] font-medium text-blue-500 mb-1 uppercase tracking-wider">
-                  {msg.rol === 'asistente_ia' ? '🤖 Asistente IA' : msg.rol === 'medico' ? '👨‍⚕️ Médico' : '📋 Secretaría'}
+                  {msg.rol === 'asistente_ia'
+                    ? '🤖 Asistente IA'
+                    : msg.rol === 'medico'
+                      ? '👨‍⚕️ Médico'
+                      : '📋 Secretaría'}
                 </div>
               )}
               <div className="whitespace-pre-wrap break-words">{msg.contenido}</div>
@@ -159,9 +159,7 @@ export default function PortalChatPage() {
                 }`}
               >
                 {formatTime(msg.createdAt)}
-                {msg.id.startsWith('temp-') && (
-                  <span className="ml-1 italic">enviando...</span>
-                )}
+                {msg.id.startsWith('temp-') && <span className="ml-1 italic">enviando...</span>}
               </div>
             </div>
           </div>

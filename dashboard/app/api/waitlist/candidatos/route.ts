@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { apiHandler, success } from '@/lib/api-handler';

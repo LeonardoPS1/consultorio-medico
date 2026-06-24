@@ -66,7 +66,7 @@ describe('Button', () => {
     render(
       <Button asChild>
         <a href="/test">Link Button</a>
-      </Button>
+      </Button>,
     );
     const link = screen.getByRole('link', { name: /link button/i });
     expect(link).toBeInTheDocument();
@@ -76,7 +76,15 @@ describe('Button', () => {
   it('maneja clics', async () => {
     const user = userEvent.setup();
     let clicked = false;
-    render(<Button onClick={() => { clicked = true; }}>Click</Button>);
+    render(
+      <Button
+        onClick={() => {
+          clicked = true;
+        }}
+      >
+        Click
+      </Button>,
+    );
 
     await user.click(screen.getByRole('button'));
     expect(clicked).toBe(true);
@@ -85,7 +93,16 @@ describe('Button', () => {
   it('no dispara onClick cuando está disabled', async () => {
     const user = userEvent.setup();
     let clicked = false;
-    render(<Button disabled onClick={() => { clicked = true; }}>No Click</Button>);
+    render(
+      <Button
+        disabled
+        onClick={() => {
+          clicked = true;
+        }}
+      >
+        No Click
+      </Button>,
+    );
 
     await user.click(screen.getByRole('button'));
     expect(clicked).toBe(false);

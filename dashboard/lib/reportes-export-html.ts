@@ -6,24 +6,15 @@
 import { escapeHtml } from '@/lib/html-utils';
 import type { ReporteApiResponse, Periodo } from '@/app/dashboard/reportes/types';
 
-export function generarHTMLReporte(
-  data: ReporteApiResponse,
-  periodo: Periodo,
-): string {
-  const periodoLabel =
-    periodo === 'semana'
-      ? 'Semanal'
-      : periodo === 'mes'
-        ? 'Mensual'
-        : 'Anual';
+export function generarHTMLReporte(data: ReporteApiResponse, periodo: Periodo): string {
+  const periodoLabel = periodo === 'semana' ? 'Semanal' : periodo === 'mes' ? 'Mensual' : 'Anual';
   const fechaHoy = new Date().toLocaleDateString('es-CL', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
   const maxTurnos = Math.max(...data.turnos.map((t) => t.cantidad)) || 1;
-  const maxIntencion =
-    Math.max(...data.intenciones.map((i) => i.cantidad)) || 1;
+  const maxIntencion = Math.max(...data.intenciones.map((i) => i.cantidad)) || 1;
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -71,7 +62,8 @@ export function generarHTMLReporte(
 <div class="kpi-grid">
   ${data.metricas
     .map(
-      (m) => `<div class="kpi-card"><div class="val">${escapeHtml(m.valor)}</div><div class="lbl">${escapeHtml(m.titulo)}</div><div style="font-size:8px;color:${m.up ? '#10b981' : '#ef4444'};margin-top:2px">${escapeHtml(m.cambio)}</div></div>`,
+      (m) =>
+        `<div class="kpi-card"><div class="val">${escapeHtml(m.valor)}</div><div class="lbl">${escapeHtml(m.titulo)}</div><div style="font-size:8px;color:${m.up ? '#10b981' : '#ef4444'};margin-top:2px">${escapeHtml(m.cambio)}</div></div>`,
     )
     .join('')}
 </div>
@@ -89,14 +81,7 @@ export function generarHTMLReporte(
       ${data.turnos
         .map((t, i) => {
           const pct = Math.max((t.cantidad / maxTurnos) * 100, 5);
-          const colores = [
-            '#3b82f6',
-            '#60a5fa',
-            '#2563eb',
-            '#1d4ed8',
-            '#93c5fd',
-            '#818cf8',
-          ];
+          const colores = ['#3b82f6', '#60a5fa', '#2563eb', '#1d4ed8', '#93c5fd', '#818cf8'];
           return `<div class="chart-col">
           <div class="chart-num">${escapeHtml(String(t.cantidad))}</div>
           <div class="chart-bar" style="height:${pct}%;background-color:${colores[i % colores.length]}"></div>
@@ -115,14 +100,7 @@ export function generarHTMLReporte(
 <div style="background:#fafafa;border-radius:6px;padding:10px;border:1px solid #eee;margin-bottom:10px">
   ${data.intenciones
     .map((item, idx) => {
-      const colores = [
-        '#3b82f6',
-        '#10b981',
-        '#f59e0b',
-        '#8b5cf6',
-        '#ef4444',
-        '#64748b',
-      ];
+      const colores = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#64748b'];
       return `<div class="hc-row">
       <div class="hc-label">${escapeHtml(item.intencion)}</div>
       <div class="hc-bar-wrap"><div class="hc-bar" style="width:${(item.cantidad / maxIntencion) * 100}%;background-color:${colores[idx]}"></div></div>
@@ -151,8 +129,9 @@ export function generarHTMLReporte(
   <tr><td>Edad promedio</td><td style="font-weight:600">${escapeHtml(String(data.pacientesKpis.edadPromedio))} años</td></tr>
 </table>
 
-${data.ejecutivo
-  ? `
+${
+  data.ejecutivo
+    ? `
 <div class="section-title">🏆 Resumen Ejecutivo</div>
 <table>
   <tr><th>Indicador</th><th>Valor</th></tr>
@@ -162,7 +141,8 @@ ${data.ejecutivo
   <tr><td>NPS</td><td style="font-weight:600">${escapeHtml(String(data.ejecutivo.nps))}</td></tr>
 </table>
 
-${data.conversionLeads
+${
+  data.conversionLeads
     ? `
 <div class="section-title">🔄 Embudo de Conversión</div>
 <table>
@@ -174,8 +154,10 @@ ${data.conversionLeads
     )
     .join('')}
 </table>`
-    : ''}</div>`
-  : ''}
+    : ''
+}</div>`
+    : ''
+}
 
 <div class="footer">
   <strong>Consultorio Médico</strong> · Reporte generado automáticamente el ${fechaHoy}

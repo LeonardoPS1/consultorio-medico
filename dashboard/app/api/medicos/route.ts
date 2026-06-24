@@ -21,14 +21,23 @@ export const GET = apiHandler(async (request: NextRequest) => {
 });
 
 const medicoBodySchema = createMedicoSchema.extend({
-  horarios: z.record(z.any()).optional(),
+  horarios: z.record(z.unknown()).optional(),
 });
 
 export const POST = apiHandler(async (request: NextRequest) => {
   await requireAuth();
 
   const body = await parseBody(request, medicoBodySchema);
-  const { nombre, especialidad, email, telefono, whatsapp, matricula, duracionTurnoMinutos, horarios } = body;
+  const {
+    nombre,
+    especialidad,
+    email,
+    telefono,
+    whatsapp,
+    matricula,
+    duracionTurnoMinutos,
+    horarios,
+  } = body;
 
   const [nuevo] = await db
     .insert(medicos)

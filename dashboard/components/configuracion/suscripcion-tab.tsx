@@ -4,7 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, CreditCard, Loader2, ArrowRight, AlertCircle, ExternalLink } from 'lucide-react';
+import {
+  CheckCircle2,
+  CreditCard,
+  Loader2,
+  ArrowRight,
+  AlertCircle,
+  ExternalLink,
+} from 'lucide-react';
 import { PLANES, PLANES_ORDERED, type PlanInfo, type PlanId } from '@/lib/planes';
 
 const PAID_PLAN_IDS: PlanId[] = ['starter', 'professional', 'premium', 'enterprise'];
@@ -98,11 +105,16 @@ export default function SuscripcionTab() {
 
   const estadoBadge = (est: string) => {
     switch (est) {
-      case 'active': return <Badge className="bg-emerald-500">Activa</Badge>;
-      case 'pending': return <Badge variant="secondary">Pendiente</Badge>;
-      case 'cancelled': return <Badge variant="destructive">Cancelada</Badge>;
-      case 'expired': return <Badge variant="outline">Vencida</Badge>;
-      default: return <Badge variant="outline">Gratuito</Badge>;
+      case 'active':
+        return <Badge className="bg-emerald-500">Activa</Badge>;
+      case 'pending':
+        return <Badge variant="secondary">Pendiente</Badge>;
+      case 'cancelled':
+        return <Badge variant="destructive">Cancelada</Badge>;
+      case 'expired':
+        return <Badge variant="outline">Vencida</Badge>;
+      default:
+        return <Badge variant="outline">Gratuito</Badge>;
     }
   };
 
@@ -147,7 +159,8 @@ export default function SuscripcionTab() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Actualmente estás usando el plan gratuito. Elegí un plan para acceder a todas las funcionalidades.
+              Actualmente estás usando el plan gratuito. Elegí un plan para acceder a todas las
+              funcionalidades.
             </p>
           )}
         </CardContent>
@@ -160,7 +173,10 @@ export default function SuscripcionTab() {
           const isLoading = checkoutLoading === plan.id;
 
           return (
-            <Card key={plan.id} className={`relative h-full flex flex-col ${isCurrent ? 'ring-2 ring-primary' : ''}`}>
+            <Card
+              key={plan.id}
+              className={`relative h-full flex flex-col ${isCurrent ? 'ring-2 ring-primary' : ''}`}
+            >
               <CardHeader className="pb-3">
                 {plan.id === 'professional' && !isCurrent && (
                   <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-semibold px-3 py-0.5 rounded-full">
@@ -188,7 +204,8 @@ export default function SuscripcionTab() {
                             +
                           </span>
                           <span className="font-medium text-foreground/80">
-                            {f} <span className="text-primary text-[9px] font-bold">(incluido)</span>
+                            {f}{' '}
+                            <span className="text-primary text-[9px] font-bold">(incluido)</span>
                           </span>
                         </>
                       ) : (
@@ -236,10 +253,12 @@ export default function SuscripcionTab() {
       )}
 
       <p className="text-xs text-muted-foreground text-center">
-        Pagos procesados por MercadoPago en pesos chilenos (CLP).
-        Precios en USD como referencia. Todos los montos incluyen IVA.
+        Pagos procesados por MercadoPago en pesos chilenos (CLP). Precios en USD como referencia.
+        Todos los montos incluyen IVA.
         {process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY?.startsWith('TEST-') && (
-          <span className="block mt-1 text-amber-600">🔧 Modo de prueba — Usá credenciales de prueba de MercadoPago.</span>
+          <span className="block mt-1 text-amber-600">
+            🔧 Modo de prueba — Usá credenciales de prueba de MercadoPago.
+          </span>
         )}
       </p>
     </div>

@@ -9,20 +9,29 @@ import {
 } from '@/lib/data-store';
 import { auth } from '@/lib/auth';
 import { apiHandler, created } from '@/lib/api-handler';
-import { parseBody, parseQuery, createConversacionSchema, conversacionQuerySchema } from '@/lib/validations';
+import {
+  parseBody,
+  parseQuery,
+  createConversacionSchema,
+  conversacionQuerySchema,
+} from '@/lib/validations';
 import { z } from 'zod';
 
-const conversacionCreateSchema = createConversacionSchema.extend({
-  mensaje: z.string().optional(),
-  intencion: z.string().optional(),
-  email: z.string().email().optional().nullable(),
-}).passthrough();
+const conversacionCreateSchema = createConversacionSchema
+  .extend({
+    mensaje: z.string().optional(),
+    intencion: z.string().optional(),
+    email: z.string().email().optional().nullable(),
+  })
+  .passthrough();
 
-const conversacionListQuerySchema = conversacionQuerySchema.extend({
-  canal: z.enum(['whatsapp', 'sms', 'email', 'web']).optional(),
-  offset: z.coerce.number().optional(),
-  estado: z.enum(['activa', 'pendiente', 'cerrada', 'derivada']).optional(),
-}).passthrough();
+const conversacionListQuerySchema = conversacionQuerySchema
+  .extend({
+    canal: z.enum(['whatsapp', 'sms', 'email', 'web']).optional(),
+    offset: z.coerce.number().optional(),
+    estado: z.enum(['activa', 'pendiente', 'cerrada', 'derivada']).optional(),
+  })
+  .passthrough();
 
 /**
  * GET /api/conversaciones
@@ -39,7 +48,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const sessionMedicoId = session?.user?.medicoId;
   const sessionRol = session?.user?.role;
 
-  const q = parseQuery(request, conversacionListQuerySchema) as any;
+  const q = parseQuery(request, conversacionListQuerySchema);
 
   await seedDataIfEmpty();
 
@@ -53,7 +62,12 @@ export const GET = apiHandler(async (request: NextRequest) => {
     medicoId: medicoIdFilter,
   });
 
-  return NextResponse.json({ data: conversaciones, total: conversaciones.length, limit: q.limit ?? 50, offset: q.offset ?? 0 });
+  return NextResponse.json({
+    data: conversaciones,
+    total: conversaciones.length,
+    limit: q.limit ?? 50,
+    offset: q.offset ?? 0,
+  });
 });
 
 /**
@@ -72,7 +86,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
  * }
  */
 export const POST = apiHandler(async (request: NextRequest) => {
-  const body = await parseBody(request, conversacionCreateSchema) as any;
+  const body = await parseBody(request, conversacionCreateSchema);
 
   let paciente = await getPacienteByTelefono(body.telefono);
 

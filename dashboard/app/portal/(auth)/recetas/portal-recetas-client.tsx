@@ -41,16 +41,11 @@ export default function PortalRecetasClient({ recetas }: Props) {
       {recetas.length > 0 ? (
         <div className="space-y-3">
           {recetas.map((r) => (
-            <div
-              key={r.id}
-              className="bg-white rounded-xl border border-gray-200 p-4"
-            >
+            <div key={r.id} className="bg-white rounded-xl border border-gray-200 p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Pill className="h-5 w-5 text-purple-600" />
-                  <span className="font-semibold text-gray-900">
-                    {r.medicamento}
-                  </span>
+                  <span className="font-semibold text-gray-900">{r.medicamento}</span>
                 </div>
                 <span
                   className={`text-xs font-medium px-2 py-0.5 rounded-full ${

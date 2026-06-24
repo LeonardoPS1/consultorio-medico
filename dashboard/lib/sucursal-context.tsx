@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { setCookieWithConsent } from '@/components/landing/cookie-consent';
 
 // ============================================================
@@ -115,13 +108,10 @@ export function SucursalProvider({ children }: { children: ReactNode }) {
   const setSucursalId = useCallback((id: string) => {
     setSucursalIdState(id);
     setSucursalCookie(id);
-    window.dispatchEvent(
-      new CustomEvent('sucursal-cambiada', { detail: { sucursalId: id } }),
-    );
+    window.dispatchEvent(new CustomEvent('sucursal-cambiada', { detail: { sucursalId: id } }));
   }, []);
 
-  const sucursalNombre =
-    sucursales.find((s) => s.id === sucursalId)?.nombre || '';
+  const sucursalNombre = sucursales.find((s) => s.id === sucursalId)?.nombre || '';
 
   const value: SucursalContextType = {
     sucursalId,
@@ -132,11 +122,7 @@ export function SucursalProvider({ children }: { children: ReactNode }) {
     hasMultiple: sucursales.length > 1,
   };
 
-  return (
-    <SucursalContext.Provider value={value}>
-      {children}
-    </SucursalContext.Provider>
-  );
+  return <SucursalContext.Provider value={value}>{children}</SucursalContext.Provider>;
 }
 
 // ============================================================

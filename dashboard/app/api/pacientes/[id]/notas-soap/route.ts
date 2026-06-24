@@ -27,10 +27,7 @@ async function requireAuthForNotasSoap(request: NextRequest, params: { id: strin
  * GET /api/pacientes/[id]/notas-soap
  * Lista Notas SOAP del paciente (con nombre del médico)
  */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   const { error } = await requireAuthForNotasSoap(_request, params);
   if (error) return error;
 
@@ -62,10 +59,7 @@ export async function GET(
     return NextResponse.json(list);
   } catch (error) {
     console.error('[API] Error GET notas-soap:', error);
-    return NextResponse.json(
-      { error: 'Error al obtener Notas SOAP' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Error al obtener Notas SOAP' }, { status: 500 });
   }
 }
 
@@ -73,10 +67,7 @@ export async function GET(
  * POST /api/pacientes/[id]/notas-soap
  * Crea una nueva Nota SOAP
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -132,10 +123,7 @@ export async function POST(
     return NextResponse.json(nota, { status: 201 });
   } catch (error) {
     console.error('[API] Error POST notas-soap:', error);
-    return NextResponse.json(
-      { error: 'Error al crear Nota SOAP' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Error al crear Nota SOAP' }, { status: 500 });
   }
 }
 
@@ -143,10 +131,7 @@ export async function POST(
  * PATCH /api/pacientes/[id]/notas-soap?entryId=xxx
  * Actualiza una Nota SOAP existente
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   const { error } = await requireAuthForNotasSoap(request, params);
   if (error) return error;
 
@@ -155,10 +140,7 @@ export async function PATCH(
     const entryId = searchParams.get('entryId');
 
     if (!entryId) {
-      return NextResponse.json(
-        { error: 'entryId es requerido' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: 'entryId es requerido' }, { status: 400 });
     }
 
     const body = await request.json();
@@ -167,18 +149,10 @@ export async function PATCH(
     const [existing] = await db
       .select({ id: notasSoap.id })
       .from(notasSoap)
-      .where(
-        and(
-          eq(notasSoap.id, entryId),
-          eq(notasSoap.pacienteId, params.id),
-        ),
-      );
+      .where(and(eq(notasSoap.id, entryId), eq(notasSoap.pacienteId, params.id)));
 
     if (!existing) {
-      return NextResponse.json(
-        { error: 'Nota SOAP no encontrada' },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: 'Nota SOAP no encontrada' }, { status: 404 });
     }
 
     const updateData: Record<string, unknown> = {
@@ -204,10 +178,7 @@ export async function PATCH(
     return NextResponse.json(updated);
   } catch (error) {
     console.error('[API] Error PATCH notas-soap:', error);
-    return NextResponse.json(
-      { error: 'Error al actualizar Nota SOAP' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Error al actualizar Nota SOAP' }, { status: 500 });
   }
 }
 
@@ -215,10 +186,7 @@ export async function PATCH(
  * DELETE /api/pacientes/[id]/notas-soap?entryId=xxx
  * Elimina una Nota SOAP
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   const { error } = await requireAuthForNotasSoap(request, params);
   if (error) return error;
 
@@ -227,40 +195,24 @@ export async function DELETE(
     const entryId = searchParams.get('entryId');
 
     if (!entryId) {
-      return NextResponse.json(
-        { error: 'entryId es requerido' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: 'entryId es requerido' }, { status: 400 });
     }
 
     // Verificar que la nota existe y pertenece al paciente
     const [existing] = await db
       .select({ id: notasSoap.id })
       .from(notasSoap)
-      .where(
-        and(
-          eq(notasSoap.id, entryId),
-          eq(notasSoap.pacienteId, params.id),
-        ),
-      );
+      .where(and(eq(notasSoap.id, entryId), eq(notasSoap.pacienteId, params.id)));
 
     if (!existing) {
-      return NextResponse.json(
-        { error: 'Nota SOAP no encontrada' },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: 'Nota SOAP no encontrada' }, { status: 404 });
     }
 
-    await db
-      .delete(notasSoap)
-      .where(eq(notasSoap.id, entryId));
+    await db.delete(notasSoap).where(eq(notasSoap.id, entryId));
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[API] Error DELETE notas-soap:', error);
-    return NextResponse.json(
-      { error: 'Error al eliminar Nota SOAP' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Error al eliminar Nota SOAP' }, { status: 500 });
   }
 }

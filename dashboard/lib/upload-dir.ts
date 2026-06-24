@@ -37,7 +37,7 @@ export function getUploadDir(): string {
     console.warn(
       `[Upload] UPLOAD_DIR no escribible ("${configured}"), ` +
         `usando fallback: "${fallback}". ` +
-        `Configurá UPLOAD_DIR en Dokploy para persistencia entre redeploys.`
+        `Configurá UPLOAD_DIR en Dokploy para persistencia entre redeploys.`,
     );
     _uploadDir = fallback;
     return _uploadDir;

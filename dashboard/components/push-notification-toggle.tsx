@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { BellRing, BellOff, Loader2, Smartphone, AlertCircle, RefreshCw } from 'lucide-react';
 
 export function PushNotificationToggle() {
-  const [status, setStatus] = useState<'loading' | 'unsupported' | 'denied' | 'inactive' | 'subscribed' | 'error'>('loading');
+  const [status, setStatus] = useState<
+    'loading' | 'unsupported' | 'denied' | 'inactive' | 'subscribed' | 'error'
+  >('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
   // Obtener la VAPID public key
@@ -22,9 +24,7 @@ export function PushNotificationToggle() {
   // Convertir VAPID public key a Uint8Array
   const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
     const rawData = atob(base64);
     return new Uint8Array(Array.from(rawData).map((char) => char.charCodeAt(0)));
   };
@@ -47,7 +47,9 @@ export function PushNotificationToggle() {
       try {
         registration = await navigator.serviceWorker.ready;
       } catch {
-        setErrorMessage('El Service Worker no está disponible. Recargá la página e intentá de nuevo.');
+        setErrorMessage(
+          'El Service Worker no está disponible. Recargá la página e intentá de nuevo.',
+        );
         setStatus('error');
         return;
       }
@@ -74,7 +76,10 @@ export function PushNotificationToggle() {
           applicationServerKey: urlBase64ToUint8Array(publicKey) as unknown as BufferSource,
         });
       } catch (err: any) {
-        if (err?.name === 'InvalidCharacterError' || err?.message?.includes('applicationServerKey')) {
+        if (
+          err?.name === 'InvalidCharacterError' ||
+          err?.message?.includes('applicationServerKey')
+        ) {
           setErrorMessage('La clave de notificaciones no es válida. Contactá al administrador.');
         } else if (err?.name === 'NotAllowedError') {
           setStatus('denied');

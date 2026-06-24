@@ -8,8 +8,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Star, MessageSquareText, Loader2, ClipboardCheck, Send,
-  ChevronRight, User as UserIcon,
+  Star,
+  MessageSquareText,
+  Loader2,
+  ClipboardCheck,
+  Send,
+  ChevronRight,
+  User as UserIcon,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -38,14 +43,19 @@ interface TurnoPendiente {
 function formatDate(date: string): string {
   const d = new Date(date);
   return d.toLocaleDateString('es-CL', {
-    day: 'numeric', month: 'long', year: 'numeric',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   });
 }
 
 function formatShort(date: string): string {
   const d = new Date(date);
   return d.toLocaleDateString('es-CL', {
-    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }
 
@@ -101,7 +111,11 @@ function PendingSurveyForm({
       const res = await fetch('/api/portal/encuestas/responder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ turnoId: selected.id, puntaje, comentario: comentario || undefined }),
+        body: JSON.stringify({
+          turnoId: selected.id,
+          puntaje,
+          comentario: comentario || undefined,
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -123,11 +137,7 @@ function PendingSurveyForm({
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="mb-6"
-    >
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
       <Card className="border-blue-100 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/50 to-white dark:from-blue-950/20 dark:to-gray-900 shadow-sm">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -150,7 +160,11 @@ function PendingSurveyForm({
               {turnos.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => { setSelectedId(t.id); setPuntaje(0); setComentario(''); }}
+                  onClick={() => {
+                    setSelectedId(t.id);
+                    setPuntaje(0);
+                    setComentario('');
+                  }}
                   className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
                     t.id === selectedId
                       ? 'bg-blue-100 dark:bg-blue-900/50 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
@@ -219,9 +233,7 @@ function PendingSurveyForm({
                   />
                 </div>
 
-                {error && (
-                  <p className="text-xs text-red-500 dark:text-red-400 mb-2">{error}</p>
-                )}
+                {error && <p className="text-xs text-red-500 dark:text-red-400 mb-2">{error}</p>}
 
                 <button
                   onClick={handleSubmit}
@@ -283,7 +295,9 @@ export default function PortalEncuestasPage() {
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [refreshKey]);
 
   if (loading) {
@@ -321,7 +335,9 @@ export default function PortalEncuestasPage() {
       {pendientes.length > 0 && encuestas.length > 0 && (
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
-          <span className="text-xs text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wider">Historial</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wider">
+            Historial
+          </span>
           <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
         </div>
       )}
@@ -334,9 +350,12 @@ export default function PortalEncuestasPage() {
           className="text-center py-16 text-gray-400 dark:text-gray-500"
         >
           <ClipboardCheck className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-          <p className="font-medium text-gray-500 dark:text-gray-400">No tienes encuestas registradas</p>
+          <p className="font-medium text-gray-500 dark:text-gray-400">
+            No tienes encuestas registradas
+          </p>
           <p className="text-sm mt-2 text-gray-400 dark:text-gray-500">
-            Después de cada consulta, recibirás una encuesta por WhatsApp para calificar tu atención.
+            Después de cada consulta, recibirás una encuesta por WhatsApp para calificar tu
+            atención.
           </p>
         </motion.div>
       ) : (

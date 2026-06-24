@@ -7,9 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { UpdateBadge } from '@/components/layout/update-badge';
 import {
-  Bell, Moon, Sun, Monitor, Calendar, MessageSquare, Syringe,
-  AlertTriangle, Menu, Store, ChevronDown, Trash2,
-  EyeOff, Eye,
+  Bell,
+  Moon,
+  Sun,
+  Monitor,
+  Calendar,
+  MessageSquare,
+  Syringe,
+  AlertTriangle,
+  Menu,
+  Store,
+  ChevronDown,
+  Trash2,
+  EyeOff,
+  Eye,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getInitials, formatRelative } from '@/lib/utils';
@@ -40,8 +51,6 @@ interface NotificacionData {
   createdAt: string;
   deletedAt: string | null;
 }
-
-
 
 // ============================================================
 // Iconos por tipo
@@ -89,13 +98,15 @@ export function Header() {
   const [orgFirma, setOrgFirma] = useState('Dr.');
 
   // Evitar hydration mismatch del theme toggle
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // ─── Cargar datos de organización ─────────────────────────
   const cargarOrg = useCallback(() => {
     fetch('/api/organization')
-      .then(r => r.json())
-      .then(res => {
+      .then((r) => r.json())
+      .then((res) => {
         if (res.data) {
           if (res.data.avatarUrl) setAvatarUrl(res.data.avatarUrl);
           if (res.data.firmaNombre) setOrgFirma(res.data.firmaNombre);
@@ -124,9 +135,10 @@ export function Header() {
   const user = session?.user;
   const nombreCompleto = user?.name || 'Dr.';
   const nameParts = nombreCompleto.trim().split(/\s+/);
-  const initials = nameParts.length > 1
-    ? (nameParts[0].charAt(0) + nameParts[1].charAt(0)).toUpperCase()
-    : nameParts[0].charAt(0).toUpperCase();
+  const initials =
+    nameParts.length > 1
+      ? (nameParts[0].charAt(0) + nameParts[1].charAt(0)).toUpperCase()
+      : nameParts[0].charAt(0).toUpperCase();
 
   return (
     <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border/60 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 px-3 sm:px-4 lg:px-6">
@@ -156,25 +168,36 @@ export function Header() {
             {orgFirma || 'Dr.'}
           </h1>
           <p className="text-[11px] lg:text-xs text-muted-foreground truncate hidden sm:block">
-            {orgNombre} · {new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })}
+            {orgNombre} ·{' '}
+            {new Date().toLocaleDateString('es-CL', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+            })}
           </p>
         </div>
         {/* Selector de sucursal */}
         {hasMultiple && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 sm:h-9 gap-1 text-xs text-muted-foreground hover:text-foreground ml-1 shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 sm:h-9 gap-1 text-xs text-muted-foreground hover:text-foreground ml-1 shrink-0"
+              >
                 <Store className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline max-w-[100px] truncate">
-                  {sucursales.find(s => s.id === activeSucursalId)?.nombre || 'Sucursal'}
+                  {sucursales.find((s) => s.id === activeSucursalId)?.nombre || 'Sucursal'}
                 </span>
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuLabel className="text-xs text-muted-foreground">Cambiar sucursal</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs text-muted-foreground">
+                Cambiar sucursal
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {sucursales.map(s => (
+              {sucursales.map((s) => (
                 <DropdownMenuItem
                   key={s.id}
                   onClick={() => setSucursalId(s.id)}
@@ -182,7 +205,9 @@ export function Header() {
                 >
                   <Store className="h-3.5 w-3.5 mr-2" />
                   {s.nombre}
-                  {s.id === activeSucursalId && <span className="ml-auto text-[10px] text-primary">Activa</span>}
+                  {s.id === activeSucursalId && (
+                    <span className="ml-auto text-[10px] text-primary">Activa</span>
+                  )}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -227,7 +252,12 @@ export function Header() {
         {/* Notificaciones */}
         <DropdownMenu open={notifOpen} onOpenChange={setNotifOpen}>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative h-10 w-10" title="Notificaciones">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-10 w-10"
+              title="Notificaciones"
+            >
               <Bell className="h-[18px] w-[18px]" />
               {noLeidas > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white px-0.5">
@@ -278,13 +308,17 @@ export function Header() {
                       } hover:bg-muted/40`}
                     >
                       {/* Icono */}
-                      <div className={`h-7 w-7 rounded-lg ${coloresNotificacion[notif.tipo] || ''} flex items-center justify-center shrink-0 mt-0.5`}>
+                      <div
+                        className={`h-7 w-7 rounded-lg ${coloresNotificacion[notif.tipo] || ''} flex items-center justify-center shrink-0 mt-0.5`}
+                      >
                         <Icon className="h-3.5 w-3.5" />
                       </div>
 
                       {/* Contenido */}
                       <div className="flex-1 min-w-0">
-                        <p className={`text-[13px] leading-tight ${!notif.leido ? 'font-semibold' : ''} truncate`}>
+                        <p
+                          className={`text-[13px] leading-tight ${!notif.leido ? 'font-semibold' : ''} truncate`}
+                        >
                           {notif.titulo}
                         </p>
                         <p className="text-[11px] text-muted-foreground/60 mt-0.5">
@@ -296,7 +330,10 @@ export function Header() {
                       <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5">
                         {notif.leido ? (
                           <button
-                            onClick={(e) => { e.stopPropagation(); marcarNoLeida(notif.id); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              marcarNoLeida(notif.id);
+                            }}
                             className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
                             title="Marcar como no leída"
                           >
@@ -304,7 +341,10 @@ export function Header() {
                           </button>
                         ) : (
                           <button
-                            onClick={(e) => { e.stopPropagation(); marcarLeida(notif.id); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              marcarLeida(notif.id);
+                            }}
                             className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
                             title="Marcar como leída"
                           >
@@ -312,7 +352,10 @@ export function Header() {
                           </button>
                         )}
                         <button
-                          onClick={(e) => { e.stopPropagation(); eliminarNotificacion(notif.id); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            eliminarNotificacion(notif.id);
+                          }}
                           className="h-6 w-6 flex items-center justify-center rounded hover:bg-destructive/10 transition-colors"
                           title="Eliminar"
                         >
@@ -334,7 +377,10 @@ export function Header() {
             <div className="border-t">
               <DropdownMenuItem
                 className="justify-center text-xs text-muted-foreground rounded-none py-2.5 cursor-pointer"
-                onClick={() => { router.push('/dashboard/notificaciones'); setNotifOpen(false); }}
+                onClick={() => {
+                  router.push('/dashboard/notificaciones');
+                  setNotifOpen(false);
+                }}
               >
                 Ver todas las notificaciones
               </DropdownMenuItem>
@@ -348,7 +394,11 @@ export function Header() {
             <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
               <Avatar className="h-8 w-8">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="Avatar" className="h-full w-full rounded-full object-cover" />
+                  <img
+                    src={avatarUrl}
+                    alt="Avatar"
+                    className="h-full w-full rounded-full object-cover"
+                  />
                 ) : (
                   <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                     {initials}
@@ -361,20 +411,33 @@ export function Header() {
             <DropdownMenuLabel>
               <div className="flex flex-col">
                 <span>{nombreCompleto}</span>
-                <span className="text-xs text-muted-foreground font-normal">
-                  {user?.email}
-                </span>
+                <span className="text-xs text-muted-foreground font-normal">{user?.email}</span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuItem onClick={() => router.push('/dashboard/configuracion')}>
-              <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              <svg
+                className="h-4 w-4 mr-2"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+              </svg>
               Configuración
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={async () => {
-              try { await signOut({ redirect: false }); } catch { /* NextAuth v5 beta puede lanzar igual */ }
-              window.location.href = '/';
-            }}>
+            <DropdownMenuItem
+              onClick={async () => {
+                try {
+                  await signOut({ redirect: false });
+                } catch {
+                  /* NextAuth v5 beta puede lanzar igual */
+                }
+                window.location.href = '/';
+              }}
+            >
               Cerrar sesión
             </DropdownMenuItem>
           </DropdownMenuContent>

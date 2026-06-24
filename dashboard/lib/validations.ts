@@ -1,9 +1,9 @@
 /**
  * Schemas de validación Zod para los endpoints de la API.
- * 
+ *
  * Reemplaza las validaciones manuales (if (!nombre?.trim())) por schemas
  * tipados que generan mensajes de error consistentes automáticamente.
- * 
+ *
  * Uso:
  *   const body = parseBody(request, createPacienteSchema);
  *   // body tiene tipo inferido automáticamente
@@ -16,13 +16,16 @@ import { fail } from './api-handler';
 // ─── Helpers ────────────────────────────────────────────
 
 /** Parsea el body de un request y valida con el schema. Tira error 400 si falla. */
-export async function parseBody<T extends z.ZodType>(request: NextRequest, schema: T): Promise<z.infer<T>> {
+export async function parseBody<T extends z.ZodType>(
+  request: NextRequest,
+  schema: T,
+): Promise<z.infer<T>> {
   try {
     const json = await request.json();
     return schema.parse(json);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const messages = error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
+      const messages = error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ');
       fail(`Datos inválidos: ${messages}`);
     }
     fail('Body JSON inválido');
@@ -33,10 +36,12 @@ export async function parseBody<T extends z.ZodType>(request: NextRequest, schem
 export function parseQuery<T extends z.ZodType>(request: NextRequest, schema: T): z.infer<T> {
   const { searchParams } = new URL(request.url);
   const params: Record<string, string> = {};
-  searchParams.forEach((value, key) => { params[key] = value; });
+  searchParams.forEach((value, key) => {
+    params[key] = value;
+  });
   const result = schema.safeParse(params);
   if (!result.success) {
-    const messages = result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
+    const messages = result.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ');
     fail(`Parametros invalidos: ${messages}`);
   }
   return result.data!;
@@ -44,7 +49,7 @@ export function parseQuery<T extends z.ZodType>(request: NextRequest, schema: T)
 
 // ─── Schemas ─────────────────────────────────────────────
 
-/** 
+/**
  * Teléfono — acepta formatos chileno (+569, +562, 9) y cualquier internacional con +.
  * Se sanitiza: se eliminan espacios, guiones, paréntesis antes de validar.
  */
@@ -53,7 +58,10 @@ const telefonoRegex = /^(\+?\d{7,15})$/;
 export const createPacienteSchema = z.object({
   nombre: z.string().min(1, 'Nombre es obligatorio'),
   apellido: z.string().min(1, 'Apellido es obligatorio'),
-  telefono: z.string().min(1, 'Teléfono es obligatorio').trim()
+  telefono: z
+    .string()
+    .min(1, 'Teléfono es obligatorio')
+    .trim()
     .regex(telefonoRegex, 'Teléfono inválido: debe tener entre 7 y 15 dígitos, con o sin +'),
   email: z.string().trim().email('Email inválido').optional().nullable().or(z.literal('')),
   obraSocial: z.string().optional().nullable(),
@@ -75,8 +83,14 @@ export const updatePacienteSchema = createPacienteSchema.partial();
 export const createTurnoSchema = z.object({
   pacienteId: z.string().uuid('pacienteId debe ser UUID'),
   medicoId: z.string().uuid('medicoId debe ser UUID'),
-  fecha: z.string().min(1, 'Fecha es obligatoria').regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato: YYYY-MM-DD'),
-  hora: z.string().min(1, 'Hora es obligatoria').regex(/^\d{2}:\d{2}$/, 'Formato: HH:MM'),
+  fecha: z
+    .string()
+    .min(1, 'Fecha es obligatoria')
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato: YYYY-MM-DD'),
+  hora: z
+    .string()
+    .min(1, 'Hora es obligatoria')
+    .regex(/^\d{2}:\d{2}$/, 'Formato: HH:MM'),
   tipoConsulta: z.enum(['presencial', 'virtual', 'telefonica']).optional().default('presencial'),
   motivo: z.string().optional().nullable(),
   duracionMinutos: z.number().min(10).max(120).optional().default(30),
@@ -84,9 +98,17 @@ export const createTurnoSchema = z.object({
 });
 
 export const updateTurnoSchema = z.object({
-  estado: z.enum(['pendiente', 'confirmada', 'en_atencion', 'atendido', 'cancelada', 'no_asistio']).optional(),
-  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  hora: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+  estado: z
+    .enum(['pendiente', 'confirmada', 'en_atencion', 'atendido', 'cancelada', 'no_asistio'])
+    .optional(),
+  fecha: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  hora: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional(),
   motivoCancelacion: z.string().optional().nullable(),
   tipoConsulta: z.string().optional(),
   motivo: z.string().optional().nullable(),
@@ -181,12 +203,22 @@ export const createMensajeSchema = z.object({
 
 // ─── Horarios ────────────────────────────────────────────
 
-export const updateHorariosSchema = z.array(z.object({
-  dia: z.string(),
-  activo: z.boolean(),
-  inicio: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM').optional().nullable(),
-  fin: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM').optional().nullable(),
-}));
+export const updateHorariosSchema = z.array(
+  z.object({
+    dia: z.string(),
+    activo: z.boolean(),
+    inicio: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/, 'Formato HH:MM')
+      .optional()
+      .nullable(),
+    fin: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/, 'Formato HH:MM')
+      .optional()
+      .nullable(),
+  }),
+);
 
 // ─── Organización ────────────────────────────────────────
 
@@ -209,11 +241,13 @@ export const updateOrganizationSchema = z.object({
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   emailSecundario: z.string().email('Email inválido').optional().or(z.literal('')),
   sitioWeb: z.string().optional(),
-  redesSociales: z.object({
-    instagram: z.string(),
-    facebook: z.string(),
-    twitter: z.string(),
-  }).optional(),
+  redesSociales: z
+    .object({
+      instagram: z.string(),
+      facebook: z.string(),
+      twitter: z.string(),
+    })
+    .optional(),
 });
 
 // ─── Onboarding ──────────────────────────────────────────
@@ -237,13 +271,17 @@ export const updateNotificacionSchema = z.object({
 });
 
 export const pushSubscriptionSchema = z.object({
-  subscription: z.object({
-    endpoint: z.string(),
-    keys: z.object({
-      p256dh: z.string(),
-      auth: z.string(),
-    }).optional(),
-  }).passthrough(),
+  subscription: z
+    .object({
+      endpoint: z.string(),
+      keys: z
+        .object({
+          p256dh: z.string(),
+          auth: z.string(),
+        })
+        .optional(),
+    })
+    .passthrough(),
 });
 
 // ─── Credenciales ────────────────────────────────────────
@@ -260,19 +298,24 @@ export const updateCredencialSchema = z.object({
 
 // ─── Auth Register ───────────────────────────────────────
 
-export const registerSchema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(8, 'Mínimo 8 caracteres').max(100),
-  nombre: z.string().min(1, 'Nombre es obligatorio'),
-  apellido: z.string().optional().nullable(),
-  planId: z.string().optional().nullable(),
-}).refine(data => {
-  // Requisitos de fortaleza
-  if (!/[A-Z]/.test(data.password)) return false;
-  if (!/[a-z]/.test(data.password)) return false;
-  if (!/[0-9]/.test(data.password)) return false;
-  return true;
-}, { message: 'La contraseña debe tener mayúscula, minúscula y número', path: ['password'] });
+export const registerSchema = z
+  .object({
+    email: z.string().email('Email inválido'),
+    password: z.string().min(8, 'Mínimo 8 caracteres').max(100),
+    nombre: z.string().min(1, 'Nombre es obligatorio'),
+    apellido: z.string().optional().nullable(),
+    planId: z.string().optional().nullable(),
+  })
+  .refine(
+    (data) => {
+      // Requisitos de fortaleza
+      if (!/[A-Z]/.test(data.password)) return false;
+      if (!/[a-z]/.test(data.password)) return false;
+      if (!/[0-9]/.test(data.password)) return false;
+      return true;
+    },
+    { message: 'La contraseña debe tener mayúscula, minúscula y número', path: ['password'] },
+  );
 
 // ─── Pagos ───────────────────────────────────────────────
 
@@ -310,7 +353,7 @@ export const createSucursalSchema = z.object({
   nombre: z.string().min(1, 'Nombre es obligatorio'),
   direccion: z.string().optional().nullable(),
   telefono: z.string().optional().nullable(),
-  horarios: z.record(z.any()).optional(),
+  horarios: z.record(z.unknown()).optional(),
 });
 
 export const updateSucursalSchema = createSucursalSchema.partial();
@@ -333,7 +376,10 @@ export const updatePrivacidadSchema = z.object({
 
 export const createTenantSchema = z.object({
   nombre: z.string().min(1, 'Nombre es obligatorio'),
-  subdomain: z.string().min(1, 'Subdominio es obligatorio').regex(/^[a-z0-9-]+$/, 'Solo letras, números y guiones'),
+  subdomain: z
+    .string()
+    .min(1, 'Subdominio es obligatorio')
+    .regex(/^[a-z0-9-]+$/, 'Solo letras, números y guiones'),
 });
 
 // ─── Portal Auth ─────────────────────────────────────────
@@ -399,17 +445,19 @@ export const createDerivacionSchema = z.object({
   sucursalId: z.string().uuid().optional().nullable(),
 });
 
-export const updateDerivacionSchema = z.object({
-  medicoDestinoId: z.string().uuid().optional().nullable(),
-  estado: z.enum(['pendiente', 'aceptada', 'rechazada', 'completada']).optional(),
-  notasDestino: z.string().optional().nullable(),
-  gravedad: z.enum(['normal', 'prioritaria', 'urgente']).optional(),
-  especialidad: z.string().optional(),
-  motivo: z.string().optional(),
-  diagnostico: z.string().optional().nullable(),
-  cie10Codigo: z.string().optional().nullable(),
-  fechaRespuesta: z.string().optional().nullable(),
-}).partial();
+export const updateDerivacionSchema = z
+  .object({
+    medicoDestinoId: z.string().uuid().optional().nullable(),
+    estado: z.enum(['pendiente', 'aceptada', 'rechazada', 'completada']).optional(),
+    notasDestino: z.string().optional().nullable(),
+    gravedad: z.enum(['normal', 'prioritaria', 'urgente']).optional(),
+    especialidad: z.string().optional(),
+    motivo: z.string().optional(),
+    diagnostico: z.string().optional().nullable(),
+    cie10Codigo: z.string().optional().nullable(),
+    fechaRespuesta: z.string().optional().nullable(),
+  })
+  .partial();
 
 // ─── Blacklist ───────────────────────────────────────────
 
@@ -422,11 +470,13 @@ export const createBlacklistSchema = z.object({
   sucursalId: z.string().uuid().optional().nullable(),
 });
 
-export const updateBlacklistSchema = z.object({
-  motivo: z.string().optional(),
-  activo: z.boolean().optional(),
-  bloqueadoHasta: z.string().optional().nullable(),
-}).partial();
+export const updateBlacklistSchema = z
+  .object({
+    motivo: z.string().optional(),
+    activo: z.boolean().optional(),
+    bloqueadoHasta: z.string().optional().nullable(),
+  })
+  .partial();
 
 export type CreateBlacklistEntry = z.infer<typeof createBlacklistSchema>;
 export type UpdateBlacklistEntry = z.infer<typeof updateBlacklistSchema>;
@@ -448,17 +498,19 @@ export const createConsentimientoSchema = z.object({
   sucursalId: z.string().uuid().optional().nullable(),
 });
 
-export const updateConsentimientoSchema = z.object({
-  tipo: z.string().optional(),
-  titulo: z.string().optional(),
-  descripcion: z.string().optional().nullable(),
-  fechaFirma: z.string().optional().nullable(),
-  ipFirma: z.string().optional().nullable(),
-  nombrePaciente: z.string().optional(),
-  rutPaciente: z.string().optional().nullable(),
-  documentoPdf: z.string().optional().nullable(),
-  metadata: z.record(z.unknown()).optional().nullable(),
-}).partial();
+export const updateConsentimientoSchema = z
+  .object({
+    tipo: z.string().optional(),
+    titulo: z.string().optional(),
+    descripcion: z.string().optional().nullable(),
+    fechaFirma: z.string().optional().nullable(),
+    ipFirma: z.string().optional().nullable(),
+    nombrePaciente: z.string().optional(),
+    rutPaciente: z.string().optional().nullable(),
+    documentoPdf: z.string().optional().nullable(),
+    metadata: z.record(z.unknown()).optional().nullable(),
+  })
+  .partial();
 
 export type CreateConsentimiento = z.infer<typeof createConsentimientoSchema>;
 export type UpdateConsentimiento = z.infer<typeof updateConsentimientoSchema>;
@@ -511,7 +563,10 @@ export const changePasswordSchema = z.object({
 // ─── 2FA ──────────────────────────────────────────────────
 export const setup2faSchema = z.object({
   secret: z.string().min(1, 'Secret requerido'),
-  token: z.string().length(6, 'Token debe tener 6 dígitos').regex(/^\d{6}$/, 'Token debe ser numérico'),
+  token: z
+    .string()
+    .length(6, 'Token debe tener 6 dígitos')
+    .regex(/^\d{6}$/, 'Token debe ser numérico'),
   backupCodes: z.array(z.string()).optional(),
 });
 

@@ -17,7 +17,10 @@ export const dynamic = 'force-dynamic';
 
 async function getCertificadoData(id: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://med.aicorebots.com';
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      'https://med.aicorebots.com';
     const res = await fetch(`${baseUrl}/api/verificar-certificado/${id}`, {
       cache: 'no-store',
     });

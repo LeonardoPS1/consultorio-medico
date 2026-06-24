@@ -9,7 +9,14 @@
  */
 
 import { db } from '@/lib/db';
-import { medicos, servicios, horariosAtencion, bloqueosAgenda, turnos, pacientes } from '@/drizzle/schema';
+import {
+  medicos,
+  servicios,
+  horariosAtencion,
+  bloqueosAgenda,
+  turnos,
+  pacientes,
+} from '@/drizzle/schema';
 import { eq, and, ne, sql, gte, lte, inArray, notInArray } from 'drizzle-orm';
 import { safeWarn, safeError } from '@/lib/logger';
 
@@ -145,7 +152,11 @@ export async function slotsDisponibles(
 
   // 2. Obtener servicio para duración y precio
   const [servicio] = await db
-    .select({ duracionMinutos: servicios.duracionMinutos, precio: servicios.precio, nombre: servicios.nombre })
+    .select({
+      duracionMinutos: servicios.duracionMinutos,
+      precio: servicios.precio,
+      nombre: servicios.nombre,
+    })
     .from(servicios)
     .where(and(eq(servicios.id, servicioId), eq(servicios.activo, true)))
     .limit(1);
@@ -183,12 +194,15 @@ export async function slotsDisponibles(
 
   // 5. Generar slots cada 30 min dentro del horario
   const slots: SlotDisponible[] = [];
-  const intervalos = horario.tipo === 'partido'
-    ? [
-        { inicio: horario.inicio!, fin: horario.fin! },
-        ...(horario.inicio2 && horario.fin2 ? [{ inicio: horario.inicio2, fin: horario.fin2 }] : []),
-      ]
-    : [{ inicio: horario.inicio!, fin: horario.fin! }];
+  const intervalos =
+    horario.tipo === 'partido'
+      ? [
+          { inicio: horario.inicio!, fin: horario.fin! },
+          ...(horario.inicio2 && horario.fin2
+            ? [{ inicio: horario.inicio2, fin: horario.fin2 }]
+            : []),
+        ]
+      : [{ inicio: horario.inicio!, fin: horario.fin! }];
 
   for (const intervalo of intervalos) {
     const [hInicio, mInicio] = intervalo.inicio.split(':').map(Number);
@@ -300,7 +314,11 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
 
   // 5. Validar servicio
   const [servicio] = await db
-    .select({ duracionMinutos: servicios.duracionMinutos, precio: servicios.precio, nombre: servicios.nombre })
+    .select({
+      duracionMinutos: servicios.duracionMinutos,
+      precio: servicios.precio,
+      nombre: servicios.nombre,
+    })
     .from(servicios)
     .where(and(eq(servicios.id, input.servicioId), eq(servicios.activo, true)))
     .limit(1);
@@ -330,7 +348,10 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
   if (servicio.precio != null) {
     insertValues.precio = servicio.precio;
   }
-  const [turno] = await db.insert(turnos).values(insertValues as any).returning();
+  const [turno] = await db
+    .insert(turnos)
+    .values(insertValues as any)
+    .returning();
 
   // 4. Si es un reagendamiento, cancelar el turno anterior
   let oldTurnoFecha: string | null = null;
@@ -340,16 +361,14 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
     const [oldTurno] = await db
       .select({ fechaHora: turnos.fechaHora })
       .from(turnos)
-      .where(
-        and(
-          eq(turnos.id, input.rescheduleTurnoId),
-          eq(turnos.pacienteId, input.pacienteId),
-        ),
-      )
+      .where(and(eq(turnos.id, input.rescheduleTurnoId), eq(turnos.pacienteId, input.pacienteId)))
       .limit(1);
     if (oldTurno) {
       oldTurnoFecha = oldTurno.fechaHora.toISOString();
-      oldTurnoHora = oldTurno.fechaHora.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+      oldTurnoHora = oldTurno.fechaHora.toLocaleTimeString('es-CL', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
     }
 
     await db
@@ -360,12 +379,7 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
         canceladoPor: 'paciente',
         updatedAt: new Date(),
       })
-      .where(
-        and(
-          eq(turnos.id, input.rescheduleTurnoId),
-          eq(turnos.pacienteId, input.pacienteId),
-        ),
-      );
+      .where(and(eq(turnos.id, input.rescheduleTurnoId), eq(turnos.pacienteId, input.pacienteId)));
   }
 
   // 5. Obtener datos del paciente y médico para la respuesta
@@ -376,7 +390,11 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
     .limit(1);
 
   const [medicoRow] = await db
-    .select({ nombre: medicos.nombre, especialidad: medicos.especialidad, telefono: medicos.telefono })
+    .select({
+      nombre: medicos.nombre,
+      especialidad: medicos.especialidad,
+      telefono: medicos.telefono,
+    })
     .from(medicos)
     .where(eq(medicos.id, input.medicoId))
     .limit(1);
@@ -419,7 +437,11 @@ export async function sendTurnoConfirmacionWhatsApp(
   if (!accountSid || !authToken || !fromNumber) return;
 
   const fecha = new Date(fechaHora);
-  const fechaStr = fecha.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+  const fechaStr = fecha.toLocaleDateString('es-CL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
   const horaStr = fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 
   let message = `✅ *Turno confirmado - Consultorio Médico*
@@ -431,7 +453,8 @@ Hola ${pacienteNombre}, tu turno fue agendado correctamente:
 ⏰ *Hora:* ${horaStr}`;
 
   if (motivo) message += `\n📝 *Motivo:* ${motivo}`;
-  if (precio && precio > 0) message += `\n💰 *Pendiente de pago:* $${precio.toLocaleString('es-CL')}`;
+  if (precio && precio > 0)
+    message += `\n💰 *Pendiente de pago:* $${precio.toLocaleString('es-CL')}`;
   message += `\n\nSi no puedes asistir, cancelá con anticipación desde el portal.
 🔗 ${appUrl}/portal`;
 
@@ -460,10 +483,15 @@ Hola ${pacienteNombre}, tu turno fue agendado correctamente:
       },
     );
     if (!response.ok) {
-      safeWarn('[PortalBooking] Error enviando confirmación WhatsApp:', { status: response.status });
+      safeWarn('[PortalBooking] Error enviando confirmación WhatsApp:', {
+        status: response.status,
+      });
     }
   } catch (e) {
-    safeError('[PortalBooking] Error enviando confirmación WhatsApp:', e instanceof Error ? { message: e.message } : e);
+    safeError(
+      '[PortalBooking] Error enviando confirmación WhatsApp:',
+      e instanceof Error ? { message: e.message } : e,
+    );
   }
 }
 
@@ -501,7 +529,9 @@ Paciente: ${pacienteNombre}`;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const body: any = {
-    To: medicoTelefono.startsWith('whatsapp:') ? medicoTelefono : `whatsapp:${medicoTelefono.startsWith('+') ? medicoTelefono : `+${medicoTelefono}`}`,
+    To: medicoTelefono.startsWith('whatsapp:')
+      ? medicoTelefono
+      : `whatsapp:${medicoTelefono.startsWith('+') ? medicoTelefono : `+${medicoTelefono}`}`,
     From: fromNumber.startsWith('whatsapp:') ? fromNumber : `whatsapp:${fromNumber}`,
     Body: message,
   };
@@ -519,10 +549,16 @@ Paciente: ${pacienteNombre}`;
       },
     );
     if (!response.ok) {
-      safeWarn('[PortalBooking] Error notificando al médico:', { status: response.status, tipo: mensajeTipo });
+      safeWarn('[PortalBooking] Error notificando al médico:', {
+        status: response.status,
+        tipo: mensajeTipo,
+      });
     }
   } catch (e) {
-    safeError('[PortalBooking] Error notificando al médico:', e instanceof Error ? { message: e.message } : e);
+    safeError(
+      '[PortalBooking] Error notificando al médico:',
+      e instanceof Error ? { message: e.message } : e,
+    );
   }
 }
 

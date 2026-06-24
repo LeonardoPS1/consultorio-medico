@@ -88,7 +88,9 @@ export function RegistroExpressModal({ open, onOpenChange, planId }: RegistroMod
       });
 
       if (signInResult?.error) {
-        throw new Error('Cuenta creada, pero hubo un problema al iniciar sesión. Redirigiendo al login...');
+        throw new Error(
+          'Cuenta creada, pero hubo un problema al iniciar sesión. Redirigiendo al login...',
+        );
       }
 
       // 3. Éxito
@@ -250,14 +252,23 @@ export function RegistroExpressModal({ open, onOpenChange, planId }: RegistroMod
                     }`}
                   >
                     Acepto la{' '}
-                    <Link href="/privacidad" target="_blank" className="text-primary hover:underline font-medium">
+                    <Link
+                      href="/privacidad"
+                      target="_blank"
+                      className="text-primary hover:underline font-medium"
+                    >
                       Política de Privacidad
                     </Link>{' '}
                     y los{' '}
-                    <Link href="/terminos" target="_blank" className="text-primary hover:underline font-medium">
+                    <Link
+                      href="/terminos"
+                      target="_blank"
+                      className="text-primary hover:underline font-medium"
+                    >
                       Términos del Servicio
                     </Link>
-                    , y autorizo el tratamiento de mis datos personales y de salud para la gestión de turnos y comunicación.
+                    , y autorizo el tratamiento de mis datos personales y de salud para la gestión
+                    de turnos y comunicación.
                   </label>
                 </div>
                 {fieldErrors.consent && (
@@ -336,11 +347,7 @@ export function RegistroExpressModal({ open, onOpenChange, planId }: RegistroMod
                 className="space-y-4"
               >
                 <p className="text-sm text-destructive text-center py-4">{errorMsg}</p>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setStep('form')}
-                >
+                <Button variant="outline" className="w-full" onClick={() => setStep('form')}>
                   Intentar de nuevo
                 </Button>
               </motion.div>

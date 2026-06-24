@@ -31,12 +31,9 @@ export default function GlobalError({
             />
           </svg>
         </div>
-        <h1 className="mb-2 text-2xl font-semibold tracking-tight">
-          Algo salió mal
-        </h1>
+        <h1 className="mb-2 text-2xl font-semibold tracking-tight">Algo salió mal</h1>
         <p className="mb-2 text-sm text-muted-foreground">
-          Ocurrió un error inesperado. Si el problema persiste, contactá al
-          administrador.
+          Ocurrió un error inesperado. Si el problema persiste, contactá al administrador.
         </p>
         <p className="mb-8 text-xs text-muted-foreground/60">
           {error.digest && `ID de error: ${error.digest}`}

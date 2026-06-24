@@ -19,7 +19,9 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4', className)}>
+    <div
+      className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4', className)}
+    >
       <div className="flex items-center gap-4 min-w-0">
         {icon && (
           <div className="hidden sm:flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 dark:bg-primary/15 ring-1 ring-primary/20 dark:ring-primary/30">
@@ -37,7 +39,8 @@ export function PageHeader({
             <h1
               className={cn(
                 'text-2xl sm:text-3xl font-bold tracking-tight text-foreground',
-                gradient && 'bg-gradient-to-r from-foreground via-foreground/90 to-foreground/60 bg-clip-text text-transparent',
+                gradient &&
+                  'bg-gradient-to-r from-foreground via-foreground/90 to-foreground/60 bg-clip-text text-transparent',
               )}
             >
               {title}
@@ -52,11 +55,7 @@ export function PageHeader({
         </div>
       </div>
 
-      {action && (
-        <div className="flex shrink-0 items-center gap-2">
-          {action}
-        </div>
-      )}
+      {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
     </div>
   );
 }

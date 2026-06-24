@@ -10,19 +10,35 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter,
-  DialogHeader, DialogTitle, DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 import {
-  Ban, Loader2, Search, ShieldAlert, ShieldCheck, User,
-  Calendar, Clock, AlertTriangle,
+  Ban,
+  Loader2,
+  Search,
+  ShieldAlert,
+  ShieldCheck,
+  User,
+  Calendar,
+  Clock,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface BlacklistEntry {
@@ -61,7 +77,10 @@ export default function BlacklistPage() {
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
-    pacienteId: '', motivo: '', bloqueadoHasta: '', activo: 'true',
+    pacienteId: '',
+    motivo: '',
+    bloqueadoHasta: '',
+    activo: 'true',
   });
 
   const fetchData = useCallback(async () => {
@@ -89,17 +108,27 @@ export default function BlacklistPage() {
       }
     } catch (err) {
       console.error('Error fetching blacklist:', err);
-      toast({ title: 'Error', description: 'No se pudieron cargar los datos', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'No se pudieron cargar los datos',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
   }, [filtroEstado, search]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleCreate = async () => {
     if (!form.pacienteId || !form.motivo) {
-      toast({ title: 'Campos incompletos', description: 'Paciente y motivo son obligatorios', variant: 'destructive' });
+      toast({
+        title: 'Campos incompletos',
+        description: 'Paciente y motivo son obligatorios',
+        variant: 'destructive',
+      });
       return;
     }
     setSaving(true);
@@ -137,7 +166,10 @@ export default function BlacklistPage() {
         body: JSON.stringify({ activo: !entry.activo }),
       });
       if (!res.ok) throw new Error('Error al actualizar');
-      toast({ title: entry.activo ? 'Desbloqueado' : 'Bloqueado', description: `Paciente ${entry.activo ? 'desbloqueado' : 'bloqueado'} correctamente` });
+      toast({
+        title: entry.activo ? 'Desbloqueado' : 'Bloqueado',
+        description: `Paciente ${entry.activo ? 'desbloqueado' : 'bloqueado'} correctamente`,
+      });
       fetchData();
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -176,7 +208,9 @@ export default function BlacklistPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total bloqueos</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total bloqueos
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">{stats.total}</p>
@@ -241,7 +275,7 @@ export default function BlacklistPage() {
               <div className="space-y-2">
                 <PacienteSearchCombobox
                   value={form.pacienteId}
-                  onChange={(pacienteId) => setForm(f => ({ ...f, pacienteId }))}
+                  onChange={(pacienteId) => setForm((f) => ({ ...f, pacienteId }))}
                   placeholder="Buscar paciente por nombre, RUT o teléfono..."
                   label="Paciente"
                   size="sm"
@@ -280,7 +314,9 @@ export default function BlacklistPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancelar</Button>
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>
+                Cancelar
+              </Button>
               <Button onClick={handleCreate} disabled={saving}>
                 {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Bloquear
@@ -307,11 +343,17 @@ export default function BlacklistPage() {
           {data.map((entry) => (
             <Card key={entry.id} className="hoverable:hover:bg-muted/30 transition-colors">
               <CardContent className="p-4 flex items-start gap-3 flex-wrap">
-                <div className={cn(
-                  'h-10 w-10 rounded-lg flex items-center justify-center shrink-0',
-                  entry.activo ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'
-                )}>
-                  {entry.activo ? <ShieldAlert className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+                <div
+                  className={cn(
+                    'h-10 w-10 rounded-lg flex items-center justify-center shrink-0',
+                    entry.activo ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600',
+                  )}
+                >
+                  {entry.activo ? (
+                    <ShieldAlert className="h-5 w-5" />
+                  ) : (
+                    <ShieldCheck className="h-5 w-5" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm">{entry.pacienteNombre}</p>

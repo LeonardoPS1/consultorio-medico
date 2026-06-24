@@ -5,9 +5,20 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Calendar, FileText, MessageSquare, User, PlusCircle,
-  Package, Bell, PenTool, FlaskConical, ClipboardCheck,
-  LogOut, ChevronLeft, ChevronRight, TrendingUp,
+  Calendar,
+  FileText,
+  MessageSquare,
+  User,
+  PlusCircle,
+  Package,
+  Bell,
+  PenTool,
+  FlaskConical,
+  ClipboardCheck,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
 } from 'lucide-react';
 
 const navItems = [
@@ -89,7 +100,10 @@ export default function PortalNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-t border-gray-200/60 dark:border-gray-800/60 z-20 transition-colors duration-300" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+    <nav
+      className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-t border-gray-200/60 dark:border-gray-800/60 z-20 transition-colors duration-300"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
       <div className="relative max-w-lg mx-auto">
         {/* Scroll indicator left */}
         <AnimatePresence>
@@ -105,10 +119,7 @@ export default function PortalNav() {
           )}
         </AnimatePresence>
 
-        <div
-          ref={scrollRef}
-          className="flex overflow-x-auto scrollbar-none gap-1 px-2 py-1.5"
-        >
+        <div ref={scrollRef} className="flex overflow-x-auto scrollbar-none gap-1 px-2 py-1.5">
           {navItems.map((item) => {
             const active = isActive(item.href);
             return (
@@ -119,9 +130,10 @@ export default function PortalNav() {
                 className={`
                   relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[64px] shrink-0
                   transition-all duration-200
-                  ${active
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40'
-                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100/60 dark:hover:bg-gray-800/60'
+                  ${
+                    active
+                      ? 'text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40'
+                      : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100/60 dark:hover:bg-gray-800/60'
                   }
                 `}
               >
@@ -148,9 +160,10 @@ export default function PortalNav() {
             className={`
               relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[64px] shrink-0
               transition-all duration-200
-              ${pathname === '/portal/notificaciones'
-                ? 'text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40'
-                : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100/60 dark:hover:bg-gray-800/60'
+              ${
+                pathname === '/portal/notificaciones'
+                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40'
+                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100/60 dark:hover:bg-gray-800/60'
               }
             `}
           >
@@ -177,9 +190,7 @@ export default function PortalNav() {
                 )}
               </AnimatePresence>
             </div>
-            <span className="relative text-[10px] font-medium leading-tight">
-              Alertas
-            </span>
+            <span className="relative text-[10px] font-medium leading-tight">Alertas</span>
           </Link>
 
           {/* Logout */}

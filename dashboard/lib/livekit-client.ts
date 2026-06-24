@@ -1,6 +1,6 @@
 /**
  * LiveKit — Constantes y helpers del lado cliente
- * 
+ *
  * Este archivo NO importa livekit-server-sdk y es seguro para uso en Client Components.
  */
 
@@ -20,10 +20,7 @@ export function getRoomName(turnoId: string): string {
  * Genera la URL completa de la videollamada para el paciente.
  * El token se pasa como query param para acceso directo.
  */
-export function getSalaLink(
-  turnoId: string,
-  token: string
-): string {
+export function getSalaLink(turnoId: string, token: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://med.aicorebots.com';
   return `${baseUrl}/videollamada/${turnoId}?token=${encodeURIComponent(token)}`;
 }

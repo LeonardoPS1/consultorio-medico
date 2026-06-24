@@ -13,7 +13,12 @@ interface BulkWhatsAppResult {
   total: number;
   enviados: number;
   fallidos: number;
-  detalles: { pacienteId: string; telefono: string; estado: 'enviado' | 'sin_consentimiento' | 'error'; error?: string }[];
+  detalles: {
+    pacienteId: string;
+    telefono: string;
+    estado: 'enviado' | 'sin_consentimiento' | 'error';
+    error?: string;
+  }[];
 }
 
 const TWILIO_ACCOUNT_SID = () => process.env.TWILIO_ACCOUNT_SID;
@@ -35,7 +40,10 @@ async function sendSingleMessage(telefono: string, mensaje: string): Promise<boo
       `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
       {
         method: 'POST',
-        headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+          Authorization: `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
         body: formData.toString(),
         signal: AbortSignal.timeout(10000),
       },
@@ -59,7 +67,12 @@ export async function bulkWhatsApp(
   if (sucursalId) conditions.push(eq(pacientes.sucursalId, sucursalId));
 
   const pacientesList = await db
-    .select({ id: pacientes.id, telefono: pacientes.telefono, nombre: pacientes.nombre, consentimiento: pacientes.consentimientoWhatsapp })
+    .select({
+      id: pacientes.id,
+      telefono: pacientes.telefono,
+      nombre: pacientes.nombre,
+      consentimiento: pacientes.consentimientoWhatsapp,
+    })
     .from(pacientes)
     .where(and(...conditions));
 
@@ -87,11 +100,18 @@ export async function bulkWhatsApp(
       detalles.push({ pacienteId: p.id, telefono: p.telefono, estado: 'enviado' });
     } else {
       fallidos++;
-      detalles.push({ pacienteId: p.id, telefono: p.telefono, estado: 'error', error: 'Error al enviar' });
+      detalles.push({
+        pacienteId: p.id,
+        telefono: p.telefono,
+        estado: 'error',
+        error: 'Error al enviar',
+      });
     }
   }
 
-  safeLog(`[BulkWhatsApp] ${enviados} enviados, ${fallidos} fallidos de ${pacientesList.length} pacientes`);
+  safeLog(
+    `[BulkWhatsApp] ${enviados} enviados, ${fallidos} fallidos de ${pacientesList.length} pacientes`,
+  );
 
   return { total: pacienteIds.length, enviados, fallidos, detalles };
 }

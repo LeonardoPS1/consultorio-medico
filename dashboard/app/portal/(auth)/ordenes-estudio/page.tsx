@@ -6,7 +6,16 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { FileText, Loader2, SearchX, FlaskConical, Image, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import {
+  FileText,
+  Loader2,
+  SearchX,
+  FlaskConical,
+  Image,
+  CheckCircle2,
+  Clock,
+  XCircle,
+} from 'lucide-react';
 
 interface OrdenEstudio {
   id: string;
@@ -74,7 +83,9 @@ export default function PortalOrdenesEstudioPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
 
   if (loading) {
     return (
@@ -106,10 +117,7 @@ export default function PortalOrdenesEstudioPage() {
 
       <div className="space-y-3">
         {ordenes.map((o) => (
-          <div
-            key={o.id}
-            className="bg-white rounded-lg border border-gray-200 p-4"
-          >
+          <div key={o.id} className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
                 {getTipoIcon(o.tipo)}
@@ -145,7 +153,8 @@ export default function PortalOrdenesEstudioPage() {
 
                 {o.observaciones && (
                   <p className="mt-2 text-sm text-gray-500 bg-gray-50 rounded-lg p-2">
-                    <strong>Observaciones: </strong>{o.observaciones}
+                    <strong>Observaciones: </strong>
+                    {o.observaciones}
                   </p>
                 )}
               </div>

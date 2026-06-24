@@ -192,7 +192,10 @@ export default function ConversacionesPage() {
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <PageHeader title="Conversaciones" description="Bandeja unificada de WhatsApp, SMS y Email" />
+        <PageHeader
+          title="Conversaciones"
+          description="Bandeja unificada de WhatsApp, SMS y Email"
+        />
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -206,7 +209,10 @@ export default function ConversacionesPage() {
           <NuevaConversacionModal
             onCreated={() => {
               refetchConversaciones();
-              toast({ title: 'Conversación creada', description: 'La conversación se inició correctamente' });
+              toast({
+                title: 'Conversación creada',
+                description: 'La conversación se inició correctamente',
+              });
             }}
           />
         </div>
@@ -255,7 +261,12 @@ export default function ConversacionesPage() {
               <div className="text-center py-12 px-4">
                 <MessageSquare className="h-10 w-10 text-destructive/50 mx-auto mb-3" />
                 <p className="text-sm font-medium text-destructive">Error al cargar</p>
-                <Button variant="outline" size="sm" className="mt-2" onClick={() => refetchConversaciones()}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => refetchConversaciones()}
+                >
                   Reintentar
                 </Button>
               </div>
@@ -323,9 +334,7 @@ export default function ConversacionesPage() {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 truncate">
-                        {conv.ultimoMensaje
-                          ? truncate(conv.ultimoMensaje, 60)
-                          : 'Sin mensajes'}
+                        {conv.ultimoMensaje ? truncate(conv.ultimoMensaje, 60) : 'Sin mensajes'}
                       </p>
                     </div>
                   </div>
@@ -406,7 +415,10 @@ export default function ConversacionesPage() {
                           <Avatar className="h-8 w-8 mt-1">
                             <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                               {selectedConv.paciente
-                                ? getInitials(selectedConv.paciente.nombre, selectedConv.paciente.apellido)
+                                ? getInitials(
+                                    selectedConv.paciente.nombre,
+                                    selectedConv.paciente.apellido,
+                                  )
                                 : '🧑'}
                             </AvatarFallback>
                           </Avatar>
@@ -417,8 +429,8 @@ export default function ConversacionesPage() {
                             msg.rol === 'paciente'
                               ? 'bg-muted rounded-tl-sm'
                               : msg.rol === 'asistente_ia'
-                              ? 'bg-primary/10 text-foreground rounded-tr-sm border border-primary/20'
-                              : 'bg-primary text-primary-foreground rounded-tr-sm'
+                                ? 'bg-primary/10 text-foreground rounded-tr-sm border border-primary/20'
+                                : 'bg-primary text-primary-foreground rounded-tr-sm'
                           }`}
                         >
                           {msg.rol === 'asistente_ia' && (

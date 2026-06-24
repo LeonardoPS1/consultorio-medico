@@ -43,12 +43,10 @@ export function Testimonials({ testimonials: customTestimonials }: TestimonialsP
 
       <div className="container mx-auto px-4 md:px-6 py-20 md:py-28">
         <AnimatedSection className="text-center mb-14">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Lo que dicen nuestros clientes
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Lo que dicen nuestros clientes</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-base">
-            Clínicas y consultorios de toda Latinoamérica ya confían en AiCoreMed
-            para transformar su gestión diaria.
+            Clínicas y consultorios de toda Latinoamérica ya confían en AiCoreMed para transformar
+            su gestión diaria.
           </p>
         </AnimatedSection>
 

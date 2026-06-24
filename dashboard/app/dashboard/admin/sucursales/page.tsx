@@ -10,7 +10,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { Store, Plus, Loader2, Pencil, MapPin, Phone, Mail, Check, X } from 'lucide-react';
@@ -43,8 +48,8 @@ export default function AdminSucursalesPage() {
   const load = () => {
     setLoading(true);
     fetch('/api/admin/sucursales')
-      .then(r => r.json())
-      .then(data => setList(Array.isArray(data) ? data : []))
+      .then((r) => r.json())
+      .then((data) => setList(Array.isArray(data) ? data : []))
       .catch(() => toast({ title: 'Error al cargar sucursales', variant: 'destructive' }))
       .finally(() => setLoading(false));
   };
@@ -83,9 +88,7 @@ export default function AdminSucursalesPage() {
     }
     setSaving(true);
     try {
-      const url = editing
-        ? '/api/admin/sucursales'
-        : '/api/admin/sucursales';
+      const url = editing ? '/api/admin/sucursales' : '/api/admin/sucursales';
       const method = editing ? 'PATCH' : 'POST';
       const body = editing
         ? { id: editing.id, nombre, direccion, telefono, email }
@@ -150,7 +153,7 @@ export default function AdminSucursalesPage() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {list.map(s => (
+          {list.map((s) => (
             <Card key={s.id} className={!s.activo ? 'opacity-60' : ''}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
@@ -187,7 +190,11 @@ export default function AdminSucursalesPage() {
                     <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => toggleActivo(s)}>
-                    {s.activo ? <X className="h-3.5 w-3.5 mr-1" /> : <Check className="h-3.5 w-3.5 mr-1" />}
+                    {s.activo ? (
+                      <X className="h-3.5 w-3.5 mr-1" />
+                    ) : (
+                      <Check className="h-3.5 w-3.5 mr-1" />
+                    )}
                     {s.activo ? 'Desactivar' : 'Activar'}
                   </Button>
                 </div>
@@ -209,25 +216,45 @@ export default function AdminSucursalesPage() {
           <div className="space-y-4">
             <div className="space-y-1">
               <Label>Nombre *</Label>
-              <Input value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Sede Centro" />
+              <Input
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                placeholder="Ej: Sede Centro"
+              />
             </div>
             <div className="space-y-1">
               <Label>Dirección</Label>
-              <Textarea value={direccion} onChange={e => setDireccion(e.target.value)} placeholder="Dirección de la sucursal" rows={2} />
+              <Textarea
+                value={direccion}
+                onChange={(e) => setDireccion(e.target.value)}
+                placeholder="Dirección de la sucursal"
+                rows={2}
+              />
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
                 <Label>Teléfono</Label>
-                <Input value={telefono} onChange={e => setTelefono(e.target.value)} placeholder="+56 9 1234 5678" />
+                <Input
+                  value={telefono}
+                  onChange={(e) => setTelefono(e.target.value)}
+                  placeholder="+56 9 1234 5678"
+                />
               </div>
               <div className="space-y-1">
                 <Label>Email</Label>
-                <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="sucursal@consultorio.cl" type="email" />
+                <Input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="sucursal@consultorio.cl"
+                  type="email"
+                />
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowModal(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setShowModal(false)}>
+              Cancelar
+            </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
               {editing ? 'Guardar cambios' : 'Crear sucursal'}

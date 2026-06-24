@@ -2,21 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/select';
 import {
   Loader2,
   Network,
@@ -253,9 +242,7 @@ export default function N8nClient({ initialStats }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.activeWorkflows}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              de {stats.totalWorkflows} totales
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">de {stats.totalWorkflows} totales</p>
           </CardContent>
         </Card>
         <Card>
@@ -320,10 +307,18 @@ export default function N8nClient({ initialStats }: Props) {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Nombre</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Estado</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Creado</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Actualizado</th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Nombre
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Estado
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Creado
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Actualizado
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -332,15 +327,18 @@ export default function N8nClient({ initialStats }: Props) {
                           <tr
                             key={wf.id}
                             className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
-                            onClick={() => setExpandedWorkflow(expandedWorkflow === wf.id ? null : wf.id)}
+                            onClick={() =>
+                              setExpandedWorkflow(expandedWorkflow === wf.id ? null : wf.id)
+                            }
                           >
                             <td className="px-4 py-2.5 font-medium">{wf.name}</td>
                             <td className="px-4 py-2.5">
                               <Badge
                                 variant={wf.active ? 'default' : 'secondary'}
-                                className={wf.active
-                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                  : ''
+                                className={
+                                  wf.active
+                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                    : ''
                                 }
                               >
                                 {wf.active ? 'Activo' : 'Inactivo'}
@@ -357,11 +355,40 @@ export default function N8nClient({ initialStats }: Props) {
                             <tr key={`${wf.id}-detail`} className="bg-muted/20">
                               <td colSpan={4} className="px-6 py-4">
                                 <div className="text-sm space-y-1">
-                                  <p><span className="font-medium text-muted-foreground">ID:</span> <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{wf.id}</code></p>
-                                  <p><span className="font-medium text-muted-foreground">Nombre:</span> {wf.name}</p>
-                                  <p><span className="font-medium text-muted-foreground">Estado:</span> {wf.active ? 'Activo' : 'Inactivo'}</p>
-                                  <p><span className="font-medium text-muted-foreground">Creado:</span> {format(new Date(wf.createdAt), 'dd/MM/yyyy HH:mm:ss', { locale: es })}</p>
-                                  <p><span className="font-medium text-muted-foreground">Última actualización:</span> {format(new Date(wf.updatedAt), 'dd/MM/yyyy HH:mm:ss', { locale: es })}</p>
+                                  <p>
+                                    <span className="font-medium text-muted-foreground">ID:</span>{' '}
+                                    <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                                      {wf.id}
+                                    </code>
+                                  </p>
+                                  <p>
+                                    <span className="font-medium text-muted-foreground">
+                                      Nombre:
+                                    </span>{' '}
+                                    {wf.name}
+                                  </p>
+                                  <p>
+                                    <span className="font-medium text-muted-foreground">
+                                      Estado:
+                                    </span>{' '}
+                                    {wf.active ? 'Activo' : 'Inactivo'}
+                                  </p>
+                                  <p>
+                                    <span className="font-medium text-muted-foreground">
+                                      Creado:
+                                    </span>{' '}
+                                    {format(new Date(wf.createdAt), 'dd/MM/yyyy HH:mm:ss', {
+                                      locale: es,
+                                    })}
+                                  </p>
+                                  <p>
+                                    <span className="font-medium text-muted-foreground">
+                                      Última actualización:
+                                    </span>{' '}
+                                    {format(new Date(wf.updatedAt), 'dd/MM/yyyy HH:mm:ss', {
+                                      locale: es,
+                                    })}
+                                  </p>
                                 </div>
                               </td>
                             </tr>
@@ -394,11 +421,21 @@ export default function N8nClient({ initialStats }: Props) {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">ID</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Workflow</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Estado</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Inicio</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Duración</th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          ID
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Workflow
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Estado
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Inicio
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Duración
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -409,15 +446,19 @@ export default function N8nClient({ initialStats }: Props) {
                           ? `${Math.round((stop.getTime() - start.getTime()) / 1000)}s`
                           : '—';
                         return (
-                          <tr key={ex.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                          <tr
+                            key={ex.id}
+                            className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                          >
                             <td className="px-4 py-2.5 text-xs font-mono text-muted-foreground">
                               {ex.id.slice(0, 8)}...
                             </td>
-                            <td className="px-4 py-2.5 font-medium">
-                              {ex.workflowName || '—'}
-                            </td>
+                            <td className="px-4 py-2.5 font-medium">{ex.workflowName || '—'}</td>
                             <td className="px-4 py-2.5">
-                              <Badge className={`font-mono text-[10px] uppercase ${STATUS_BADGE[ex.status] || ''}`} variant="outline">
+                              <Badge
+                                className={`font-mono text-[10px] uppercase ${STATUS_BADGE[ex.status] || ''}`}
+                                variant="outline"
+                              >
                                 {ex.status}
                               </Badge>
                             </td>
@@ -443,7 +484,10 @@ export default function N8nClient({ initialStats }: Props) {
           <div className="flex items-center gap-3">
             <Select
               value={logFilterNivel || 'all'}
-              onValueChange={(v) => { setLogFilterNivel(v === 'all' ? '' : v); setLogOffset(0); }}
+              onValueChange={(v) => {
+                setLogFilterNivel(v === 'all' ? '' : v);
+                setLogOffset(0);
+              }}
             >
               <SelectTrigger className="h-9 w-[140px]">
                 <SelectValue placeholder="Nivel" />
@@ -477,15 +521,26 @@ export default function N8nClient({ initialStats }: Props) {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Fecha</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Workflow</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Nivel</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Mensaje</th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Fecha
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Workflow
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Nivel
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Mensaje
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {logs.map((log) => (
-                        <tr key={log.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                        <tr
+                          key={log.id}
+                          className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                        >
                           <td className="px-4 py-2.5 whitespace-nowrap text-xs text-muted-foreground">
                             {format(new Date(log.createdAt), 'dd/MM/yy HH:mm:ss', { locale: es })}
                           </td>
@@ -493,7 +548,10 @@ export default function N8nClient({ initialStats }: Props) {
                             {log.workflowName || log.workflowId.slice(0, 8)}
                           </td>
                           <td className="px-4 py-2.5">
-                            <Badge className={`font-mono text-[10px] uppercase ${LEVEL_BADGE[log.nivel] || ''}`} variant="outline">
+                            <Badge
+                              className={`font-mono text-[10px] uppercase ${LEVEL_BADGE[log.nivel] || ''}`}
+                              variant="outline"
+                            >
                               {log.nivel}
                             </Badge>
                           </td>
@@ -563,16 +621,29 @@ export default function N8nClient({ initialStats }: Props) {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Fecha</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Workflow</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Nodo</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Código</th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3">Error</th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Fecha
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Workflow
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Nodo
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Código
+                        </th>
+                        <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                          Error
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {errors.map((err) => (
-                        <tr key={err.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                        <tr
+                          key={err.id}
+                          className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                        >
                           <td className="px-4 py-2.5 whitespace-nowrap text-xs text-muted-foreground">
                             {format(new Date(err.createdAt), 'dd/MM/yy HH:mm:ss', { locale: es })}
                           </td>

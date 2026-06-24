@@ -1,8 +1,6 @@
 'use client';
 
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { TooltipProps } from 'recharts';
 
 interface Props {
@@ -20,7 +18,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 };
 
 export default function NuevosPacientesChart({ data }: Props) {
-  const maxVal = Math.max(...data.map(d => d.valor), 1);
+  const maxVal = Math.max(...data.map((d) => d.valor), 1);
 
   return (
     <div className="relative">
@@ -54,7 +52,10 @@ export default function NuevosPacientesChart({ data }: Props) {
             domain={[0, Math.ceil(maxVal * 1.15)]}
             allowDecimals={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }}
+          />
           <Bar
             dataKey="valor"
             fill="url(#emeraldGradient)"

@@ -34,7 +34,10 @@ export async function setTenantContext(tenantId: string | null | undefined): Pro
     await db.execute(sql`SELECT public.set_tenant_context(${tenantId}::uuid)`);
   } catch (error) {
     // Si RLS no está instalado aún, no fallar
-    console.warn('[RLS] No se pudo establecer contexto tenant:', error instanceof Error ? error.message : error);
+    console.warn(
+      '[RLS] No se pudo establecer contexto tenant:',
+      error instanceof Error ? error.message : error,
+    );
   }
 }
 

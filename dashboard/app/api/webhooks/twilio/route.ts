@@ -59,7 +59,9 @@ async function notifyDoctor(patientName: string, messagePreview: string, telefon
   const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
 
   if (!accountSid || !authToken || !doctorNumber || !fromNumber) {
-    safeWarn('[Twilio] ⚠️ notifyDoctor: faltan env vars (TWILIO_ACCOUNT_SID, AUTH_TOKEN, DOCTOR_NUMBER, WHATSAPP_NUMBER)');
+    safeWarn(
+      '[Twilio] ⚠️ notifyDoctor: faltan env vars (TWILIO_ACCOUNT_SID, AUTH_TOKEN, DOCTOR_NUMBER, WHATSAPP_NUMBER)',
+    );
     return;
   }
 
@@ -69,9 +71,8 @@ async function notifyDoctor(patientName: string, messagePreview: string, telefon
   if (doctorPhone === senderPhone) return;
 
   // Truncar mensaje largo para preview
-  const preview = messagePreview.length > 80
-    ? messagePreview.substring(0, 77) + '...'
-    : messagePreview;
+  const preview =
+    messagePreview.length > 80 ? messagePreview.substring(0, 77) + '...' : messagePreview;
 
   const now = new Date().toLocaleString('es-CL', {
     timeZone: 'America/Santiago',
@@ -94,7 +95,7 @@ async function notifyDoctor(patientName: string, messagePreview: string, telefon
     await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${auth}`,
+        Authorization: `Basic ${auth}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: formData.toString(),
@@ -118,9 +119,12 @@ async function notifyDoctor(patientName: string, messagePreview: string, telefon
 async function handleReminderResponse(
   messageBody: string,
   pacienteId: string,
-  telefono: string
+  telefono: string,
 ): Promise<{ handled: boolean; skipN8n: boolean }> {
-  const upperBody = messageBody.trim().toUpperCase().replace(/[.!¡¿?]/g, '');
+  const upperBody = messageBody
+    .trim()
+    .toUpperCase()
+    .replace(/[.!¡¿?]/g, '');
   const esConfirmar = /^(SI\s*)?(CONFIRMAR|CONFIRMO|CONFIRMÓ)$/.test(upperBody);
   const esCancelar = /^(CANCELAR|CANCELO|CANCELAR\s*TURNO)$/.test(upperBody);
 
@@ -136,12 +140,14 @@ async function handleReminderResponse(
   const [turno] = await db
     .select({ id: turnos.id, fechaHora: turnos.fechaHora })
     .from(turnos)
-    .where(and(
-      eq(turnos.pacienteId, pacienteId),
-      sql`${turnos.deletedAt} IS NULL`,
-      sql`${turnos.estado} IN ('pendiente', 'confirmada')`,
-      sql`${turnos.fechaHora} > NOW()`,
-    ))
+    .where(
+      and(
+        eq(turnos.pacienteId, pacienteId),
+        sql`${turnos.deletedAt} IS NULL`,
+        sql`${turnos.estado} IN ('pendiente', 'confirmada')`,
+        sql`${turnos.fechaHora} > NOW()`,
+      ),
+    )
     .orderBy(turnos.fechaHora)
     .limit(1);
 
@@ -152,7 +158,8 @@ async function handleReminderResponse(
 
   if (esConfirmar) {
     // Marcar confirmación de asistencia + leído
-    await db.update(turnos)
+    await db
+      .update(turnos)
       .set({ confirmoAsistencia: true, recordatorio24hLeido: true, updatedAt: new Date() })
       .where(eq(turnos.id, turno.id));
 
@@ -170,11 +177,17 @@ async function handleReminderResponse(
     if (accountSid && authToken && fromNumber) {
       const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
       const fecha = new Date(turno.fechaHora).toLocaleString('es-CL', {
-        day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+        day: 'numeric',
+        month: 'long',
+        hour: '2-digit',
+        minute: '2-digit',
       });
       await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
         method: 'POST',
-        headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+          Authorization: `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
         body: new URLSearchParams({
           From: fromNumber,
           To: `whatsapp:${telefono}`,
@@ -193,7 +206,8 @@ async function handleReminderResponse(
     });
 
     // Marcar recordatorio como leído (el paciente respondió, claramente lo leyó)
-    await db.update(turnos)
+    await db
+      .update(turnos)
       .set({ recordatorio24hLeido: true, updatedAt: new Date() })
       .where(eq(turnos.id, turno.id));
 
@@ -212,7 +226,10 @@ async function handleReminderResponse(
       const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
       await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
         method: 'POST',
-        headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+          Authorization: `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
         body: new URLSearchParams({
           From: fromNumber,
           To: `whatsapp:${telefono}`,
@@ -232,10 +249,7 @@ async function handleReminderResponse(
  - En producción: la validación es OBLIGATORIA. Si falta firma o token, se rechaza.
  - En desarrollo: si no hay TWILIO_AUTH_TOKEN configurado, se salta (útil para testing local).
  */
-function validateTwilioRequest(
-  request: NextRequest,
-  params: Record<string, string>
-): boolean {
+function validateTwilioRequest(request: NextRequest, params: Record<string, string>): boolean {
   const isProduction = process.env.NODE_ENV === 'production';
   const signature = request.headers.get('x-twilio-signature');
 
@@ -283,255 +297,272 @@ function validateTwilioRequest(
  *
  * Responde con TwiML para que Twilio procese la respuesta.
  */
-export const POST = withRateLimit(async function POST(request: NextRequest) {
-  try {
-    // Twilio envía form-data, pero también aceptamos JSON para testing
-    let from: string;
-    let body: string;
-    let profileName: string | null;
-    let messageSid: string | null;
-    let to: string | null;
-    let params: Record<string, string> = {};
+export const POST = withRateLimit(
+  async function POST(request: NextRequest) {
+    try {
+      // Twilio envía form-data, pero también aceptamos JSON para testing
+      let from: string;
+      let body: string;
+      let profileName: string | null;
+      let messageSid: string | null;
+      let to: string | null;
+      let params: Record<string, string> = {};
 
-    const contentType = request.headers.get('content-type') || '';
+      const contentType = request.headers.get('content-type') || '';
 
-    if (contentType.includes('application/json')) {
-      const json = await request.json();
-      from = json.From || json.from;
-      body = json.Body || json.body;
-      profileName = json.ProfileName || json.profileName || null;
-      messageSid = json.MessageSid || json.messageSid || null;
-      to = json.To || json.to || null;
+      if (contentType.includes('application/json')) {
+        const json = await request.json();
+        from = json.From || json.from;
+        body = json.Body || json.body;
+        profileName = json.ProfileName || json.profileName || null;
+        messageSid = json.MessageSid || json.messageSid || null;
+        to = json.To || json.to || null;
 
-      // Recolectar params también para JSON (necesario para validación de firma)
-      Object.entries(json).forEach(([key, value]) => {
-        if (typeof value === 'string') params[key] = value;
-      });
-    } else {
-      const formData = await request.formData();
-      from = (formData.get('From') as string) || '';
-      body = (formData.get('Body') as string) || '';
-      profileName = (formData.get('ProfileName') as string) || null;
-      messageSid = (formData.get('MessageSid') as string) || null;
-      to = (formData.get('To') as string) || null;
+        // Recolectar params también para JSON (necesario para validación de firma)
+        Object.entries(json).forEach(([key, value]) => {
+          if (typeof value === 'string') params[key] = value;
+        });
+      } else {
+        const formData = await request.formData();
+        from = (formData.get('From') as string) || '';
+        body = (formData.get('Body') as string) || '';
+        profileName = (formData.get('ProfileName') as string) || null;
+        messageSid = (formData.get('MessageSid') as string) || null;
+        to = (formData.get('To') as string) || null;
 
-      // Recolectar todos los params para validación de firma
-      Array.from(formData.entries()).forEach(([key, value]) => {
-        params[key] = value.toString();
-      });
-    }
+        // Recolectar todos los params para validación de firma
+        Array.from(formData.entries()).forEach(([key, value]) => {
+          params[key] = value.toString();
+        });
+      }
 
-    // Validar firma de Twilio
-    if (!validateTwilioRequest(request, params)) {
-      safeWarn('[Twilio] ⚠️ Firma inválida — posible spoofing');
-      return NextResponse.json({ error: 'Firma inválida' }, { status: 403 });
-    }
+      // Validar firma de Twilio
+      if (!validateTwilioRequest(request, params)) {
+        safeWarn('[Twilio] ⚠️ Firma inválida — posible spoofing');
+        return NextResponse.json({ error: 'Firma inválida' }, { status: 403 });
+      }
 
-    // ─────────────────────────────────────────────────────────────
-    // STATUS CALLBACK: Twilio nos avisa el estado de un mensaje
-    // enviado (entregado, leído, falló, etc.)
-    // ─────────────────────────────────────────────────────────────
-    const messageStatus = params.MessageStatus;
-    const callbackMessageSid = params.MessageSid;
+      // ─────────────────────────────────────────────────────────────
+      // STATUS CALLBACK: Twilio nos avisa el estado de un mensaje
+      // enviado (entregado, leído, falló, etc.)
+      // ─────────────────────────────────────────────────────────────
+      const messageStatus = params.MessageStatus;
+      const callbackMessageSid = params.MessageSid;
 
-    if (messageStatus && callbackMessageSid) {
-      const errorCode = params.ErrorCode || null;
-      const errorMessage = params.ErrorMessage ? escapeHtml(params.ErrorMessage) : null;
+      if (messageStatus && callbackMessageSid) {
+        const errorCode = params.ErrorCode || null;
+        const errorMessage = params.ErrorMessage ? escapeHtml(params.ErrorMessage) : null;
 
-      safeLog(
-        `[Twilio] Status Callback — SID: ${callbackMessageSid}, Estado: ${messageStatus}` +
-          (errorCode ? `, Error: ${errorCode} — ${errorMessage}` : '')
-      );
+        safeLog(
+          `[Twilio] Status Callback — SID: ${callbackMessageSid}, Estado: ${messageStatus}` +
+            (errorCode ? `, Error: ${errorCode} — ${errorMessage}` : ''),
+        );
 
-      // Actualizar el mensaje en DB
-      const updated = await updateMensajeByTwilioSid(callbackMessageSid, {
-        twilioStatus: messageStatus,
-        metadata: errorCode ? { errorCode, errorMessage } : undefined,
-      });
+        // Actualizar el mensaje en DB
+        const updated = await updateMensajeByTwilioSid(callbackMessageSid, {
+          twilioStatus: messageStatus,
+          metadata: errorCode ? { errorCode, errorMessage } : undefined,
+        });
 
-      if (updated) {
-        safeLog(`[Twilio] Mensaje ${callbackMessageSid} actualizado → ${messageStatus}`);
+        if (updated) {
+          safeLog(`[Twilio] Mensaje ${callbackMessageSid} actualizado → ${messageStatus}`);
 
-        // Si el mensaje falló, loguear con más detalle
-        if (messageStatus === 'failed' || messageStatus === 'undelivered') {
-          safeError(
-            `[Twilio] ⚠️ Mensaje fallido SID: ${callbackMessageSid}` +
-              `, Error: ${errorCode} — ${errorMessage || 'sin detalle'}`
+          // Si el mensaje falló, loguear con más detalle
+          if (messageStatus === 'failed' || messageStatus === 'undelivered') {
+            safeError(
+              `[Twilio] ⚠️ Mensaje fallido SID: ${callbackMessageSid}` +
+                `, Error: ${errorCode} — ${errorMessage || 'sin detalle'}`,
+            );
+          }
+        } else {
+          safeWarn(
+            `[Twilio] Mensaje ${callbackMessageSid} no encontrado en DB (puede ser de antes del tracking)`,
           );
         }
 
-      } else {
-        safeWarn(`[Twilio] Mensaje ${callbackMessageSid} no encontrado en DB (puede ser de antes del tracking)`);
+        // Twilio espera un 200 vacío para status callbacks
+        return new NextResponse(null, { status: 200 });
       }
 
-      // Twilio espera un 200 vacío para status callbacks
-      return new NextResponse(null, { status: 200 });
-    }
+      if (!from || !body) {
+        return NextResponse.json(
+          { error: 'Faltan campos requeridos: From, Body' },
+          { status: 400 },
+        );
+      }
 
-    if (!from || !body) {
-      return NextResponse.json(
-        { error: 'Faltan campos requeridos: From, Body' },
-        { status: 400 }
+      // Limpiar el número de teléfono (sacar prefijo "whatsapp:")
+      const telefono = from
+        .replace(/^whatsapp:/, '')
+        .replace(/^sms:/, '')
+        .trim();
+
+      // Buscar o crear paciente
+      let paciente = await getPacienteByTelefono(telefono);
+
+      if (!paciente) {
+        // Intentar extraer nombre del ProfileName de WhatsApp
+        const nombrePartes = profileName
+          ? profileName.split(' ')
+          : ['Paciente', telefono.slice(-4)];
+
+        const nombre = nombrePartes[0] || 'Paciente';
+        const apellido = nombrePartes.slice(1).join(' ') || telefono.slice(-4);
+
+        paciente = await createPaciente({
+          telefono,
+          nombre,
+          apellido,
+          canalPreferido: from.startsWith('whatsapp') ? 'whatsapp' : 'sms',
+          consentimientoWhatsapp: from.startsWith('whatsapp'),
+          consentimientoEmail: false,
+          fuente: from.startsWith('whatsapp') ? 'whatsapp' : 'sms',
+          tags: [],
+          metadata: { primeraVez: true },
+        });
+      }
+
+      // Buscar conversación activa existente de este paciente
+      const convsActivas = await getConversaciones({ estado: 'activa' });
+      const convExistente = convsActivas.find((c) => c.pacienteId === paciente.id);
+
+      let conversacionId: string;
+      let esNueva = false;
+
+      if (convExistente) {
+        conversacionId = convExistente.id;
+      } else {
+        // Crear nueva conversación
+        const nuevaConv = await createConversacion({
+          pacienteId: paciente.id,
+          canal: from.startsWith('whatsapp') ? 'whatsapp' : 'sms',
+          mensajeInicial: body,
+          rolMensajeInicial: 'paciente',
+        });
+        conversacionId = nuevaConv.id;
+        esNueva = true;
+      }
+
+      // Guardar el mensaje
+      const mensaje = await createMensaje({
+        conversacionId,
+        rol: 'paciente',
+        contenido: body,
+        tipo: 'texto',
+        twilioSid: messageSid || undefined,
+        twilioStatus: 'received',
+      });
+
+      safeLog(
+        `[Twilio] Mensaje recibido — ${conversacionId ? 'conversación existente' : 'nueva conversación'}`,
       );
-    }
 
-    // Limpiar el número de teléfono (sacar prefijo "whatsapp:")
-    const telefono = from.replace(/^whatsapp:/, '').replace(/^sms:/, '').trim();
+      // Detectar si es respuesta de encuesta (número 1-5)
+      const survey = detectSurveyResponse(body);
+      if (survey.esEncuesta && paciente) {
+        storeSurveyResponse({
+          pacienteId: paciente.id,
+          puntaje: survey.puntaje!,
+          comentario: body,
+        }).catch(() => {});
+      }
 
-    // Buscar o crear paciente
-    let paciente = await getPacienteByTelefono(telefono);
+      // ─── Detección rápida de respuestas (regex, sin DB) ───────────
+      // Estas son respuestas a recordatorios (SÍ/CONFIRMAR/NO/CANCELAR) u
+      // ofertas de waitlist (ACEPTAR/RECHAZAR). Se procesan en segundo
+      // plano para no bloquear la respuesta a Twilio.
+      const upperBody = body
+        .trim()
+        .toUpperCase()
+        .replace(/[.!¡¿?]/g, '');
+      const textExact = body.trim().toUpperCase();
 
-    if (!paciente) {
-      // Intentar extraer nombre del ProfileName de WhatsApp
-      const nombrePartes = profileName
-        ? profileName.split(' ')
-        : ['Paciente', telefono.slice(-4)];
+      // Recordatorio: SÍ, SI + CONFIRMAR, o solo CONFIRMAR
+      const esConfirmar =
+        /^(SÍ|SI)(\s+(CONFIRMAR|CONFIRMO|CONFIRMÓ))?$/.test(upperBody) ||
+        /^CONFIRMAR$/.test(upperBody) ||
+        /^CONFIRMO$/.test(upperBody) ||
+        /^CONFIRMÓ$/.test(upperBody);
+      // Recordatorio: NO + CANCELAR, o solo CANCELAR
+      const esCancelar =
+        /^NO(\s+(CANCELAR|CANCELO))?$/.test(upperBody) ||
+        /^(CANCELAR|CANCELO|CANCELÓ)$/.test(upperBody);
+      const esReminder = (esConfirmar || esCancelar) && !!paciente;
 
-      const nombre = nombrePartes[0] || 'Paciente';
-      const apellido = nombrePartes.slice(1).join(' ') || telefono.slice(-4);
+      // Waitlist: detección exacta de palabras clave
+      const esAceptarWl = textExact === 'ACEPTAR' || textExact === 'OK';
+      const esRechazarWl = textExact === 'RECHAZAR' || textExact === 'RECHAZO';
+      const esRespWaitlist = (esAceptarWl || esRechazarWl) && !!paciente;
 
-      paciente = await createPaciente({
-        telefono,
-        nombre,
-        apellido,
-        canalPreferido: from.startsWith('whatsapp') ? 'whatsapp' : 'sms',
-        consentimientoWhatsapp: from.startsWith('whatsapp'),
-        consentimientoEmail: false,
-        fuente: from.startsWith('whatsapp') ? 'whatsapp' : 'sms',
-        tags: [],
-        metadata: { primeraVez: true },
-      });
-    }
+      // SÍ/NO pueden ser respuesta a recordatorio O a waitlist.
+      // Ejecutamos ambos handlers — cada uno valida internamente si aplica
+      // (handleReminderResponse busca turno pendiente, handleWaitlistResponse busca oferta pendiente).
+      const esSiNoSimple = /^(SÍ|SI|NO)$/i.test(textExact);
 
-    // Buscar conversación activa existente de este paciente
-    const convsActivas = await getConversaciones({ estado: 'activa' });
-    const convExistente = convsActivas.find((c) => c.pacienteId === paciente.id);
+      // Fire handlers en segundo plano (fire-and-forget)
+      if (esReminder) {
+        handleReminderResponse(body, paciente!.id, telefono).catch(() => {});
+      }
+      if (esRespWaitlist || esSiNoSimple) {
+        handleWaitlistResponse(paciente!.id, body, telefono).catch(() => {});
+      }
 
-    let conversacionId: string;
-    let esNueva = false;
+      // Si es respuesta a recordatorio u oferta, responder 200 inmediato (no forward a n8n)
+      if (esReminder || esRespWaitlist || esSiNoSimple) {
+        return new NextResponse(null, { status: 200 });
+      }
 
-    if (convExistente) {
-      conversacionId = convExistente.id;
-    } else {
-      // Crear nueva conversación
-      const nuevaConv = await createConversacion({
-        pacienteId: paciente.id,
-        canal: from.startsWith('whatsapp') ? 'whatsapp' : 'sms',
-        mensajeInicial: body,
-        rolMensajeInicial: 'paciente',
-      });
-      conversacionId = nuevaConv.id;
-      esNueva = true;
-    }
+      // Forward a n8n para procesamiento con IA (fire-and-forget)
+      forwardToN8n(params).catch(() => {});
 
-    // Guardar el mensaje
-    const mensaje = await createMensaje({
-      conversacionId,
-      rol: 'paciente',
-      contenido: body,
-      tipo: 'texto',
-      twilioSid: messageSid || undefined,
-      twilioStatus: 'received',
-    });
+      // Notificar al médico (fire-and-forget)
+      const nombrePaciente = paciente ? `${paciente.nombre} ${paciente.apellido}`.trim() : '';
+      if (nombrePaciente) {
+        notifyDoctor(nombrePaciente, body, telefono).catch(() => {});
+      }
 
-    safeLog(`[Twilio] Mensaje recibido — ${conversacionId ? 'conversación existente' : 'nueva conversación'}`);
-
-    // Detectar si es respuesta de encuesta (número 1-5)
-    const survey = detectSurveyResponse(body);
-    if (survey.esEncuesta && paciente) {
-      storeSurveyResponse({
-        pacienteId: paciente.id,
-        puntaje: survey.puntaje!,
-        comentario: body,
-      }).catch(() => {});
-    }
-
-    // ─── Detección rápida de respuestas (regex, sin DB) ───────────
-    // Estas son respuestas a recordatorios (SÍ/CONFIRMAR/NO/CANCELAR) u
-    // ofertas de waitlist (ACEPTAR/RECHAZAR). Se procesan en segundo
-    // plano para no bloquear la respuesta a Twilio.
-    const upperBody = body.trim().toUpperCase().replace(/[.!¡¿?]/g, '');
-    const textExact = body.trim().toUpperCase();
-
-    // Recordatorio: SÍ, SI + CONFIRMAR, o solo CONFIRMAR
-    const esConfirmar = /^(SÍ|SI)(\s+(CONFIRMAR|CONFIRMO|CONFIRMÓ))?$/.test(upperBody)
-      || /^CONFIRMAR$/.test(upperBody)
-      || /^CONFIRMO$/.test(upperBody)
-      || /^CONFIRMÓ$/.test(upperBody);
-    // Recordatorio: NO + CANCELAR, o solo CANCELAR
-    const esCancelar = /^NO(\s+(CANCELAR|CANCELO))?$/.test(upperBody)
-      || /^(CANCELAR|CANCELO|CANCELÓ)$/.test(upperBody);
-    const esReminder = (esConfirmar || esCancelar) && !!paciente;
-
-    // Waitlist: detección exacta de palabras clave
-    const esAceptarWl = textExact === 'ACEPTAR' || textExact === 'OK';
-    const esRechazarWl = textExact === 'RECHAZAR' || textExact === 'RECHAZO';
-    const esRespWaitlist = (esAceptarWl || esRechazarWl) && !!paciente;
-
-    // SÍ/NO pueden ser respuesta a recordatorio O a waitlist.
-    // Ejecutamos ambos handlers — cada uno valida internamente si aplica
-    // (handleReminderResponse busca turno pendiente, handleWaitlistResponse busca oferta pendiente).
-    const esSiNoSimple = /^(SÍ|SI|NO)$/i.test(textExact);
-
-    // Fire handlers en segundo plano (fire-and-forget)
-    if (esReminder) {
-      handleReminderResponse(body, paciente!.id, telefono).catch(() => {});
-    }
-    if (esRespWaitlist || esSiNoSimple) {
-      handleWaitlistResponse(paciente!.id, body, telefono).catch(() => {});
-    }
-
-    // Si es respuesta a recordatorio u oferta, responder 200 inmediato (no forward a n8n)
-    if (esReminder || esRespWaitlist || esSiNoSimple) {
-      return new NextResponse(null, { status: 200 });
-    }
-
-    // Forward a n8n para procesamiento con IA (fire-and-forget)
-    forwardToN8n(params).catch(() => {});
-
-    // Notificar al médico (fire-and-forget)
-    const nombrePaciente = paciente ? `${paciente.nombre} ${paciente.apellido}`.trim() : '';
-    if (nombrePaciente) {
-      notifyDoctor(nombrePaciente, body, telefono).catch(() => {});
-    }
-
-    // Responder con TwiML si es una request de Twilio real
-    const acceptHeader = request.headers.get('accept') || '';
-    if (acceptHeader.includes('text/xml') || contentType.includes('application/x-www-form-urlencoded')) {
-      // Respuesta TwiML: acuse de recibo básico
-      const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
+      // Responder con TwiML si es una request de Twilio real
+      const acceptHeader = request.headers.get('accept') || '';
+      if (
+        acceptHeader.includes('text/xml') ||
+        contentType.includes('application/x-www-form-urlencoded')
+      ) {
+        // Respuesta TwiML: acuse de recibo básico
+        const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Message>Gracias por tu mensaje. Un asistente te responderá a la brevedad. 😊</Message>
 </Response>`;
 
-      return new NextResponse(twimlResponse, {
-        headers: { 'Content-Type': 'text/xml' },
-      });
-    }
+        return new NextResponse(twimlResponse, {
+          headers: { 'Content-Type': 'text/xml' },
+        });
+      }
 
-    // Respuesta JSON para testing
-    return NextResponse.json({
-      success: true,
-      message: 'Mensaje recibido y almacenado',
-      data: {
-        conversacionId,
-        mensajeId: mensaje.id,
-        esNueva,
-        pacienteId: paciente.id,
-      },
-    });
-  } catch (error) {
-    safeError('[Twilio Webhook] Error:', error);
-    const isProduction = process.env.NODE_ENV === 'production';
-    return NextResponse.json(
-      {
-        error: 'Error al procesar mensaje entrante',
-        ...(isProduction ? {} : { details: (error as Error).message }),
-      },
-      { status: 500 }
-    );
-  }
-}, { maxRequests: 60, windowMs: 60_000 }); // 60 requests/min para Twilio
+      // Respuesta JSON para testing
+      return NextResponse.json({
+        success: true,
+        message: 'Mensaje recibido y almacenado',
+        data: {
+          conversacionId,
+          mensajeId: mensaje.id,
+          esNueva,
+          pacienteId: paciente.id,
+        },
+      });
+    } catch (error) {
+      safeError('[Twilio Webhook] Error:', error);
+      const isProduction = process.env.NODE_ENV === 'production';
+      return NextResponse.json(
+        {
+          error: 'Error al procesar mensaje entrante',
+          ...(isProduction ? {} : { details: (error as Error).message }),
+        },
+        { status: 500 },
+      );
+    }
+  },
+  { maxRequests: 60, windowMs: 60_000 },
+); // 60 requests/min para Twilio
 
 /**
  * GET /api/webhooks/twilio

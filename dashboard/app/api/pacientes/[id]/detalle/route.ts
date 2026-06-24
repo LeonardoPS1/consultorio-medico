@@ -20,17 +20,11 @@ import { verifyPacienteAccess } from '@/lib/api-auth';
  * Devuelve la ficha completa del paciente: datos, turnos, recetas,
  * historial médico, y últimas conversaciones.
  */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     const sessionMedicoId = session.user?.medicoId;
@@ -79,10 +73,7 @@ export async function GET(
         });
       }
 
-      return NextResponse.json(
-        { error: 'Paciente no encontrado' },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: 'Paciente no encontrado' }, { status: 404 });
     }
 
     // ─── Turnos ──────────────────────────────────────
@@ -99,12 +90,7 @@ export async function GET(
       })
       .from(turnos)
       .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
-      .where(
-        and(
-          eq(turnos.pacienteId, pacienteId),
-          sql`${turnos.deletedAt} IS NULL`,
-        ),
-      )
+      .where(and(eq(turnos.pacienteId, pacienteId), sql`${turnos.deletedAt} IS NULL`))
       .orderBy(desc(turnos.fechaHora))
       .limit(30);
 
@@ -167,10 +153,7 @@ export async function GET(
       })
       .from(conversaciones)
       .where(
-        and(
-          eq(conversaciones.pacienteId, pacienteId),
-          sql`${conversaciones.deletedAt} IS NULL`,
-        ),
+        and(eq(conversaciones.pacienteId, pacienteId), sql`${conversaciones.deletedAt} IS NULL`),
       )
       .orderBy(desc(conversaciones.ultimaInteraccion))
       .limit(1);
@@ -213,9 +196,6 @@ export async function GET(
     });
   } catch (error) {
     console.error('[API] Error GET /api/pacientes/[id]/detalle:', error);
-    return NextResponse.json(
-      { error: 'Error al obtener detalle del paciente' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Error al obtener detalle del paciente' }, { status: 500 });
   }
 }

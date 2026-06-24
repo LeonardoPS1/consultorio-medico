@@ -257,13 +257,10 @@ export function VideoRoom({
     if (onDisconnect) onDisconnect();
   }, [onDisconnect]);
 
-  const handleParticipantClick = useCallback(
-    (evt: ParticipantClickEvent) => {
-      const identity = evt.participant.identity;
-      setFocusedIdentity((prev) => (prev === identity ? null : identity));
-    },
-    [],
-  );
+  const handleParticipantClick = useCallback((evt: ParticipantClickEvent) => {
+    const identity = evt.participant.identity;
+    setFocusedIdentity((prev) => (prev === identity ? null : identity));
+  }, []);
 
   const toggleChat = useCallback(() => setChatOpen((v) => !v), []);
 
@@ -396,9 +393,7 @@ export function VideoRoom({
       </LKLiveKitRoom>
 
       {/* Indicador de conexión con timer */}
-      {connected && (
-        <ConnectionIndicator identity={identity} role={role} roomName={roomName} />
-      )}
+      {connected && <ConnectionIndicator identity={identity} role={role} roomName={roomName} />}
     </div>
   );
 }

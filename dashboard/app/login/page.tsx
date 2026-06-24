@@ -13,9 +13,10 @@ import { Logo } from '@/components/layout/logo';
 
 export default function LoginPage() {
   // Leer callbackUrl del query string directamente (evita Suspense boundary)
-  const callbackUrl = typeof window !== 'undefined'
-    ? new URLSearchParams(window.location.search).get('callbackUrl') || '/dashboard'
-    : '/dashboard';
+  const callbackUrl =
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('callbackUrl') || '/dashboard'
+      : '/dashboard';
   const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -106,9 +107,7 @@ export default function LoginPage() {
           </Link>
           <CardTitle className="text-xl font-bold">{orgNombre}</CardTitle>
           <CardDescription>
-            {step2fa
-              ? 'Verificación de dos factores'
-              : 'Ingresá a tu panel de gestión'}
+            {step2fa ? 'Verificación de dos factores' : 'Ingresá a tu panel de gestión'}
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -23,7 +23,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShieldAlert, UserPlus, Edit, Loader2, ChevronDown, Sparkles, Trash2, KeyRound, Eye, EyeOff } from 'lucide-react';
+import {
+  ShieldAlert,
+  UserPlus,
+  Edit,
+  Loader2,
+  ChevronDown,
+  Sparkles,
+  Trash2,
+  KeyRound,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 import { FEATURE_PLAN, getFeatureRequiredPlan } from '@/lib/features';
 
 interface Usuario {
@@ -117,8 +128,11 @@ export default function AdminUsuariosTab() {
         const data = await res.json();
         setEditOverrides(new Set(data.featureIds || []));
       }
-    } catch { /* ignore */ }
-    finally { setEditOverridesLoading(false); }
+    } catch {
+      /* ignore */
+    } finally {
+      setEditOverridesLoading(false);
+    }
   }, []);
 
   const fetchUsers = useCallback(async () => {
@@ -317,7 +331,8 @@ export default function AdminUsuariosTab() {
         <div>
           <h3 className="text-lg font-semibold">Usuarios del sistema</h3>
           <p className="text-sm text-muted-foreground">
-            {users.length} usuario{users.length !== 1 ? 's' : ''} registrado{users.length !== 1 ? 's' : ''} en tu consultorio
+            {users.length} usuario{users.length !== 1 ? 's' : ''} registrado
+            {users.length !== 1 ? 's' : ''} en tu consultorio
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)} className="gap-2">
@@ -336,7 +351,9 @@ export default function AdminUsuariosTab() {
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Rol</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Plan</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Activo</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Último acceso</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">
+                Último acceso
+              </th>
               <th className="text-right px-4 py-3 font-medium text-muted-foreground">Acción</th>
             </tr>
           </thead>
@@ -352,17 +369,31 @@ export default function AdminUsuariosTab() {
                 <tr key={u.id} className="hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3 font-medium">{u.nombre}</td>
                   <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
-                  <td className="px-4 py-3"><RolBadge rol={u.rol} /></td>
-                  <td className="px-4 py-3"><PlanBadge plan={u.plan} /></td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1.5 text-xs ${u.activo ? 'text-green-600' : 'text-destructive'}`}>
-                      <span className={`h-1.5 w-1.5 rounded-full ${u.activo ? 'bg-green-500' : 'bg-destructive'}`} />
+                    <RolBadge rol={u.rol} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <PlanBadge plan={u.plan} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-flex items-center gap-1.5 text-xs ${u.activo ? 'text-green-600' : 'text-destructive'}`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${u.activo ? 'bg-green-500' : 'bg-destructive'}`}
+                      />
                       {u.activo ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs hidden md:table-cell">
                     {u.ultimoAcceso
-                      ? new Date(u.ultimoAcceso).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
+                      ? new Date(u.ultimoAcceso).toLocaleDateString('es-CL', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
                       : '—'}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -430,7 +461,9 @@ export default function AdminUsuariosTab() {
                   </SelectTrigger>
                   <SelectContent>
                     {PLANES.map((p) => (
-                      <SelectItem key={p} value={p}>{p}</SelectItem>
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -443,7 +476,9 @@ export default function AdminUsuariosTab() {
                   </SelectTrigger>
                   <SelectContent>
                     {ROLES.map((r) => (
-                      <SelectItem key={r} value={r}>{r === 'medico' ? 'Médico' : r === 'admin' ? 'Admin' : 'Secretaria'}</SelectItem>
+                      <SelectItem key={r} value={r}>
+                        {r === 'medico' ? 'Médico' : r === 'admin' ? 'Admin' : 'Secretaria'}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -471,7 +506,15 @@ export default function AdminUsuariosTab() {
       </Dialog>
 
       {/* ─── Modal Editar Usuario ────────────────────────── */}
-      <Dialog open={!!editingUser} onOpenChange={(open) => { if (!open) { setEditingUser(null); setShowDeleteConfirm(false); } }}>
+      <Dialog
+        open={!!editingUser}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingUser(null);
+            setShowDeleteConfirm(false);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar usuario</DialogTitle>
@@ -516,7 +559,9 @@ export default function AdminUsuariosTab() {
                   </SelectTrigger>
                   <SelectContent>
                     {PLANES.map((p) => (
-                      <SelectItem key={p} value={p}>{p}</SelectItem>
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -529,7 +574,9 @@ export default function AdminUsuariosTab() {
                   </SelectTrigger>
                   <SelectContent>
                     {ROLES.map((r) => (
-                      <SelectItem key={r} value={r}>{r === 'medico' ? 'Médico' : r === 'admin' ? 'Admin' : 'Secretaria'}</SelectItem>
+                      <SelectItem key={r} value={r}>
+                        {r === 'medico' ? 'Médico' : r === 'admin' ? 'Admin' : 'Secretaria'}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -539,16 +586,14 @@ export default function AdminUsuariosTab() {
             {/* Activo */}
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label htmlFor="e-activo" className="text-sm font-medium cursor-pointer">Usuario activo</Label>
+                <Label htmlFor="e-activo" className="text-sm font-medium cursor-pointer">
+                  Usuario activo
+                </Label>
                 <p className="text-xs text-muted-foreground">
                   {editActivo ? 'Puede iniciar sesión normalmente' : 'No podrá acceder al sistema'}
                 </p>
               </div>
-              <Switch
-                id="e-activo"
-                checked={editActivo}
-                onCheckedChange={setEditActivo}
-              />
+              <Switch id="e-activo" checked={editActivo} onCheckedChange={setEditActivo} />
             </div>
 
             {/* ─── Cambiar contraseña ──────────────────────────── */}
@@ -562,7 +607,9 @@ export default function AdminUsuariosTab() {
                   <KeyRound className="h-4 w-4 text-muted-foreground" />
                   Cambiar contraseña
                 </span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${showPassword ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${showPassword ? 'rotate-180' : ''}`}
+                />
               </button>
 
               {showPassword && (
@@ -623,14 +670,16 @@ export default function AdminUsuariosTab() {
                     </span>
                   )}
                 </span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${editOverridesOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${editOverridesOpen ? 'rotate-180' : ''}`}
+                />
               </button>
 
               {editOverridesOpen && (
                 <div className="px-3 pb-3 space-y-1 border-t border-primary/10 pt-2">
                   <p className="text-xs text-muted-foreground mb-2">
-                    Los overrides permiten habilitar features de planes superiores para este usuario,
-                    sin necesidad de cambiar su plan de suscripción.
+                    Los overrides permiten habilitar features de planes superiores para este
+                    usuario, sin necesidad de cambiar su plan de suscripción.
                   </p>
                   {editOverridesLoading ? (
                     <div className="flex items-center gap-2 py-2">
@@ -641,7 +690,13 @@ export default function AdminUsuariosTab() {
                     <div className="max-h-48 overflow-y-auto space-y-0.5">
                       {Object.entries(FEATURE_PLAN)
                         .sort(([, aPlan], [, bPlan]) => {
-                          const order = ['free', 'starter', 'professional', 'premium', 'enterprise'];
+                          const order = [
+                            'free',
+                            'starter',
+                            'professional',
+                            'premium',
+                            'enterprise',
+                          ];
                           return order.indexOf(aPlan) - order.indexOf(bPlan);
                         })
                         .map(([featureId, requiredPlan]) => {
@@ -654,7 +709,10 @@ export default function AdminUsuariosTab() {
                               <div className="flex items-center gap-2 min-w-0">
                                 <span className="text-xs truncate">{featureId}</span>
                                 {isOverridden && (
-                                  <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 bg-amber-500/10 border-amber-500/30 text-amber-600">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[9px] px-1 py-0 h-3.5 bg-amber-500/10 border-amber-500/30 text-amber-600"
+                                  >
                                     override
                                   </Badge>
                                 )}
@@ -721,8 +779,8 @@ export default function AdminUsuariosTab() {
           <DialogHeader>
             <DialogTitle>¿Eliminar usuario?</DialogTitle>
             <DialogDescription>
-              Esta acción desactivará al usuario <strong>{editingUser?.nombre}</strong> ({editingUser?.email}).
-              No podrá iniciar sesión hasta que un admin lo reactive.
+              Esta acción desactivará al usuario <strong>{editingUser?.nombre}</strong> (
+              {editingUser?.email}). No podrá iniciar sesión hasta que un admin lo reactive.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">

@@ -68,9 +68,7 @@ function CtrlButton({
       {...props}
     >
       {active && activeIcon ? activeIcon : icon}
-      {showLabel && (
-        <span className="hidden sm:inline text-xs font-medium">{label}</span>
-      )}
+      {showLabel && <span className="hidden sm:inline text-xs font-medium">{label}</span>}
     </button>
   );
 }

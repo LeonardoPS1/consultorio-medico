@@ -6,10 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPortalSession } from '@/lib/portal-auth';
 import { marcarLeida } from '@/lib/services/portal-notificaciones';
 
-export async function PATCH(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function PATCH(_request: NextRequest, { params }: { params: { id: string } }) {
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });

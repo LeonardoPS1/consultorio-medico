@@ -9,10 +9,18 @@
 import { db } from '@/lib/db';
 import { pacientes } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import { publicApiHandler, jsonResponse, errorResponse, type AuthenticatedRequest } from '@/lib/public-api-handler';
+import {
+  publicApiHandler,
+  jsonResponse,
+  errorResponse,
+  type AuthenticatedRequest,
+} from '@/lib/public-api-handler';
 import { API_SCOPES } from '@/lib/public-api-auth';
 
-async function handler(request: AuthenticatedRequest, context?: { params: Record<string, string> }) {
+async function handler(
+  request: AuthenticatedRequest,
+  context?: { params: Record<string, string> },
+) {
   const pacienteId = context?.params?.id;
 
   if (!pacienteId) {

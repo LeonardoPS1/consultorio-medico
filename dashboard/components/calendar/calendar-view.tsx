@@ -34,7 +34,20 @@ interface CalendarViewProps {
 // ============================================================
 
 const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const MESES = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+];
 
 function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
@@ -45,9 +58,11 @@ function getFirstDayOfMonth(year: number, month: number): number {
 }
 
 function isSameDay(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() &&
+  return (
+    a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
+    a.getDate() === b.getDate()
+  );
 }
 
 function isToday(date: Date): boolean {
@@ -58,7 +73,13 @@ function isToday(date: Date): boolean {
 // Componente
 // ============================================================
 
-export function CalendarView({ turnos, onDateChange, onTurnoClick, viewMode: viewModeProp, onViewModeChange }: CalendarViewProps) {
+export function CalendarView({
+  turnos,
+  onDateChange,
+  onTurnoClick,
+  viewMode: viewModeProp,
+  onViewModeChange,
+}: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'mes' | 'dia'>(viewModeProp ?? 'mes');
@@ -70,10 +91,13 @@ export function CalendarView({ turnos, onDateChange, onTurnoClick, viewMode: vie
     }
   }, [viewModeProp]);
 
-  const setViewModeInternal = useCallback((mode: 'mes' | 'dia') => {
-    setViewMode(mode);
-    onViewModeChange?.(mode);
-  }, [onViewModeChange]);
+  const setViewModeInternal = useCallback(
+    (mode: 'mes' | 'dia') => {
+      setViewMode(mode);
+      onViewModeChange?.(mode);
+    },
+    [onViewModeChange],
+  );
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -93,7 +117,7 @@ export function CalendarView({ turnos, onDateChange, onTurnoClick, viewMode: vie
         return isSameDay(tDate, date);
       });
     },
-    [turnos, year, month]
+    [turnos, year, month],
   );
 
   const navigateMonth = (delta: number) => {
@@ -149,7 +173,10 @@ export function CalendarView({ turnos, onDateChange, onTurnoClick, viewMode: vie
             <div className="grid grid-cols-7 gap-px bg-muted rounded-lg overflow-hidden">
               {/* Días de la semana */}
               {DIAS.map((dia) => (
-                <div key={dia} className="bg-background p-2 text-center text-xs font-medium text-muted-foreground">
+                <div
+                  key={dia}
+                  className="bg-background p-2 text-center text-xs font-medium text-muted-foreground"
+                >
                   {dia}
                 </div>
               ))}
@@ -227,12 +254,7 @@ export function CalendarView({ turnos, onDateChange, onTurnoClick, viewMode: vie
                 <Button variant="outline" size="icon" onClick={() => navigateDay(1)}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={goToToday}
-                  className="ml-2"
-                >
+                <Button variant="outline" size="sm" onClick={goToToday} className="ml-2">
                   Hoy
                 </Button>
                 <Button

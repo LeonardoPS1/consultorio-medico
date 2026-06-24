@@ -63,9 +63,7 @@ export default function RegistroPage() {
               <CheckCircle className="h-6 w-6 text-green-500" />
             </div>
             <CardTitle className="text-xl">¡Cuenta creada!</CardTitle>
-            <CardDescription>
-              Redirigiendo al inicio de sesión...
-            </CardDescription>
+            <CardDescription>Redirigiendo al inicio de sesión...</CardDescription>
           </CardContent>
         </Card>
       </div>
@@ -87,9 +85,7 @@ export default function RegistroPage() {
             </div>
           </Link>
           <CardTitle className="text-xl font-bold">Crear cuenta</CardTitle>
-          <CardDescription>
-            Comenzá gratis con todas las funcionalidades básicas
-          </CardDescription>
+          <CardDescription>Comenzá gratis con todas las funcionalidades básicas</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

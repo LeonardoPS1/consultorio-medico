@@ -7,8 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  Bell, BellOff, Calendar, MessageSquare, Syringe, AlertTriangle,
-  Check, Eye, EyeOff, Trash2, CheckCheck, Filter, Loader2, Smartphone,
+  Bell,
+  BellOff,
+  Calendar,
+  MessageSquare,
+  Syringe,
+  AlertTriangle,
+  Check,
+  Eye,
+  EyeOff,
+  Trash2,
+  CheckCheck,
+  Filter,
+  Loader2,
+  Smartphone,
 } from 'lucide-react';
 import { PushNotificationToggle } from '@/components/push-notification-toggle';
 import { formatRelative } from '@/lib/utils';
@@ -85,7 +97,9 @@ export default function NotificacionesPage() {
     }
   }, [filtroTipo, soloNoLeidas]);
 
-  useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
 
   // Acciones
   const marcarLeida = async (id: string) => {
@@ -94,8 +108,8 @@ export default function NotificacionesPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'read' }),
     });
-    setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, leido: true } : n));
-    setNoLeidas(prev => Math.max(0, prev - 1));
+    setNotificaciones((prev) => prev.map((n) => (n.id === id ? { ...n, leido: true } : n)));
+    setNoLeidas((prev) => Math.max(0, prev - 1));
   };
 
   const marcarNoLeida = async (id: string) => {
@@ -104,17 +118,15 @@ export default function NotificacionesPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'unread' }),
     });
-    setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, leido: false } : n));
-    setNoLeidas(prev => prev + 1);
+    setNotificaciones((prev) => prev.map((n) => (n.id === id ? { ...n, leido: false } : n)));
+    setNoLeidas((prev) => prev + 1);
   };
 
   const eliminar = async (id: string) => {
     await fetch(`/api/notificaciones/${id}`, { method: 'DELETE' });
-    setNotificaciones(prev => prev.filter(n => n.id !== id));
-    setTotal(prev => prev - 1);
-    setNoLeidas(prev =>
-      prev - (notificaciones.find(n => n.id === id)?.leido ? 0 : 1)
-    );
+    setNotificaciones((prev) => prev.filter((n) => n.id !== id));
+    setTotal((prev) => prev - 1);
+    setNoLeidas((prev) => prev - (notificaciones.find((n) => n.id === id)?.leido ? 0 : 1));
   };
 
   const marcarTodasLeidas = async () => {
@@ -123,7 +135,7 @@ export default function NotificacionesPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'leidas' }),
     });
-    setNotificaciones(prev => prev.map(n => ({ ...n, leido: true })));
+    setNotificaciones((prev) => prev.map((n) => ({ ...n, leido: true })));
     setNoLeidas(0);
   };
 
@@ -148,24 +160,33 @@ export default function NotificacionesPage() {
         <Badge
           variant={!filtroTipo && !soloNoLeidas ? 'default' : 'outline'}
           className="cursor-pointer"
-          onClick={() => { setFiltroTipo(null); setSoloNoLeidas(false); }}
+          onClick={() => {
+            setFiltroTipo(null);
+            setSoloNoLeidas(false);
+          }}
         >
           Todas ({total})
         </Badge>
         <Badge
           variant={soloNoLeidas ? 'default' : 'outline'}
           className="cursor-pointer"
-          onClick={() => { setSoloNoLeidas(!soloNoLeidas); setFiltroTipo(null); }}
+          onClick={() => {
+            setSoloNoLeidas(!soloNoLeidas);
+            setFiltroTipo(null);
+          }}
         >
           <Bell className="h-3 w-3 mr-1" />
           No leídas ({noLeidas})
         </Badge>
-        {TIPOS.map(tipo => (
+        {TIPOS.map((tipo) => (
           <Badge
             key={tipo}
             variant={filtroTipo === tipo ? 'default' : 'outline'}
             className="cursor-pointer capitalize"
-            onClick={() => { setFiltroTipo(tipo); setSoloNoLeidas(false); }}
+            onClick={() => {
+              setFiltroTipo(tipo);
+              setSoloNoLeidas(false);
+            }}
           >
             {labelsTipo[tipo] || tipo}
           </Badge>
@@ -175,7 +196,9 @@ export default function NotificacionesPage() {
       {/* ─── Push Notification Toggle ────────────────────── */}
       <div className="flex items-center gap-2 px-4 py-3 rounded-xl border bg-card/50">
         <Smartphone className="w-4 h-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground font-medium">Notificaciones en este dispositivo:</span>
+        <span className="text-sm text-muted-foreground font-medium">
+          Notificaciones en este dispositivo:
+        </span>
         <PushNotificationToggle />
       </div>
 
@@ -209,7 +232,9 @@ export default function NotificacionesPage() {
                   } ${!isLast ? 'border-b' : ''} hover:bg-muted/30`}
                 >
                   {/* Icono */}
-                  <div className={`h-9 w-9 rounded-xl ${coloresNotificacion[notif.tipo] || ''} flex items-center justify-center shrink-0 mt-0.5`}>
+                  <div
+                    className={`h-9 w-9 rounded-xl ${coloresNotificacion[notif.tipo] || ''} flex items-center justify-center shrink-0 mt-0.5`}
+                  >
                     <Icon className="h-4.5 w-4.5" />
                   </div>
 

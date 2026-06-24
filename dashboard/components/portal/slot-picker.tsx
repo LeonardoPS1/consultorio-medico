@@ -17,8 +17,18 @@ interface SlotPickerProps {
 
 const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
 ];
 
 function formatDate(d: Date) {
@@ -91,7 +101,13 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
       <div className="bg-card rounded-xl border border-border/50 p-3">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <Button variant="ghost" size="icon" onClick={goBack} disabled={weekDays[0] <= today} className="h-8 w-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={goBack}
+            disabled={weekDays[0] <= today}
+            className="h-8 w-8"
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm font-semibold">
@@ -105,7 +121,10 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
         {/* Day names */}
         <div className="grid grid-cols-7 gap-1 mb-1">
           {DAY_NAMES.map((name) => (
-            <div key={name} className="text-center text-[11px] font-medium text-muted-foreground py-1">
+            <div
+              key={name}
+              className="text-center text-[11px] font-medium text-muted-foreground py-1"
+            >
               {name}
             </div>
           ))}
@@ -164,9 +183,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
               <p className="text-sm text-muted-foreground">
                 No hay horarios disponibles para esta fecha.
               </p>
-              <p className="text-xs text-muted-foreground/60 mt-1">
-                Probá seleccionar otro día.
-              </p>
+              <p className="text-xs text-muted-foreground/60 mt-1">Probá seleccionar otro día.</p>
             </div>
           ) : (
             <div className="space-y-3">

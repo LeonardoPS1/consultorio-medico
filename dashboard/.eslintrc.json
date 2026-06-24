@@ -1,0 +1,112 @@
+{
+  "root": true,
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:jsdoc/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "plugins": [
+    "jsdoc",
+    "@typescript-eslint"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {}
+    }
+  },
+  "rules": {
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-empty": ["warn", { "allowEmptyCatch": true }],
+    "prefer-const": "error",
+    "no-var": "error",
+    "eqeqeq": ["warn", "smart"],
+    "curly": ["warn", "multi-line"],
+    "no-useless-rename": "warn",
+    "object-shorthand": "warn",
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/explicit-function-return-type": "error",
+    "@typescript-eslint/explicit-module-boundary-types": "error",
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-unsafe-assignment": "error",
+    "@typescript-eslint/no-unsafe-member-access": "error",
+    "@typescript-eslint/no-unsafe-call": "error",
+
+    // React
+    "react/jsx-key": "error",
+    "react/self-closing-comp": ["warn", { "component": true, "html": true }],
+    "react/display-name": "off",
+    "react/no-array-index-key": "warn",
+
+    // React Hooks
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+
+    // Import ordering
+    "import/order": [
+      "warn",
+      {
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+        "newlines-between": "never",
+        "alphabetize": { "order": "asc", "caseInsensitive": true }
+      }
+    ],
+    "import/first": "warn",
+    "import/no-duplicates": "warn",
+    "import/no-anonymous-default-export": "warn",
+
+    // JSDoc — requerido en funciones exportadas públicas
+    "jsdoc/require-jsdoc": ["error", {
+      "publicOnly": true,
+      "require": {
+        "FunctionDeclaration": true,
+        "MethodDefinition": true,
+        "ClassDeclaration": true,
+        "ArrowFunctionExpression": false,
+        "FunctionExpression": false
+      }
+    }],
+    "jsdoc/require-param": ["error", { "exemptedBy": ["ignore"] }],
+    "jsdoc/require-returns": ["error", { "exemptedBy": ["ignore"] }],
+    "jsdoc/check-alignment": "error",
+    "jsdoc/require-param-type": "error",
+    "jsdoc/require-returns-type": "error",
+    "jsdoc/no-undefined-types": "off",
+
+    // Next.js
+    "@next/next/no-img-element": "warn"
+  },
+  "overrides": [
+    // Menos reglas en tests
+    {
+      "files": ["**/__tests__/**", "**/*.test.*", "**/*.spec.*"],
+      "rules": {
+        "jsdoc/require-jsdoc": "off",
+        "jsdoc/require-param": "off",
+        "jsdoc/require-returns": "off",
+        "import/order": "off",
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    },
+    // Menos reglas en configs y scripts
+    {
+      "files": ["**/*.config.*", "scripts/**"],
+      "rules": {
+        "jsdoc/require-jsdoc": "off",
+        "import/order": "off",
+        "no-console": "off"
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    "public/",
+    "*.config.*"
+  ]
+}

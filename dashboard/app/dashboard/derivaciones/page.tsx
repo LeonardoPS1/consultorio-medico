@@ -11,20 +11,39 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter,
-  DialogHeader, DialogTitle, DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 import {
-  ArrowRightLeft, Loader2, Search, AlertTriangle, AlertCircle,
-  Info, CheckCircle2, XCircle, Clock, User, Stethoscope,
-  Activity, Calendar,
+  ArrowRightLeft,
+  Loader2,
+  Search,
+  AlertTriangle,
+  AlertCircle,
+  Info,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  User,
+  Stethoscope,
+  Activity,
+  Calendar,
 } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────
@@ -101,7 +120,11 @@ export default function DerivacionesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<string>('todas');
-  const [stats, setStats] = useState<{ total: number; porEstado: Record<string, number>; porGravedad: Record<string, number> } | null>(null);
+  const [stats, setStats] = useState<{
+    total: number;
+    porEstado: Record<string, number>;
+    porGravedad: Record<string, number>;
+  } | null>(null);
 
   // Create modal
   const [createOpen, setCreateOpen] = useState(false);
@@ -114,9 +137,15 @@ export default function DerivacionesPage() {
   const [detailLoading, setDetailLoading] = useState(false);
 
   const [form, setForm] = useState({
-    pacienteId: '', medicoOrigenId: '', medicoDestinoId: 'ninguno',
-    especialidad: '', motivo: '', diagnostico: '', cie10Codigo: '',
-    gravedad: 'normal' as Gravedad, notasOrigen: '',
+    pacienteId: '',
+    medicoOrigenId: '',
+    medicoDestinoId: 'ninguno',
+    especialidad: '',
+    motivo: '',
+    diagnostico: '',
+    cie10Codigo: '',
+    gravedad: 'normal' as Gravedad,
+    notasOrigen: '',
   });
 
   // ── Cargar datos ──────────────────────────────────────
@@ -150,14 +179,16 @@ export default function DerivacionesPage() {
     }
   }, [filtroEstado, search]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // ── Cargar médicos ─────────────────────────────────────
   useEffect(() => {
     if (createOpen && medicos.length === 0) {
       fetch('/api/derivaciones?medicos=true')
-        .then(r => r.json())
-        .then(json => setMedicos(json.data ?? []))
+        .then((r) => r.json())
+        .then((json) => setMedicos(json.data ?? []))
         .catch(() => {});
     }
   }, [createOpen, medicos.length]);
@@ -165,7 +196,11 @@ export default function DerivacionesPage() {
   // ── Crear derivación ───────────────────────────────────
   const handleCreate = async () => {
     if (!form.pacienteId || !form.medicoOrigenId || !form.especialidad || !form.motivo) {
-      toast({ title: 'Campos requeridos', description: 'Completá Paciente, Médico origen, Especialidad y Motivo', variant: 'destructive' });
+      toast({
+        title: 'Campos requeridos',
+        description: 'Completá Paciente, Médico origen, Especialidad y Motivo',
+        variant: 'destructive',
+      });
       return;
     }
     setSaving(true);
@@ -181,12 +216,29 @@ export default function DerivacionesPage() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Error al crear');
-      toast({ title: 'Derivación creada', description: 'La derivación fue registrada correctamente' });
+      toast({
+        title: 'Derivación creada',
+        description: 'La derivación fue registrada correctamente',
+      });
       setCreateOpen(false);
-      setForm({ pacienteId: '', medicoOrigenId: '', medicoDestinoId: 'ninguno', especialidad: '', motivo: '', diagnostico: '', cie10Codigo: '', gravedad: 'normal', notasOrigen: '' });
+      setForm({
+        pacienteId: '',
+        medicoOrigenId: '',
+        medicoDestinoId: 'ninguno',
+        especialidad: '',
+        motivo: '',
+        diagnostico: '',
+        cie10Codigo: '',
+        gravedad: 'normal',
+        notasOrigen: '',
+      });
       fetchData();
     } catch (err) {
-      toast({ title: 'Error', description: 'No se pudo crear la derivación', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'No se pudo crear la derivación',
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }
@@ -203,13 +255,18 @@ export default function DerivacionesPage() {
         const json = await res.json();
         setDetail(json.data ?? json);
       }
-    } catch {} finally {
+    } catch {
+    } finally {
       setDetailLoading(false);
     }
   };
 
   // ── Cambiar estado ──────────────────────────────────────
-  const cambiarEstado = async (id: string, nuevoEstado: DerivacionEstado, notasDestino?: string) => {
+  const cambiarEstado = async (
+    id: string,
+    nuevoEstado: DerivacionEstado,
+    notasDestino?: string,
+  ) => {
     try {
       const body: Record<string, any> = { estado: nuevoEstado };
       if (notasDestino) body.notasDestino = notasDestino;
@@ -219,11 +276,18 @@ export default function DerivacionesPage() {
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error();
-      toast({ title: `Derivación ${estadoLabels[nuevoEstado].toLowerCase()}`, description: 'Estado actualizado correctamente' });
+      toast({
+        title: `Derivación ${estadoLabels[nuevoEstado].toLowerCase()}`,
+        description: 'Estado actualizado correctamente',
+      });
       fetchData();
       if (selectedId === id) openDetail(id);
     } catch {
-      toast({ title: 'Error', description: 'No se pudo actualizar el estado', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el estado',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -234,7 +298,9 @@ export default function DerivacionesPage() {
           <CardContent>
             <ArrowRightLeft className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold mb-2">Plan no disponible</h2>
-            <p className="text-muted-foreground">Actualizá tu plan para acceder al sistema de derivaciones.</p>
+            <p className="text-muted-foreground">
+              Actualizá tu plan para acceder al sistema de derivaciones.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -258,14 +324,45 @@ export default function DerivacionesPage() {
       {stats && (
         <motion.div
           className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-6"
-          initial="hidden" animate="visible"
+          initial="hidden"
+          animate="visible"
         >
-          <StatCard title="Totales" value={String(stats.total)} icon={ArrowRightLeft} color="text-blue-500" />
-          <StatCard title="Pendientes" value={String(stats.porEstado?.pendiente ?? 0)} icon={Clock} color="text-amber-500" />
-          <StatCard title="Aceptadas" value={String(stats.porEstado?.aceptada ?? 0)} icon={CheckCircle2} color="text-emerald-500" />
-          <StatCard title="Completadas" value={String(stats.porEstado?.completada ?? 0)} icon={Activity} color="text-blue-500" />
-          <StatCard title="Urgentes" value={String(stats.porGravedad?.urgente ?? 0)} icon={AlertTriangle} color="text-red-500" />
-          <StatCard title="Prioritarias" value={String(stats.porGravedad?.prioritaria ?? 0)} icon={AlertCircle} color="text-amber-500" />
+          <StatCard
+            title="Totales"
+            value={String(stats.total)}
+            icon={ArrowRightLeft}
+            color="text-blue-500"
+          />
+          <StatCard
+            title="Pendientes"
+            value={String(stats.porEstado?.pendiente ?? 0)}
+            icon={Clock}
+            color="text-amber-500"
+          />
+          <StatCard
+            title="Aceptadas"
+            value={String(stats.porEstado?.aceptada ?? 0)}
+            icon={CheckCircle2}
+            color="text-emerald-500"
+          />
+          <StatCard
+            title="Completadas"
+            value={String(stats.porEstado?.completada ?? 0)}
+            icon={Activity}
+            color="text-blue-500"
+          />
+          <StatCard
+            title="Urgentes"
+            value={String(stats.porGravedad?.urgente ?? 0)}
+            icon={AlertTriangle}
+            color="text-red-500"
+          />
+          <StatCard
+            title="Prioritarias"
+            value={String(stats.porGravedad?.prioritaria ?? 0)}
+            icon={AlertCircle}
+            color="text-amber-500"
+          />
         </motion.div>
       )}
 
@@ -306,7 +403,9 @@ export default function DerivacionesPage() {
           <CardContent className="flex flex-col items-center py-12">
             <ArrowRightLeft className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-lg font-medium mb-1">Sin derivaciones</p>
-            <p className="text-sm text-muted-foreground">No hay derivaciones registradas en este período</p>
+            <p className="text-sm text-muted-foreground">
+              No hay derivaciones registradas en este período
+            </p>
             <Button variant="outline" className="mt-4" onClick={() => setCreateOpen(true)}>
               Crear primera derivación
             </Button>
@@ -333,7 +432,9 @@ export default function DerivacionesPage() {
                   <span className="font-medium truncate">{der.pacienteNombre}</span>
                   <Badge className={estadoColores[der.estado]}>{estadoLabels[der.estado]}</Badge>
                   {der.gravedad === 'urgente' && (
-                    <Badge variant="destructive" className="text-[10px]">URGENTE</Badge>
+                    <Badge variant="destructive" className="text-[10px]">
+                      URGENTE
+                    </Badge>
                   )}
                 </div>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -356,19 +457,31 @@ export default function DerivacionesPage() {
               <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                 {der.estado === 'pendiente' && (
                   <>
-                    <Button size="sm" variant="ghost" className="h-8 text-emerald-600"
-                      onClick={() => cambiarEstado(der.id, 'aceptada')}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 text-emerald-600"
+                      onClick={() => cambiarEstado(der.id, 'aceptada')}
+                    >
                       Aceptar
                     </Button>
-                    <Button size="sm" variant="ghost" className="h-8 text-red-600"
-                      onClick={() => cambiarEstado(der.id, 'rechazada')}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 text-red-600"
+                      onClick={() => cambiarEstado(der.id, 'rechazada')}
+                    >
                       Rechazar
                     </Button>
                   </>
                 )}
                 {der.estado === 'aceptada' && (
-                  <Button size="sm" variant="ghost" className="h-8 text-blue-600"
-                    onClick={() => cambiarEstado(der.id, 'completada')}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 text-blue-600"
+                    onClick={() => cambiarEstado(der.id, 'completada')}
+                  >
                     Completar
                   </Button>
                 )}
@@ -383,16 +496,14 @@ export default function DerivacionesPage() {
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nueva Derivación</DialogTitle>
-            <DialogDescription>
-              Derivar paciente a otro especialista o médico
-            </DialogDescription>
+            <DialogDescription>Derivar paciente a otro especialista o médico</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <PacienteSearchCombobox
                   value={form.pacienteId}
-                  onChange={(pacienteId) => setForm(f => ({ ...f, pacienteId }))}
+                  onChange={(pacienteId) => setForm((f) => ({ ...f, pacienteId }))}
                   placeholder="Buscar paciente por nombre, RUT o teléfono..."
                   label="Paciente *"
                   size="sm"
@@ -401,11 +512,18 @@ export default function DerivacionesPage() {
               </div>
               <div className="space-y-2">
                 <Label>Médico origen *</Label>
-                <Select value={form.medicoOrigenId} onValueChange={(v) => setForm(f => ({ ...f, medicoOrigenId: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar médico" /></SelectTrigger>
+                <Select
+                  value={form.medicoOrigenId}
+                  onValueChange={(v) => setForm((f) => ({ ...f, medicoOrigenId: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar médico" />
+                  </SelectTrigger>
                   <SelectContent>
                     {medicos.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>{m.nombre} — {m.especialidad}</SelectItem>
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.nombre} — {m.especialidad}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -415,48 +533,72 @@ export default function DerivacionesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Especialidad destino *</Label>
-                <Input placeholder="Ej: Cardiología, Traumatología"
+                <Input
+                  placeholder="Ej: Cardiología, Traumatología"
                   value={form.especialidad}
-                  onChange={(e) => setForm(f => ({ ...f, especialidad: e.target.value }))} />
+                  onChange={(e) => setForm((f) => ({ ...f, especialidad: e.target.value }))}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Médico destino</Label>
-                  <Select value={form.medicoDestinoId} onValueChange={(v) => setForm(f => ({ ...f, medicoDestinoId: v }))}>
-                    <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ninguno">Sin asignar</SelectItem>
-                      {medicos.filter(m => m.id !== form.medicoOrigenId).map((m) => (
-                        <SelectItem key={m.id} value={m.id}>{m.nombre} — {m.especialidad}</SelectItem>
+                <Select
+                  value={form.medicoDestinoId}
+                  onValueChange={(v) => setForm((f) => ({ ...f, medicoDestinoId: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Opcional" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ninguno">Sin asignar</SelectItem>
+                    {medicos
+                      .filter((m) => m.id !== form.medicoOrigenId)
+                      .map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.nombre} — {m.especialidad}
+                        </SelectItem>
                       ))}
-                    </SelectContent>
-                  </Select>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             <div className="space-y-2">
               <Label>Motivo *</Label>
-              <Textarea placeholder="Motivo de la derivación"
+              <Textarea
+                placeholder="Motivo de la derivación"
                 value={form.motivo}
-                onChange={(e) => setForm(f => ({ ...f, motivo: e.target.value }))} />
+                onChange={(e) => setForm((f) => ({ ...f, motivo: e.target.value }))}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Diagnóstico</Label>
-                <Input placeholder="Diagnóstico actual" value={form.diagnostico}
-                  onChange={(e) => setForm(f => ({ ...f, diagnostico: e.target.value }))} />
+                <Input
+                  placeholder="Diagnóstico actual"
+                  value={form.diagnostico}
+                  onChange={(e) => setForm((f) => ({ ...f, diagnostico: e.target.value }))}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Código CIE-10</Label>
-                <Input placeholder="Ej: I10" value={form.cie10Codigo}
-                  onChange={(e) => setForm(f => ({ ...f, cie10Codigo: e.target.value }))} />
+                <Input
+                  placeholder="Ej: I10"
+                  value={form.cie10Codigo}
+                  onChange={(e) => setForm((f) => ({ ...f, cie10Codigo: e.target.value }))}
+                />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label>Gravedad</Label>
-              <Select value={form.gravedad} onValueChange={(v: Gravedad) => setForm(f => ({ ...f, gravedad: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select
+                value={form.gravedad}
+                onValueChange={(v: Gravedad) => setForm((f) => ({ ...f, gravedad: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="normal">Normal</SelectItem>
                   <SelectItem value="prioritaria">Prioritaria</SelectItem>
@@ -467,13 +609,17 @@ export default function DerivacionesPage() {
 
             <div className="space-y-2">
               <Label>Notas del origen</Label>
-              <Textarea placeholder="Comentarios adicionales, estudios previos..."
+              <Textarea
+                placeholder="Comentarios adicionales, estudios previos..."
                 value={form.notasOrigen}
-                onChange={(e) => setForm(f => ({ ...f, notasOrigen: e.target.value }))} />
+                onChange={(e) => setForm((f) => ({ ...f, notasOrigen: e.target.value }))}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              Cancelar
+            </Button>
             <Button onClick={handleCreate} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Crear Derivación
@@ -483,7 +629,12 @@ export default function DerivacionesPage() {
       </Dialog>
 
       {/* Modal Detalle */}
-      <Dialog open={!!selectedId} onOpenChange={(open) => { if (!open) setSelectedId(null); }}>
+      <Dialog
+        open={!!selectedId}
+        onOpenChange={(open) => {
+          if (!open) setSelectedId(null);
+        }}
+      >
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalle de Derivación</DialogTitle>
@@ -497,9 +648,13 @@ export default function DerivacionesPage() {
           ) : detail ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Badge className={estadoColores[detail.estado]}>{estadoLabels[detail.estado]}</Badge>
+                <Badge className={estadoColores[detail.estado]}>
+                  {estadoLabels[detail.estado]}
+                </Badge>
                 <div className="flex items-center gap-1 text-sm">
-                  {React.createElement(gravedadIconos[detail.gravedad], { className: `h-4 w-4 ${gravedadColores[detail.gravedad]}` })}
+                  {React.createElement(gravedadIconos[detail.gravedad], {
+                    className: `h-4 w-4 ${gravedadColores[detail.gravedad]}`,
+                  })}
                   <span className="capitalize">{detail.gravedad}</span>
                 </div>
               </div>
@@ -563,13 +718,19 @@ export default function DerivacionesPage() {
 
               {detail.estado === 'pendiente' && (
                 <div className="flex gap-2 pt-2 border-t">
-                  <Button className="flex-1" variant="outline"
-                    onClick={() => cambiarEstado(detail.id, 'aceptada')}>
+                  <Button
+                    className="flex-1"
+                    variant="outline"
+                    onClick={() => cambiarEstado(detail.id, 'aceptada')}
+                  >
                     <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-500" />
                     Aceptar
                   </Button>
-                  <Button className="flex-1" variant="outline"
-                    onClick={() => cambiarEstado(detail.id, 'rechazada')}>
+                  <Button
+                    className="flex-1"
+                    variant="outline"
+                    onClick={() => cambiarEstado(detail.id, 'rechazada')}
+                  >
                     <XCircle className="h-4 w-4 mr-2 text-red-500" />
                     Rechazar
                   </Button>
@@ -577,8 +738,11 @@ export default function DerivacionesPage() {
               )}
               {detail.estado === 'aceptada' && (
                 <div className="pt-2 border-t">
-                  <Button className="w-full" variant="outline"
-                    onClick={() => cambiarEstado(detail.id, 'completada')}>
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => cambiarEstado(detail.id, 'completada')}
+                  >
                     <CheckCircle2 className="h-4 w-4 mr-2 text-blue-500" />
                     Marcar como completada
                   </Button>
@@ -596,8 +760,16 @@ export default function DerivacionesPage() {
 
 import React from 'react';
 
-function StatCard({ title, value, icon: Icon, color }: {
-  title: string; value: string; icon: React.ElementType; color: string;
+function StatCard({
+  title,
+  value,
+  icon: Icon,
+  color,
+}: {
+  title: string;
+  value: string;
+  icon: React.ElementType;
+  color: string;
 }) {
   return (
     <motion.div variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}>

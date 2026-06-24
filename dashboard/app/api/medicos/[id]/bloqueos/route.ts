@@ -9,10 +9,7 @@ import { eq, and, sql, desc } from 'drizzle-orm';
  * Lista todos los bloqueos de agenda de un médico (vacaciones, feriados, etc.)
  * Query params: desde, hasta (filtro por rango de fechas)
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const medicoId = params.id;
     const { searchParams } = new URL(request.url);
@@ -20,12 +17,18 @@ export async function GET(
     const hasta = searchParams.get('hasta');
 
     let whereConditions = eq(bloqueosAgenda.medicoId, medicoId);
-    
+
     if (desde) {
-      whereConditions = and(whereConditions, sql`${bloqueosAgenda.fechaFin} >= ${desde}::timestamptz`) as any;
+      whereConditions = and(
+        whereConditions,
+        sql`${bloqueosAgenda.fechaFin} >= ${desde}::timestamptz`,
+      );
     }
     if (hasta) {
-      whereConditions = and(whereConditions, sql`${bloqueosAgenda.fechaInicio} <= ${hasta}::timestamptz`) as any;
+      whereConditions = and(
+        whereConditions,
+        sql`${bloqueosAgenda.fechaInicio} <= ${hasta}::timestamptz`,
+      );
     }
 
     const bloqueos = await db
@@ -47,10 +50,7 @@ export async function GET(
  * Crea un nuevo bloqueo de agenda para un médico.
  * Body: { titulo, fechaInicio, fechaFin, tipo?, motivo? }
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const medicoId = params.id;
     const body = await request.json();

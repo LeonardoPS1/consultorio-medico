@@ -1,6 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, TrendingUp, TrendingDown, Minus, MessageSquare, Users, BarChart3, ThumbsUp, ThumbsDown, Meh } from 'lucide-react';
+import {
+  Star,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  MessageSquare,
+  Users,
+  BarChart3,
+  ThumbsUp,
+  ThumbsDown,
+  Meh,
+} from 'lucide-react';
 import { EncuestasClient } from './encuestas-client';
 import { PageHeader } from '@/components/page-header';
 import { EvolucionEncuestasChart } from '@/components/charts/evolucion-encuestas-chart';
@@ -57,7 +68,10 @@ async function getSurveyStats(): Promise<EncuestaApiResponse | null> {
 function TendenciaBadge({ tendencia }: { tendencia: string }) {
   if (tendencia === 'subiendo') {
     return (
-      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800">
+      <Badge
+        variant="outline"
+        className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800"
+      >
         <TrendingUp className="h-3 w-3 mr-1" />
         Subiendo
       </Badge>
@@ -65,14 +79,20 @@ function TendenciaBadge({ tendencia }: { tendencia: string }) {
   }
   if (tendencia === 'bajando') {
     return (
-      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800">
+      <Badge
+        variant="outline"
+        className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800"
+      >
         <TrendingDown className="h-3 w-3 mr-1" />
         Bajando
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+    <Badge
+      variant="outline"
+      className="bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+    >
       <Minus className="h-3 w-3 mr-1" />
       Estable
     </Badge>
@@ -125,7 +145,8 @@ function KpiCards({ stats }: { stats: EncuestaApiResponse['data'] }) {
                 kpi.custom
               ) : (
                 <p className={`text-2xl font-bold ${kpi.color}`}>
-                  {kpi.value}{kpi.suffix || ''}
+                  {kpi.value}
+                  {kpi.suffix || ''}
                 </p>
               )}
             </div>
@@ -164,9 +185,7 @@ function DistribucionSection({ distribucion }: { distribucion: Record<number, nu
                 <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
-                      puntaje >= 4 ? 'bg-emerald-500' :
-                      puntaje >= 3 ? 'bg-amber-400' :
-                      'bg-red-400'
+                      puntaje >= 4 ? 'bg-emerald-500' : puntaje >= 3 ? 'bg-amber-400' : 'bg-red-400'
                     }`}
                     style={{ width: `${porcentaje}%` }}
                   />
@@ -183,7 +202,11 @@ function DistribucionSection({ distribucion }: { distribucion: Record<number, nu
 
 // ─── Sentimiento ───────────────────────────────────────────
 
-function SentimientoSection({ distribucion }: { distribucion: { positivo: number; neutral: number; negativo: number } }) {
+function SentimientoSection({
+  distribucion,
+}: {
+  distribucion: { positivo: number; neutral: number; negativo: number };
+}) {
   const total = distribucion.positivo + distribucion.neutral + distribucion.negativo;
   const items = [
     {
@@ -222,7 +245,8 @@ function SentimientoSection({ distribucion }: { distribucion: { positivo: number
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <Star className="h-8 w-8 text-muted-foreground/30 mb-2" />
             <p className="text-xs text-muted-foreground/60">
-              El análisis de sentimiento aparece automáticamente cuando los pacientes dejan comentarios
+              El análisis de sentimiento aparece automáticamente cuando los pacientes dejan
+              comentarios
             </p>
           </div>
         ) : (
@@ -273,7 +297,10 @@ export default async function EncuestasPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Encuestas" description="Resultados de encuestas post-consulta enviadas por WhatsApp" />
+      <PageHeader
+        title="Encuestas"
+        description="Resultados de encuestas post-consulta enviadas por WhatsApp"
+      />
 
       {/* KPIs */}
       <KpiCards stats={stats} />

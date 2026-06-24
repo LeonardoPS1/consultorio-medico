@@ -5,11 +5,7 @@
  */
 import Script from 'next/script';
 
-export default function PortalLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function PortalLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       {/* Prevenir flicker: preserva el tema actual del sistema sin forzarlo */}

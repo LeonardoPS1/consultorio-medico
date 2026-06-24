@@ -11,10 +11,7 @@ import { eq, and } from 'drizzle-orm';
 import { generarHashCertificado, generarHTMLCertificado } from '@/lib/certificados';
 import QRCode from 'qrcode';
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });

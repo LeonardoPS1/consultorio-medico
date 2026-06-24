@@ -54,7 +54,8 @@ export function GatedContent({ children }: { children: React.ReactNode }) {
 
   // Admin tiene acceso a TODO, independientemente del plan
   // Para no-admins: verificar plan gating + user overrides
-  const blocked = !isAdmin && !!required && !canAccess(plan, required) && !userOverrides.has(required);
+  const blocked =
+    !isAdmin && !!required && !canAccess(plan, required) && !userOverrides.has(required);
 
   // Redirect en useEffect — solo cuando la sesión ya cargó completamente
   // Evita race condition: si redirect durante 'loading', router.replace() se dispara

@@ -9,10 +9,7 @@ import { db } from '@/lib/db';
 import { consentimientos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
 
-export async function POST(
-  req: Request,
-  { params }: { params: { id: string } },
-) {
+export async function POST(req: Request, { params }: { params: { id: string } }) {
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -56,5 +53,8 @@ export async function POST(
     })
     .where(eq(consentimientos.id, params.id));
 
-  return NextResponse.json({ success: true, mensaje: `"${existing.titulo}" firmado correctamente` });
+  return NextResponse.json({
+    success: true,
+    mensaje: `"${existing.titulo}" firmado correctamente`,
+  });
 }

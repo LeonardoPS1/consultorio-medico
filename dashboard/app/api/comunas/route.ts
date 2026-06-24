@@ -21,13 +21,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'region_id es requerido' }, { status: 400 });
     }
 
-    const data = await cache.getOrSet(`comunas:region:${regionId}`, async () => {
-      return await db
-        .select({ id: comunas.id, nombre: comunas.nombre })
-        .from(comunas)
-        .where(eq(comunas.regionId, regionId))
-        .orderBy(asc(comunas.nombre));
-    }, CACHE_TTL);
+    const data = await cache.getOrSet(
+      `comunas:region:${regionId}`,
+      async () => {
+        return await db
+          .select({ id: comunas.id, nombre: comunas.nombre })
+          .from(comunas)
+          .where(eq(comunas.regionId, regionId))
+          .orderBy(asc(comunas.nombre));
+      },
+      CACHE_TTL,
+    );
 
     return NextResponse.json({ data });
   } catch (error) {

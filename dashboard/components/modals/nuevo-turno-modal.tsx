@@ -12,13 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/select';
 import { Loader2, Search, Plus, User, Video, Phone, MapPin } from 'lucide-react';
 
 interface MedicoOption {
@@ -50,7 +44,13 @@ interface NuevoTurnoModalProps {
   pacienteName?: string;
 }
 
-export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: propPacienteId, pacienteName }: NuevoTurnoModalProps) {
+export function NuevoTurnoModal({
+  open,
+  onOpenChange,
+  onSubmit,
+  pacienteId: propPacienteId,
+  pacienteName,
+}: NuevoTurnoModalProps) {
   const [paciente, setPaciente] = useState(pacienteName || '');
   const [tipo, setTipo] = useState('Consulta');
   const [tipoConsulta, setTipoConsulta] = useState('presencial');
@@ -110,7 +110,9 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
       setPacienteSearchLoading(true);
       setPacienteSearchError(false);
       try {
-        const res = await fetch(`/api/pacientes?search=${encodeURIComponent(pacienteSearch.trim())}&limit=8`);
+        const res = await fetch(
+          `/api/pacientes?search=${encodeURIComponent(pacienteSearch.trim())}&limit=8`,
+        );
         if (!res.ok) throw new Error('Error en búsqueda');
         const json = await res.json();
         const list: PacienteSuggestion[] = json.data || [];
@@ -134,8 +136,12 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
   // Click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (listRef.current && !listRef.current.contains(e.target as Node) &&
-          inputRef.current && !inputRef.current.contains(e.target as Node)) {
+      if (
+        listRef.current &&
+        !listRef.current.contains(e.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(e.target as Node)
+      ) {
         setPacienteSearchOpen(false);
       }
     };
@@ -199,7 +205,9 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
       .finally(() => {
         if (!cancelled) setLoadingMedicos(false);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [open]);
 
   // Reset form on close
@@ -257,9 +265,7 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Nuevo Turno</DialogTitle>
-          <DialogDescription>
-            Agendá un nuevo turno para un paciente
-          </DialogDescription>
+          <DialogDescription>Agendá un nuevo turno para un paciente</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -322,7 +328,9 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
                       >
                         <User className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <div className="flex-1 min-w-0">
-                          <span className="font-medium">{p.nombre} {p.apellido}</span>
+                          <span className="font-medium">
+                            {p.nombre} {p.apellido}
+                          </span>
                           {p.telefono && (
                             <span className="ml-2 text-xs text-muted-foreground">{p.telefono}</span>
                           )}
@@ -333,13 +341,18 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
                 )}
 
                 {/* Sin resultados */}
-                {pacienteSearch.trim().length >= 2 && !pacienteSearchLoading &&
-                 !pacienteSearchOpen && pacienteSuggestions.length === 0 && (
-                  <div className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
-                    <Plus className="h-3 w-3" />
-                    <span>No se encontró el paciente. Completá los datos y se creará automáticamente al guardar.</span>
-                  </div>
-                )}
+                {pacienteSearch.trim().length >= 2 &&
+                  !pacienteSearchLoading &&
+                  !pacienteSearchOpen &&
+                  pacienteSuggestions.length === 0 && (
+                    <div className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
+                      <Plus className="h-3 w-3" />
+                      <span>
+                        No se encontró el paciente. Completá los datos y se creará automáticamente
+                        al guardar.
+                      </span>
+                    </div>
+                  )}
               </div>
             )}
           </div>
@@ -442,7 +455,10 @@ export function NuevoTurnoModal({ open, onOpenChange, onSubmit, pacienteId: prop
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading || !pacienteSearch.trim() || loadingMedicos || medicos.length === 0}>
+            <Button
+              type="submit"
+              disabled={loading || !pacienteSearch.trim() || loadingMedicos || medicos.length === 0}
+            >
               {loading ? 'Creando...' : 'Crear Turno'}
             </Button>
           </DialogFooter>

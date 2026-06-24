@@ -4,13 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/select';
 import {
   Dialog,
   DialogContent,
@@ -43,11 +37,7 @@ interface TurnoDetailModalProps {
 
 // ─── Component ────────────────────────────────────────────
 
-export function TurnoDetailModal({
-  editTurno,
-  onOpenChange,
-  onSaveEdit,
-}: TurnoDetailModalProps) {
+export function TurnoDetailModal({ editTurno, onOpenChange, onSaveEdit }: TurnoDetailModalProps) {
   const [saving, setSaving] = useState(false);
 
   return (
@@ -60,9 +50,7 @@ export function TurnoDetailModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Editar Turno</DialogTitle>
-          <DialogDescription>
-            Modificá los datos del turno
-          </DialogDescription>
+          <DialogDescription>Modificá los datos del turno</DialogDescription>
         </DialogHeader>
         {editTurno && (
           <div className="space-y-4 py-2">
@@ -153,16 +141,11 @@ export function CancelTurnoDialog({
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>Cancelar Turno</DialogTitle>
-          <DialogDescription>
-            ¿Estás seguro de que querés cancelar este turno?
-          </DialogDescription>
+          <DialogDescription>¿Estás seguro de que querés cancelar este turno?</DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
           <Label>Motivo de cancelación</Label>
-          <Input
-            id="motivoCancelacion"
-            placeholder="Ej: El paciente solicitó cancelación"
-          />
+          <Input id="motivoCancelacion" placeholder="Ej: El paciente solicitó cancelación" />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -174,7 +157,8 @@ export function CancelTurnoDialog({
             onClick={async () => {
               if (showCancelDialog) {
                 setCanceling(true);
-                const motivo = (document.getElementById('motivoCancelacion') as HTMLInputElement)?.value || '';
+                const motivo =
+                  (document.getElementById('motivoCancelacion') as HTMLInputElement)?.value || '';
                 try {
                   await onConfirmCancel(showCancelDialog, motivo);
                 } finally {

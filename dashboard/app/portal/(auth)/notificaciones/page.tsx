@@ -5,7 +5,15 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Bell, CheckCheck, RefreshCw, AlertCircle, Calendar, MessageSquare, FileText } from 'lucide-react';
+import {
+  Bell,
+  CheckCheck,
+  RefreshCw,
+  AlertCircle,
+  Calendar,
+  MessageSquare,
+  FileText,
+} from 'lucide-react';
 import Link from 'next/link';
 
 interface Notificacion {
@@ -62,9 +70,7 @@ export default function PortalNotificacionesPage() {
 
   async function marcarLeida(id: string) {
     // Optimistic update
-    setNotificaciones((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, leido: true } : n)),
-    );
+    setNotificaciones((prev) => prev.map((n) => (n.id === id ? { ...n, leido: true } : n)));
     await fetch(`/api/portal/notificaciones/${id}`, { method: 'PATCH' });
   }
 
@@ -88,9 +94,7 @@ export default function PortalNotificacionesPage() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Notificaciones</h1>
-          {noLeidas > 0 && (
-            <p className="text-sm text-gray-500">{noLeidas} sin leer</p>
-          )}
+          {noLeidas > 0 && <p className="text-sm text-gray-500">{noLeidas} sin leer</p>}
         </div>
         {noLeidas > 0 && (
           <button
@@ -127,9 +131,7 @@ export default function PortalNotificacionesPage() {
                     if (n.href) window.location.href = n.href;
                   }}
                   className={`w-full text-left flex items-start gap-3 p-3 rounded-lg transition-colors ${
-                    n.leido
-                      ? 'bg-white hover:bg-gray-50'
-                      : 'bg-blue-50 hover:bg-blue-100'
+                    n.leido ? 'bg-white hover:bg-gray-50' : 'bg-blue-50 hover:bg-blue-100'
                   }`}
                 >
                   <div className="mt-0.5 shrink-0">{Icon}</div>
@@ -140,17 +142,11 @@ export default function PortalNotificacionesPage() {
                       {n.titulo}
                     </p>
                     {n.descripcion && (
-                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                        {n.descripcion}
-                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.descripcion}</p>
                     )}
-                    <p className="text-[10px] text-gray-400 mt-1">
-                      {formatDate(n.createdAt)}
-                    </p>
+                    <p className="text-[10px] text-gray-400 mt-1">{formatDate(n.createdAt)}</p>
                   </div>
-                  {!n.leido && (
-                    <span className="w-2 h-2 rounded-full bg-blue-500 mt-2 shrink-0" />
-                  )}
+                  {!n.leido && <span className="w-2 h-2 rounded-full bg-blue-500 mt-2 shrink-0" />}
                 </button>
               </div>
             );

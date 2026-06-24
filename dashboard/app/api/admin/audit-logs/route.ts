@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getAuditLogs, cleanAuditLogs } from '@/lib/audit-log';
+import type { EntidadAudit, AccionAudit } from '@/lib/audit-log';
 
 // Forzar dinámico para evitar errores de build en Linux (auth() usa headers/cookies)
 export const dynamic = 'force-dynamic';
@@ -36,8 +37,8 @@ export async function GET(request: NextRequest) {
   const result = await getAuditLogs({
     limit: Math.min(limit, 500),
     offset,
-    entidad: entidad as any,
-    accion: accion as any,
+    entidad: entidad as EntidadAudit,
+    accion: accion as AccionAudit,
     usuarioId,
   });
 

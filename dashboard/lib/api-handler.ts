@@ -1,9 +1,9 @@
 /**
  * Wrapper unificado para handlers de API.
- * 
+ *
  * Captura excepciones, loguea, y devuelve { error } con status code.
  * Elimina el try/catch repetitivo en cada endpoint.
- * 
+ *
  * Uso:
  *   export const GET = apiHandler(async (req, ctx) => {
  *     const data = await someService();
@@ -15,7 +15,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { safeError } from '@/lib/logger';
 import { withTenantScope } from '@/lib/rls';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- wrapper que acepta distintos tipos de callbacks
 export function apiHandler(fn: (...args: any[]) => Promise<NextResponse> | NextResponse) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async (...args: any[]) => {
     const request = args[0] as NextRequest;
     try {
@@ -30,7 +32,7 @@ export function apiHandler(fn: (...args: any[]) => Promise<NextResponse> | NextR
       // En producción se puede ocultar después de diagnosticar
       const userFacing = status < 500;
       return NextResponse.json(
-        { 
+        {
           error: userFacing ? message : 'Error interno del servidor',
           ...(process.env.NODE_ENV !== 'production' ? { detail: message } : {}),
         },

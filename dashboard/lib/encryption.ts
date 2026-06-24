@@ -22,7 +22,7 @@ function getEncryptionKey(): Buffer {
     if (process.env.NODE_ENV === 'production') {
       throw new Error(
         'AUTH_SECRET es obligatorio en producción. ' +
-        'Configuralo en las variables de entorno del dashboard.'
+          'Configuralo en las variables de entorno del dashboard.',
       );
     }
     // En desarrollo sin AUTH_SECRET, usa hash de hostname + cwd como fallback

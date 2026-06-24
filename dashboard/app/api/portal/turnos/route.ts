@@ -31,16 +31,18 @@ export async function GET(request: NextRequest) {
       })
       .from(turnos)
       .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
-      .leftJoin(historialMedico, and(
-        eq(historialMedico.turnoId, turnos.id),
-        eq(historialMedico.tipo, 'encuesta'),
-      ))
-      .where(and(
-        eq(turnos.pacienteId, session.pacienteId),
-        eq(turnos.estado, 'atendido'),
-        sql`${turnos.deletedAt} IS NULL`,
-        sql`${historialMedico.id} IS NULL`,
-      ))
+      .leftJoin(
+        historialMedico,
+        and(eq(historialMedico.turnoId, turnos.id), eq(historialMedico.tipo, 'encuesta')),
+      )
+      .where(
+        and(
+          eq(turnos.pacienteId, session.pacienteId),
+          eq(turnos.estado, 'atendido'),
+          sql`${turnos.deletedAt} IS NULL`,
+          sql`${historialMedico.id} IS NULL`,
+        ),
+      )
       .orderBy(desc(turnos.fechaHora))
       .limit(10);
 
@@ -92,8 +94,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { crearTurnoPortal, sendTurnoConfirmacionWhatsApp, notifyDoctorWhatsApp } = await import('@/lib/services/portal-booking');
-    const { consumirTurnoSuscripcion, tienePaqueteDisponible } = await import('@/lib/services/portal-paquetes');
+    const { crearTurnoPortal, sendTurnoConfirmacionWhatsApp, notifyDoctorWhatsApp } =
+      await import('@/lib/services/portal-booking');
+    const { consumirTurnoSuscripcion, tienePaqueteDisponible } =
+      await import('@/lib/services/portal-paquetes');
     const turno = await crearTurnoPortal({
       pacienteId: session.pacienteId,
       medicoId,
@@ -127,7 +131,10 @@ export async function POST(request: NextRequest) {
     // Notificar al médico si es un reagendamiento
     if (rescheduleTurnoId && turno.medicoTelefono) {
       const fechaAntigua = turno.oldTurnoFecha
-        ? new Date(turno.oldTurnoFecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })
+        ? new Date(turno.oldTurnoFecha).toLocaleDateString('es-CL', {
+            day: 'numeric',
+            month: 'long',
+          })
         : '';
       const horaAntigua = turno.oldTurnoHora || '';
       const fechaNueva = turno.fechaHora
@@ -147,7 +154,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, turno }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error al crear turno';
-    safeError('[PortalBooking] Error en POST /api/portal/turnos:', err instanceof Error ? { message: err.message, stack: err.stack } : err);
+    safeError(
+      '[PortalBooking] Error en POST /api/portal/turnos:',
+      err instanceof Error ? { message: err.message, stack: err.stack } : err,
+    );
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

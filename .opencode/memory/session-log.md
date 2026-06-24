@@ -1,42 +1,69 @@
 # 📜 Log Global de Sesiones
 
-## 21/06 — Portal Paciente Fase 3 COMPLETA (salvo A3 y A4) ✅
+## 21/06 — Portal Paciente Fase 2 COMPLETA ✅
+### Items completados (6 commits, push a origin/main):
+- **.ics WhatsApp** (4afb138): `lib/ics.ts` genera archivo calendario, endpoint `/api/portal/turnos/[id]/ics`, adjunto MediaUrl en confirmación WhatsApp
+- **Recibo digital** (90aca75): `lib/services/portal-recibos.ts` HTML imprimible, botón "Recibo" en historial turnos pagados
+- **Notificar médico reagendar** (5266d5d): `notifyDoctorWhatsApp()` envía WhatsApp al médico con datos turno viejo/nuevo
+- **Reembolso cancelación** (f232c16): `lib/services/portal-reembolsos.ts`, política configurable por env vars, reembolso automático via API MP, feedback al paciente
+- **Paquetes + suscripciones** (7739dd0): migration 0036 (paquetes_portal + suscripciones_paciente), schema, service, 3 APIs, webhook MP, UI página paquetes, navegación portal, auto-consumo en booking
+- Todos: 0 TS errors, push a origin/main ✅
 
-### Items completados (múltiples commits, push a origin/main):
-- **B1 Chat portal** (247f935): API GET/POST /api/portal/chat, UI mensajes con burbujas, auto-refresh 10s, nav link Chat
-- **B2 Auto-respuestas** (76428fc): `getAutoReplyIfOutsideHours()` Lun-Vie 9-18 Chile, push
-- **A1 Notificaciones** (bb7563f): migration 0037, service, API, badge+count, página con filtros
-- **C1 Recetas PDF** (503ecd3): endpoint HTML imprimible con hash, botón descarga, push
-- **C2 Certificados** (0c8f802): API list + HTML con QR, UI página, nav link Certificados
-- **C3 Consentimientos** (03bfc97): API list/detail/firmar, UI página, nav link
-- **C4 Órdenes estudio** (3c47969): tabla ordenes_estudio + service + API + UI página + nav link
-- **A2 Push pacientes** (0d881e0): pacienteId en push_subscriptions, service actualizado, API suscribir/desuscribir/estado, componente PushNotificationToggle en perfil
+## 21/06 — Portal Paciente Fase 3 COMPLETA ✅
+### Items completados:
+- **B1 Chat portal**: API + UI mensajes, auto-refresh 10s
+- **B2 Auto-respuestas**: Lun-Vie 9-18 Chile, respuesta fuera de horario (sin atención)
+- **A1 Notificaciones in-app**: Badge panel, filtros, migration 0037
+- **C1 Recetas PDF**: HTML imprimible + hash, botón descarga
+- **C2 Certificados**: Lista + QR, página portal
+- **C3 Consentimientos**: Lista + firma digital
+- **C4 Órdenes estudio**: Tabla + service + UI completa
+- **A2 Push pacientes**: Suscripción, toggle en perfil
+- Push a origin/main, 0 TS errors ✅
 
-### Pendientes:
-- **A3 Encuesta post-consulta portal** — API + UI página iniciada (falta: trigger al pasar turno a "atendido", UI para responder)
-- **A4 Confirmación asistencia interactiva WhatsApp** — No iniciado
+## 22/06 — A3 + A4 Portal Paciente ✅
+- **A3 UI Encuestas**, **A4 Webhook SÍ/NO**, triggers automáticos
 
-### Estado actual:
-- 0 TS errors en todos los commits
-- Push a origin/main ✅
-- Rama: main
-- Último commit: 0c8f802 (certificados) + 0d881e0 (push) + 03bfc97 (consentimientos) + 3c47969 (órdenes) + trabajo en curso de encuestas
+## 22/06 — Fix Issues 1-6 + Reportes Ejecutivos (commit bc53cf5) ✅
+- Issues 1-4, 6-7 fixeados; Reportes ejecutivos con KPIs reales (2da fila, fix div/0)
 
----
+## 22/06 — Fix error 500 portal crear turno (commit ac8f29e) ✅
+- INSERT dinámico condicional para `precio` y `sucursalId`
 
-## Pendientes para próxima sesión:
-1. **A3**: Completar encuesta post-consulta portal
-   - API GET/POST /api/portal/encuestas ya creada
-   - Página /portal/encuestas por crear (UI)
-   - Trigger: cuando turno pasa a estado "atendido" → enviar WhatsApp de encuesta (lib/encuestas.ts ya tiene `sendSurveyWhatsApp()`)
-   - Respuesta vía portal o WhatsApp (detectSurveyResponse ya existe)
-2. **A4**: Confirmación asistencia interactiva WhatsApp
-   - Turno tiene campos: `recordatorio_24h_leido`, `recordatorio_1h_leido`, `confirmoAsistencia`
-   - n8n WF-03 ya marca los flags de enviado
-   - Falta: procesar respuesta paciente (SÍ/NO) vía webhook Twilio → actualizar `confirmoAsistencia` en turno
-   - Opcional: enviar recordatorio 1h con botones interactivos si no confirmó
+## 22/06 — Portal redesign + bypass + migrations producción ✅
+- **Rediseño login público**: Hero gradient, tarjetas informativas, formulario modal, animaciones fade-in-up
+- **Bypass portal**: GET /api/portal/auth/status + botón "Acceder sin autenticación (prueba)" gated por PORTAL_BYPASS=true
+- **Migrations 0035-0039 aplicadas en producción**: tablas portal_pagos, portal_config, portal_paquetes, suscripciones_paciente, ordenes_estudio, push_subscriptions_portal; columnas precio/pagado/metodo_pago en turnos; paciente_id en notificaciones
+- **Docker redeploy**: commit 99b087b, imagen rebuilt, service corriendo ✅
 
----
+## 22/06 — Fix Portal CSS/JS 404 en consultorio.aicorebots.com ✅
+- **Problema**: consultorio.aicorebots.com/portal mostraba texto plano (sin CSS) y botones no funcionaban (sin JS)
+- **Causa raíz**: Traefik router `consultorio.aicorebots.com` tenía `PathPrefix(/portal)` que solo enrutaba `/portal*`, bloqueando `/_next/static/*` y `/api/*`
+- **Fix**: Editado `/etc/dokploy/traefik/dynamic/app-hack-back-end-sensor-jd2eu3.yml` eliminando `&& PathPrefix(\`/portal\`)` de routers HTTP y HTTPS de consultorio.aicorebots.com
+- **Reload**: SIGHUP a `dokploy-traefik`
+- **Verificado**: CSS (200 OK, 126KB), JS (200 OK), API (200 OK) todos sirven correctamente
 
-## Stack:
-Next.js 14.2.35, Drizzle ORM, PostgreSQL 16, Twilio WhatsApp, MercadoPago, Ollama/Gemma3, Docker
+## 22/06 — Portal redesign COMPLETO + Dark Mode + Reportes + Deep Links (commit e122b22) ✅
+### Items completados:
+- **🎨 Dark mode portal**: Toggle sol/luna en header, portal adaptado al tema del sistema. Portal layout ya no forza modo claro.
+- **🎨 BottomNav rediseñada**: Dark mode, scroll indicators, animaciones layoutId
+- **🎨 Skeleton loading**: Dark mode soportado
+- **📝 A3 Encuestas pendientes**: Formulario inline para responder desde /encuestas con selector de turno y estrellas. Dashboard card "Calificá tu atención" con feedback inline.
+- **📝 API pendientesEncuesta**: GET /api/portal/turnos?pendientesEncuesta=true devuelve turnos atendidos sin encuesta
+- **📊 B Reportes personales**: Nueva API /api/portal/reportes (totalVisitas, visitasEsteMes, visitasPorTipo, visitasPorMes, totalGastado, recetasActivas, ultimaVisita). Página /portal/reportes con stats cards y minibar chart.
+- **🔗 B Deep links**: redirect param en POST /api/portal/auth/request, pasado como query param en magic link. Verify page redirige al destino post-auth.
+- **Build**: ✓ Compiled successfully, 0 TS errors. Push a origin/main. 16 files, +1230/-211.
+
+## 22/06 — Portal bypass activado para testing ✅
+- **Problema**: `PORTAL_BYPASS=true` no se propagaba al container en Docker Swarm/Dokploy
+- **Fix temporal**: Código hardcodeado en `app/api/portal/auth/status/route.ts` forzando `bypass: true`
+- **Deploy manual**: `docker compose build --no-cache` + `docker service update --force` en VPS
+- **Resultado**: API `/api/portal/auth/status` devuelve `{"bypass":true,"bypassActivo":true,"ambiente":"produccion"}` — botón "Acceder sin autenticación (prueba)" visible en portal
+- **Pendiente**: Revertir bypass temporal y configurar env var correctamente en Dokploy UI
+
+## 23/06 — Fix botón Ir a Credenciales + build error reportes (commit f8584b7) ✅
+- **Bug integraciones**: Botón "Ir a Credenciales" navegaba a `/dashboard/admin/sistema` sin `?tab=credenciales`, abría tab incorrecto (Toggles en vez de Credenciales)
+- **Fix**: `router.push('/dashboard/admin/sistema?tab=credenciales')` en integraciones-dashboard.tsx
+- **Bug build**: `reportes/route.ts` línea 106 usaba `recetas.deletedAt IS NULL` pero tabla recetas no tiene soft delete
+- **Fix**: Eliminada condición `deletedAt` de la query de recetas activas
+- **Build**: 0 TS errors. Commit f8584b7, push a origin/main ✅

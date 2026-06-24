@@ -84,8 +84,8 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
             </div>
             <h3 className="font-semibold text-lg">No hay pacientes en espera</h3>
             <p className="text-muted-foreground text-sm max-w-md">
-              Cuando un turno se cancele, los pacientes en lista de espera recibirán
-              automáticamente una oferta vía WhatsApp.
+              Cuando un turno se cancele, los pacientes en lista de espera recibirán automáticamente
+              una oferta vía WhatsApp.
             </p>
             <Button variant="outline" size="sm" onClick={handleRefresh}>
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -150,8 +150,8 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                     <AlertDialogHeader>
                       <AlertDialogTitle>¿Quitar paciente?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        {item.pacienteNombre} {item.pacienteApellido} será quitado
-                        de la lista de espera. No recibirá más ofertas de turno.
+                        {item.pacienteNombre} {item.pacienteApellido} será quitado de la lista de
+                        espera. No recibirá más ofertas de turno.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

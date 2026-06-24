@@ -20,12 +20,18 @@ const SYSTEM_TABS = [
   { id: 'privacidad', label: 'Privacidad', icon: Lock },
 ] as const;
 
-const VALID_TABS = SYSTEM_TABS.map(t => t.id);
+const VALID_TABS = SYSTEM_TABS.map((t) => t.id);
 const DEFAULT_TAB = 'toggles';
 
 export default function AdminSistemaPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-96"><div className="skeleton h-8 w-48" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-96">
+          <div className="skeleton h-8 w-48" />
+        </div>
+      }
+    >
       <AdminSistemaContent />
     </Suspense>
   );
@@ -38,8 +44,9 @@ function AdminSistemaContent() {
 
   // Leer tab desde URL o usar default
   const tabFromUrl = searchParams?.get('tab');
-  type TabId = typeof VALID_TABS[number];
-  const initialTab = tabFromUrl && VALID_TABS.includes(tabFromUrl as TabId) ? (tabFromUrl as TabId) : DEFAULT_TAB;
+  type TabId = (typeof VALID_TABS)[number];
+  const initialTab =
+    tabFromUrl && VALID_TABS.includes(tabFromUrl as TabId) ? (tabFromUrl as TabId) : DEFAULT_TAB;
   const [tab, setTab] = useState(initialTab);
 
   // Sincronizar URL con el estado del tab
@@ -80,7 +87,7 @@ function AdminSistemaContent() {
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)}>
         <TabsList className="flex-wrap">
-          {SYSTEM_TABS.map(t => (
+          {SYSTEM_TABS.map((t) => (
             <TabsTrigger key={t.id} value={t.id} className="gap-2">
               <t.icon className="h-4 w-4" />
               <span className="hidden sm:inline">{t.label}</span>
@@ -88,7 +95,7 @@ function AdminSistemaContent() {
           ))}
         </TabsList>
 
-        {SYSTEM_TABS.map(t => (
+        {SYSTEM_TABS.map((t) => (
           <TabsContent key={t.id} value={t.id} className="mt-4">
             {t.id === 'usuarios' ? (
               <AdminUsuariosTab />

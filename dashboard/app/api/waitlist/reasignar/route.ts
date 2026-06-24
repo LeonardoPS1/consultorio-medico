@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { apiHandler, ok, fail } from '@/lib/api-handler';
@@ -20,7 +20,8 @@ export const POST = apiHandler(async (request: NextRequest) => {
   try {
     const result = await waitlistService.aceptar(parsed.ofertaId);
     return ok({ success: true, ...result });
-  } catch (error: any) {
-    fail(error.message || 'Error al reasignar turno', 400);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Error al reasignar turno';
+    fail(msg, 400);
   }
 });

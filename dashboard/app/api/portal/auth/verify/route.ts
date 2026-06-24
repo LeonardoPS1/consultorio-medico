@@ -18,10 +18,7 @@ export async function GET(request: NextRequest) {
   const session = await verifyMagicToken(token);
 
   if (!session) {
-    return NextResponse.json(
-      { error: 'Token inválido o expirado' },
-      { status: 401 },
-    );
+    return NextResponse.json({ error: 'Token inválido o expirado' }, { status: 401 });
   }
 
   // Setear cookie de sesión

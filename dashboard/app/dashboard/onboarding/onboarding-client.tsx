@@ -7,10 +7,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  CheckCircle2, Loader2, Lightbulb, ExternalLink,
-  Stethoscope, Clock, UserPlus, Bell,
+  CheckCircle2,
+  Loader2,
+  Lightbulb,
+  ExternalLink,
+  Stethoscope,
+  Clock,
+  UserPlus,
+  Bell,
   ListChecks,
-  Sparkles, RefreshCw, RotateCcw, SkipForward, Building2,
+  Sparkles,
+  RefreshCw,
+  RotateCcw,
+  SkipForward,
+  Building2,
 } from 'lucide-react';
 import { ONBOARDING_STEPS, FALLBACK_TIPS } from '@/lib/onboarding-types';
 import { useToast } from '@/components/ui/use-toast';
@@ -34,27 +44,37 @@ interface TipState {
 // ─── Map icon string → component ────────────────────────────
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  Building2, Stethoscope, Clock, UserPlus, Bell, Sparkles,
+  Building2,
+  Stethoscope,
+  Clock,
+  UserPlus,
+  Bell,
+  Sparkles,
 };
 
 // ═══════════════════════════════════════════════════════════════
 //  Hook: useOnboarding
 // ═══════════════════════════════════════════════════════════════
 
-function useOnboarding(initialCompleted: string[], isComplete: boolean, isForceRestart?: boolean, verProgreso?: boolean) {
+function useOnboarding(
+  initialCompleted: string[],
+  isComplete: boolean,
+  isForceRestart?: boolean,
+  verProgreso?: boolean,
+) {
   const router = useRouter();
   const { toast } = useToast();
 
   // ── Pasos completados ────────────────────────────────────
   const [completed, setCompleted] = useState<string[]>(() =>
-    isForceRestart ? [] : [...initialCompleted]
+    isForceRestart ? [] : [...initialCompleted],
   );
 
   // ── Paso activo (expandido) ──────────────────────────────
   const [activeStep, setActiveStep] = useState<string | null>(() => {
     if (isForceRestart) return null;
     if (initialCompleted.length >= ONBOARDING_STEPS.length) return null;
-    return ONBOARDING_STEPS.find(s => !initialCompleted.includes(s.id))?.id ?? null;
+    return ONBOARDING_STEPS.find((s) => !initialCompleted.includes(s.id))?.id ?? null;
   });
 
   // ── Tips por paso ────────────────────────────────────────
@@ -68,8 +88,8 @@ function useOnboarding(initialCompleted: string[], isComplete: boolean, isForceR
   const allLocallyDone = completed.length >= ONBOARDING_STEPS.length;
   const localProgress = Math.round((completed.length / ONBOARDING_STEPS.length) * 100);
 
-  const showSuccess = (isComplete || (allLocallyDone && hasManualInteraction))
-    && !verProgreso && !showProgressDetail;
+  const showSuccess =
+    (isComplete || (allLocallyDone && hasManualInteraction)) && !verProgreso && !showProgressDetail;
 
   // ── Cargar tip IA ────────────────────────────────────────
   // NOTA: No usar useCallback porque tipStates cambia constantemente.
@@ -167,7 +187,9 @@ function useOnboarding(initialCompleted: string[], isComplete: boolean, isForceR
 
     // 3. Auto-avance: buscar siguiente paso disponible
     setCompleted((currentCompleted) => {
-      const updated = currentCompleted.includes(stepId) ? currentCompleted : [...currentCompleted, stepId];
+      const updated = currentCompleted.includes(stepId)
+        ? currentCompleted
+        : [...currentCompleted, stepId];
       // Buscar el siguiente paso que no esté completado ni pendiente
       const currentIdx = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
       const nextIdx = ONBOARDING_STEPS.findIndex((s, i) => {
@@ -206,7 +228,11 @@ function useOnboarding(initialCompleted: string[], isComplete: boolean, isForceR
 
   // ── Reiniciar ────────────────────────────────────────────
   const handleReiniciar = async () => {
-    try { await fetch('/api/onboarding', { method: 'DELETE' }); } catch { /* fallback a recarga */ }
+    try {
+      await fetch('/api/onboarding', { method: 'DELETE' });
+    } catch {
+      /* fallback a recarga */
+    }
     window.location.href = '/dashboard/onboarding?reiniciar=true';
   };
 
@@ -253,8 +279,8 @@ function SuccessScreen({
       <div className="text-center space-y-3 mb-8 max-w-md">
         <h3 className="text-2xl font-bold tracking-tight">Consultorio operativo</h3>
         <p className="text-muted-foreground leading-relaxed">
-          Todos los pasos están completos. Ya podés gestionar turnos,
-          pacientes y comunicarte con tus pacientes desde el panel.
+          Todos los pasos están completos. Ya podés gestionar turnos, pacientes y comunicarte con
+          tus pacientes desde el panel.
         </p>
       </div>
 
@@ -327,10 +353,15 @@ function AiTipCard({
               {(tipState.status === 'fallback' || tipState.status === 'error') && (
                 <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-amber-200/30 dark:border-amber-800/25">
                   <span className="text-[10px] text-amber-500/60 dark:text-amber-400/50">
-                    {tipState.status === 'error' ? 'Error de conexión con IA' : 'Asistente IA no disponible'}
+                    {tipState.status === 'error'
+                      ? 'Error de conexión con IA'
+                      : 'Asistente IA no disponible'}
                   </span>
                   <button
-                    onClick={(e) => { e.stopPropagation(); onRetry(); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRetry();
+                    }}
                     className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 transition-colors"
                   >
                     <RefreshCw className="h-2.5 w-2.5" />
@@ -382,24 +413,29 @@ function StepDots({
             className="flex flex-col items-center gap-1 group"
             title={step.title}
           >
-            <div className={`
+            <div
+              className={`
               flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium
               transition-all duration-300
-              ${done
-                ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-200'
-                : active
-                  ? 'bg-primary text-primary-foreground ring-2 ring-primary/30 scale-110'
-                  : pending
-                    ? 'bg-muted-foreground/10 text-muted-foreground/40 cursor-not-allowed'
-                    : 'bg-muted text-muted-foreground group-hover:bg-muted-foreground/20 group-hover:scale-105 cursor-pointer'
+              ${
+                done
+                  ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-200'
+                  : active
+                    ? 'bg-primary text-primary-foreground ring-2 ring-primary/30 scale-110'
+                    : pending
+                      ? 'bg-muted-foreground/10 text-muted-foreground/40 cursor-not-allowed'
+                      : 'bg-muted text-muted-foreground group-hover:bg-muted-foreground/20 group-hover:scale-105 cursor-pointer'
               }
-            `}>
+            `}
+            >
               {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : stepNumber}
             </div>
-            <span className={`
+            <span
+              className={`
               text-[10px] leading-tight text-center max-w-14 truncate
               ${done ? 'text-emerald-600 font-medium' : active ? 'text-primary font-medium' : 'text-muted-foreground/60'}
-            `}>
+            `}
+            >
               {step.title}
             </span>
           </button>
@@ -418,12 +454,27 @@ export function OnboardingClient(props: OnboardingClientProps) {
   const { isForceRestart, verProgreso } = props;
 
   const {
-    completed, activeStep, setActiveStep, tipStates,
-    showProgressDetail, setShowProgressDetail,
-    showSuccess, allLocallyDone, localProgress,
-    loadTip, isStepCompleted, isStepPending,
-    marcarCompletado, saltarPaso, handleReiniciar,
-  } = useOnboarding(props.initialCompleted, props.isComplete, props.isForceRestart, props.verProgreso);
+    completed,
+    activeStep,
+    setActiveStep,
+    tipStates,
+    showProgressDetail,
+    setShowProgressDetail,
+    showSuccess,
+    allLocallyDone,
+    localProgress,
+    loadTip,
+    isStepCompleted,
+    isStepPending,
+    marcarCompletado,
+    saltarPaso,
+    handleReiniciar,
+  } = useOnboarding(
+    props.initialCompleted,
+    props.isComplete,
+    props.isForceRestart,
+    props.verProgreso,
+  );
 
   // ── Pantalla de éxito ────────────────────────────────────
   if (showSuccess) {
@@ -438,7 +489,6 @@ export function OnboardingClient(props: OnboardingClientProps) {
   // ── Vista principal ──────────────────────────────────────
   return (
     <div className="space-y-6">
-
       {/* ── Progress bar ──────────────────────────────────── */}
       <div className="rounded-xl bg-card border p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
@@ -528,48 +578,66 @@ export function OnboardingClient(props: OnboardingClientProps) {
                 }}
                 disabled={done || pending}
               >
-                <CardHeader className={`p-4 transition-colors ${active && !done ? 'pb-3' : 'pb-4'}`}>
+                <CardHeader
+                  className={`p-4 transition-colors ${active && !done ? 'pb-3' : 'pb-4'}`}
+                >
                   <div className="flex items-center gap-3">
-                    <div className={`
+                    <div
+                      className={`
                       flex items-center justify-center h-10 w-10 rounded-xl shrink-0 transition-all duration-300
-                      ${done
-                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 shadow-sm shadow-emerald-200/50'
-                        : active
-                          ? 'bg-primary/10 text-primary scale-105'
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
+                      ${
+                        done
+                          ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 shadow-sm shadow-emerald-200/50'
+                          : active
+                            ? 'bg-primary/10 text-primary scale-105'
+                            : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
                       {done ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <CardTitle className={`text-base ${done ? 'text-emerald-700 dark:text-emerald-300' : ''}`}>
+                        <CardTitle
+                          className={`text-base ${done ? 'text-emerald-700 dark:text-emerald-300' : ''}`}
+                        >
                           {step.title}
                         </CardTitle>
                         {done && (
-                          <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-100/50 dark:border-emerald-800 dark:text-emerald-400 dark:bg-emerald-900/20 text-[10px] px-1.5 h-5 font-medium">
+                          <Badge
+                            variant="outline"
+                            className="text-emerald-600 border-emerald-200 bg-emerald-100/50 dark:border-emerald-800 dark:text-emerald-400 dark:bg-emerald-900/20 text-[10px] px-1.5 h-5 font-medium"
+                          >
                             Listo
                           </Badge>
                         )}
                         {pending && (
-                          <Badge variant="outline" className="text-muted-foreground/60 border-muted-foreground/20 text-[10px] px-1.5 h-5">
+                          <Badge
+                            variant="outline"
+                            className="text-muted-foreground/60 border-muted-foreground/20 text-[10px] px-1.5 h-5"
+                          >
                             Bloqueado
                           </Badge>
                         )}
                       </div>
-                      <CardDescription className={`text-sm mt-0.5 ${done ? 'text-emerald-600/60 dark:text-emerald-400/60' : ''}`}>
+                      <CardDescription
+                        className={`text-sm mt-0.5 ${done ? 'text-emerald-600/60 dark:text-emerald-400/60' : ''}`}
+                      >
                         {step.description}
                       </CardDescription>
                     </div>
 
-                    <div className={`
+                    <div
+                      className={`
                       flex items-center justify-center h-7 w-7 rounded-full text-xs font-mono transition-all duration-300
-                      ${done
-                        ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
-                        : active
-                          ? 'bg-primary/10 text-primary'
-                          : 'bg-muted/50 text-muted-foreground'
-                      }`}>
+                      ${
+                        done
+                          ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+                          : active
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-muted/50 text-muted-foreground'
+                      }`}
+                    >
                       {done ? '✓' : `0${idx + 1}`}
                     </div>
                   </div>
@@ -635,7 +703,9 @@ export function OnboardingClient(props: OnboardingClientProps) {
       <div className="flex items-center justify-between pt-2 border-t border-muted/50">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-          <span>{completed.length}/{ONBOARDING_STEPS.length} completados</span>
+          <span>
+            {completed.length}/{ONBOARDING_STEPS.length} completados
+          </span>
         </div>
         <div className="flex items-center gap-2">
           {showProgressDetail && allLocallyDone ? (
@@ -645,7 +715,12 @@ export function OnboardingClient(props: OnboardingClientProps) {
             </Button>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard')} className="text-muted-foreground">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/dashboard')}
+                className="text-muted-foreground"
+              >
                 <SkipForward className="h-3 w-3 mr-1" />
                 Continuar más tarde
               </Button>
@@ -654,7 +729,12 @@ export function OnboardingClient(props: OnboardingClientProps) {
                   <Link href="/dashboard/onboarding">Ver progreso real</Link>
                 </Button>
               )}
-              <Button variant="ghost" size="sm" onClick={handleReiniciar} className="text-muted-foreground">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleReiniciar}
+                className="text-muted-foreground"
+              >
                 <RotateCcw className="h-3 w-3 mr-1" />
                 {isForceRestart ? 'Reiniciar de nuevo' : 'Reiniciar'}
               </Button>
@@ -665,5 +745,3 @@ export function OnboardingClient(props: OnboardingClientProps) {
     </div>
   );
 }
-
-

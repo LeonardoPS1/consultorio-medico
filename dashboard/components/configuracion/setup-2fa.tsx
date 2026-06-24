@@ -33,7 +33,11 @@ export default function Setup2FA() {
       setBackupCodes(data.backupCodes);
       setStep('qr');
     } catch {
-      toast({ title: 'Error', description: 'No se pudo iniciar la configuración', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'No se pudo iniciar la configuración',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -52,14 +56,25 @@ export default function Setup2FA() {
 
       if (!res.ok) {
         const data = await res.json();
-        toast({ title: 'Código inválido', description: data.error || 'Verifica la hora de tu teléfono', variant: 'destructive' });
+        toast({
+          title: 'Código inválido',
+          description: data.error || 'Verifica la hora de tu teléfono',
+          variant: 'destructive',
+        });
         return;
       }
 
       setStep('done');
-      toast({ title: '✅ 2FA activado', description: 'Tu cuenta ahora está protegida con doble factor' });
+      toast({
+        title: '✅ 2FA activado',
+        description: 'Tu cuenta ahora está protegida con doble factor',
+      });
     } catch {
-      toast({ title: 'Error', description: 'No se pudo verificar el código', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'No se pudo verificar el código',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -75,7 +90,10 @@ export default function Setup2FA() {
         setSecret('');
         setQrCode('');
         setBackupCodes([]);
-        toast({ title: '2FA desactivado', description: 'La autenticación de dos factores fue desactivada' });
+        toast({
+          title: '2FA desactivado',
+          description: 'La autenticación de dos factores fue desactivada',
+        });
       }
     } catch {
       toast({ title: 'Error', description: 'No se pudo desactivar 2FA', variant: 'destructive' });
@@ -105,7 +123,9 @@ export default function Setup2FA() {
               <Shield className="h-8 w-8 text-emerald-500" />
               <div>
                 <p className="text-sm font-medium text-emerald-700">2FA activo</p>
-                <p className="text-xs text-muted-foreground">Se requiere código de verificación para iniciar sesión</p>
+                <p className="text-xs text-muted-foreground">
+                  Se requiere código de verificación para iniciar sesión
+                </p>
               </div>
             </div>
 
@@ -113,10 +133,14 @@ export default function Setup2FA() {
               <p className="text-sm font-medium">Códigos de respaldo</p>
               <div className="grid grid-cols-2 gap-1 font-mono text-xs bg-muted p-3 rounded-lg">
                 {backupCodes.map((code, i) => (
-                  <span key={i} className="text-center">{code}</span>
+                  <span key={i} className="text-center">
+                    {code}
+                  </span>
                 ))}
               </div>
-              <p className="text-[11px] text-muted-foreground">Guardalos en un lugar seguro. Cada código solo puede usarse una vez.</p>
+              <p className="text-[11px] text-muted-foreground">
+                Guardalos en un lugar seguro. Cada código solo puede usarse una vez.
+              </p>
             </div>
 
             <div className="flex gap-2">
@@ -142,18 +166,12 @@ export default function Setup2FA() {
             <Smartphone className="h-5 w-5 text-primary" />
             Configurar 2FA
           </CardTitle>
-          <CardDescription>
-            Escaneá el código QR con Google Authenticator o Authy
-          </CardDescription>
+          <CardDescription>Escaneá el código QR con Google Authenticator o Authy</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={qrCode}
-              alt="Código QR para 2FA"
-              className="w-48 h-48 border rounded-lg"
-            />
+            <img src={qrCode} alt="Código QR para 2FA" className="w-48 h-48 border rounded-lg" />
           </div>
 
           <div className="space-y-2">
@@ -204,9 +222,7 @@ export default function Setup2FA() {
           <Shield className="h-5 w-5 text-primary" />
           Autenticación de dos factores
         </CardTitle>
-        <CardDescription>
-          Añadí una capa extra de seguridad a tu cuenta
-        </CardDescription>
+        <CardDescription>Añadí una capa extra de seguridad a tu cuenta</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -215,8 +231,8 @@ export default function Setup2FA() {
             <div>
               <p className="text-sm font-medium">¿Cómo funciona?</p>
               <p className="text-xs text-muted-foreground">
-                Además de tu contraseña, vas a necesitar un código de 6 dígitos
-                generado por una app como Google Authenticator o Authy.
+                Además de tu contraseña, vas a necesitar un código de 6 dígitos generado por una app
+                como Google Authenticator o Authy.
               </p>
             </div>
           </div>

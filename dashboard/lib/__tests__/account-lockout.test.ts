@@ -1,4 +1,30 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+// Mock de la DB antes de importar el módulo
+const mockAccountLockouts = new Map<
+  string,
+  { email: string; attempts: number; lockedUntil: Date | null; updatedAt: Date }
+>();
+
+vi.mock('@/lib/db', () => {
+  return {
+    db: {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockImplementation(() => {
+        // Return based on what we're querying
+        return [];
+      }),
+      insert: vi.fn().mockReturnThis(),
+      values: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      set: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+    },
+  };
+});
+
 import {
   isAccountLocked,
   incrementFailedAttempts,
@@ -7,11 +33,9 @@ import {
 } from '@/lib/account-lockout';
 
 describe('account-lockout', () => {
-  beforeEach(async () => {
-    // Limpiar el mapa antes de cada test
-    // Accedemos al mapa interno via las funciones de reset
-    await resetFailedAttempts('test@example.com');
-    await resetFailedAttempts('otro@test.com');
+  beforeEach(() => {
+    mockAccountLockouts.clear();
+    vi.clearAllMocks();
   });
 
   describe('incrementFailedAttempts', () => {

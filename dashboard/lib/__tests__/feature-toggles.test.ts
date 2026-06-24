@@ -6,7 +6,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { canAccessWithToggles, getDisabledFeatures, canAccess, FEATURE_PLAN, type FeatureId } from '@/lib/features';
+import {
+  canAccessWithToggles,
+  getDisabledFeatures,
+  canAccess,
+  FEATURE_PLAN,
+  type FeatureId,
+} from '@/lib/features';
 
 // ─── getDisabledFeatures ────────────────────────────────────
 
@@ -149,14 +155,17 @@ describe('FEATURE_PLAN consistency', () => {
     const allFeatures = Object.keys(FEATURE_PLAN) as FeatureId[];
     allFeatures.forEach((f) => {
       expect(FEATURE_PLAN[f]).toBeDefined();
-      expect(['free', 'starter', 'professional', 'premium', 'enterprise']).toContain(FEATURE_PLAN[f]);
+      expect(['free', 'starter', 'professional', 'premium', 'enterprise']).toContain(
+        FEATURE_PLAN[f],
+      );
     });
   });
 
   it('features free son accesibles desde cualquier plan', () => {
     const planes = ['free', 'starter', 'professional', 'premium', 'enterprise'];
-    const freeFeatures = (Object.keys(FEATURE_PLAN) as FeatureId[])
-      .filter((f) => FEATURE_PLAN[f] === 'free');
+    const freeFeatures = (Object.keys(FEATURE_PLAN) as FeatureId[]).filter(
+      (f) => FEATURE_PLAN[f] === 'free',
+    );
 
     freeFeatures.forEach((feature) => {
       planes.forEach((plan) => {

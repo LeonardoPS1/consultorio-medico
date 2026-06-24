@@ -62,14 +62,11 @@ export function DashboardClient({ dateStr }: DashboardClientProps) {
     router.refresh();
   }, [router]);
 
-  const handleQuickAction = useCallback(
-    (action: string) => {
-      if (action === 'turno') {
-        setShowNewTurno(true);
-      }
-    },
-    [],
-  );
+  const handleQuickAction = useCallback((action: string) => {
+    if (action === 'turno') {
+      setShowNewTurno(true);
+    }
+  }, []);
 
   return (
     <>
@@ -81,7 +78,9 @@ export function DashboardClient({ dateStr }: DashboardClientProps) {
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2 mt-1">
             <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
-            <span className="truncate line-clamp-1">Resumen de la actividad del consultorio &mdash; {dateStr}</span>
+            <span className="truncate line-clamp-1">
+              Resumen de la actividad del consultorio &mdash; {dateStr}
+            </span>
           </p>
         </div>
         <Button

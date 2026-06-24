@@ -7,10 +7,7 @@ import { recetasService, verificarHash } from '@/lib/services/recetas';
  * Endpoint público (sin auth) para verificar autenticidad de una receta.
  * Usado por el QR code en las recetas impresas.
  */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const receta = await recetasService.obtener(params.id);
 

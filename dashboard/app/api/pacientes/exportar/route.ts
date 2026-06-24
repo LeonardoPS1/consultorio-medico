@@ -27,10 +27,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (data.length === 0) {
-      return NextResponse.json(
-        { error: 'No hay pacientes para exportar' },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: 'No hay pacientes para exportar' }, { status: 404 });
     }
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -44,10 +41,11 @@ export async function GET(request: NextRequest) {
       const ws = XLSX.utils.json_to_sheet(data);
 
       const colWidths = Object.keys(data[0] || {}).map((key: string) => ({
-        wch: Math.max(
-          key.length,
-          ...data.map((r: Record<string, any>) => String(r[key] || '').length),
-        ) + 2,
+        wch:
+          Math.max(
+            key.length,
+            ...data.map((r: Record<string, any>) => String(r[key] || '').length),
+          ) + 2,
       }));
       ws['!cols'] = colWidths;
 
@@ -61,8 +59,7 @@ export async function GET(request: NextRequest) {
       return new NextResponse(new Uint8Array(buffer), {
         status: 200,
         headers: {
-          'Content-Type':
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'Content-Disposition': `attachment; filename="${filename}.xlsx"`,
           'Content-Length': String(buffer.length),
         },
@@ -70,8 +67,7 @@ export async function GET(request: NextRequest) {
     }
 
     // PDF - HTML imprimible
-    const nombreOrg =
-      process.env.ORGANIZATION_NAME || 'Consultorio Médico';
+    const nombreOrg = process.env.ORGANIZATION_NAME || 'Consultorio Médico';
     const fechaActual = new Date().toLocaleDateString('es-CL', {
       day: 'numeric',
       month: 'long',
@@ -154,9 +150,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('[API] Error GET /api/pacientes/exportar:', error);
-    return NextResponse.json(
-      { error: 'Error al exportar pacientes' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Error al exportar pacientes' }, { status: 500 });
   }
 }

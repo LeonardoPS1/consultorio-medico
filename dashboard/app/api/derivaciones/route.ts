@@ -30,7 +30,12 @@ export const GET = apiHandler(async (request: NextRequest) => {
   }
 
   const result = await derivacionesService.list({
-    limit, offset, estado, pacienteId, medicoId, search,
+    limit,
+    offset,
+    estado,
+    pacienteId,
+    medicoId,
+    search,
   });
   return ok(result);
 });

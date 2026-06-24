@@ -15,16 +15,8 @@ import { db } from '@/lib/db';
 import { safeError, safeLog } from '@/lib/logger';
 import { turnos, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import {
-  getRoomName,
-  getSalaLink,
-  LIVEKIT_URL,
-} from '@/lib/livekit-client';
-import {
-  generateMedicoToken,
-  generatePacienteToken,
-  LIVEKIT_API_KEY,
-} from '@/lib/livekit';
+import { getRoomName, getSalaLink, LIVEKIT_URL } from '@/lib/livekit-client';
+import { generateMedicoToken, generatePacienteToken, LIVEKIT_API_KEY } from '@/lib/livekit';
 
 // ─── Tipos ─────────────────────────────────────────────────
 
@@ -67,9 +59,7 @@ export const telemedicinaService = {
           fechaHora: turnos.fechaHora,
         })
         .from(turnos)
-        .where(
-          and(eq(turnos.id, turnoId), sql`${turnos.deletedAt} IS NULL`)
-        )
+        .where(and(eq(turnos.id, turnoId), sql`${turnos.deletedAt} IS NULL`))
         .limit(1);
 
       if (!turno) {
@@ -84,23 +74,13 @@ export const telemedicinaService = {
           telefono: pacientes.telefono,
         })
         .from(pacientes)
-        .where(
-          and(
-            eq(pacientes.id, turno.pacienteId),
-            sql`${pacientes.deletedAt} IS NULL`
-          )
-        )
+        .where(and(eq(pacientes.id, turno.pacienteId), sql`${pacientes.deletedAt} IS NULL`))
         .limit(1);
 
       const [medico] = await db
         .select({ nombre: medicos.nombre })
         .from(medicos)
-        .where(
-          and(
-            eq(medicos.id, turno.medicoId),
-            sql`${medicos.deletedAt} IS NULL`
-          )
-        )
+        .where(and(eq(medicos.id, turno.medicoId), sql`${medicos.deletedAt} IS NULL`))
         .limit(1);
 
       const nombrePaciente = paciente
@@ -166,7 +146,7 @@ export const telemedicinaService = {
     } catch (error) {
       safeError(
         `[LiveKit] Error configurando sala para turno ${turnoId}:`,
-        error instanceof Error ? { message: error.message } : error
+        error instanceof Error ? { message: error.message } : error,
       );
       return null;
     }
@@ -209,9 +189,7 @@ export const telemedicinaService = {
         '🗓 Ingresá 5 minutos antes del horario agendado.',
       ].join('\n');
 
-      const numeroLimpio = telefono.startsWith('whatsapp:')
-        ? telefono
-        : `whatsapp:${telefono}`;
+      const numeroLimpio = telefono.startsWith('whatsapp:') ? telefono : `whatsapp:${telefono}`;
 
       const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
       const formData = new URLSearchParams({
@@ -230,7 +208,7 @@ export const telemedicinaService = {
           },
           body: formData.toString(),
           signal: AbortSignal.timeout(30000),
-        }
+        },
       );
 
       if (!res.ok) {
@@ -244,7 +222,7 @@ export const telemedicinaService = {
     } catch (error) {
       safeError(
         '[LiveKit] Error enviando WhatsApp:',
-        error instanceof Error ? { message: error.message } : error
+        error instanceof Error ? { message: error.message } : error,
       );
       return false;
     }

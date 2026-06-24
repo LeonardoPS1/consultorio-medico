@@ -14,12 +14,7 @@ export async function DELETE(
   try {
     const result = await db
       .delete(bloqueosAgenda)
-      .where(
-        and(
-          eq(bloqueosAgenda.id, params.bloqueoId),
-          eq(bloqueosAgenda.medicoId, params.id),
-        ),
-      );
+      .where(and(eq(bloqueosAgenda.id, params.bloqueoId), eq(bloqueosAgenda.medicoId, params.id)));
 
     if (result.length === 0) {
       return NextResponse.json({ error: 'Bloqueo no encontrado' }, { status: 404 });
@@ -66,12 +61,7 @@ export async function PATCH(
     const [actualizado] = await db
       .update(bloqueosAgenda)
       .set(updateData)
-      .where(
-        and(
-          eq(bloqueosAgenda.id, params.bloqueoId),
-          eq(bloqueosAgenda.medicoId, params.id),
-        ),
-      )
+      .where(and(eq(bloqueosAgenda.id, params.bloqueoId), eq(bloqueosAgenda.medicoId, params.id)))
       .returning();
 
     if (!actualizado) {

@@ -30,11 +30,13 @@ export async function GET() {
   const [totalData] = await db
     .select({ value: count() })
     .from(turnos)
-    .where(and(
-      eq(turnos.pacienteId, pacienteId),
-      sql`${turnos.estado} IN ('atendido', 'completada')`,
-      sql`${turnos.deletedAt} IS NULL`,
-    ));
+    .where(
+      and(
+        eq(turnos.pacienteId, pacienteId),
+        sql`${turnos.estado} IN ('atendido', 'completada')`,
+        sql`${turnos.deletedAt} IS NULL`,
+      ),
+    );
 
   const totalVisitas = Number(totalData?.value || 0);
 
@@ -43,12 +45,14 @@ export async function GET() {
   const [mesData] = await db
     .select({ value: count() })
     .from(turnos)
-    .where(and(
-      eq(turnos.pacienteId, pacienteId),
-      sql`${turnos.estado} IN ('atendido', 'completada')`,
-      sql`${turnos.deletedAt} IS NULL`,
-      sql`${turnos.fechaHora} >= ${inicioMes}`,
-    ));
+    .where(
+      and(
+        eq(turnos.pacienteId, pacienteId),
+        sql`${turnos.estado} IN ('atendido', 'completada')`,
+        sql`${turnos.deletedAt} IS NULL`,
+        sql`${turnos.fechaHora} >= ${inicioMes}`,
+      ),
+    );
 
   const visitasEsteMes = Number(mesData?.value || 0);
 
@@ -59,11 +63,13 @@ export async function GET() {
       value: count(),
     })
     .from(turnos)
-    .where(and(
-      eq(turnos.pacienteId, pacienteId),
-      sql`${turnos.estado} IN ('atendido', 'completada')`,
-      sql`${turnos.deletedAt} IS NULL`,
-    ))
+    .where(
+      and(
+        eq(turnos.pacienteId, pacienteId),
+        sql`${turnos.estado} IN ('atendido', 'completada')`,
+        sql`${turnos.deletedAt} IS NULL`,
+      ),
+    )
     .groupBy(turnos.tipoConsulta);
 
   // Visitas por mes (últimos 12)
@@ -73,12 +79,14 @@ export async function GET() {
       value: count(),
     })
     .from(turnos)
-    .where(and(
-      eq(turnos.pacienteId, pacienteId),
-      sql`${turnos.estado} IN ('atendido', 'completada')`,
-      sql`${turnos.deletedAt} IS NULL`,
-      sql`${turnos.fechaHora} >= NOW() - INTERVAL '12 months'`,
-    ))
+    .where(
+      and(
+        eq(turnos.pacienteId, pacienteId),
+        sql`${turnos.estado} IN ('atendido', 'completada')`,
+        sql`${turnos.deletedAt} IS NULL`,
+        sql`${turnos.fechaHora} >= NOW() - INTERVAL '12 months'`,
+      ),
+    )
     .groupBy(sql`TO_CHAR(${turnos.fechaHora}, 'YYYY-MM')`)
     .orderBy(sql`TO_CHAR(${turnos.fechaHora}, 'YYYY-MM')`);
 
@@ -88,11 +96,13 @@ export async function GET() {
       value: sql<string>`COALESCE(SUM(${turnos.precio}::numeric), 0)`,
     })
     .from(turnos)
-    .where(and(
-      eq(turnos.pacienteId, pacienteId),
-      eq(turnos.pagado, true),
-      sql`${turnos.deletedAt} IS NULL`,
-    ));
+    .where(
+      and(
+        eq(turnos.pacienteId, pacienteId),
+        eq(turnos.pagado, true),
+        sql`${turnos.deletedAt} IS NULL`,
+      ),
+    );
 
   const totalGastado = Number(gastadoData?.value || 0);
 
@@ -100,10 +110,7 @@ export async function GET() {
   const [recetasData] = await db
     .select({ value: count() })
     .from(recetas)
-    .where(and(
-      eq(recetas.pacienteId, pacienteId),
-      eq(recetas.estado, 'activa'),
-    ));
+    .where(and(eq(recetas.pacienteId, pacienteId), eq(recetas.estado, 'activa')));
 
   const recetasActivas = Number(recetasData?.value || 0);
 
@@ -115,11 +122,13 @@ export async function GET() {
     })
     .from(turnos)
     .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
-    .where(and(
-      eq(turnos.pacienteId, pacienteId),
-      sql`${turnos.estado} = 'atendido'`,
-      sql`${turnos.deletedAt} IS NULL`,
-    ))
+    .where(
+      and(
+        eq(turnos.pacienteId, pacienteId),
+        sql`${turnos.estado} = 'atendido'`,
+        sql`${turnos.deletedAt} IS NULL`,
+      ),
+    )
     .orderBy(desc(turnos.fechaHora))
     .limit(1);
 

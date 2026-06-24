@@ -41,11 +41,15 @@ export const GET = apiHandler(async (_req: NextRequest, { params }) => {
     .from(turnos)
     .leftJoin(pacientes, eq(turnos.pacienteId, pacientes.id))
     .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
-    .where(and(
-      eq(turnos.id, params.id),
-      sessionRol !== 'admin' && sessionMedicoId ? eq(turnos.medicoId, sessionMedicoId) : undefined,
-      sql`${turnos.deletedAt} IS NULL`,
-    ))
+    .where(
+      and(
+        eq(turnos.id, params.id),
+        sessionRol !== 'admin' && sessionMedicoId
+          ? eq(turnos.medicoId, sessionMedicoId)
+          : undefined,
+        sql`${turnos.deletedAt} IS NULL`,
+      ),
+    )
     .limit(1);
 
   if (!turno) notFound('Turno no encontrado');
@@ -102,7 +106,7 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
     sendSurveyWhatsApp(params.id).catch(() => {});
   }
 
-// El sync a Google Calendar ahora lo maneja turnosService.update()
+  // El sync a Google Calendar ahora lo maneja turnosService.update()
 
   return success(updated);
 });

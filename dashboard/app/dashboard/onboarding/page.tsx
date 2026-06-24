@@ -56,7 +56,14 @@ export default function OnboardingPage({
         completedSteps: [],
         progress: 0,
         isComplete: false,
-        nextStep: { id: 'plan', title: 'Elige tu plan', description: '', icon: '', actionLink: '', actionLabel: '' },
+        nextStep: {
+          id: 'plan',
+          title: 'Elige tu plan',
+          description: '',
+          icon: '',
+          actionLink: '',
+          actionLabel: '',
+        },
       });
       setLoading(false);
     }
@@ -108,9 +115,7 @@ export default function OnboardingPage({
             <SparklesIcon className="h-6 w-6" />
           </div>
           <div className="space-y-1">
-            <h1 className="text-xl font-semibold tracking-tight">
-              Asistente IA
-            </h1>
+            <h1 className="text-xl font-semibold tracking-tight">Asistente IA</h1>
             <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
               {isForceRestart
                 ? 'Repasá cada paso y marcalo como completado cuando lo configures.'

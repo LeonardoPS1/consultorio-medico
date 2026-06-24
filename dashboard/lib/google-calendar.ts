@@ -44,7 +44,10 @@ export function generateGCalUrl(data: GCalEventData): string {
   const fin = addMinutes(inicio, data.duracionMinutos ?? 30);
 
   const fmtGCal = (d: Date) =>
-    d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    d
+      .toISOString()
+      .replace(/[-:]/g, '')
+      .replace(/\.\d{3}/, '');
 
   const dates = `${fmtGCal(inicio)}/${fmtGCal(fin)}`;
 
@@ -76,7 +79,5 @@ export function generateGCalUrl(data: GCalEventData): string {
  * Formatea el texto para el evento de Google Calendar
  */
 export function formatGCalEventText(paciente: string, tipo?: string): string {
-  return tipo
-    ? `Consulta: ${paciente} (${tipo})`
-    : `Consulta: ${paciente}`;
+  return tipo ? `Consulta: ${paciente} (${tipo})` : `Consulta: ${paciente}`;
 }

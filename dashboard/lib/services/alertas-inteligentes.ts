@@ -63,13 +63,14 @@ export const alertasService = {
     const dia = hoy.getDate();
 
     // PostgreSQL: extraer mes y día de fecha_nacimiento
-    const rows = await db.select({
-      id: pacientes.id,
-      nombre: pacientes.nombre,
-      apellido: pacientes.apellido,
-      telefono: pacientes.telefono,
-      fechaNacimiento: pacientes.fechaNacimiento,
-    })
+    const rows = await db
+      .select({
+        id: pacientes.id,
+        nombre: pacientes.nombre,
+        apellido: pacientes.apellido,
+        telefono: pacientes.telefono,
+        fechaNacimiento: pacientes.fechaNacimiento,
+      })
       .from(pacientes)
       .where(
         and(
@@ -81,7 +82,9 @@ export const alertasService = {
       );
 
     return rows.map((p) => {
-      const birthYear = p.fechaNacimiento ? new Date(p.fechaNacimiento).getFullYear() : hoy.getFullYear();
+      const birthYear = p.fechaNacimiento
+        ? new Date(p.fechaNacimiento).getFullYear()
+        : hoy.getFullYear();
       return {
         pacienteId: p.id,
         pacienteNombre: `${p.nombre} ${p.apellido}`,
@@ -99,10 +102,11 @@ export const alertasService = {
     const ventana = dias ?? 30;
     const fechaLimite = new Date(Date.now() - ventana * 24 * 60 * 60 * 1000);
 
-    const rows = await db.select({
-      pacienteId: turnos.pacienteId,
-      totalAusencias: count(),
-    })
+    const rows = await db
+      .select({
+        pacienteId: turnos.pacienteId,
+        totalAusencias: count(),
+      })
       .from(turnos)
       .where(
         and(
@@ -117,17 +121,18 @@ export const alertasService = {
 
     if (rows.length === 0) return [];
 
-    const pacienteIds = rows.map(r => r.pacienteId);
-    const pacientesRows = await db.select({
-      id: pacientes.id,
-      nombre: pacientes.nombre,
-      apellido: pacientes.apellido,
-      telefono: pacientes.telefono,
-    })
+    const pacienteIds = rows.map((r) => r.pacienteId);
+    const pacientesRows = await db
+      .select({
+        id: pacientes.id,
+        nombre: pacientes.nombre,
+        apellido: pacientes.apellido,
+        telefono: pacientes.telefono,
+      })
       .from(pacientes)
       .where(and(sql`${pacientes.id} = ANY(${pacienteIds})`, sql`${pacientes.deletedAt} IS NULL`));
 
-    const pacienteMap = new Map(pacientesRows.map(p => [p.id, p]));
+    const pacienteMap = new Map(pacientesRows.map((p) => [p.id, p]));
 
     return rows.map((r) => {
       const p = pacienteMap.get(r.pacienteId);
@@ -148,44 +153,49 @@ export const alertasService = {
     const ventana = dias ?? 60;
     const fechaLimite = new Date(Date.now() - ventana * 24 * 60 * 60 * 1000);
 
-    const rows = await db.select({
-      pacienteId: turnos.pacienteId,
-      totalConsultas: count(),
-    })
+    const rows = await db
+      .select({
+        pacienteId: turnos.pacienteId,
+        totalConsultas: count(),
+      })
       .from(turnos)
-      .where(
-        and(
-          gte(turnos.fechaHora, fechaLimite),
-          sql`${turnos.deletedAt} IS NULL`,
-        ),
-      )
+      .where(and(gte(turnos.fechaHora, fechaLimite), sql`${turnos.deletedAt} IS NULL`))
       .groupBy(turnos.pacienteId)
       .having(sql`count(*) >= 3`)
       .limit(50);
 
     if (rows.length === 0) return [];
 
-    const pacienteIds = rows.map(r => r.pacienteId);
+    const pacienteIds = rows.map((r) => r.pacienteId);
     const [pacientesRows, diagRows] = await Promise.all([
-      db.select({
-        id: pacientes.id,
-        nombre: pacientes.nombre,
-        apellido: pacientes.apellido,
-        telefono: pacientes.telefono,
-      })
+      db
+        .select({
+          id: pacientes.id,
+          nombre: pacientes.nombre,
+          apellido: pacientes.apellido,
+          telefono: pacientes.telefono,
+        })
         .from(pacientes)
-        .where(and(sql`${pacientes.id} = ANY(${pacienteIds})`, sql`${pacientes.deletedAt} IS NULL`)),
-      db.select({
-        pacienteId: historialMedico.pacienteId,
-        descripcion: historialMedico.descripcion,
-      })
+        .where(
+          and(sql`${pacientes.id} = ANY(${pacienteIds})`, sql`${pacientes.deletedAt} IS NULL`),
+        ),
+      db
+        .select({
+          pacienteId: historialMedico.pacienteId,
+          descripcion: historialMedico.descripcion,
+        })
         .from(historialMedico)
-        .where(and(sql`${historialMedico.pacienteId} = ANY(${pacienteIds})`, eq(historialMedico.tipo, 'diagnostico')))
+        .where(
+          and(
+            sql`${historialMedico.pacienteId} = ANY(${pacienteIds})`,
+            eq(historialMedico.tipo, 'diagnostico'),
+          ),
+        )
         .orderBy(desc(historialMedico.createdAt))
         .limit(50),
     ]);
 
-    const pacienteMap = new Map(pacientesRows.map(p => [p.id, p]));
+    const pacienteMap = new Map(pacientesRows.map((p) => [p.id, p]));
     const ultimoDiag = new Map<string, string>();
     for (const d of diagRows) {
       if (!ultimoDiag.has(d.pacienteId)) {
@@ -226,9 +236,21 @@ export const alertasService = {
             nivel: s.nivel,
             factores: [
               { nombre: 'no_shows', valor: s.factores.noShows, peso: 40 },
-              { nombre: 'cancelaciones_sin_aviso', valor: s.factores.cancelacionesSinAviso, peso: 25 },
-              { nombre: 'tasa_no_confirmacion', valor: s.factores.totalTurnos - s.factores.turnosConfirmados, peso: 20 },
-              { nombre: 'recordatorios_ignorados', valor: s.factores.recordatoriosEnviados - s.factores.recordatoriosLeidos, peso: 10 },
+              {
+                nombre: 'cancelaciones_sin_aviso',
+                valor: s.factores.cancelacionesSinAviso,
+                peso: 25,
+              },
+              {
+                nombre: 'tasa_no_confirmacion',
+                valor: s.factores.totalTurnos - s.factores.turnosConfirmados,
+                peso: 20,
+              },
+              {
+                nombre: 'recordatorios_ignorados',
+                valor: s.factores.recordatoriosEnviados - s.factores.recordatoriosLeidos,
+                peso: 10,
+              },
             ],
           });
         }
@@ -236,14 +258,17 @@ export const alertasService = {
       if (altos.length === 0) return [];
 
       const pacienteIds = altos.map((s) => s.pacienteId);
-      const pacientesRows = await db.select({
-        id: pacientes.id,
-        nombre: pacientes.nombre,
-        apellido: pacientes.apellido,
-        telefono: pacientes.telefono,
-      })
+      const pacientesRows = await db
+        .select({
+          id: pacientes.id,
+          nombre: pacientes.nombre,
+          apellido: pacientes.apellido,
+          telefono: pacientes.telefono,
+        })
         .from(pacientes)
-        .where(and(sql`${pacientes.id} = ANY(${pacienteIds})`, sql`${pacientes.deletedAt} IS NULL`));
+        .where(
+          and(sql`${pacientes.id} = ANY(${pacienteIds})`, sql`${pacientes.deletedAt} IS NULL`),
+        );
 
       const pacienteMap = new Map(pacientesRows.map((p) => [p.id, p]));
 
@@ -276,11 +301,12 @@ export const alertasService = {
     const { notificacionesService } = await import('@/lib/services/notificaciones');
     const { medicos: medicosTable } = await import('@/drizzle/schema');
 
-    const medicosActivos = await db.select({
-      id: medicosTable.id,
-      usuarioId: medicosTable.usuarioId,
-      nombre: medicosTable.nombre,
-    })
+    const medicosActivos = await db
+      .select({
+        id: medicosTable.id,
+        usuarioId: medicosTable.usuarioId,
+        nombre: medicosTable.nombre,
+      })
       .from(medicosTable)
       .where(and(eq(medicosTable.activo, true), sql`${medicosTable.deletedAt} IS NULL`));
 
@@ -303,7 +329,9 @@ export const alertasService = {
             href: `/dashboard/pacientes/${cumple.pacienteId}`,
           });
           cumpleaniosCreadas++;
-        } catch { /* continuar */ }
+        } catch {
+          /* continuar */
+        }
       }
     }
 
@@ -321,7 +349,9 @@ export const alertasService = {
             href: `/dashboard/pacientes/${ausente.pacienteId}`,
           });
           ausentismoCreadas++;
-        } catch { /* continuar */ }
+        } catch {
+          /* continuar */
+        }
       }
     }
 
@@ -339,7 +369,9 @@ export const alertasService = {
             href: `/dashboard/pacientes/${critico.pacienteId}`,
           });
           criticosCreados++;
-        } catch { /* continuar */ }
+        } catch {
+          /* continuar */
+        }
       }
     }
 
@@ -358,7 +390,9 @@ export const alertasService = {
             href: `/dashboard/pacientes/${alto.pacienteId}`,
           });
           scoreAltoCreadas++;
-        } catch { /* continuar */ }
+        } catch {
+          /* continuar */
+        }
       }
     }
 

@@ -48,10 +48,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Error al registrar encuesta' }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: { pacienteId: parsed.pacienteId, puntaje: parsed.puntaje, comentario: parsed.comentario, registrada: new Date().toISOString() },
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          pacienteId: parsed.pacienteId,
+          puntaje: parsed.puntaje,
+          comentario: parsed.comentario,
+          registrada: new Date().toISOString(),
+        },
+      },
+      { status: 201 },
+    );
   } catch (error) {
     console.error('[API] Error POST /api/encuestas:', error);
     return NextResponse.json({ error: 'Error al registrar encuesta' }, { status: 500 });

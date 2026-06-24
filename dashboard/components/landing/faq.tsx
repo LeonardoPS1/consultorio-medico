@@ -56,12 +56,10 @@ export function FAQ({ items }: FAQProps = {}) {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-14"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Preguntas Frecuentes
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Preguntas Frecuentes</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-base">
-            Todo lo que necesitas saber antes de empezar. Si tienes otra consulta,
-            escribinos por WhatsApp.
+            Todo lo que necesitas saber antes de empezar. Si tienes otra consulta, escribinos por
+            WhatsApp.
           </p>
         </motion.div>
 

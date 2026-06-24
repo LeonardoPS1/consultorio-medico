@@ -119,12 +119,14 @@ export async function calcularScorePaciente(
   const [cancelRow] = await db
     .select({ total: count() })
     .from(turnos)
-    .where(and(
-      ...filtrosBase,
-      eq(turnos.estado, 'cancelada'),
-      eq(turnos.canceladoPor, 'dashboard'),
-      sql`${turnos.confirmoAsistencia} IS DISTINCT FROM true`,
-    ));
+    .where(
+      and(
+        ...filtrosBase,
+        eq(turnos.estado, 'cancelada'),
+        eq(turnos.canceladoPor, 'dashboard'),
+        sql`${turnos.confirmoAsistencia} IS DISTINCT FROM true`,
+      ),
+    );
   const cancelacionesSinAviso = Number(cancelRow?.total ?? 0);
 
   // ─── Turnos confirmados ────────────────────────────
@@ -138,19 +140,23 @@ export async function calcularScorePaciente(
   const [leidosRow] = await db
     .select({ total: count() })
     .from(turnos)
-    .where(and(
-      ...filtrosBase,
-      sql`(${turnos.recordatorio24hLeido} = true OR ${turnos.recordatorio1hLeido} = true)`,
-    ));
+    .where(
+      and(
+        ...filtrosBase,
+        sql`(${turnos.recordatorio24hLeido} = true OR ${turnos.recordatorio1hLeido} = true)`,
+      ),
+    );
   const recordatoriosLeidos = Number(leidosRow?.total ?? 0);
 
   const [enviadosRow] = await db
     .select({ total: count() })
     .from(turnos)
-    .where(and(
-      ...filtrosBase,
-      sql`(${turnos.recordatorio24hEnviado} = true OR ${turnos.recordatorio1hEnviado} = true)`,
-    ));
+    .where(
+      and(
+        ...filtrosBase,
+        sql`(${turnos.recordatorio24hEnviado} = true OR ${turnos.recordatorio1hEnviado} = true)`,
+      ),
+    );
   const recordatoriosEnviados = Number(enviadosRow?.total ?? 0);
 
   // ─── Cálculo de scores parciales ───────────────────
@@ -167,9 +173,7 @@ export async function calcularScorePaciente(
   const scoreConfirm = (1 - ratioConfirm) * PESOS.confirmacion;
 
   // Recordatorios: inversa (menos lectura = más riesgo) (0-10)
-  const ratioLectura = recordatoriosEnviados > 0
-    ? recordatoriosLeidos / recordatoriosEnviados
-    : 0;
+  const ratioLectura = recordatoriosEnviados > 0 ? recordatoriosLeidos / recordatoriosEnviados : 0;
   const scoreRecordatorios = (1 - ratioLectura) * PESOS.recordatorios;
 
   // Asistencia histórica: bonificación por asistencias (máximo -5)
@@ -177,9 +181,10 @@ export async function calcularScorePaciente(
   const bonificacion = Math.min(asistencias * 0.5, PESOS.asistencia);
 
   // Score final (0-100)
-  const score = Math.max(0, Math.min(100,
-    scoreNoShows + scoreCancel + scoreConfirm + scoreRecordatorios - bonificacion,
-  ));
+  const score = Math.max(
+    0,
+    Math.min(100, scoreNoShows + scoreCancel + scoreConfirm + scoreRecordatorios - bonificacion),
+  );
 
   return {
     pacienteId,
@@ -224,10 +229,21 @@ export async function calcularScoreBulk(
       pacienteId: turnos.pacienteId,
       totalTurnos: count().mapWith(Number),
       noShows: sql`count(*) FILTER (WHERE ${turnos.estado} = 'no_asistio')`.mapWith(Number),
-      cancelacionesSinAviso: sql`count(*) FILTER (WHERE ${turnos.estado} = 'cancelada' AND ${turnos.canceladoPor} = 'dashboard' AND ${turnos.confirmoAsistencia} IS DISTINCT FROM true)`.mapWith(Number),
-      turnosConfirmados: sql`count(*) FILTER (WHERE ${turnos.confirmoAsistencia} = true)`.mapWith(Number),
-      recordatoriosLeidos: sql`count(*) FILTER (WHERE ${turnos.recordatorio24hLeido} = true OR ${turnos.recordatorio1hLeido} = true)`.mapWith(Number),
-      recordatoriosEnviados: sql`count(*) FILTER (WHERE ${turnos.recordatorio24hEnviado} = true OR ${turnos.recordatorio1hEnviado} = true)`.mapWith(Number),
+      cancelacionesSinAviso:
+        sql`count(*) FILTER (WHERE ${turnos.estado} = 'cancelada' AND ${turnos.canceladoPor} = 'dashboard' AND ${turnos.confirmoAsistencia} IS DISTINCT FROM true)`.mapWith(
+          Number,
+        ),
+      turnosConfirmados: sql`count(*) FILTER (WHERE ${turnos.confirmoAsistencia} = true)`.mapWith(
+        Number,
+      ),
+      recordatoriosLeidos:
+        sql`count(*) FILTER (WHERE ${turnos.recordatorio24hLeido} = true OR ${turnos.recordatorio1hLeido} = true)`.mapWith(
+          Number,
+        ),
+      recordatoriosEnviados:
+        sql`count(*) FILTER (WHERE ${turnos.recordatorio24hEnviado} = true OR ${turnos.recordatorio1hEnviado} = true)`.mapWith(
+          Number,
+        ),
     })
     .from(turnos)
     .where(and(...filtros))
@@ -236,8 +252,13 @@ export async function calcularScoreBulk(
   const scores: ScoringResult[] = [];
   for (const row of rows) {
     const {
-      pacienteId, totalTurnos, noShows, cancelacionesSinAviso,
-      turnosConfirmados, recordatoriosLeidos, recordatoriosEnviados,
+      pacienteId,
+      totalTurnos,
+      noShows,
+      cancelacionesSinAviso,
+      turnosConfirmados,
+      recordatoriosLeidos,
+      recordatoriosEnviados,
     } = row;
 
     if (totalTurnos === 0) continue;
@@ -252,17 +273,17 @@ export async function calcularScoreBulk(
     const ratioConfirm = turnosConfirmados / totalTurnos;
     const scoreConfirm = (1 - ratioConfirm) * PESOS.confirmacion;
 
-    const ratioLectura = recordatoriosEnviados > 0
-      ? recordatoriosLeidos / recordatoriosEnviados
-      : 0;
+    const ratioLectura =
+      recordatoriosEnviados > 0 ? recordatoriosLeidos / recordatoriosEnviados : 0;
     const scoreRecordatorios = (1 - ratioLectura) * PESOS.recordatorios;
 
     const asistencias = totalTurnos - noShows;
     const bonificacion = Math.min(asistencias * 0.5, PESOS.asistencia);
 
-    const score = Math.max(0, Math.min(100,
-      scoreNoShows + scoreCancel + scoreConfirm + scoreRecordatorios - bonificacion,
-    ));
+    const score = Math.max(
+      0,
+      Math.min(100, scoreNoShows + scoreCancel + scoreConfirm + scoreRecordatorios - bonificacion),
+    );
 
     scores.push({
       pacienteId,
@@ -288,15 +309,15 @@ export async function calcularScoreBulk(
  * Retorna un Map para lookup rápido.
  * Refactorizada: usa calcularScoreBulk() en vez de loop N+1.
  */
-export async function calcularTodosLosScores(opts?: { sucursalId?: string; limit?: number }): Promise<Map<string, ScoringResult>> {
+export async function calcularTodosLosScores(opts?: {
+  sucursalId?: string;
+  limit?: number;
+}): Promise<Map<string, ScoringResult>> {
   // Obtener IDs de pacientes con turnos en la ventana
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - VENTANA_DIAS);
 
-  const filtros = [
-    gte(turnos.fechaHora, startDate),
-    isNull(turnos.deletedAt),
-  ];
+  const filtros = [gte(turnos.fechaHora, startDate), isNull(turnos.deletedAt)];
   if (opts?.sucursalId) {
     filtros.push(eq(turnos.sucursalId, opts.sucursalId));
   }
@@ -308,7 +329,7 @@ export async function calcularTodosLosScores(opts?: { sucursalId?: string; limit
     .groupBy(turnos.pacienteId)
     .limit(opts?.limit ?? 500);
 
-  const pacienteIds = rows.map(r => r.pacienteId);
+  const pacienteIds = rows.map((r) => r.pacienteId);
   if (pacienteIds.length === 0) return new Map();
 
   // Una sola query para todos

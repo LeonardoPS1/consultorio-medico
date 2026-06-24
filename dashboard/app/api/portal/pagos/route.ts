@@ -84,7 +84,10 @@ export async function POST(request: Request) {
     });
 
     if (!preference) {
-      return NextResponse.json({ error: 'Error al crear preferencia de pago — MP no configurado' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Error al crear preferencia de pago — MP no configurado' },
+        { status: 500 },
+      );
     }
 
     // Guardar registro de pago en portal_pagos
@@ -101,15 +104,21 @@ export async function POST(request: Request) {
       })
       .returning();
 
-    return NextResponse.json({
-      success: true,
-      pagoId: pago.id,
-      preferenceId: preference.id,
-      initPoint: preference.init_point,
-      sandboxInitPoint: preference.sandbox_init_point,
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        pagoId: pago.id,
+        preferenceId: preference.id,
+        initPoint: preference.init_point,
+        sandboxInitPoint: preference.sandbox_init_point,
+      },
+      { status: 201 },
+    );
   } catch (err) {
-    safeError('[PortalPagos] Error creando pago:', err instanceof Error ? { message: err.message } : err);
+    safeError(
+      '[PortalPagos] Error creando pago:',
+      err instanceof Error ? { message: err.message } : err,
+    );
     const message = err instanceof Error ? err.message : 'Error al iniciar pago';
     return NextResponse.json({ error: message }, { status: 500 });
   }

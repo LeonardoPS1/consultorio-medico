@@ -47,9 +47,10 @@ const securityHeaders: Record<string, string> = {
 // ─── Helper: verificar si hay sesión activa via cookie ───
 // NextAuth v5 usa `authjs.session-token` (HTTP) o `__Secure-authjs.session-token` (HTTPS)
 function hasSessionCookie(request: NextRequest): boolean {
-  const cookieName = process.env.NODE_ENV === 'production'
-    ? '__Secure-authjs.session-token'
-    : 'authjs.session-token';
+  const cookieName =
+    process.env.NODE_ENV === 'production'
+      ? '__Secure-authjs.session-token'
+      : 'authjs.session-token';
 
   return !!request.cookies.get(cookieName);
 }
@@ -57,7 +58,11 @@ function hasSessionCookie(request: NextRequest): boolean {
 // ─── Helper: detectar tenant por subdominio ─────────────
 function detectTenant(hostname: string): string {
   // localhost, 127.0.0.1, o IP → tenant por defecto
-  if (hostname === 'localhost' || hostname === '127.0.0.1' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+  if (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    /^\d+\.\d+\.\d+\.\d+$/.test(hostname)
+  ) {
     return '00000000-0000-0000-0000-000000000000';
   }
 
@@ -96,16 +101,14 @@ export function middleware(request: NextRequest) {
 
   // Strict-Transport-Security solo en producción
   if (process.env.NODE_ENV === 'production') {
-    response.headers.set(
-      'Strict-Transport-Security',
-      'max-age=63072000; includeSubDomains'
-    );
+    response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
   }
 
   // ─── 2. Rate limiting específico por ruta ──────────────
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    || request.headers.get('x-real-ip')
-    || '127.0.0.1';
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    '127.0.0.1';
 
   function rateLimitedResponse(limitSecs: number): NextResponse {
     const headers = new Headers({
@@ -113,10 +116,10 @@ export function middleware(request: NextRequest) {
       'Retry-After': String(limitSecs),
     });
     Object.entries(securityHeaders).forEach(([k, v]) => headers.set(k, v));
-    return new NextResponse(
-      JSON.stringify({ error: 'Demasiados intentos. Esperá un momento.' }),
-      { status: 429, headers }
-    );
+    return new NextResponse(JSON.stringify({ error: 'Demasiados intentos. Esperá un momento.' }), {
+      status: 429,
+      headers,
+    });
   }
 
   if (request.method === 'POST') {
@@ -145,7 +148,11 @@ export function middleware(request: NextRequest) {
   // Rate limit general para APIs (120 requests por minuto por IP)
   // Un dashboard hace ~7 llamadas al cargar + polling cada 60s
   // Excluir /api/auth/ (ya tiene rate limit específico), /api/v1/ (API key propio)
-  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/') && !pathname.startsWith('/api/v1/')) {
+  if (
+    pathname.startsWith('/api/') &&
+    !pathname.startsWith('/api/auth/') &&
+    !pathname.startsWith('/api/v1/')
+  ) {
     if (!rateLimit(`api:${ip}`, 120, 60_000)) {
       const headers = new Headers({
         'Content-Type': 'application/json',
@@ -154,7 +161,7 @@ export function middleware(request: NextRequest) {
       Object.entries(securityHeaders).forEach(([k, v]) => headers.set(k, v));
       return new NextResponse(
         JSON.stringify({ error: 'Demasiadas requests. Esperá un momento.' }),
-        { status: 429, headers }
+        { status: 429, headers },
       );
     }
   }
@@ -169,8 +176,15 @@ export function middleware(request: NextRequest) {
   }
 
   // ─── 4. Proteger rutas del portal (rutas autenticadas) ──
-  const PORTAL_AUTH_ROUTES = ['/portal/dashboard', '/portal/agendar', '/portal/turnos', '/portal/recetas', '/portal/historial', '/portal/perfil'];
-  if (PORTAL_AUTH_ROUTES.some(route => pathname.startsWith(route))) {
+  const PORTAL_AUTH_ROUTES = [
+    '/portal/dashboard',
+    '/portal/agendar',
+    '/portal/turnos',
+    '/portal/recetas',
+    '/portal/historial',
+    '/portal/perfil',
+  ];
+  if (PORTAL_AUTH_ROUTES.some((route) => pathname.startsWith(route))) {
     if (!request.cookies.get('portal_session')) {
       return NextResponse.redirect(new URL('/portal', request.url));
     }

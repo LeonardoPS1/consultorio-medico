@@ -10,7 +10,15 @@
  * superiores para usuarios específicos.
  */
 
-import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from 'react';
 
 // ================================================================
 // Feature Flags (tenant-level toggles)
@@ -82,9 +90,7 @@ export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <FeatureFlagsContext.Provider value={contextValue}>
-      {children}
-    </FeatureFlagsContext.Provider>
+    <FeatureFlagsContext.Provider value={contextValue}>{children}</FeatureFlagsContext.Provider>
   );
 }
 
@@ -149,8 +155,6 @@ export function UserFeatureOverridesProvider({ children }: { children: ReactNode
   );
 
   return (
-    <UserOverridesContext.Provider value={contextValue}>
-      {children}
-    </UserOverridesContext.Provider>
+    <UserOverridesContext.Provider value={contextValue}>{children}</UserOverridesContext.Provider>
   );
 }

@@ -146,7 +146,9 @@ export async function sendSurveyWhatsApp(turnoId: string): Promise<void> {
     const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
 
     if (!accountSid || !authToken || !fromNumber) {
-      safeWarn('[Encuestas] ⚠️ Falta config Twilio (TWILIO_ACCOUNT_SID, AUTH_TOKEN, WHATSAPP_NUMBER)');
+      safeWarn(
+        '[Encuestas] ⚠️ Falta config Twilio (TWILIO_ACCOUNT_SID, AUTH_TOKEN, WHATSAPP_NUMBER)',
+      );
       return;
     }
 
@@ -162,18 +164,23 @@ export async function sendSurveyWhatsApp(turnoId: string): Promise<void> {
       Body: mensaje,
     });
 
-    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
+    const res = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+        signal: AbortSignal.timeout(10000),
       },
-      body: formData.toString(),
-      signal: AbortSignal.timeout(10000),
-    });
+    );
 
     if (res.ok) {
-      safeLog(`[Encuestas] ✅ Encuesta enviada a ${pacienteNombre} (${telefono}) por turno ${turnoId}`);
+      safeLog(
+        `[Encuestas] ✅ Encuesta enviada a ${pacienteNombre} (${telefono}) por turno ${turnoId}`,
+      );
     } else {
       const errBody = await res.text();
       safeWarn(`[Encuestas] ⚠️ Error Twilio al enviar encuesta: ${res.status} — ${errBody}`);
@@ -217,12 +224,17 @@ export async function storeSurveyResponse(data: {
       titulo: `Encuesta de satisfacción - ${data.puntaje}/5`,
       descripcion: data.comentario || 'Sin comentarios',
       visibleParaPaciente: false,
-      archivos: archivos as any,
+      archivos: archivos as unknown as string[],
     });
-    safeLog(`[Encuestas] ✅ Respuesta guardada: paciente ${data.pacienteId}, puntaje ${data.puntaje}`);
+    safeLog(
+      `[Encuestas] ✅ Respuesta guardada: paciente ${data.pacienteId}, puntaje ${data.puntaje}`,
+    );
     return true;
   } catch (e) {
-    safeError('[Encuestas] Error al guardar respuesta:', e instanceof Error ? { message: e.message } : e);
+    safeError(
+      '[Encuestas] Error al guardar respuesta:',
+      e instanceof Error ? { message: e.message } : e,
+    );
     return false;
   }
 }
@@ -309,9 +321,10 @@ export async function getSurveyStats(): Promise<EncuestaStats> {
   });
 
   const puntajes = respuestas.filter((r) => r.puntaje > 0).map((r) => r.puntaje);
-  const puntajePromedio = puntajes.length > 0
-    ? Math.round((puntajes.reduce((a, b) => a + b, 0) / puntajes.length) * 10) / 10
-    : 0;
+  const puntajePromedio =
+    puntajes.length > 0
+      ? Math.round((puntajes.reduce((a, b) => a + b, 0) / puntajes.length) * 10) / 10
+      : 0;
 
   // Distribución de puntajes
   const distribucion: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -328,7 +341,7 @@ export async function getSurveyStats(): Promise<EncuestaStats> {
   // Tendencia: comparar última semana con semana anterior
   const hace14dias = new Date(Date.now() - 14 * 86400000).toISOString();
   const semanaAnterior = respuestas.filter(
-    (r) => new Date(r.fecha) >= new Date(hace14dias) && new Date(r.fecha) < new Date(hace7dias)
+    (r) => new Date(r.fecha) >= new Date(hace14dias) && new Date(r.fecha) < new Date(hace7dias),
   ).length;
 
   let tendencia: 'subiendo' | 'estable' | 'bajando' = 'estable';

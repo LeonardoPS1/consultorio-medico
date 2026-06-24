@@ -34,7 +34,8 @@ export const POST = apiHandler(async (request: NextRequest, { params }) => {
   await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
 
   const body = await parseBody(request, registrarConsentimientoSchema);
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined;
+  const ip =
+    request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined;
   const userAgent = request.headers.get('user-agent') || undefined;
 
   // Verificar que el paciente existe
@@ -59,11 +60,13 @@ export const POST = apiHandler(async (request: NextRequest, { params }) => {
 
   // Actualizar flags de consentimiento en el paciente
   if (body.tipo === 'whatsapp') {
-    await db.update(pacientes)
+    await db
+      .update(pacientes)
       .set({ consentimientoWhatsapp: body.aceptado })
       .where(eq(pacientes.id, params.id));
   } else if (body.tipo === 'email') {
-    await db.update(pacientes)
+    await db
+      .update(pacientes)
       .set({ consentimientoEmail: body.aceptado })
       .where(eq(pacientes.id, params.id));
   }

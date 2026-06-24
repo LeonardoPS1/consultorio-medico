@@ -31,36 +31,36 @@ export async function GET() {
     }
 
     ensureDir();
-    const files = fs.readdirSync(BACKUP_DIR)
-      .filter(f => f.endsWith('.sql.gz'))
+    const files = fs
+      .readdirSync(BACKUP_DIR)
+      .filter((f) => f.endsWith('.sql.gz'))
       .sort()
       .reverse();
 
-    const backups = files.map(f => {
-      const filePath = path.join(BACKUP_DIR, f);
-      try {
-        const stat = fs.statSync(filePath);
-        const id = f.replace(/\.sql\.gz$/, '');
-        return {
-          id,
-          filename: f,
-          sizeBytes: stat.size,
-          createdAt: stat.mtime.toISOString(),
-          tables: 0,
-          rows: 0,
-        };
-      } catch {
-        return null;
-      }
-    }).filter(Boolean);
+    const backups = files
+      .map((f) => {
+        const filePath = path.join(BACKUP_DIR, f);
+        try {
+          const stat = fs.statSync(filePath);
+          const id = f.replace(/\.sql\.gz$/, '');
+          return {
+            id,
+            filename: f,
+            sizeBytes: stat.size,
+            createdAt: stat.mtime.toISOString(),
+            tables: 0,
+            rows: 0,
+          };
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
 
     return NextResponse.json({ backups });
   } catch (error) {
     console.error('[Backups] Error al listar:', error);
-    return NextResponse.json(
-      { error: 'Error al cargar backups', backups: [] },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Error al cargar backups', backups: [] }, { status: 500 });
   }
 }
 
@@ -126,15 +126,13 @@ export async function POST() {
 
       // Obtener datos
       try {
-        const rows = await db.execute(
-          sql.raw(`SELECT * FROM "${tableName}" ORDER BY 1`)
-        );
+        const rows = await db.execute(sql.raw(`SELECT * FROM "${tableName}" ORDER BY 1`));
 
         if (rows.length > 0) {
-          const quotedCols = colNames.map(c => `"${c}"`).join(', ');
+          const quotedCols = colNames.map((c) => `"${c}"`).join(', ');
 
           for (const row of rows) {
-            const values = colNames.map(col => {
+            const values = colNames.map((col) => {
               const val = (row as Record<string, unknown>)[col];
               if (val === null || val === undefined) return 'NULL';
               if (typeof val === 'number') return val.toString();
@@ -162,11 +160,7 @@ export async function POST() {
       const gzip = zlib.createGzip();
       const writeStream = fs.createWriteStream(filepath);
 
-      readStream
-        .pipe(gzip)
-        .pipe(writeStream)
-        .on('finish', resolve)
-        .on('error', reject);
+      readStream.pipe(gzip).pipe(writeStream).on('finish', resolve).on('error', reject);
     });
 
     const stats = fs.statSync(filepath);
@@ -186,11 +180,12 @@ export async function POST() {
     console.error('[Backup] Error al crear:', error);
     return NextResponse.json(
       {
-        error: error instanceof Error
-          ? `Error al crear backup: ${error.message}`
-          : 'Error al crear backup',
+        error:
+          error instanceof Error
+            ? `Error al crear backup: ${error.message}`
+            : 'Error al crear backup',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

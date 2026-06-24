@@ -8,10 +8,7 @@ import { getUploadDir } from '@/lib/upload-dir';
 /**
  * Sirve archivos subidos (imágenes) desde .data/uploads/
  */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function GET(_request: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {

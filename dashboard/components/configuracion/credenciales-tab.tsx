@@ -8,9 +8,24 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Bot, Globe, Database, Mail, Phone, Calendar,
-  CheckCircle2, XCircle, AlertCircle, Eye, EyeOff,
-  Save, Wifi, RefreshCw, Shield, Key, Trash2, RotateCcw,
+  Bot,
+  Globe,
+  Database,
+  Mail,
+  Phone,
+  Calendar,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Save,
+  Wifi,
+  RefreshCw,
+  Shield,
+  Key,
+  Trash2,
+  RotateCcw,
 } from 'lucide-react';
 
 // ============================================================
@@ -217,7 +232,12 @@ export default function CredencialesTab() {
 
     setServiciosState((prev) => ({
       ...prev,
-      [servicio]: { ...prev[servicio], probando: true, mensaje: '🔄 Probando conexión...', mensajeTipo: 'info' },
+      [servicio]: {
+        ...prev[servicio],
+        probando: true,
+        mensaje: '🔄 Probando conexión...',
+        mensajeTipo: 'info',
+      },
     }));
 
     try {
@@ -261,14 +281,21 @@ export default function CredencialesTab() {
 
     setServiciosState((prev) => ({
       ...prev,
-      [servicio]: { ...prev[servicio], guardando: true, mensaje: '🔄 Eliminando...', mensajeTipo: 'info' },
+      [servicio]: {
+        ...prev[servicio],
+        guardando: true,
+        mensaje: '🔄 Eliminando...',
+        mensajeTipo: 'info',
+      },
     }));
 
     try {
-      const res = await fetch(`/api/credenciales?servicio=${encodeURIComponent(servicio)}`, { method: 'DELETE' });
+      const res = await fetch(`/api/credenciales?servicio=${encodeURIComponent(servicio)}`, {
+        method: 'DELETE',
+      });
       if (res.ok) {
         const valoresVacios: CredencialesState = {};
-        for (const campo of (servicios.find(sv => sv.servicio === servicio)?.campos || [])) {
+        for (const campo of servicios.find((sv) => sv.servicio === servicio)?.campos || []) {
           valoresVacios[campo.clave] = '';
         }
         setServiciosState((prev) => ({
@@ -288,13 +315,23 @@ export default function CredencialesTab() {
         const data = await res.json();
         setServiciosState((prev) => ({
           ...prev,
-          [servicio]: { ...prev[servicio], guardando: false, mensaje: `❌ ${data.error || 'Error al eliminar'}`, mensajeTipo: 'error' },
+          [servicio]: {
+            ...prev[servicio],
+            guardando: false,
+            mensaje: `❌ ${data.error || 'Error al eliminar'}`,
+            mensajeTipo: 'error',
+          },
         }));
       }
     } catch (err) {
       setServiciosState((prev) => ({
         ...prev,
-        [servicio]: { ...prev[servicio], guardando: false, mensaje: '❌ Error de conexión', mensajeTipo: 'error' },
+        [servicio]: {
+          ...prev[servicio],
+          guardando: false,
+          mensaje: '❌ Error de conexión',
+          mensajeTipo: 'error',
+        },
       }));
     }
   };
@@ -302,7 +339,7 @@ export default function CredencialesTab() {
   // Limpiar campos localmente (no borra de DB hasta que se guarde)
   const limpiarCampos = (servicio: string) => {
     const valoresVacios: CredencialesState = {};
-    for (const campo of (servicios.find(sv => sv.servicio === servicio)?.campos || [])) {
+    for (const campo of servicios.find((sv) => sv.servicio === servicio)?.campos || []) {
       valoresVacios[campo.clave] = '';
     }
     const s = serviciosState[servicio];
@@ -356,8 +393,8 @@ export default function CredencialesTab() {
                 Credenciales del Sistema
               </CardTitle>
               <CardDescription>
-                Gestioná las API keys y credenciales de servicios externos.
-                Se guardan encriptadas y se sincronizan automáticamente con n8n.
+                Gestioná las API keys y credenciales de servicios externos. Se guardan encriptadas y
+                se sincronizan automáticamente con n8n.
               </CardDescription>
             </div>
             <Badge variant="outline" className="text-xs">
@@ -387,9 +424,7 @@ export default function CredencialesTab() {
               {ICONOS[sv.servicio] || <Globe className="h-4 w-4" />}
               <span className="hidden sm:inline">{sv.displayName}</span>
               <span className="sm:hidden">{sv.displayName.split(' ')[0]}</span>
-              {state?.modificado && (
-                <span className="h-2 w-2 rounded-full bg-amber-500" />
-              )}
+              {state?.modificado && <span className="h-2 w-2 rounded-full bg-amber-500" />}
               {tieneValores && !state?.modificado && (
                 <CheckCircle2 className="h-3 w-3 text-emerald-500" />
               )}
@@ -545,7 +580,9 @@ function ServicioForm({
 
         {/* Mensaje de estado */}
         {state.mensaje && (
-          <div className={`text-sm p-3 rounded-lg ${mensajeColors[state.mensajeTipo] || mensajeColors.info}`}>
+          <div
+            className={`text-sm p-3 rounded-lg ${mensajeColors[state.mensajeTipo] || mensajeColors.info}`}
+          >
             {state.mensaje}
           </div>
         )}
@@ -597,7 +634,11 @@ function ServicioForm({
             variant="ghost"
             size="sm"
             onClick={() => {
-              if (window.confirm(`¿Estás seguro de eliminar TODAS las credenciales de ${config.displayName}?\n\nEsta acción borra los datos de la base de datos y también intenta eliminarlos de n8n.`)) {
+              if (
+                window.confirm(
+                  `¿Estás seguro de eliminar TODAS las credenciales de ${config.displayName}?\n\nEsta acción borra los datos de la base de datos y también intenta eliminarlos de n8n.`,
+                )
+              ) {
                 onEliminar();
               }
             }}
@@ -613,16 +654,24 @@ function ServicioForm({
         {/* Info de sincronización */}
         {state.n8nId && (
           <p className="text-xs text-muted-foreground">
-            n8n credential ID: <code className="font-mono text-xs bg-muted px-1 rounded">{state.n8nId}</code>
+            n8n credential ID:{' '}
+            <code className="font-mono text-xs bg-muted px-1 rounded">{state.n8nId}</code>
             {config.n8nCredentialType && (
-              <> · Tipo: <code className="font-mono text-xs bg-muted px-1 rounded">{config.n8nCredentialType}</code></>
+              <>
+                {' '}
+                · Tipo:{' '}
+                <code className="font-mono text-xs bg-muted px-1 rounded">
+                  {config.n8nCredentialType}
+                </code>
+              </>
             )}
           </p>
         )}
 
         {!config.n8nSync && config.servicio !== 'n8n' && (
           <p className="text-xs text-muted-foreground">
-            ℹ️ Estas credenciales se usan solo localmente en el dashboard (no se sincronizan con n8n).
+            ℹ️ Estas credenciales se usan solo localmente en el dashboard (no se sincronizan con
+            n8n).
           </p>
         )}
 

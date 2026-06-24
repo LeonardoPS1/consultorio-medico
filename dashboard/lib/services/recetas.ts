@@ -139,15 +139,9 @@ export async function listarRecetas(params: {
   const scope = medicoId ? eq(recetas.medicoId, medicoId) : undefined;
 
   const whereBase = (estadoFiltro?: string) =>
-    and(
-      estadoFiltro ? eq(recetas.estado, estadoFiltro) : undefined,
-      scope,
-    );
+    and(estadoFiltro ? eq(recetas.estado, estadoFiltro) : undefined, scope);
 
-  const whereList = and(
-    estado ? eq(recetas.estado, estado) : undefined,
-    scope,
-  );
+  const whereList = and(estado ? eq(recetas.estado, estado) : undefined, scope);
 
   const [activas, vencidas, historial, total] = await Promise.all([
     db.select({ count: count() }).from(recetas).where(whereBase('activa')),
@@ -191,9 +185,7 @@ export async function listarRecetas(params: {
     estado: r.estado as EstadoReceta,
     indicaciones: r.indicaciones || undefined,
     vence: r.fechaFin || r.fechaInicio,
-    fechaCreacion: r.createdAt
-      ? new Date(r.createdAt).toISOString().split('T')[0]
-      : '',
+    fechaCreacion: r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : '',
     renovable: r.renovable,
     hashVerificacion: r.hashVerificacion,
   }));
@@ -255,9 +247,7 @@ export async function crearReceta(input: CreateRecetaInput) {
   }
 
   const fechaInicio = new Date().toISOString().split('T')[0];
-  const fechaFin = new Date(Date.now() + 30 * 86400000)
-    .toISOString()
-    .split('T')[0];
+  const fechaFin = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
 
   // Generar UUID antes de insertar para calcular el hash en la misma operación
   const id = randomUUID();
@@ -296,16 +286,11 @@ export async function crearReceta(input: CreateRecetaInput) {
 /**
  * Actualiza una receta (regenera hash si cambian datos sensibles).
  */
-export async function actualizarReceta(
-  id: string,
-  input: UpdateRecetaInput,
-) {
+export async function actualizarReceta(id: string, input: UpdateRecetaInput) {
   const camposSensibles = ['medicamento', 'dosis', 'pacienteId', 'fechaInicio'];
-  const tieneCambioSensible = camposSensibles.some(
-    (k) => k in input,
-  );
+  const tieneCambioSensible = camposSensibles.some((k) => k in input);
 
-  const updateData: Record<string, any> = {
+  const updateData: Record<string, unknown> = {
     ...input,
     updatedAt: new Date(),
   };
@@ -313,9 +298,7 @@ export async function actualizarReceta(
   // Si se renueva, actualizar fechas
   if (input.estado === 'activa') {
     updateData.fechaInicio = new Date().toISOString().split('T')[0];
-    updateData.fechaFin = new Date(Date.now() + 30 * 86400000)
-      .toISOString()
-      .split('T')[0];
+    updateData.fechaFin = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
   }
 
   const [actualizada] = await db
@@ -411,12 +394,8 @@ export async function getRecetasForExport(params: {
     Estado: r.estado,
     'Fecha Inicio': r.fechaInicio,
     'Fecha Fin': r.fechaFin || '—',
-    'Fecha Creación': r.createdAt
-      ? new Date(r.createdAt).toISOString().split('T')[0]
-      : '—',
-    'Código Verificación': r.hashVerificacion
-      ? `${r.hashVerificacion.substring(0, 12)}...`
-      : '—',
+    'Fecha Creación': r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : '—',
+    'Código Verificación': r.hashVerificacion ? `${r.hashVerificacion.substring(0, 12)}...` : '—',
   }));
 }
 
@@ -433,10 +412,8 @@ export function generarExcelRecetas(data: RecetaExportRow[]): Buffer {
 
   // Ajustar ancho de columnas
   const colWidths = Object.keys(data[0] || {}).map((key) => ({
-    wch: Math.max(
-      key.length,
-      ...data.map((r) => String(r[key as keyof typeof r] ?? '').length),
-    ) + 2,
+    wch:
+      Math.max(key.length, ...data.map((r) => String(r[key as keyof typeof r] ?? '').length)) + 2,
   }));
   ws['!cols'] = colWidths;
 
@@ -448,10 +425,7 @@ export function generarExcelRecetas(data: RecetaExportRow[]): Buffer {
 /**
  * Genera HTML formateado para exportación PDF (imprimible).
  */
-export function generarHTMLRecetasPDF(
-  data: RecetaExportRow[],
-  titulo?: string,
-): string {
+export function generarHTMLRecetasPDF(data: RecetaExportRow[], titulo?: string): string {
   const nombreOrg = process.env.ORGANIZATION_NAME || 'Consultorio Médico';
   const fecha = new Date().toLocaleDateString('es-CL', {
     day: 'numeric',
@@ -553,9 +527,7 @@ export async function getPacientesForExport(params: {
     Email: p.email || '—',
     'Obra Social': p.obraSocial || '—',
     Tags: Array.isArray(p.tags) ? p.tags.join(', ') : '—',
-    'Último Turno': p.ultimoTurno
-      ? new Date(p.ultimoTurno).toISOString().split('T')[0]
-      : '—',
+    'Último Turno': p.ultimoTurno ? new Date(p.ultimoTurno).toISOString().split('T')[0] : '—',
     'Total Turnos': p.totalTurnos ?? 0,
   }));
 }

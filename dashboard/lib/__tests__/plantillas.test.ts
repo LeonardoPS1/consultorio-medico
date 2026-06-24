@@ -61,7 +61,8 @@ const template1h: Plantilla = {
 
 const templateConfirmacion: Plantilla = {
   nombre: 'Confirmación Turno',
-  contenido: 'Turno confirmado! {{paciente_nombre}}, te esperamos el {{fecha_hora}} con {{medico_nombre}}.',
+  contenido:
+    'Turno confirmado! {{paciente_nombre}}, te esperamos el {{fecha_hora}} con {{medico_nombre}}.',
   categoria: 'turnos',
   variables: ['paciente_nombre', 'fecha_hora', 'medico_nombre', 'motivo'],
 };
@@ -84,7 +85,9 @@ describe('Plantillas WhatsApp - Sustitución de variables', () => {
       fecha_hora: 'lunes 25/05 a las 10:30',
       medico_nombre: 'Dr. García',
     });
-    expect(resultado).toBe('Hola María! Recordatorio: turno mañana lunes 25/05 a las 10:30 con Dr. García.');
+    expect(resultado).toBe(
+      'Hola María! Recordatorio: turno mañana lunes 25/05 a las 10:30 con Dr. García.',
+    );
   });
 
   it('debe limpiar variables no provistas', () => {
@@ -94,7 +97,9 @@ describe('Plantillas WhatsApp - Sustitución de variables', () => {
       medico_nombre: 'Dra. López',
       // motivo no se provee
     });
-    expect(resultado).toBe('Turno confirmado! Juan, te esperamos el 25/05/2026 15:00 con Dra. López.');
+    expect(resultado).toBe(
+      'Turno confirmado! Juan, te esperamos el 25/05/2026 15:00 con Dra. López.',
+    );
     // motivo se reemplazó con '' (se limpió la variable {{motivo}})
     expect(resultado).not.toContain('{{motivo}}');
   });

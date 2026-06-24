@@ -14,7 +14,11 @@ export const POST = apiHandler(async (request: NextRequest) => {
   const normalizedEmail = email.toLowerCase().trim();
 
   // Verificar si el email ya está registrado
-  const existing = await db.select().from(usuarios).where(eq(usuarios.email, normalizedEmail)).limit(1);
+  const existing = await db
+    .select()
+    .from(usuarios)
+    .where(eq(usuarios.email, normalizedEmail))
+    .limit(1);
   if (existing.length > 0) {
     conflict('Este email ya está registrado. Iniciá sesión o usá otro email.');
   }

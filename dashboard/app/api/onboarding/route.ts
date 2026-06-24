@@ -41,8 +41,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
 export const DELETE = apiHandler(async () => {
   const session = await requireAuth();
 
-  await db.delete(onboardingProgress)
-    .where(eq(onboardingProgress.usuarioId, session.user.id!));
+  await db.delete(onboardingProgress).where(eq(onboardingProgress.usuarioId, session.user.id!));
 
   return ok({ success: true });
 });
@@ -66,17 +65,23 @@ export const PUT = apiHandler(async (request: NextRequest) => {
   }
 
   try {
-    await db.insert(onboardingProgress).values({
-      usuarioId: session.user.id!,
-      stepId,
-    }).onConflictDoNothing();
+    await db
+      .insert(onboardingProgress)
+      .values({
+        usuarioId: session.user.id!,
+        stepId,
+      })
+      .onConflictDoNothing();
 
     // No devolvemos el estado completo porque en un reinicio (isForceRestart)
     // el servidor todavía tiene todos los pasos de la sesión anterior en DB.
     // El cliente maneja el estado localmente, solo confirmamos la persistencia.
     return ok({ success: true });
   } catch (error) {
-    safeWarn('[Onboarding] Error al guardar progreso:', error instanceof Error ? error.message : error);
+    safeWarn(
+      '[Onboarding] Error al guardar progreso:',
+      error instanceof Error ? error.message : error,
+    );
     throw error;
   }
 });

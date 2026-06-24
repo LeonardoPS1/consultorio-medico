@@ -17,11 +17,7 @@ export async function POST(request: Request) {
     const { email } = parsed.data;
 
     // Buscar usuario
-    const result = await db
-      .select()
-      .from(usuarios)
-      .where(eq(usuarios.email, email))
-      .limit(1);
+    const result = await db.select().from(usuarios).where(eq(usuarios.email, email)).limit(1);
 
     if (result.length === 0) {
       // No revelar si el email existe o no por seguridad

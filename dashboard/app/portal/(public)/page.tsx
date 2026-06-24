@@ -10,8 +10,16 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Phone, ArrowRight, CheckCircle, AlertCircle, Bug,
-  Activity, Calendar, Shield, Stethoscope, Loader2,
+  Phone,
+  ArrowRight,
+  CheckCircle,
+  AlertCircle,
+  Bug,
+  Activity,
+  Calendar,
+  Shield,
+  Stethoscope,
+  Loader2,
 } from 'lucide-react';
 import { isValidPhone } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,7 +33,11 @@ const fadeSlideUp = {
 
 const scaleIn = {
   initial: { opacity: 0, scale: 0.94 },
-  animate: { opacity: 1, scale: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] as const } },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] as const },
+  },
   exit: { opacity: 0, scale: 0.94, transition: { duration: 0.15 } },
 };
 
@@ -132,7 +144,12 @@ export default function PortalLogin() {
           animate="animate"
           className="max-w-sm w-full text-center"
         >
-          <motion.div variants={springPop} initial="initial" animate="animate" className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-success/10 mb-6">
+          <motion.div
+            variants={springPop}
+            initial="initial"
+            animate="animate"
+            className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-success/10 mb-6"
+          >
             <CheckCircle className="h-10 w-10 text-success" />
           </motion.div>
 
@@ -145,8 +162,8 @@ export default function PortalLogin() {
           <div className="bg-accent/50 rounded-xl p-4 mb-6 text-left border border-border/50">
             <p className="text-sm font-medium mb-1">¿No te llega el mensaje?</p>
             <p className="text-xs text-muted-foreground">
-              Verificá que el número ingresado sea el mismo que registraste en el consultorio.
-              Si el problema persiste, contactanos por WhatsApp.
+              Verificá que el número ingresado sea el mismo que registraste en el consultorio. Si el
+              problema persiste, contactanos por WhatsApp.
             </p>
           </div>
 
@@ -156,7 +173,10 @@ export default function PortalLogin() {
 
           <Button
             variant="link"
-            onClick={() => { setSent(false); setTelefono(''); }}
+            onClick={() => {
+              setSent(false);
+              setTelefono('');
+            }}
             className="mt-6"
           >
             Ingresar otro número
@@ -181,7 +201,13 @@ export default function PortalLogin() {
           <AnimatePresence mode="wait">
             {!mostrarForm ? (
               /* ── Landing ─────────────────────────────── */
-              <motion.div key="landing" variants={fadeSlideUp} initial="initial" animate="animate" exit="exit">
+              <motion.div
+                key="landing"
+                variants={fadeSlideUp}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
                 {/* Brand */}
                 <div className="mb-10">
                   <motion.div
@@ -193,7 +219,9 @@ export default function PortalLogin() {
                     <Activity className="h-8 w-8 text-white" />
                   </motion.div>
                   <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">AicoreMed</h1>
-                  <p className="text-white/70 text-sm font-medium tracking-wide">Portal del Paciente</p>
+                  <p className="text-white/70 text-sm font-medium tracking-wide">
+                    Portal del Paciente
+                  </p>
                 </div>
 
                 {/* Beneficios */}
@@ -203,7 +231,11 @@ export default function PortalLogin() {
                       key={b.titulo}
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 + i * 0.08, duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
+                      transition={{
+                        delay: 0.1 + i * 0.08,
+                        duration: 0.3,
+                        ease: [0.16, 1, 0.3, 1] as const,
+                      }}
                       className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex items-start gap-3 ring-1 ring-white/10"
                     >
                       <div className="shrink-0 w-10 h-10 rounded-lg bg-white/15 flex items-center justify-center">
@@ -228,12 +260,16 @@ export default function PortalLogin() {
               </motion.div>
             ) : (
               /* ── Formulario ──────────────────────────── */
-              <motion.div key="form" variants={scaleIn} initial="initial" animate="animate" exit="exit">
+              <motion.div
+                key="form"
+                variants={scaleIn}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
                 <div className="bg-white rounded-2xl shadow-xl shadow-primary/10 p-6 text-left">
                   <h2 className="text-xl font-bold text-gray-900 mb-1">Ingresá al Portal</h2>
-                  <p className="text-sm text-gray-500 mb-6">
-                    Recibí un enlace mágico por WhatsApp
-                  </p>
+                  <p className="text-sm text-gray-500 mb-6">Recibí un enlace mágico por WhatsApp</p>
 
                   <form onSubmit={handleSubmit} className="space-y-5">
                     {error && (
@@ -271,7 +307,9 @@ export default function PortalLogin() {
                       className="w-full h-11"
                     >
                       {loading ? (
-                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</>
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...
+                        </>
                       ) : (
                         <>
                           Enviar enlace

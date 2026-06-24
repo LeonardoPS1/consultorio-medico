@@ -4,7 +4,10 @@ import { FooterColumn } from '@/components/landing/landing-footer-column';
 import { ScrollToTop } from '@/components/landing/scroll-to-top';
 import { Logo } from '@/components/layout/logo';
 
-const footerLinks: Record<string, { label: string; links: Array<{ label: string; href: string; external?: boolean }> }> = {
+const footerLinks: Record<
+  string,
+  { label: string; links: Array<{ label: string; href: string; external?: boolean }> }
+> = {
   product: {
     label: 'Producto',
     links: [
@@ -70,8 +73,8 @@ export function Footer() {
                 <Logo className="h-8 md:h-9 w-auto" />
               </Link>
               <p className="text-xs text-muted-foreground/70 leading-relaxed max-w-xs mb-3">
-                Sistema de gestión para consultorios médicos con IA local, WhatsApp integrado
-                y automatizaciones inteligentes.
+                Sistema de gestión para consultorios médicos con IA local, WhatsApp integrado y
+                automatizaciones inteligentes.
               </p>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">

@@ -24,7 +24,7 @@ export function exportReporteExcel(input: ExcelExportInput): void {
     ['Consultorio Médico — Sistema de Gestión'],
     [],
     ['Métrica', 'Valor', 'Cambio'],
-    ...datos.metricas.map(m => [m.titulo, m.valor, `${m.cambio}${m.up ? ' ↑' : ' ↓'}`]),
+    ...datos.metricas.map((m) => [m.titulo, m.valor, `${m.cambio}${m.up ? ' ↑' : ' ↓'}`]),
     [],
     ['KPIs Turnos', '', ''],
     ['Total Turnos', datos.turnosKpis.total, datos.turnosKpis.cambioTotal],
@@ -38,7 +38,7 @@ export function exportReporteExcel(input: ExcelExportInput): void {
     ['Edad Promedio', datos.pacientesKpis.edadPromedio, ''],
     [],
     ['WhatsApp', '', ''],
-    ...datos.whatsapp.map(w => [w.titulo, w.valor, `${w.cambio}${w.up ? ' ↑' : ' ↓'}`]),
+    ...datos.whatsapp.map((w) => [w.titulo, w.valor, `${w.cambio}${w.up ? ' ↑' : ' ↓'}`]),
     [],
     ['Calidad Respuesta', '', ''],
     ['Tasa', datos.calidadRespuesta.tasa, ''],
@@ -53,7 +53,7 @@ export function exportReporteExcel(input: ExcelExportInput): void {
   // ─── Hoja 2: Turnos por día ──────────────────────────
   const turnosRows: (string | number)[][] = [
     ['Día', 'Total', 'Completados', 'Cancelados', 'Ausentes'],
-    ...datos.turnos.map(t => [t.dia, t.cantidad, t.completados, t.cancelados, t.ausentes]),
+    ...datos.turnos.map((t) => [t.dia, t.cantidad, t.completados, t.cancelados, t.ausentes]),
   ];
   const wsTurnos = XLSX.utils.aoa_to_sheet(turnosRows);
   wsTurnos['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 12 }, { wch: 10 }];
@@ -62,7 +62,7 @@ export function exportReporteExcel(input: ExcelExportInput): void {
   // ─── Hoja 3: Intenciones ────────────────────────────
   const intencionesRows: (string | number)[][] = [
     ['Intención', 'Cantidad', 'Porcentaje'],
-    ...intenciones.map(i => [i.intencion, i.cantidad, `${i.porcentaje}%`]),
+    ...intenciones.map((i) => [i.intencion, i.cantidad, `${i.porcentaje}%`]),
   ];
   const wsIntenciones = XLSX.utils.aoa_to_sheet(intencionesRows);
   wsIntenciones['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }];
@@ -71,7 +71,7 @@ export function exportReporteExcel(input: ExcelExportInput): void {
   // ─── Hoja 4: Obra Social ─────────────────────────────
   const osRows: (string | number)[][] = [
     ['Obra Social', 'Cantidad'],
-    ...pacientesObraSocial.map(p => [p.obra, p.cantidad]),
+    ...pacientesObraSocial.map((p) => [p.obra, p.cantidad]),
   ];
   const wsOS = XLSX.utils.aoa_to_sheet(osRows);
   wsOS['!cols'] = [{ wch: 20 }, { wch: 12 }];
@@ -80,7 +80,7 @@ export function exportReporteExcel(input: ExcelExportInput): void {
   // ─── Hoja 5: Canales de Contacto ─────────────────────
   const canalesRows: (string | number)[][] = [
     ['Canal', 'Porcentaje'],
-    ...datos.canalesContacto.map(c => [c.canal, `${c.porcentaje}%`]),
+    ...datos.canalesContacto.map((c) => [c.canal, `${c.porcentaje}%`]),
   ];
   const wsCanales = XLSX.utils.aoa_to_sheet(canalesRows);
   wsCanales['!cols'] = [{ wch: 16 }, { wch: 12 }];

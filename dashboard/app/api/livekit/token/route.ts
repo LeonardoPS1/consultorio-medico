@@ -55,12 +55,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     const [turno] = await db
       .select({ id: turnos.id })
       .from(turnos)
-      .where(
-        and(
-          eq(turnos.id, turnoId),
-          sql`${turnos.deletedAt} IS NULL`
-        )
-      )
+      .where(and(eq(turnos.id, turnoId), sql`${turnos.deletedAt} IS NULL`))
       .limit(1);
 
     if (!turno) {
@@ -94,12 +89,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     const [turno] = await db
       .select({ pacienteId: turnos.pacienteId })
       .from(turnos)
-      .where(
-        and(
-          eq(turnos.id, turnoId),
-          sql`${turnos.deletedAt} IS NULL`
-        )
-      )
+      .where(and(eq(turnos.id, turnoId), sql`${turnos.deletedAt} IS NULL`))
       .limit(1);
 
     if (!turno) {

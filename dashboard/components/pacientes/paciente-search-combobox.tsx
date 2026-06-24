@@ -91,7 +91,9 @@ export function PacienteSearchCombobox({
     searchRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/pacientes?search=${encodeURIComponent(search.trim())}&limit=8`);
+        const res = await fetch(
+          `/api/pacientes?search=${encodeURIComponent(search.trim())}&limit=8`,
+        );
         if (!res.ok) throw new Error('Error en búsqueda');
         const json = await res.json();
         const list: PacienteResult[] = json.data || [];
@@ -120,8 +122,10 @@ export function PacienteSearchCombobox({
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
       if (
-        listRef.current && !listRef.current.contains(e.target as Node) &&
-        inputRef.current && !inputRef.current.contains(e.target as Node)
+        listRef.current &&
+        !listRef.current.contains(e.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(e.target as Node)
       ) {
         setOpen(false);
       }
@@ -187,7 +191,9 @@ export function PacienteSearchCombobox({
           ref={inputRef}
           value={search}
           onChange={handleInputChange}
-          onFocus={() => { if (results.length > 0) setOpen(true); }}
+          onFocus={() => {
+            if (results.length > 0) setOpen(true);
+          }}
           onKeyDown={handleKeyDown}
           placeholder={selectedName ? '' : placeholder}
           disabled={disabled}

@@ -25,9 +25,7 @@ export default function ReportesError({
             />
           </svg>
         </div>
-        <h2 className="mb-1 text-lg font-semibold">
-          Error al cargar reportes
-        </h2>
+        <h2 className="mb-1 text-lg font-semibold">Error al cargar reportes</h2>
         <p className="mb-6 text-sm text-muted-foreground">
           No pudimos generar los reportes. {error.message}
         </p>

@@ -60,7 +60,9 @@ export function FooterColumn({
                 : undefined;
           return (
             <li key={link.label}>
-              {link.external || link.href.startsWith('mailto:') || link.href.startsWith('https://wa') ? (
+              {link.external ||
+              link.href.startsWith('mailto:') ||
+              link.href.startsWith('https://wa') ? (
                 <a
                   href={link.href}
                   target="_blank"
@@ -69,7 +71,9 @@ export function FooterColumn({
                 >
                   {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
                   {link.label}
-                  {link.href.startsWith('http') && !link.href.includes('wa.me') && !link.href.includes('aicorebots.com/') ? (
+                  {link.href.startsWith('http') &&
+                  !link.href.includes('wa.me') &&
+                  !link.href.includes('aicorebots.com/') ? (
                     <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-40" />
                   ) : null}
                 </a>

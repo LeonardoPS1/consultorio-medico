@@ -1,10 +1,21 @@
 'use client';
 
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
 } from 'recharts';
 import type { TooltipProps } from 'recharts';
-export interface DistribucionEstado { estado: string; valor: number; color: string; }
+export interface DistribucionEstado {
+  estado: string;
+  valor: number;
+  color: string;
+}
 
 interface Props {
   data: DistribucionEstado[];
@@ -30,7 +41,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 };
 
 export default function DistribucionEstadosChart({ data }: Props) {
-  const chartData = data.map(d => ({
+  const chartData = data.map((d) => ({
     ...d,
     fill: colorMap[d.color] || '#6b7280',
   }));
@@ -57,7 +68,10 @@ export default function DistribucionEstadosChart({ data }: Props) {
             tickLine={false}
             allowDecimals={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }}
+          />
           <Bar
             dataKey="valor"
             radius={[4, 4, 0, 0]}

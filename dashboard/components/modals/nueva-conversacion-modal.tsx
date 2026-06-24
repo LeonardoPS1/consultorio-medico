@@ -13,13 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/select';
 import { Loader2 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
@@ -77,7 +71,13 @@ export function NuevaConversacionModal({ onCreated }: NuevaConversacionModalProp
   return (
     <>
       <Button size="sm" onClick={() => setOpen(true)}>
-        <svg className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg
+          className="h-4 w-4 mr-1"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
           <path d="M12 5v14M5 12h14" />
         </svg>
         Nueva
@@ -157,7 +157,10 @@ export function NuevaConversacionModal({ onCreated }: NuevaConversacionModalProp
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={loading || !nombre.trim() || !apellido.trim() || !telefono.trim()}>
+              <Button
+                type="submit"
+                disabled={loading || !nombre.trim() || !apellido.trim() || !telefono.trim()}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-1 animate-spin" />

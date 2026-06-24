@@ -9,8 +9,15 @@ import { parseBody, createServicioSchema } from '@/lib/validations';
 export const GET = apiHandler(async (_request: NextRequest) => {
   await requireAuth();
 
-  const lista = await db.select().from(servicios).where(sql`${servicios.deletedAt} IS NULL`).orderBy(servicios.nombre);
-  const [{ total }] = await db.select({ total: count() }).from(servicios).where(sql`${servicios.deletedAt} IS NULL`);
+  const lista = await db
+    .select()
+    .from(servicios)
+    .where(sql`${servicios.deletedAt} IS NULL`)
+    .orderBy(servicios.nombre);
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(servicios)
+    .where(sql`${servicios.deletedAt} IS NULL`);
   return success({ lista, total: Number(total) });
 });
 
@@ -19,14 +26,17 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
   const body = await parseBody(request, createServicioSchema);
 
-  const [nuevo] = await db.insert(servicios).values({
-    nombre: body.nombre,
-    descripcion: body.descripcion ?? null,
-    duracionMinutos: body.duracionMinutos,
-    precio: body.precio ?? null,
-    medicoId: body.medicoId ?? null,
-    activo: true,
-  } as any).returning();
+  const [nuevo] = await db
+    .insert(servicios)
+    .values({
+      nombre: body.nombre,
+      descripcion: body.descripcion ?? null,
+      duracionMinutos: body.duracionMinutos,
+      precio: body.precio ?? null,
+      medicoId: body.medicoId ?? null,
+      activo: true,
+    })
+    .returning();
 
   return created(nuevo);
 });

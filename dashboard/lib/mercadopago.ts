@@ -35,13 +35,15 @@ export interface CreateTurnoPreferenceInput {
  * Usa external_reference con formato "turno:{turnoId}" para identificar el pago.
  */
 export async function createTurnoPaymentPreference(
-  input: CreateTurnoPreferenceInput
+  input: CreateTurnoPreferenceInput,
 ): Promise<CreatePreferenceResult | null> {
   const client = getClient();
   if (!client) return null;
 
   const isDev = process.env.NODE_ENV === 'development';
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (isDev ? 'http://localhost:3000' : 'https://med.aicorebots.com');
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (isDev ? 'http://localhost:3000' : 'https://med.aicorebots.com');
   const currency = input.moneda || process.env.MERCADOPAGO_CURRENCY || 'CLP';
 
   const preference = new Preference(client);
@@ -97,7 +99,7 @@ export interface CreatePreferenceResult {
 export async function createCheckoutPreference(
   planId: string,
   externalReference: string,
-  payerEmail?: string
+  payerEmail?: string,
 ): Promise<CreatePreferenceResult | null> {
   const client = getClient();
   if (!client) return null;
@@ -106,7 +108,9 @@ export async function createCheckoutPreference(
   if (!plan) throw new Error(`Plan no valido: ${planId}`);
 
   const isDev = process.env.NODE_ENV === 'development';
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (isDev ? 'http://localhost:3000' : 'https://med.aicorebots.com');
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (isDev ? 'http://localhost:3000' : 'https://med.aicorebots.com');
   const currency = process.env.MERCADOPAGO_CURRENCY || 'CLP';
   const price = currency === 'CLP' ? plan.precioCLP : plan.precioUSD;
 
@@ -128,9 +132,12 @@ export async function createCheckoutPreference(
     external_reference: externalReference,
     auto_return: 'approved',
     back_urls: {
-      success: process.env.MERCADOPAGO_SUCCESS_URL || `${baseUrl}/dashboard/configuracion?tab=suscripcion`,
-      failure: process.env.MERCADOPAGO_FAILURE_URL || `${baseUrl}/dashboard/configuracion?tab=suscripcion`,
-      pending: process.env.MERCADOPAGO_PENDING_URL || `${baseUrl}/dashboard/configuracion?tab=suscripcion`,
+      success:
+        process.env.MERCADOPAGO_SUCCESS_URL || `${baseUrl}/dashboard/configuracion?tab=suscripcion`,
+      failure:
+        process.env.MERCADOPAGO_FAILURE_URL || `${baseUrl}/dashboard/configuracion?tab=suscripcion`,
+      pending:
+        process.env.MERCADOPAGO_PENDING_URL || `${baseUrl}/dashboard/configuracion?tab=suscripcion`,
     },
     notification_url: `${baseUrl}/api/pagos/webhook`,
   };

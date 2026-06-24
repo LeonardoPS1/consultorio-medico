@@ -88,7 +88,8 @@ export default function PaquetesPage() {
             <div>
               <p className="font-semibold text-emerald-800">{suscripcionActiva.nombre}</p>
               <p className="text-sm text-emerald-600">
-                {suscripcionActiva.turnosRestantes} de {suscripcionActiva.turnosTotales} turnos disponibles
+                {suscripcionActiva.turnosRestantes} de {suscripcionActiva.turnosTotales} turnos
+                disponibles
               </p>
             </div>
           </div>
@@ -118,9 +119,7 @@ export default function PaquetesPage() {
             >
               <div>
                 <h3 className="font-semibold text-gray-900">{p.nombre}</h3>
-                {p.descripcion && (
-                  <p className="text-sm text-gray-500 mt-1">{p.descripcion}</p>
-                )}
+                {p.descripcion && <p className="text-sm text-gray-500 mt-1">{p.descripcion}</p>}
                 <p className="text-sm text-gray-400 mt-1">
                   {p.cantidadTurnos} turno{p.cantidadTurnos !== 1 ? 's' : ''}
                 </p>

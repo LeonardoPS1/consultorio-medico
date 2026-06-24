@@ -8,10 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPortalSession } from '@/lib/portal-auth';
 import { getReciboData, generarHTMLRecibo } from '@/lib/services/portal-recibos';
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -21,7 +18,10 @@ export async function GET(
 
   const data = await getReciboData(turnoId, session.pacienteId);
   if (!data) {
-    return NextResponse.json({ error: 'Recibo no encontrado o pago no completado' }, { status: 404 });
+    return NextResponse.json(
+      { error: 'Recibo no encontrado o pago no completado' },
+      { status: 404 },
+    );
   }
 
   const html = generarHTMLRecibo(data);

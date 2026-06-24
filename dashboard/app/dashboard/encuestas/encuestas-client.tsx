@@ -2,7 +2,15 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, StarHalf, MessageSquare, ThumbsUp, ThumbsDown, Meh, Stethoscope } from 'lucide-react';
+import {
+  Star,
+  StarHalf,
+  MessageSquare,
+  ThumbsUp,
+  ThumbsDown,
+  Meh,
+  Stethoscope,
+} from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -37,11 +45,7 @@ function StarRating({ puntaje }: { puntaje: number }) {
 function formatFecha(fecha: string) {
   const date = new Date(fecha);
   const distancia = formatDistanceToNow(date, { addSuffix: true, locale: es });
-  return (
-    <span title={format(date, "d 'de' MMM 'a las' HH:mm", { locale: es })}>
-      {distancia}
-    </span>
-  );
+  return <span title={format(date, "d 'de' MMM 'a las' HH:mm", { locale: es })}>{distancia}</span>;
 }
 
 export function EncuestasClient({ respuestas }: { respuestas: Respuesta[] }) {
@@ -81,7 +85,8 @@ export function EncuestasClient({ respuestas }: { respuestas: Respuesta[] }) {
               {/* Avatar */}
               <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 <span className="text-xs font-bold text-primary">
-                  {resp.pacienteNombre.charAt(0)}{resp.pacienteApellido.charAt(0)}
+                  {resp.pacienteNombre.charAt(0)}
+                  {resp.pacienteApellido.charAt(0)}
                 </span>
               </div>
 
@@ -101,15 +106,22 @@ export function EncuestasClient({ respuestas }: { respuestas: Respuesta[] }) {
                     </span>
                   )}
                   {resp.sentimiento && (
-                    <Badge variant="outline" className={`
+                    <Badge
+                      variant="outline"
+                      className={`
                       text-[10px] px-1.5 py-0 h-4 font-normal
                       ${resp.sentimiento === 'positivo' ? 'text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800' : ''}
                       ${resp.sentimiento === 'neutral' ? 'text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800' : ''}
                       ${resp.sentimiento === 'negativo' ? 'text-red-600 border-red-200 bg-red-50 dark:bg-red-950 dark:text-red-400 dark:border-red-800' : ''}
-                    `}>
-                      {resp.sentimiento === 'positivo' && <ThumbsUp className="h-2.5 w-2.5 mr-0.5" />}
+                    `}
+                    >
+                      {resp.sentimiento === 'positivo' && (
+                        <ThumbsUp className="h-2.5 w-2.5 mr-0.5" />
+                      )}
                       {resp.sentimiento === 'neutral' && <Meh className="h-2.5 w-2.5 mr-0.5" />}
-                      {resp.sentimiento === 'negativo' && <ThumbsDown className="h-2.5 w-2.5 mr-0.5" />}
+                      {resp.sentimiento === 'negativo' && (
+                        <ThumbsDown className="h-2.5 w-2.5 mr-0.5" />
+                      )}
                       {resp.sentimiento}
                     </Badge>
                   )}
@@ -119,9 +131,7 @@ export function EncuestasClient({ respuestas }: { respuestas: Respuesta[] }) {
                     {resp.comentario}
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground/60 mt-1">
-                  {formatFecha(resp.fecha)}
-                </p>
+                <p className="text-xs text-muted-foreground/60 mt-1">{formatFecha(resp.fecha)}</p>
               </div>
             </div>
           ))}

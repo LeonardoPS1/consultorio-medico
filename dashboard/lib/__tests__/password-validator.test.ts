@@ -60,14 +60,12 @@ describe('passwordErrorsToString', () => {
 
   it('formatea un solo error', () => {
     expect(passwordErrorsToString(['Mínimo 8 caracteres'])).toBe(
-      'La contraseña debe tener: Mínimo 8 caracteres.'
+      'La contraseña debe tener: Mínimo 8 caracteres.',
     );
   });
 
   it('formatea múltiples errores', () => {
     const result = passwordErrorsToString(['Mínimo 8 caracteres', 'Al menos una mayúscula']);
-    expect(result).toBe(
-      'La contraseña debe tener: Mínimo 8 caracteres, Al menos una mayúscula.'
-    );
+    expect(result).toBe('La contraseña debe tener: Mínimo 8 caracteres, Al menos una mayúscula.');
   });
 });

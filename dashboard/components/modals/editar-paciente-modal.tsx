@@ -13,13 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/select';
 import { SISTEMAS_SALUD, ISAPRES_CHILENAS } from '@/lib/isapres';
 
 interface Region {
@@ -76,7 +70,12 @@ function formatTelefonoChile(value: string): string {
   return value;
 }
 
-export function EditarPacienteModal({ open, onOpenChange, paciente, onSaved }: EditarPacienteModalProps) {
+export function EditarPacienteModal({
+  open,
+  onOpenChange,
+  paciente,
+  onSaved,
+}: EditarPacienteModalProps) {
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -116,19 +115,22 @@ export function EditarPacienteModal({ open, onOpenChange, paciente, onSaved }: E
   useEffect(() => {
     if (open) {
       fetch('/api/regiones')
-        .then(r => r.json())
-        .then(data => setRegiones(data.data || []))
+        .then((r) => r.json())
+        .then((data) => setRegiones(data.data || []))
         .catch(() => {});
     }
   }, [open]);
 
   // Cargar comunas al cambiar región
   useEffect(() => {
-    if (!regionId) { setComunas([]); return; }
+    if (!regionId) {
+      setComunas([]);
+      return;
+    }
     setLoadingComunas(true);
     fetch(`/api/comunas?region_id=${regionId}`)
-      .then(r => r.json())
-      .then(data => setComunas(data.data || []))
+      .then((r) => r.json())
+      .then((data) => setComunas(data.data || []))
       .catch(() => {})
       .finally(() => setLoadingComunas(false));
   }, [regionId]);
@@ -182,9 +184,7 @@ export function EditarPacienteModal({ open, onOpenChange, paciente, onSaved }: E
       <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Paciente</DialogTitle>
-          <DialogDescription>
-            Modificá los datos del paciente
-          </DialogDescription>
+          <DialogDescription>Modificá los datos del paciente</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -268,13 +268,21 @@ export function EditarPacienteModal({ open, onOpenChange, paciente, onSaved }: E
 
           <div className="space-y-2">
             <Label>Sistema de Salud</Label>
-            <Select value={sistemaSalud} onValueChange={(val) => { setSistemaSalud(val); setIsapreNombre(''); }}>
+            <Select
+              value={sistemaSalud}
+              onValueChange={(val) => {
+                setSistemaSalud(val);
+                setIsapreNombre('');
+              }}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {SISTEMAS_SALUD.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -289,7 +297,9 @@ export function EditarPacienteModal({ open, onOpenChange, paciente, onSaved }: E
                 </SelectTrigger>
                 <SelectContent>
                   {ISAPRES_CHILENAS.map((i) => (
-                    <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>
+                    <SelectItem key={i.value} value={i.value}>
+                      {i.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -299,14 +309,21 @@ export function EditarPacienteModal({ open, onOpenChange, paciente, onSaved }: E
           {/* Región */}
           <div className="space-y-2">
             <Label>Región</Label>
-            <Select value={regionId} onValueChange={(val) => { setRegionId(val); setComunaId(''); }}>
+            <Select
+              value={regionId}
+              onValueChange={(val) => {
+                setRegionId(val);
+                setComunaId('');
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccioná una región" />
               </SelectTrigger>
               <SelectContent>
                 {regiones.map((r) => (
                   <SelectItem key={r.id} value={r.id}>
-                    {r.numeroRomano ? `${r.numeroRomano} - ` : ''}{r.nombre}
+                    {r.numeroRomano ? `${r.numeroRomano} - ` : ''}
+                    {r.nombre}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -322,11 +339,15 @@ export function EditarPacienteModal({ open, onOpenChange, paciente, onSaved }: E
               disabled={!regionId || loadingComunas}
             >
               <SelectTrigger>
-                <SelectValue placeholder={loadingComunas ? 'Cargando...' : 'Seleccioná una comuna'} />
+                <SelectValue
+                  placeholder={loadingComunas ? 'Cargando...' : 'Seleccioná una comuna'}
+                />
               </SelectTrigger>
               <SelectContent>
                 {comunas.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.nombre}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -336,7 +357,10 @@ export function EditarPacienteModal({ open, onOpenChange, paciente, onSaved }: E
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading || !nombre.trim() || !apellido.trim() || !telefono.trim()}>
+            <Button
+              type="submit"
+              disabled={loading || !nombre.trim() || !apellido.trim() || !telefono.trim()}
+            >
               {loading ? 'Guardando...' : 'Guardar Cambios'}
             </Button>
           </DialogFooter>

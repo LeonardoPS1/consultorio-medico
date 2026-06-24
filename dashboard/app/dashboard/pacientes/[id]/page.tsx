@@ -169,9 +169,7 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
       })
       .from(turnos)
       .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
-      .where(
-        and(eq(turnos.pacienteId, id), sql`${turnos.deletedAt} IS NULL`),
-      )
+      .where(and(eq(turnos.pacienteId, id), sql`${turnos.deletedAt} IS NULL`))
       .orderBy(desc(turnos.fechaHora))
       .limit(30);
 
@@ -226,7 +224,9 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
     // ─── Baja ARCO (query segura, columna puede no existir en prod) ──
     let bajaSolicitadaAt: string | null = null;
     try {
-      const [row] = await db.execute(sql`SELECT baja_solicitada_at FROM pacientes WHERE id = ${id}`);
+      const [row] = await db.execute(
+        sql`SELECT baja_solicitada_at FROM pacientes WHERE id = ${id}`,
+      );
       const raw = (row as Record<string, unknown>)?.baja_solicitada_at;
       bajaSolicitadaAt = raw ? String(raw) : null;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -241,12 +241,7 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
         estado: conversaciones.estado,
       })
       .from(conversaciones)
-      .where(
-        and(
-          eq(conversaciones.pacienteId, id),
-          sql`${conversaciones.deletedAt} IS NULL`,
-        ),
-      )
+      .where(and(eq(conversaciones.pacienteId, id), sql`${conversaciones.deletedAt} IS NULL`))
       .orderBy(desc(conversaciones.ultimaInteraccion))
       .limit(1);
 
@@ -322,24 +317,31 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
 
 // ─── Page ──────────────────────────────────────────────────
 
-export default async function PacienteDetallePage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function PacienteDetallePage({ params }: { params: { id: string } }) {
   const data = await getPacienteDetalle(params.id);
   if (!data) notFound();
 
-  const { paciente, turnos, recetas, historial, ultimaConversacion, stats, bajaSolicitadaAt, bajaConfirmada } = data;
+  const {
+    paciente,
+    turnos,
+    recetas,
+    historial,
+    ultimaConversacion,
+    stats,
+    bajaSolicitadaAt,
+    bajaConfirmada,
+  } = data;
 
-  return <PacienteDetalleClient
-    paciente={paciente}
-    turnos={turnos}
-    recetas={recetas}
-    historial={historial}
-    ultimaConversacion={ultimaConversacion}
-    stats={stats}
-    bajaSolicitadaAt={bajaSolicitadaAt}
-    bajaConfirmada={bajaConfirmada}
-  />;
+  return (
+    <PacienteDetalleClient
+      paciente={paciente}
+      turnos={turnos}
+      recetas={recetas}
+      historial={historial}
+      ultimaConversacion={ultimaConversacion}
+      stats={stats}
+      bajaSolicitadaAt={bajaSolicitadaAt}
+      bajaConfirmada={bajaConfirmada}
+    />
+  );
 }

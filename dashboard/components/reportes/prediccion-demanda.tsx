@@ -1,7 +1,14 @@
 'use client';
 
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
 } from 'recharts';
 import type { TooltipProps } from 'recharts';
 
@@ -19,8 +26,8 @@ interface Props {
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
   if (!active || !payload?.length) return null;
-  const real = payload.find(p => p.dataKey === 'real');
-  const estimado = payload.find(p => p.dataKey === 'estimado');
+  const real = payload.find((p) => p.dataKey === 'real');
+  const estimado = payload.find((p) => p.dataKey === 'estimado');
   return (
     <div className="bg-foreground text-background text-xs rounded-lg px-3 py-2 shadow-card border border-border/50">
       <p className="font-semibold mb-1">{label}</p>
@@ -31,7 +38,10 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 };
 
 export default function PrediccionDemanda({ data }: Props) {
-  const maxVal = Math.max(...data.map(d => Math.max(d.real ?? 0, d.estimado ?? 0, d.max ?? 0)), 1);
+  const maxVal = Math.max(
+    ...data.map((d) => Math.max(d.real ?? 0, d.estimado ?? 0, d.max ?? 0)),
+    1,
+  );
 
   return (
     <div className="relative">
@@ -49,7 +59,12 @@ export default function PrediccionDemanda({ data }: Props) {
       </svg>
       <ResponsiveContainer width="100%" height={240}>
         <AreaChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.4} vertical={false} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="hsl(var(--border))"
+            strokeOpacity={0.4}
+            vertical={false}
+          />
           <XAxis
             dataKey="dia"
             tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
@@ -64,10 +79,15 @@ export default function PrediccionDemanda({ data }: Props) {
             domain={[0, Math.ceil(maxVal * 1.15)]}
             allowDecimals={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.2 }} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ fill: 'hsl(var(--muted))', opacity: 0.2 }}
+          />
           <Legend
             wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
-            formatter={(value: string) => (value === 'real' ? 'Histórico' : value === 'estimado' ? 'Predicción' : value)}
+            formatter={(value: string) =>
+              value === 'real' ? 'Histórico' : value === 'estimado' ? 'Predicción' : value
+            }
           />
           <Area
             type="monotone"

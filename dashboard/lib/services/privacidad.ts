@@ -27,7 +27,12 @@ import {
 import type { ConfigPrivacidad } from '@/drizzle/schema';
 import { eq, and, sql, inArray } from 'drizzle-orm';
 import { notFound } from '@/lib/api-handler';
-import { anonymizeNombre, anonymizeEmail, anonymizeTelefono, anonymizeDocumento } from '@/lib/anonymize';
+import {
+  anonymizeNombre,
+  anonymizeEmail,
+  anonymizeTelefono,
+  anonymizeDocumento,
+} from '@/lib/anonymize';
 
 // ─── Tipos ──────────────────────────────────────────────────────
 
@@ -82,14 +87,17 @@ export const privacidadService = {
    * Esta tabla es la fuente de verdad para auditoría de consentimientos.
    */
   async registrarConsentimiento(input: RegistrarConsentimientoInput) {
-    const [result] = await db.insert(consentimientoLog).values({
-      pacienteId: input.pacienteId,
-      tipo: input.tipo,
-      accion: input.accion,
-      aceptado: input.aceptado,
-      ip: input.ip || null,
-      userAgent: input.userAgent || null,
-    }).returning();
+    const [result] = await db
+      .insert(consentimientoLog)
+      .values({
+        pacienteId: input.pacienteId,
+        tipo: input.tipo,
+        accion: input.accion,
+        aceptado: input.aceptado,
+        ip: input.ip || null,
+        userAgent: input.userAgent || null,
+      })
+      .returning();
     return result;
   },
 
@@ -122,7 +130,8 @@ export const privacidadService = {
     if (!paciente) notFound('Paciente no encontrado');
 
     // Marcar bajaSolicitadaAt en el paciente
-    await db.update(pacientes)
+    await db
+      .update(pacientes)
       .set({ bajaSolicitadaAt: new Date() })
       .where(eq(pacientes.id, pacienteId));
 
@@ -176,7 +185,8 @@ export const privacidadService = {
     if (!paciente) notFound('Paciente no encontrado');
 
     // ─── 1. Soft-delete turnos ────────────────────────────────
-    await db.update(turnos)
+    await db
+      .update(turnos)
       .set({ deletedAt: new Date() })
       .where(and(eq(turnos.pacienteId, pacienteId), sql`${turnos.deletedAt} IS NULL`));
 
@@ -184,17 +194,19 @@ export const privacidadService = {
     const convsActivas = await db
       .select({ id: conversaciones.id })
       .from(conversaciones)
-      .where(and(eq(conversaciones.pacienteId, pacienteId), sql`${conversaciones.deletedAt} IS NULL`));
+      .where(
+        and(eq(conversaciones.pacienteId, pacienteId), sql`${conversaciones.deletedAt} IS NULL`),
+      );
 
     if (convsActivas.length > 0) {
-      const convIds = convsActivas.map(c => c.id);
+      const convIds = convsActivas.map((c) => c.id);
 
       // Hard-delete mensajes de esas conversaciones
-      await db.delete(mensajes)
-        .where(inArray(mensajes.conversacionId, convIds));
+      await db.delete(mensajes).where(inArray(mensajes.conversacionId, convIds));
 
       // Soft-delete conversaciones
-      await db.update(conversaciones)
+      await db
+        .update(conversaciones)
         .set({ deletedAt: new Date() })
         .where(inArray(conversaciones.id, convIds));
     }
@@ -205,17 +217,17 @@ export const privacidadService = {
     await db.delete(tareasPendientes).where(eq(tareasPendientes.pacienteId, pacienteId));
 
     // ─── 4. Marcar recetas como historial ─────────────────────
-    await db.update(recetas)
-      .set({ estado: 'historial' })
-      .where(eq(recetas.pacienteId, pacienteId));
+    await db.update(recetas).set({ estado: 'historial' }).where(eq(recetas.pacienteId, pacienteId));
 
     // ─── 5. Soft-delete facturación ──────────────────────────
-    await db.update(facturacion)
+    await db
+      .update(facturacion)
       .set({ deletedAt: new Date() })
       .where(and(eq(facturacion.pacienteId, pacienteId), sql`${facturacion.deletedAt} IS NULL`));
 
     // ─── 6. Anonimizar PII del paciente + soft-delete ────────
-    await db.update(pacientes)
+    await db
+      .update(pacientes)
       .set({
         nombre: anonymizeNombre(paciente.nombre) || 'Paciente',
         apellido: 'Anonimizado',
@@ -297,14 +309,16 @@ export const privacidadService = {
     const expirados = await db
       .select({ id: pacientes.id })
       .from(pacientes)
-      .where(and(
-        sql`${pacientes.deletedAt} IS NOT NULL`,
-        sql`${pacientes.deletedAt} <= ${fechaLimite.toISOString()}::timestamptz`,
-      ));
+      .where(
+        and(
+          sql`${pacientes.deletedAt} IS NOT NULL`,
+          sql`${pacientes.deletedAt} <= ${fechaLimite.toISOString()}::timestamptz`,
+        ),
+      );
 
     if (expirados.length === 0) return 0;
 
-    const ids = expirados.map(p => p.id);
+    const ids = expirados.map((p) => p.id);
 
     // Hard-delete definitivo de datos residuales
     await db.delete(historialMedico).where(inArray(historialMedico.pacienteId, ids));
@@ -312,10 +326,9 @@ export const privacidadService = {
     await db.delete(tareasPendientes).where(inArray(tareasPendientes.pacienteId, ids));
 
     // Recetas: hard-delete si están en estado 'historial'
-    await db.delete(recetas).where(and(
-      inArray(recetas.pacienteId, ids),
-      eq(recetas.estado, 'historial'),
-    ));
+    await db
+      .delete(recetas)
+      .where(and(inArray(recetas.pacienteId, ids), eq(recetas.estado, 'historial')));
 
     return expirados.length;
   },

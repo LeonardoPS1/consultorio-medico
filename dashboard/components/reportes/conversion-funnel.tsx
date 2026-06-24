@@ -1,7 +1,15 @@
 'use client';
 
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LabelList,
+  Cell,
 } from 'recharts';
 import type { TooltipProps } from 'recharts';
 
@@ -21,7 +29,9 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   return (
     <div className="bg-foreground text-background text-xs rounded-lg px-3 py-2 shadow-card border border-border/50">
       <p className="font-semibold">{label}</p>
-      <p className="opacity-80">{item.value} pacientes ({item.payload?.porcentaje ?? 0}%)</p>
+      <p className="opacity-80">
+        {item.value} pacientes ({item.payload?.porcentaje ?? 0}%)
+      </p>
     </div>
   );
 };
@@ -29,7 +39,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 const COLORS = ['#6366f1', '#818cf8', '#a5b4fc', '#3b82f6', '#60a5fa'];
 
 export default function ConversionFunnel({ data }: Props) {
-  const maxVal = Math.max(...data.map(d => d.cantidad), 1);
+  const maxVal = Math.max(...data.map((d) => d.cantidad), 1);
 
   return (
     <div className="relative">
@@ -62,7 +72,10 @@ export default function ConversionFunnel({ data }: Props) {
             tickLine={false}
             width={120}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }}
+          />
           <Bar
             dataKey="cantidad"
             radius={[0, 4, 4, 0]}

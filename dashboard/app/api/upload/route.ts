@@ -28,17 +28,14 @@ export async function POST(request: NextRequest) {
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
         { error: 'Tipo de archivo no permitido. Usá JPG, PNG, WebP, GIF o SVG.' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Validar tamaño (máximo 5MB)
     const MAX_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      return NextResponse.json(
-        { error: 'La imagen es muy grande. Máximo 5MB.' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'La imagen es muy grande. Máximo 5MB.' }, { status: 400 });
     }
 
     // Obtener directorio escribible (fallback automático a tmp si no hay permisos)
@@ -66,9 +63,6 @@ export async function POST(request: NextRequest) {
     const stack = error instanceof Error ? error.stack : '';
     console.error('[Upload] Error:', msg, '| Dir:', uploadDir || 'N/A', '| CWD:', process.cwd());
     if (stack) console.error('[Upload] Stack:', stack);
-    return NextResponse.json(
-      { error: `Error al subir archivo: ${msg}` },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: `Error al subir archivo: ${msg}` }, { status: 500 });
   }
 }

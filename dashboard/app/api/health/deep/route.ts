@@ -2,13 +2,37 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 
+interface CheckResult {
+  status: 'ok' | 'error' | 'degraded';
+  message?: string;
+  latencyMs: number;
+}
+
+interface HealthChecks {
+  [key: string]: CheckResult;
+}
+
+interface OllamaTag {
+  name: string;
+}
+
+/**
+ * Extrae el mensaje de un error de forma segura.
+ * @param error - Error capturado (tipo desconocido).
+ * @returns Mensaje de error, truncado a 100 caracteres.
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message?.slice(0, 100) || 'unknown error';
+  return String(error).slice(0, 100);
+}
+
 /**
  * GET /api/health/deep
  *
  * Health check profundo que verifica:
  * - PostgreSQL (conexión + query)
  * - n8n (API reachable)
- * - Ollama (modelo Mistral responde)
+ * - Ollama (modelo responde)
  * - Twilio (API reachable)
  *
  * Útil para monitoreo proactivo y alertas.
@@ -16,7 +40,7 @@ import { sql } from 'drizzle-orm';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const checks: Record<string, { status: 'ok' | 'error' | 'degraded'; message?: string; latencyMs: number }> = {};
+  const checks: HealthChecks = {};
   const start = Date.now();
 
   // ─── PostgreSQL ────────────────────────────────────
@@ -24,8 +48,12 @@ export async function GET() {
     const pgStart = Date.now();
     await db.execute(sql`SELECT 1`);
     checks.postgres = { status: 'ok', latencyMs: Date.now() - pgStart };
-  } catch (e: any) {
-    checks.postgres = { status: 'error', message: e.message?.slice(0, 100), latencyMs: Date.now() - start };
+  } catch (e: unknown) {
+    checks.postgres = {
+      status: 'error',
+      message: getErrorMessage(e),
+      latencyMs: Date.now() - start,
+    };
   }
 
   // ─── n8n ───────────────────────────────────────────
@@ -39,30 +67,49 @@ export async function GET() {
     if (res.ok) {
       checks.n8n = { status: 'ok', latencyMs: Date.now() - n8nStart };
     } else {
-      checks.n8n = { status: 'degraded', message: `HTTP ${res.status}`, latencyMs: Date.now() - n8nStart };
+      checks.n8n = {
+        status: 'degraded',
+        message: `HTTP ${res.status}`,
+        latencyMs: Date.now() - n8nStart,
+      };
     }
-  } catch (e: any) {
-    checks.n8n = { status: 'error', message: e.message?.slice(0, 100) || 'timeout', latencyMs: 3000 };
+  } catch (e: unknown) {
+    checks.n8n = {
+      status: 'error',
+      message: getErrorMessage(e) || 'timeout',
+      latencyMs: 3000,
+    };
   }
 
   // ─── Ollama ────────────────────────────────────────
   try {
     const ollamaStart = Date.now();
-    // Usar OLLAMA_BASE_URL (consistente con el resto de la app)
     const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://172.18.0.1:11434';
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(`${ollamaUrl}/api/tags`, { signal: controller.signal });
     clearTimeout(timeout);
     if (res.ok) {
-      const data = await res.json();
-      const models = data?.models?.map((m: any) => m.name) || [];
-      checks.ollama = { status: 'ok', message: models.join(', ') || 'no models', latencyMs: Date.now() - ollamaStart };
+      const data = (await res.json()) as { models?: OllamaTag[] };
+      const models = data?.models?.map((m: OllamaTag) => m.name) || [];
+      checks.ollama = {
+        status: 'ok',
+        message: models.join(', ') || 'no models',
+        latencyMs: Date.now() - ollamaStart,
+      };
     } else {
-      checks.ollama = { status: 'degraded', message: `HTTP ${res.status}`, latencyMs: Date.now() - ollamaStart };
+      checks.ollama = {
+        status: 'degraded',
+        message: `HTTP ${res.status}`,
+        latencyMs: Date.now() - ollamaStart,
+      };
     }
-  } catch (e: any) {
-    checks.ollama = { status: 'error', message: e.message?.slice(0, 100) || 'timeout', latencyMs: 5000 };
+  } catch (e: unknown) {
+    checks.ollama = {
+      status: 'error',
+      message: getErrorMessage(e) || 'timeout',
+      latencyMs: 5000,
+    };
   }
 
   // ─── Twilio ────────────────────────────────────────
@@ -82,28 +129,44 @@ export async function GET() {
       if (res.ok) {
         checks.twilio = { status: 'ok', latencyMs: Date.now() - twilioStart };
       } else {
-        checks.twilio = { status: 'degraded', message: `HTTP ${res.status}`, latencyMs: Date.now() - twilioStart };
+        checks.twilio = {
+          status: 'degraded',
+          message: `HTTP ${res.status}`,
+          latencyMs: Date.now() - twilioStart,
+        };
       }
     } else {
-      checks.twilio = { status: 'degraded', message: 'Credenciales no configuradas', latencyMs: 0 };
+      checks.twilio = {
+        status: 'degraded',
+        message: 'Credenciales no configuradas',
+        latencyMs: 0,
+      };
     }
-  } catch (e: any) {
-    checks.twilio = { status: 'error', message: e.message?.slice(0, 100) || 'timeout', latencyMs: 5000 };
+  } catch (e: unknown) {
+    checks.twilio = {
+      status: 'error',
+      message: getErrorMessage(e) || 'timeout',
+      latencyMs: 5000,
+    };
   }
 
   // ─── Overall ───────────────────────────────────────
-  const statuses = Object.values(checks).map(c => c.status);
-  const overall = statuses.every(s => s === 'ok') ? 'healthy'
-    : statuses.some(s => s === 'error') ? 'unhealthy'
-    : 'degraded';
+  const statuses = Object.values(checks).map((c) => c.status);
+  const overall = statuses.every((s) => s === 'ok')
+    ? 'ok'
+    : statuses.some((s) => s === 'error')
+      ? 'error'
+      : 'degraded';
 
-  return NextResponse.json({
-    status: overall,
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    totalLatencyMs: Date.now() - start,
-    checks,
-  }, {
-    status: overall === 'healthy' ? 200 : overall === 'degraded' ? 200 : 503,
-  });
+  return NextResponse.json(
+    {
+      status: overall,
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      checks,
+    },
+    {
+      status: overall === 'error' ? 503 : 200,
+    },
+  );
 }

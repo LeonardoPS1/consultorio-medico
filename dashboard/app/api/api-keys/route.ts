@@ -17,7 +17,10 @@ const VALID_SCOPES = Object.values(API_SCOPES);
 
 const createApiKeySchema = z.object({
   nombre: z.string().min(1).max(100),
-  scopes: z.array(z.enum(VALID_SCOPES as [string, ...string[]])).optional().default(VALID_SCOPES),
+  scopes: z
+    .array(z.enum(VALID_SCOPES as [string, ...string[]]))
+    .optional()
+    .default(VALID_SCOPES),
   expiresAt: z.string().datetime().optional(),
 });
 
@@ -25,7 +28,9 @@ const createApiKeySchema = z.object({
 async function getSession() {
   const session = await auth();
   if (!session?.user?.id) return null;
-  return session as { user: { id: string; role: string; plan: string; name: string; email: string } };
+  return session as {
+    user: { id: string; role: string; plan: string; name: string; email: string };
+  };
 }
 
 // ─── GET: Listar API keys ────────────────────────────────────
@@ -70,14 +75,17 @@ export async function POST(request: NextRequest) {
     });
 
     // Devolver la key completa (única vez)
-    return NextResponse.json({
-      id: result.id,
-      fullKey: result.keyData.fullKey,
-      keyPrefix: result.keyData.keyPrefix,
-      nombre: parsed.nombre.trim(),
-      scopes: parsed.scopes,
-      advertencia: 'Guardá esta key. No se mostrará nuevamente.',
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        id: result.id,
+        fullKey: result.keyData.fullKey,
+        keyPrefix: result.keyData.keyPrefix,
+        nombre: parsed.nombre.trim(),
+        scopes: parsed.scopes,
+        advertencia: 'Guardá esta key. No se mostrará nuevamente.',
+      },
+      { status: 201 },
+    );
   } catch (e) {
     return NextResponse.json({ error: 'Error al crear API key' }, { status: 500 });
   }

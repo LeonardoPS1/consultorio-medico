@@ -5,7 +5,12 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { createTurnoSchema, createPacienteSchema, updateTurnoSchema, updatePacienteSchema } from '@/lib/validations';
+import {
+  createTurnoSchema,
+  createPacienteSchema,
+  updateTurnoSchema,
+  updatePacienteSchema,
+} from '@/lib/validations';
 
 // ─── UUIDs de prueba ───────────────────────────────────────
 

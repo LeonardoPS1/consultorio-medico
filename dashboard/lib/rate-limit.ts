@@ -12,14 +12,14 @@ import { eq, and, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 
 export interface RateLimitConfig {
-  maxRequests: number;   // Máximo de requests en la ventana
-  windowMs: number;      // Ventana de tiempo en ms
-  message?: string;      // Mensaje de error
+  maxRequests: number; // Máximo de requests en la ventana
+  windowMs: number; // Ventana de tiempo en ms
+  message?: string; // Mensaje de error
 }
 
 const DEFAULT_CONFIG: RateLimitConfig = {
   maxRequests: 30,
-  windowMs: 60_000,      // 1 minuto
+  windowMs: 60_000, // 1 minuto
   message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.',
 };
 
@@ -42,11 +42,7 @@ export async function checkRateLimit(
     .catch(() => {}); // fire-and-forget, no crítico
 
   // Buscar entrada existente
-  const [existing] = await db
-    .select()
-    .from(rateLimits)
-    .where(eq(rateLimits.key, key))
-    .limit(1);
+  const [existing] = await db.select().from(rateLimits).where(eq(rateLimits.key, key)).limit(1);
 
   if (!existing || new Date(existing.resetAt) < now) {
     // Crear nueva ventana
@@ -74,10 +70,7 @@ export async function checkRateLimit(
 
   // Ventana activa — incrementar contador
   const newCount = existing.count + 1;
-  await db
-    .update(rateLimits)
-    .set({ count: newCount })
-    .where(eq(rateLimits.key, key));
+  await db.update(rateLimits).set({ count: newCount }).where(eq(rateLimits.key, key));
 
   return {
     allowed: newCount <= maxRequests,
@@ -99,9 +92,10 @@ export function withRateLimit(
   config?: Partial<RateLimitConfig>,
 ) {
   return async (request: NextRequest) => {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || 'unknown';
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
 
     const { allowed, remaining, resetAt } = await checkRateLimit(ip, config);
 

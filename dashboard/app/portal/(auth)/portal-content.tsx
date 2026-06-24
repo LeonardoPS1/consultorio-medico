@@ -9,9 +9,7 @@ export function PortalContent({ children }: { children: React.ReactNode }) {
 
   return (
     <AnimatePresence mode="wait">
-      <PageTransition key={pathname}>
-        {children}
-      </PageTransition>
+      <PageTransition key={pathname}>{children}</PageTransition>
     </AnimatePresence>
   );
 }

@@ -7,9 +7,9 @@ import { Cookie, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 // ─── Tipos ────────────────────────────────────────────────────
 export interface CookiePreferences {
-  essential: boolean;   // Sesión, autenticación, seguridad
-  functional: boolean;  // Preferencias de UI, sucursal, PWA
-  analytics: boolean;   // Tracking de uso (no implementado actualmente)
+  essential: boolean; // Sesión, autenticación, seguridad
+  functional: boolean; // Preferencias de UI, sucursal, PWA
+  analytics: boolean; // Tracking de uso (no implementado actualmente)
 }
 
 const COOKIE_NAME = 'consultorio_cookie_consent';
@@ -100,9 +100,24 @@ export function setCookieWithConsent(
 }
 
 // ─── Categorías con descripciones visibles ────────────────────
-const CATEGORIES: { key: keyof CookiePreferences; label: string; description: string; alwaysOn?: boolean }[] = [
-  { key: 'essential', label: 'Esenciales', description: 'Necesarias para la autenticación, seguridad y funcionamiento básico.', alwaysOn: true },
-  { key: 'functional', label: 'Funcionales', description: 'Recuerdan tus preferencias como sucursal activa, estado de instalación PWA y versión del changelog.' },
+const CATEGORIES: {
+  key: keyof CookiePreferences;
+  label: string;
+  description: string;
+  alwaysOn?: boolean;
+}[] = [
+  {
+    key: 'essential',
+    label: 'Esenciales',
+    description: 'Necesarias para la autenticación, seguridad y funcionamiento básico.',
+    alwaysOn: true,
+  },
+  {
+    key: 'functional',
+    label: 'Funcionales',
+    description:
+      'Recuerdan tus preferencias como sucursal activa, estado de instalación PWA y versión del changelog.',
+  },
 ];
 
 // ─── Componente del banner ────────────────────────────────────
@@ -163,19 +178,17 @@ export function CookieConsentBanner() {
                   <Cookie className="h-5 w-5 text-primary" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    Este sitio utiliza cookies
-                  </p>
+                  <p className="text-sm font-medium leading-none">Este sitio utiliza cookies</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Usamos cookies esenciales para el funcionamiento y cookies funcionales para recordar tus preferencias.
-                    Podés consultar nuestra{' '}
+                    Usamos cookies esenciales para el funcionamiento y cookies funcionales para
+                    recordar tus preferencias. Podés consultar nuestra{' '}
                     <Link
                       href="/privacidad"
                       className="font-medium underline underline-offset-2 hover:text-primary transition-colors"
                     >
                       Política de Privacidad
-                    </Link>
-                    {' '}para más información.
+                    </Link>{' '}
+                    para más información.
                   </p>
                 </div>
               </div>
@@ -188,10 +201,17 @@ export function CookieConsentBanner() {
                   Aceptar todas
                 </button>
                 <button
-                  onClick={() => { setDraft({ essential: true, functional: false, analytics: false }); setShowDetails(!showDetails); }}
+                  onClick={() => {
+                    setDraft({ essential: true, functional: false, analytics: false });
+                    setShowDetails(!showDetails);
+                  }}
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
-                  {showDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  {showDetails ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
                   {showDetails ? 'Ocultar configuración' : 'Configurar'}
                 </button>
                 <button
@@ -221,13 +241,22 @@ export function CookieConsentBanner() {
                           id={`cookie-${cat.key}`}
                           checked={draft[cat.key]}
                           disabled={cat.alwaysOn}
-                          onChange={(e) => setDraft((prev) => ({ ...prev, [cat.key]: e.target.checked }))}
+                          onChange={(e) =>
+                            setDraft((prev) => ({ ...prev, [cat.key]: e.target.checked }))
+                          }
                           className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                         />
                         <div className="flex-1">
-                          <label htmlFor={`cookie-${cat.key}`} className="text-sm font-medium cursor-pointer">
+                          <label
+                            htmlFor={`cookie-${cat.key}`}
+                            className="text-sm font-medium cursor-pointer"
+                          >
                             {cat.label}
-                            {cat.alwaysOn && <span className="text-xs text-muted-foreground ml-2">(siempre activas)</span>}
+                            {cat.alwaysOn && (
+                              <span className="text-xs text-muted-foreground ml-2">
+                                (siempre activas)
+                              </span>
+                            )}
                           </label>
                           <p className="text-xs text-muted-foreground">{cat.description}</p>
                         </div>

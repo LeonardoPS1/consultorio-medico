@@ -103,8 +103,10 @@ describe('showSuccess logic', () => {
     const verProgreso = false;
     const showProgressDetail = false;
 
-    const showSuccess = (isComplete || (allLocallyDone && hasManualInteraction))
-      && !verProgreso && !showProgressDetail;
+    const showSuccess =
+      (isComplete || (allLocallyDone && hasManualInteraction)) &&
+      !verProgreso &&
+      !showProgressDetail;
 
     expect(showSuccess).toBe(true);
   });
@@ -116,8 +118,10 @@ describe('showSuccess logic', () => {
     const verProgreso = false;
     const showProgressDetail = false;
 
-    const showSuccess = (isComplete || (allLocallyDone && hasManualInteraction))
-      && !verProgreso && !showProgressDetail;
+    const showSuccess =
+      (isComplete || (allLocallyDone && hasManualInteraction)) &&
+      !verProgreso &&
+      !showProgressDetail;
 
     expect(showSuccess).toBe(false);
   });
@@ -129,8 +133,10 @@ describe('showSuccess logic', () => {
     const verProgreso = false;
     const showProgressDetail = false;
 
-    const showSuccess = (isComplete || (allLocallyDone && hasManualInteraction))
-      && !verProgreso && !showProgressDetail;
+    const showSuccess =
+      (isComplete || (allLocallyDone && hasManualInteraction)) &&
+      !verProgreso &&
+      !showProgressDetail;
 
     expect(showSuccess).toBe(true);
   });
@@ -142,8 +148,10 @@ describe('showSuccess logic', () => {
     const verProgreso = true;
     const showProgressDetail = false;
 
-    const showSuccess = (isComplete || (allLocallyDone && hasManualInteraction))
-      && !verProgreso && !showProgressDetail;
+    const showSuccess =
+      (isComplete || (allLocallyDone && hasManualInteraction)) &&
+      !verProgreso &&
+      !showProgressDetail;
 
     expect(showSuccess).toBe(false);
   });
@@ -155,8 +163,10 @@ describe('showSuccess logic', () => {
     const verProgreso = false;
     const showProgressDetail = true;
 
-    const showSuccess = (isComplete || (allLocallyDone && hasManualInteraction))
-      && !verProgreso && !showProgressDetail;
+    const showSuccess =
+      (isComplete || (allLocallyDone && hasManualInteraction)) &&
+      !verProgreso &&
+      !showProgressDetail;
 
     expect(showSuccess).toBe(false);
   });

@@ -10,19 +10,35 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter,
-  DialogHeader, DialogTitle, DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 import {
-  FileSignature, Loader2, Search, FileText, User, Calendar,
-  Shield, Download, Eye,
+  FileSignature,
+  Loader2,
+  Search,
+  FileText,
+  User,
+  Calendar,
+  Shield,
+  Download,
+  Eye,
 } from 'lucide-react';
 
 interface Consentimiento {
@@ -64,8 +80,13 @@ export default function ConsentimientosPage() {
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
-    pacienteId: '', tipo: 'general', titulo: '', descripcion: '',
-    nombrePaciente: '', rutPaciente: '', ipFirma: '',
+    pacienteId: '',
+    tipo: 'general',
+    titulo: '',
+    descripcion: '',
+    nombrePaciente: '',
+    rutPaciente: '',
+    ipFirma: '',
   });
 
   const [detailOpen, setDetailOpen] = useState(false);
@@ -95,17 +116,27 @@ export default function ConsentimientosPage() {
       }
     } catch (err) {
       console.error('Error fetching consentimientos:', err);
-      toast({ title: 'Error', description: 'No se pudieron cargar los datos', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'No se pudieron cargar los datos',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
   }, [filtroTipo, search]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleCreate = async () => {
     if (!form.pacienteId || !form.titulo || !form.nombrePaciente) {
-      toast({ title: 'Campos incompletos', description: 'Paciente, título y nombre son obligatorios', variant: 'destructive' });
+      toast({
+        title: 'Campos incompletos',
+        description: 'Paciente, título y nombre son obligatorios',
+        variant: 'destructive',
+      });
       return;
     }
     setSaving(true);
@@ -130,7 +161,15 @@ export default function ConsentimientosPage() {
       }
       toast({ title: 'Creado', description: 'Consentimiento registrado correctamente' });
       setCreateOpen(false);
-      setForm({ pacienteId: '', tipo: 'general', titulo: '', descripcion: '', nombrePaciente: '', rutPaciente: '', ipFirma: '' });
+      setForm({
+        pacienteId: '',
+        tipo: 'general',
+        titulo: '',
+        descripcion: '',
+        nombrePaciente: '',
+        rutPaciente: '',
+        ipFirma: '',
+      });
       fetchData();
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -148,7 +187,11 @@ export default function ConsentimientosPage() {
         setDetailOpen(true);
       }
     } catch (err) {
-      toast({ title: 'Error', description: 'No se pudo cargar el detalle', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'No se pudo cargar el detalle',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -161,8 +204,12 @@ export default function ConsentimientosPage() {
   }
 
   const tipoLabels: Record<string, string> = {
-    general: 'General', cirugia: 'Cirugía', tratamiento: 'Tratamiento',
-    procedimiento: 'Procedimiento', estetica: 'Estética', otros: 'Otros',
+    general: 'General',
+    cirugia: 'Cirugía',
+    tratamiento: 'Tratamiento',
+    procedimiento: 'Procedimiento',
+    estetica: 'Estética',
+    otros: 'Otros',
   };
 
   return (
@@ -184,16 +231,20 @@ export default function ConsentimientosPage() {
               <p className="text-3xl font-bold">{stats.total}</p>
             </CardContent>
           </Card>
-          {TIPOS.filter(t => (stats.porTipo[t] || 0) > 0).slice(0, 3).map((tipo) => (
-            <Card key={tipo}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{tipoLabels[tipo] || tipo}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{stats.porTipo[tipo] || 0}</p>
-              </CardContent>
-            </Card>
-          ))}
+          {TIPOS.filter((t) => (stats.porTipo[t] || 0) > 0)
+            .slice(0, 3)
+            .map((tipo) => (
+              <Card key={tipo}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {tipoLabels[tipo] || tipo}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold">{stats.porTipo[tipo] || 0}</p>
+                </CardContent>
+              </Card>
+            ))}
         </div>
       )}
 
@@ -215,7 +266,9 @@ export default function ConsentimientosPage() {
           <SelectContent>
             <SelectItem value="todos">Todos</SelectItem>
             {TIPOS.map((t) => (
-              <SelectItem key={t} value={t}>{tipoLabels[t] || t}</SelectItem>
+              <SelectItem key={t} value={t}>
+                {tipoLabels[t] || t}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -238,7 +291,7 @@ export default function ConsentimientosPage() {
                   <PacienteSearchCombobox
                     value={form.pacienteId}
                     onChange={(pacienteId, pacienteNombre) => {
-                      setForm(prev => ({
+                      setForm((prev) => ({
                         ...prev,
                         pacienteId,
                         nombrePaciente: pacienteNombre,
@@ -258,7 +311,9 @@ export default function ConsentimientosPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {TIPOS.map((t) => (
-                        <SelectItem key={t} value={t}>{tipoLabels[t] || t}</SelectItem>
+                        <SelectItem key={t} value={t}>
+                          {tipoLabels[t] || t}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -314,7 +369,9 @@ export default function ConsentimientosPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancelar</Button>
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>
+                Cancelar
+              </Button>
               <Button onClick={handleCreate} disabled={saving}>
                 {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Guardar consentimiento
@@ -348,9 +405,15 @@ export default function ConsentimientosPage() {
                 <div>
                   <p className="text-muted-foreground">Fecha de firma</p>
                   <p className="font-medium">
-                    {detailData.fechaFirma ? new Date(detailData.fechaFirma).toLocaleDateString('es-CL', {
-                      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                    }) : '—'}
+                    {detailData.fechaFirma
+                      ? new Date(detailData.fechaFirma).toLocaleDateString('es-CL', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : '—'}
                   </p>
                 </div>
                 <div>
@@ -397,7 +460,11 @@ export default function ConsentimientosPage() {
       ) : (
         <motion.div initial="hidden" animate="visible" className="space-y-2">
           {data.map((item) => (
-            <Card key={item.id} className="hoverable:hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => handleVerDetalle(item.id)}>
+            <Card
+              key={item.id}
+              className="hoverable:hover:bg-muted/30 transition-colors cursor-pointer"
+              onClick={() => handleVerDetalle(item.id)}
+            >
               <CardContent className="p-4 flex items-start gap-3 flex-wrap">
                 <div className="h-10 w-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                   <FileText className="h-5 w-5" />
@@ -423,7 +490,15 @@ export default function ConsentimientosPage() {
                     )}
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="shrink-0" onClick={(e) => { e.stopPropagation(); handleVerDetalle(item.id); }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleVerDetalle(item.id);
+                  }}
+                >
                   <Eye className="h-4 w-4" />
                 </Button>
               </CardContent>

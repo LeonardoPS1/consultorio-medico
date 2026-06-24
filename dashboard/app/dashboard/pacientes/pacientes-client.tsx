@@ -85,8 +85,7 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
   const [showEditPaciente, setShowEditPaciente] = useState(false);
   const [editPacienteData, setEditPacienteData] = useState<PacienteEditData | null>(null);
   const [loadingEdit, setLoadingEdit] = useState(false);
-  const [pacientesList, setPacientesList] =
-    useState<Paciente[]>(initialPacientes);
+  const [pacientesList, setPacientesList] = useState<Paciente[]>(initialPacientes);
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const [scoresMap, setScoresMap] = useState<Record<string, { score: number; nivel: string }>>({});
@@ -121,7 +120,11 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
       });
       setShowEditPaciente(true);
     } catch {
-      toast({ title: 'Error', description: 'No se pudo cargar el paciente', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'No se pudo cargar el paciente',
+        variant: 'destructive',
+      });
     } finally {
       setLoadingEdit(false);
     }
@@ -202,7 +205,7 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
     if (visibleIds.length === 0) return;
     const params = new URLSearchParams({ ids: visibleIds.join(',') });
     fetch(`/api/pacientes/scoring?${params.toString()}`)
-      .then((r) => r.ok ? r.json() : null)
+      .then((r) => (r.ok ? r.json() : null))
       .then((json) => {
         if (json?.data?.scores) {
           const map: Record<string, { score: number; nivel: string }> = {};
@@ -212,11 +215,16 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
           setScoresMap(map);
         }
       })
-      .catch(() => { /* silencioso */ });
+      .catch(() => {
+        /* silencioso */
+      });
   }, [filtered]);
 
   // ─── Selección múltiple (helpers) ──────────────────────────
-  const selectedArray = useMemo(() => filtered.filter((p) => selectedIds.has(p.id)), [filtered, selectedIds]);
+  const selectedArray = useMemo(
+    () => filtered.filter((p) => selectedIds.has(p.id)),
+    [filtered, selectedIds],
+  );
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -251,7 +259,11 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
       });
       if (!res.ok) {
         const err = await res.json();
-        toast({ title: 'Error', description: err.error || 'Error al enviar', variant: 'destructive' });
+        toast({
+          title: 'Error',
+          description: err.error || 'Error al enviar',
+          variant: 'destructive',
+        });
         return;
       }
       const json = await res.json();
@@ -263,7 +275,11 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
       setBulkMessage('');
       clearSelection();
     } catch {
-      toast({ title: 'Error', description: 'Error de red al enviar WhatsApp', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Error de red al enviar WhatsApp',
+        variant: 'destructive',
+      });
     } finally {
       setSendingBulk(false);
     }
@@ -376,7 +392,9 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 text-sm">
           <CheckCheck className="h-4 w-4 text-primary shrink-0" />
-          <span className="font-medium">{selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''}</span>
+          <span className="font-medium">
+            {selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''}
+          </span>
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={clearSelection} className="h-8 text-xs">
             <X className="h-3 w-3 mr-1" />
@@ -386,7 +404,12 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
             <FileSpreadsheet className="h-3 w-3 mr-1" />
             Exportar
           </Button>
-          <Button variant="default" size="sm" onClick={() => setShowBulkWhatsApp(true)} className="h-8 text-xs">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => setShowBulkWhatsApp(true)}
+            className="h-8 text-xs"
+          >
             <Send className="h-3 w-3 mr-1" />
             WhatsApp
           </Button>
@@ -400,14 +423,10 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Search className="h-12 w-12 text-muted-foreground/30 mb-4" />
               <p className="text-lg font-medium text-muted-foreground">
-                {search
-                  ? 'No se encontraron pacientes'
-                  : 'No hay pacientes registrados'}
+                {search ? 'No se encontraron pacientes' : 'No hay pacientes registrados'}
               </p>
               <p className="text-sm text-muted-foreground/70 mt-1 mb-4">
-                {search
-                  ? 'Prueba con otros términos de búsqueda'
-                  : 'Registra tu primer paciente'}
+                {search ? 'Prueba con otros términos de búsqueda' : 'Registra tu primer paciente'}
               </p>
               {!search && (
                 <Button onClick={() => setShowNewPaciente(true)}>
@@ -425,7 +444,11 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
                   onCheckedChange={toggleSelectAll}
                   aria-label="Seleccionar todo"
                 />
-                <span>{selectedIds.size === filtered.length ? 'Todos seleccionados' : `${filtered.length} pacientes`}</span>
+                <span>
+                  {selectedIds.size === filtered.length
+                    ? 'Todos seleccionados'
+                    : `${filtered.length} pacientes`}
+                </span>
               </div>
               {filtered.map((paciente) => (
                 <div
@@ -445,117 +468,110 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
                     href={`/dashboard/pacientes/${paciente.id}`}
                     className="flex items-center gap-4 flex-1 min-w-0 no-underline hoverable:hover:opacity-80"
                   >
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                      {getInitials(paciente.nombre, paciente.apellido)}
-                    </AvatarFallback>
-                  </Avatar>
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                        {getInitials(paciente.nombre, paciente.apellido)}
+                      </AvatarFallback>
+                    </Avatar>
 
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate flex items-center gap-1.5">
-                      {paciente.nombre} {paciente.apellido}
-                      {scoresMap[paciente.id] && (
-                        <span
-                          className={`inline-block w-2 h-2 rounded-full shrink-0 ${
-                            scoresMap[paciente.id].nivel === 'alto'
-                              ? 'bg-red-500'
-                              : scoresMap[paciente.id].nivel === 'medio'
-                                ? 'bg-yellow-500'
-                                : 'bg-green-500'
-                          }`}
-                          title={`Score: ${scoresMap[paciente.id].score} - Riesgo ${scoresMap[paciente.id].nivel}`}
-                        />
-                      )}
-                    </p>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground mt-0.5">
-                      <span className="flex items-center gap-1">
-                        <Phone className="h-3 w-3" />
-                        {formatPhone(paciente.telefono)}
-                      </span>
-                      {paciente.email && (
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate flex items-center gap-1.5">
+                        {paciente.nombre} {paciente.apellido}
+                        {scoresMap[paciente.id] && (
+                          <span
+                            className={`inline-block w-2 h-2 rounded-full shrink-0 ${
+                              scoresMap[paciente.id].nivel === 'alto'
+                                ? 'bg-red-500'
+                                : scoresMap[paciente.id].nivel === 'medio'
+                                  ? 'bg-yellow-500'
+                                  : 'bg-green-500'
+                            }`}
+                            title={`Score: ${scoresMap[paciente.id].score} - Riesgo ${scoresMap[paciente.id].nivel}`}
+                          />
+                        )}
+                      </p>
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground mt-0.5">
                         <span className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {paciente.email}
+                          <Phone className="h-3 w-3" />
+                          {formatPhone(paciente.telefono)}
                         </span>
+                        {paciente.email && (
+                          <span className="flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            {paciente.email}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="hidden md:block text-sm text-muted-foreground text-center">
+                      <p className="font-medium text-foreground">{paciente.totalTurnos}</p>
+                      <p className="text-xs">turnos</p>
+                    </div>
+
+                    <div className="hidden md:block text-sm text-muted-foreground min-w-[80px]">
+                      {paciente.ultimoTurno ? (
+                        <>
+                          <p className="text-xs">Último turno</p>
+                          <p>{formatDate(paciente.ultimoTurno, 'dd/MM/yy')}</p>
+                        </>
+                      ) : (
+                        <Badge
+                          variant="secondary"
+                          className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
+                        >
+                          Nuevo
+                        </Badge>
                       )}
                     </div>
-                  </div>
 
-                  <div className="hidden md:block text-sm text-muted-foreground text-center">
-                    <p className="font-medium text-foreground">
-                      {paciente.totalTurnos}
-                    </p>
-                    <p className="text-xs">turnos</p>
-                  </div>
+                    <div className="hidden lg:flex gap-1">
+                      {paciente.tags.map((tag) => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
 
-                  <div className="hidden md:block text-sm text-muted-foreground min-w-[80px]">
-                    {paciente.ultimoTurno ? (
-                      <>
-                        <p className="text-xs">Último turno</p>
-                        <p>{formatDate(paciente.ultimoTurno, 'dd/MM/yy')}</p>
-                      </>
-                    ) : (
-                      <Badge
-                        variant="secondary"
-                        className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
+                    <div className="flex gap-1" onClick={(e) => e.preventDefault()}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Editar paciente"
+                        disabled={loadingEdit}
+                        onClick={() => handleOpenEdit(paciente.id)}
                       >
-                        Nuevo
-                      </Badge>
-                    )}
-                  </div>
-
-                  <div className="hidden lg:flex gap-1">
-                    {paciente.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-1" onClick={(e) => e.preventDefault()}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Editar paciente"
-                      disabled={loadingEdit}
-                      onClick={() => handleOpenEdit(paciente.id)}
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                      </svg>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Recetas"
-                      asChild
-                    >
-                      <Link href={`/dashboard/pacientes/${paciente.id}`}>
-                        <Syringe className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Enviar WhatsApp"
-                      asChild
-                    >
-                      <Link href={`/dashboard/conversaciones`}>
-                        <MessageSquare className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Ver ficha completa"
-                      asChild
-                    >
-                      <Link href={`/dashboard/pacientes/${paciente.id}`}>
-                        <ExternalLink className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                </Link>
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                          />
+                        </svg>
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Recetas" asChild>
+                        <Link href={`/dashboard/pacientes/${paciente.id}`}>
+                          <Syringe className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Enviar WhatsApp" asChild>
+                        <Link href={`/dashboard/conversaciones`}>
+                          <MessageSquare className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Ver ficha completa" asChild>
+                        <Link href={`/dashboard/pacientes/${paciente.id}`}>
+                          <ExternalLink className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </Link>
                 </div>
               ))}
             </div>
@@ -586,8 +602,9 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
           <DialogHeader>
             <DialogTitle>Enviar WhatsApp masivo</DialogTitle>
             <DialogDescription>
-              Se enviará un mensaje a {selectedArray.length} paciente{selectedArray.length !== 1 ? 's' : ''}.
-              Usá {'{nombre}'} para personalizar con el nombre del paciente.
+              Se enviará un mensaje a {selectedArray.length} paciente
+              {selectedArray.length !== 1 ? 's' : ''}. Usá {'{nombre}'} para personalizar con el
+              nombre del paciente.
             </DialogDescription>
           </DialogHeader>
           <Textarea
@@ -600,10 +617,7 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
             <Button variant="outline" onClick={() => setShowBulkWhatsApp(false)}>
               Cancelar
             </Button>
-            <Button
-              onClick={handleBulkWhatsApp}
-              disabled={!bulkMessage.trim() || sendingBulk}
-            >
+            <Button onClick={handleBulkWhatsApp} disabled={!bulkMessage.trim() || sendingBulk}>
               {sendingBulk ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

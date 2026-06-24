@@ -37,10 +37,9 @@ async function getTurnos(sucursalId?: string, fecha?: string): Promise<TurnosApi
     params.set('limit', '200');
     if (sucursalId) params.set('sucursalId', sucursalId);
 
-    const res = await fetch(
-      `http://localhost:3000/api/turnos?${params.toString()}`,
-      { cache: 'no-store' },
-    );
+    const res = await fetch(`http://localhost:3000/api/turnos?${params.toString()}`, {
+      cache: 'no-store',
+    });
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -104,9 +103,7 @@ export default async function TurnosPage() {
               style={{ backgroundColor: COLORES_ESTADO[estado] || '#999' }}
             />
             <span className="font-medium">{count}</span>
-            <span className="text-muted-foreground text-xs">
-              {LABELS_ESTADO[estado] || estado}
-            </span>
+            <span className="text-muted-foreground text-xs">{LABELS_ESTADO[estado] || estado}</span>
           </div>
         ))}
       </div>

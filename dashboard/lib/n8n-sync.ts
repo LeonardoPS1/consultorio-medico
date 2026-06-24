@@ -19,10 +19,13 @@ const N8N_API_KEY = process.env.N8N_API_KEY || '';
  * Tipos de credenciales n8n con su estructura de datos.
  * Cada entrada define qué campos espera n8n para ese tipo.
  */
-export const N8N_CREDENTIAL_TYPES: Record<string, {
-  displayName: string;
-  fields: Record<string, { label: string; type: string; required?: boolean }>;
-}> = {
+export const N8N_CREDENTIAL_TYPES: Record<
+  string,
+  {
+    displayName: string;
+    fields: Record<string, { label: string; type: string; required?: boolean }>;
+  }
+> = {
   ollamaApi: {
     displayName: 'Ollama',
     fields: {
@@ -86,12 +89,15 @@ export const N8N_CREDENTIAL_TYPES: Record<string, {
  * Mapa de servicio → tipo de credential en n8n.
  * Define cómo se traducen las credenciales del dashboard a n8n.
  */
-export const SERVICIO_TO_N8N_TYPE: Record<string, {
-  n8nType: string;
-  fieldMapping: Record<string, string>; // dashboard_key → n8n_field
-  /** Valores fijos que n8n requiere por schema condicional (if/then en vacío) */
-  defaults?: Record<string, unknown>;
-}> = {
+export const SERVICIO_TO_N8N_TYPE: Record<
+  string,
+  {
+    n8nType: string;
+    fieldMapping: Record<string, string>; // dashboard_key → n8n_field
+    /** Valores fijos que n8n requiere por schema condicional (if/then en vacío) */
+    defaults?: Record<string, unknown>;
+  }
+> = {
   twilio: {
     n8nType: 'twilioApi',
     fieldMapping: {
@@ -119,8 +125,8 @@ export const SERVICIO_TO_N8N_TYPE: Record<string, {
       password: 'password',
     },
     defaults: {
-      ssl: 'disable',       // Necesario: allowUnauthorizedCerts ausente → if vacío pide ssl
-      sshTunnel: false,     // Necesario: sshTunnel ausente → if vacío pide SSH fields
+      ssl: 'disable', // Necesario: allowUnauthorizedCerts ausente → if vacío pide ssl
+      sshTunnel: false, // Necesario: sshTunnel ausente → if vacío pide SSH fields
     },
   },
   smtp: {
@@ -171,12 +177,12 @@ function getHeaders(): Record<string, string> {
  */
 function buildN8nData(
   servicio: string,
-  credenciales: Record<string, string>
-): Record<string, any> | null {
+  credenciales: Record<string, string>,
+): Record<string, unknown> | null {
   const mapping = SERVICIO_TO_N8N_TYPE[servicio];
   if (!mapping) return null;
 
-  const data: Record<string, any> = {};
+  const data: Record<string, unknown> = {};
 
   // 1. Aplicar defaults primero (ssl, sshTunnel, authType, etc.)
   //    Necesarios porque n8n usa if/then condicional que evalúa true en vacío.
@@ -214,7 +220,7 @@ function buildN8nData(
 export async function syncToN8n(
   servicio: string,
   credenciales: Record<string, string>,
-  n8nCredentialId?: string | null
+  n8nCredentialId?: string | null,
 ): Promise<{ success: boolean; n8nId?: string; error?: string }> {
   const mapping = SERVICIO_TO_N8N_TYPE[servicio];
   if (!mapping) {
@@ -318,7 +324,11 @@ function isSafeUrl(url: string): boolean {
     const hostname = parsed.hostname.toLowerCase();
     if (blockedHosts.includes(hostname)) return false;
     // Bloquear rangos privados IPv4
-    if (/^10\./.test(hostname) || /^172\.(1[6-9]|2\d|3[01])\./.test(hostname) || /^192\.168\./.test(hostname)) {
+    if (
+      /^10\./.test(hostname) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(hostname) ||
+      /^192\.168\./.test(hostname)
+    ) {
       return false;
     }
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
@@ -329,7 +339,7 @@ function isSafeUrl(url: string): boolean {
 
 export async function testCredentialConnection(
   servicio: string,
-  credenciales: Record<string, string>
+  credenciales: Record<string, string>,
 ): Promise<{ success: boolean; message: string }> {
   switch (servicio) {
     case 'ollama': {
@@ -372,7 +382,11 @@ export async function testCredentialConnection(
       const hasSid = !!credenciales['account_sid'];
       const hasToken = !!credenciales['auth_token'];
       if (hasSid && hasToken) {
-        return { success: true, message: '✅ Configuración de Twilio completa (no se puede testear sin enviar un mensaje)' };
+        return {
+          success: true,
+          message:
+            '✅ Configuración de Twilio completa (no se puede testear sin enviar un mensaje)',
+        };
       }
       return { success: false, message: '❌ Faltan Account SID o Auth Token' };
     }

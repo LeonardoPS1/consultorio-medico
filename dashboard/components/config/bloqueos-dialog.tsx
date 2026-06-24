@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/select';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/select';
 import { Plus, Trash2, CalendarX, Calendar, Umbrella, Ban, Pencil } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
@@ -42,12 +42,23 @@ const TIPOS_BLOQUEO = [
 function formatBloqueoFecha(isoInicio: string, isoFin: string): string {
   const inicio = new Date(isoInicio);
   const fin = new Date(isoFin);
-  const esHorario = inicio.getUTCHours() !== 0 || inicio.getUTCMinutes() !== 0
-    || fin.getUTCHours() !== 0 || fin.getUTCMinutes() !== 0
-    || (fin.getTime() - inicio.getTime()) < 86400000;
+  const esHorario =
+    inicio.getUTCHours() !== 0 ||
+    inicio.getUTCMinutes() !== 0 ||
+    fin.getUTCHours() !== 0 ||
+    fin.getUTCMinutes() !== 0 ||
+    fin.getTime() - inicio.getTime() < 86400000;
 
-  const fechaIni = inicio.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: '2-digit' });
-  const fechaFinStr = fin.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  const fechaIni = inicio.toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  });
+  const fechaFinStr = fin.toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  });
 
   if (esHorario) {
     const horaIni = inicio.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
@@ -65,7 +76,12 @@ function formatBloqueoFecha(isoInicio: string, isoFin: string): string {
   return `${fechaIni} → ${fechaFinStr}`;
 }
 
-export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: Props & { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function BloqueosDialog({
+  medicoId,
+  medicoNombre,
+  open,
+  onOpenChange,
+}: Props & { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [bloqueos, setBloqueos] = useState<Bloqueo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
@@ -84,32 +100,47 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
   const fetchBloqueos = () => {
     setLoading(true);
     fetch(`/api/medicos/${medicoId}/bloqueos`)
-      .then(r => r.json())
-      .then(d => setBloqueos(d.data || []))
+      .then((r) => r.json())
+      .then((d) => setBloqueos(d.data || []))
       .catch(() => toast({ title: 'Error al cargar bloqueos', variant: 'destructive' }))
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { if (open) fetchBloqueos(); }, [open, medicoId]);
+  useEffect(() => {
+    if (open) fetchBloqueos();
+  }, [open, medicoId]);
 
   const handleCreate = async () => {
     if (!titulo.trim() || !fechaInicio || !fechaFin) return;
     setSaving(true);
     try {
-      const inicio = bloqueoHorario && horaInicio ? `${fechaInicio}T${horaInicio}:00.000Z` : fechaInicio;
+      const inicio =
+        bloqueoHorario && horaInicio ? `${fechaInicio}T${horaInicio}:00.000Z` : fechaInicio;
       const fin = bloqueoHorario && horaFin ? `${fechaFin}T${horaFin}:00.000Z` : fechaFin;
       const res = await fetch(`/api/medicos/${medicoId}/bloqueos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ titulo, fechaInicio: inicio, fechaFin: fin, tipo }),
       });
-      if (!res.ok) { const err = await res.json(); toast({ title: err.error || 'Error', variant: 'destructive' }); return; }
+      if (!res.ok) {
+        const err = await res.json();
+        toast({ title: err.error || 'Error', variant: 'destructive' });
+        return;
+      }
       toast({ title: 'Bloqueo creado' });
-      setShowNew(false); setTitulo(''); setFechaInicio(''); setFechaFin(''); setHoraInicio(''); setHoraFin(''); setBloqueoHorario(false);
+      setShowNew(false);
+      setTitulo('');
+      setFechaInicio('');
+      setFechaFin('');
+      setHoraInicio('');
+      setHoraFin('');
+      setBloqueoHorario(false);
       fetchBloqueos();
     } catch {
       toast({ title: 'Error', variant: 'destructive' });
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (bloqueoId: string) => {
@@ -126,20 +157,33 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
     if (!titulo.trim() || !fechaInicio || !fechaFin) return;
     setSaving(true);
     try {
-      const inicio = bloqueoHorario && horaInicio ? `${fechaInicio}T${horaInicio}:00.000Z` : fechaInicio;
+      const inicio =
+        bloqueoHorario && horaInicio ? `${fechaInicio}T${horaInicio}:00.000Z` : fechaInicio;
       const fin = bloqueoHorario && horaFin ? `${fechaFin}T${horaFin}:00.000Z` : fechaFin;
       const res = await fetch(`/api/medicos/${medicoId}/bloqueos/${bloqueoId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ titulo, fechaInicio: inicio, fechaFin: fin, tipo }),
       });
-      if (!res.ok) { const err = await res.json(); toast({ title: err.error || 'Error', variant: 'destructive' }); return; }
+      if (!res.ok) {
+        const err = await res.json();
+        toast({ title: err.error || 'Error', variant: 'destructive' });
+        return;
+      }
       toast({ title: 'Bloqueo actualizado' });
-      setEditId(null); setTitulo(''); setFechaInicio(''); setFechaFin(''); setHoraInicio(''); setHoraFin(''); setBloqueoHorario(false);
+      setEditId(null);
+      setTitulo('');
+      setFechaInicio('');
+      setFechaFin('');
+      setHoraInicio('');
+      setHoraFin('');
+      setBloqueoHorario(false);
       fetchBloqueos();
     } catch {
       toast({ title: 'Error', variant: 'destructive' });
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const startEdit = (b: Bloqueo) => {
@@ -148,9 +192,12 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
     // Detectar si es bloqueo horario (tiene hora != 00:00)
     const inicio = new Date(b.fechaInicio);
     const fin = new Date(b.fechaFin);
-    const esHorario = inicio.getUTCHours() !== 0 || inicio.getUTCMinutes() !== 0
-      || fin.getUTCHours() !== 0 || fin.getUTCMinutes() !== 0
-      || (fin.getTime() - inicio.getTime()) < 86400000; // menos de 24hs
+    const esHorario =
+      inicio.getUTCHours() !== 0 ||
+      inicio.getUTCMinutes() !== 0 ||
+      fin.getUTCHours() !== 0 ||
+      fin.getUTCMinutes() !== 0 ||
+      fin.getTime() - inicio.getTime() < 86400000; // menos de 24hs
     setBloqueoHorario(esHorario);
     setFechaInicio(b.fechaInicio.split('T')[0]);
     setFechaFin(b.fechaFin.split('T')[0]);
@@ -165,7 +212,7 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
     setShowNew(false);
   };
 
-  const getTipoInfo = (t: string) => TIPOS_BLOQUEO.find(x => x.value === t) || TIPOS_BLOQUEO[3];
+  const getTipoInfo = (t: string) => TIPOS_BLOQUEO.find((x) => x.value === t) || TIPOS_BLOQUEO[3];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -187,27 +234,43 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
                   <div className="space-y-1">
                     <Label>Tipo</Label>
                     <Select value={tipo} onValueChange={setTipo}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
-                        {TIPOS_BLOQUEO.map(t => (
-                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        {TIPOS_BLOQUEO.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>
+                            {t.label}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1">
                     <Label>Titulo</Label>
-                    <Input value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Vacaciones de invierno" />
+                    <Input
+                      value={titulo}
+                      onChange={(e) => setTitulo(e.target.value)}
+                      placeholder="Vacaciones de invierno"
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label>Desde</Label>
-                    <Input type="date" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} />
+                    <Input
+                      type="date"
+                      value={fechaInicio}
+                      onChange={(e) => setFechaInicio(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-1">
                     <Label>Hasta</Label>
-                    <Input type="date" value={fechaFin} onChange={e => setFechaFin(e.target.value)} />
+                    <Input
+                      type="date"
+                      value={fechaFin}
+                      onChange={(e) => setFechaFin(e.target.value)}
+                    />
                   </div>
                 </div>
 
@@ -217,7 +280,7 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
                     type="checkbox"
                     id="bloqueo-horario"
                     checked={bloqueoHorario}
-                    onChange={e => setBloqueoHorario(e.target.checked)}
+                    onChange={(e) => setBloqueoHorario(e.target.checked)}
                     className="h-4 w-4 rounded border-gray-300"
                   />
                   <Label htmlFor="bloqueo-horario" className="text-xs cursor-pointer">
@@ -229,17 +292,31 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <Label className="text-xs">Hora inicio</Label>
-                      <Input type="time" value={horaInicio} onChange={e => setHoraInicio(e.target.value)} />
+                      <Input
+                        type="time"
+                        value={horaInicio}
+                        onChange={(e) => setHoraInicio(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Hora fin</Label>
-                      <Input type="time" value={horaFin} onChange={e => setHoraFin(e.target.value)} />
+                      <Input
+                        type="time"
+                        value={horaFin}
+                        onChange={(e) => setHoraFin(e.target.value)}
+                      />
                     </div>
                   </div>
                 )}
                 <div className="flex gap-2 justify-end">
-                  <Button variant="outline" size="sm" onClick={() => setShowNew(false)}>Cancelar</Button>
-                  <Button size="sm" onClick={handleCreate} disabled={saving || !titulo.trim() || !fechaInicio || !fechaFin}>
+                  <Button variant="outline" size="sm" onClick={() => setShowNew(false)}>
+                    Cancelar
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleCreate}
+                    disabled={saving || !titulo.trim() || !fechaInicio || !fechaFin}
+                  >
                     {saving ? 'Guardando...' : 'Crear bloqueo'}
                   </Button>
                 </div>
@@ -254,7 +331,9 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
           {/* Lista de bloqueos */}
           {loading ? (
             <div className="space-y-2">
-              {[1, 2].map(i => <div key={i} className="h-14 skeleton rounded-lg" />)}
+              {[1, 2].map((i) => (
+                <div key={i} className="h-14 skeleton rounded-lg" />
+              ))}
             </div>
           ) : bloqueos.length === 0 ? (
             <div className="text-center py-8">
@@ -280,46 +359,98 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
                           <div className="space-y-1">
                             <Label className="text-xs">Tipo</Label>
                             <Select value={tipo} onValueChange={setTipo}>
-                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
                               <SelectContent>
-                                {TIPOS_BLOQUEO.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                                {TIPOS_BLOQUEO.map((t) => (
+                                  <SelectItem key={t.value} value={t.value}>
+                                    {t.label}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </div>
                           <div className="space-y-1">
                             <Label className="text-xs">Titulo</Label>
-                            <Input className="h-8 text-xs" value={titulo} onChange={e => setTitulo(e.target.value)} />
+                            <Input
+                              className="h-8 text-xs"
+                              value={titulo}
+                              onChange={(e) => setTitulo(e.target.value)}
+                            />
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div className="space-y-1">
                             <Label className="text-xs">Desde</Label>
-                            <Input className="h-8 text-xs" type="date" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} />
+                            <Input
+                              className="h-8 text-xs"
+                              type="date"
+                              value={fechaInicio}
+                              onChange={(e) => setFechaInicio(e.target.value)}
+                            />
                           </div>
                           <div className="space-y-1">
                             <Label className="text-xs">Hasta</Label>
-                            <Input className="h-8 text-xs" type="date" value={fechaFin} onChange={e => setFechaFin(e.target.value)} />
+                            <Input
+                              className="h-8 text-xs"
+                              type="date"
+                              value={fechaFin}
+                              onChange={(e) => setFechaFin(e.target.value)}
+                            />
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" id="edit-horario" checked={bloqueoHorario} onChange={e => setBloqueoHorario(e.target.checked)} className="h-3 w-3" />
-                          <Label htmlFor="edit-horario" className="text-[10px] cursor-pointer">Horario especifico</Label>
+                          <input
+                            type="checkbox"
+                            id="edit-horario"
+                            checked={bloqueoHorario}
+                            onChange={(e) => setBloqueoHorario(e.target.checked)}
+                            className="h-3 w-3"
+                          />
+                          <Label htmlFor="edit-horario" className="text-[10px] cursor-pointer">
+                            Horario especifico
+                          </Label>
                         </div>
                         {bloqueoHorario && (
                           <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
                               <Label className="text-[10px]">Hora inicio</Label>
-                              <Input className="h-7 text-xs" type="time" value={horaInicio} onChange={e => setHoraInicio(e.target.value)} />
+                              <Input
+                                className="h-7 text-xs"
+                                type="time"
+                                value={horaInicio}
+                                onChange={(e) => setHoraInicio(e.target.value)}
+                              />
                             </div>
                             <div className="space-y-1">
                               <Label className="text-[10px]">Hora fin</Label>
-                              <Input className="h-7 text-xs" type="time" value={horaFin} onChange={e => setHoraFin(e.target.value)} />
+                              <Input
+                                className="h-7 text-xs"
+                                type="time"
+                                value={horaFin}
+                                onChange={(e) => setHoraFin(e.target.value)}
+                              />
                             </div>
                           </div>
                         )}
                         <div className="flex gap-2 justify-end">
-                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setEditId(null)}>Cancelar</Button>
-                          <Button size="sm" className="h-7 text-xs" onClick={() => handleUpdate(b.id)} disabled={saving}>Guardar</Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => setEditId(null)}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => handleUpdate(b.id)}
+                            disabled={saving}
+                          >
+                            Guardar
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -327,25 +458,44 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
                 }
 
                 return (
-                  <div key={b.id} className={`flex items-center justify-between p-3 rounded-lg ${activo ? 'bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800' : 'bg-muted/30 opacity-60'}`}>
+                  <div
+                    key={b.id}
+                    className={`flex items-center justify-between p-3 rounded-lg ${activo ? 'bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800' : 'bg-muted/30 opacity-60'}`}
+                  >
                     <div className="flex items-center gap-3">
                       <Icon className={`h-5 w-5 ${info.color}`} />
                       <div>
                         <p className="text-sm font-medium">{b.titulo}</p>
                         <p className="text-xs text-muted-foreground">
                           {formatBloqueoFecha(b.fechaInicio, b.fechaFin)}
-                          {!activo && <span className="ml-2 text-muted-foreground/50">(finalizado)</span>}
+                          {!activo && (
+                            <span className="ml-2 text-muted-foreground/50">(finalizado)</span>
+                          )}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant={activo ? 'default' : 'secondary'} className={`text-xs ${activo ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : ''}`}>
+                      <Badge
+                        variant={activo ? 'default' : 'secondary'}
+                        className={`text-xs ${activo ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : ''}`}
+                      >
                         {info.label}
                       </Badge>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(b)} title="Editar bloqueo">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => startEdit(b)}
+                        title="Editar bloqueo"
+                      >
                         <Pencil className="h-3 w-3" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(b.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive"
+                        onClick={() => handleDelete(b.id)}
+                      >
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
@@ -357,7 +507,9 @@ export function BloqueosDialog({ medicoId, medicoNombre, open, onOpenChange }: P
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cerrar
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -8,22 +8,28 @@ import { requireAuth } from '@/lib/api-auth';
 import { parseBody, updateConversacionSchema } from '@/lib/validations';
 import { z } from 'zod';
 
-const conversacionUpdateSchema = updateConversacionSchema.extend({
-  optOut: z.boolean().optional(),
-  ultimoMensaje: z.string().optional(),
-  ultimoMensajeRol: z.string().optional(),
-  ultimaIntencion: z.string().optional(),
-  ultimaInteraccion: z.string().optional(),
-  medicoId: z.string().uuid().optional().nullable(),
-  proximoRecordatorio: z.string().optional().nullable(),
-}).passthrough();
+const conversacionUpdateSchema = updateConversacionSchema
+  .extend({
+    optOut: z.boolean().optional(),
+    ultimoMensaje: z.string().optional(),
+    ultimoMensajeRol: z.string().optional(),
+    ultimaIntencion: z.string().optional(),
+    ultimaInteraccion: z.string().optional(),
+    medicoId: z.string().uuid().optional().nullable(),
+    proximoRecordatorio: z.string().optional().nullable(),
+  })
+  .passthrough();
 
 function extractId(request: NextRequest): string {
   const parts = request.nextUrl.pathname.split('/').filter(Boolean);
   return parts.pop()!;
 }
 
-async function verifyConversacionAccess(conversacionId: string, medicoId: string | undefined, rol: string | undefined) {
+async function verifyConversacionAccess(
+  conversacionId: string,
+  medicoId: string | undefined,
+  rol: string | undefined,
+) {
   if (rol === 'admin') return;
   if (!medicoId) fail('No autorizado', 403);
 
@@ -63,7 +69,7 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
   const sessionRol = session.user?.role;
   await verifyConversacionAccess(id, sessionMedicoId, sessionRol);
 
-  const body = await parseBody(request, conversacionUpdateSchema) as any;
+  const body = await parseBody(request, conversacionUpdateSchema);
 
   const updateData: Record<string, any> = { updatedAt: new Date() };
   if (body.estado !== undefined) updateData.estado = body.estado;
@@ -75,9 +81,13 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
   if (body.ultimoMensaje !== undefined) updateData.ultimoMensaje = body.ultimoMensaje;
   if (body.ultimoMensajeRol !== undefined) updateData.ultimoMensajeRol = body.ultimoMensajeRol;
   if (body.ultimaIntencion !== undefined) updateData.ultimaIntencion = body.ultimaIntencion;
-  if (body.ultimaInteraccion !== undefined) updateData.ultimaInteraccion = new Date(body.ultimaInteraccion);
+  if (body.ultimaInteraccion !== undefined)
+    updateData.ultimaInteraccion = new Date(body.ultimaInteraccion);
   if (body.medicoId !== undefined) updateData.medicoId = body.medicoId;
-  if (body.proximoRecordatorio !== undefined) updateData.proximoRecordatorio = body.proximoRecordatorio ? new Date(body.proximoRecordatorio) : null;
+  if (body.proximoRecordatorio !== undefined)
+    updateData.proximoRecordatorio = body.proximoRecordatorio
+      ? new Date(body.proximoRecordatorio)
+      : null;
 
   const [actualizada] = await db
     .update(conversaciones)

@@ -49,12 +49,38 @@ export async function GET(request: NextRequest) {
     const periodLength = todayStart.getTime() - startDate.getTime();
     const prevStart = new Date(startDate.getTime() - periodLength);
 
-    const [turnosTot] = await db.select({ total: count() }).from(turnos)
-      .where(and(gte(turnos.fechaHora, startDate), lt(turnos.fechaHora, todayStart), sql`${turnos.deletedAt} IS NULL`));
-    const [completadosTot] = await db.select({ total: count() }).from(turnos)
-      .where(and(gte(turnos.fechaHora, startDate), lt(turnos.fechaHora, todayStart), eq(turnos.estado, 'completado'), sql`${turnos.deletedAt} IS NULL`));
-    const [canceladosTot] = await db.select({ total: count() }).from(turnos)
-      .where(and(gte(turnos.fechaHora, startDate), lt(turnos.fechaHora, todayStart), eq(turnos.estado, 'cancelado'), sql`${turnos.deletedAt} IS NULL`));
+    const [turnosTot] = await db
+      .select({ total: count() })
+      .from(turnos)
+      .where(
+        and(
+          gte(turnos.fechaHora, startDate),
+          lt(turnos.fechaHora, todayStart),
+          sql`${turnos.deletedAt} IS NULL`,
+        ),
+      );
+    const [completadosTot] = await db
+      .select({ total: count() })
+      .from(turnos)
+      .where(
+        and(
+          gte(turnos.fechaHora, startDate),
+          lt(turnos.fechaHora, todayStart),
+          eq(turnos.estado, 'completado'),
+          sql`${turnos.deletedAt} IS NULL`,
+        ),
+      );
+    const [canceladosTot] = await db
+      .select({ total: count() })
+      .from(turnos)
+      .where(
+        and(
+          gte(turnos.fechaHora, startDate),
+          lt(turnos.fechaHora, todayStart),
+          eq(turnos.estado, 'cancelado'),
+          sql`${turnos.deletedAt} IS NULL`,
+        ),
+      );
 
     const totalTurnos = Number(turnosTot?.total ?? 0);
     const totalCompletados = Number(completadosTot?.total ?? 0);
@@ -70,7 +96,10 @@ export async function GET(request: NextRequest) {
     const demo = getDemoReportes(periodo);
     return NextResponse.json({ ...demo, _demo: true });
   } catch (error) {
-    safeWarn('[Reportes API] Error DB, usando datos demo:', error instanceof Error ? { message: error.message } : error);
+    safeWarn(
+      '[Reportes API] Error DB, usando datos demo:',
+      error instanceof Error ? { message: error.message } : error,
+    );
     const demo = getDemoReportes(periodo);
     return NextResponse.json({ ...demo, _demo: true });
   }

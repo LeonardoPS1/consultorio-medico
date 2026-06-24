@@ -23,7 +23,12 @@ const cardVariants = {
   },
 };
 
-const floatClasses = ['animate-gentle-float', 'animate-gentle-float-2', 'animate-gentle-float-3', 'animate-gentle-float-4'];
+const floatClasses = [
+  'animate-gentle-float',
+  'animate-gentle-float-2',
+  'animate-gentle-float-3',
+  'animate-gentle-float-4',
+];
 
 export function Pricing() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -46,12 +51,10 @@ export function Pricing() {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-14"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Planes simples, sin sorpresas
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Planes simples, sin sorpresas</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-base">
-            Elige el plan que mejor se adapte a tu consultorio. Todos incluyen IA local sin costos adicionales.
-            Cancela cuando quieras, sin preguntas.
+            Elige el plan que mejor se adapte a tu consultorio. Todos incluyen IA local sin costos
+            adicionales. Cancela cuando quieras, sin preguntas.
           </p>
         </motion.div>
 
@@ -90,14 +93,18 @@ export function Pricing() {
                     <span className="text-2xl font-bold">${plan.precioUSD}</span>
                     <span className="text-xs text-muted-foreground">/mes USD</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{plan.descripcion}</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                    {plan.descripcion}
+                  </p>
                 </div>
 
                 <ul className="space-y-2">
                   {plan.features.slice(0, 4).map((f) => (
                     <li key={f} className="flex items-start gap-2 text-xs">
                       <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-                      <span className="text-foreground/80">{f.length > 45 ? f.slice(0, 42) + '...' : f}</span>
+                      <span className="text-foreground/80">
+                        {f.length > 45 ? f.slice(0, 42) + '...' : f}
+                      </span>
                     </li>
                   ))}
                   {plan.features.length > 4 && (
@@ -125,10 +132,7 @@ export function Pricing() {
           {/* Scroll indicator dots */}
           <div className="flex justify-center gap-1.5">
             {PLANES_ORDERED.filter((p) => p.id !== 'free').map((_, i) => (
-              <div
-                key={i}
-                className="h-1.5 w-1.5 rounded-full bg-primary/30"
-              />
+              <div key={i} className="h-1.5 w-1.5 rounded-full bg-primary/30" />
             ))}
           </div>
         </motion.div>
@@ -146,9 +150,7 @@ export function Pricing() {
               key={plan.id}
               variants={cardVariants}
               className={`relative rounded-xl border bg-card p-6 grid grid-rows-[auto_1fr_auto] gap-6 card-lift-hover ${
-                plan.popular
-                  ? 'popular-border-shine popular-ring-pulse z-10'
-                  : 'shadow-sm'
+                plan.popular ? 'popular-border-shine popular-ring-pulse z-10' : 'shadow-sm'
               } ${floatClasses[index]}`}
             >
               {plan.popular && (
@@ -218,11 +220,7 @@ export function Pricing() {
       </div>
 
       {/* Registro exprés modal */}
-      <RegistroExpressModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        planId={selectedPlan}
-      />
+      <RegistroExpressModal open={modalOpen} onOpenChange={setModalOpen} planId={selectedPlan} />
     </section>
   );
 }

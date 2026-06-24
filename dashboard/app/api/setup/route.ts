@@ -24,7 +24,10 @@ export const POST = apiHandler(async (request: NextRequest) => {
   if (process.env.NODE_ENV === 'production') {
     const setupKey = process.env.SETUP_KEY;
     if (!setupKey) {
-      throw Object.assign(new Error('SETUP_KEY no configurado en producción. Agregalo a las env vars.'), { status: 500 });
+      throw Object.assign(
+        new Error('SETUP_KEY no configurado en producción. Agregalo a las env vars.'),
+        { status: 500 },
+      );
     }
     const providedKey = request.headers.get('x-setup-key');
     if (!providedKey || providedKey !== setupKey) {
@@ -89,7 +92,11 @@ export const GET = apiHandler(async () => {
     `);
     tableCount = tables.length;
 
-    const admin = await db.select().from(usuarios).where(eq(usuarios.email, 'admin@consultorio.com')).limit(1);
+    const admin = await db
+      .select()
+      .from(usuarios)
+      .where(eq(usuarios.email, 'admin@consultorio.com'))
+      .limit(1);
     adminExists = admin.length > 0;
 
     const tenantsResult = await db.execute<{ count: number }>(sql`
@@ -115,7 +122,9 @@ export const GET = apiHandler(async () => {
           const content = fs.readFileSync(path.default.join(dataDir, file), 'utf-8');
           const data = JSON.parse(content);
           devStats[file.replace('.json', '')] = Array.isArray(data) ? data.length : 1;
-        } catch { /* skip */ }
+        } catch {
+          /* skip */
+        }
       }
     }
   }

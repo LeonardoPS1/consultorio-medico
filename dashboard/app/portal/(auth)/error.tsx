@@ -36,7 +36,8 @@ export default function PortalError({
         Algo salió mal
       </h2>
       <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mb-8 leading-relaxed">
-        Ocurrió un error inesperado al cargar esta página. Puede ser un problema de conexión o un error temporal.
+        Ocurrió un error inesperado al cargar esta página. Puede ser un problema de conexión o un
+        error temporal.
       </p>
 
       <div className="flex items-center gap-3">

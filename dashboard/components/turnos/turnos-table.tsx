@@ -94,9 +94,7 @@ function EmptyState({
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <Calendar className="h-12 w-12 text-muted-foreground/30 mb-4" />
       <p className="text-lg font-medium text-muted-foreground">
-        {filtrosActivos > 0
-          ? 'Sin turnos con esos filtros'
-          : 'Sin turnos para esta fecha'}
+        {filtrosActivos > 0 ? 'Sin turnos con esos filtros' : 'Sin turnos para esta fecha'}
       </p>
       <p className="text-sm text-muted-foreground/70 mt-1 mb-4">
         {filtrosActivos > 0
@@ -150,9 +148,7 @@ function TurnoRow({
         <p className="text-xs text-muted-foreground truncate hidden md:block">
           {turno.tipo} &middot; {turno.medico}
         </p>
-        <p className="text-xs text-muted-foreground truncate md:hidden">
-          {turno.tipo}
-        </p>
+        <p className="text-xs text-muted-foreground truncate md:hidden">{turno.tipo}</p>
       </div>
 
       {/* Estado */}
@@ -198,7 +194,14 @@ function TurnoRow({
               <CheckCircle2 className="h-3 w-3" /> Finalizar
             </Button>
           )}
-          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEditTurno(turno); }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditTurno(turno);
+            }}
+          >
             Editar
           </Button>
           {turno.estado !== 'atendido' && turno.estado !== 'cancelada' && (
@@ -206,7 +209,10 @@ function TurnoRow({
               variant="ghost"
               size="sm"
               className="text-destructive"
-              onClick={(e) => { e.stopPropagation(); onCancelTurno(turno.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancelTurno(turno.id);
+              }}
             >
               <XCircle className="h-3.5 w-3.5 mr-1" />
               Cancelar
@@ -224,20 +230,27 @@ function TurnoRow({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               {(turno.estado === 'pendiente' || turno.estado === 'confirmada') && (
-                <DropdownMenuItem onClick={() => onActualizarEstado(turno.id, 'en_atencion', 'En atención')}>
+                <DropdownMenuItem
+                  onClick={() => onActualizarEstado(turno.id, 'en_atencion', 'En atención')}
+                >
                   <Play className="h-4 w-4 mr-2" /> Atender
                 </DropdownMenuItem>
               )}
               {turno.estado === 'en_atencion' && (
-                <DropdownMenuItem onClick={() => onActualizarEstado(turno.id, 'atendido', `${turno.paciente} fue atendido`)}>
+                <DropdownMenuItem
+                  onClick={() =>
+                    onActualizarEstado(turno.id, 'atendido', `${turno.paciente} fue atendido`)
+                  }
+                >
                   <CheckCircle2 className="h-4 w-4 mr-2" /> Finalizar
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={() => onEditTurno(turno)}>
-                Editar
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEditTurno(turno)}>Editar</DropdownMenuItem>
               {turno.estado !== 'atendido' && turno.estado !== 'cancelada' && (
-                <DropdownMenuItem className="text-destructive" onClick={() => onCancelTurno(turno.id)}>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => onCancelTurno(turno.id)}
+                >
                   <XCircle className="h-4 w-4 mr-2" /> Cancelar
                 </DropdownMenuItem>
               )}
@@ -264,7 +277,10 @@ function TurnoRow({
           }}
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z" fill="currentColor"/>
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z"
+              fill="currentColor"
+            />
           </svg>
         </Button>
 
@@ -299,7 +315,7 @@ function TurnoRow({
             onClick={(e) => {
               e.stopPropagation();
               const msg = encodeURIComponent(
-                `📋 *Encuesta de Satisfacción*%0A%0AHola ${turno.paciente}, ¿cómo calificarías tu consulta del ${turno.fecha}?%0A%0AResponde con un número del 1 al 5:%0A1 😞 Muy mala%0A2 😕 Regular%0A3 😐 Normal%0A4 🙂 Buena%0A5 😍 Excelente%0A%0A¡Gracias por tu tiempo!`
+                `📋 *Encuesta de Satisfacción*%0A%0AHola ${turno.paciente}, ¿cómo calificarías tu consulta del ${turno.fecha}?%0A%0AResponde con un número del 1 al 5:%0A1 😞 Muy mala%0A2 😕 Regular%0A3 😐 Normal%0A4 🙂 Buena%0A5 😍 Excelente%0A%0A¡Gracias por tu tiempo!`,
               );
               window.open(`https://wa.me/?text=${msg}`, '_blank');
             }}

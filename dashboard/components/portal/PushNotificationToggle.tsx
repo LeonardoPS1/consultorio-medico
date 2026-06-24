@@ -34,7 +34,9 @@ export function PushNotificationToggle() {
     }
   }, []);
 
-  useEffect(() => { cargarEstado(); }, [cargarEstado]);
+  useEffect(() => {
+    cargarEstado();
+  }, [cargarEstado]);
 
   const urlBase64ToUint8Array = (base64String: string) => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -62,7 +64,10 @@ export function PushNotificationToggle() {
       return;
     }
     if (permission === 'denied') {
-      setMsg({ type: 'error', text: 'Permisos denegados. Habilitá notificaciones en el navegador.' });
+      setMsg({
+        type: 'error',
+        text: 'Permisos denegados. Habilitá notificaciones en el navegador.',
+      });
       return;
     }
 

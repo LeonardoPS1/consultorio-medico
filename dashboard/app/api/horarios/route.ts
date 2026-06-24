@@ -56,8 +56,8 @@ export const PUT = apiHandler(async (request: NextRequest) => {
           tipo: row.tipo || 'corrido',
           inicio: row.inicio ?? undefined,
           fin: row.fin ?? undefined,
-          inicio2: row.tipo === 'partido' ? (row.inicio2 || null) : null,
-          fin2: row.tipo === 'partido' ? (row.fin2 || null) : null,
+          inicio2: row.tipo === 'partido' ? row.inicio2 || null : null,
+          fin2: row.tipo === 'partido' ? row.fin2 || null : null,
           updatedAt: new Date(),
         })
         .where(eq(horariosAtencion.dia, row.dia));
@@ -68,8 +68,8 @@ export const PUT = apiHandler(async (request: NextRequest) => {
         tipo: row.tipo || 'corrido',
         inicio: row.inicio ?? undefined,
         fin: row.fin ?? undefined,
-        inicio2: row.tipo === 'partido' ? (row.inicio2 || null) : null,
-        fin2: row.tipo === 'partido' ? (row.fin2 || null) : null,
+        inicio2: row.tipo === 'partido' ? row.inicio2 || null : null,
+        fin2: row.tipo === 'partido' ? row.fin2 || null : null,
       });
     }
   }

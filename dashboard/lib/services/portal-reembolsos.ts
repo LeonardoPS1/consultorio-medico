@@ -155,19 +155,16 @@ export async function procesarReembolso(
       return { success: false, error: 'MercadoPago no configurado' };
     }
 
-    const response = await fetch(
-      `https://api.mercadopago.com/v1/payments/${mpPaymentId}/refunds`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: refund.montoReembolso,
-        }),
+    const response = await fetch(`https://api.mercadopago.com/v1/payments/${mpPaymentId}/refunds`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify({
+        amount: refund.montoReembolso,
+      }),
+    });
 
     if (!response.ok) {
       const errBody = await response.text();

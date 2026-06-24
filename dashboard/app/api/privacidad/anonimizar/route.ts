@@ -13,7 +13,11 @@
 
 import { NextRequest } from 'next/server';
 import { apiHandler, success } from '@/lib/api-handler';
-import { privacidadService, getPeriodoRetencionConfig, PERIODO_RETENCION_BAJA_DIAS } from '@/lib/services/privacidad';
+import {
+  privacidadService,
+  getPeriodoRetencionConfig,
+  PERIODO_RETENCION_BAJA_DIAS,
+} from '@/lib/services/privacidad';
 
 export const POST = apiHandler(async (request: NextRequest) => {
   // Verificar webhook secret
@@ -34,8 +38,9 @@ export const POST = apiHandler(async (request: NextRequest) => {
   return success({
     anonimizados,
     fechaLimite: fechaLimite.toISOString(),
-    mensaje: anonimizados > 0
-      ? `${anonimizados} paciente(s) anonimizado(s) post-retención`
-      : 'No hay pacientes pendientes de anonimización',
+    mensaje:
+      anonimizados > 0
+        ? `${anonimizados} paciente(s) anonimizado(s) post-retención`
+        : 'No hay pacientes pendientes de anonimización',
   });
 });

@@ -42,10 +42,7 @@ Te responderemos a la brevedad cuando retomemos la atención. ¡Gracias por tu p
 /**
  * GET: Devuelve los mensajes de la conversación (ordenados cronológicamente).
  */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -83,10 +80,7 @@ export async function GET(
 /**
  * POST: Envía un mensaje del paciente en la conversación.
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -119,7 +113,10 @@ export async function POST(
   }
 
   if (contenido.length > 1000) {
-    return NextResponse.json({ error: 'Mensaje demasiado largo (máximo 1000 caracteres)' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Mensaje demasiado largo (máximo 1000 caracteres)' },
+      { status: 400 },
+    );
   }
 
   // Crear el mensaje

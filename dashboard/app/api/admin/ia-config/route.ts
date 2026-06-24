@@ -18,7 +18,8 @@ import { z } from 'zod';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 const DEFAULT_CONFIG: ConfigIa = {
-  prompt: 'Sos el asistente virtual del consultorio médico. Respondés mensajes de WhatsApp de forma amable y profesional en español neutro chileno. Si detectás una urgencia, priorizala y notificá al médico.',
+  prompt:
+    'Sos el asistente virtual del consultorio médico. Respondés mensajes de WhatsApp de forma amable y profesional en español neutro chileno. Si detectás una urgencia, priorizala y notificá al médico.',
   maxTokens: 300,
   temperatura: 0.3,
 };
@@ -41,7 +42,11 @@ export const GET = apiHandler(async () => {
     .where(eq(tenants.id, DEFAULT_TENANT_ID))
     .limit(1);
 
-  const config = (tenant?.configIa && typeof tenant.configIa === 'object' && 'prompt' in tenant.configIa ? tenant.configIa : DEFAULT_CONFIG) as ConfigIa;
+  const config = (
+    tenant?.configIa && typeof tenant.configIa === 'object' && 'prompt' in tenant.configIa
+      ? tenant.configIa
+      : DEFAULT_CONFIG
+  ) as ConfigIa;
 
   return success({ config });
 });
@@ -60,17 +65,18 @@ export const PUT = apiHandler(async (request: NextRequest) => {
     .where(eq(tenants.id, DEFAULT_TENANT_ID))
     .limit(1);
 
-  const current = (tenant?.configIa && typeof tenant.configIa === 'object' && 'prompt' in tenant.configIa ? tenant.configIa : DEFAULT_CONFIG) as ConfigIa;
+  const current = (
+    tenant?.configIa && typeof tenant.configIa === 'object' && 'prompt' in tenant.configIa
+      ? tenant.configIa
+      : DEFAULT_CONFIG
+  ) as ConfigIa;
 
   const merged: ConfigIa = {
     ...current,
     ...body,
   };
 
-  await db
-    .update(tenants)
-    .set({ configIa: merged })
-    .where(eq(tenants.id, DEFAULT_TENANT_ID));
+  await db.update(tenants).set({ configIa: merged }).where(eq(tenants.id, DEFAULT_TENANT_ID));
 
   return success({
     config: merged,

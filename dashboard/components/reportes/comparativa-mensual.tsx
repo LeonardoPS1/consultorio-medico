@@ -2,16 +2,36 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-  type TooltipProps, type DefaultLegendContentProps,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  type TooltipProps,
+  type DefaultLegendContentProps,
 } from 'recharts';
-import {
-  TrendingUp, TrendingDown, Minus,
-} from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Periodo } from '@/app/dashboard/reportes/types';
 
-export type ComparativaData = { kpis: { titulo: string; actual: string; anterior: string; cambio: string; cambioPct: string; up: boolean }[]; turnos: { label: string; actual: number; anterior: number }[]; intenciones: { intencion: string; actual: number; anterior: number; cambioPct: number }[]; whatsapp: { titulo: string; actual: string; anterior: string; cambio: string; up: boolean }[]; pacientesActual: number; pacientesAnterior: number; };
+export type ComparativaData = {
+  kpis: {
+    titulo: string;
+    actual: string;
+    anterior: string;
+    cambio: string;
+    cambioPct: string;
+    up: boolean;
+  }[];
+  turnos: { label: string; actual: number; anterior: number }[];
+  intenciones: { intencion: string; actual: number; anterior: number; cambioPct: number }[];
+  whatsapp: { titulo: string; actual: string; anterior: string; cambio: string; up: boolean }[];
+  pacientesActual: number;
+  pacientesAnterior: number;
+};
 
 interface Props {
   data: ComparativaData;
@@ -58,7 +78,9 @@ export default function ComparativaMensual({ data, periodo }: Props) {
             transition={{ duration: 0.2, ease: 'easeOut' }}
           >
             <Card className="relative overflow-hidden transition-all hoverable:hover:shadow-card-hover">
-              <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${kpi.up ? 'from-emerald-400 to-emerald-600' : 'from-red-400 to-red-600'}`} />
+              <div
+                className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${kpi.up ? 'from-emerald-400 to-emerald-600' : 'from-red-400 to-red-600'}`}
+              />
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {kpi.titulo}
@@ -73,7 +95,9 @@ export default function ComparativaMensual({ data, periodo }: Props) {
                     ) : (
                       <TrendingDown className="h-4 w-4 text-red-500" />
                     )}
-                    <span className={`text-sm font-semibold ${kpi.up ? 'text-emerald-600' : 'text-red-600'}`}>
+                    <span
+                      className={`text-sm font-semibold ${kpi.up ? 'text-emerald-600' : 'text-red-600'}`}
+                    >
                       {kpi.cambioPct}
                     </span>
                   </div>
@@ -124,13 +148,19 @@ export default function ComparativaMensual({ data, periodo }: Props) {
                   tickLine={false}
                   allowDecimals={false}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }}
+                />
                 <Legend
                   content={({ payload }: DefaultLegendContentProps) => (
                     <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground pt-2">
                       {payload?.map((entry, idx) => (
                         <span key={idx} className="flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: entry.color }} />
+                          <span
+                            className="h-2 w-2 rounded-sm"
+                            style={{ backgroundColor: entry.color }}
+                          />
                           {entry.value}
                         </span>
                       ))}
@@ -186,18 +216,24 @@ export default function ComparativaMensual({ data, periodo }: Props) {
                 {data.intenciones.map((item) => {
                   const isUp = item.cambioPct > 0;
                   return (
-                    <tr key={item.intencion} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                    <tr
+                      key={item.intencion}
+                      className="border-b last:border-0 hover:bg-muted/30 transition-colors"
+                    >
                       <td className="py-2.5 font-medium">{item.intencion}</td>
                       <td className="py-2.5 text-right font-semibold">{item.actual}</td>
                       <td className="py-2.5 text-right text-muted-foreground">{item.anterior}</td>
                       <td className="py-2.5 text-right">
-                        <span className={`inline-flex items-center gap-0.5 font-medium ${isUp ? 'text-emerald-600' : 'text-red-600'}`}>
+                        <span
+                          className={`inline-flex items-center gap-0.5 font-medium ${isUp ? 'text-emerald-600' : 'text-red-600'}`}
+                        >
                           {isUp ? (
                             <TrendingUp className="h-3 w-3" />
                           ) : (
                             <TrendingDown className="h-3 w-3" />
                           )}
-                          {item.cambioPct > 0 ? '+' : ''}{item.cambioPct}%
+                          {item.cambioPct > 0 ? '+' : ''}
+                          {item.cambioPct}%
                         </span>
                       </td>
                     </tr>
@@ -223,9 +259,13 @@ export default function ComparativaMensual({ data, periodo }: Props) {
             transition={{ duration: 0.2, ease: 'easeOut' }}
           >
             <Card className="relative overflow-hidden">
-              <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${w.up ? 'from-emerald-400 to-emerald-600' : 'from-red-400 to-red-600'}`} />
+              <div
+                className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${w.up ? 'from-emerald-400 to-emerald-600' : 'from-red-400 to-red-600'}`}
+              />
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{w.titulo}</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {w.titulo}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline justify-between">
@@ -236,7 +276,9 @@ export default function ComparativaMensual({ data, periodo }: Props) {
                     ) : (
                       <TrendingDown className="h-4 w-4 text-red-500" />
                     )}
-                    <span className={`text-sm font-semibold ${w.up ? 'text-emerald-600' : 'text-red-600'}`}>
+                    <span
+                      className={`text-sm font-semibold ${w.up ? 'text-emerald-600' : 'text-red-600'}`}
+                    >
                       {w.cambio}
                     </span>
                   </div>
@@ -268,16 +310,21 @@ export default function ComparativaMensual({ data, periodo }: Props) {
           </div>
           <div className="flex items-center justify-center gap-2 mt-4 text-sm">
             <span className="text-muted-foreground">Diferencia:</span>
-            <span className={`font-semibold flex items-center gap-1 ${data.pacientesActual >= data.pacientesAnterior ? 'text-emerald-600' : 'text-red-600'}`}>
+            <span
+              className={`font-semibold flex items-center gap-1 ${data.pacientesActual >= data.pacientesAnterior ? 'text-emerald-600' : 'text-red-600'}`}
+            >
               {data.pacientesActual >= data.pacientesAnterior ? (
                 <TrendingUp className="h-4 w-4" />
               ) : (
                 <TrendingDown className="h-4 w-4" />
               )}
               {data.pacientesActual >= data.pacientesAnterior ? '+' : ''}
-              {data.pacientesActual - data.pacientesAnterior}
-              {' '}
-              ({((data.pacientesActual - data.pacientesAnterior) / data.pacientesAnterior * 100).toFixed(1)}%)
+              {data.pacientesActual - data.pacientesAnterior} (
+              {(
+                ((data.pacientesActual - data.pacientesAnterior) / data.pacientesAnterior) *
+                100
+              ).toFixed(1)}
+              %)
             </span>
           </div>
         </CardContent>

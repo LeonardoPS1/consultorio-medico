@@ -42,7 +42,10 @@ export default function ConversacionesLoading() {
             </div>
             <div className="flex-1 space-y-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={`msg-${i}`} className={`h-16 w-3/4 rounded-xl ${i % 2 === 0 ? '' : 'ml-auto'}`} />
+                <Skeleton
+                  key={`msg-${i}`}
+                  className={`h-16 w-3/4 rounded-xl ${i % 2 === 0 ? '' : 'ml-auto'}`}
+                />
               ))}
             </div>
           </CardContent>

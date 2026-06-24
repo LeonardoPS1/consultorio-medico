@@ -2,7 +2,9 @@ import { db } from '@/lib/db';
 import { usuarios, medicos } from '@/drizzle/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 
-export async function getMedicoScope(usuarioId: string): Promise<{ medicoId: string | null; rol: string } | null> {
+export async function getMedicoScope(
+  usuarioId: string,
+): Promise<{ medicoId: string | null; rol: string } | null> {
   const [user] = await db
     .select({ rol: usuarios.rol })
     .from(usuarios)

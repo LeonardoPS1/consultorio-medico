@@ -2,7 +2,13 @@ import { NextResponse } from 'next/server';
 import { getPaymentById, getMerchantOrderById } from '@/lib/mercadopago';
 import { PLANES, type PlanId } from '@/lib/planes';
 import { db } from '@/lib/db';
-import { suscripciones, usuarios, portalPagos, turnos, suscripcionesPaciente } from '@/drizzle/schema';
+import {
+  suscripciones,
+  usuarios,
+  portalPagos,
+  turnos,
+  suscripcionesPaciente,
+} from '@/drizzle/schema';
 import { eq, desc } from 'drizzle-orm';
 import { getUserByEmail } from '@/lib/data-store';
 import { safeLog, safeWarn, safeError } from '@/lib/logger';
@@ -14,7 +20,7 @@ function verifySignature(
   signatureHeader: string | null,
   body: { data?: { id?: string | number } },
   querySecret: string | null,
-  secret: string
+  secret: string,
 ): boolean {
   // Método 1: Firma HMAC en header x-signature (recomendado por MP)
   if (signatureHeader) {
@@ -69,7 +75,9 @@ export const POST = apiHandler(async (request: Request) => {
       safeError('[MP Webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — rechazando');
       return NextResponse.json({ ok: false, error: 'Server config error' }, { status: 500 });
     }
-    safeWarn('[MP Webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — saltando validación (solo desarrollo)');
+    safeWarn(
+      '[MP Webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — saltando validación (solo desarrollo)',
+    );
   } else {
     const signatureHeader = request.headers.get('x-signature');
     const url = new URL(request.url);
@@ -111,7 +119,7 @@ async function handlePaymentNotification(paymentId: string) {
     return;
   }
 
-  const status = payment.status;           // approved, rejected, pending, etc.
+  const status = payment.status; // approved, rejected, pending, etc.
   const externalRef = payment.external_reference;
   const payerEmail = payment.payer?.email;
   const merchantOrderId = payment.order?.id;
@@ -300,7 +308,9 @@ async function handlePaquetePayment(
       })
       .where(eq(suscripcionesPaciente.id, suscripcionId));
 
-    safeLog(`[MP Webhook] ✅ Paquete suscripción ${suscripcionId} activada (MP payment ${paymentId})`);
+    safeLog(
+      `[MP Webhook] ✅ Paquete suscripción ${suscripcionId} activada (MP payment ${paymentId})`,
+    );
   } else if (['cancelled', 'rejected', 'refunded'].includes(status ?? '')) {
     await db
       .update(suscripcionesPaciente)

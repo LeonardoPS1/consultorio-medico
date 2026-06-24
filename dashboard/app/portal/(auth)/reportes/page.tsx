@@ -8,8 +8,15 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Calendar, DollarSign, Syringe, Clock, TrendingUp,
-  Loader2, Activity, Eye, ArrowUpRight,
+  Calendar,
+  DollarSign,
+  Syringe,
+  Clock,
+  TrendingUp,
+  Loader2,
+  Activity,
+  Eye,
+  ArrowUpRight,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -34,7 +41,20 @@ function formatCLPrice(amount: number): string {
 
 function formatShortMonth(mes: string): string {
   const [year, month] = mes.split('-');
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  const months = [
+    'Ene',
+    'Feb',
+    'Mar',
+    'Abr',
+    'May',
+    'Jun',
+    'Jul',
+    'Ago',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dic',
+  ];
   return `${months[parseInt(month, 10) - 1]} ${year.slice(2)}`;
 }
 
@@ -60,7 +80,9 @@ function MiniBarChart({ data }: { data: Array<{ mes: string; value: number }> })
         const pct = (d.value / max) * 100;
         return (
           <div key={d.mes} className="flex-1 flex flex-col items-center gap-1">
-            <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">{d.value}</span>
+            <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+              {d.value}
+            </span>
             <div
               className="w-full rounded-t-md bg-blue-500 dark:bg-blue-400 transition-all duration-500"
               style={{ height: `${Math.max(pct, 4)}%` }}
@@ -208,7 +230,9 @@ export default function PortalReportesPage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Clock className="h-4 w-4 text-blue-500" />
-                <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100">Última visita</h3>
+                <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                  Última visita
+                </h3>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 {formatDateCL(data.ultimaVisita.fecha)}
@@ -282,17 +306,21 @@ export default function PortalReportesPage() {
         </motion.div>
       )}
 
-      {data.visitasPorMes.length === 0 && data.visitasPorTipo.length === 0 && data.totalVisitas === 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-12 text-gray-400 dark:text-gray-500"
-        >
-          <TrendingUp className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-          <p className="font-medium text-gray-500 dark:text-gray-400">Sin actividad aún</p>
-          <p className="text-sm mt-1">Tus estadísticas aparecerán aquí cuando tengas visitas registradas.</p>
-        </motion.div>
-      )}
+      {data.visitasPorMes.length === 0 &&
+        data.visitasPorTipo.length === 0 &&
+        data.totalVisitas === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12 text-gray-400 dark:text-gray-500"
+          >
+            <TrendingUp className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
+            <p className="font-medium text-gray-500 dark:text-gray-400">Sin actividad aún</p>
+            <p className="text-sm mt-1">
+              Tus estadísticas aparecerán aquí cuando tengas visitas registradas.
+            </p>
+          </motion.div>
+        )}
     </div>
   );
 }

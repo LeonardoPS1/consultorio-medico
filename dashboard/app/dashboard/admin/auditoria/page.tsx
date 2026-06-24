@@ -5,12 +5,7 @@ import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,13 +17,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/select';
 import {
   Loader2,
   Search,
@@ -58,7 +47,18 @@ interface AuditEntry {
 }
 
 const ACCIONES = ['login', 'logout', 'view', 'create', 'edit', 'delete', 'export', 'config'];
-const ENTIDADES = ['paciente', 'turno', 'conversacion', 'mensaje', 'receta', 'credencial', 'usuario', 'reporte', 'historial_medico', 'configuracion'];
+const ENTIDADES = [
+  'paciente',
+  'turno',
+  'conversacion',
+  'mensaje',
+  'receta',
+  'credencial',
+  'usuario',
+  'reporte',
+  'historial_medico',
+  'configuracion',
+];
 
 const ACTION_COLORS: Record<string, string> = {
   login: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
@@ -119,11 +119,12 @@ function AuditoriaContent() {
   }, [fetchLogs]);
 
   const filteredLogs = searchTerm
-    ? logs.filter(l =>
-        l.detalle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        l.usuarioNombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        l.usuarioEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        l.entidadId?.toLowerCase().includes(searchTerm.toLowerCase())
+    ? logs.filter(
+        (l) =>
+          l.detalle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          l.usuarioNombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          l.usuarioEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          l.entidadId?.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     : logs;
 
@@ -164,7 +165,11 @@ function AuditoriaContent() {
   return (
     <div className="space-y-6 animate-in">
       <div className="flex items-center justify-between">
-        <PageHeader title="Auditoría" description="Registro de accesos y acciones del sistema" gradient />
+        <PageHeader
+          title="Auditoría"
+          description="Registro de accesos y acciones del sistema"
+          gradient
+        />
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="text-sm px-3 py-1">
             {total} registros
@@ -203,33 +208,53 @@ function AuditoriaContent() {
             </div>
             <Select
               value={filtroAccion || 'all'}
-              onValueChange={(v) => { setFiltroAccion(v === 'all' ? '' : v); setOffset(0); }}
+              onValueChange={(v) => {
+                setFiltroAccion(v === 'all' ? '' : v);
+                setOffset(0);
+              }}
             >
               <SelectTrigger className="h-9 w-[160px]">
                 <SelectValue placeholder="Acción" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas las acciones</SelectItem>
-                {ACCIONES.map(a => (
-                  <SelectItem key={a} value={a}>{a}</SelectItem>
+                {ACCIONES.map((a) => (
+                  <SelectItem key={a} value={a}>
+                    {a}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select
               value={filtroEntidad || 'all'}
-              onValueChange={(v) => { setFiltroEntidad(v === 'all' ? '' : v); setOffset(0); }}
+              onValueChange={(v) => {
+                setFiltroEntidad(v === 'all' ? '' : v);
+                setOffset(0);
+              }}
             >
               <SelectTrigger className="h-9 w-[180px]">
                 <SelectValue placeholder="Entidad" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas las entidades</SelectItem>
-                {ENTIDADES.map(e => (
-                  <SelectItem key={e} value={e}>{e}</SelectItem>
+                {ENTIDADES.map((e) => (
+                  <SelectItem key={e} value={e}>
+                    {e}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" className="h-9" onClick={() => { setFiltroAccion(''); setFiltroEntidad(''); setSearchTerm(''); setOffset(0); }}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9"
+              onClick={() => {
+                setFiltroAccion('');
+                setFiltroEntidad('');
+                setSearchTerm('');
+                setOffset(0);
+              }}
+            >
               Limpiar filtros
             </Button>
           </div>
@@ -254,32 +279,50 @@ function AuditoriaContent() {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left font-medium text-muted-foreground px-4 py-3">Fecha</th>
-                    <th className="text-left font-medium text-muted-foreground px-4 py-3">Acción</th>
-                    <th className="text-left font-medium text-muted-foreground px-4 py-3">Entidad</th>
-                    <th className="text-left font-medium text-muted-foreground px-4 py-3">Usuario</th>
-                    <th className="text-left font-medium text-muted-foreground px-4 py-3">Detalle</th>
+                    <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                      Acción
+                    </th>
+                    <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                      Entidad
+                    </th>
+                    <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                      Usuario
+                    </th>
+                    <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                      Detalle
+                    </th>
                     <th className="text-left font-medium text-muted-foreground px-4 py-3">IP</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredLogs.map((log) => (
-                    <tr key={log.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                    <tr
+                      key={log.id}
+                      className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                    >
                       <td className="px-4 py-2.5 whitespace-nowrap text-xs text-muted-foreground">
                         {format(new Date(log.createdAt), 'dd/MM/yy HH:mm', { locale: es })}
                       </td>
                       <td className="px-4 py-2.5">
-                        <Badge className={`font-mono text-[10px] uppercase ${ACTION_COLORS[log.accion] || ''}`} variant="outline">
+                        <Badge
+                          className={`font-mono text-[10px] uppercase ${ACTION_COLORS[log.accion] || ''}`}
+                          variant="outline"
+                        >
                           {log.accion}
                         </Badge>
                       </td>
                       <td className="px-4 py-2.5">
                         <span className="text-xs font-medium">{log.entidad}</span>
                         {log.entidadId && (
-                          <span className="text-[10px] text-muted-foreground ml-1">#{log.entidadId.slice(0, 8)}</span>
+                          <span className="text-[10px] text-muted-foreground ml-1">
+                            #{log.entidadId.slice(0, 8)}
+                          </span>
                         )}
                       </td>
                       <td className="px-4 py-2.5 text-xs">
-                        {log.usuarioNombre || log.usuarioEmail || <span className="text-muted-foreground">—</span>}
+                        {log.usuarioNombre || log.usuarioEmail || (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[250px] truncate">
                         {log.detalle || <span className="text-muted-foreground/50">—</span>}
@@ -365,7 +408,9 @@ function AuditoriaContent() {
                   className="mt-0.5"
                 />
                 <div>
-                  <p className="text-sm font-medium text-destructive">Eliminar todos los registros</p>
+                  <p className="text-sm font-medium text-destructive">
+                    Eliminar todos los registros
+                  </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Vacía completamente la tabla de auditoría
                   </p>
@@ -375,19 +420,22 @@ function AuditoriaContent() {
 
             <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3 text-xs text-destructive">
               <p className="font-medium mb-1">⚠️ Advertencia</p>
-              <p>Esta operación borra {cleanupMode === 'all' ? 'todos los' : 'los'} registros de la base de datos. No hay forma de deshacerla.</p>
+              <p>
+                Esta operación borra {cleanupMode === 'all' ? 'todos los' : 'los'} registros de la
+                base de datos. No hay forma de deshacerla.
+              </p>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCleanupDialog(false)} disabled={cleaning}>
-              Cancelar
-            </Button>
             <Button
-              variant="destructive"
-              onClick={handleCleanup}
+              variant="outline"
+              onClick={() => setShowCleanupDialog(false)}
               disabled={cleaning}
             >
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleCleanup} disabled={cleaning}>
               {cleaning ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

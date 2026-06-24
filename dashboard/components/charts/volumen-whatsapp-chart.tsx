@@ -1,10 +1,21 @@
 'use client';
 
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from 'recharts';
 import type { TooltipProps, DefaultLegendContentProps } from 'recharts';
-export interface WhatsAppVolumen { dia: string; recibidos: number; enviados: number; }
+export interface WhatsAppVolumen {
+  dia: string;
+  recibidos: number;
+  enviados: number;
+}
 
 interface Props {
   data: WhatsAppVolumen[];
@@ -40,7 +51,7 @@ const CustomLegend = ({ payload }: DefaultLegendContentProps) => {
 };
 
 export default function VolumenWhatsAppChart({ data }: Props) {
-  const maxVal = Math.max(...data.flatMap(d => [d.recibidos, d.enviados]), 1);
+  const maxVal = Math.max(...data.flatMap((d) => [d.recibidos, d.enviados]), 1);
 
   return (
     <div className="relative">
@@ -65,7 +76,10 @@ export default function VolumenWhatsAppChart({ data }: Props) {
             domain={[0, Math.ceil(maxVal * 1.15)]}
             allowDecimals={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }}
+          />
           <Legend content={<CustomLegend />} />
           <Bar
             dataKey="recibidos"

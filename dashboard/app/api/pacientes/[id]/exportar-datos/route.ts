@@ -34,17 +34,11 @@ import { verifyPacienteAccess } from '@/lib/api-auth';
  * - Historial de consentimientos
  * - Auditoría de accesos a sus datos
  */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     const sessionMedicoId = session.user?.medicoId;
@@ -54,16 +48,10 @@ export async function GET(
     const pacienteId = params.id;
 
     // ─── 1. Datos del paciente ────────────────────────
-    const [paciente] = await db
-      .select()
-      .from(pacientes)
-      .where(eq(pacientes.id, pacienteId));
+    const [paciente] = await db.select().from(pacientes).where(eq(pacientes.id, pacienteId));
 
     if (!paciente) {
-      return NextResponse.json(
-        { error: 'Paciente no encontrado' },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: 'Paciente no encontrado' }, { status: 404 });
     }
 
     // ─── 2. Turnos ─────────────────────────────────────
@@ -149,10 +137,7 @@ export async function GET(
     const facturas = await db
       .select()
       .from(facturacion)
-      .where(and(
-        eq(facturacion.pacienteId, pacienteId),
-        sql`${facturacion.deletedAt} IS NULL`,
-      ))
+      .where(and(eq(facturacion.pacienteId, pacienteId), sql`${facturacion.deletedAt} IS NULL`))
       .orderBy(desc(facturacion.createdAt));
 
     // ─── 9. Consentimiento log ────────────────────────
@@ -217,9 +202,6 @@ export async function GET(
     return NextResponse.json(exportData);
   } catch (error) {
     console.error('[API] Error GET /api/pacientes/[id]/exportar-datos:', error);
-    return NextResponse.json(
-      { error: 'Error al exportar datos del paciente' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Error al exportar datos del paciente' }, { status: 500 });
   }
 }

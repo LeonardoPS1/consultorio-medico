@@ -38,7 +38,12 @@ export const GET = apiHandler(async () => {
     return NextResponse.json({
       plan: 'free',
       estado: 'free',
-      planInfo: { id: 'free', nombre: 'Gratuito', precio: 0, descripcion: 'Sin suscripción activa' },
+      planInfo: {
+        id: 'free',
+        nombre: 'Gratuito',
+        precio: 0,
+        descripcion: 'Sin suscripción activa',
+      },
       periodEnd: null,
     });
   }

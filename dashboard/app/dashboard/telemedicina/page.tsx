@@ -20,7 +20,13 @@ import { toast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-type TurnoEstado = 'pendiente' | 'confirmada' | 'en_atencion' | 'atendido' | 'cancelada' | 'no_asistio';
+type TurnoEstado =
+  | 'pendiente'
+  | 'confirmada'
+  | 'en_atencion'
+  | 'atendido'
+  | 'cancelada'
+  | 'no_asistio';
 
 interface TurnoVirtual {
   id: string;
@@ -67,7 +73,11 @@ export default function TelemedicinaPage() {
       setTurnos(data.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
-      toast({ title: 'Error', description: 'No se pudieron cargar los turnos virtuales', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'No se pudieron cargar los turnos virtuales',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -79,24 +89,26 @@ export default function TelemedicinaPage() {
 
   // Filtrar por estado
   const ahora = new Date();
-  const turnosFiltrados = turnos.filter((t) => {
-    const turnoFecha = new Date(`${t.fecha}T${t.hora}:00`);
-    
-    switch (filtroEstado) {
-      case 'proximos':
-        return turnoFecha >= ahora && (t.estado === 'pendiente' || t.estado === 'confirmada');
-      case 'en_curso':
-        return t.estado === 'en_atencion';
-      case 'finalizados':
-        return t.estado === 'atendido' || t.estado === 'cancelada' || t.estado === 'no_asistio';
-      default:
-        return true;
-    }
-  }).sort((a, b) => {
-    const fechaA = new Date(`${a.fecha}T${a.hora}:00`).getTime();
-    const fechaB = new Date(`${b.fecha}T${b.hora}:00`).getTime();
-    return filtroEstado === 'finalizados' ? fechaB - fechaA : fechaA - fechaB;
-  });
+  const turnosFiltrados = turnos
+    .filter((t) => {
+      const turnoFecha = new Date(`${t.fecha}T${t.hora}:00`);
+
+      switch (filtroEstado) {
+        case 'proximos':
+          return turnoFecha >= ahora && (t.estado === 'pendiente' || t.estado === 'confirmada');
+        case 'en_curso':
+          return t.estado === 'en_atencion';
+        case 'finalizados':
+          return t.estado === 'atendido' || t.estado === 'cancelada' || t.estado === 'no_asistio';
+        default:
+          return true;
+      }
+    })
+    .sort((a, b) => {
+      const fechaA = new Date(`${a.fecha}T${a.hora}:00`).getTime();
+      const fechaB = new Date(`${b.fecha}T${b.hora}:00`).getTime();
+      return filtroEstado === 'finalizados' ? fechaB - fechaA : fechaA - fechaB;
+    });
 
   const medicos = Array.from(new Set(turnos.map((t) => t.medico))).sort();
 
@@ -114,12 +126,32 @@ export default function TelemedicinaPage() {
 
   const getEstadoBadge = (estado: TurnoEstado) => {
     const config: Record<TurnoEstado, { label: string; color: string; bg: string }> = {
-      pendiente: { label: 'Pendiente', color: 'text-amber-700', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-      confirmada: { label: 'Confirmada', color: 'text-emerald-700', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
-      en_atencion: { label: 'En atención', color: 'text-blue-700', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-      atendido: { label: 'Atendido', color: 'text-emerald-700', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
+      pendiente: {
+        label: 'Pendiente',
+        color: 'text-amber-700',
+        bg: 'bg-amber-100 dark:bg-amber-900/30',
+      },
+      confirmada: {
+        label: 'Confirmada',
+        color: 'text-emerald-700',
+        bg: 'bg-emerald-100 dark:bg-emerald-900/30',
+      },
+      en_atencion: {
+        label: 'En atención',
+        color: 'text-blue-700',
+        bg: 'bg-blue-100 dark:bg-blue-900/30',
+      },
+      atendido: {
+        label: 'Atendido',
+        color: 'text-emerald-700',
+        bg: 'bg-emerald-100 dark:bg-emerald-900/30',
+      },
       cancelada: { label: 'Cancelada', color: 'text-red-700', bg: 'bg-red-100 dark:bg-red-900/30' },
-      no_asistio: { label: 'No asistió', color: 'text-purple-700', bg: 'bg-purple-100 dark:bg-purple-900/30' },
+      no_asistio: {
+        label: 'No asistió',
+        color: 'text-purple-700',
+        bg: 'bg-purple-100 dark:bg-purple-900/30',
+      },
     };
     return config[estado];
   };
@@ -151,7 +183,13 @@ export default function TelemedicinaPage() {
               >
                 <Filter className="h-4 w-4" />
                 <span>
-                  {filtroEstado === 'todos' ? 'Todos' : filtroEstado === 'proximos' ? 'Próximos' : filtroEstado === 'en_curso' ? 'En curso' : 'Finalizados'}
+                  {filtroEstado === 'todos'
+                    ? 'Todos'
+                    : filtroEstado === 'proximos'
+                      ? 'Próximos'
+                      : filtroEstado === 'en_curso'
+                        ? 'En curso'
+                        : 'Finalizados'}
                 </span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
@@ -201,18 +239,44 @@ export default function TelemedicinaPage() {
       {/* Stats rápidos */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Próximos', count: turnos.filter(t => new Date(`${t.fecha}T${t.hora}:00`) >= ahora && (t.estado === 'pendiente' || t.estado === 'confirmada')).length, color: 'amber' },
-          { label: 'En curso', count: turnos.filter(t => t.estado === 'en_atencion').length, color: 'blue' },
-          { label: 'Atendidos', count: turnos.filter(t => t.estado === 'atendido').length, color: 'emerald' },
-          { label: 'Cancelados', count: turnos.filter(t => t.estado === 'cancelada' || t.estado === 'no_asistio').length, color: 'red' },
+          {
+            label: 'Próximos',
+            count: turnos.filter(
+              (t) =>
+                new Date(`${t.fecha}T${t.hora}:00`) >= ahora &&
+                (t.estado === 'pendiente' || t.estado === 'confirmada'),
+            ).length,
+            color: 'amber',
+          },
+          {
+            label: 'En curso',
+            count: turnos.filter((t) => t.estado === 'en_atencion').length,
+            color: 'blue',
+          },
+          {
+            label: 'Atendidos',
+            count: turnos.filter((t) => t.estado === 'atendido').length,
+            color: 'emerald',
+          },
+          {
+            label: 'Cancelados',
+            count: turnos.filter((t) => t.estado === 'cancelada' || t.estado === 'no_asistio')
+              .length,
+            color: 'red',
+          },
         ].map((stat, i) => (
-          <Card key={i} className="border-primary/10 bg-gradient-to-br from-primary/[0.03] to-transparent">
+          <Card
+            key={i}
+            className="border-primary/10 bg-gradient-to-br from-primary/[0.03] to-transparent"
+          >
             <CardContent className="flex items-center justify-between p-4">
               <div>
                 <p className="text-2xl font-bold text-foreground">{stat.count}</p>
                 <p className="text-xs text-muted-foreground">{stat.label}</p>
               </div>
-              <div className={`h-10 w-10 rounded-full bg-${stat.color}-100 dark:bg-${stat.color}-900/30 flex items-center justify-center`}>
+              <div
+                className={`h-10 w-10 rounded-full bg-${stat.color}-100 dark:bg-${stat.color}-900/30 flex items-center justify-center`}
+              >
                 <Video className={`h-5 w-5 text-${stat.color}-600 dark:text-${stat.color}-400`} />
               </div>
             </CardContent>
@@ -247,10 +311,13 @@ export default function TelemedicinaPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center px-4">
               <Video className="h-12 w-12 text-muted-foreground/30 mb-3" />
               <p className="text-muted-foreground">
-                {filtroEstado === 'proximos' ? 'No hay videoconsultas próximas' : 'No hay turnos en este estado'}
+                {filtroEstado === 'proximos'
+                  ? 'No hay videoconsultas próximas'
+                  : 'No hay turnos en este estado'}
               </p>
               <p className="text-sm text-muted-foreground/60 mt-1">
-                Los turnos virtuales aparecen aquí automáticamente al crearlos con modalidad "Virtual"
+                Los turnos virtuales aparecen aquí automáticamente al crearlos con modalidad
+                "Virtual"
               </p>
             </div>
           ) : (
@@ -258,7 +325,9 @@ export default function TelemedicinaPage() {
               {turnosFiltrados.map((turno) => {
                 const estadoConfig = getEstadoBadge(turno.estado);
                 const turnoFecha = new Date(`${turno.fecha}T${turno.hora}:00`);
-                const esProximo = turnoFecha >= ahora && (turno.estado === 'pendiente' || turno.estado === 'confirmada');
+                const esProximo =
+                  turnoFecha >= ahora &&
+                  (turno.estado === 'pendiente' || turno.estado === 'confirmada');
                 const esEnCurso = turno.estado === 'en_atencion';
                 const tieneLink = !!turno.linkVideollamada;
 
@@ -286,12 +355,18 @@ export default function TelemedicinaPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-medium truncate">{turno.paciente}</p>
-                          <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] px-2 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                          >
                             <Video className="h-2.5 w-2.5 mr-1" />
                             Virtual
                           </Badge>
                           {turno.estado === 'en_atencion' && (
-                            <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 animate-pulse">
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] px-2 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 animate-pulse"
+                            >
                               En vivo
                             </Badge>
                           )}
@@ -365,10 +440,15 @@ export default function TelemedicinaPage() {
             <div className="text-sm text-muted-foreground space-y-1">
               <p className="font-medium text-foreground">Cómo funciona la telemedicina</p>
               <ul className="list-disc list-inside space-y-0.5 text-[13px]">
-                <li>Los turnos con modalidad <strong>Virtual</strong> generan automáticamente una sala LiveKit</li>
+                <li>
+                  Los turnos con modalidad <strong>Virtual</strong> generan automáticamente una sala
+                  LiveKit
+                </li>
                 <li>El paciente recibe el link por WhatsApp al agendar</li>
                 <li>El médico accede desde esta página o desde el Kanban de Atención</li>
-                <li>No requiere instalar apps: funciona en navegador (Chrome, Firefox, Safari, Edge)</li>
+                <li>
+                  No requiere instalar apps: funciona en navegador (Chrome, Firefox, Safari, Edge)
+                </li>
                 <li>Permisos de cámara y micrófono son obligatorios</li>
               </ul>
             </div>

@@ -6,32 +6,29 @@ import { parseBody } from '@/lib/validations';
 import { updateConsentimientoSchema } from '@/lib/validations';
 
 // GET /api/consentimientos/[id]
-export const GET = apiHandler(async (
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
-  await requireAuth();
-  const c = await consentimientosService.getById(params.id);
-  return ok({ data: c });
-});
+export const GET = apiHandler(
+  async (_request: NextRequest, { params }: { params: { id: string } }) => {
+    await requireAuth();
+    const c = await consentimientosService.getById(params.id);
+    return ok({ data: c });
+  },
+);
 
 // PATCH /api/consentimientos/[id]
-export const PATCH = apiHandler(async (
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
-  await requireAuth();
-  const body = await parseBody(request, updateConsentimientoSchema);
-  const updated = await consentimientosService.update(params.id, body);
-  return ok({ data: updated });
-});
+export const PATCH = apiHandler(
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
+    await requireAuth();
+    const body = await parseBody(request, updateConsentimientoSchema);
+    const updated = await consentimientosService.update(params.id, body);
+    return ok({ data: updated });
+  },
+);
 
 // DELETE /api/consentimientos/[id]
-export const DELETE = apiHandler(async (
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
-  await requireAuth();
-  const result = await consentimientosService.eliminar(params.id);
-  return ok(result);
-});
+export const DELETE = apiHandler(
+  async (_request: NextRequest, { params }: { params: { id: string } }) => {
+    await requireAuth();
+    const result = await consentimientosService.eliminar(params.id);
+    return ok(result);
+  },
+);

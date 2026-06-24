@@ -42,7 +42,13 @@ import { PageHeader } from '@/components/page-header';
 // ============================================================
 // Tipos
 // ============================================================
-type TurnoEstado = 'pendiente' | 'confirmada' | 'en_atencion' | 'atendido' | 'cancelada' | 'no_asistio';
+type TurnoEstado =
+  | 'pendiente'
+  | 'confirmada'
+  | 'en_atencion'
+  | 'atendido'
+  | 'cancelada'
+  | 'no_asistio';
 
 interface Turno {
   id: string;
@@ -143,10 +149,10 @@ function TurnoCard({
     () => ({
       transform: CSS.Translate.toString(transform),
       opacity: isDragging ? 0.4 : 1,
-      zIndex: isDragging ? 50 : 'auto' as const,
+      zIndex: isDragging ? 50 : ('auto' as const),
       borderColor: isInAttention ? color : undefined,
     }),
-    [transform, isDragging, color, isInAttention]
+    [transform, isDragging, color, isInAttention],
   );
 
   return (
@@ -252,7 +258,10 @@ function TurnoCard({
             <Button
               size="sm"
               className="flex-1 min-w-[100px] h-8 text-xs gap-2 font-semibold"
-              onClick={(e) => { e.stopPropagation(); onAtender(turno.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAtender(turno.id);
+              }}
             >
               <Play className="h-3.5 w-3.5" />
               Atender
@@ -263,7 +272,10 @@ function TurnoCard({
               size="sm"
               variant="outline"
               className="h-8 text-xs gap-1.5 shrink-0 min-w-[80px]"
-              onClick={(e) => { e.stopPropagation(); window.open(`/videollamada/${turno.id}`, '_blank'); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(`/videollamada/${turno.id}`, '_blank');
+              }}
               title="Iniciar videollamada"
             >
               <Video className="h-3.5 w-3.5" />
@@ -275,7 +287,10 @@ function TurnoCard({
               size="sm"
               variant="default"
               className="flex-1 h-8 text-xs gap-2 font-semibold bg-emerald-600 hoverable:hover:bg-emerald-700"
-              onClick={(e) => { e.stopPropagation(); onFinalizar(turno.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onFinalizar(turno.id);
+              }}
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
               Finalizar
@@ -286,7 +301,10 @@ function TurnoCard({
               size="sm"
               variant="ghost"
               className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive shrink-0"
-              onClick={(e) => { e.stopPropagation(); onCancelar(turno.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancelar(turno.id);
+              }}
               title="Cancelar turno"
             >
               <XCircle className="h-4 w-4" />
@@ -297,7 +315,10 @@ function TurnoCard({
               size="sm"
               variant="ghost"
               className="h-8 w-8 p-0 text-muted-foreground hover:text-purple-600 shrink-0"
-              onClick={(e) => { e.stopPropagation(); onMoverNoAsistio(turno.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoverNoAsistio(turno.id);
+              }}
               title="Marcar como no asistió"
             >
               <AlertCircle className="h-4 w-4" />
@@ -335,7 +356,10 @@ function DragPreview({ turno }: { turno: Turno }) {
           <span className="inline-flex items-center justify-center h-7 w-14 rounded-lg text-xs font-bold tabular-nums bg-muted text-muted-foreground">
             {turno.hora}
           </span>
-          <Badge variant="outline" className="text-[10px] px-2 py-0 font-medium pointer-events-none">
+          <Badge
+            variant="outline"
+            className="text-[10px] px-2 py-0 font-medium pointer-events-none"
+          >
             {getTurnoLabel(turno.estado)}
           </Badge>
         </div>
@@ -343,7 +367,9 @@ function DragPreview({ turno }: { turno: Turno }) {
         <p className="text-xs text-muted-foreground truncate">
           {turno.tipo} &middot; {turno.medico}
           {isVirtual && (
-            <span className="inline-flex items-center gap-0.5 ml-1 text-[10px] text-blue-600">🎥</span>
+            <span className="inline-flex items-center gap-0.5 ml-1 text-[10px] text-blue-600">
+              🎥
+            </span>
           )}
         </p>
       </div>
@@ -362,7 +388,7 @@ function KanbanColumn({
   onCancelar,
   onMoverNoAsistio,
 }: {
-  columna: typeof COLUMNAS[0];
+  columna: (typeof COLUMNAS)[0];
   turnos: Turno[];
   onAtender: (id: string) => void;
   onFinalizar: (id: string) => void;
@@ -374,26 +400,31 @@ function KanbanColumn({
     data: { columnaId: columna.id },
   });
 
-  const Icono = columna.id === 'pendientes' ? Hourglass
-    : columna.id === 'en_atencion' ? Play
-    : columna.id === 'atendidos' ? CheckCircle2
-    : columna.id === 'cancelados' ? XCircle
-    : AlertCircle;
+  const Icono =
+    columna.id === 'pendientes'
+      ? Hourglass
+      : columna.id === 'en_atencion'
+        ? Play
+        : columna.id === 'atendidos'
+          ? CheckCircle2
+          : columna.id === 'cancelados'
+            ? XCircle
+            : AlertCircle;
 
   return (
     <div
       ref={setNodeRef}
       className={`flex flex-col gap-2 min-h-[250px] rounded-xl p-3 transition-[transform,border-color,background-color,box-shadow] duration-200 border-2
-        ${isOver
-          ? 'border-primary bg-primary/5 shadow-lg scale-[1.01]'
-          : 'border-transparent'
-        }
+        ${isOver ? 'border-primary bg-primary/5 shadow-lg scale-[1.01]' : 'border-transparent'}
         ${turnos.length === 0 && !isOver ? 'bg-muted/10' : ''}
       `}
     >
       {/* Header de columna */}
       <div className="flex items-center gap-2 px-1 mb-1">
-        <div className="flex items-center justify-center h-7 w-7 rounded-lg" style={{ backgroundColor: `${columna.color}18` }}>
+        <div
+          className="flex items-center justify-center h-7 w-7 rounded-lg"
+          style={{ backgroundColor: `${columna.color}18` }}
+        >
           <Icono className="h-4 w-4" style={{ color: columna.color }} />
         </div>
         <span className="text-sm font-semibold">{columna.titulo}</span>
@@ -411,13 +442,13 @@ function KanbanColumn({
 
       {/* Cards */}
       {turnos.length === 0 ? (
-        <div className={`flex flex-col items-center justify-center py-8 text-center rounded-xl border-2 border-dashed flex-1 transition-colors ${
-          isOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/10'
-        }`}>
+        <div
+          className={`flex flex-col items-center justify-center py-8 text-center rounded-xl border-2 border-dashed flex-1 transition-colors ${
+            isOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/10'
+          }`}
+        >
           <Icono className="h-8 w-8 mb-2 opacity-30" style={{ color: columna.color }} />
-          <p className="text-xs text-muted-foreground/60">
-            {isOver ? 'Soltó acá' : 'Sin turnos'}
-          </p>
+          <p className="text-xs text-muted-foreground/60">{isOver ? 'Soltó acá' : 'Sin turnos'}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -440,7 +471,13 @@ function KanbanColumn({
 // ============================================================
 // Resumen de atención
 // ============================================================
-function ResumenBar({ total, enAtencion, atendidos, pendientes, noAsistio }: {
+function ResumenBar({
+  total,
+  enAtencion,
+  atendidos,
+  pendientes,
+  noAsistio,
+}: {
   total: number;
   enAtencion: number;
   atendidos: number;
@@ -497,7 +534,7 @@ export default function AtencionPage() {
       activationConstraint: {
         distance: 8, // 8px de distancia antes de activar el drag (evita conflictos con clicks)
       },
-    })
+    }),
   );
 
   useEffect(() => {
@@ -546,105 +583,135 @@ export default function AtencionPage() {
   // ============================================================
   // Helper: PATCH con verificación de response.ok
   // ============================================================
-  const patchTurnoEstado = useCallback(async (
-    id: string,
-    nuevoEstado: TurnoEstado,
-    getOptimistic: (turno: Turno) => Partial<Turno>,
-    extraBody?: Record<string, unknown>,
-  ): Promise<{ ok: boolean; error?: string }> => {
-    const turno = turnos.find((t) => t.id === id);
-    if (!turno) return { ok: false, error: 'Turno no encontrado' };
+  const patchTurnoEstado = useCallback(
+    async (
+      id: string,
+      nuevoEstado: TurnoEstado,
+      getOptimistic: (turno: Turno) => Partial<Turno>,
+      extraBody?: Record<string, unknown>,
+    ): Promise<{ ok: boolean; error?: string }> => {
+      const turno = turnos.find((t) => t.id === id);
+      if (!turno) return { ok: false, error: 'Turno no encontrado' };
 
-    const snapshot = { estado: turno.estado, inicioAtencionAt: turno.inicioAtencionAt };
+      const snapshot = { estado: turno.estado, inicioAtencionAt: turno.inicioAtencionAt };
 
-    // Optimistic update
-    setTurnos((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? { ...t, ...getOptimistic(t) }
-          : t
-      )
-    );
+      // Optimistic update
+      setTurnos((prev) => prev.map((t) => (t.id === id ? { ...t, ...getOptimistic(t) } : t)));
 
-    try {
-      const res = await fetch(`/api/turnos/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: nuevoEstado, ...extraBody }),
-      });
+      try {
+        const res = await fetch(`/api/turnos/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estado: nuevoEstado, ...extraBody }),
+        });
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        const serverMsg = body?.prodError || body?.detail || body?.error || '';
-        const msg = serverMsg || (res.status >= 500 ? 'Error del servidor' : 'Error al guardar');
-        throw new Error(msg);
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          const serverMsg = body?.prodError || body?.detail || body?.error || '';
+          const msg = serverMsg || (res.status >= 500 ? 'Error del servidor' : 'Error al guardar');
+          throw new Error(msg);
+        }
+
+        return { ok: true };
+      } catch (err) {
+        // Revert optimistic update on error
+        setTurnos((prev) =>
+          prev.map((t) =>
+            t.id === id
+              ? { ...t, estado: snapshot.estado, inicioAtencionAt: snapshot.inicioAtencionAt }
+              : t,
+          ),
+        );
+        return { ok: false, error: err instanceof Error ? err.message : 'Error desconocido' };
       }
-
-      return { ok: true };
-    } catch (err) {
-      // Revert optimistic update on error
-      setTurnos((prev) =>
-        prev.map((t) =>
-          t.id === id
-            ? { ...t, estado: snapshot.estado, inicioAtencionAt: snapshot.inicioAtencionAt }
-            : t
-        )
-      );
-      return { ok: false, error: err instanceof Error ? err.message : 'Error desconocido' };
-    }
-  }, [turnos]);
+    },
+    [turnos],
+  );
 
   // ============================================================
   // Acciones con botones
   // ============================================================
-  const atenderTurno = useCallback(async (id: string) => {
-    const { ok, error } = await patchTurnoEstado(id, 'en_atencion', (t) => ({
-      estado: 'en_atencion' as const,
-      inicioAtencionAt: new Date().toISOString(),
-    }));
-    const paciente = turnos.find((t) => t.id === id)?.paciente;
-    if (ok) {
-      toast({ title: 'En atención', description: `${paciente} está siendo atendido` });
-    } else {
-      toast({ title: 'Error', description: error || 'No se pudo iniciar la atención', variant: 'destructive' });
-    }
-  }, [turnos, patchTurnoEstado]);
+  const atenderTurno = useCallback(
+    async (id: string) => {
+      const { ok, error } = await patchTurnoEstado(id, 'en_atencion', (t) => ({
+        estado: 'en_atencion' as const,
+        inicioAtencionAt: new Date().toISOString(),
+      }));
+      const paciente = turnos.find((t) => t.id === id)?.paciente;
+      if (ok) {
+        toast({ title: 'En atención', description: `${paciente} está siendo atendido` });
+      } else {
+        toast({
+          title: 'Error',
+          description: error || 'No se pudo iniciar la atención',
+          variant: 'destructive',
+        });
+      }
+    },
+    [turnos, patchTurnoEstado],
+  );
 
-  const finalizarTurno = useCallback(async (id: string) => {
-    const { ok, error } = await patchTurnoEstado(id, 'atendido', () => ({
-      estado: 'atendido' as const,
-    }));
-    const paciente = turnos.find((t) => t.id === id)?.paciente;
-    if (ok) {
-      toast({ title: 'Atendido', description: `${paciente} fue atendido correctamente` });
-    } else {
-      toast({ title: 'Error', description: error || 'No se pudo finalizar el turno', variant: 'destructive' });
-    }
-  }, [turnos, patchTurnoEstado]);
+  const finalizarTurno = useCallback(
+    async (id: string) => {
+      const { ok, error } = await patchTurnoEstado(id, 'atendido', () => ({
+        estado: 'atendido' as const,
+      }));
+      const paciente = turnos.find((t) => t.id === id)?.paciente;
+      if (ok) {
+        toast({ title: 'Atendido', description: `${paciente} fue atendido correctamente` });
+      } else {
+        toast({
+          title: 'Error',
+          description: error || 'No se pudo finalizar el turno',
+          variant: 'destructive',
+        });
+      }
+    },
+    [turnos, patchTurnoEstado],
+  );
 
-  const cancelarTurno = useCallback(async (id: string) => {
-    const { ok, error } = await patchTurnoEstado(id, 'cancelada', () => ({
-      estado: 'cancelada' as const,
-    }), { motivoCancelacion: 'Cancelado desde dashboard', skipWaitlist: true });
-    const paciente = turnos.find((t) => t.id === id)?.paciente;
-    if (ok) {
-      toast({ title: 'Cancelado', description: `Turno de ${paciente} cancelado` });
-    } else {
-      toast({ title: 'Error', description: error || 'No se pudo cancelar el turno', variant: 'destructive' });
-    }
-  }, [turnos, patchTurnoEstado]);
+  const cancelarTurno = useCallback(
+    async (id: string) => {
+      const { ok, error } = await patchTurnoEstado(
+        id,
+        'cancelada',
+        () => ({
+          estado: 'cancelada' as const,
+        }),
+        { motivoCancelacion: 'Cancelado desde dashboard', skipWaitlist: true },
+      );
+      const paciente = turnos.find((t) => t.id === id)?.paciente;
+      if (ok) {
+        toast({ title: 'Cancelado', description: `Turno de ${paciente} cancelado` });
+      } else {
+        toast({
+          title: 'Error',
+          description: error || 'No se pudo cancelar el turno',
+          variant: 'destructive',
+        });
+      }
+    },
+    [turnos, patchTurnoEstado],
+  );
 
-  const moverNoAsistio = useCallback(async (id: string) => {
-    const { ok, error } = await patchTurnoEstado(id, 'no_asistio', () => ({
-      estado: 'no_asistio' as const,
-    }));
-    const paciente = turnos.find((t) => t.id === id)?.paciente;
-    if (ok) {
-      toast({ title: 'No asistió', description: `Turno de ${paciente} marcado como no asistió` });
-    } else {
-      toast({ title: 'Error', description: error || 'No se pudo actualizar el turno', variant: 'destructive' });
-    }
-  }, [turnos, patchTurnoEstado]);
+  const moverNoAsistio = useCallback(
+    async (id: string) => {
+      const { ok, error } = await patchTurnoEstado(id, 'no_asistio', () => ({
+        estado: 'no_asistio' as const,
+      }));
+      const paciente = turnos.find((t) => t.id === id)?.paciente;
+      if (ok) {
+        toast({ title: 'No asistió', description: `Turno de ${paciente} marcado como no asistió` });
+      } else {
+        toast({
+          title: 'Error',
+          description: error || 'No se pudo actualizar el turno',
+          variant: 'destructive',
+        });
+      }
+    },
+    [turnos, patchTurnoEstado],
+  );
 
   // ============================================================
   // Drag & Drop handlers (@dnd-kit)
@@ -653,73 +720,76 @@ export default function AtencionPage() {
     setActiveId(event.active.id as string);
   }, []);
 
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    setActiveId(null);
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      setActiveId(null);
 
-    const { active, over } = event;
-    if (!over) return;
+      const { active, over } = event;
+      if (!over) return;
 
-    const turnoId = active.id as string;
-    const columnaDestino = over.id as string;
+      const turnoId = active.id as string;
+      const columnaDestino = over.id as string;
 
-    const turno = turnos.find((t) => t.id === turnoId);
-    if (!turno) return;
+      const turno = turnos.find((t) => t.id === turnoId);
+      if (!turno) return;
 
-    // Validar que el destino sea una columna válida
-    const nuevoEstado = COLUMNA_ESTADO_MAP[columnaDestino as ColumnaId];
-    if (!nuevoEstado || turno.estado === nuevoEstado) return;
+      // Validar que el destino sea una columna válida
+      const nuevoEstado = COLUMNA_ESTADO_MAP[columnaDestino as ColumnaId];
+      if (!nuevoEstado || turno.estado === nuevoEstado) return;
 
-    const now = new Date().toISOString();
+      const now = new Date().toISOString();
 
-    // Optimistic update
-    setTurnos((prev) =>
-      prev.map((t) => {
-        if (t.id !== turnoId) return t;
-        const updated: Turno = { ...t, estado: nuevoEstado };
-        if (nuevoEstado === 'en_atencion') {
-          updated.inicioAtencionAt = now;
-        }
-        return updated;
-      })
-    );
-
-    // Persistir en backend
-    try {
-      const res = await fetch(`/api/turnos/${turnoId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: nuevoEstado }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        const serverMsg = body?.prodError || body?.detail || body?.error || '';
-        throw new Error(serverMsg || 'Error del servidor');
-      }
-
-      const label = COLUMNAS.find((c) => c.id === columnaDestino)?.titulo || nuevoEstado;
-      toast({
-        title: `Movido a ${label}`,
-        description: `${turno.paciente} → ${getTurnoLabel(nuevoEstado)}`,
-      });
-    } catch (err) {
-      // Revert optimistic update on error
+      // Optimistic update
       setTurnos((prev) =>
         prev.map((t) => {
           if (t.id !== turnoId) return t;
-          const reverted: Turno = { ...t, estado: turno.estado };
-          if (turno.inicioAtencionAt) reverted.inicioAtencionAt = turno.inicioAtencionAt;
-          return reverted;
-        })
+          const updated: Turno = { ...t, estado: nuevoEstado };
+          if (nuevoEstado === 'en_atencion') {
+            updated.inicioAtencionAt = now;
+          }
+          return updated;
+        }),
       );
-      const msg = err instanceof Error ? err.message : 'Error desconocido';
-      toast({
-        title: 'Error',
-        description: msg,
-        variant: 'destructive',
-      });
-    }
-  }, [turnos]);
+
+      // Persistir en backend
+      try {
+        const res = await fetch(`/api/turnos/${turnoId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estado: nuevoEstado }),
+        });
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          const serverMsg = body?.prodError || body?.detail || body?.error || '';
+          throw new Error(serverMsg || 'Error del servidor');
+        }
+
+        const label = COLUMNAS.find((c) => c.id === columnaDestino)?.titulo || nuevoEstado;
+        toast({
+          title: `Movido a ${label}`,
+          description: `${turno.paciente} → ${getTurnoLabel(nuevoEstado)}`,
+        });
+      } catch (err) {
+        // Revert optimistic update on error
+        setTurnos((prev) =>
+          prev.map((t) => {
+            if (t.id !== turnoId) return t;
+            const reverted: Turno = { ...t, estado: turno.estado };
+            if (turno.inicioAtencionAt) reverted.inicioAtencionAt = turno.inicioAtencionAt;
+            return reverted;
+          }),
+        );
+        const msg = err instanceof Error ? err.message : 'Error desconocido';
+        toast({
+          title: 'Error',
+          description: msg,
+          variant: 'destructive',
+        });
+      }
+    },
+    [turnos],
+  );
 
   const handleDragCancel = useCallback((_event: DragCancelEvent) => {
     setActiveId(null);
@@ -730,15 +800,13 @@ export default function AtencionPage() {
   // ============================================================
   const activeTurno = useMemo(
     () => turnos.find((t) => t.id === activeId) ?? null,
-    [activeId, turnos]
+    [activeId, turnos],
   );
 
   // ============================================================
   // Filtrar turnos
   // ============================================================
-  const turnosFiltrados = filtroMedico
-    ? turnos.filter((t) => t.medico === filtroMedico)
-    : turnos;
+  const turnosFiltrados = filtroMedico ? turnos.filter((t) => t.medico === filtroMedico) : turnos;
 
   const agrupar = (estados: TurnoEstado[]) =>
     turnosFiltrados
@@ -756,40 +824,45 @@ export default function AtencionPage() {
   return (
     <div className="space-y-6 animate-in">
       {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <PageHeader title="Atención de Turnos" gradient />
-          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-            {/* Filtro por médico */}
-            <div className="flex items-center gap-1 rounded-lg border p-1 overflow-x-auto flex-1 sm:flex-none">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <PageHeader title="Atención de Turnos" gradient />
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+          {/* Filtro por médico */}
+          <div className="flex items-center gap-1 rounded-lg border p-1 overflow-x-auto flex-1 sm:flex-none">
+            <Button
+              variant={!filtroMedico ? 'secondary' : 'ghost'}
+              size="sm"
+              className="text-xs h-8 shrink-0"
+              onClick={() => setFiltroMedico(null)}
+            >
+              <Users className="h-3.5 w-3.5 mr-1" />
+              Todos
+            </Button>
+            {medicos.map((m) => (
               <Button
-                variant={!filtroMedico ? 'secondary' : 'ghost'}
+                key={m}
+                variant={filtroMedico === m ? 'secondary' : 'ghost'}
                 size="sm"
                 className="text-xs h-8 shrink-0"
-                onClick={() => setFiltroMedico(null)}
+                onClick={() => setFiltroMedico(m)}
               >
-                <Users className="h-3.5 w-3.5 mr-1" />
-                Todos
+                {m}
               </Button>
-              {medicos.map((m) => (
-                <Button
-                  key={m}
-                  variant={filtroMedico === m ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="text-xs h-8 shrink-0"
-                  onClick={() => setFiltroMedico(m)}
-                >
-                  {m}
-                </Button>
-              ))}
-            </div>
-            <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/turnos')} className="shrink-0">
-              <Calendar className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">Ver Agenda</span>
-              <span className="sm:hidden">Agenda</span>
-              <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-            </Button>
+            ))}
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push('/dashboard/turnos')}
+            className="shrink-0"
+          >
+            <Calendar className="h-4 w-4 mr-1.5" />
+            <span className="hidden sm:inline">Ver Agenda</span>
+            <span className="sm:hidden">Agenda</span>
+            <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+          </Button>
         </div>
+      </div>
 
       {/* Barra de resumen */}
       <Card className="border-primary/10 bg-gradient-to-br from-primary/[0.03] to-transparent">
@@ -805,7 +878,10 @@ export default function AtencionPage() {
             </div>
           ) : (
             <ResumenBar
-              total={turnosFiltrados.filter((t) => t.estado !== 'cancelada' && t.estado !== 'no_asistio').length}
+              total={
+                turnosFiltrados.filter((t) => t.estado !== 'cancelada' && t.estado !== 'no_asistio')
+                  .length
+              }
               enAtencion={enAtencion.length}
               atendidos={atendidos.length}
               pendientes={pendientes.length}
@@ -859,11 +935,15 @@ export default function AtencionPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                 {COLUMNAS.map((col) => {
                   const turnosCol =
-                    col.id === 'pendientes' ? pendientes
-                    : col.id === 'en_atencion' ? enAtencion
-                    : col.id === 'atendidos' ? atendidos
-                    : col.id === 'cancelados' ? cancelados
-                    : noAsistio;
+                    col.id === 'pendientes'
+                      ? pendientes
+                      : col.id === 'en_atencion'
+                        ? enAtencion
+                        : col.id === 'atendidos'
+                          ? atendidos
+                          : col.id === 'cancelados'
+                            ? cancelados
+                            : noAsistio;
 
                   return (
                     <KanbanColumn
@@ -898,22 +978,46 @@ export default function AtencionPage() {
       {/* Leyenda de estados */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
         <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('pendiente') }} /> Pendiente
+          <span
+            className="h-2 w-2 rounded-full"
+            style={{ backgroundColor: getTurnoColor('pendiente') }}
+          />{' '}
+          Pendiente
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('confirmada') }} /> Confirmada
+          <span
+            className="h-2 w-2 rounded-full"
+            style={{ backgroundColor: getTurnoColor('confirmada') }}
+          />{' '}
+          Confirmada
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('en_atencion') }} /> En atención
+          <span
+            className="h-2 w-2 rounded-full"
+            style={{ backgroundColor: getTurnoColor('en_atencion') }}
+          />{' '}
+          En atención
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('atendido') }} /> Atendido
+          <span
+            className="h-2 w-2 rounded-full"
+            style={{ backgroundColor: getTurnoColor('atendido') }}
+          />{' '}
+          Atendido
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('cancelada') }} /> Cancelado
+          <span
+            className="h-2 w-2 rounded-full"
+            style={{ backgroundColor: getTurnoColor('cancelada') }}
+          />{' '}
+          Cancelado
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTurnoColor('no_asistio') }} /> No asistió
+          <span
+            className="h-2 w-2 rounded-full"
+            style={{ backgroundColor: getTurnoColor('no_asistio') }}
+          />{' '}
+          No asistió
         </span>
         <span className="flex items-center gap-1 text-muted-foreground/50 ml-auto">
           <GripVertical className="h-3 w-3" /> Táctil + Mouse

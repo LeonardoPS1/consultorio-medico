@@ -36,7 +36,11 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
   if (body.precio !== undefined) updateData.precio = body.precio;
   if (body.activo !== undefined) updateData.activo = body.activo;
 
-  const [actualizado] = await db.update(servicios).set(updateData).where(eq(servicios.id, id)).returning();
+  const [actualizado] = await db
+    .update(servicios)
+    .set(updateData)
+    .where(eq(servicios.id, id))
+    .returning();
   if (!actualizado) notFound('Servicio no encontrado');
 
   return success(actualizado);

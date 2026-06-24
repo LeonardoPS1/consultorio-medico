@@ -29,10 +29,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (data.length === 0) {
-      return NextResponse.json(
-        { error: 'No hay recetas para exportar' },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: 'No hay recetas para exportar' }, { status: 404 });
     }
 
     const fecha = new Date().toISOString().split('T')[0];
@@ -45,8 +42,7 @@ export async function GET(request: NextRequest) {
       return new NextResponse(new Uint8Array(buffer), {
         status: 200,
         headers: {
-          'Content-Type':
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'Content-Disposition': `attachment; filename="${filename}.xlsx"`,
           'Content-Length': String(buffer.length),
         },
@@ -68,9 +64,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('[API] Error GET /api/recetas/exportar:', error);
-    return NextResponse.json(
-      { error: 'Error al exportar recetas' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Error al exportar recetas' }, { status: 500 });
   }
 }

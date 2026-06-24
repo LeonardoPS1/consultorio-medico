@@ -11,7 +11,13 @@ import { Lock, Loader2, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-reac
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background p-4"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
       <ResetPasswordContent />
     </Suspense>
   );
@@ -78,9 +84,7 @@ function ResetPasswordContent() {
             <Logo className="h-16 w-auto" />
           </div>
           <CardTitle>Nueva contraseña</CardTitle>
-          <CardDescription>
-            Ingresá tu nueva contraseña.
-          </CardDescription>
+          <CardDescription>Ingresá tu nueva contraseña.</CardDescription>
         </CardHeader>
         <CardContent>
           {done ? (
@@ -90,13 +94,12 @@ function ResetPasswordContent() {
                   <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Contraseña actualizada correctamente. Ya podés iniciar sesión con tu nueva contraseña.
+                  Contraseña actualizada correctamente. Ya podés iniciar sesión con tu nueva
+                  contraseña.
                 </p>
               </div>
               <Button className="w-full" asChild>
-                <Link href="/login">
-                  Iniciar sesión
-                </Link>
+                <Link href="/login">Iniciar sesión</Link>
               </Button>
             </div>
           ) : (
@@ -157,7 +160,10 @@ function ResetPasswordContent() {
               </Button>
 
               <div className="text-center">
-                <Link href="/login" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  href="/login"
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
                   <ArrowLeft className="h-3 w-3 inline mr-1" />
                   Volver al inicio de sesión
                 </Link>

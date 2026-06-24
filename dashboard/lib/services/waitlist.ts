@@ -15,24 +15,8 @@
  */
 
 import { db } from '@/lib/db';
-import {
-  listaEspera,
-  ofertasTurno,
-  turnos,
-  pacientes,
-  medicos,
-} from '@/drizzle/schema';
-import {
-  eq,
-  and,
-  sql,
-  count,
-  desc,
-  asc,
-  lt,
-  not,
-  inArray,
-} from 'drizzle-orm';
+import { listaEspera, ofertasTurno, turnos, pacientes, medicos } from '@/drizzle/schema';
+import { eq, and, sql, count, desc, asc, lt, not, inArray } from 'drizzle-orm';
 import { notFound, conflict, fail } from '@/lib/api-handler';
 import type { ListaEspera, OfertaTurno } from '@/drizzle/schema';
 
@@ -102,10 +86,7 @@ export const waitlistService = {
       .limit(1);
     if (!existe) notFound('Inscripción no encontrada o ya no está activa');
 
-    await db
-      .update(listaEspera)
-      .set({ estado: 'cancelada' })
-      .where(eq(listaEspera.id, id));
+    await db.update(listaEspera).set({ estado: 'cancelada' }).where(eq(listaEspera.id, id));
 
     return { deleted: true };
   },
@@ -185,12 +166,7 @@ export const waitlistService = {
     const [ofertaExistente] = await db
       .select({ id: ofertasTurno.id })
       .from(ofertasTurno)
-      .where(
-        and(
-          eq(ofertasTurno.turnoId, turnoId),
-          eq(ofertasTurno.estado, 'pendiente'),
-        ),
-      )
+      .where(and(eq(ofertasTurno.turnoId, turnoId), eq(ofertasTurno.estado, 'pendiente')))
       .limit(1);
     if (ofertaExistente) conflict('Ya hay una oferta pendiente para este turno');
 
@@ -296,12 +272,7 @@ export const waitlistService = {
         expiracion: ofertasTurno.expiracion,
       })
       .from(ofertasTurno)
-      .where(
-        and(
-          eq(ofertasTurno.estado, 'pendiente'),
-          lt(ofertasTurno.expiracion, new Date()),
-        ),
-      );
+      .where(and(eq(ofertasTurno.estado, 'pendiente'), lt(ofertasTurno.expiracion, new Date())));
 
     if (vencidas.length === 0) return [];
 

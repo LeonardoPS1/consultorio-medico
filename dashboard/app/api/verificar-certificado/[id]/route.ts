@@ -10,10 +10,7 @@ import { generarHashCertificado } from '@/lib/certificados';
  * Endpoint público (sin auth) para verificar autenticidad de un certificado médico.
  * Usado por el QR code en los certificados impresos.
  */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const [entry] = await db
       .select()

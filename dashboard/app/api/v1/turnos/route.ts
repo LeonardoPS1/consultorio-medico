@@ -12,7 +12,12 @@
 import { db } from '@/lib/db';
 import { turnos } from '@/drizzle/schema';
 import { z } from 'zod';
-import { publicApiHandler, jsonResponse, errorResponse, type AuthenticatedRequest } from '@/lib/public-api-handler';
+import {
+  publicApiHandler,
+  jsonResponse,
+  errorResponse,
+  type AuthenticatedRequest,
+} from '@/lib/public-api-handler';
 import { API_SCOPES } from '@/lib/public-api-auth';
 import { turnosService } from '@/lib/services/turnos';
 
@@ -40,7 +45,9 @@ export const POST = publicApiHandler(
     if (!parsed.success) {
       const errores = parsed.error.flatten().fieldErrors;
       return errorResponse(
-        `Campos inválidos: ${Object.entries(errores).map(([k, v]) => `${k}: ${v?.join(', ')}`).join('; ')}`,
+        `Campos inválidos: ${Object.entries(errores)
+          .map(([k, v]) => `${k}: ${v?.join(', ')}`)
+          .join('; ')}`,
         400,
       );
     }
@@ -57,14 +64,17 @@ export const POST = publicApiHandler(
       });
 
       // Devolver el turno creado (sin datos sensibles)
-      return jsonResponse({
-        id: turno.id,
-        pacienteId: turno.pacienteId,
-        medicoId: turno.medicoId,
-        fechaHora: turno.fechaHora,
-        estado: turno.estado,
-        motivo: turno.motivo,
-      }, 201);
+      return jsonResponse(
+        {
+          id: turno.id,
+          pacienteId: turno.pacienteId,
+          medicoId: turno.medicoId,
+          fechaHora: turno.fechaHora,
+          estado: turno.estado,
+          motivo: turno.motivo,
+        },
+        201,
+      );
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Error al crear el turno';
       return errorResponse(message, 400);

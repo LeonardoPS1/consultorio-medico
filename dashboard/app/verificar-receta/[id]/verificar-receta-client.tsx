@@ -1,6 +1,17 @@
 'use client';
 
-import { Shield, ShieldCheck, ShieldAlert, FileText, Calendar, Clock, User, Pill, Syringe, QrCode } from 'lucide-react';
+import {
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
+  FileText,
+  Calendar,
+  Clock,
+  User,
+  Pill,
+  Syringe,
+  QrCode,
+} from 'lucide-react';
 
 interface RecetaData {
   id: string;
@@ -55,13 +66,15 @@ export function VerificarRecetaClient({ data, recetaId }: Props) {
   return (
     <div className="w-full max-w-lg mx-auto space-y-4">
       {/* Header con escudo de verificación */}
-      <div className={`rounded-2xl p-6 text-center ${
-        data.valida && !receta.vencida
-          ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800'
-          : receta.vencida
-            ? 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800'
-            : 'bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800'
-      }`}>
+      <div
+        className={`rounded-2xl p-6 text-center ${
+          data.valida && !receta.vencida
+            ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800'
+            : receta.vencida
+              ? 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800'
+              : 'bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800'
+        }`}
+      >
         <div className="flex justify-center mb-3">
           {data.valida && !receta.vencida ? (
             <div className="h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
@@ -77,13 +90,15 @@ export function VerificarRecetaClient({ data, recetaId }: Props) {
             </div>
           )}
         </div>
-        <h1 className={`text-xl font-bold ${
-          data.valida && !receta.vencida
-            ? 'text-emerald-700 dark:text-emerald-300'
-            : receta.vencida
-              ? 'text-amber-700 dark:text-amber-300'
-              : 'text-red-700 dark:text-red-300'
-        }`}>
+        <h1
+          className={`text-xl font-bold ${
+            data.valida && !receta.vencida
+              ? 'text-emerald-700 dark:text-emerald-300'
+              : receta.vencida
+                ? 'text-amber-700 dark:text-amber-300'
+                : 'text-red-700 dark:text-red-300'
+          }`}
+        >
           {data.valida && !receta.vencida
             ? '✅ Receta Válida'
             : receta.vencida
@@ -176,7 +191,9 @@ export function VerificarRecetaClient({ data, recetaId }: Props) {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Válida hasta</p>
-                <p className={`font-medium ${receta.vencida ? 'text-red-600 dark:text-red-400' : ''}`}>
+                <p
+                  className={`font-medium ${receta.vencida ? 'text-red-600 dark:text-red-400' : ''}`}
+                >
                   {receta.fechaFin ? formatearFecha(receta.fechaFin) : '—'}
                   {receta.vencida && ' (vencida)'}
                 </p>
@@ -206,7 +223,8 @@ export function VerificarRecetaClient({ data, recetaId }: Props) {
           <span>Código de verificación: {receta.id.substring(0, 8)}...</span>
         </div>
         <p className="text-xs text-muted-foreground">
-          Este documento fue verificado electrónicamente el {new Date().toLocaleDateString('es-CL', {
+          Este documento fue verificado electrónicamente el{' '}
+          {new Date().toLocaleDateString('es-CL', {
             day: 'numeric',
             month: 'long',
             year: 'numeric',
@@ -231,9 +249,7 @@ function CardError({ recetaId }: { recetaId: string }) {
         <br />
         Intentá de nuevo más tarde.
       </p>
-      <p className="text-xs text-muted-foreground">
-        ID: {recetaId.substring(0, 8)}...
-      </p>
+      <p className="text-xs text-muted-foreground">ID: {recetaId.substring(0, 8)}...</p>
     </div>
   );
 }
@@ -250,9 +266,7 @@ function CardNoEncontrada({ recetaId }: { recetaId: string }) {
         <br />
         Podría haber sido eliminada o el código QR es inválido.
       </p>
-      <p className="text-xs text-muted-foreground">
-        ID: {recetaId.substring(0, 8)}...
-      </p>
+      <p className="text-xs text-muted-foreground">ID: {recetaId.substring(0, 8)}...</p>
     </div>
   );
 }

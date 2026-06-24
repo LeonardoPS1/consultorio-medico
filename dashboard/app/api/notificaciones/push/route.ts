@@ -99,12 +99,15 @@ export const POST = apiHandler(async (request: NextRequest) => {
       });
 
       // Enviar push
-      const result = await pushService.sendToUser({ usuarioId }, {
-        title,
-        body: pushBody || '',
-        url,
-        tipo,
-      });
+      const result = await pushService.sendToUser(
+        { usuarioId },
+        {
+          title,
+          body: pushBody || '',
+          url,
+          tipo,
+        },
+      );
 
       return NextResponse.json(result);
     }

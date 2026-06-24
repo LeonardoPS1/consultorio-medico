@@ -49,7 +49,7 @@ interface NavItem {
   title: string;
   href: string;
   icon: React.ElementType;
-  feature?: FeatureId;     // feature requerida (si no tiene, se muestra bloqueado)
+  feature?: FeatureId; // feature requerida (si no tiene, se muestra bloqueado)
   badge?: string;
 }
 
@@ -60,14 +60,34 @@ const navItems: NavItem[] = [
   { title: 'Telemedicina', href: '/dashboard/telemedicina', icon: Video, feature: 'telemedicina' },
   { title: 'Turnos', href: '/dashboard/turnos', icon: Calendar, feature: 'turnos' },
   { title: 'Pacientes', href: '/dashboard/pacientes', icon: Users, feature: 'pacientes' },
-  { title: 'Conversaciones', href: '/dashboard/conversaciones', icon: MessageSquare, feature: 'conversaciones' },
+  {
+    title: 'Conversaciones',
+    href: '/dashboard/conversaciones',
+    icon: MessageSquare,
+    feature: 'conversaciones',
+  },
   { title: 'Recetas', href: '/dashboard/recetas', icon: Syringe, feature: 'recetas' },
   { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3, feature: 'reportes' },
   { title: 'Encuestas', href: '/dashboard/encuestas', icon: Star, feature: 'encuestas' },
-  { title: 'Lista de Espera', href: '/dashboard/lista-espera', icon: ListChecks, feature: 'lista-espera' },
-  { title: 'Derivaciones', href: '/dashboard/derivaciones', icon: ArrowRightLeft, feature: 'derivaciones' },
+  {
+    title: 'Lista de Espera',
+    href: '/dashboard/lista-espera',
+    icon: ListChecks,
+    feature: 'lista-espera',
+  },
+  {
+    title: 'Derivaciones',
+    href: '/dashboard/derivaciones',
+    icon: ArrowRightLeft,
+    feature: 'derivaciones',
+  },
   { title: 'Lista Negra', href: '/dashboard/blacklist', icon: Ban, feature: 'blacklist' },
-  { title: 'Consentimientos', href: '/dashboard/consentimientos', icon: FileSignature, feature: 'consentimiento-informado' },
+  {
+    title: 'Consentimientos',
+    href: '/dashboard/consentimientos',
+    icon: FileSignature,
+    feature: 'consentimiento-informado',
+  },
   { title: 'Notificaciones', href: '/dashboard/notificaciones', icon: Bell },
   { title: 'Ajustes', href: '/dashboard/configuracion', icon: Sliders },
   { title: 'Ayuda', href: '/dashboard/ayuda', icon: BookOpen },
@@ -144,7 +164,9 @@ export function Sidebar() {
     } else {
       document.body.style.overflow = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [mobileOpen]);
 
   const closeMobile = () => setMobileOpen(false);
@@ -170,7 +192,7 @@ export function Sidebar() {
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
           'lg:translate-x-0',
           // Desktop: collapse toggle
-          collapsed ? 'lg:w-16' : 'w-64'
+          collapsed ? 'lg:w-16' : 'w-64',
         )}
       >
         {/* Logo */}
@@ -180,7 +202,9 @@ export function Sidebar() {
               <div className="h-20 w-20 lg:h-40 lg:w-40 shrink-0">
                 <Logo className="h-full w-full object-cover" />
               </div>
-              <span className="font-semibold text-xs lg:text-sm text-center truncate max-w-[120px] lg:max-w-[160px] leading-none -mt-1">{orgNombre}</span>
+              <span className="font-semibold text-xs lg:text-sm text-center truncate max-w-[120px] lg:max-w-[160px] leading-none -mt-1">
+                {orgNombre}
+              </span>
             </div>
           )}
           {collapsed && (
@@ -215,76 +239,81 @@ export function Sidebar() {
               </>
             ) : (
               navItems.map((item) => {
-              const userPlan = session?.user?.plan ?? 'free';
-              const hasAccess = !item.feature || (canAccess(userPlan, item.feature) && isFeatureEnabled(item.feature));
-              const isActive = item.href === '/dashboard'
-                ? pathname === '/dashboard'
-                : pathname === item.href || pathname.startsWith(item.href + '/');
-              const Icon = item.icon;
+                const userPlan = session?.user?.plan ?? 'free';
+                const hasAccess =
+                  !item.feature ||
+                  (canAccess(userPlan, item.feature) && isFeatureEnabled(item.feature));
+                const isActive =
+                  item.href === '/dashboard'
+                    ? pathname === '/dashboard'
+                    : pathname === item.href || pathname.startsWith(item.href + '/');
+                const Icon = item.icon;
 
-              if (!hasAccess) {
-                const requiredPlan = getFeatureRequiredPlan(item.feature!);
+                if (!hasAccess) {
+                  const requiredPlan = getFeatureRequiredPlan(item.feature!);
+                  return (
+                    <Link
+                      key={item.href}
+                      href="/dashboard/configuracion?tab=suscripcion"
+                      onClick={closeMobile}
+                      className={cn(
+                        'nav-item-hover flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors',
+                        'text-sidebar-foreground/40 hoverable:hover:bg-sidebar-accent/50 hoverable:hover:text-sidebar-foreground/60',
+                      )}
+                      title={collapsed ? `${item.title} (Plan ${requiredPlan})` : undefined}
+                    >
+                      <div className="relative shrink-0">
+                        <Icon className="h-5 w-5" />
+                        <LockKeyhole className="h-2.5 w-2.5 absolute -top-1 -right-1 text-muted-foreground/60" />
+                      </div>
+                      {!collapsed && (
+                        <>
+                          <span className="flex-1 truncate text-sidebar-foreground/40">
+                            {item.title}
+                          </span>
+                          <span className="text-[9px] font-semibold uppercase tracking-wider text-amber-500 dark:text-amber-400 shrink-0">
+                            {requiredPlan}
+                          </span>
+                        </>
+                      )}
+                    </Link>
+                  );
+                }
+
                 return (
                   <Link
                     key={item.href}
-                    href="/dashboard/configuracion?tab=suscripcion"
+                    href={item.href}
                     onClick={closeMobile}
                     className={cn(
-                    'nav-item-hover flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors',
-                    'text-sidebar-foreground/40 hoverable:hover:bg-sidebar-accent/50 hoverable:hover:text-sidebar-foreground/60'
+                      isActive
+                        ? 'nav-active-indicator bg-sidebar-accent text-white'
+                        : 'text-sidebar-foreground/70 nav-item-hover',
+                      'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
+                      !isActive && 'hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                     )}
-                    title={collapsed ? `${item.title} (Plan ${requiredPlan})` : undefined}
+                    title={collapsed ? item.title : undefined}
                   >
-                    <div className="relative shrink-0">
-                      <Icon className="h-5 w-5" />
-                      <LockKeyhole className="h-2.5 w-2.5 absolute -top-1 -right-1 text-muted-foreground/60" />
-                    </div>
+                    <Icon className="h-5 w-5 shrink-0" />
                     {!collapsed && (
                       <>
-                        <span className="flex-1 truncate text-sidebar-foreground/40">{item.title}</span>
-                        <span className="text-[9px] font-semibold uppercase tracking-wider text-amber-500 dark:text-amber-400 shrink-0">
-                          {requiredPlan}
-                        </span>
+                        <span className="flex-1 truncate">{item.title}</span>
+                        {item.badge && (
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+                            {item.badge}
+                          </span>
+                        )}
+                        {item.title === 'Asistente IA' && onboardingPending && (
+                          <span className="flex h-5 items-center rounded-full bg-amber-500/15 text-amber-500 dark:text-amber-400 text-[9px] font-semibold px-1.5 uppercase tracking-wider shrink-0 ml-1">
+                            Continuar
+                          </span>
+                        )}
                       </>
                     )}
                   </Link>
                 );
-              }
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={closeMobile}
-                  className={cn(
-                    isActive
-                      ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover',
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                    !isActive && 'hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
-                  )}
-                  title={collapsed ? item.title : undefined}
-                >
-                  <Icon className="h-5 w-5 shrink-0" />
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1 truncate">{item.title}</span>
-                      {item.badge && (
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
-                          {item.badge}
-                        </span>
-                      )}
-                      {item.title === 'Asistente IA' && onboardingPending && (
-                        <span className="flex h-5 items-center rounded-full bg-amber-500/15 text-amber-500 dark:text-amber-400 text-[9px] font-semibold px-1.5 uppercase tracking-wider shrink-0 ml-1">
-                          Continuar
-                        </span>
-                      )}
-                    </>
-                  )}
-                </Link>
-              );
-            }))
-            }
+              })
+            )}
             {/* Admin section */}
             {status !== 'loading' && session?.user?.role === 'admin' && (
               <div className="mt-2 pt-2 border-t border-sidebar-muted">
@@ -298,9 +327,10 @@ export function Sidebar() {
                   onClick={closeMobile}
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                    pathname === '/dashboard/admin/sistema' || pathname.startsWith('/dashboard/admin/sistema/')
+                    pathname === '/dashboard/admin/sistema' ||
+                      pathname.startsWith('/dashboard/admin/sistema/')
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
                   title={collapsed ? 'Sistema' : undefined}
                 >
@@ -314,7 +344,7 @@ export function Sidebar() {
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/tenants'
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
                   title={collapsed ? 'Tenants' : undefined}
                 >
@@ -328,7 +358,7 @@ export function Sidebar() {
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/sucursales'
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
                   title={collapsed ? 'Sucursales' : undefined}
                 >
@@ -342,7 +372,7 @@ export function Sidebar() {
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/auditoria'
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
                   title={collapsed ? 'Auditoría' : undefined}
                 >
@@ -356,7 +386,7 @@ export function Sidebar() {
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                     pathname === '/dashboard/admin/backups'
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
                   title={collapsed ? 'Backups' : undefined}
                 >
@@ -368,9 +398,10 @@ export function Sidebar() {
                   onClick={closeMobile}
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                    pathname === '/dashboard/admin/n8n' || pathname.startsWith('/dashboard/admin/n8n/')
+                    pathname === '/dashboard/admin/n8n' ||
+                      pathname.startsWith('/dashboard/admin/n8n/')
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
                   title={collapsed ? 'n8n' : undefined}
                 >
@@ -385,9 +416,10 @@ export function Sidebar() {
                   onClick={closeMobile}
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                    pathname === '/dashboard/webhooks' || pathname.startsWith('/dashboard/webhooks/')
+                    pathname === '/dashboard/webhooks' ||
+                      pathname.startsWith('/dashboard/webhooks/')
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
                   title={collapsed ? 'Webhooks' : undefined}
                 >
@@ -406,10 +438,14 @@ export function Sidebar() {
             size="sm"
             className={cn(
               'w-full justify-start text-sidebar-foreground/70 hoverable:hover:text-white hoverable:hover:bg-sidebar-accent',
-              collapsed && 'justify-center px-0'
+              collapsed && 'justify-center px-0',
             )}
             onClick={async () => {
-              try { await signOut({ redirect: false }); } catch { /* NextAuth v5 beta puede lanzar igual */ }
+              try {
+                await signOut({ redirect: false });
+              } catch {
+                /* NextAuth v5 beta puede lanzar igual */
+              }
               window.location.href = '/';
             }}
             title="Cerrar sesión"
@@ -426,11 +462,7 @@ export function Sidebar() {
           className="hidden lg:flex absolute -right-3 top-20 h-6 w-6 rounded-full border bg-sidebar text-sidebar-foreground hoverable:hover:bg-sidebar-accent"
           onClick={() => setCollapsed(!collapsed)}
         >
-          {collapsed ? (
-            <ChevronRight className="h-3 w-3" />
-          ) : (
-            <ChevronLeft className="h-3 w-3" />
-          )}
+          {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
         </Button>
       </aside>
     </>

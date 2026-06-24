@@ -8,7 +8,11 @@
 import { db } from '@/lib/db';
 import { servicios } from '@/drizzle/schema';
 import { sql, asc } from 'drizzle-orm';
-import { publicApiHandler, jsonResponse, type AuthenticatedRequest } from '@/lib/public-api-handler';
+import {
+  publicApiHandler,
+  jsonResponse,
+  type AuthenticatedRequest,
+} from '@/lib/public-api-handler';
 import { API_SCOPES } from '@/lib/public-api-auth';
 
 export const GET = publicApiHandler(

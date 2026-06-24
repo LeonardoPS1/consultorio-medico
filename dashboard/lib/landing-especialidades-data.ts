@@ -147,7 +147,8 @@ export const odontologia: EspecialidadPageData = {
   ],
   cta: {
     title: '¿Listo para digitalizar tu clínica dental?',
-    subtitle: 'Empezá hoy. En 5 minutos tenés todo configurado para tu consultorio odontológico. Sin compromisos, sin tarjeta.',
+    subtitle:
+      'Empezá hoy. En 5 minutos tenés todo configurado para tu consultorio odontológico. Sin compromisos, sin tarjeta.',
     badgeText: 'Sin tarjeta de crédito · Sin compromisos',
   },
 };
@@ -268,7 +269,8 @@ export const clinicasMedicas: EspecialidadPageData = {
   ],
   cta: {
     title: '¿Listo para transformar tu centro médico?',
-    subtitle: 'Empezá hoy. En 5 minutos tenés todo configurado para tu clínica. Sin compromisos, sin tarjeta.',
+    subtitle:
+      'Empezá hoy. En 5 minutos tenés todo configurado para tu clínica. Sin compromisos, sin tarjeta.',
     badgeText: 'Sin tarjeta de crédito · Sin compromisos',
   },
 };
@@ -389,7 +391,8 @@ export const estetica: EspecialidadPageData = {
   ],
   cta: {
     title: '¿Listo para digitalizar tu centro de estética?',
-    subtitle: 'Empezá hoy. En 5 minutos tenés todo configurado para tu centro. Sin compromisos, sin tarjeta.',
+    subtitle:
+      'Empezá hoy. En 5 minutos tenés todo configurado para tu centro. Sin compromisos, sin tarjeta.',
     badgeText: 'Sin tarjeta de crédito · Sin compromisos',
   },
 };
@@ -510,7 +513,8 @@ export const oftalmologia: EspecialidadPageData = {
   ],
   cta: {
     title: '¿Listo para digitalizar tu consultorio oftalmológico?',
-    subtitle: 'Empezá hoy. En 5 minutos tenés todo configurado para tu clínica oftalmológica. Sin compromisos, sin tarjeta.',
+    subtitle:
+      'Empezá hoy. En 5 minutos tenés todo configurado para tu clínica oftalmológica. Sin compromisos, sin tarjeta.',
     badgeText: 'Sin tarjeta de crédito · Sin compromisos',
   },
 };

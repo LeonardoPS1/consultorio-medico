@@ -76,7 +76,7 @@ export function ImageUpload({
         setLoading(false);
       }
     },
-    [onChange, maxSizeMB]
+    [onChange, maxSizeMB],
   );
 
   const handleDrop = useCallback(
@@ -87,7 +87,7 @@ export function ImageUpload({
       const file = e.dataTransfer.files?.[0];
       if (file) handleFile(file);
     },
-    [handleFile]
+    [handleFile],
   );
 
   const handleChange = useCallback(
@@ -98,7 +98,7 @@ export function ImageUpload({
         e.target.value = '';
       }
     },
-    [handleFile]
+    [handleFile],
   );
 
   return (
@@ -112,9 +112,9 @@ export function ImageUpload({
           isDragging
             ? 'border-primary bg-primary/5 scale-105'
             : value
-            ? 'border-border hoverable:hover:border-primary/50'
-            : 'border-muted-foreground/30 hoverable:hover:border-primary/50 bg-muted/30',
-          loading && 'opacity-50 pointer-events-none'
+              ? 'border-border hoverable:hover:border-primary/50'
+              : 'border-muted-foreground/30 hoverable:hover:border-primary/50 bg-muted/30',
+          loading && 'opacity-50 pointer-events-none',
         )}
         onDragOver={(e) => {
           e.preventDefault();
@@ -144,12 +144,7 @@ export function ImageUpload({
               alt="Upload"
               className="h-full w-full object-cover"
               style={{
-                borderRadius:
-                  shape === 'circle'
-                    ? '50%'
-                    : shape === 'rounded'
-                    ? '1rem'
-                    : '0.5rem',
+                borderRadius: shape === 'circle' ? '50%' : shape === 'rounded' ? '1rem' : '0.5rem',
               }}
               onError={() => {
                 // Si la imagen falla, dejamos que se vea el botón de upload
@@ -188,9 +183,7 @@ export function ImageUpload({
       </label>
 
       {/* Mensaje de error */}
-      {error && (
-        <p className="text-xs text-destructive text-center">{error}</p>
-      )}
+      {error && <p className="text-xs text-destructive text-center">{error}</p>}
     </div>
   );
 }

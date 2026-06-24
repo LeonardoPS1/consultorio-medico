@@ -18,7 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             retry: 1,
           },
         },
-      })
+      }),
   );
 
   return (
@@ -26,18 +26,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <FeatureFlagsProvider>
           <UserFeatureOverridesProvider>
-          <SucursalProvider>
-            <UpdateProvider>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-              >
-                {children}
-              </ThemeProvider>
-            </UpdateProvider>
-          </SucursalProvider>
+            <SucursalProvider>
+              <UpdateProvider>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="system"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  {children}
+                </ThemeProvider>
+              </UpdateProvider>
+            </SucursalProvider>
           </UserFeatureOverridesProvider>
         </FeatureFlagsProvider>
       </QueryClientProvider>

@@ -31,12 +31,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
       const [p] = await db
         .select()
         .from(plantillasMensajes)
-        .where(
-          and(
-            eq(plantillasMensajes.id, plantillaId),
-            isNull(plantillasMensajes.deletedAt)
-          )
-        )
+        .where(and(eq(plantillasMensajes.id, plantillaId), isNull(plantillasMensajes.deletedAt)))
         .limit(1);
       return p;
     }
@@ -47,8 +42,8 @@ export const POST = apiHandler(async (request: NextRequest) => {
         and(
           eq(plantillasMensajes.categoria, categoria!),
           eq(plantillasMensajes.activa, true),
-          isNull(plantillasMensajes.deletedAt)
-        )
+          isNull(plantillasMensajes.deletedAt),
+        ),
       )
       .limit(1);
     return p;

@@ -1,24 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  getMensajesByConversacion,
-  createMensaje,
-  getConversacionById,
-} from '@/lib/data-store';
+import { getMensajesByConversacion, createMensaje, getConversacionById } from '@/lib/data-store';
 import { auth } from '@/lib/auth';
 import { apiHandler, created, notFound, fail } from '@/lib/api-handler';
 import { parseBody, createMensajeSchema } from '@/lib/validations';
 import { z } from 'zod';
 
-const mensajeCreateSchema = createMensajeSchema.extend({
-  rol: z.enum(['paciente', 'asistente_ia', 'medico', 'secretaria', 'sistema']),
-  contenidoProcesado: z.string().optional(),
-  intencion: z.string().optional(),
-  confianzaIntencion: z.number().optional(),
-  twilioSid: z.string().optional(),
-  twilioStatus: z.string().optional(),
-  n8nExecutionId: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
-}).passthrough();
+const mensajeCreateSchema = createMensajeSchema
+  .extend({
+    rol: z.enum(['paciente', 'asistente_ia', 'medico', 'secretaria', 'sistema']),
+    contenidoProcesado: z.string().optional(),
+    intencion: z.string().optional(),
+    confianzaIntencion: z.number().optional(),
+    twilioSid: z.string().optional(),
+    twilioStatus: z.string().optional(),
+    n8nExecutionId: z.string().optional(),
+    metadata: z.record(z.any()).optional(),
+  })
+  .passthrough();
 
 function extractConversacionId(request: NextRequest): string {
   const parts = request.nextUrl.pathname.split('/').filter(Boolean);
@@ -60,7 +58,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     fail('No autorizado', 403);
   }
 
-  const body = await parseBody(request, mensajeCreateSchema) as any;
+  const body = await parseBody(request, mensajeCreateSchema);
 
   const mensaje = await createMensaje({
     conversacionId: id,

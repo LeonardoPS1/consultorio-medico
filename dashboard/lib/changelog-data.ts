@@ -38,7 +38,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Portal del Paciente: botón "Ingresar" para pacientes con turnos virtuales (link con token único)',
       'Feature gating: la telemedicina se habilita automáticamente en el plan Professional o superior',
       'Videollamada segura: tokens JWT temporales, sala privada médico-paciente, sin grabación',
-      'Infraestructura: LiveKit server self-hosted en Dokploy con Redis, TURN, Ingress y HTTPS con Let\'s Encrypt',
+      "Infraestructura: LiveKit server self-hosted en Dokploy con Redis, TURN, Ingress y HTTPS con Let's Encrypt",
       'Acceso multiplataforma: funciona en cualquier navegador moderno sin descargar apps',
       'Lista Negra de pacientes: gestioná restricciones de acceso al consultorio con registro de incidentes y control por tipo de restricción',
     ],

@@ -60,7 +60,9 @@ export async function syncTurnoToGCal(payload: GCalSyncPayload): Promise<void> {
     }
   } catch (e) {
     // Si el workflow no está activo o n8n no responde, solo loguear
-    safeWarn(`[GCalSync] ⚠️ No se pudo sincronizar turno ${payload.turnoId}:`, { error: (e as Error).message });
+    safeWarn(`[GCalSync] ⚠️ No se pudo sincronizar turno ${payload.turnoId}:`, {
+      error: (e as Error).message,
+    });
   }
 }
 

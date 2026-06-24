@@ -6,9 +6,21 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
-  Rocket, Calendar, Users, Activity, Syringe, MessageSquare,
-  BarChart3, Star, Settings, CreditCard, ExternalLink,
-  Search, ChevronRight, Lightbulb, ExternalLink as ExternalLinkIcon,
+  Rocket,
+  Calendar,
+  Users,
+  Activity,
+  Syringe,
+  MessageSquare,
+  BarChart3,
+  Star,
+  Settings,
+  CreditCard,
+  ExternalLink,
+  Search,
+  ChevronRight,
+  Lightbulb,
+  ExternalLink as ExternalLinkIcon,
   BookOpen,
 } from 'lucide-react';
 import { SECCIONES_AYUDA, type AyudaSeccion } from '@/lib/ayuda-content';
@@ -16,8 +28,17 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  Rocket, Calendar, Users, Activity, Syringe, MessageSquare,
-  BarChart3, Star, Settings, CreditCard, ExternalLink,
+  Rocket,
+  Calendar,
+  Users,
+  Activity,
+  Syringe,
+  MessageSquare,
+  BarChart3,
+  Star,
+  Settings,
+  CreditCard,
+  ExternalLink,
 };
 
 export default function AyudaPage() {
@@ -27,29 +48,31 @@ export default function AyudaPage() {
   const seccionesFiltradas = useMemo(() => {
     if (!busqueda.trim()) return SECCIONES_AYUDA;
     const q = busqueda.toLowerCase();
-    return SECCIONES_AYUDA.filter(s =>
-      s.titulo.toLowerCase().includes(q) ||
-      s.descripcion.toLowerCase().includes(q) ||
-      s.pasos?.some(p =>
-        p.titulo.toLowerCase().includes(q) ||
-        p.descripcion.toLowerCase().includes(q)
-      ) ||
-      s.preguntas?.some(p =>
-        p.pregunta.toLowerCase().includes(q) ||
-        p.respuesta.toLowerCase().includes(q)
-      )
+    return SECCIONES_AYUDA.filter(
+      (s) =>
+        s.titulo.toLowerCase().includes(q) ||
+        s.descripcion.toLowerCase().includes(q) ||
+        s.pasos?.some(
+          (p) => p.titulo.toLowerCase().includes(q) || p.descripcion.toLowerCase().includes(q),
+        ) ||
+        s.preguntas?.some(
+          (p) => p.pregunta.toLowerCase().includes(q) || p.respuesta.toLowerCase().includes(q),
+        ),
     );
   }, [busqueda]);
 
   const seccionActual = useMemo(() => {
     if (!seccionActiva) return null;
-    return SECCIONES_AYUDA.find(s => s.id === seccionActiva) || null;
+    return SECCIONES_AYUDA.find((s) => s.id === seccionActiva) || null;
   }, [seccionActiva]);
 
   return (
     <div className="space-y-6 animate-in max-w-5xl mx-auto">
       {/* Header */}
-      <PageHeader title="Centro de Ayuda" description="Guía completa de uso del sistema — instrucciones paso a paso, tips y preguntas frecuentes" />
+      <PageHeader
+        title="Centro de Ayuda"
+        description="Guía completa de uso del sistema — instrucciones paso a paso, tips y preguntas frecuentes"
+      />
 
       {/* Buscador */}
       <div className="relative">
@@ -58,14 +81,22 @@ export default function AyudaPage() {
           placeholder="Buscá en la ayuda..."
           className="pl-9"
           value={busqueda}
-          onChange={(e) => { setBusqueda(e.target.value); setSeccionActiva(null); }}
+          onChange={(e) => {
+            setBusqueda(e.target.value);
+            setSeccionActiva(null);
+          }}
         />
       </div>
 
       {seccionActual ? (
         /* ─── Vista detalle de sección ─────────────────────── */
         <div className="space-y-6">
-          <Button variant="ghost" size="sm" onClick={() => setSeccionActiva(null)} className="gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSeccionActiva(null)}
+            className="gap-1"
+          >
             <ChevronRight className="h-4 w-4 rotate-180" />
             Volver al índice
           </Button>
@@ -95,10 +126,15 @@ export default function AyudaPage() {
                       <div className="flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 p-3">
                         <Lightbulb className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                         <div>
-                          <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mb-1">Tips</p>
+                          <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mb-1">
+                            Tips
+                          </p>
                           <ul className="space-y-1">
                             {paso.tips.map((tip, j) => (
-                              <li key={j} className="text-sm text-amber-700 dark:text-amber-400 flex items-start gap-1.5">
+                              <li
+                                key={j}
+                                className="text-sm text-amber-700 dark:text-amber-400 flex items-start gap-1.5"
+                              >
                                 <span className="text-amber-500 mt-0.5">•</span>
                                 {tip}
                               </li>
@@ -128,7 +164,10 @@ export default function AyudaPage() {
               <h3 className="text-lg font-semibold">Preguntas frecuentes</h3>
               <div className="space-y-2">
                 {seccionActual.preguntas.map((pq, i) => (
-                  <details key={i} className="group rounded-lg border border-border p-3 transition-colors hover:border-muted-foreground/30">
+                  <details
+                    key={i}
+                    className="group rounded-lg border border-border p-3 transition-colors hover:border-muted-foreground/30"
+                  >
                     <summary className="flex items-center justify-between cursor-pointer text-sm font-medium list-none">
                       {pq.pregunta}
                       <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90 text-muted-foreground" />

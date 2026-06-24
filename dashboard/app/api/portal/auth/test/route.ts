@@ -22,14 +22,22 @@ export async function POST() {
   try {
     // Buscar el primer paciente activo como paciente de prueba
     const [paciente] = await db
-      .select({ id: pacientes.id, nombre: pacientes.nombre, apellido: pacientes.apellido, telefono: pacientes.telefono })
+      .select({
+        id: pacientes.id,
+        nombre: pacientes.nombre,
+        apellido: pacientes.apellido,
+        telefono: pacientes.telefono,
+      })
       .from(pacientes)
       .where(and(sql`${pacientes.deletedAt} IS NULL`))
       .orderBy(pacientes.createdAt)
       .limit(1);
 
     if (!paciente) {
-      return NextResponse.json({ error: 'No hay pacientes de prueba disponibles. Creá un paciente primero.' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'No hay pacientes de prueba disponibles. Creá un paciente primero.' },
+        { status: 404 },
+      );
     }
 
     // Crear sesión para el paciente
@@ -40,9 +48,15 @@ export async function POST() {
       telefono: paciente.telefono || '+56900000000',
     });
 
-    return NextResponse.json({ success: true, redirect: '/portal/dashboard', token }, { status: 200 });
+    return NextResponse.json(
+      { success: true, redirect: '/portal/dashboard', token },
+      { status: 200 },
+    );
   } catch (error) {
-    safeError('[PortalAuthTest] Error:', error instanceof Error ? { message: error.message, stack: error.stack } : error);
+    safeError(
+      '[PortalAuthTest] Error:',
+      error instanceof Error ? { message: error.message, stack: error.stack } : error,
+    );
     return NextResponse.json({ error: 'Error al generar acceso de prueba' }, { status: 500 });
   }
 }

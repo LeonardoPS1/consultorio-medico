@@ -27,13 +27,23 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
   });
 
   const totalTurnos = turnos.reduce((s: number, t: { cantidad: number }) => s + t.cantidad, 0);
-  const totalCompletados = turnos.reduce((s: number, t: { completados: number }) => s + t.completados, 0);
-  const totalCancelados = turnos.reduce((s: number, t: { cancelados: number }) => s + t.cancelados, 0);
+  const totalCompletados = turnos.reduce(
+    (s: number, t: { completados: number }) => s + t.completados,
+    0,
+  );
+  const totalCancelados = turnos.reduce(
+    (s: number, t: { cancelados: number }) => s + t.cancelados,
+    0,
+  );
   const ausentes = turnos.reduce((s: number, t: { ausentes: number }) => s + t.ausentes, 0);
 
   // ─── Distribución de estados ──────────────────────────────
   const distribucionEstados = [
-    { estado: 'pendiente', valor: Math.max(0, totalTurnos - totalCompletados - totalCancelados - ausentes), color: '#f59e0b' },
+    {
+      estado: 'pendiente',
+      valor: Math.max(0, totalTurnos - totalCompletados - totalCancelados - ausentes),
+      color: '#f59e0b',
+    },
     { estado: 'completado', valor: totalCompletados, color: '#22c55e' },
     { estado: 'cancelado', valor: totalCancelados, color: '#ef4444' },
     { estado: 'ausente', valor: ausentes, color: '#6b7280' },
@@ -59,9 +69,7 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
   const nuevos = esAnual ? 89 : 23;
 
   const nuevosPacientesLabels = etiquetas;
-  const nuevosPacientes = etiquetas.map(() =>
-    Math.max(1, Math.round(Math.random() * 7) + 1)
-  );
+  const nuevosPacientes = etiquetas.map(() => Math.max(1, Math.round(Math.random() * 7) + 1));
 
   const pacientesKpis = {
     total: totalPac,
@@ -77,8 +85,14 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
     enviados: 8 + Math.round(Math.random() * 10) + i,
   }));
 
-  const totalRecibidos = volumenWhatsApp.reduce((s: number, v: { recibidos: number }) => s + v.recibidos, 0);
-  const totalEnviados = volumenWhatsApp.reduce((s: number, v: { enviados: number }) => s + v.enviados, 0);
+  const totalRecibidos = volumenWhatsApp.reduce(
+    (s: number, v: { recibidos: number }) => s + v.recibidos,
+    0,
+  );
+  const totalEnviados = volumenWhatsApp.reduce(
+    (s: number, v: { enviados: number }) => s + v.enviados,
+    0,
+  );
 
   // ─── Canales de contacto ─────────────────────────────────
   const canalesContacto = [
@@ -107,19 +121,59 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
 
   // ─── Métricas principales ─────────────────────────────────
   const metricas = [
-    { titulo: 'Turnos', valor: String(totalTurnos), cambio: '+12% vs período anterior', icon: 'calendar', up: true },
-    { titulo: 'Asistencia', valor: `${asistenciaPct}%`, cambio: `${totalCompletados} completados`, icon: 'users', up: totalCompletados > totalCancelados },
-    { titulo: 'Nuevos Pacientes', valor: String(nuevos), cambio: 'en el período', icon: 'trending-up', up: true },
-    { titulo: 'Conversaciones Activas', valor: String(Math.max(1, Math.floor(totalRecibidos / 5))), cambio: 'en atención', icon: 'message-square', up: true },
-    { titulo: 'Consultas Virtuales', valor: String(virtuales), cambio: `${virtualesCompletados} realizadas`, icon: 'video', up: true },
+    {
+      titulo: 'Turnos',
+      valor: String(totalTurnos),
+      cambio: '+12% vs período anterior',
+      icon: 'calendar',
+      up: true,
+    },
+    {
+      titulo: 'Asistencia',
+      valor: `${asistenciaPct}%`,
+      cambio: `${totalCompletados} completados`,
+      icon: 'users',
+      up: totalCompletados > totalCancelados,
+    },
+    {
+      titulo: 'Nuevos Pacientes',
+      valor: String(nuevos),
+      cambio: 'en el período',
+      icon: 'trending-up',
+      up: true,
+    },
+    {
+      titulo: 'Conversaciones Activas',
+      valor: String(Math.max(1, Math.floor(totalRecibidos / 5))),
+      cambio: 'en atención',
+      icon: 'message-square',
+      up: true,
+    },
+    {
+      titulo: 'Consultas Virtuales',
+      valor: String(virtuales),
+      cambio: `${virtualesCompletados} realizadas`,
+      icon: 'video',
+      up: true,
+    },
   ];
 
   // ─── WhatsApp KPIs ────────────────────────────────────────
   const whatsapp = [
-    { titulo: 'Mensajes recibidos', valor: String(totalRecibidos), cambio: 'en el período', up: true },
+    {
+      titulo: 'Mensajes recibidos',
+      valor: String(totalRecibidos),
+      cambio: 'en el período',
+      up: true,
+    },
     { titulo: 'Mensajes enviados', valor: String(totalEnviados), cambio: 'por IA', up: true },
     { titulo: 'Tasa de respuesta', valor: '94%', cambio: 'automática', up: true },
-    { titulo: 'Conversaciones activas', valor: String(Math.max(1, Math.floor(totalRecibidos / 5))), cambio: 'en atención', up: true },
+    {
+      titulo: 'Conversaciones activas',
+      valor: String(Math.max(1, Math.floor(totalRecibidos / 5))),
+      cambio: 'en atención',
+      up: true,
+    },
   ];
 
   // ─── Obra social ─────────────────────────────────────────
@@ -134,27 +188,73 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
   // ─── Datos de comparativa (período anterior) ────────────
   const _comparativa = {
     kpis: [
-      { titulo: 'Turnos', actual: String(totalTurnos), anterior: String(Math.round(totalTurnos * 0.85)), cambio: '+15%', cambioPct: '+15%', up: true },
-      { titulo: 'Asistencia', actual: `${asistenciaPct}%`, anterior: '78%', cambio: '+7%', cambioPct: '+7%', up: true },
-      { titulo: 'Nuevos Pacientes', actual: String(nuevos), anterior: String(Math.round(nuevos * 0.7)), cambio: '+30%', cambioPct: '+30%', up: true },
-      { titulo: 'Conversaciones', actual: String(Math.max(1, Math.floor(totalRecibidos / 5))), anterior: String(Math.max(1, Math.floor(totalRecibidos / 7))), cambio: '+12%', cambioPct: '+12%', up: true },
+      {
+        titulo: 'Turnos',
+        actual: String(totalTurnos),
+        anterior: String(Math.round(totalTurnos * 0.85)),
+        cambio: '+15%',
+        cambioPct: '+15%',
+        up: true,
+      },
+      {
+        titulo: 'Asistencia',
+        actual: `${asistenciaPct}%`,
+        anterior: '78%',
+        cambio: '+7%',
+        cambioPct: '+7%',
+        up: true,
+      },
+      {
+        titulo: 'Nuevos Pacientes',
+        actual: String(nuevos),
+        anterior: String(Math.round(nuevos * 0.7)),
+        cambio: '+30%',
+        cambioPct: '+30%',
+        up: true,
+      },
+      {
+        titulo: 'Conversaciones',
+        actual: String(Math.max(1, Math.floor(totalRecibidos / 5))),
+        anterior: String(Math.max(1, Math.floor(totalRecibidos / 7))),
+        cambio: '+12%',
+        cambioPct: '+12%',
+        up: true,
+      },
     ],
     turnos: etiquetas.map((label, i) => ({
       label,
       actual: turnos[i].cantidad,
       anterior: Math.max(1, turnos[i].cantidad - 2 - Math.round(Math.random() * 4)),
     })),
-    intenciones: intenciones.map(item => ({
+    intenciones: intenciones.map((item) => ({
       intencion: item.intencion,
       actual: item.cantidad,
       anterior: Math.max(1, item.cantidad - Math.round(Math.random() * 8)),
-      cambioPct: Math.round((Math.random() * 20 + 5)),
+      cambioPct: Math.round(Math.random() * 20 + 5),
     })),
     whatsapp: [
-      { titulo: 'Mensajes recibidos', actual: String(totalRecibidos), anterior: String(Math.round(totalRecibidos * 0.8)), cambio: '+12%', up: true },
-      { titulo: 'Mensajes enviados', actual: String(totalEnviados), anterior: String(Math.round(totalEnviados * 0.75)), cambio: '+8%', up: true },
+      {
+        titulo: 'Mensajes recibidos',
+        actual: String(totalRecibidos),
+        anterior: String(Math.round(totalRecibidos * 0.8)),
+        cambio: '+12%',
+        up: true,
+      },
+      {
+        titulo: 'Mensajes enviados',
+        actual: String(totalEnviados),
+        anterior: String(Math.round(totalEnviados * 0.75)),
+        cambio: '+8%',
+        up: true,
+      },
       { titulo: 'Tasa de respuesta', actual: '94%', anterior: '91%', cambio: '+3%', up: true },
-      { titulo: 'Conversaciones activas', actual: String(Math.max(1, Math.floor(totalRecibidos / 5))), anterior: String(Math.max(1, Math.floor(totalRecibidos / 6))), cambio: '+10%', up: true },
+      {
+        titulo: 'Conversaciones activas',
+        actual: String(Math.max(1, Math.floor(totalRecibidos / 5))),
+        anterior: String(Math.max(1, Math.floor(totalRecibidos / 6))),
+        cambio: '+10%',
+        up: true,
+      },
     ],
     pacientesActual: totalPac,
     pacientesAnterior: Math.round(totalPac * 0.82),
@@ -164,7 +264,8 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
   const diasPrediccion = 30;
   const prediccionBase = esSemana ? 10 : esAnual ? 15 : 12;
   const prediccion = Array.from({ length: diasPrediccion }, (_, i) => {
-    const real = i < 15 ? prediccionBase + Math.round(Math.sin(i * 0.5) * 3 + Math.random() * 4) : null;
+    const real =
+      i < 15 ? prediccionBase + Math.round(Math.sin(i * 0.5) * 3 + Math.random() * 4) : null;
     const estimado = prediccionBase + Math.round(Math.sin(i * 0.5) * 3 + i * 0.15);
     return {
       dia: `Día ${i + 1}`,
@@ -185,7 +286,20 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
   ];
 
   // ─── Comparativa anual (Y/Y, 12 meses) ────────────────────
-  const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  const meses = [
+    'Ene',
+    'Feb',
+    'Mar',
+    'Abr',
+    'May',
+    'Jun',
+    'Jul',
+    'Ago',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dic',
+  ];
   const comparativaAnual = meses.map((mes, i) => ({
     mes,
     actual: 80 + Math.round(Math.sin(i * 0.6) * 15 + Math.random() * 20 + i * 3),
@@ -194,7 +308,7 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
 
   // ─── Resumen ejecutivo ─────────────────────────────────────
   const ejecutivo = {
-    totalIngresos: `$${Math.round((totalTurnos * 45 + Math.random() * 1000) / 1000 * 10) / 10}M`,
+    totalIngresos: `$${Math.round(((totalTurnos * 45 + Math.random() * 1000) / 1000) * 10) / 10}M`,
     ingresosCambio: '+18% vs año anterior',
     tasaOcupacion: `${75 + Math.round(Math.random() * 15)}%`,
     ocupacionCambio: '+5% vs trimestre anterior',

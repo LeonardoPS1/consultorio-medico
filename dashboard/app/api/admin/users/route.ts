@@ -58,9 +58,12 @@ export const POST = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();
   if (session.user.role !== 'admin') fail('No autorizado', 403);
 
-  const body = await parseBody(request, createUserSchema.extend({
-    rol: z.enum(['medico', 'admin', 'secretaria']).optional(),
-  }));
+  const body = await parseBody(
+    request,
+    createUserSchema.extend({
+      rol: z.enum(['medico', 'admin', 'secretaria']).optional(),
+    }),
+  );
 
   const normalizedEmail = body.email.toLowerCase().trim();
 

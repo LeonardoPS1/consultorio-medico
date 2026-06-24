@@ -5,7 +5,14 @@ import { db } from '@/lib/db';
 import { plantillasMensajes } from '@/drizzle/schema';
 import { eq, isNull } from 'drizzle-orm';
 
-const CATEGORIAS_VALIDAS = ['recordatorios', 'notificaciones', 'whatsapp', 'email', 'sms', 'general'] as const;
+const CATEGORIAS_VALIDAS = [
+  'recordatorios',
+  'notificaciones',
+  'whatsapp',
+  'email',
+  'sms',
+  'general',
+] as const;
 
 const createPlantillaSchema = z.object({
   nombre: z.string().min(1).max(100),
@@ -60,10 +67,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = createPlantillaSchema.parse(body);
 
-    const [nueva] = await db
-      .insert(plantillasMensajes)
-      .values(parsed)
-      .returning();
+    const [nueva] = await db.insert(plantillasMensajes).values(parsed).returning();
 
     return NextResponse.json({
       data: {
@@ -97,10 +101,7 @@ export async function PATCH(request: Request) {
     if (parsed.variables !== undefined) updateData.variables = parsed.variables;
     const id = parsed.id;
 
-    await db
-      .update(plantillasMensajes)
-      .set(updateData)
-      .where(eq(plantillasMensajes.id, id));
+    await db.update(plantillasMensajes).set(updateData).where(eq(plantillasMensajes.id, id));
 
     return NextResponse.json({ ok: true });
   } catch (error) {

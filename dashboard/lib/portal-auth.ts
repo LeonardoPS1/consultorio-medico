@@ -58,7 +58,9 @@ setInterval(() => {
 
 // ─── Blacklist check ─────────────────────────────────────────
 
-export async function checkBlacklist(pacienteId: string): Promise<{ bloqueado: boolean; motivo?: string }> {
+export async function checkBlacklist(
+  pacienteId: string,
+): Promise<{ bloqueado: boolean; motivo?: string }> {
   const [entry] = await db
     .select({ motivo: blacklist.motivo, bloqueadoHasta: blacklist.bloqueadoHasta })
     .from(blacklist)
@@ -122,7 +124,10 @@ export interface GenerateTokenResult {
  * Incluye rate limiting por teléfono y verificación de blacklist.
  * Devuelve el token y la URL completa del magic link.
  */
-export async function generateMagicLink(telefono: string, redirect?: string): Promise<GenerateTokenResult | null> {
+export async function generateMagicLink(
+  telefono: string,
+  redirect?: string,
+): Promise<GenerateTokenResult | null> {
   // 0. Rate limiting por teléfono
   if (!checkPhoneRate(telefono)) {
     safeWarn(`[PortalAuth] Rate limit excedido para ${telefono}`);
@@ -188,12 +193,7 @@ export async function verifyMagicToken(token: string): Promise<PortalSession | n
       telefono: pacientes.telefono,
     })
     .from(pacientes)
-    .where(
-      and(
-        eq(pacientes.portalToken, token),
-        sql`${pacientes.portalTokenExpires} > NOW()`,
-      ),
-    )
+    .where(and(eq(pacientes.portalToken, token), sql`${pacientes.portalTokenExpires} > NOW()`))
     .limit(1);
 
   if (!paciente) return null;
@@ -338,7 +338,10 @@ No compartas este mensaje.`;
 
     return response.ok;
   } catch (e) {
-    safeError('[PortalAuth] Error enviando magic link:', e instanceof Error ? { message: e.message } : e);
+    safeError(
+      '[PortalAuth] Error enviando magic link:',
+      e instanceof Error ? { message: e.message } : e,
+    );
     return false;
   }
 }

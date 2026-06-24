@@ -40,7 +40,9 @@ export default function PortalConsentimientosPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
 
   const firmar = async (id: string) => {
     setFirmando(id);
@@ -92,7 +94,9 @@ export default function PortalConsentimientosPage() {
         <div className="text-center py-16 text-gray-400">
           <FileText className="h-12 w-12 mx-auto mb-3" />
           <p>No tienes consentimientos pendientes</p>
-          <p className="text-sm mt-2">Cuando tu médico registre un consentimiento, aparecerá aquí para que lo firmes</p>
+          <p className="text-sm mt-2">
+            Cuando tu médico registre un consentimiento, aparecerá aquí para que lo firmes
+          </p>
         </div>
       ) : (
         <div className="space-y-3">

@@ -2,7 +2,11 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 import { getUserByEmail, createAdminUserIfNotExists } from '@/lib/data-store';
-import { isAccountLocked, incrementFailedAttempts, resetFailedAttempts } from '@/lib/account-lockout';
+import {
+  isAccountLocked,
+  incrementFailedAttempts,
+  resetFailedAttempts,
+} from '@/lib/account-lockout';
 import { verify2faToken } from '@/lib/mfa';
 import { logAudit } from '@/lib/audit-log';
 import { createHash } from 'crypto';
@@ -32,9 +36,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // 1. Verificar si la cuenta está bloqueada por intentos fallidos
           const lockStatus = await isAccountLocked(email);
           if (lockStatus.locked) {
-            throw new Error(
-              'Demasiados intentos fallidos. Intentá de nuevo más tarde.'
-            );
+            throw new Error('Demasiados intentos fallidos. Intentá de nuevo más tarde.');
           }
 
           // Asegurar que existe el admin por si es primera vez
@@ -54,9 +56,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             await incrementFailedAttempts(email);
             const lockStatusAfter = await isAccountLocked(email);
             if (lockStatusAfter.locked) {
-              throw new Error(
-                'Demasiados intentos fallidos. Intentá de nuevo más tarde.'
-              );
+              throw new Error('Demasiados intentos fallidos. Intentá de nuevo más tarde.');
             }
             throw new Error('Email o contraseña incorrectos');
           }
@@ -75,7 +75,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               let parsedCodes: string[] = [];
               try {
                 parsedCodes = JSON.parse(user.backupCodes);
-              } catch { /* formato inválido */ }
+              } catch {
+                /* formato inválido */
+              }
 
               const codeHash = createHash('sha256').update(token2fa.toUpperCase()).digest('hex');
               const idx = parsedCodes.indexOf(codeHash);
@@ -121,7 +123,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (error instanceof Error) {
             throw error;
           }
-          safeError('[Auth] Error en authorize:', error instanceof Error ? { message: error.message } : error);
+          safeError(
+            '[Auth] Error en authorize:',
+            error instanceof Error ? { message: error.message } : error,
+          );
           return null;
         }
       },

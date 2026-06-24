@@ -11,7 +11,8 @@ const SPECIALTIES = [
     label: 'Clínicas Médicas',
     icon: '🏥',
     title: 'IA para Centros Médicos y Clínicas',
-    description: 'Optimizá la recepción de pacientes con triaje inicial de síntomas, agendamiento inteligente al especialista indicado y gestión automática de cancelaciones para cubrir sobrecupos.',
+    description:
+      'Optimizá la recepción de pacientes con triaje inicial de síntomas, agendamiento inteligente al especialista indicado y gestión automática de cancelaciones para cubrir sobrecupos.',
     benefits: [
       'Direccionamiento inteligente al especialista (Cardiólogo, Pediatra, etc.)',
       'Redistribución automática de turnos liberados de última hora',
@@ -29,7 +30,8 @@ const SPECIALTIES = [
     label: 'Odontología',
     icon: '🦷',
     title: 'IA para Clínicas Dentales',
-    description: 'Automatizá recordatorios de ortodoncia, agendá limpiezas periódicas de control y gestioná urgencias dentales al instante con respuestas inteligentes.',
+    description:
+      'Automatizá recordatorios de ortodoncia, agendá limpiezas periódicas de control y gestioná urgencias dentales al instante con respuestas inteligentes.',
     benefits: [
       'Confirmación activa de citas de control semestrales',
       'Filtro y agendamiento prioritario para urgencias de dolor dental',
@@ -47,7 +49,8 @@ const SPECIALTIES = [
     label: 'Oftalmología',
     icon: '👁️',
     title: 'IA para Centros Oftalmológicos',
-    description: 'Optimizá la preparación de pacientes para exámenes de fondo de ojo o cirugías refractivas y respondé dudas postoperatorias comunes al instante.',
+    description:
+      'Optimizá la preparación de pacientes para exámenes de fondo de ojo o cirugías refractivas y respondé dudas postoperatorias comunes al instante.',
     benefits: [
       'Instrucciones de preparación (dilatación de pupilas, no conducir)',
       'Recordatorio periódico para renovación de recetas de lentes',
@@ -65,7 +68,8 @@ const SPECIALTIES = [
     label: 'Estética y Belleza',
     icon: '✨',
     title: 'IA para Clínicas Estéticas',
-    description: 'Capturá y convertí leads de Instagram/Facebook al instante. Agendá evaluaciones gratuitas y hacé seguimiento automático de retoques periódicos.',
+    description:
+      'Capturá y convertí leads de Instagram/Facebook al instante. Agendá evaluaciones gratuitas y hacé seguimiento automático de retoques periódicos.',
     benefits: [
       'Captura instantánea de leads desde redes sociales',
       'Agendamiento automatizado de citas de valoración sin costo',
@@ -110,12 +114,10 @@ export function Specialties() {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-14"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Soluciones para cada especialidad
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Soluciones para cada especialidad</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-base">
-            Adaptamos los agentes de IA y los flujos de automatización a las necesidades
-            específicas de cada nicho médico.
+            Adaptamos los agentes de IA y los flujos de automatización a las necesidades específicas
+            de cada nicho médico.
           </p>
         </motion.div>
 
@@ -162,9 +164,7 @@ export function Specialties() {
             {/* Details */}
             <div className="space-y-6">
               <h3 className="text-xl font-semibold">{current.title}</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                {current.description}
-              </p>
+              <p className="text-muted-foreground text-sm leading-relaxed">{current.description}</p>
               <ul className="space-y-3">
                 {current.benefits.map((b) => (
                   <li key={b} className="flex items-start gap-2.5 text-sm">
@@ -174,7 +174,11 @@ export function Specialties() {
                 ))}
               </ul>
               <Button variant="outline" size="sm" className="gap-2" asChild>
-                <a href={`https://wa.me/56975680702?text=Hola%20quiero%20informaci%C3%B3n%20para%20${encodeURIComponent(current.label)}`} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={`https://wa.me/56975680702?text=Hola%20quiero%20informaci%C3%B3n%20para%20${encodeURIComponent(current.label)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <MessageCircle className="h-4 w-4" />
                   Consultar para {current.label}
                 </a>

@@ -24,7 +24,7 @@ export const LIVEKIT_URL = process.env.LIVEKIT_URL || 'wss://livekit.aicorebots.
 function getEnvOrThrow(): { apiKey: string; apiSecret: string } {
   if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {
     throw new Error(
-      'LiveKit no configurado: faltan LIVEKIT_API_KEY y/o LIVEKIT_API_SECRET en env vars'
+      'LiveKit no configurado: faltan LIVEKIT_API_KEY y/o LIVEKIT_API_SECRET en env vars',
     );
   }
   return { apiKey: LIVEKIT_API_KEY, apiSecret: LIVEKIT_API_SECRET };
@@ -43,10 +43,7 @@ export function getRoomName(turnoId: string): string {
  * - Puede publicar/subscribir audio/video
  * - Puede administrar la sala (kick, mute, close)
  */
-export async function generateMedicoToken(
-  roomName: string,
-  identity: string
-): Promise<string> {
+export async function generateMedicoToken(roomName: string, identity: string): Promise<string> {
   const { apiKey, apiSecret } = getEnvOrThrow();
   const at = new AccessToken(apiKey, apiSecret, {
     identity,
@@ -69,10 +66,7 @@ export async function generateMedicoToken(
  * - Puede publicar/subscribir audio/video
  * - NO puede administrar la sala
  */
-export async function generatePacienteToken(
-  roomName: string,
-  identity: string
-): Promise<string> {
+export async function generatePacienteToken(roomName: string, identity: string): Promise<string> {
   const { apiKey, apiSecret } = getEnvOrThrow();
   const at = new AccessToken(apiKey, apiSecret, {
     identity,
@@ -94,10 +88,7 @@ export async function generatePacienteToken(
  * Genera la URL completa de la videollamada para el paciente.
  * El token se pasa como query param para acceso directo.
  */
-export function getSalaLink(
-  turnoId: string,
-  token: string
-): string {
+export function getSalaLink(turnoId: string, token: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://med.aicorebots.com';
   return `${baseUrl}/videollamada/${turnoId}?token=${encodeURIComponent(token)}`;
 }

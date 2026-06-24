@@ -129,7 +129,9 @@ export async function getPacienteByTelefono(telefono: string): Promise<PacienteD
   };
 }
 
-export async function createPaciente(data: Omit<PacienteData, 'id' | 'createdAt' | 'updatedAt'>): Promise<PacienteData> {
+export async function createPaciente(
+  data: Omit<PacienteData, 'id' | 'createdAt' | 'updatedAt'>,
+): Promise<PacienteData> {
   const now = new Date().toISOString();
   const nuevo: PacienteData = {
     ...data,
@@ -165,9 +167,14 @@ export async function createPaciente(data: Omit<PacienteData, 'id' | 'createdAt'
 // CONVERSACIONES
 // ============================================================
 
-export async function getConversaciones(
-  options?: { estado?: string; canal?: string; search?: string; limit?: number; offset?: number; medicoId?: string }
-): Promise<ConversacionData[]> {
+export async function getConversaciones(options?: {
+  estado?: string;
+  canal?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+  medicoId?: string;
+}): Promise<ConversacionData[]> {
   let query = db
     .select({
       conversacion: conversaciones,
@@ -192,8 +199,8 @@ export async function getConversaciones(
       or(
         like(pacientes.nombre, `%${options.search}%`),
         like(pacientes.apellido, `%${options.search}%`),
-        like(conversaciones.ultimoMensaje, `%${options.search}%`)
-      )
+        like(conversaciones.ultimoMensaje, `%${options.search}%`),
+      ),
     );
   }
   if (options?.medicoId) {
@@ -328,7 +335,7 @@ export async function updateConversacion(
     contextoIa: Record<string, unknown>;
     medicoId: string;
     metadata: Record<string, unknown>;
-  }>
+  }>,
 ): Promise<ConversacionData | null> {
   const updateData: Record<string, unknown> = { ...data, updatedAt: new Date() };
   if (data.ultimoMensaje !== undefined || data.ultimaIntencion !== undefined) {
@@ -425,7 +432,7 @@ export async function updateMensajeByTwilioSid(
     twilioStatus?: string;
     costo?: number;
     metadata?: Record<string, unknown>;
-  }
+  },
 ): Promise<MensajeData | null> {
   const existing = await db
     .select()
@@ -440,10 +447,7 @@ export async function updateMensajeByTwilioSid(
   if (updates.costo !== undefined) updateFields.costo = String(updates.costo);
   if (updates.metadata !== undefined) updateFields.metadata = updates.metadata;
 
-  await db
-    .update(mensajes)
-    .set(updateFields)
-    .where(eq(mensajes.twilioSid, twilioSid));
+  await db.update(mensajes).set(updateFields).where(eq(mensajes.twilioSid, twilioSid));
 
   const updated = await db
     .select()
@@ -492,7 +496,7 @@ export interface MensajeWithPaciente extends MensajeData {
 }
 
 export async function getMensajes(
-  options: GetMensajesOptions = {}
+  options: GetMensajesOptions = {},
 ): Promise<{ mensajes: MensajeWithPaciente[]; total: number; porEstado: Record<string, number> }> {
   const conditions: (SQL | undefined)[] = [];
 
@@ -507,7 +511,7 @@ export async function getMensajes(
   }
   if (options.search) {
     conditions.push(
-      sql`(LOWER(${mensajes.contenido}) LIKE LOWER(${'%' + options.search + '%'}) OR LOWER(${pacientes.nombre}) LIKE LOWER(${'%' + options.search + '%'}) OR LOWER(${pacientes.apellido}) LIKE LOWER(${'%' + options.search + '%'}))`
+      sql`(LOWER(${mensajes.contenido}) LIKE LOWER(${'%' + options.search + '%'}) OR LOWER(${pacientes.nombre}) LIKE LOWER(${'%' + options.search + '%'}) OR LOWER(${pacientes.apellido}) LIKE LOWER(${'%' + options.search + '%'}))`,
     );
   }
 
@@ -599,11 +603,7 @@ export async function getMensajes(
 // ============================================================
 
 export async function getUserByEmail(email: string): Promise<UsuarioData | null> {
-  const result = await db
-    .select()
-    .from(usuarios)
-    .where(eq(usuarios.email, email))
-    .limit(1);
+  const result = await db.select().from(usuarios).where(eq(usuarios.email, email)).limit(1);
   if (result.length === 0) return null;
   const u = result[0];
   if (!u.activo) return null;
@@ -641,11 +641,19 @@ export async function getUserByEmail(email: string): Promise<UsuarioData | null>
 
 export async function createAdminUserIfNotExists(): Promise<boolean> {
   try {
-    const existing = await db.select().from(usuarios).where(eq(usuarios.email, 'admin@consultorio.com')).limit(1);
+    const existing = await db
+      .select()
+      .from(usuarios)
+      .where(eq(usuarios.email, 'admin@consultorio.com'))
+      .limit(1);
     if (existing.length > 0) return false;
 
     // Asegurar que existe el tenant default
-    const tenantExists = await db.select().from(tenants).where(eq(tenants.id, '00000000-0000-0000-0000-000000000000')).limit(1);
+    const tenantExists = await db
+      .select()
+      .from(tenants)
+      .where(eq(tenants.id, '00000000-0000-0000-0000-000000000000'))
+      .limit(1);
     if (tenantExists.length === 0) {
       await db.insert(tenants).values({
         id: '00000000-0000-0000-0000-000000000000',
@@ -657,9 +665,12 @@ export async function createAdminUserIfNotExists(): Promise<boolean> {
       });
     }
 
-    const seedPassword = process.env.SEED_ADMIN_PASSWORD || process.env.NEXT_PUBLIC_SEED_ADMIN_PASSWORD;
+    const seedPassword =
+      process.env.SEED_ADMIN_PASSWORD || process.env.NEXT_PUBLIC_SEED_ADMIN_PASSWORD;
     if (!seedPassword) {
-      console.warn('[Seed] No SEED_ADMIN_PASSWORD set, using fallback. Cambiá la password después del primer login.');
+      console.warn(
+        '[Seed] No SEED_ADMIN_PASSWORD set, using fallback. Cambiá la password después del primer login.',
+      );
     }
     const hash = await bcrypt.hash(seedPassword || 'Admin123456!', 10);
     const adminId = crypto.randomUUID();
@@ -676,7 +687,11 @@ export async function createAdminUserIfNotExists(): Promise<boolean> {
     });
 
     // Crear medico asociado al admin
-    const medicoExists = await db.select().from(medicos).where(eq(medicos.email, 'admin@consultorio.com')).limit(1);
+    const medicoExists = await db
+      .select()
+      .from(medicos)
+      .where(eq(medicos.email, 'admin@consultorio.com'))
+      .limit(1);
     if (medicoExists.length === 0) {
       await db.insert(medicos).values({
         usuarioId: adminId,
@@ -690,17 +705,20 @@ export async function createAdminUserIfNotExists(): Promise<boolean> {
     safeLog('[DataStore] Admin creado en PostgreSQL exitosamente');
     return true;
   } catch (err) {
-    safeError('[DataStore] Error creando admin en PostgreSQL:', err instanceof Error ? { message: err.message } : err);
+    safeError(
+      '[DataStore] Error creando admin en PostgreSQL:',
+      err instanceof Error ? { message: err.message } : err,
+    );
     return false;
   }
 }
 
 export async function updateUser2FA(
   email: string,
-  data: { secreto2fa: string | null; activo2fa: boolean; clearBackupCodes?: boolean }
+  data: { secreto2fa: string | null; activo2fa: boolean; clearBackupCodes?: boolean },
 ): Promise<boolean> {
   try {
-    const updateData: Record<string, any> = {
+    const updateData: Record<string, unknown> = {
       secreto2fa: data.secreto2fa,
       activo2fa: data.activo2fa,
       updatedAt: new Date(),
@@ -708,10 +726,7 @@ export async function updateUser2FA(
     if (data.clearBackupCodes) {
       updateData.backupCodes = null;
     }
-    await db
-      .update(usuarios)
-      .set(updateData)
-      .where(eq(usuarios.email, email));
+    await db.update(usuarios).set(updateData).where(eq(usuarios.email, email));
     return true;
   } catch {
     return false;

@@ -16,9 +16,7 @@ function initDb() {
 
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
-    throw new Error(
-      'DATABASE_URL no configurada. Esta variable es requerida en runtime.'
-    );
+    throw new Error('DATABASE_URL no configurada. Esta variable es requerida en runtime.');
   }
 
   // ─── PgBouncer ──────────────────────────────────────────────────────────
@@ -32,15 +30,12 @@ function initDb() {
   // ────────────────────────────────────────────────────────────────────────
 
   const isPgBouncer =
-    connectionString.includes(':6432') ||
-    connectionString.includes('pgbouncer=true');
+    connectionString.includes(':6432') || connectionString.includes('pgbouncer=true');
 
   // URL directa a PostgreSQL para migraciones (saltea PgBouncer)
   const directUrl =
     process.env.DATABASE_URL_DIRECT ||
-    connectionString
-      .replace('pgbouncer:6432', 'postgres:5432')
-      .replace('?pgbouncer=true', '');
+    connectionString.replace('pgbouncer:6432', 'postgres:5432').replace('?pgbouncer=true', '');
 
   // Cliente para migraciones (1 conexión directa — saltea PgBouncer)
   const migrationClient = postgres(directUrl, { max: 1, idle_timeout: 10 });
@@ -74,15 +69,10 @@ export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
   },
 });
 
-export const migrationDb = new Proxy(
-  {} as ReturnType<typeof drizzle<typeof schema>>,
-  {
-    get(_, prop) {
-      return getMigrationDb()[
-        prop as keyof ReturnType<typeof drizzle<typeof schema>>
-      ];
-    },
-  }
-);
+export const migrationDb = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
+  get(_, prop) {
+    return getMigrationDb()[prop as keyof ReturnType<typeof drizzle<typeof schema>>];
+  },
+});
 
 export default db;

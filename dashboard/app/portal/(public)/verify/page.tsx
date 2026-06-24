@@ -12,7 +12,13 @@ import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function PortalVerify() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center p-4"><Loader2 className="h-10 w-10 text-blue-600 animate-spin" /></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
+        </div>
+      }
+    >
       <PortalVerifyContent />
     </Suspense>
   );
@@ -33,9 +39,7 @@ function PortalVerifyContent() {
     }
 
     // Validar redirect (solo rutas del portal)
-    const destino = redirect && redirect.startsWith('/portal/')
-      ? redirect
-      : '/portal/dashboard';
+    const destino = redirect && redirect.startsWith('/portal/') ? redirect : '/portal/dashboard';
 
     fetch(`/api/portal/auth/verify?token=${encodeURIComponent(token)}`)
       .then((res) => {

@@ -110,7 +110,8 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
     if ('serviceWorker' in navigator) {
       const handleControllerChange = () => window.location.reload();
 
-      navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      navigator.serviceWorker
+        .register('/sw.js', { scope: '/' })
         .then((registration) => {
           // Si ya hay un SW esperando (nueva versión)
           if (registration.waiting) {

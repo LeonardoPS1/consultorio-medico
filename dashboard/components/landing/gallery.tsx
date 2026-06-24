@@ -30,12 +30,10 @@ export function Gallery() {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Explorá el sistema por dentro
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Explorá el sistema por dentro</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-base">
-            Una interfaz intuitiva, moderna y diseñada especialmente para el flujo de trabajo
-            de médicos y administradores. 100% real.
+            Una interfaz intuitiva, moderna y diseñada especialmente para el flujo de trabajo de
+            médicos y administradores. 100% real.
           </p>
         </motion.div>
 

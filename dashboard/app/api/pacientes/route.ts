@@ -1,7 +1,7 @@
 /**
  * GET /api/pacientes  -  Lista con búsqueda y stats
  * POST /api/pacientes -  Crea paciente
- * 
+ *
  * Refactorizado con: apiHandler + Zod + service layer
  */
 

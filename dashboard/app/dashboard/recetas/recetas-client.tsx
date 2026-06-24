@@ -41,7 +41,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-
 // ─── Types ────────────────────────────────────────────────
 
 interface Receta {
@@ -78,9 +77,10 @@ async function generarPDFReceta(receta: Receta, org: Record<string, string>) {
   let qrDataUrl = '';
   try {
     const QRCode = await import('qrcode');
-    const baseUrl = typeof window !== 'undefined'
-      ? `${window.location.protocol}//${window.location.host}`
-      : 'https://med.aicorebots.com';
+    const baseUrl =
+      typeof window !== 'undefined'
+        ? `${window.location.protocol}//${window.location.host}`
+        : 'https://med.aicorebots.com';
     const verificationUrl = `${baseUrl}/verificar-receta/${receta.id}`;
     qrDataUrl = await QRCode.toDataURL(verificationUrl, {
       width: 120,
@@ -98,10 +98,7 @@ async function generarPDFReceta(receta: Receta, org: Record<string, string>) {
   const logoUrl = org.logoUrl || '';
   const colorPrimario = org.colorPrimario || '#2563eb';
 
-  const hoy = formatDate(
-    new Date().toISOString(),
-    "dd 'de' MMMM 'de' yyyy",
-  );
+  const hoy = formatDate(new Date().toISOString(), "dd 'de' MMMM 'de' yyyy");
   const vence = formatDate(receta.vence, "dd 'de' MMMM 'de' yyyy");
 
   const html = generarHTMLRecetaCompleta({
@@ -122,8 +119,7 @@ async function generarPDFReceta(receta: Receta, org: Record<string, string>) {
   if (!ventana) {
     toast({
       title: '❌ Error',
-      description:
-        'Permití ventanas emergentes para abrir la receta',
+      description: 'Permití ventanas emergentes para abrir la receta',
       variant: 'destructive',
     });
     return;
@@ -148,17 +144,14 @@ function enviarRecetaWhatsApp(receta: Receta) {
           `Medicamento: ${receta.medicamento}%0A` +
           `Dosis: ${receta.dosis}%0A` +
           `Duración: ${receta.duracion}%0A` +
-          (receta.indicaciones
-            ? `Indicaciones: ${receta.indicaciones}%0A`
-            : '') +
+          (receta.indicaciones ? `Indicaciones: ${receta.indicaciones}%0A` : '') +
           `%0AVence: ${formatDate(receta.vence, 'dd/MM/yyyy')}%0A%0A` +
           `Enviado desde ${nombreOrg}`,
       );
       window.open(`https://wa.me/?text=${texto}`, '_blank');
       toast({
         title: '📱 Abriendo WhatsApp',
-        description:
-          'Se abrirá una ventana para enviar la receta',
+        description: 'Se abrirá una ventana para enviar la receta',
       });
     })
     .catch(() => {
@@ -168,17 +161,14 @@ function enviarRecetaWhatsApp(receta: Receta) {
           `Medicamento: ${receta.medicamento}%0A` +
           `Dosis: ${receta.dosis}%0A` +
           `Duración: ${receta.duracion}%0A` +
-          (receta.indicaciones
-            ? `Indicaciones: ${receta.indicaciones}%0A`
-            : '') +
+          (receta.indicaciones ? `Indicaciones: ${receta.indicaciones}%0A` : '') +
           `%0AVence: ${formatDate(receta.vence, 'dd/MM/yyyy')}%0A%0A` +
           `Enviado desde Consultorio Médico`,
       );
       window.open(`https://wa.me/?text=${texto}`, '_blank');
       toast({
         title: '📱 Abriendo WhatsApp',
-        description:
-          'Se abrirá una ventana para enviar la receta',
+        description: 'Se abrirá una ventana para enviar la receta',
       });
     });
 }
@@ -191,27 +181,43 @@ async function imprimirReceta(receta: Receta) {
       let qrDataUrl = '';
       try {
         const QRCode = await import('qrcode');
-        const baseUrl = typeof window !== 'undefined'
-          ? `${window.location.protocol}//${window.location.host}`
-          : 'https://med.aicorebots.com';
-        qrDataUrl = await QRCode.toDataURL(`${baseUrl}/verificar-receta/${receta.id}`, { width: 120, margin: 2, color: { dark: '#1a1a1a', light: '#ffffff' } });
+        const baseUrl =
+          typeof window !== 'undefined'
+            ? `${window.location.protocol}//${window.location.host}`
+            : 'https://med.aicorebots.com';
+        qrDataUrl = await QRCode.toDataURL(`${baseUrl}/verificar-receta/${receta.id}`, {
+          width: 120,
+          margin: 2,
+          color: { dark: '#1a1a1a', light: '#ffffff' },
+        });
       } catch {}
       const html = generarHTMLRecetaCompletaConBoton({ ...org, receta, qrDataUrl } as any);
       const ventana = window.open('', '_blank');
-      if (ventana) { ventana.document.write(html); ventana.document.close(); }
+      if (ventana) {
+        ventana.document.write(html);
+        ventana.document.close();
+      }
     })
     .catch(async () => {
       let qrDataUrl = '';
       try {
         const QRCode = await import('qrcode');
-        const baseUrl = typeof window !== 'undefined'
-          ? `${window.location.protocol}//${window.location.host}`
-          : 'https://med.aicorebots.com';
-        qrDataUrl = await QRCode.toDataURL(`${baseUrl}/verificar-receta/${receta.id}`, { width: 120, margin: 2, color: { dark: '#1a1a1a', light: '#ffffff' } });
+        const baseUrl =
+          typeof window !== 'undefined'
+            ? `${window.location.protocol}//${window.location.host}`
+            : 'https://med.aicorebots.com';
+        qrDataUrl = await QRCode.toDataURL(`${baseUrl}/verificar-receta/${receta.id}`, {
+          width: 120,
+          margin: 2,
+          color: { dark: '#1a1a1a', light: '#ffffff' },
+        });
       } catch {}
       const html = generarHTMLRecetaCompletaConBoton({ receta, qrDataUrl } as any);
       const ventana = window.open('', '_blank');
-      if (ventana) { ventana.document.write(html); ventana.document.close(); }
+      if (ventana) {
+        ventana.document.write(html);
+        ventana.document.close();
+      }
     });
 }
 
@@ -407,7 +413,11 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
 
       if (!res.ok) {
         const err = await res.json();
-        toast({ title: 'Error', description: err.error || 'No se pudo crear la receta', variant: 'destructive' });
+        toast({
+          title: 'Error',
+          description: err.error || 'No se pudo crear la receta',
+          variant: 'destructive',
+        });
         return;
       }
 
@@ -426,9 +436,16 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         indicaciones: created.indicaciones,
       };
       setRecetas((prev) => [newReceta, ...prev]);
-      toast({ title: 'Receta creada', description: `${created.medicamento} para ${data.pacienteNombre}` });
+      toast({
+        title: 'Receta creada',
+        description: `${created.medicamento} para ${data.pacienteNombre}`,
+      });
     } catch {
-      toast({ title: 'Error', description: 'Error de red al crear receta', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Error de red al crear receta',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -441,7 +458,11 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
       });
 
       if (!res.ok) {
-        toast({ title: 'Error', description: 'No se pudo renovar la receta', variant: 'destructive' });
+        toast({
+          title: 'Error',
+          description: 'No se pudo renovar la receta',
+          variant: 'destructive',
+        });
         return;
       }
 
@@ -465,7 +486,11 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         description: `${receta.medicamento} para ${receta.paciente} - Vence ${formatDate(renovada.vence, 'dd/MM/yyyy')}`,
       });
     } catch {
-      toast({ title: 'Error', description: 'Error de red al renovar receta', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Error de red al renovar receta',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -478,21 +503,26 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         method: 'DELETE',
       });
       if (!res.ok) {
-        toast({ title: 'Error', description: 'No se pudo eliminar la receta', variant: 'destructive' });
+        toast({
+          title: 'Error',
+          description: 'No se pudo eliminar la receta',
+          variant: 'destructive',
+        });
         return;
       }
       setRecetas((prev) => prev.filter((r) => r.id !== deleteRecetaId));
       toast({ title: 'Receta eliminada', description: 'La receta se movió al historial' });
       setDeleteRecetaId(null);
     } catch {
-      toast({ title: 'Error', description: 'Error de red al eliminar receta', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Error de red al eliminar receta',
+        variant: 'destructive',
+      });
     }
   };
 
-  const renderRecetaCard = (
-    receta: Receta,
-    variant: 'activa' | 'vencida' | 'historial',
-  ) => {
+  const renderRecetaCard = (receta: Receta, variant: 'activa' | 'vencida' | 'historial') => {
     const isActiva = variant === 'activa';
     const isVencida = variant === 'vencida';
 
@@ -520,9 +550,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-medium truncate">{receta.paciente}</p>
-          <p className="text-sm text-muted-foreground truncate">
-            {receta.medicamento}
-          </p>
+          <p className="text-sm text-muted-foreground truncate">{receta.medicamento}</p>
           <p className="text-xs text-muted-foreground mt-0.5 truncate">
             {receta.dosis} · {receta.duracion}
           </p>
@@ -533,20 +561,9 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
           )}
         </div>
         <div className="text-sm text-muted-foreground text-center min-w-[50px]">
-          <p className="text-xs">
-            {isActiva
-              ? 'Vence'
-              : isVencida
-                ? 'Venció'
-                : 'Creada'}
-          </p>
+          <p className="text-xs">{isActiva ? 'Vence' : isVencida ? 'Venció' : 'Creada'}</p>
           <p className="font-medium text-foreground">
-            {formatDate(
-              isActiva || isVencida
-                ? receta.vence
-                : receta.fechaCreacion,
-              'dd/MM',
-            )}
+            {formatDate(isActiva || isVencida ? receta.vence : receta.fechaCreacion, 'dd/MM')}
           </p>
         </div>
         {/* Acciones — desktop: inline, mobile: dropdown */}
@@ -623,22 +640,45 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); descargarReceta(receta); }}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    descargarReceta(receta);
+                  }}
+                >
                   <Download className="h-4 w-4 mr-2" /> Descargar
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); enviarRecetaWhatsApp(receta); }}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    enviarRecetaWhatsApp(receta);
+                  }}
+                >
                   <Send className="h-4 w-4 mr-2" /> WhatsApp
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); imprimirReceta(receta); }}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    imprimirReceta(receta);
+                  }}
+                >
                   <Printer className="h-4 w-4 mr-2" /> Imprimir
                 </DropdownMenuItem>
                 {(isActiva || isVencida) && receta.renovable && (
-                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleRenovar(receta); }}>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRenovar(receta);
+                    }}
+                  >
                     <RotateCcw className="h-4 w-4 mr-2" /> Renovar
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem
-                  onClick={(e) => { e.stopPropagation(); setDeleteRecetaId(receta.id); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteRecetaId(receta.id);
+                  }}
                   className="text-destructive"
                 >
                   <Trash2 className="h-4 w-4 mr-2" /> Eliminar
@@ -692,13 +732,10 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         <TabsContent value="activas" className="mt-4">
           <Card>
             <CardContent className="p-0">
-              {recetas.filter((r) => r.estado === 'activa').length ===
-              0 ? (
+              {recetas.filter((r) => r.estado === 'activa').length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <Syringe className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                  <p className="text-lg font-medium text-muted-foreground">
-                    Sin recetas activas
-                  </p>
+                  <p className="text-lg font-medium text-muted-foreground">Sin recetas activas</p>
                   <p className="text-sm text-muted-foreground/70 mt-1 mb-4">
                     No hay recetas activas en este momento
                   </p>
@@ -721,16 +758,11 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         <TabsContent value="vencidas" className="mt-4">
           <Card>
             <CardContent className="p-0">
-              {recetas.filter((r) => r.estado === 'vencida').length ===
-              0 ? (
+              {recetas.filter((r) => r.estado === 'vencida').length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <AlertCircle className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                  <p className="text-lg font-medium text-muted-foreground">
-                    Sin recetas vencidas
-                  </p>
-                  <p className="text-sm text-muted-foreground/70 mt-1">
-                    No hay recetas vencidas
-                  </p>
+                  <p className="text-lg font-medium text-muted-foreground">Sin recetas vencidas</p>
+                  <p className="text-sm text-muted-foreground/70 mt-1">No hay recetas vencidas</p>
                 </div>
               ) : (
                 <div className="divide-y">
@@ -746,8 +778,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         <TabsContent value="historial" className="mt-4">
           <Card>
             <CardContent className="p-0">
-              {recetas.filter((r) => r.estado === 'historial')
-                .length === 0 ? (
+              {recetas.filter((r) => r.estado === 'historial').length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-48">
                   <FileText className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">
@@ -777,7 +808,10 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
       />
 
       {/* Confirmación eliminar receta */}
-      <AlertDialog open={!!deleteRecetaId} onOpenChange={(open) => !open && setDeleteRecetaId(null)}>
+      <AlertDialog
+        open={!!deleteRecetaId}
+        onOpenChange={(open) => !open && setDeleteRecetaId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar receta?</AlertDialogTitle>
@@ -787,7 +821,10 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleEliminar} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction
+              onClick={handleEliminar}
+              className="bg-destructive text-destructive-foreground"
+            >
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>

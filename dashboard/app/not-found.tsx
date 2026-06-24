@@ -7,9 +7,7 @@ export default function NotFound() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <div className="mx-auto max-w-md text-center">
         <div className="mb-6 text-7xl font-bold text-muted-foreground/30">404</div>
-        <h1 className="mb-2 text-2xl font-semibold tracking-tight">
-          Página no encontrada
-        </h1>
+        <h1 className="mb-2 text-2xl font-semibold tracking-tight">Página no encontrada</h1>
         <p className="mb-8 text-sm text-muted-foreground">
           La página que buscas no existe, fue movida o no tienes acceso.
         </p>

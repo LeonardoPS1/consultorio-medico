@@ -19,7 +19,8 @@ export const POST = apiHandler(async (request: NextRequest, { params }) => {
   const sessionRol = session.user?.role;
   await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
 
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined;
+  const ip =
+    request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined;
   const userAgent = request.headers.get('user-agent') || undefined;
 
   const result = await privacidadService.solicitarBaja(params.id, ip, userAgent);

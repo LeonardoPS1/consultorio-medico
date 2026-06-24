@@ -1,10 +1,14 @@
 'use client';
 
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { TooltipProps } from 'recharts';
-export interface TurnoDia { dia: string; cantidad: number; completados: number; cancelados: number; ausentes: number; }
+export interface TurnoDia {
+  dia: string;
+  cantidad: number;
+  completados: number;
+  cancelados: number;
+  ausentes: number;
+}
 
 interface Props {
   data: TurnoDia[];
@@ -58,7 +62,10 @@ export default function TurnosChart({ data }: Props) {
             tickLine={false}
             allowDecimals={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }}
+          />
           <Bar
             dataKey="completados"
             stackId="a"
@@ -92,9 +99,15 @@ export default function TurnosChart({ data }: Props) {
         </BarChart>
       </ResponsiveContainer>
       <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground border-t pt-2.5 mt-1">
-        <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-emerald-500" /> Completados</span>
-        <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-amber-500" /> Cancelados</span>
-        <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-red-500" /> Ausentes</span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-sm bg-emerald-500" /> Completados
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-sm bg-amber-500" /> Cancelados
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-sm bg-red-500" /> Ausentes
+        </span>
       </div>
     </div>
   );

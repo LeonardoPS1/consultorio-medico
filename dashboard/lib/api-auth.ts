@@ -11,7 +11,9 @@ import { fail } from '@/lib/api-handler';
 import type { Session } from 'next-auth';
 
 /** Obtiene la sesión y lanza 401 si no está autenticado. Compatible con apiHandler. */
-export async function requireAuth(): Promise<Session & { user: NonNullable<Session['user']> & { id: string } }> {
+export async function requireAuth(): Promise<
+  Session & { user: NonNullable<Session['user']> & { id: string } }
+> {
   const session = await auth();
   if (!session?.user?.id) {
     fail('No autorizado', 401);

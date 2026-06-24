@@ -15,7 +15,10 @@ export async function POST(request: Request) {
   try {
     const parsed = bulkWhatsAppSchema.safeParse(await request.json());
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.errors[0]?.message || 'Datos inválidos' }, { status: 400 });
+      return NextResponse.json(
+        { error: parsed.error.errors[0]?.message || 'Datos inválidos' },
+        { status: 400 },
+      );
     }
     const { pacienteIds, mensaje } = parsed.data;
 

@@ -54,7 +54,7 @@ export function CustomChat({ onClose }: CustomChatProps) {
         // Error al enviar — ignoramos, LiveKit se encarga
       }
     },
-    [input, send]
+    [input, send],
   );
 
   const handleKeyDown = useCallback(
@@ -64,7 +64,7 @@ export function CustomChat({ onClose }: CustomChatProps) {
         handleSend(e as unknown as React.FormEvent);
       }
     },
-    [handleSend]
+    [handleSend],
   );
 
   return (
@@ -104,9 +104,7 @@ export function CustomChat({ onClose }: CustomChatProps) {
                     {msg.from?.name || msg.from?.identity || 'Desconocido'}
                   </span>
                 )}
-                <span className="text-[10px] text-white/30">
-                  {formatTime(msg.timestamp)}
-                </span>
+                <span className="text-[10px] text-white/30">{formatTime(msg.timestamp)}</span>
               </div>
 
               {/* Burbuja */}
@@ -147,11 +145,7 @@ export function CustomChat({ onClose }: CustomChatProps) {
           title="Enviar"
           aria-label="Enviar mensaje"
         >
-          {isSending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
-          )}
+          {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </button>
       </form>
     </div>

@@ -9,11 +9,21 @@
 import { db } from '@/lib/db';
 import { safeWarn, safeLog, safeError } from '@/lib/logger';
 import {
-  medicos, pacientes, horariosAtencion, preferenciasNotificaciones,
-  usuarios, onboardingProgress, tenants,
+  medicos,
+  pacientes,
+  horariosAtencion,
+  preferenciasNotificaciones,
+  usuarios,
+  onboardingProgress,
+  tenants,
 } from '@/drizzle/schema';
 import { count, sql, eq, isNull } from 'drizzle-orm';
-import { ONBOARDING_STEPS, FALLBACK_TIPS, type OnboardingState, type AiTipResult } from './onboarding-types';
+import {
+  ONBOARDING_STEPS,
+  FALLBACK_TIPS,
+  type OnboardingState,
+  type AiTipResult,
+} from './onboarding-types';
 import { auth } from '@/lib/auth';
 import { ollamaChat } from './ollama';
 import { getOrganization, DEFAULT_ORG } from './organization-store';
@@ -57,15 +67,17 @@ export async function getOnboardingState(callerUserId?: string): Promise<Onboard
         completed.push('plan');
       }
     }
-  } catch { /* ignorar */ }
+  } catch {
+    /* ignorar */
+  }
 
   // Perfil — verificar que los datos del consultorio se hayan personalizado
   try {
     // ── 1. Chequeo local (archivo organization.json) ──
     const org = getOrganization();
     const hasCustomName = org.nombre !== DEFAULT_ORG.nombre;
-    const hasCustomPhone = org.telefono !== DEFAULT_ORG.telefono
-      || org.whatsapp !== DEFAULT_ORG.whatsapp;
+    const hasCustomPhone =
+      org.telefono !== DEFAULT_ORG.telefono || org.whatsapp !== DEFAULT_ORG.whatsapp;
 
     // ── 2. Chequeo DB (tenants) como respaldo en producción ──
     // El archivo organization.json es efímero en Docker (se pierde al redeploy),
@@ -102,9 +114,7 @@ export async function getOnboardingState(callerUserId?: string): Promise<Onboard
 
   // Horarios — al menos un horario configurado
   try {
-    const [horariosCount] = await db
-      .select({ total: count() })
-      .from(horariosAtencion);
+    const [horariosCount] = await db.select({ total: count() }).from(horariosAtencion);
     if (Number(horariosCount?.total || 0) > 0) completed.push('horarios');
   } catch (e) {
     safeWarn('[Onboarding] Error al verificar horarios:', e instanceof Error ? e.message : e);
@@ -123,9 +133,7 @@ export async function getOnboardingState(callerUserId?: string): Promise<Onboard
 
   // Notificaciones — preferencias configuradas
   try {
-    const [notifCount] = await db
-      .select({ total: count() })
-      .from(preferenciasNotificaciones);
+    const [notifCount] = await db.select({ total: count() }).from(preferenciasNotificaciones);
     if (Number(notifCount?.total || 0) > 0) completed.push('notificaciones');
   } catch (e) {
     safeWarn('[Onboarding] Error al verificar notificaciones:', e instanceof Error ? e.message : e);
@@ -208,24 +216,37 @@ async function getTenantContext(userId?: string, plan?: string): Promise<TenantC
       if (userData?.tenantNombre) {
         ctx.nombre = userData.tenantNombre;
       }
-    } catch { /* usar default */ }
+    } catch {
+      /* usar default */
+    }
   }
 
   try {
     const [mc] = await db.select({ total: count() }).from(medicos).where(isNull(medicos.deletedAt));
     ctx.medicosCount = Number(mc?.total || 0);
-  } catch { /* ignorar */ }
+  } catch {
+    /* ignorar */
+  }
 
   try {
-    const [pc] = await db.select({ total: count() }).from(pacientes).where(isNull(pacientes.deletedAt));
+    const [pc] = await db
+      .select({ total: count() })
+      .from(pacientes)
+      .where(isNull(pacientes.deletedAt));
     ctx.pacientesCount = Number(pc?.total || 0);
-  } catch { /* ignorar */ }
+  } catch {
+    /* ignorar */
+  }
 
   try {
-    const [tc] = await db.execute(sql`SELECT COUNT(*) as total FROM turnos WHERE deleted_at IS NULL`);
+    const [tc] = await db.execute(
+      sql`SELECT COUNT(*) as total FROM turnos WHERE deleted_at IS NULL`,
+    );
     const tRaw = tc as Record<string, unknown> | undefined;
     ctx.turnosCount = Number(tRaw?.total || 0);
-  } catch { /* ignorar */ }
+  } catch {
+    /* ignorar */
+  }
 
   return ctx;
 }
@@ -257,17 +278,26 @@ ANTI-JAILBREAK:
  * Acepta `callerUserId` opcional para pasarlo a getOnboardingState()
  * y evitar múltiples llamadas a auth() internas.
  */
-export async function getAiOnboardingTip(stepId: string, callerUserId?: string): Promise<AiTipResult> {
-  const fallbackTip = FALLBACK_TIPS[stepId] || 'Completa este paso siguiendo las instrucciones en pantalla.';
+export async function getAiOnboardingTip(
+  stepId: string,
+  callerUserId?: string,
+): Promise<AiTipResult> {
+  const fallbackTip =
+    FALLBACK_TIPS[stepId] || 'Completa este paso siguiendo las instrucciones en pantalla.';
 
   try {
     // Obtener plan del usuario para contexto del prompt
     let userPlan: string | undefined;
     if (callerUserId) {
       try {
-        const [u] = await db.select({ plan: usuarios.plan }).from(usuarios).where(eq(usuarios.id, callerUserId));
+        const [u] = await db
+          .select({ plan: usuarios.plan })
+          .from(usuarios)
+          .where(eq(usuarios.id, callerUserId));
         userPlan = u?.plan;
-      } catch { /* ignorar */ }
+      } catch {
+        /* ignorar */
+      }
     }
 
     const [state, ctx] = await Promise.all([
@@ -289,14 +319,19 @@ export async function getAiOnboardingTip(stepId: string, callerUserId?: string):
     });
 
     if (result.success && result.content) {
-      safeLog(`[Onboarding] Tip generado correctamente (${result.content.length} chars) desde ${result.sourceUrl}`);
+      safeLog(
+        `[Onboarding] Tip generado correctamente (${result.content.length} chars) desde ${result.sourceUrl}`,
+      );
       return { tip: result.content, success: true };
     }
 
     safeWarn(`[Onboarding] Ollama no disponible: ${result.error}. Usando fallback.`);
     return { tip: fallbackTip, success: false };
   } catch (e) {
-    safeError('[Onboarding] Error inesperado en getAiOnboardingTip:', e instanceof Error ? e.message : e);
+    safeError(
+      '[Onboarding] Error inesperado en getAiOnboardingTip:',
+      e instanceof Error ? e.message : e,
+    );
     return { tip: fallbackTip, success: false };
   }
 }
@@ -432,5 +467,8 @@ INDICACIONES PARA TU RESPUESTA:
 FORMATO: Responde en español neutro chileno, cálido, motivador. Máximo 4 oraciones. No uses markdown ni emojis.`,
   };
 
-  return prompts[stepId] || `Eres el asistente de configuración de "${consultorio}". El usuario está en el paso "${step.title}" (${stepNum}/${totalSteps}). Da una guía práctica y cálida para completar este paso en español neutro chileno. Máximo 4 oraciones. Sin emojis ni markdown.`;
+  return (
+    prompts[stepId] ||
+    `Eres el asistente de configuración de "${consultorio}". El usuario está en el paso "${step.title}" (${stepNum}/${totalSteps}). Da una guía práctica y cálida para completar este paso en español neutro chileno. Máximo 4 oraciones. Sin emojis ni markdown.`
+  );
 }

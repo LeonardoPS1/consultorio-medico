@@ -16,7 +16,7 @@ export const POST = apiHandler(async (request: Request) => {
 
   const { planId } = await parseBody(request as any, createPreferenceSchema);
 
-  if (!PAID_PLANS.includes(planId as typeof PAID_PLANS[number])) {
+  if (!PAID_PLANS.includes(planId as (typeof PAID_PLANS)[number])) {
     fail('Plan no válido');
   }
 
@@ -30,7 +30,7 @@ export const POST = apiHandler(async (request: Request) => {
   const result = await createCheckoutPreference(
     planId,
     externalReference,
-    session.user.email ?? undefined
+    session.user.email ?? undefined,
   );
 
   if (!result) {

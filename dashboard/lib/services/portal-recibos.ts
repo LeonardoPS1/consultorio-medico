@@ -90,16 +90,27 @@ export function generarHTMLRecibo(data: ReciboData): string {
   const orgAddress = process.env.ORGANIZATION_ADDRESS || 'Av. Providencia 1234, Santiago';
 
   const formatCLP = (monto: string) =>
-    Number(monto).toLocaleString('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 });
+    Number(monto).toLocaleString('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+    });
 
   const formatFecha = (d: Date) =>
-    d.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    d.toLocaleDateString('es-CL', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
   const formatFechaCorta = (d: Date) =>
     d.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
 
   const hora = data.fechaHora.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
-  const metodoPagoLabel = data.metodoPago === 'mercadopago' ? 'MercadoPago (Tarjeta)' : data.metodoPago;
+  const metodoPagoLabel =
+    data.metodoPago === 'mercadopago' ? 'MercadoPago (Tarjeta)' : data.metodoPago;
 
   const simboloMoneda = data.moneda === 'CLP' ? '$' : data.moneda;
 

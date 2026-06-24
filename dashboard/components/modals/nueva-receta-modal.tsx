@@ -160,9 +160,7 @@ export function NuevaRecetaModal({ open, onOpenChange, onSubmit }: NuevaRecetaMo
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Nueva Receta</DialogTitle>
-          <DialogDescription>
-            Prescribí un nuevo medicamento para un paciente
-          </DialogDescription>
+          <DialogDescription>Prescribí un nuevo medicamento para un paciente</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -217,25 +215,27 @@ export function NuevaRecetaModal({ open, onOpenChange, onSubmit }: NuevaRecetaMo
                         onClick={() => selectPaciente(p)}
                       >
                         <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-xs shrink-0">
-                          {p.nombre.charAt(0)}{p.apellido.charAt(0)}
+                          {p.nombre.charAt(0)}
+                          {p.apellido.charAt(0)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">
                             {p.nombre} {p.apellido}
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatPhone(p.telefono)}
-                          </p>
+                          <p className="text-xs text-muted-foreground">{formatPhone(p.telefono)}</p>
                         </div>
                       </button>
                     ))}
                   </div>
                 )}
-                {searchTerm.trim().length >= 2 && !searching && results.length === 0 && !showDropdown === false && (
-                  <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover p-3 text-center text-sm text-muted-foreground shadow-md">
-                    No se encontraron pacientes con ese nombre
-                  </div>
-                )}
+                {searchTerm.trim().length >= 2 &&
+                  !searching &&
+                  results.length === 0 &&
+                  !showDropdown === false && (
+                    <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover p-3 text-center text-sm text-muted-foreground shadow-md">
+                      No se encontraron pacientes con ese nombre
+                    </div>
+                  )}
               </div>
             )}
           </div>

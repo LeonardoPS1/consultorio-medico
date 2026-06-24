@@ -16,12 +16,16 @@ const CACHE_TTL = 86_400_000; // 24hs
  */
 export async function GET() {
   try {
-    const data = await cache.getOrSet(CACHE_KEY, async () => {
-      return await db
-        .select({ id: regiones.id, nombre: regiones.nombre, numeroRomano: regiones.numeroRomano })
-        .from(regiones)
-        .orderBy(asc(regiones.nombre));
-    }, CACHE_TTL);
+    const data = await cache.getOrSet(
+      CACHE_KEY,
+      async () => {
+        return await db
+          .select({ id: regiones.id, nombre: regiones.nombre, numeroRomano: regiones.numeroRomano })
+          .from(regiones)
+          .orderBy(asc(regiones.nombre));
+      },
+      CACHE_TTL,
+    );
 
     return NextResponse.json({ data });
   } catch (error) {

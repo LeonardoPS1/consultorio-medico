@@ -20,10 +20,7 @@ export function CTASectionButton() {
         <ChevronRight className="ml-1 h-4 w-4" />
       </Button>
 
-      <RegistroExpressModal
-        open={registroOpen}
-        onOpenChange={setRegistroOpen}
-      />
+      <RegistroExpressModal open={registroOpen} onOpenChange={setRegistroOpen} />
     </>
   );
 }

@@ -1,12 +1,5 @@
 import { AnimatedSection } from '@/components/landing/animated-section';
-import {
-  CalendarX,
-  PhoneCall,
-  BellOff,
-  FileText,
-  Receipt,
-  MessageCircleOff,
-} from 'lucide-react';
+import { CalendarX, PhoneCall, BellOff, FileText, Receipt, MessageCircleOff } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export interface PainPointItem {
@@ -81,12 +74,8 @@ export function PainPoints({
 
       <div className="container mx-auto px-4 md:px-6 py-20 md:py-28">
         <AnimatedSection className="text-center mb-14 max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            {title}
-          </h2>
-          <p className="text-muted-foreground text-base md:text-lg">
-            {subtitle}
-          </p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{title}</h2>
+          <p className="text-muted-foreground text-base md:text-lg">{subtitle}</p>
         </AnimatedSection>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
@@ -112,9 +101,7 @@ export function PainPoints({
                   {point.title}
                 </h3>
 
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {point.problem}
-                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{point.problem}</p>
               </div>
             );
           })}

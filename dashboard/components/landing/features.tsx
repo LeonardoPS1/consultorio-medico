@@ -1,5 +1,16 @@
 import { AnimatedSection } from '@/components/landing/animated-section';
-import { Calendar, MessageSquare, Syringe, BarChart3, Bot, Smartphone, Shield, Users, ChevronRight, Video } from 'lucide-react';
+import {
+  Calendar,
+  MessageSquare,
+  Syringe,
+  BarChart3,
+  Bot,
+  Smartphone,
+  Shield,
+  Users,
+  ChevronRight,
+  Video,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -77,12 +88,8 @@ export function Features({
 
       <div className="container mx-auto px-4 md:px-6 py-20 md:py-28">
         <AnimatedSection className="text-center mb-14">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            {title}
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-base">
-            {subtitle}
-          </p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{title}</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-base">{subtitle}</p>
         </AnimatedSection>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 stagger-children">
@@ -99,7 +106,9 @@ export function Features({
                 <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4 feature-icon-morph">
                   <Icon className="h-5.5 w-5.5 text-primary" />
                 </div>
-                <h3 className="font-semibold text-sm mb-2 group-hover:text-primary transition-colors duration-200">{feature.title}</h3>
+                <h3 className="font-semibold text-sm mb-2 group-hover:text-primary transition-colors duration-200">
+                  {feature.title}
+                </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">{feature.desc}</p>
               </div>
             );

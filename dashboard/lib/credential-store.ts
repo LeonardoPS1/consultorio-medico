@@ -29,7 +29,7 @@ export interface CredencialData {
   id: string;
   servicio: string;
   clave: string;
-  valor: string;        // Siempre encriptado en DB, pero acá manejamos raw
+  valor: string; // Siempre encriptado en DB, pero acá manejamos raw
   encriptado: boolean;
   etiqueta?: string;
   n8nCredentialId?: string;
@@ -42,7 +42,7 @@ export interface CredencialData {
 export interface CredencialInput {
   servicio: string;
   clave: string;
-  valor: string;        // Valor en texto plano (se encripta al guardar)
+  valor: string; // Valor en texto plano (se encripta al guardar)
   etiqueta?: string;
   n8nCredentialId?: string;
   n8nCredentialType?: string;
@@ -78,9 +78,21 @@ export const SERVICIOS_CONFIG: ServicioCredenciales[] = [
     descripcion: 'Credenciales para enviar y recibir mensajes de WhatsApp',
     icon: 'twilio',
     campos: [
-      { clave: 'account_sid', etiqueta: 'Account SID', tipo: 'text', requerido: true, placeholder: 'AC...' },
+      {
+        clave: 'account_sid',
+        etiqueta: 'Account SID',
+        tipo: 'text',
+        requerido: true,
+        placeholder: 'AC...',
+      },
       { clave: 'auth_token', etiqueta: 'Auth Token', tipo: 'password', requerido: true },
-      { clave: 'whatsapp_number', etiqueta: 'Número de WhatsApp', tipo: 'text', requerido: true, placeholder: 'whatsapp:+14155238886' },
+      {
+        clave: 'whatsapp_number',
+        etiqueta: 'Número de WhatsApp',
+        tipo: 'text',
+        requerido: true,
+        placeholder: 'whatsapp:+14155238886',
+      },
     ],
     n8nSync: true,
     n8nCredentialType: 'twilioApi',
@@ -92,8 +104,20 @@ export const SERVICIOS_CONFIG: ServicioCredenciales[] = [
     descripcion: 'Servidor de IA local con Mistral',
     icon: 'bot',
     campos: [
-      { clave: 'base_url', etiqueta: 'Base URL', tipo: 'text', requerido: true, placeholder: 'http://ollama:11434' },
-      { clave: 'modelo', etiqueta: 'Modelo', tipo: 'text', requerido: false, placeholder: 'mistral' },
+      {
+        clave: 'base_url',
+        etiqueta: 'Base URL',
+        tipo: 'text',
+        requerido: true,
+        placeholder: 'http://ollama:11434',
+      },
+      {
+        clave: 'modelo',
+        etiqueta: 'Modelo',
+        tipo: 'text',
+        requerido: false,
+        placeholder: 'mistral',
+      },
     ],
     n8nSync: true,
     n8nCredentialType: 'ollamaApi',
@@ -105,7 +129,13 @@ export const SERVICIOS_CONFIG: ServicioCredenciales[] = [
     descripcion: 'Conexión con el servidor de n8n para sincronizar credenciales',
     icon: 'globe',
     campos: [
-      { clave: 'base_url', etiqueta: 'URL Base', tipo: 'text', requerido: true, placeholder: 'https://n8n.aicorebots.com' },
+      {
+        clave: 'base_url',
+        etiqueta: 'URL Base',
+        tipo: 'text',
+        requerido: true,
+        placeholder: 'https://n8n.aicorebots.com',
+      },
       { clave: 'api_key', etiqueta: 'API Key', tipo: 'password', requerido: true },
     ],
     n8nSync: false,
@@ -117,7 +147,13 @@ export const SERVICIOS_CONFIG: ServicioCredenciales[] = [
     descripcion: 'Servidor de correo para enviar emails',
     icon: 'mail',
     campos: [
-      { clave: 'host', etiqueta: 'Host', tipo: 'text', requerido: true, placeholder: 'smtp.gmail.com' },
+      {
+        clave: 'host',
+        etiqueta: 'Host',
+        tipo: 'text',
+        requerido: true,
+        placeholder: 'smtp.gmail.com',
+      },
       { clave: 'port', etiqueta: 'Puerto', tipo: 'number', requerido: true, placeholder: '587' },
       { clave: 'user', etiqueta: 'Usuario', tipo: 'text', requerido: true },
       { clave: 'password', etiqueta: 'Contraseña', tipo: 'password', requerido: true },
@@ -133,7 +169,13 @@ export const SERVICIOS_CONFIG: ServicioCredenciales[] = [
     descripcion: 'Servidor de correo para leer emails entrantes',
     icon: 'mail',
     campos: [
-      { clave: 'host', etiqueta: 'Host', tipo: 'text', requerido: true, placeholder: 'imap.gmail.com' },
+      {
+        clave: 'host',
+        etiqueta: 'Host',
+        tipo: 'text',
+        requerido: true,
+        placeholder: 'imap.gmail.com',
+      },
       { clave: 'port', etiqueta: 'Puerto', tipo: 'number', requerido: true, placeholder: '993' },
       { clave: 'user', etiqueta: 'Usuario', tipo: 'text', requerido: true },
       { clave: 'password', etiqueta: 'Contraseña', tipo: 'password', requerido: true },
@@ -151,8 +193,20 @@ export const SERVICIOS_CONFIG: ServicioCredenciales[] = [
     campos: [
       { clave: 'host', etiqueta: 'Host', tipo: 'text', requerido: true, placeholder: 'localhost' },
       { clave: 'port', etiqueta: 'Puerto', tipo: 'number', requerido: true, placeholder: '5432' },
-      { clave: 'database', etiqueta: 'Base de Datos', tipo: 'text', requerido: true, placeholder: 'consultorio_medico' },
-      { clave: 'user', etiqueta: 'Usuario', tipo: 'text', requerido: true, placeholder: 'postgres' },
+      {
+        clave: 'database',
+        etiqueta: 'Base de Datos',
+        tipo: 'text',
+        requerido: true,
+        placeholder: 'consultorio_medico',
+      },
+      {
+        clave: 'user',
+        etiqueta: 'Usuario',
+        tipo: 'text',
+        requerido: true,
+        placeholder: 'postgres',
+      },
       { clave: 'password', etiqueta: 'Contraseña', tipo: 'password', requerido: true },
     ],
     n8nSync: true,
@@ -178,8 +232,20 @@ export const SERVICIOS_CONFIG: ServicioCredenciales[] = [
     descripcion: 'Número de WhatsApp personal para recibir alertas de urgencia',
     icon: 'phone',
     campos: [
-      { clave: 'whatsapp', etiqueta: 'WhatsApp', tipo: 'text', requerido: true, placeholder: '+56955550000' },
-      { clave: 'email', etiqueta: 'Email', tipo: 'text', requerido: false, placeholder: 'medico@consultorio.com' },
+      {
+        clave: 'whatsapp',
+        etiqueta: 'WhatsApp',
+        tipo: 'text',
+        requerido: true,
+        placeholder: '+56955550000',
+      },
+      {
+        clave: 'email',
+        etiqueta: 'Email',
+        tipo: 'text',
+        requerido: false,
+        placeholder: 'medico@consultorio.com',
+      },
     ],
     n8nSync: false,
     testable: false,
@@ -265,8 +331,14 @@ export async function getAllCredenciales(): Promise<CredencialData[]> {
         n8nCredentialId: (raw.n8n_credential_id as string) || undefined,
         n8nCredentialType: (raw.n8n_credential_type as string) || undefined,
         orden: raw.orden as number,
-        createdAt: typeof raw.created_at === 'object' ? (raw.created_at as Date).toISOString() : String(raw.created_at ?? ''),
-        updatedAt: typeof raw.updated_at === 'object' ? (raw.updated_at as Date).toISOString() : String(raw.updated_at ?? ''),
+        createdAt:
+          typeof raw.created_at === 'object'
+            ? (raw.created_at as Date).toISOString()
+            : String(raw.created_at ?? ''),
+        updatedAt:
+          typeof raw.updated_at === 'object'
+            ? (raw.updated_at as Date).toISOString()
+            : String(raw.updated_at ?? ''),
       };
     });
   }
@@ -292,9 +364,7 @@ export async function getAllCredencialesMasked(): Promise<CredencialData[]> {
 /**
  * Obtiene las credenciales agrupadas por servicio.
  */
-export async function getCredencialesByServicio(
-  servicio: string
-): Promise<Record<string, string>> {
+export async function getCredencialesByServicio(servicio: string): Promise<Record<string, string>> {
   const all = await getAllCredenciales();
   const filtered = all.filter((c) => c.servicio === servicio);
   const result: Record<string, string> = {};
@@ -309,7 +379,7 @@ export async function getCredencialesByServicio(
  */
 export async function getCredencial(
   servicio: string,
-  clave: string
+  clave: string,
 ): Promise<CredencialData | null> {
   const all = await getAllCredenciales();
   return all.find((c) => c.servicio === servicio && c.clave === clave) || null;
@@ -357,15 +427,21 @@ export async function saveCredencial(input: CredencialInput): Promise<Credencial
       n8nCredentialId: (raw.n8n_credential_id as string) || undefined,
       n8nCredentialType: (raw.n8n_credential_type as string) || undefined,
       orden: raw.orden as number,
-      createdAt: typeof raw.created_at === 'object' ? (raw.created_at as Date).toISOString() : String(raw.created_at ?? ''),
-      updatedAt: typeof raw.updated_at === 'object' ? (raw.updated_at as Date).toISOString() : String(raw.updated_at ?? ''),
+      createdAt:
+        typeof raw.created_at === 'object'
+          ? (raw.created_at as Date).toISOString()
+          : String(raw.created_at ?? ''),
+      updatedAt:
+        typeof raw.updated_at === 'object'
+          ? (raw.updated_at as Date).toISOString()
+          : String(raw.updated_at ?? ''),
     };
   }
 
   // Fallback JSON
   const data = readJSON();
   const existingIdx = data.findIndex(
-    (c) => c.servicio === input.servicio && c.clave === input.clave
+    (c) => c.servicio === input.servicio && c.clave === input.clave,
   );
 
   const record: CredencialData = {
@@ -403,8 +479,8 @@ export async function saveCredencial(input: CredencialInput): Promise<Credencial
 export async function saveServicioCredenciales(
   servicio: string,
   valores: Record<string, string>,
-  n8nCredentialId?: string | null
-): Promise<{ credenciales: CredencialData[]; n8nSyncResult?: any }> {
+  n8nCredentialId?: string | null,
+): Promise<{ credenciales: CredencialData[]; n8nSyncResult?: unknown }> {
   const config = SERVICIOS_CONFIG.find((s) => s.servicio === servicio);
   const n8nType = config?.n8nCredentialType;
 

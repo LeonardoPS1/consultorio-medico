@@ -11,17 +11,11 @@ import QRCode from 'qrcode';
  * GET /api/pacientes/[id]/certificados
  * Lista certificados del paciente (entradas de tipo 'certificado' en historial)
  */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     const sessionMedicoId = session.user?.medicoId;
@@ -46,10 +40,7 @@ export async function GET(
         );
 
       if (!entry) {
-        return NextResponse.json(
-          { error: 'Certificado no encontrado' },
-          { status: 404 },
-        );
+        return NextResponse.json({ error: 'Certificado no encontrado' }, { status: 404 });
       }
 
       // Paciente
@@ -59,10 +50,7 @@ export async function GET(
         .where(eq(pacientes.id, params.id));
 
       if (!paciente) {
-        return NextResponse.json(
-          { error: 'Paciente no encontrado' },
-          { status: 404 },
-        );
+        return NextResponse.json({ error: 'Paciente no encontrado' }, { status: 404 });
       }
 
       // Médico
@@ -118,10 +106,7 @@ export async function GET(
       .select()
       .from(historialMedico)
       .where(
-        and(
-          eq(historialMedico.pacienteId, params.id),
-          eq(historialMedico.tipo, 'certificado'),
-        ),
+        and(eq(historialMedico.pacienteId, params.id), eq(historialMedico.tipo, 'certificado')),
       )
       .orderBy(desc(historialMedico.createdAt));
 
@@ -129,10 +114,7 @@ export async function GET(
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error al obtener certificados';
     console.error('[API] Error GET certificados:', message);
-    return NextResponse.json(
-      { error: message },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -140,17 +122,11 @@ export async function GET(
  * POST /api/pacientes/[id]/certificados
  * Crea un nuevo certificado médico (como entrada en historial)
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
     let medicoId = session.user?.medicoId as string | undefined;
 
@@ -167,20 +143,14 @@ export async function POST(
     }
 
     if (!medicoId) {
-      return NextResponse.json(
-        { error: 'Debe estar autenticado como médico' },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: 'Debe estar autenticado como médico' }, { status: 401 });
     }
 
     const body = await request.json();
     const { diagnostico, cie10Codigo, reposoDesde, reposoHasta, reposoDias, indicaciones } = body;
 
     if (!diagnostico?.trim()) {
-      return NextResponse.json(
-        { error: 'El diagnóstico es obligatorio' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: 'El diagnóstico es obligatorio' }, { status: 400 });
     }
 
     // Generar ID primero para el hash
@@ -226,9 +196,6 @@ export async function POST(
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error al crear certificado';
     console.error('[API] Error POST certificados:', message);
-    return NextResponse.json(
-      { error: message },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

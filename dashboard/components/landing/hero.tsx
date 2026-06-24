@@ -103,8 +103,7 @@ export function Hero({
               transition={springTransition}
               className="text-lg sm:text-xl text-muted-foreground leading-relaxed mb-8"
             >
-              {subtitle}
-              {' '}<span className="font-semibold text-foreground">{subtitleBold}</span>
+              {subtitle} <span className="font-semibold text-foreground">{subtitleBold}</span>
             </motion.p>
 
             <motion.div
@@ -112,14 +111,23 @@ export function Hero({
               transition={{ ...springTransition, delay: 0.2 }}
               className="flex flex-col sm:flex-row gap-3"
             >
-              <Button size="lg" className="text-base h-12 px-8 gap-2 shadow-lg shadow-primary/20 shine-effect btn-press" onClick={() => setRegistroOpen(true)}>
+              <Button
+                size="lg"
+                className="text-base h-12 px-8 gap-2 shadow-lg shadow-primary/20 shine-effect btn-press"
+                onClick={() => setRegistroOpen(true)}
+              >
                 <MessageCircle className="h-4 w-4" />
                 Probar gratis
                 <ChevronRight className="h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" className="text-base h-12 px-8 gap-2 btn-press" onClick={() => {
-                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
-              }}>
+              <Button
+                size="lg"
+                variant="outline"
+                className="text-base h-12 px-8 gap-2 btn-press"
+                onClick={() => {
+                  document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 <Play className="h-4 w-4" />
                 Ver cómo funciona
               </Button>
@@ -154,7 +162,10 @@ export function Hero({
             transition={{ ...springTransition, delay: 0.15 }}
             className="relative hidden lg:block"
             onMouseMove={handleMouseMove}
-            onMouseLeave={() => { mouseX.set(0.5); mouseY.set(0.5); }}
+            onMouseLeave={() => {
+              mouseX.set(0.5);
+              mouseY.set(0.5);
+            }}
           >
             {/* Dashboard screenshot with shadow and border */}
             <motion.div
@@ -194,7 +205,9 @@ export function Hero({
               </div>
               <div>
                 <p className="text-sm font-semibold leading-tight">WhatsApp Activo</p>
-                <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">Agendando turnos en tiempo real</p>
+                <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+                  Agendando turnos en tiempo real
+                </p>
               </div>
             </motion.div>
 
@@ -210,7 +223,9 @@ export function Hero({
               </div>
               <div>
                 <p className="text-sm font-semibold leading-tight">Asistente IA</p>
-                <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">Mistral · Local · Sin costos</p>
+                <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+                  Mistral · Local · Sin costos
+                </p>
               </div>
             </motion.div>
           </motion.div>
@@ -218,10 +233,7 @@ export function Hero({
       </div>
 
       {/* Registro exprés modal */}
-      <RegistroExpressModal
-        open={registroOpen}
-        onOpenChange={setRegistroOpen}
-      />
+      <RegistroExpressModal open={registroOpen} onOpenChange={setRegistroOpen} />
     </section>
   );
 }

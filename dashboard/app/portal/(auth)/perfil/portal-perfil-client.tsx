@@ -75,8 +75,8 @@ export default function PortalPerfilClient({ paciente }: Props) {
   // Cargar regiones al montar
   useEffect(() => {
     fetch('/api/regiones')
-      .then(r => r.json())
-      .then(data => setRegiones(data.data || []))
+      .then((r) => r.json())
+      .then((data) => setRegiones(data.data || []))
       .catch(() => {});
   }, []);
 
@@ -88,8 +88,8 @@ export default function PortalPerfilClient({ paciente }: Props) {
     }
     setLoadingComunas(true);
     fetch(`/api/comunas?region_id=${regionId}`)
-      .then(r => r.json())
-      .then(data => setComunas(data.data || []))
+      .then((r) => r.json())
+      .then((data) => setComunas(data.data || []))
       .catch(() => {})
       .finally(() => setLoadingComunas(false));
   }, [regionId]);
@@ -135,9 +135,7 @@ export default function PortalPerfilClient({ paciente }: Props) {
 
       {/* Datos fijos (no editables) */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3">
-          Datos personales
-        </h2>
+        <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3">Datos personales</h2>
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <User className="h-5 w-5 text-gray-400" />
@@ -165,7 +163,9 @@ export default function PortalPerfilClient({ paciente }: Props) {
             <div className="flex items-center gap-3">
               <MapPin className="h-5 w-5 text-gray-400" />
               <div>
-                <div className="text-gray-700">{paciente.comuna}, {paciente.region}</div>
+                <div className="text-gray-700">
+                  {paciente.comuna}, {paciente.region}
+                </div>
               </div>
             </div>
           )}
@@ -195,9 +195,7 @@ export default function PortalPerfilClient({ paciente }: Props) {
         </h2>
 
         {error && (
-          <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg mb-3">
-            {error}
-          </div>
+          <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg mb-3">{error}</div>
         )}
 
         {saved && (
@@ -209,9 +207,7 @@ export default function PortalPerfilClient({ paciente }: Props) {
         <div className="space-y-4">
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
               value={email}
@@ -223,33 +219,36 @@ export default function PortalPerfilClient({ paciente }: Props) {
 
           {/* Sistema de salud */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Sistema de Salud
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sistema de Salud</label>
             <select
               value={sistemaSalud}
-              onChange={(e) => { setSistemaSalud(e.target.value); setIsapreNombre('') }}
+              onChange={(e) => {
+                setSistemaSalud(e.target.value);
+                setIsapreNombre('');
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
             >
-              {SISTEMAS_SALUD.map(s => (
-                <option key={s.value} value={s.value}>{s.label}</option>
+              {SISTEMAS_SALUD.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
               ))}
             </select>
           </div>
 
           {sistemaSalud === 'isapre' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Isapre
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Isapre</label>
               <select
                 value={isapreNombre}
                 onChange={(e) => setIsapreNombre(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
               >
                 <option value="">Selecciona una Isapre...</option>
-                {ISAPRES_CHILENAS.map(i => (
-                  <option key={i.value} value={i.value}>{i.label}</option>
+                {ISAPRES_CHILENAS.map((i) => (
+                  <option key={i.value} value={i.value}>
+                    {i.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -257,18 +256,20 @@ export default function PortalPerfilClient({ paciente }: Props) {
 
           {/* Región */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Región
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Región</label>
             <select
               value={regionId}
-              onChange={(e) => { setRegionId(e.target.value); setComunaId(''); }}
+              onChange={(e) => {
+                setRegionId(e.target.value);
+                setComunaId('');
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
             >
               <option value="">Seleccionar región...</option>
-              {regiones.map(r => (
+              {regiones.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.numeroRomano ? `${r.numeroRomano} - ` : ''}{r.nombre}
+                  {r.numeroRomano ? `${r.numeroRomano} - ` : ''}
+                  {r.nombre}
                 </option>
               ))}
             </select>
@@ -276,20 +277,18 @@ export default function PortalPerfilClient({ paciente }: Props) {
 
           {/* Comuna */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Comuna
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Comuna</label>
             <select
               value={comunaId}
               onChange={(e) => setComunaId(e.target.value)}
               disabled={!regionId || loadingComunas}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
-              <option value="">
-                {loadingComunas ? 'Cargando...' : 'Seleccionar comuna...'}
-              </option>
-              {comunas.map(c => (
-                <option key={c.id} value={c.id}>{c.nombre}</option>
+              <option value="">{loadingComunas ? 'Cargando...' : 'Seleccionar comuna...'}</option>
+              {comunas.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
+                </option>
               ))}
             </select>
           </div>
@@ -297,12 +296,8 @@ export default function PortalPerfilClient({ paciente }: Props) {
           {/* Consentimientos */}
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-gray-700">
-                Notificaciones por WhatsApp
-              </div>
-              <div className="text-xs text-gray-400">
-                Recordatorios y avisos de turnos
-              </div>
+              <div className="text-sm font-medium text-gray-700">Notificaciones por WhatsApp</div>
+              <div className="text-xs text-gray-400">Recordatorios y avisos de turnos</div>
             </div>
             <input
               type="checkbox"
@@ -314,12 +309,8 @@ export default function PortalPerfilClient({ paciente }: Props) {
 
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-gray-700">
-                Notificaciones por Email
-              </div>
-              <div className="text-xs text-gray-400">
-                Resúmenes y novedades
-              </div>
+              <div className="text-sm font-medium text-gray-700">Notificaciones por Email</div>
+              <div className="text-xs text-gray-400">Resúmenes y novedades</div>
             </div>
             <input
               type="checkbox"

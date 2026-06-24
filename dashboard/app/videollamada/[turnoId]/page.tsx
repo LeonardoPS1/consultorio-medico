@@ -7,11 +7,7 @@ import { Button } from '@/components/ui/button';
 import { VideoRoom } from '@/components/videollamada/video-room';
 import { getRoomName, LIVEKIT_URL } from '@/lib/livekit-client';
 
-export default function VideollamadaPage({
-  params,
-}: {
-  params: Promise<{ turnoId: string }>;
-}) {
+export default function VideollamadaPage({ params }: { params: Promise<{ turnoId: string }> }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);

@@ -22,12 +22,9 @@ export default function PortalError({
         </div>
 
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Algo salió mal
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Algo salió mal</h1>
           <p className="text-gray-500">
-            Ocurrió un error inesperado al cargar el portal.
-            Por favor, intentá de nuevo.
+            Ocurrió un error inesperado al cargar el portal. Por favor, intentá de nuevo.
           </p>
         </div>
 

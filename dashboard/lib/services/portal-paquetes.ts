@@ -18,15 +18,12 @@ function getMPClient(): MercadoPagoConfig | null {
 // ─── Tipos ──────────────────────────────────────────────────────
 export interface PaqueteConSuscripcion {
   paquete: typeof paquetesPortal.$inferSelect;
-  suscripcionActiva: (typeof suscripcionesPaciente.$inferSelect) | null;
+  suscripcionActiva: typeof suscripcionesPaciente.$inferSelect | null;
 }
 
 // ─── Listar paquetes activos ────────────────────────────────────
-export async function listarPaquetesActivos(): Promise<typeof paquetesPortal.$inferSelect[]> {
-  return db
-    .select()
-    .from(paquetesPortal)
-    .where(eq(paquetesPortal.activo, true));
+export async function listarPaquetesActivos(): Promise<(typeof paquetesPortal.$inferSelect)[]> {
+  return db.select().from(paquetesPortal).where(eq(paquetesPortal.activo, true));
 }
 
 // ─── Obtener suscripciones activas del paciente ─────────────────
@@ -80,7 +77,9 @@ export async function comprarPaquete(pacienteId: string, paqueteId: string) {
   if (!client) throw new Error('MercadoPago no configurado');
 
   const isDev = process.env.NODE_ENV === 'development';
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (isDev ? 'http://localhost:3000' : 'https://med.aicorebots.com');
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (isDev ? 'http://localhost:3000' : 'https://med.aicorebots.com');
   const currency = process.env.MERCADOPAGO_CURRENCY || 'CLP';
 
   const preference = new Preference(client);
@@ -116,10 +115,18 @@ export async function comprarPaquete(pacienteId: string, paqueteId: string) {
   // 3. Guardar preference ID en la suscripción
   await db
     .update(suscripcionesPaciente)
-    .set({ metadata: { ...(suscripcion.metadata as Record<string, unknown> || {}), preferenceId: result.id } })
+    .set({
+      metadata: {
+        ...((suscripcion.metadata as Record<string, unknown>) || {}),
+        preferenceId: result.id,
+      },
+    })
     .where(eq(suscripcionesPaciente.id, suscripcion.id));
 
-  safeLog('[Paquetes] Preferencia MP creada:', { suscripcionId: suscripcion.id, preferenceId: result.id });
+  safeLog('[Paquetes] Preferencia MP creada:', {
+    suscripcionId: suscripcion.id,
+    preferenceId: result.id,
+  });
 
   return {
     id: result.id,
@@ -156,10 +163,17 @@ export async function activarSuscripcion(
       metadata: { paqueteNombre: paquete.nombre, paquetePrecio: paquete.precio },
     });
 
-    safeLog('[Paquetes] Suscripción activada:', { pacienteId, paqueteId, turnos: paquete.cantidadTurnos });
+    safeLog('[Paquetes] Suscripción activada:', {
+      pacienteId,
+      paqueteId,
+      turnos: paquete.cantidadTurnos,
+    });
     return true;
   } catch (e) {
-    safeError('[Paquetes] Error activando suscripción:', e instanceof Error ? { message: e.message } : e);
+    safeError(
+      '[Paquetes] Error activando suscripción:',
+      e instanceof Error ? { message: e.message } : e,
+    );
     return false;
   }
 }
@@ -193,10 +207,7 @@ export async function consumirTurnoSuscripcion(
     .where(eq(suscripcionesPaciente.id, suscripcion.id));
 
   // Marcar turno como pagado (viene del paquete)
-  await db
-    .update(turnos)
-    .set({ pagado: true, pagadoAt: new Date() })
-    .where(eq(turnos.id, turnoId));
+  await db.update(turnos).set({ pagado: true, pagadoAt: new Date() }).where(eq(turnos.id, turnoId));
 
   // Si se acabaron los turnos, desactivar
   if (suscripcion.turnosRestantes <= 1) {

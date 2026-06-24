@@ -10,15 +10,17 @@ import {
 /**
  * POST /api/waitlist/ofertas/[id]/aceptar - Acepta una oferta de turno
  */
-export const POST = apiHandler(async (_req: NextRequest, { params }: { params: { id: string } }) => {
-  await requireAuth();
-  const result = await waitlistService.aceptar(params.id);
+export const POST = apiHandler(
+  async (_req: NextRequest, { params }: { params: { id: string } }) => {
+    await requireAuth();
+    const result = await waitlistService.aceptar(params.id);
 
-  // Notificar al médico y al paciente (fire-and-forget)
-  if (result.turno) {
-    notificarMedicoReasignacion(result.turno.id).catch(() => {});
-    notificarConfirmacionReasignacion(result.turno.id, result.turno.pacienteId).catch(() => {});
-  }
+    // Notificar al médico y al paciente (fire-and-forget)
+    if (result.turno) {
+      notificarMedicoReasignacion(result.turno.id).catch(() => {});
+      notificarConfirmacionReasignacion(result.turno.id, result.turno.pacienteId).catch(() => {});
+    }
 
-  return success(result);
-});
+    return success(result);
+  },
+);

@@ -6,13 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/select';
 import { Calendar, Filter, List, RotateCcw, Search, Users, X } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 
@@ -94,18 +88,15 @@ export function TurnosFilters({
       {/* Header con acciones */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onToggleFilters}
-          >
+          <Button variant="outline" size="sm" onClick={onToggleFilters}>
             <Filter className="h-4 w-4 mr-1" />
             Filtros
           </Button>
           {filtrosActivos > 0 && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              {filtrosActivos} filtro{filtrosActivos !== 1 ? 's' : ''} activo{filtrosActivos !== 1 ? 's' : ''}
+              {filtrosActivos} filtro{filtrosActivos !== 1 ? 's' : ''} activo
+              {filtrosActivos !== 1 ? 's' : ''}
             </div>
           )}
         </div>
@@ -136,9 +127,7 @@ export function TurnosFilters({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {/* Búsqueda */}
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">
-                  Buscar paciente
-                </Label>
+                <Label className="text-xs text-muted-foreground">Buscar paciente</Label>
                 <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
@@ -177,9 +166,7 @@ export function TurnosFilters({
                       variant={filtroMedico === m ? 'default' : 'outline'}
                       size="sm"
                       className="h-9 text-xs"
-                      onClick={() =>
-                        onFiltroMedicoChange(filtroMedico === m ? '__all__' : m)
-                      }
+                      onClick={() => onFiltroMedicoChange(filtroMedico === m ? '__all__' : m)}
                     >
                       {m}
                     </Button>
@@ -217,9 +204,7 @@ export function TurnosFilters({
 
               {/* Tipo */}
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">
-                  Tipo de consulta
-                </Label>
+                <Label className="text-xs text-muted-foreground">Tipo de consulta</Label>
                 <Select
                   value={filtroTipo === '__all__' ? '__all__' : filtroTipo}
                   onValueChange={(v) => onFiltroTipoChange(v)}
@@ -249,9 +234,7 @@ export function TurnosFilters({
                 {filtrosActivos > 0 && (
                   <>
                     {' '}
-                    de{' '}
-                    <strong className="text-foreground">{turnos.length}</strong>{' '}
-                    totales
+                    de <strong className="text-foreground">{turnos.length}</strong> totales
                   </>
                 )}
               </span>

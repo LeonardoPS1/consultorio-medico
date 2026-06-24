@@ -26,13 +26,7 @@ export const notificacionesService = {
    * Listar notificaciones de un usuario con paginación y filtros
    */
   async list(usuarioId: string, options: ListNotificacionesOptions = {}) {
-    const {
-      limit = 50,
-      offset = 0,
-      tipo,
-      soloNoLeidas = false,
-      includeDeleted = false,
-    } = options;
+    const { limit = 50, offset = 0, tipo, soloNoLeidas = false, includeDeleted = false } = options;
 
     const whereConditions = and(
       eq(notificaciones.usuarioId, usuarioId),
@@ -71,7 +65,7 @@ export const notificacionesService = {
     const noLeidasCount = await this.getNoLeidasCount(usuarioId);
 
     return {
-      data: rows.map(n => ({
+      data: rows.map((n) => ({
         id: n.id,
         usuarioId: n.usuarioId,
         titulo: n.titulo,
@@ -109,20 +103,25 @@ export const notificacionesService = {
       .returning();
 
     // Enviar push notification (fire-and-forget)
-      try {
-        const { pushService } = await import('@/lib/services/push');
-        if (pushService.isConfigured()) {
-          pushService.sendToUser({ usuarioId: input.usuarioId }, {
-            title: input.titulo,
-            body: input.descripcion || input.titulo,
-            url: input.href || '/',
-            id: nueva.id,
-            tipo: input.tipo || 'sistema',
-          }).catch(() => {});
-        }
-      } catch {
-        // No bloquear si push falla
+    try {
+      const { pushService } = await import('@/lib/services/push');
+      if (pushService.isConfigured()) {
+        pushService
+          .sendToUser(
+            { usuarioId: input.usuarioId },
+            {
+              title: input.titulo,
+              body: input.descripcion || input.titulo,
+              url: input.href || '/',
+              id: nueva.id,
+              tipo: input.tipo || 'sistema',
+            },
+          )
+          .catch(() => {});
       }
+    } catch {
+      // No bloquear si push falla
+    }
 
     return nueva;
   },
@@ -134,11 +133,13 @@ export const notificacionesService = {
     const [notif] = await db
       .select()
       .from(notificaciones)
-      .where(and(
-        eq(notificaciones.id, id),
-        eq(notificaciones.usuarioId, usuarioId),
-        sql`${notificaciones.deletedAt} IS NULL`,
-      ))
+      .where(
+        and(
+          eq(notificaciones.id, id),
+          eq(notificaciones.usuarioId, usuarioId),
+          sql`${notificaciones.deletedAt} IS NULL`,
+        ),
+      )
       .limit(1);
 
     if (!notif) notFound('Notificación no encontrada');
@@ -176,11 +177,13 @@ export const notificacionesService = {
     await db
       .update(notificaciones)
       .set({ leido: true })
-      .where(and(
-        eq(notificaciones.usuarioId, usuarioId),
-        eq(notificaciones.leido, false),
-        sql`${notificaciones.deletedAt} IS NULL`,
-      ));
+      .where(
+        and(
+          eq(notificaciones.usuarioId, usuarioId),
+          eq(notificaciones.leido, false),
+          sql`${notificaciones.deletedAt} IS NULL`,
+        ),
+      );
     return { success: true };
   },
 
@@ -203,11 +206,13 @@ export const notificacionesService = {
     const [result] = await db
       .select({ total: count() })
       .from(notificaciones)
-      .where(and(
-        eq(notificaciones.usuarioId, usuarioId),
-        eq(notificaciones.leido, false),
-        sql`${notificaciones.deletedAt} IS NULL`,
-      ));
+      .where(
+        and(
+          eq(notificaciones.usuarioId, usuarioId),
+          eq(notificaciones.leido, false),
+          sql`${notificaciones.deletedAt} IS NULL`,
+        ),
+      );
     return Number(result.total);
   },
 };

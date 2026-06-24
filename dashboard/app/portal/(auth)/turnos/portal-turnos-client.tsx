@@ -6,7 +6,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, MapPin, Video, Phone, Clock, XCircle, AlertCircle, ExternalLink, RefreshCw, Receipt } from 'lucide-react';
+import {
+  Calendar,
+  MapPin,
+  Video,
+  Phone,
+  Clock,
+  XCircle,
+  AlertCircle,
+  ExternalLink,
+  RefreshCw,
+  Receipt,
+} from 'lucide-react';
 
 interface Turno {
   id: string;
@@ -70,7 +81,9 @@ export default function PortalTurnosClient({ turnos }: Props) {
         setError('');
         if (data.reembolso) {
           if (data.reembolso.procesado) {
-            setSuccessMsg(`✅ Turno cancelado. ${data.reembolso.mensaje} — Monto reembolsado: $${Number(data.reembolso.monto).toLocaleString('es-CL')}`);
+            setSuccessMsg(
+              `✅ Turno cancelado. ${data.reembolso.mensaje} — Monto reembolsado: $${Number(data.reembolso.monto).toLocaleString('es-CL')}`,
+            );
           } else {
             setSuccessMsg(`Turno cancelado. ${data.reembolso.mensaje}`);
           }
@@ -121,14 +134,14 @@ export default function PortalTurnosClient({ turnos }: Props) {
                   <div>
                     <div className="flex items-center gap-2 text-gray-700 mb-1">
                       <Calendar className="h-4 w-4" />
-                      <span className="font-medium">{formatDate(t.fechaHora)} · {t.hora}</span>
+                      <span className="font-medium">
+                        {formatDate(t.fechaHora)} · {t.hora}
+                      </span>
                     </div>
                     <div className="text-sm text-gray-500 mb-2">
                       Dr/a. {t.medicoNombre} · {t.medicoEspecialidad}
                     </div>
-                    {t.motivo && (
-                      <div className="text-sm text-gray-600 mb-1">{t.motivo}</div>
-                    )}
+                    {t.motivo && <div className="text-sm text-gray-600 mb-1">{t.motivo}</div>}
                     <div className="flex items-center gap-3 text-xs text-gray-400">
                       <span className="flex items-center gap-1">
                         {TIPO_ICONS[t.tipoConsulta] || null}
@@ -142,18 +155,20 @@ export default function PortalTurnosClient({ turnos }: Props) {
                   </div>
 
                   <div className="flex flex-col gap-1 items-end">
-                    {!cancelados.has(t.id) && t.tipoConsulta === 'virtual' && t.linkVideollamada && (
-                      <a
-                        href={t.linkVideollamada}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
-                      >
-                        <Video className="h-3.5 w-3.5" />
-                        Ingresar
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    )}
+                    {!cancelados.has(t.id) &&
+                      t.tipoConsulta === 'virtual' &&
+                      t.linkVideollamada && (
+                        <a
+                          href={t.linkVideollamada}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                        >
+                          <Video className="h-3.5 w-3.5" />
+                          Ingresar
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
 
                     {!cancelados.has(t.id) && (
                       <div className="flex gap-1">
@@ -192,10 +207,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
           <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3">Historial</h2>
           <div className="space-y-2">
             {pasados.map((t) => (
-              <div
-                key={t.id}
-                className="bg-white/60 rounded-lg border border-gray-100 p-3"
-              >
+              <div key={t.id} className="bg-white/60 rounded-lg border border-gray-100 p-3">
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="text-sm font-medium text-gray-700">

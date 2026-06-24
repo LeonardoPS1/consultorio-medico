@@ -80,7 +80,10 @@ export default function RecuperarPage() {
                     {devInfo.resetUrl}
                   </a>
                   <p className="text-[10px] text-muted-foreground">
-                    Token: <code className="text-amber-700 dark:text-amber-400">{devInfo.token.substring(0, 20)}...</code>
+                    Token:{' '}
+                    <code className="text-amber-700 dark:text-amber-400">
+                      {devInfo.token.substring(0, 20)}...
+                    </code>
                   </p>
                 </div>
               )}
@@ -131,7 +134,10 @@ export default function RecuperarPage() {
               </Button>
 
               <div className="text-center">
-                <Link href="/login" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  href="/login"
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
                   <ArrowLeft className="h-3 w-3 inline mr-1" />
                   Volver al inicio de sesión
                 </Link>

@@ -24,7 +24,12 @@ export const GET = apiHandler(async (request: NextRequest) => {
   }
 
   const result = await consentimientosService.list({
-    limit, offset, tipo, pacienteId, medicoId, search,
+    limit,
+    offset,
+    tipo,
+    pacienteId,
+    medicoId,
+    search,
   });
   return ok(result);
 });

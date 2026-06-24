@@ -9,7 +9,12 @@
 import { db } from '@/lib/db';
 import { turnos, medicos } from '@/drizzle/schema';
 import { sql, and, gte, lte, eq } from 'drizzle-orm';
-import { publicApiHandler, jsonResponse, errorResponse, type AuthenticatedRequest } from '@/lib/public-api-handler';
+import {
+  publicApiHandler,
+  jsonResponse,
+  errorResponse,
+  type AuthenticatedRequest,
+} from '@/lib/public-api-handler';
 import { API_SCOPES } from '@/lib/public-api-auth';
 
 export const GET = publicApiHandler(
@@ -62,7 +67,9 @@ export const GET = publicApiHandler(
         estado: turnos.estado,
       })
       .from(turnos)
-      .where(and(...conditions, sql`${turnos.estado} IN ('pendiente', 'confirmada', 'en_atencion')`))
+      .where(
+        and(...conditions, sql`${turnos.estado} IN ('pendiente', 'confirmada', 'en_atencion')`),
+      )
       .orderBy(turnos.fechaHora);
 
     return jsonResponse({

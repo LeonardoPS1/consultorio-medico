@@ -6,7 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Plus, Stethoscope, Pencil, X, CalendarX, Clock, ChevronDown, Store } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { BloqueosDialog } from '@/components/config/bloqueos-dialog';
@@ -40,13 +46,62 @@ interface HorarioDia {
 }
 
 const DEFAULT_HORARIOS: Record<string, HorarioDia> = {
-  Lunes: { activo: true, inicio: '09:00', fin: '18:00', tipo: 'corrido', inicio2: null, fin2: null },
-  Martes: { activo: true, inicio: '09:00', fin: '18:00', tipo: 'corrido', inicio2: null, fin2: null },
-  Miercoles: { activo: true, inicio: '09:00', fin: '18:00', tipo: 'corrido', inicio2: null, fin2: null },
-  Jueves: { activo: true, inicio: '09:00', fin: '18:00', tipo: 'corrido', inicio2: null, fin2: null },
-  Viernes: { activo: true, inicio: '09:00', fin: '18:00', tipo: 'corrido', inicio2: null, fin2: null },
-  Sabado: { activo: true, inicio: '09:00', fin: '13:00', tipo: 'corrido', inicio2: null, fin2: null },
-  Domingo: { activo: false, inicio: '09:00', fin: '18:00', tipo: 'corrido', inicio2: null, fin2: null },
+  Lunes: {
+    activo: true,
+    inicio: '09:00',
+    fin: '18:00',
+    tipo: 'corrido',
+    inicio2: null,
+    fin2: null,
+  },
+  Martes: {
+    activo: true,
+    inicio: '09:00',
+    fin: '18:00',
+    tipo: 'corrido',
+    inicio2: null,
+    fin2: null,
+  },
+  Miercoles: {
+    activo: true,
+    inicio: '09:00',
+    fin: '18:00',
+    tipo: 'corrido',
+    inicio2: null,
+    fin2: null,
+  },
+  Jueves: {
+    activo: true,
+    inicio: '09:00',
+    fin: '18:00',
+    tipo: 'corrido',
+    inicio2: null,
+    fin2: null,
+  },
+  Viernes: {
+    activo: true,
+    inicio: '09:00',
+    fin: '18:00',
+    tipo: 'corrido',
+    inicio2: null,
+    fin2: null,
+  },
+  Sabado: {
+    activo: true,
+    inicio: '09:00',
+    fin: '13:00',
+    tipo: 'corrido',
+    inicio2: null,
+    fin2: null,
+  },
+  Domingo: {
+    activo: false,
+    inicio: '09:00',
+    fin: '18:00',
+    tipo: 'corrido',
+    inicio2: null,
+    fin2: null,
+  },
 };
 
 export function MedicosSection({ plan }: Props) {
@@ -71,27 +126,36 @@ export function MedicosSection({ plan }: Props) {
 
   useEffect(() => {
     fetch('/api/sucursales')
-      .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setSucursales(data); })
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setSucursales(data);
+      })
       .catch(() => {});
   }, []);
 
   const fetchMedicos = () => {
     fetch('/api/medicos')
-      .then(r => r.json())
-      .then(d => setMedicos(d.data || []))
+      .then((r) => r.json())
+      .then((d) => setMedicos(d.data || []))
       .catch(() => toast({ title: 'Error al cargar médicos', variant: 'destructive' }))
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchMedicos(); }, []);
+  useEffect(() => {
+    fetchMedicos();
+  }, []);
 
   const resetForm = () => {
-    setNombre(''); setEspecialidad(''); setMatricula('');
-    setWhatsapp(''); setEmail(''); setDuracion(30);
-    setShowHorarios(false); setHorarios({ ...DEFAULT_HORARIOS });
+    setNombre('');
+    setEspecialidad('');
+    setMatricula('');
+    setWhatsapp('');
+    setEmail('');
+    setDuracion(30);
+    setShowHorarios(false);
+    setHorarios({ ...DEFAULT_HORARIOS });
     setSucursalId('');
-  }; 
+  };
 
   const openEdit = (m: Medico & { horarios?: Record<string, unknown>; sucursal_id?: string }) => {
     setEditMedico(m);
@@ -126,14 +190,28 @@ export function MedicosSection({ plan }: Props) {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, especialidad, matricula: matricula || null, whatsapp: whatsapp || null, email: email || null, duracionTurnoMinutos: duracion, horarios, sucursalId: sucursalId || null }),
+        body: JSON.stringify({
+          nombre,
+          especialidad,
+          matricula: matricula || null,
+          whatsapp: whatsapp || null,
+          email: email || null,
+          duracionTurnoMinutos: duracion,
+          horarios,
+          sucursalId: sucursalId || null,
+        }),
       });
       if (!res.ok) throw new Error();
       toast({ title: editMedico ? 'Médico actualizado' : 'Médico creado' });
-      setShowNew(false); setEditMedico(null); resetForm(); fetchMedicos();
+      setShowNew(false);
+      setEditMedico(null);
+      resetForm();
+      fetchMedicos();
     } catch {
       toast({ title: 'Error al guardar', variant: 'destructive' });
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleToggleActivo = async (m: Medico) => {
@@ -160,14 +238,22 @@ export function MedicosSection({ plan }: Props) {
             </CardTitle>
             <CardDescription>Profesionales que atienden en el consultorio</CardDescription>
           </div>
-          <Button size="sm" onClick={() => { resetForm(); setShowNew(true); }}>
+          <Button
+            size="sm"
+            onClick={() => {
+              resetForm();
+              setShowNew(true);
+            }}
+          >
             <Plus className="h-4 w-4 mr-1" /> Agregar médico
           </Button>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="space-y-2">
-              {[1, 2].map(i => <div key={i} className="h-14 skeleton rounded-lg" />)}
+              {[1, 2].map((i) => (
+                <div key={i} className="h-14 skeleton rounded-lg" />
+              ))}
             </div>
           ) : medicos.length === 0 ? (
             <div className="text-center py-8">
@@ -177,7 +263,10 @@ export function MedicosSection({ plan }: Props) {
           ) : (
             <div className="space-y-2">
               {medicos.map((m) => (
-                <div key={m.id} className={`flex items-center justify-between p-3 rounded-lg ${m.activo ? 'bg-muted/30' : 'bg-muted/10 opacity-60'}`}>
+                <div
+                  key={m.id}
+                  className={`flex items-center justify-between p-3 rounded-lg ${m.activo ? 'bg-muted/30' : 'bg-muted/10 opacity-60'}`}
+                >
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-sm">
                       {m.nombre.charAt(0)}
@@ -191,14 +280,31 @@ export function MedicosSection({ plan }: Props) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">{m.duracionTurnoMinutos}min</Badge>
-                    <Badge variant={m.activo ? 'default' : 'secondary'} className="text-xs cursor-pointer" onClick={() => handleToggleActivo(m)}>
+                    <Badge variant="outline" className="text-xs">
+                      {m.duracionTurnoMinutos}min
+                    </Badge>
+                    <Badge
+                      variant={m.activo ? 'default' : 'secondary'}
+                      className="text-xs cursor-pointer"
+                      onClick={() => handleToggleActivo(m)}
+                    >
                       {m.activo ? 'Activo' : 'Inactivo'}
                     </Badge>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(m)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => openEdit(m)}
+                    >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600 hoverable:hover:text-amber-700" title="Gestionar bloqueos" onClick={() => setBloqueosMedicoId(m.id)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-amber-600 hoverable:hover:text-amber-700"
+                      title="Gestionar bloqueos"
+                      onClick={() => setBloqueosMedicoId(m.id)}
+                    >
                       <CalendarX className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -210,7 +316,16 @@ export function MedicosSection({ plan }: Props) {
       </Card>
 
       {/* Modal crear/editar médico */}
-      <Dialog open={showNew || !!editMedico} onOpenChange={(o) => { if (!o) { setShowNew(false); setEditMedico(null); resetForm(); } }}>
+      <Dialog
+        open={showNew || !!editMedico}
+        onOpenChange={(o) => {
+          if (!o) {
+            setShowNew(false);
+            setEditMedico(null);
+            resetForm();
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editMedico ? 'Editar médico' : 'Nuevo médico'}</DialogTitle>
@@ -219,30 +334,56 @@ export function MedicosSection({ plan }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Nombre *</Label>
-                <Input value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Dr. García" />
+                <Input
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  placeholder="Dr. García"
+                />
               </div>
               <div className="space-y-1">
                 <Label>Especialidad *</Label>
-                <Input value={especialidad} onChange={e => setEspecialidad(e.target.value)} placeholder="Clínica Médica" />
+                <Input
+                  value={especialidad}
+                  onChange={(e) => setEspecialidad(e.target.value)}
+                  placeholder="Clínica Médica"
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Matrícula</Label>
-                <Input value={matricula} onChange={e => setMatricula(e.target.value)} placeholder="MN 12345" />
+                <Input
+                  value={matricula}
+                  onChange={(e) => setMatricula(e.target.value)}
+                  placeholder="MN 12345"
+                />
               </div>
               <div className="space-y-1">
                 <Label>WhatsApp</Label>
-                <Input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="+569..." />
+                <Input
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="+569..."
+                />
               </div>
             </div>
             <div className="space-y-1">
               <Label>Email</Label>
-              <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="doctor@consultorio.com" />
+              <Input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="doctor@consultorio.com"
+              />
             </div>
             <div className="space-y-1">
               <Label>Duracion turno (min)</Label>
-              <Input type="number" value={duracion} onChange={e => setDuracion(Number(e.target.value))} min={10} max={120} />
+              <Input
+                type="number"
+                value={duracion}
+                onChange={(e) => setDuracion(Number(e.target.value))}
+                min={10}
+                max={120}
+              />
             </div>
             {/* Sucursal */}
             {sucursales.length > 0 && (
@@ -251,11 +392,13 @@ export function MedicosSection({ plan }: Props) {
                 <select
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                   value={sucursalId}
-                  onChange={e => setSucursalId(e.target.value)}
+                  onChange={(e) => setSucursalId(e.target.value)}
                 >
                   <option value="">Sin sucursal</option>
-                  {sucursales.map(s => (
-                    <option key={s.id} value={s.id}>{s.nombre}</option>
+                  {sucursales.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nombre}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -272,7 +415,9 @@ export function MedicosSection({ plan }: Props) {
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   Horarios de atencion
                 </span>
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${showHorarios ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`h-4 w-4 text-muted-foreground transition-transform ${showHorarios ? 'rotate-180' : ''}`}
+                />
               </button>
               {showHorarios && (
                 <div className="px-3 pb-3 space-y-2">
@@ -281,7 +426,9 @@ export function MedicosSection({ plan }: Props) {
                       <div className="flex items-center gap-2">
                         <Switch
                           checked={horarios[dia]?.activo ?? false}
-                          onCheckedChange={(v) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], activo: v } }))}
+                          onCheckedChange={(v) =>
+                            setHorarios((prev) => ({ ...prev, [dia]: { ...prev[dia], activo: v } }))
+                          }
                         />
                         <span className="text-xs w-20 shrink-0 font-medium">{dia}</span>
                       </div>
@@ -294,10 +441,17 @@ export function MedicosSection({ plan }: Props) {
                                 type="radio"
                                 name={`med-tipo-${dia}`}
                                 checked={(horarios[dia]?.tipo || 'corrido') === 'corrido'}
-                                onChange={() => setHorarios(prev => ({
-                                  ...prev,
-                                  [dia]: { ...prev[dia], tipo: 'corrido', inicio2: null, fin2: null }
-                                }))}
+                                onChange={() =>
+                                  setHorarios((prev) => ({
+                                    ...prev,
+                                    [dia]: {
+                                      ...prev[dia],
+                                      tipo: 'corrido',
+                                      inicio2: null,
+                                      fin2: null,
+                                    },
+                                  }))
+                                }
                                 className="accent-primary w-3 h-3"
                               />
                               <span className="text-[10px]">Corrido</span>
@@ -307,10 +461,17 @@ export function MedicosSection({ plan }: Props) {
                                 type="radio"
                                 name={`med-tipo-${dia}`}
                                 checked={(horarios[dia]?.tipo || 'corrido') === 'partido'}
-                                onChange={() => setHorarios(prev => ({
-                                  ...prev,
-                                  [dia]: { ...prev[dia], tipo: 'partido', inicio2: prev[dia]?.inicio2 || '15:00', fin2: prev[dia]?.fin2 || '19:00' }
-                                }))}
+                                onChange={() =>
+                                  setHorarios((prev) => ({
+                                    ...prev,
+                                    [dia]: {
+                                      ...prev[dia],
+                                      tipo: 'partido',
+                                      inicio2: prev[dia]?.inicio2 || '15:00',
+                                      fin2: prev[dia]?.fin2 || '19:00',
+                                    },
+                                  }))
+                                }
                                 className="accent-primary w-3 h-3"
                               />
                               <span className="text-[10px]">Mañana y Tarde</span>
@@ -325,14 +486,24 @@ export function MedicosSection({ plan }: Props) {
                                 type="time"
                                 className="h-7 w-20 text-xs"
                                 value={horarios[dia]?.inicio || '09:00'}
-                                onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], inicio: e.target.value } }))}
+                                onChange={(e) =>
+                                  setHorarios((prev) => ({
+                                    ...prev,
+                                    [dia]: { ...prev[dia], inicio: e.target.value },
+                                  }))
+                                }
                               />
                               <span className="text-[10px] text-muted-foreground">a</span>
                               <Input
                                 type="time"
                                 className="h-7 w-20 text-xs"
                                 value={horarios[dia]?.fin || '18:00'}
-                                onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], fin: e.target.value } }))}
+                                onChange={(e) =>
+                                  setHorarios((prev) => ({
+                                    ...prev,
+                                    [dia]: { ...prev[dia], fin: e.target.value },
+                                  }))
+                                }
                               />
                             </div>
                           )}
@@ -341,37 +512,61 @@ export function MedicosSection({ plan }: Props) {
                           {(horarios[dia]?.tipo || 'corrido') === 'partido' && (
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] text-muted-foreground w-12">Mañana</span>
+                                <span className="text-[10px] text-muted-foreground w-12">
+                                  Mañana
+                                </span>
                                 <span className="text-[10px] text-muted-foreground">de</span>
                                 <Input
                                   type="time"
                                   className="h-7 w-20 text-xs"
                                   value={horarios[dia]?.inicio || '09:00'}
-                                  onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], inicio: e.target.value } }))}
+                                  onChange={(e) =>
+                                    setHorarios((prev) => ({
+                                      ...prev,
+                                      [dia]: { ...prev[dia], inicio: e.target.value },
+                                    }))
+                                  }
                                 />
                                 <span className="text-[10px] text-muted-foreground">a</span>
                                 <Input
                                   type="time"
                                   className="h-7 w-20 text-xs"
                                   value={horarios[dia]?.fin || '13:00'}
-                                  onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], fin: e.target.value } }))}
+                                  onChange={(e) =>
+                                    setHorarios((prev) => ({
+                                      ...prev,
+                                      [dia]: { ...prev[dia], fin: e.target.value },
+                                    }))
+                                  }
                                 />
                               </div>
                               <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] text-muted-foreground w-12">Tarde</span>
+                                <span className="text-[10px] text-muted-foreground w-12">
+                                  Tarde
+                                </span>
                                 <span className="text-[10px] text-muted-foreground">de</span>
                                 <Input
                                   type="time"
                                   className="h-7 w-20 text-xs"
                                   value={horarios[dia]?.inicio2 || '15:00'}
-                                  onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], inicio2: e.target.value } }))}
+                                  onChange={(e) =>
+                                    setHorarios((prev) => ({
+                                      ...prev,
+                                      [dia]: { ...prev[dia], inicio2: e.target.value },
+                                    }))
+                                  }
                                 />
                                 <span className="text-[10px] text-muted-foreground">a</span>
                                 <Input
                                   type="time"
                                   className="h-7 w-20 text-xs"
                                   value={horarios[dia]?.fin2 || '19:00'}
-                                  onChange={(e) => setHorarios(prev => ({ ...prev, [dia]: { ...prev[dia], fin2: e.target.value } }))}
+                                  onChange={(e) =>
+                                    setHorarios((prev) => ({
+                                      ...prev,
+                                      [dia]: { ...prev[dia], fin2: e.target.value },
+                                    }))
+                                  }
                                 />
                               </div>
                             </div>
@@ -385,8 +580,20 @@ export function MedicosSection({ plan }: Props) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowNew(false); setEditMedico(null); resetForm(); }}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={saving || !nombre.trim() || !especialidad.trim()}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowNew(false);
+                setEditMedico(null);
+                resetForm();
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={saving || !nombre.trim() || !especialidad.trim()}
+            >
               {saving ? 'Guardando...' : 'Guardar'}
             </Button>
           </DialogFooter>
@@ -397,9 +604,11 @@ export function MedicosSection({ plan }: Props) {
       {bloqueosMedicoId && (
         <BloqueosDialog
           medicoId={bloqueosMedicoId}
-          medicoNombre={medicos.find(m => m.id === bloqueosMedicoId)?.nombre || 'Médico'}
+          medicoNombre={medicos.find((m) => m.id === bloqueosMedicoId)?.nombre || 'Médico'}
           open={!!bloqueosMedicoId}
-          onOpenChange={(v) => { if (!v) setBloqueosMedicoId(null); }}
+          onOpenChange={(v) => {
+            if (!v) setBloqueosMedicoId(null);
+          }}
         />
       )}
     </>

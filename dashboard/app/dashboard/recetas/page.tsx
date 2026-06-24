@@ -30,10 +30,9 @@ export const dynamic = 'force-dynamic';
 
 async function getRecetas(): Promise<RecetasApiResponse | null> {
   try {
-    const res = await fetch(
-      'http://localhost:3000/api/recetas?limit=100&offset=0',
-      { cache: 'no-store' },
-    );
+    const res = await fetch('http://localhost:3000/api/recetas?limit=100&offset=0', {
+      cache: 'no-store',
+    });
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -56,20 +55,20 @@ export default async function RecetasPage() {
       <PageHeader title="Recetas" description="Recetas activas, vencidas y renovaciones" />
 
       {/* Estadísticas (server-rendered) */}
-<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-  <div className="rounded-lg bg-emerald-500/5 p-3 text-center">
-    <p className="text-xl sm:text-2xl font-bold text-emerald-600">{activas}</p>
-    <p className="text-xs text-muted-foreground">Activas</p>
-  </div>
-  <div className="rounded-lg bg-red-500/5 p-3 text-center">
-    <p className="text-xl sm:text-2xl font-bold text-red-600">{vencidas}</p>
-    <p className="text-xs text-muted-foreground">Vencidas</p>
-  </div>
-  <div className="rounded-lg bg-blue-500/5 p-3 text-center">
-    <p className="text-xl sm:text-2xl font-bold text-blue-600">{historial}</p>
-    <p className="text-xs text-muted-foreground">Historial</p>
-  </div>
-</div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-lg bg-emerald-500/5 p-3 text-center">
+          <p className="text-xl sm:text-2xl font-bold text-emerald-600">{activas}</p>
+          <p className="text-xs text-muted-foreground">Activas</p>
+        </div>
+        <div className="rounded-lg bg-red-500/5 p-3 text-center">
+          <p className="text-xl sm:text-2xl font-bold text-red-600">{vencidas}</p>
+          <p className="text-xs text-muted-foreground">Vencidas</p>
+        </div>
+        <div className="rounded-lg bg-blue-500/5 p-3 text-center">
+          <p className="text-xl sm:text-2xl font-bold text-blue-600">{historial}</p>
+          <p className="text-xs text-muted-foreground">Historial</p>
+        </div>
+      </div>
 
       {/* Tabs + lista + acciones + modal (client) */}
       <RecetasClient initialRecetas={recetas} />
