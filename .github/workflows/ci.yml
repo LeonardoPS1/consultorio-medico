@@ -57,6 +57,9 @@ jobs:
       - name: ESLint
         run: npx next lint --max-warnings 30
 
+      - name: 📦 Dependency audit
+        run: pnpm audit --audit-level=high || echo "::warning::Vulnerabilidades encontradas - revisar 'pnpm audit'"
+
       - name: Prettier check
         run: npx prettier --check "**/*.{ts,tsx}" || echo "::warning::Format issues found - run 'pnpm format' to fix"
 
@@ -196,6 +199,16 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: 🔬 Scan Docker image for vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@0.29.0
+        with:
+          image-ref: ghcr.io/${{ github.repository }}:latest
+          format: table
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+          hide-progress: true
+          timeout: 10m
 
   migrate:
     name: DB Migrations (Drizzle)

@@ -131,6 +131,14 @@ async function main() {
   console.log(`\n📊 ${res.rows.length} tablas en public (${ok} OK, ${fail} errores):`);
   res.rows.forEach(r => console.log('  -', r.tablename));
 
+  // 🔒 Revocar CREATE en public (mínimo privilegio post-migración)
+  // El app user ya no necesita crear objetos en el schema public
+  const admin2 = new Client(PROD_CONFIG);
+  await admin2.connect();
+  await admin2.query(`REVOKE CREATE ON SCHEMA public FROM ${process.env.PG_APP_USER}`);
+  console.log('\n🔒 CREATE revocado en schema public (mínimo privilegio)');
+  await admin2.end();
+
   await client.end();
   console.log('\n✅ Done');
 }
