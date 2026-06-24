@@ -46,12 +46,15 @@
 
 ### Convenciones de Código
 - **Idioma**: Todo el texto visible al usuario en español neutro chileno (no argentino). Prompts de IA en español neutro.
-- **TypeScript estricto**: `strict: true` en tsconfig. Evitar `any`.
+- **TypeScript estricto**: `strict: true` en tsconfig. `no-explicit-any: error`. JSDoc obligatorio en funciones públicas.
+- **ESLint**: `@typescript-eslint`, `jsdoc`, `prettier`, `react`, `import/order`. Corre con typed rules.
+- **Prettier**: `pnpm run format` sobre `*.{ts,tsx}`. Single quotes, trailing commas, printWidth 100.
 - **Drizzle ORM puro**: Queries tipadas con `db.select()`, `db.insert()`, etc. Sin SQL raw excepto migraciones.
 - **API Routes**: Patrón RESTful con `apiHandler` para errores consistentes.
 - **Componentes UI**: shadcn/ui + Radix UI + Tailwind CSS. Animaciones con framer-motion.
 - **Zod**: Validación de schemas en todas las API routes.
 - **Server Actions**: Solo cuando es necesario. Preferir API Routes para operaciones complejas.
+- **Tests**: Vitest (unit) + Playwright (e2e). 175+ tests. `pnpm test` / `pnpm e2e`.
 
 ### Gestión de Sesiones (OpenCode)
 - **Memoria persistente** en `.opencode/memory/`:
@@ -605,16 +608,24 @@ consultorio-medico/
 | Dashboard | 0.5 | 512MB |
 | Ollama | — | 8GB |
 
+### Docker Compose
+- **`docker-compose.yml`** (dev): 5 servicios (dashboard, postgres, n8n, ollama) con healthchecks, NODE_ENV=development, volúmenes persistentes.
+- **`docker-compose.prod.yml`** (Swarm): rolling update (parallelism=1, delay=10s, order=start-first, failure_action=rollback). 2 réplicas dashboard, placement constraints DB/GPU, resource limits.
+
 ### Despliegue
 - **Dashboard**: Docker build multistage con `ARG CACHEBUST`
-- **Actualización**: Dokploy detecta push a `main` y redeploya automáticamente
+- **Actualización**: Dokploy detecta push a `main` y redeploya automáticamente. Rolling update vía Swarm para zero-downtime.
 - **Backup**: Script `backup-docker.sh` corre diariamente a las 3AM vía n8n WF-07
 - **Workflows n8n**: Se deployan via `scripts/deploy-workflows.js --activate`
+- **CI/CD**: GitHub Actions con 4 jobs paralelos (quality, test, build, docker) + migrate + e2e.
 
 ### Comandos de Infra
 ```bash
 # Redeploy dashboard (via Dokploy UI o SSH)
 docker service update --force med-dashboard
+
+# Deploy stack a Swarm (producción)
+make docker-stack
 
 # Backup manual
 bash /opt/consultorio/scripts/backup-encriptado.sh
@@ -624,6 +635,9 @@ docker logs $(docker ps -q -f name=n8n) --tail 100
 
 # Ver logs de dashboard
 docker logs $(docker ps -q -f name=med-dashboard) --tail 100
+
+# CI completo (local)
+make ci-full
 ```
 
 ---
