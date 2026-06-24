@@ -6,6 +6,7 @@ import { useSucursal } from '@/lib/sucursal-context';
 import { Calendar, Plus, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { PageAnimation } from '@/components/dashboard/page-animation';
+import { motion } from 'framer-motion';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
 import { toast } from '@/components/ui/use-toast';
 import {
@@ -575,6 +576,14 @@ export function TurnosClient({
 
   return (
     <PageAnimation>
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: { opacity: 0 },
+          visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+        }}
+      >
       {/* View toggle + new turno button */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
@@ -583,6 +592,7 @@ export function TurnosClient({
               variant={view === 'lista' ? 'secondary' : 'ghost'}
               size="sm"
               onClick={() => setView('lista')}
+              aria-label="Vista de lista"
             >
               <List className="h-4 w-4 md:mr-1" />
               <span className="hidden md:inline">Lista</span>
@@ -591,6 +601,7 @@ export function TurnosClient({
               variant={view === 'calendario' ? 'secondary' : 'ghost'}
               size="sm"
               onClick={() => setView('calendario')}
+              aria-label="Vista de calendario"
             >
               <Calendar className="h-4 w-4 md:mr-1" />
               <span className="hidden md:inline">Calendario</span>
@@ -609,8 +620,8 @@ export function TurnosClient({
         <>
           {/* Date navigation */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={() => navigateDate(-1)}>
+              <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={() => navigateDate(-1)} aria-label="Fecha anterior">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <h3 className="text-sm sm:text-lg font-semibold min-w-[120px] sm:min-w-[200px] text-center truncate">
@@ -630,7 +641,7 @@ export function TurnosClient({
                   })}
                 </span>
               </h3>
-              <Button variant="outline" size="icon" onClick={() => navigateDate(1)}>
+              <Button variant="outline" size="icon" onClick={() => navigateDate(1)} aria-label="Fecha siguiente">
                 <ChevronRight className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="sm" className="ml-2" onClick={goToToday}>
@@ -661,6 +672,12 @@ export function TurnosClient({
           />
 
           {/* Turnos list */}
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, y: 12 },
+              visible: { opacity: 1, y: 0 },
+            }}
+          >
           <TurnosTable
             turnosFiltrados={turnosFiltrados}
             loading={loading}
@@ -672,6 +689,7 @@ export function TurnosClient({
             onLimpiarFiltros={limpiarFiltros}
             onNewTurno={() => setShowNewTurno(true)}
           />
+          </motion.div>
         </>
       )}
 
@@ -923,6 +941,7 @@ export function TurnosClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </motion.div>
     </PageAnimation>
   );
 }

@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -155,7 +159,7 @@ export function WebhooksClient({ initialMensajes, initialTotal }: WebhooksClient
           ))}
         </select>
 
-        <input
+        <Input
           type="text"
           placeholder="Buscar por mensaje o paciente..."
           value={searchFilter}
@@ -163,16 +167,16 @@ export function WebhooksClient({ initialMensajes, initialTotal }: WebhooksClient
             setSearchFilter(e.target.value);
             setPage(1);
           }}
-          className="h-9 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 text-sm text-gray-700 dark:text-gray-300 flex-1 min-w-[200px]"
+          className="flex-1 min-w-[200px]"
         />
 
-        <button
+        <Button
           onClick={fetchLogs}
           disabled={loading}
-          className="h-9 px-4 rounded-lg bg-gray-100 dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+          variant="secondary"
         >
           {loading ? 'Cargando...' : 'Actualizar'}
-        </button>
+        </Button>
       </div>
 
       {/* Error */}
@@ -183,7 +187,7 @@ export function WebhooksClient({ initialMensajes, initialTotal }: WebhooksClient
       )}
 
       {/* Tabla */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -292,30 +296,32 @@ export function WebhooksClient({ initialMensajes, initialTotal }: WebhooksClient
 
         {/* Paginacion */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-            <p className="text-xs text-gray-500 dark:text-gray-400">{total} mensajes en total</p>
+          <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/50">
+            <p className="text-xs text-muted-foreground">{total} mensajes en total</p>
             <div className="flex gap-1">
-              <button
+              <Button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700"
+                variant="outline"
+                size="sm"
               >
                 Anterior
-              </button>
-              <span className="px-3 py-1 text-sm text-gray-500 dark:text-gray-400">
+              </Button>
+              <span className="px-3 py-1 text-sm text-muted-foreground">
                 {page} / {totalPages}
               </span>
-              <button
+              <Button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-3 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700"
+                variant="outline"
+                size="sm"
               >
                 Siguiente
-              </button>
+              </Button>
             </div>
           </div>
         )}
-      </div>
+      </Card>
     </>
   );
 }

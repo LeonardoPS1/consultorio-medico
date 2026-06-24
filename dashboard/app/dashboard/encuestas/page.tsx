@@ -91,7 +91,7 @@ function TendenciaBadge({ tendencia }: { tendencia: string }) {
   return (
     <Badge
       variant="outline"
-      className="bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+      className="bg-muted text-muted-foreground border-border"
     >
       <Minus className="h-3 w-3 mr-1" />
       Estable

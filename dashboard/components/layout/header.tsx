@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UpdateBadge } from '@/components/layout/update-badge';
 import {
   Bell,
@@ -150,13 +150,14 @@ export function Header() {
           className="lg:hidden h-10 w-10 shrink-0"
           onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
           title="Menú"
+          aria-label="Abrir menú"
         >
           <Menu className="h-5 w-5" />
         </Button>
 
         <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-2 ring-border shrink-0">
           {avatarUrl ? (
-            <img src={avatarUrl} alt="Avatar" className="h-full w-full rounded-full object-cover" />
+            <AvatarImage src={avatarUrl} alt={orgFirma || 'Avatar'} />
           ) : (
             <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
               {orgFirma.charAt(0).toUpperCase()}
@@ -257,6 +258,7 @@ export function Header() {
               size="icon"
               className="relative h-10 w-10"
               title="Notificaciones"
+              aria-label="Notificaciones"
             >
               <Bell className="h-[18px] w-[18px]" />
               {noLeidas > 0 && (
@@ -336,6 +338,7 @@ export function Header() {
                             }}
                             className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
                             title="Marcar como no leída"
+                            aria-label="Marcar como no leída"
                           >
                             <EyeOff className="h-3 w-3 text-muted-foreground/60" />
                           </button>
@@ -347,6 +350,7 @@ export function Header() {
                             }}
                             className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
                             title="Marcar como leída"
+                            aria-label="Marcar como leída"
                           >
                             <Eye className="h-3 w-3 text-muted-foreground/60" />
                           </button>
@@ -358,6 +362,7 @@ export function Header() {
                           }}
                           className="h-6 w-6 flex items-center justify-center rounded hover:bg-destructive/10 transition-colors"
                           title="Eliminar"
+                          aria-label="Eliminar notificación"
                         >
                           <Trash2 className="h-3 w-3 text-destructive/60" />
                         </button>
@@ -391,7 +396,7 @@ export function Header() {
         {/* Perfil */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
+            <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" aria-label="Menú de perfil">
               <Avatar className="h-8 w-8">
                 {avatarUrl ? (
                   <img

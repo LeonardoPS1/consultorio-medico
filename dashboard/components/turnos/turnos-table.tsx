@@ -223,10 +223,10 @@ function TurnoRow({
         {/* Mobile: dropdown */}
         <div className="md:hidden">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Más acciones">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               {(turno.estado === 'pendiente' || turno.estado === 'confirmada') && (
@@ -264,6 +264,7 @@ function TurnoRow({
           size="icon"
           className="h-8 w-8 text-muted-foreground hoverable:hover:text-[#4285F4]"
           title="Agregar a Google Calendar"
+          aria-label="Agregar a Google Calendar"
           onClick={(e) => {
             e.stopPropagation();
             const url = generateGCalUrl({
@@ -290,6 +291,7 @@ function TurnoRow({
           size="icon"
           className="h-8 w-8 text-muted-foreground hoverable:hover:text-primary"
           title="Descargar .ics (Outlook, Apple)"
+          aria-label="Descargar .ics"
           onClick={(e) => {
             e.stopPropagation();
             descargarICS({
@@ -312,6 +314,7 @@ function TurnoRow({
             size="icon"
             className="h-8 w-8 text-emerald-600 hoverable:hover:text-emerald-700"
             title="Enviar encuesta de satisfacción"
+            aria-label="Enviar encuesta de satisfacción"
             onClick={(e) => {
               e.stopPropagation();
               const msg = encodeURIComponent(
@@ -357,7 +360,7 @@ export function TurnosTable({
             onNewTurno={onNewTurno}
           />
         ) : (
-          <div className="divide-y">
+          <div className="divide-y" role="list" aria-label="Lista de turnos">
             {turnosFiltrados
               .sort((a, b) => a.hora.localeCompare(b.hora))
               .map((turno) => (

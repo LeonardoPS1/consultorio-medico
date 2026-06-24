@@ -216,7 +216,7 @@ export default function TelemedicinaPage() {
                 type="date"
                 value={fechaDesde}
                 onChange={(e) => setFechaDesde(e.target.value)}
-                className="h-9 px-3 text-sm border rounded-lg bg-white dark:bg-gray-800"
+                className="h-9 px-3 text-sm border rounded-lg bg-background"
                 title="Fecha desde"
               />
               <span className="text-muted-foreground">a</span>
@@ -224,7 +224,7 @@ export default function TelemedicinaPage() {
                 type="date"
                 value={fechaHasta}
                 onChange={(e) => setFechaHasta(e.target.value)}
-                className="h-9 px-3 text-sm border rounded-lg bg-white dark:bg-gray-800"
+                className="h-9 px-3 text-sm border rounded-lg bg-background"
                 title="Fecha hasta"
               />
             </div>

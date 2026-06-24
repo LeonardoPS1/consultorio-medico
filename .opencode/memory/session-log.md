@@ -68,6 +68,12 @@
 - **pnpm run build**: 0 errores ✅ (Compiled successfully + 150/150 static pages + SW generated)
 - **Commit**: 44d4b76, push a origin/main ✅
 
+## 24/06 — Perf: Índice pacientes.rut + server pages sin fetch localhost (d968cfc) ✅
+- **Índice RUT**: agregado `idx_pacientes_rut` al schema Drizzle + migration 0040. Ya existía en migración 0007 pero faltaba en el schema oficial.
+- **lib/server-page-data.ts**: nuevo helper que llama services directo desde server components, evitando `fetch('http://localhost:3000/api/...')` con round-trip HTTP + serialización JSON.
+- **3 server pages optimizadas**: turnos, pacientes, recetas ahora usan `getServer*()` helpers. Los services ya tienen cache in-memory (10-30s TTL) y los helpers manejan `auth()` para scoping por médico.
+- **Build**: 0 errores ✅. Commit d968cfc, push a origin/main ✅
+
 ## 24/06 — Seguridad: Webhooks HMAC + Docker Secrets + CSP + Rate limiting + PostgreSQL + CI (12a9e75) ✅
 - **Item 1**: verify-webhook-secret.ts con timingSafeEqual. 3 endpoints migrados (n8n-alert, anonimizar, waitlist). 14+13 tests.
 - **Item 2**: lib/secrets.ts (Docker secrets dual). docker-compose.prod.yml: secrets external. livekit Redis password a env var.

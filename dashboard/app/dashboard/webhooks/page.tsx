@@ -1,5 +1,6 @@
 import { WebhooksClient } from './webhooks-client';
 import { PageHeader } from '@/components/page-header';
+import { Card, CardContent } from '@/components/ui/card';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -73,15 +74,14 @@ function KpiCards({ total, porEstado }: { total: number; porEstado: Record<strin
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {kpis.map((kpi) => (
-        <div
-          key={kpi.label}
-          className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
-        >
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            {kpi.label}
-          </p>
-          <p className={`text-2xl font-bold mt-1 ${kpi.color}`}>{kpi.value}</p>
-        </div>
+        <Card key={kpi.label}>
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              {kpi.label}
+            </p>
+            <p className={`text-2xl font-bold mt-1 ${kpi.color}`}>{kpi.value}</p>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );

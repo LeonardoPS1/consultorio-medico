@@ -171,7 +171,7 @@ export default function Setup2FA() {
         <CardContent className="space-y-6">
           <div className="flex justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qrCode} alt="Código QR para 2FA" className="w-48 h-48 border rounded-lg" />
+            <img src={qrCode} alt="Código QR para 2FA - Escanea con tu app de autenticación" className="w-48 h-48 border rounded-lg" aria-label="Código QR para configuración de doble factor de autenticación" />
           </div>
 
           <div className="space-y-2">

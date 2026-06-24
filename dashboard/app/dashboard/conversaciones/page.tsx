@@ -231,6 +231,7 @@ export default function ConversacionesPage() {
                   className="pl-9 h-9"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  aria-label="Buscar conversación"
                 />
               </div>
               <div className="flex gap-1">
@@ -495,6 +496,7 @@ export default function ConversacionesPage() {
                   <Button
                     type="submit"
                     disabled={!mensajeInput.trim() || enviarMensajeMutation.isPending}
+                    aria-label="Enviar mensaje"
                   >
                     {enviarMensajeMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

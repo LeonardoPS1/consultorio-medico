@@ -219,6 +219,7 @@ export function Sidebar() {
             size="icon"
             className="absolute top-2 right-2 h-9 w-9 lg:hidden text-sidebar-foreground/60 hoverable:hover:text-sidebar-foreground"
             onClick={closeMobile}
+            aria-label="Cerrar menú"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -226,7 +227,7 @@ export function Sidebar() {
 
         {/* Navegación */}
         <ScrollArea className="flex-1 py-4">
-          <nav className="space-y-1 px-2">
+          <nav className="space-y-1 px-2" aria-label="Navegación principal">
             {status === 'loading' ? (
               <>
                 {/* Skeletons mientras carga la sesión — evita que los links apunten a config */}
@@ -292,6 +293,7 @@ export function Sidebar() {
                       'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
                       !isActive && 'hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                     )}
+                    aria-current={isActive ? 'page' : undefined}
                     title={collapsed ? item.title : undefined}
                   >
                     <Icon className="h-5 w-5 shrink-0" />
@@ -332,6 +334,12 @@ export function Sidebar() {
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
+                  aria-current={
+                    pathname === '/dashboard/admin/sistema' ||
+                    pathname.startsWith('/dashboard/admin/sistema/')
+                      ? 'page'
+                      : undefined
+                  }
                   title={collapsed ? 'Sistema' : undefined}
                 >
                   <Settings className="h-5 w-5 shrink-0" />
@@ -346,6 +354,7 @@ export function Sidebar() {
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
+                  aria-current={pathname === '/dashboard/admin/tenants' ? 'page' : undefined}
                   title={collapsed ? 'Tenants' : undefined}
                 >
                   <Building2 className="h-5 w-5 shrink-0" />
@@ -360,6 +369,7 @@ export function Sidebar() {
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
+                  aria-current={pathname === '/dashboard/admin/sucursales' ? 'page' : undefined}
                   title={collapsed ? 'Sucursales' : undefined}
                 >
                   <Store className="h-5 w-5 shrink-0" />
@@ -374,6 +384,7 @@ export function Sidebar() {
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
+                  aria-current={pathname === '/dashboard/admin/auditoria' ? 'page' : undefined}
                   title={collapsed ? 'Auditoría' : undefined}
                 >
                   <ScrollText className="h-5 w-5 shrink-0" />
@@ -388,6 +399,7 @@ export function Sidebar() {
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
+                  aria-current={pathname === '/dashboard/admin/backups' ? 'page' : undefined}
                   title={collapsed ? 'Backups' : undefined}
                 >
                   <HardDrive className="h-5 w-5 shrink-0" />
@@ -403,6 +415,12 @@ export function Sidebar() {
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
+                  aria-current={
+                    pathname === '/dashboard/admin/n8n' ||
+                    pathname.startsWith('/dashboard/admin/n8n/')
+                      ? 'page'
+                      : undefined
+                  }
                   title={collapsed ? 'n8n' : undefined}
                 >
                   <span className="relative inline-flex shrink-0">
@@ -421,6 +439,12 @@ export function Sidebar() {
                       ? 'nav-active-indicator bg-sidebar-accent text-white'
                       : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
                   )}
+                  aria-current={
+                    pathname === '/dashboard/webhooks' ||
+                    pathname.startsWith('/dashboard/webhooks/')
+                      ? 'page'
+                      : undefined
+                  }
                   title={collapsed ? 'Webhooks' : undefined}
                 >
                   <Webhook className="h-5 w-5 shrink-0" />
@@ -461,6 +485,7 @@ export function Sidebar() {
           size="icon"
           className="hidden lg:flex absolute -right-3 top-20 h-6 w-6 rounded-full border bg-sidebar text-sidebar-foreground hoverable:hover:bg-sidebar-accent"
           onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? 'Expandir barra lateral' : 'Contraer barra lateral'}
         >
           {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
         </Button>
