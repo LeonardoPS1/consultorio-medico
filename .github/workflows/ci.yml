@@ -61,10 +61,13 @@ jobs:
         run: pnpm audit --audit-level=high || echo "::warning::Vulnerabilidades encontradas - revisar 'pnpm audit'"
 
       - name: Prettier check
-        run: npx prettier --check "**/*.{ts,tsx}" || echo "::warning::Format issues found - run 'pnpm format' to fix"
+          run: npx prettier --check "**/*.{ts,tsx}" || echo "::warning::Format issues found - run 'pnpm format' to fix"
 
       - name: TypeScript check
         run: npx tsc --noEmit
+
+      - name: 🔍 Validate n8n workflows
+        run: node scripts/validate-n8n-workflows.mjs
 
   test:
     name: Tests
