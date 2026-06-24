@@ -93,9 +93,9 @@ export const POST = apiHandler(async (request: NextRequest) => {
   if (!paciente) {
     paciente = await createPaciente({
       telefono: body.telefono,
-      nombre: body.nombre,
-      apellido: body.apellido,
-      email: body.email,
+      nombre: body.nombre ?? '',
+      apellido: body.apellido ?? '',
+      email: body.email ?? undefined,
       canalPreferido: body.canal || 'whatsapp',
       consentimientoWhatsapp: true,
       consentimientoEmail: false,

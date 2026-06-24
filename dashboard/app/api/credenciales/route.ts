@@ -56,7 +56,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
   }
 
   // Agrupar por servicio para facilitar el frontend
-  const grouped: Record<string, unknown> = {};
+  const grouped: Record<string, { servicio: string; config: unknown; credenciales: Record<string, string | null> }> = {};
   for (const c of credenciales) {
     if (!grouped[c.servicio]) {
       const config = SERVICIOS_CONFIG.find((s) => s.servicio === c.servicio);

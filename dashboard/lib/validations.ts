@@ -261,7 +261,7 @@ export const onboardingStepSchema = z.object({
 export const createNotificacionSchema = z.object({
   titulo: z.string().min(1, 'Título es obligatorio'),
   mensaje: z.string().min(1, 'Mensaje es obligatorio'),
-  tipo: z.enum(['info', 'alerta', 'error', 'success']).optional().default('info'),
+  tipo: z.enum(['turno', 'mensaje', 'receta', 'urgencia', 'sistema']).optional().default('sistema'),
   usuarioId: z.string().uuid().optional().nullable(),
   pacienteId: z.string().uuid().optional().nullable(),
 });

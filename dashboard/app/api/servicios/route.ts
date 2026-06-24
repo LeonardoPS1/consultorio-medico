@@ -32,10 +32,10 @@ export const POST = apiHandler(async (request: NextRequest) => {
       nombre: body.nombre,
       descripcion: body.descripcion ?? null,
       duracionMinutos: body.duracionMinutos,
-      precio: body.precio ?? null,
-      medicoId: body.medicoId ?? null,
+      precio: body.precio?.toString() ?? null,
+      medicoId: body.medicoId ?? '',
       activo: true,
-    })
+    } as typeof servicios.$inferInsert)
     .returning();
 
   return created(nuevo);

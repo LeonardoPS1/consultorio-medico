@@ -22,13 +22,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       whereConditions = and(
         whereConditions,
         sql`${bloqueosAgenda.fechaFin} >= ${desde}::timestamptz`,
-      );
+      )!;
     }
     if (hasta) {
       whereConditions = and(
         whereConditions,
         sql`${bloqueosAgenda.fechaInicio} <= ${hasta}::timestamptz`,
-      );
+      )!;
     }
 
     const bloqueos = await db
