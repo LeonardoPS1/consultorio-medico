@@ -117,14 +117,14 @@ export default function PortalNav() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-white dark:from-gray-950 to-transparent z-10 flex items-center justify-start pl-1 pointer-events-none"
+              className="absolute left-0 top-0 bottom-0 w-14 bg-gradient-to-r from-white dark:from-gray-950 to-transparent z-10 flex items-center justify-start pl-1.5 pointer-events-none"
             >
               <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground/40" />
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div ref={scrollRef} className="flex overflow-x-auto scrollbar-none gap-0.5 px-1.5 py-2">
+        <div ref={scrollRef} className="flex overflow-x-auto scrollbar-none gap-3 px-6 py-2">
           {navItems.map((item) => {
             const active = isActive(item.href);
             return (
@@ -134,7 +134,8 @@ export default function PortalNav() {
                 data-active={active ? 'true' : undefined}
                 className={`
                   relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[60px] shrink-0
-                  transition-all duration-150
+                  transition-all duration-200
+                  active:scale-95
                   ${active ? 'text-primary' : 'text-muted-foreground/60 hover:text-foreground/70 hover:bg-accent/50'}
                 `}
               >
@@ -146,13 +147,13 @@ export default function PortalNav() {
                   />
                 )}
                 <div className="relative z-[1]">
-                  <item.icon className={`h-[18px] w-[18px] ${active ? 'drop-shadow-sm' : ''}`} />
-                  {/* Active dot indicator */}
+                  <item.icon className={`h-[18px] w-[18px] ${active ? 'drop-shadow-sm scale-110' : ''} transition-all duration-200`} />
+                  {/* Active underline indicator */}
                   {active && (
                     <motion.div
-                      layoutId="nav-dot"
-                      className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
-                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                      layoutId="nav-underline"
+                      className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-4 h-[3px] rounded-full bg-primary"
+                      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
                     />
                   )}
                 </div>
@@ -168,7 +169,8 @@ export default function PortalNav() {
             href="/portal/notificaciones"
             className={`
               relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[60px] shrink-0
-              transition-all duration-150
+              transition-all duration-200
+              active:scale-95
               ${pathname === '/portal/notificaciones' ? 'text-primary' : 'text-muted-foreground/60 hover:text-foreground/70 hover:bg-accent/50'}
             `}
           >
@@ -180,14 +182,15 @@ export default function PortalNav() {
               />
             )}
             <div className="relative z-[1]">
-              <Bell className="h-[18px] w-[18px]" />
+              <Bell className={`h-[18px] w-[18px] ${pathname === '/portal/notificaciones' ? 'scale-110' : ''} transition-all duration-200`} />
               <AnimatePresence>
                 {unreadCount > 0 && (
                   <motion.span
                     key={unreadCount}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                     className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 shadow-sm"
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -201,7 +204,7 @@ export default function PortalNav() {
           {/* Logout */}
           <button
             onClick={handleLogout}
-            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[60px] shrink-0 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/5 transition-all duration-150"
+            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[60px] shrink-0 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/5 transition-all duration-200 active:scale-95"
           >
             <LogOut className="h-[18px] w-[18px]" />
             <span className="text-[10px] font-medium leading-tight">Salir</span>
@@ -215,7 +218,7 @@ export default function PortalNav() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white dark:from-gray-950 to-transparent z-10 flex items-center justify-end pr-1 pointer-events-none"
+              className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-white dark:from-gray-950 to-transparent z-10 flex items-center justify-end pr-1.5 pointer-events-none"
             >
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40" />
             </motion.div>

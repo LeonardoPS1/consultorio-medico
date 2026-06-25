@@ -17,7 +17,7 @@ export const metadata = {
 export default function PortalAuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="min-h-screen bg-gradient-to-b from-teal-50/30 via-background to-white dark:from-teal-950/10 dark:via-background dark:to-gray-950"
+      className="min-h-screen bg-gradient-to-b from-violet-50/20 via-background to-white dark:from-violet-950/8 dark:via-background dark:to-gray-950"
       style={{ transition: 'background 300ms var(--ease-out)' }}
     >
       {/* Header premium */}

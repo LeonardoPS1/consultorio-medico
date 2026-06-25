@@ -67,6 +67,10 @@ const BENEFICIOS = [
   },
 ];
 
+/* ─── Aicore Brand Colors ────────────────────────────── */
+// Paleta profesional oscura: violeta profundo → púrpura
+// Refleja el branding moderno de Aicore (tech + IA)
+
 /* ─── Componente principal ─────────────────────────────── */
 export default function PortalLogin() {
   const [telefono, setTelefono] = useState('');
@@ -190,13 +194,13 @@ export default function PortalLogin() {
 
   /* ─── Landing / Form ─────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0d6d4a] via-[#0f7c54] to-[#0a5c3c] flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#1a0533] via-[#2d0a4a] to-[#0f0220] flex flex-col relative overflow-hidden">
       {/* Decoración de fondo — orbes sutiles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-white/8 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-emerald-300/10 blur-3xl" />
-        <div className="absolute top-1/3 -left-20 w-60 h-60 rounded-full bg-teal-300/8 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.06)_0%,transparent_70%)]" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-violet-500/10 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-purple-600/15 blur-3xl" />
+        <div className="absolute top-1/3 -left-20 w-60 h-60 rounded-full bg-indigo-500/8 blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(120,60,255,0.08)_0%,transparent_70%)]" />
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-8 text-center relative z-10">
@@ -257,7 +261,7 @@ export default function PortalLogin() {
                 <Button
                   onClick={() => setMostrarForm(true)}
                   size="lg"
-                  className="w-full h-12 text-base bg-white text-emerald-800 hover:bg-white/90 shadow-lg shadow-black/20 hover:shadow-black/30 transition-all duration-200"
+                  className="w-full h-12 text-base bg-white text-violet-900 hover:bg-white/90 shadow-lg shadow-black/20 hover:shadow-black/30 transition-all duration-200"
                 >
                   Ingresar al Portal
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -277,7 +281,7 @@ export default function PortalLogin() {
                 animate="animate"
                 exit="exit"
               >
-                <div className="bg-white rounded-2xl shadow-2xl shadow-emerald-900/20 p-6 text-left">
+                <div className="bg-white rounded-2xl shadow-2xl shadow-violet-900/20 p-6 text-left">
                   <h2 className="text-xl font-bold text-gray-900 mb-1">Ingresa al Portal</h2>
                   <p className="text-sm text-gray-500 mb-6">Recibe un enlace mágico por WhatsApp</p>
 
