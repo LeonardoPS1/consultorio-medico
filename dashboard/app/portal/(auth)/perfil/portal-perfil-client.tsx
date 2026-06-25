@@ -131,39 +131,39 @@ export default function PortalPerfilClient({ paciente }: Props) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Mi Perfil</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-6">Mi Perfil</h1>
 
       {/* Datos fijos (no editables) */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3">Datos personales</h2>
+      <div className="bg-card rounded-xl border border-border/50 p-4 mb-6">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Datos personales</h2>
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <User className="h-5 w-5 text-gray-400" />
+            <User className="h-5 w-5 text-muted-foreground/50" />
             <div>
-              <div className="font-medium text-gray-900">
+              <div className="font-medium text-foreground">
                 {paciente.nombre} {paciente.apellido}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Phone className="h-5 w-5 text-gray-400" />
+            <Phone className="h-5 w-5 text-muted-foreground/50" />
             <div>
-              <div className="text-gray-700">{paciente.telefono}</div>
+              <div className="text-foreground/90">{paciente.telefono}</div>
             </div>
           </div>
           {paciente.rut && (
             <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-gray-400" />
+              <Shield className="h-5 w-5 text-muted-foreground/50" />
               <div>
-                <div className="text-gray-700">RUT: {paciente.rut}</div>
+                <div className="text-foreground/90">RUT: {paciente.rut}</div>
               </div>
             </div>
           )}
           {paciente.region && paciente.comuna && (
             <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-gray-400" />
+              <MapPin className="h-5 w-5 text-muted-foreground/50" />
               <div>
-                <div className="text-gray-700">
+                <div className="text-foreground/90">
                   {paciente.comuna}, {paciente.region}
                 </div>
               </div>
@@ -171,17 +171,17 @@ export default function PortalPerfilClient({ paciente }: Props) {
           )}
           {paciente.sistemaSalud && (
             <div className="flex items-center gap-3">
-              <Heart className="h-5 w-5 text-gray-400" />
+              <Heart className="h-5 w-5 text-muted-foreground/50" />
               <div>
-                <div className="text-gray-700 capitalize">{paciente.sistemaSalud}</div>
+                <div className="text-foreground/90 capitalize">{paciente.sistemaSalud}</div>
               </div>
             </div>
           )}
           {paciente.obraSocial && (
             <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-gray-400" />
+              <Shield className="h-5 w-5 text-muted-foreground/50" />
               <div>
-                <div className="text-gray-700">{paciente.obraSocial}</div>
+                <div className="text-foreground/90">{paciente.obraSocial}</div>
               </div>
             </div>
           )}
@@ -189,17 +189,17 @@ export default function PortalPerfilClient({ paciente }: Props) {
       </div>
 
       {/* Datos editables */}
-      <form onSubmit={handleSave} className="bg-white rounded-xl border border-gray-200 p-4">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3">
+      <form onSubmit={handleSave} className="bg-card rounded-xl border border-border/50 p-4">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           Configuración y contacto
         </h2>
 
         {error && (
-          <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg mb-3">{error}</div>
+          <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg mb-3">{error}</div>
         )}
 
         {saved && (
-          <div className="text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg mb-3">
+          <div className="text-sm text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg mb-3">
             Cambios guardados correctamente
           </div>
         )}
@@ -207,26 +207,26 @@ export default function PortalPerfilClient({ paciente }: Props) {
         <div className="space-y-4">
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-foreground/80 mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-border/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm"
               placeholder="tu@email.com"
             />
           </div>
 
           {/* Sistema de salud */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Sistema de Salud</label>
+            <label className="block text-sm font-medium text-foreground/80 mb-1">Sistema de Salud</label>
             <select
               value={sistemaSalud}
               onChange={(e) => {
                 setSistemaSalud(e.target.value);
                 setIsapreNombre('');
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
+              className="w-full px-3 py-2 border border-border/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm bg-white"
             >
               {SISTEMAS_SALUD.map((s) => (
                 <option key={s.value} value={s.value}>
@@ -238,11 +238,11 @@ export default function PortalPerfilClient({ paciente }: Props) {
 
           {sistemaSalud === 'isapre' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Isapre</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-1">Isapre</label>
               <select
                 value={isapreNombre}
                 onChange={(e) => setIsapreNombre(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
+                className="w-full px-3 py-2 border border-border/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm bg-white"
               >
                 <option value="">Selecciona una Isapre...</option>
                 {ISAPRES_CHILENAS.map((i) => (
@@ -256,14 +256,14 @@ export default function PortalPerfilClient({ paciente }: Props) {
 
           {/* Región */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Región</label>
+            <label className="block text-sm font-medium text-foreground/80 mb-1">Región</label>
             <select
               value={regionId}
               onChange={(e) => {
                 setRegionId(e.target.value);
                 setComunaId('');
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
+              className="w-full px-3 py-2 border border-border/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm bg-white"
             >
               <option value="">Seleccionar región...</option>
               {regiones.map((r) => (
@@ -277,12 +277,12 @@ export default function PortalPerfilClient({ paciente }: Props) {
 
           {/* Comuna */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Comuna</label>
+            <label className="block text-sm font-medium text-foreground/80 mb-1">Comuna</label>
             <select
               value={comunaId}
               onChange={(e) => setComunaId(e.target.value)}
               disabled={!regionId || loadingComunas}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-border/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm bg-white disabled:bg-muted disabled:cursor-not-allowed"
             >
               <option value="">{loadingComunas ? 'Cargando...' : 'Seleccionar comuna...'}</option>
               {comunas.map((c) => (
@@ -296,39 +296,39 @@ export default function PortalPerfilClient({ paciente }: Props) {
           {/* Consentimientos */}
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-gray-700">Notificaciones por WhatsApp</div>
-              <div className="text-xs text-gray-400">Recordatorios y avisos de turnos</div>
+              <div className="text-sm font-medium text-foreground/80">Notificaciones por WhatsApp</div>
+              <div className="text-xs text-muted-foreground/70">Recordatorios y avisos de turnos</div>
             </div>
             <input
               type="checkbox"
               checked={consentimientoWhatsapp}
               onChange={(e) => setConsentimientoWhatsapp(e.target.checked)}
-              className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-5 w-5 rounded border-border/50 text-primary focus:ring-primary/30"
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-gray-700">Notificaciones por Email</div>
-              <div className="text-xs text-gray-400">Resúmenes y novedades</div>
+              <div className="text-sm font-medium text-foreground/80">Notificaciones por Email</div>
+              <div className="text-xs text-muted-foreground/70">Resúmenes y novedades</div>
             </div>
             <input
               type="checkbox"
               checked={consentimientoEmail}
               onChange={(e) => setConsentimientoEmail(e.target.checked)}
-              className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-5 w-5 rounded border-border/50 text-primary focus:ring-primary/30"
             />
           </div>
 
           {/* Push Notifications */}
-          <div className="pt-2 border-t border-gray-100">
+          <div className="pt-2 border-t border-border/30">
             <PushNotificationToggle />
           </div>
 
           <button
             type="submit"
             disabled={saving}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold py-2.5 rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-all duration-200 active:scale-[0.98]"
           >
             {saving ? (
               <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

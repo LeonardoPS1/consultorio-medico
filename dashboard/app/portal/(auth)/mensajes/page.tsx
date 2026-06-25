@@ -103,7 +103,7 @@ export default function PortalChatPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -111,20 +111,20 @@ export default function PortalChatPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] max-w-lg mx-auto">
       {/* Header */}
-      <div className="bg-white px-4 py-3 border-b border-gray-200">
-        <h1 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-blue-500" />
+      <div className="bg-card px-4 py-3 border-b border-border/50">
+        <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <MessageSquare className="h-5 w-5 text-primary" />
           Mensajes
         </h1>
-        <p className="text-xs text-gray-500 mt-0.5">Consultá con el equipo médico por este canal</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Consultá con el equipo médico por este canal</p>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
-        {error && <div className="text-center text-red-500 text-sm py-8">{error}</div>}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-muted/30">
+        {error && <div className="text-center text-destructive text-sm py-8">{error}</div>}
 
         {mensajes.length === 0 && !error && (
-          <div className="text-center text-gray-400 py-12">
+          <div className="text-center text-muted-foreground/70 py-12">
             <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
             <p className="text-sm">No hay mensajes todavía</p>
             <p className="text-xs mt-1">Escribinos tu consulta y te responderemos a la brevedad</p>
@@ -139,12 +139,12 @@ export default function PortalChatPage() {
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
                 msg.rol === 'paciente'
-                  ? 'bg-blue-500 text-white rounded-br-md'
-                  : 'bg-white border border-gray-200 text-gray-800 rounded-bl-md'
+                  ? 'bg-primary text-primary-foreground rounded-br-md'
+                  : 'bg-card border border-border/50 text-foreground/90 rounded-bl-md'
               }`}
             >
               {msg.rol !== 'paciente' && (
-                <div className="text-[10px] font-medium text-blue-500 mb-1 uppercase tracking-wider">
+                <div className="text-[10px] font-medium text-primary mb-1 uppercase tracking-wider">
                   {msg.rol === 'asistente_ia'
                     ? '🤖 Asistente IA'
                     : msg.rol === 'medico'
@@ -155,7 +155,7 @@ export default function PortalChatPage() {
               <div className="whitespace-pre-wrap break-words">{msg.contenido}</div>
               <div
                 className={`text-[10px] mt-1 ${
-                  msg.rol === 'paciente' ? 'text-blue-200' : 'text-gray-400'
+                  msg.rol === 'paciente' ? 'text-primary-foreground/70' : 'text-muted-foreground/70'
                 }`}
               >
                 {formatTime(msg.createdAt)}
@@ -168,7 +168,7 @@ export default function PortalChatPage() {
       </div>
 
       {/* Input */}
-      <div className="bg-white border-t border-gray-200 px-4 py-3">
+      <div className="bg-card border-t border-border/50 px-4 py-3">
         <div className="flex items-center gap-2">
           <input
             type="text"
@@ -183,12 +183,12 @@ export default function PortalChatPage() {
             placeholder="Escribí tu mensaje..."
             maxLength={1000}
             disabled={sending || !!error}
-            className="flex-1 px-4 py-2.5 bg-gray-100 rounded-full text-sm border-0 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 bg-muted rounded-full text-sm border-0 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
           />
           <button
             onClick={sendMessage}
             disabled={!input.trim() || sending || !!error}
-            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white rounded-full p-2.5 transition-colors"
+            className="bg-primary hover:bg-primary/90 disabled:opacity-40 text-primary-foreground rounded-full p-2.5 transition-all duration-200"
           >
             <Send className="h-5 w-5" />
           </button>

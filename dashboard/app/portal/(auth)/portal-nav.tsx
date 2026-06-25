@@ -19,16 +19,21 @@ import {
   ChevronLeft,
   ChevronRight,
   TrendingUp,
+  History,
+  HeartPulse,
+  ScrollText,
+  ShieldCheck,
 } from 'lucide-react';
 
 const navItems = [
-  { href: '/portal/dashboard', label: 'Inicio', icon: User },
+  { href: '/portal/dashboard', label: 'Inicio', icon: HeartPulse },
   { href: '/portal/agendar', label: 'Agendar', icon: PlusCircle },
   { href: '/portal/turnos', label: 'Turnos', icon: Calendar },
   { href: '/portal/mensajes', label: 'Chat', icon: MessageSquare },
   { href: '/portal/recetas', label: 'Recetas', icon: FileText },
+  { href: '/portal/historial', label: 'Historial', icon: History },
   { href: '/portal/reportes', label: 'Reportes', icon: TrendingUp },
-  { href: '/portal/certificados', label: 'Certificados', icon: FileText },
+  { href: '/portal/certificados', label: 'Certificados', icon: ScrollText },
   { href: '/portal/consentimientos', label: 'Docs', icon: PenTool },
   { href: '/portal/encuestas', label: 'Encuestas', icon: ClipboardCheck },
   { href: '/portal/ordenes-estudio', label: 'Estudios', icon: FlaskConical },
@@ -101,10 +106,10 @@ export default function PortalNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-t border-gray-200/60 dark:border-gray-800/60 z-20 transition-colors duration-300"
+      className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl border-t border-border/50 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.2)]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <div className="relative max-w-lg mx-auto">
+      <div className="relative max-w-2xl mx-auto">
         {/* Scroll indicator left */}
         <AnimatePresence>
           {canScrollLeft && (
@@ -112,14 +117,14 @@ export default function PortalNav() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white dark:from-gray-900 to-transparent z-10 flex items-center justify-start pl-1 pointer-events-none"
+              className="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-white dark:from-gray-950 to-transparent z-10 flex items-center justify-start pl-1 pointer-events-none"
             >
-              <ChevronLeft className="h-4 w-4 text-gray-400 dark:text-gray-600" />
+              <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground/40" />
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div ref={scrollRef} className="flex overflow-x-auto scrollbar-none gap-1 px-2 py-1.5">
+        <div ref={scrollRef} className="flex overflow-x-auto scrollbar-none gap-0.5 px-1.5 py-2">
           {navItems.map((item) => {
             const active = isActive(item.href);
             return (
@@ -128,26 +133,30 @@ export default function PortalNav() {
                 href={item.href}
                 data-active={active ? 'true' : undefined}
                 className={`
-                  relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[64px] shrink-0
-                  transition-all duration-200
-                  ${
-                    active
-                      ? 'text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40'
-                      : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100/60 dark:hover:bg-gray-800/60'
-                  }
+                  relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[60px] shrink-0
+                  transition-all duration-150
+                  ${active ? 'text-primary' : 'text-muted-foreground/60 hover:text-foreground/70 hover:bg-accent/50'}
                 `}
               >
                 {active && (
                   <motion.div
                     layoutId="nav-active"
-                    className="absolute inset-0 rounded-xl bg-blue-50/80 dark:bg-blue-950/40"
+                    className="absolute inset-0 rounded-xl bg-primary/8"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}
-                <div className="relative">
-                  <item.icon className="h-5 w-5" />
+                <div className="relative z-[1]">
+                  <item.icon className={`h-[18px] w-[18px] ${active ? 'drop-shadow-sm' : ''}`} />
+                  {/* Active dot indicator */}
+                  {active && (
+                    <motion.div
+                      layoutId="nav-dot"
+                      className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
                 </div>
-                <span className="relative text-[10px] font-medium leading-tight whitespace-nowrap">
+                <span className="relative z-[1] text-[10px] font-medium leading-tight whitespace-nowrap">
                   {item.label}
                 </span>
               </Link>
@@ -158,24 +167,20 @@ export default function PortalNav() {
           <Link
             href="/portal/notificaciones"
             className={`
-              relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[64px] shrink-0
-              transition-all duration-200
-              ${
-                pathname === '/portal/notificaciones'
-                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40'
-                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100/60 dark:hover:bg-gray-800/60'
-              }
+              relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[60px] shrink-0
+              transition-all duration-150
+              ${pathname === '/portal/notificaciones' ? 'text-primary' : 'text-muted-foreground/60 hover:text-foreground/70 hover:bg-accent/50'}
             `}
           >
             {pathname === '/portal/notificaciones' && (
               <motion.div
                 layoutId="nav-active"
-                className="absolute inset-0 rounded-xl bg-blue-50/80 dark:bg-blue-950/40"
+                className="absolute inset-0 rounded-xl bg-primary/8"
                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
               />
             )}
-            <div className="relative">
-              <Bell className="h-5 w-5" />
+            <div className="relative z-[1]">
+              <Bell className="h-[18px] w-[18px]" />
               <AnimatePresence>
                 {unreadCount > 0 && (
                   <motion.span
@@ -183,22 +188,22 @@ export default function PortalNav() {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
-                    className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 shadow-sm"
+                    className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 shadow-sm"
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </motion.span>
                 )}
               </AnimatePresence>
             </div>
-            <span className="relative text-[10px] font-medium leading-tight">Alertas</span>
+            <span className="relative z-[1] text-[10px] font-medium leading-tight">Alertas</span>
           </Link>
 
           {/* Logout */}
           <button
             onClick={handleLogout}
-            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[64px] shrink-0 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50/60 dark:hover:bg-red-950/30 transition-all duration-200"
+            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[60px] shrink-0 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/5 transition-all duration-150"
           >
-            <LogOut className="h-5 w-5" />
+            <LogOut className="h-[18px] w-[18px]" />
             <span className="text-[10px] font-medium leading-tight">Salir</span>
           </button>
         </div>
@@ -210,9 +215,9 @@ export default function PortalNav() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white dark:from-gray-900 to-transparent z-10 flex items-center justify-end pr-1 pointer-events-none"
+              className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white dark:from-gray-950 to-transparent z-10 flex items-center justify-end pr-1 pointer-events-none"
             >
-              <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-600" />
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40" />
             </motion.div>
           )}
         </AnimatePresence>

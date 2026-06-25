@@ -1,22 +1,24 @@
-'use client';
-
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-
 /**
- * Página de agendamiento de turnos.
- * Si el usuario no está autenticado, lo redirige al login.
+ * Portal Agendar — Booking Wizard con selección de médico, horario y confirmación.
+ * Server component: verifica sesión y carga médicos disponibles.
  */
-export default function AgendarPage() {
-  const router = useRouter();
 
-  useEffect(() => {
-    const isAuth = Boolean(/* lógica de autenticación aquí */);
-    if (!isAuth) {
-      router.replace('/login');
-    }
-  }, [router]);
+import { getPortalSession } from '@/lib/portal-auth';
+import { redirect } from 'next/navigation';
+import { medicosDisponiblesPortal } from '@/lib/services/portal-booking';
+import { BookingWizard } from '@/components/portal/booking-wizard';
 
-  // Render opcional mientras redirige o muestra UI mínima
-  return null;
+export const dynamic = 'force-dynamic';
+
+export default async function AgendarPage() {
+  const session = await getPortalSession();
+  if (!session) redirect('/portal');
+
+  const medicos = await medicosDisponiblesPortal();
+
+  return (
+    <div>
+      <BookingWizard medicos={medicos} />
+    </div>
+  );
 }

@@ -106,43 +106,43 @@ export default function PortalTurnosClient({ turnos }: Props) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Mis Turnos</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-6">Mis Turnos</h1>
 
       {error && (
-        <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-2 rounded-lg text-sm mb-4">
+        <div className="flex items-center gap-2 text-destructive bg-destructive/5 px-3 py-2.5 rounded-xl border border-destructive/10 text-sm mb-4">
           <AlertCircle className="h-4 w-4" /> {error}
         </div>
       )}
       {successMsg && (
-        <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg text-sm mb-4">
+        <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 text-sm mb-4">
           <span>{successMsg}</span>
         </div>
       )}
 
       {pendientes.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3">Próximos</h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Próximos</h2>
           <div className="space-y-3">
             {pendientes.map((t) => (
               <div
                 key={t.id}
-                className={`bg-white rounded-xl border border-gray-200 p-4 ${
+                className={`bg-card rounded-xl border border-border/50 p-4 transition-all duration-200 hover:shadow-card-hover ${
                   cancelados.has(t.id) ? 'opacity-50' : ''
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <div className="flex items-center gap-2 text-gray-700 mb-1">
-                      <Calendar className="h-4 w-4" />
+                    <div className="flex items-center gap-2 text-foreground mb-1">
+                      <Calendar className="h-4 w-4 text-primary" />
                       <span className="font-medium">
                         {formatDate(t.fechaHora)} · {t.hora}
                       </span>
                     </div>
-                    <div className="text-sm text-gray-500 mb-2">
+                    <div className="text-sm text-muted-foreground mb-2">
                       Dr/a. {t.medicoNombre} · {t.medicoEspecialidad}
                     </div>
-                    {t.motivo && <div className="text-sm text-gray-600 mb-1">{t.motivo}</div>}
-                    <div className="flex items-center gap-3 text-xs text-gray-400">
+                    {t.motivo && <div className="text-sm text-muted-foreground/80 mb-1">{t.motivo}</div>}
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground/60">
                       <span className="flex items-center gap-1">
                         {TIPO_ICONS[t.tipoConsulta] || null}
                         {t.tipoConsulta}
@@ -162,7 +162,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                           href={t.linkVideollamada}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/8 hover:bg-primary/12 px-3 py-1.5 rounded-lg transition-colors"
                         >
                           <Video className="h-3.5 w-3.5" />
                           Ingresar
@@ -175,7 +175,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                         <button
                           onClick={() => reagendarTurno(t.id)}
                           disabled={loadingId === t.id}
-                          className="text-blue-500 hover:text-blue-700 disabled:opacity-50 transition-colors p-1"
+                          className="text-primary hover:text-primary/80 disabled:opacity-50 transition-colors p-1"
                           title="Reagendar turno"
                         >
                           <RefreshCw className="h-5 w-5" />
@@ -204,16 +204,16 @@ export default function PortalTurnosClient({ turnos }: Props) {
 
       {pasados.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3">Historial</h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Historial</h2>
           <div className="space-y-2">
             {pasados.map((t) => (
-              <div key={t.id} className="bg-white/60 rounded-lg border border-gray-100 p-3">
+              <div key={t.id} className="bg-card/60 rounded-xl border border-border/30 p-3 transition-all duration-200 hover:bg-card">
                 <div className="flex justify-between items-start">
                   <div>
-                    <div className="text-sm font-medium text-gray-700">
+                    <div className="text-sm font-medium text-foreground">
                       {formatDate(t.fechaHora)} · {t.hora}
                     </div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-muted-foreground/70">
                       Dr/a. {t.medicoNombre} · {t.tipoConsulta}
                     </div>
                   </div>
@@ -222,7 +222,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                       <a
                         href={`/api/portal/recibos/${t.id}`}
                         target="_blank"
-                        className="text-xs font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                        className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1"
                         title="Ver recibo"
                       >
                         <Receipt className="h-3.5 w-3.5" />
@@ -230,12 +230,12 @@ export default function PortalTurnosClient({ turnos }: Props) {
                       </a>
                     )}
                     <span
-                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                      className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full ${
                         t.estado === 'atendido'
-                          ? 'bg-green-100 text-green-700'
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
                           : t.estado === 'cancelada'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-yellow-100 text-yellow-700'
+                            ? 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400'
+                            : 'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
                       }`}
                     >
                       {t.estado}
@@ -249,9 +249,12 @@ export default function PortalTurnosClient({ turnos }: Props) {
       )}
 
       {turnos.length === 0 && (
-        <div className="text-center py-12 text-gray-400">
-          <Calendar className="h-12 w-12 mx-auto mb-3" />
-          <p>No tienes turnos registrados</p>
+        <div className="text-center py-16">
+          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+            <Calendar className="h-8 w-8 text-muted-foreground/40" />
+          </div>
+          <p className="text-muted-foreground font-medium">No tienes turnos registrados</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Agendá tu primer turno desde la sección Agendar</p>
         </div>
       )}
     </div>

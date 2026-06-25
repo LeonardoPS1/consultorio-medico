@@ -27,10 +27,10 @@ interface Notificacion {
 }
 
 const TIPO_ICONS: Record<string, React.ReactNode> = {
-  turno: <Calendar className="h-4 w-4 text-blue-500" />,
+  turno: <Calendar className="h-4 w-4 text-primary" />,
   mensaje: <MessageSquare className="h-4 w-4 text-emerald-500" />,
   receta: <FileText className="h-4 w-4 text-amber-500" />,
-  sistema: <Bell className="h-4 w-4 text-purple-500" />,
+  sistema: <Bell className="h-4 w-4 text-primary" />,
 };
 
 function formatDate(dateStr: string): string {
@@ -84,7 +84,7 @@ export default function PortalNotificacionesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+        <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground/70" />
       </div>
     );
   }
@@ -93,13 +93,13 @@ export default function PortalNotificacionesPage() {
     <div className="pb-24">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Notificaciones</h1>
-          {noLeidas > 0 && <p className="text-sm text-gray-500">{noLeidas} sin leer</p>}
+          <h1 className="text-xl font-bold text-foreground">Notificaciones</h1>
+          {noLeidas > 0 && <p className="text-sm text-muted-foreground">{noLeidas} sin leer</p>}
         </div>
         {noLeidas > 0 && (
           <button
             onClick={marcarTodasLeidas}
-            className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1"
           >
             <CheckCheck className="h-3.5 w-3.5" />
             Marcar todas leídas
@@ -108,15 +108,15 @@ export default function PortalNotificacionesPage() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-2 rounded-lg text-sm mb-4">
+        <div className="flex items-center gap-2 text-destructive bg-destructive/5 border border-destructive/10 px-3 py-2 rounded-xl text-sm mb-4">
           <AlertCircle className="h-4 w-4" /> {error}
         </div>
       )}
 
       {notificaciones.length === 0 ? (
         <div className="text-center py-16">
-          <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-          <p className="text-gray-400 text-sm">No tienes notificaciones</p>
+          <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mx-auto mb-3"><Bell className="h-6 w-6 text-muted-foreground/50" /></div>
+          <p className="text-muted-foreground/70 text-sm">No tienes notificaciones</p>
         </div>
       ) : (
         <div className="space-y-1">
@@ -131,22 +131,22 @@ export default function PortalNotificacionesPage() {
                     if (n.href) window.location.href = n.href;
                   }}
                   className={`w-full text-left flex items-start gap-3 p-3 rounded-lg transition-colors ${
-                    n.leido ? 'bg-white hover:bg-gray-50' : 'bg-blue-50 hover:bg-blue-100'
+                    n.leido ? 'bg-card hover:bg-accent/50' : 'bg-primary/5 hover:bg-primary/10'
                   }`}
                 >
                   <div className="mt-0.5 shrink-0">{Icon}</div>
                   <div className="flex-1 min-w-0">
                     <p
-                      className={`text-sm ${n.leido ? 'text-gray-600' : 'text-gray-900 font-medium'}`}
+                      className={`text-sm ${n.leido ? 'text-muted-foreground/80' : 'text-foreground font-medium'}`}
                     >
                       {n.titulo}
                     </p>
                     {n.descripcion && (
-                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.descripcion}</p>
+                      <p className="text-xs text-muted-foreground/70 mt-0.5 line-clamp-2">{n.descripcion}</p>
                     )}
-                    <p className="text-[10px] text-gray-400 mt-1">{formatDate(n.createdAt)}</p>
+                    <p className="text-[10px] text-muted-foreground/50 mt-1">{formatDate(n.createdAt)}</p>
                   </div>
-                  {!n.leido && <span className="w-2 h-2 rounded-full bg-blue-500 mt-2 shrink-0" />}
+                  {!n.leido && <span className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />}
                 </button>
               </div>
             );

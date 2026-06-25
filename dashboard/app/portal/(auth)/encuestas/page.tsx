@@ -138,17 +138,17 @@ function PendingSurveyForm({
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-      <Card className="border-blue-100 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/50 to-white dark:from-blue-950/20 dark:to-gray-900 shadow-sm">
+        <Card className="border-primary/10 dark:border-primary/20 bg-gradient-to-br from-primary/5 to-white dark:from-primary/10 dark:to-gray-900 shadow-sm">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-              <ClipboardCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <div className="h-8 w-8 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+              <ClipboardCheck className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h2 className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+              <h2 className="font-semibold text-sm text-foreground">
                 Calificá tu atención
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 {turnos.length} turno{turnos.length !== 1 ? 's' : ''} sin calificar
               </p>
             </div>
@@ -167,8 +167,8 @@ function PendingSurveyForm({
                   }}
                   className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
                     t.id === selectedId
-                      ? 'bg-blue-100 dark:bg-blue-900/50 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
-                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'
+                      ? 'bg-primary/10 dark:bg-primary/20 border-primary/20 text-primary'
+                      : 'bg-card dark:bg-gray-800 border-border/50 text-muted-foreground hover:border-primary/50'
                   }`}
                 >
                   {formatShort(t.fechaHora)}
@@ -178,7 +178,7 @@ function PendingSurveyForm({
           )}
 
           {/* Info del turno seleccionado */}
-          <div className="flex items-center gap-2 mb-3 text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground bg-card rounded-xl px-3 py-2 border border-border/30">
             <UserIcon className="h-4 w-4 text-gray-400" />
             {selected.medicoNombre && <span>Dr/a. {selected.medicoNombre} · </span>}
             <span>{formatShort(selected.fechaHora)}</span>
@@ -221,14 +221,14 @@ function PendingSurveyForm({
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 mb-3 focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-400 transition-all">
+                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 mb-3 focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary/50 transition-all">
                   <MessageSquareText className="h-4 w-4 text-gray-400 dark:text-gray-500 shrink-0" />
                   <input
                     type="text"
                     value={comentario}
                     onChange={(e) => setComentario(e.target.value)}
                     placeholder="Contanos cómo fue tu experiencia (opcional)"
-                    className="flex-1 text-sm bg-transparent border-none outline-none text-gray-700 dark:text-gray-300 placeholder:text-gray-400"
+                    className="flex-1 text-sm bg-transparent border-none outline-none text-foreground/90 placeholder:text-gray-400"
                     maxLength={500}
                   />
                 </div>
@@ -238,7 +238,7 @@ function PendingSurveyForm({
                 <button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-all duration-150 shadow-sm"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 active:scale-[0.98] disabled:opacity-50 text-primary-foreground text-sm font-medium rounded-xl transition-all duration-150 shadow-sm"
                 >
                   {submitting ? (
                     <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -303,7 +303,7 @@ export default function PortalEncuestasPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -316,8 +316,8 @@ export default function PortalEncuestasPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Mis Encuestas</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <h1 className="text-2xl font-bold text-foreground">Mis Encuestas</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Calificá tu atención y ayudanos a mejorar
         </p>
       </motion.div>
@@ -334,11 +334,11 @@ export default function PortalEncuestasPage() {
       {/* Separador */}
       {pendientes.length > 0 && encuestas.length > 0 && (
         <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
-          <span className="text-xs text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wider">
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-xs text-muted-foreground/70 font-medium uppercase tracking-wider">
             Historial
           </span>
-          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+          <div className="flex-1 h-px bg-border" />
         </div>
       )}
 
@@ -347,13 +347,13 @@ export default function PortalEncuestasPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-16 text-gray-400 dark:text-gray-500"
+          className="text-center py-16 text-muted-foreground/70"
         >
-          <ClipboardCheck className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-          <p className="font-medium text-gray-500 dark:text-gray-400">
+          <ClipboardCheck className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
+          <p className="font-medium text-muted-foreground">
             No tienes encuestas registradas
           </p>
-          <p className="text-sm mt-2 text-gray-400 dark:text-gray-500">
+          <p className="text-sm mt-2 text-muted-foreground/70">
             Después de cada consulta, recibirás una encuesta por WhatsApp para calificar tu
             atención.
           </p>
@@ -369,30 +369,30 @@ export default function PortalEncuestasPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04, duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               >
-                <Card className="bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-200">
+                <Card className="bg-card border-border/50 shadow-sm hover:shadow-md transition-all duration-200">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3 mb-2">
                       <div className="flex items-center gap-2">
                         <StarRating puntaje={puntaje} />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <span className="text-sm font-medium text-foreground/80">
                           {puntaje}/5
                         </span>
                       </div>
-                      <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
+                      <span className="text-xs text-muted-foreground/70 shrink-0">
                         {formatDate(e.createdAt)}
                       </span>
                     </div>
 
                     {e.medicoNombre && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1">
+                      <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
                         <UserIcon className="h-3.5 w-3.5" />
                         Dr/a. {e.medicoNombre}
                       </p>
                     )}
 
                     {e.descripcion && e.descripcion !== 'Sin comentarios' && (
-                      <div className="flex items-start gap-1.5 mt-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
-                        <MessageSquareText className="h-4 w-4 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
+                      <div className="flex items-start gap-1.5 mt-2 text-sm text-muted-foreground bg-muted rounded-xl p-3">
+                        <MessageSquareText className="h-4 w-4 text-muted-foreground/70 mt-0.5 shrink-0" />
                         <p>{e.descripcion}</p>
                       </div>
                     )}

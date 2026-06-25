@@ -252,17 +252,17 @@ function QuickSurveyCard({
       className={`${staggerItem}`}
       style={staggerDelay(2)}
     >
-      <Card className="shadow-sm border-blue-100 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/50 to-white dark:from-blue-950/20 dark:to-gray-900">
+      <Card className="shadow-sm border-primary/10 dark:border-primary/20 bg-gradient-to-br from-primary/5 to-white dark:from-primary/10 dark:to-gray-900">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-              <Star className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <div className="h-8 w-8 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+              <Star className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100">
-                Calificá tu atención
-              </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <h3 className="font-semibold text-sm text-foreground">
+                  Calificá tu atención
+                </h3>
+                <p className="text-xs text-muted-foreground">
                 {turnoActual.medicoNombre
                   ? `Tu visita con ${turnoActual.medicoNombre} del ${formatCLShort(turnoActual.fechaHora)}`
                   : `Tu visita del ${formatCLShort(turnoActual.fechaHora)}`}
@@ -283,7 +283,7 @@ function QuickSurveyCard({
                   }}
                   className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
                     (selectedTurno || turnosSinEncuesta[0].id) === t.id
-                      ? 'bg-blue-100 dark:bg-blue-900/50 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
+                      ? 'bg-primary/10 dark:bg-primary/20 border-primary/30 text-primary'
                       : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'
                   }`}
                 >
@@ -319,7 +319,7 @@ function QuickSurveyCard({
               </button>
             ))}
             {puntaje > 0 && (
-              <span className="ml-1 text-sm font-medium text-gray-600 dark:text-gray-400">
+              <span className="ml-1 text-sm font-medium text-muted-foreground">
                 {puntaje === 1
                   ? 'Muy malo'
                   : puntaje === 2
@@ -343,7 +343,7 @@ function QuickSurveyCard({
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 mb-3 focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-400 transition-all">
+                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 mb-3 focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary transition-all">
                   <MessageSquareText className="h-4 w-4 text-gray-400 dark:text-gray-500 shrink-0" />
                   <input
                     type="text"
@@ -415,20 +415,20 @@ export default function PortalDashboardClient({
         className="flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-400 dark:to-blue-600 flex items-center justify-center shadow-sm">
+          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm">
             <User className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-xl font-bold text-foreground">
               Hola, {paciente.nombre}
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <p className="text-sm text-muted-foreground flex items-center gap-1">
               <Phone className="h-3 w-3" /> {formatCLPhone(paciente.telefono)}
             </p>
           </div>
         </div>
 
-        <ChevronRight className="h-5 w-5 text-gray-300 dark:text-gray-600" />
+        <ChevronRight className="h-5 w-5 text-muted-foreground/30" />
       </motion.div>
 
       {/* Quick Survey */}
@@ -445,9 +445,10 @@ export default function PortalDashboardClient({
             label: 'Turnos',
             valor: turnos.length,
             icon: Calendar,
-            gradient: 'from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20',
-            iconColor: 'text-blue-600 dark:text-blue-400',
-            textColor: 'text-blue-700 dark:text-blue-300',
+            gradient:
+              'from-teal-50 to-teal-100/50 dark:from-teal-950/30 dark:to-teal-900/20',
+            iconColor: 'text-teal-600 dark:text-teal-400',
+            textColor: 'text-teal-700 dark:text-teal-300',
           },
           {
             label: 'Próximos',
@@ -463,9 +464,9 @@ export default function PortalDashboardClient({
             valor: recetas.length,
             icon: HeartPulse,
             gradient:
-              'from-purple-50 to-purple-100/50 dark:from-purple-950/30 dark:to-purple-900/20',
-            iconColor: 'text-purple-600 dark:text-purple-400',
-            textColor: 'text-purple-700 dark:text-purple-300',
+              'from-cyan-50 to-cyan-100/50 dark:from-cyan-950/30 dark:to-cyan-900/20',
+            iconColor: 'text-cyan-600 dark:text-cyan-400',
+            textColor: 'text-cyan-700 dark:text-cyan-300',
           },
         ].map((stat, i) => (
           <div
@@ -488,34 +489,34 @@ export default function PortalDashboardClient({
 
       {/* Datos del paciente */}
       <div className={`${staggerItem}`} style={staggerDelay(3)}>
-        <Card className="shadow-sm border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-colors duration-300">
+        <Card className="shadow-sm border-border/50 bg-card transition-colors duration-300">
           <CardContent className="p-4">
-            <h2 className="font-semibold text-sm text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">
+            <h2 className="font-semibold text-sm text-muted-foreground mb-3 uppercase tracking-wider">
               Mis datos
             </h2>
             <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
               <div>
-                <p className="text-xs text-gray-400 dark:text-gray-500">Nombre completo</p>
-                <p className="font-medium text-gray-900 dark:text-gray-100">
+                <p className="text-xs text-muted-foreground/70">Nombre completo</p>
+                <p className="font-medium text-foreground">
                   {paciente.nombre} {paciente.apellido}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-400 dark:text-gray-500">Teléfono</p>
-                <p className="font-medium text-gray-900 dark:text-gray-100">
+                <p className="text-xs text-muted-foreground/70">Teléfono</p>
+                <p className="font-medium text-foreground">
                   {formatCLPhone(paciente.telefono)}
                 </p>
               </div>
               {paciente.rut && (
                 <div>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">RUT</p>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">{paciente.rut}</p>
+                  <p className="text-xs text-muted-foreground/70">RUT</p>
+                  <p className="font-medium text-foreground">{paciente.rut}</p>
                 </div>
               )}
               {paciente.email && (
                 <div>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">Email</p>
-                  <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                  <p className="text-xs text-muted-foreground/70">Email</p>
+                  <p className="font-medium text-foreground truncate">
                     {paciente.email}
                   </p>
                 </div>
@@ -534,9 +535,9 @@ export default function PortalDashboardClient({
               )}
               {(paciente.comuna || paciente.region) && (
                 <div>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">Ubicación</p>
-                  <p className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                <p className="text-xs text-muted-foreground/70">Ubicación</p>
+                <p className="font-medium text-foreground flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-muted-foreground/50" />
                     {[paciente.comuna, paciente.region].filter(Boolean).join(', ')}
                   </p>
                 </div>
@@ -549,7 +550,7 @@ export default function PortalDashboardClient({
       {/* Tabs principales */}
       <div className={`${staggerItem}`} style={staggerDelay(4)}>
         <Tabs defaultValue="proximos">
-          <TabsList className="w-full bg-gray-100/80 dark:bg-gray-800/60 rounded-xl p-1">
+          <TabsList className="w-full bg-muted/60 dark:bg-muted/30 rounded-xl p-1">
             <TabsTrigger
               value="proximos"
               className="flex-1 text-xs sm:text-sm data-[state=active]:shadow-sm"
@@ -576,13 +577,15 @@ export default function PortalDashboardClient({
           {/* ── Próximos turnos ── */}
           <TabsContent value="proximos" className="mt-4">
             {turnosProximos.length === 0 ? (
-              <Card className="bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800">
+              <Card className="bg-card border-border/50">
                 <CardContent className="flex flex-col items-center justify-center py-10 text-center">
-                  <Calendar className="h-10 w-10 text-gray-300 dark:text-gray-600 mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400 font-medium">
+                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                    <Calendar className="h-6 w-6 text-muted-foreground/60" />
+                  </div>
+                  <p className="text-muted-foreground font-medium">
                     No tienes turnos próximos
                   </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground/60 mt-1">
                     Los turnos aparecerán aquí cuando los agendes
                   </p>
                 </CardContent>
@@ -597,16 +600,16 @@ export default function PortalDashboardClient({
                 {turnosProximos.map((t) => (
                   <motion.div key={t.id} variants={itemVariants}>
                     <Card
-                      className="border-l-4 overflow-hidden shadow-sm border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-200 hover:shadow-md hoverable:hover:-translate-y-0.5"
+                      className="border-l-4 overflow-hidden shadow-sm border-border/50 bg-card transition-all duration-200 hover:shadow-card-hover hoverable:hover:-translate-y-0.5"
                       style={{ borderLeftColor: getTurnoColor(t.estado) }}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <p className="font-semibold text-gray-900 dark:text-gray-100">
+                            <p className="font-semibold text-foreground">
                               {formatCLDate(t.fechaHora, "EEEE d 'de' MMMM")}
                             </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p className="text-sm text-muted-foreground">
                               {t.hora} · {t.duracionMinutos} min
                             </p>
                           </div>
@@ -622,12 +625,12 @@ export default function PortalDashboardClient({
                           </Badge>
                         </div>
                         {t.motivo && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                          <p className="text-sm text-muted-foreground mb-1">
                             {t.motivo}
                           </p>
                         )}
                         {t.medicoNombre && (
-                          <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                          <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
                             <User className="h-3 w-3" /> Dr/a. {t.medicoNombre}
                           </p>
                         )}
@@ -642,11 +645,13 @@ export default function PortalDashboardClient({
           {/* ── Historial ── */}
           <TabsContent value="historial" className="mt-4">
             {turnosPasados.length === 0 && historial.length === 0 ? (
-              <Card className="bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800">
+              <Card className="bg-card border-border/50">
                 <CardContent className="flex flex-col items-center justify-center py-10 text-center">
-                  <ClipboardList className="h-10 w-10 text-gray-300 dark:text-gray-600 mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400 font-medium">Sin historial aún</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                    <ClipboardList className="h-6 w-6 text-muted-foreground/60" />
+                  </div>
+                  <p className="text-muted-foreground font-medium">Sin historial aún</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">
                     Tus visitas anteriores aparecerán aquí
                   </p>
                 </CardContent>
@@ -664,20 +669,20 @@ export default function PortalDashboardClient({
                         const Icon = getEstadoIcon(t.estado);
                         return (
                           <motion.div key={t.id} variants={itemVariants} className="mb-2">
-                            <Card className="opacity-80 transition-all duration-200 hover:opacity-100 hover:shadow-sm bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800">
+                            <Card className="opacity-80 transition-all duration-200 hover:opacity-100 hover:shadow-sm bg-card border-border/50">
                               <CardContent className="p-3 flex items-center gap-3">
-                                <Icon className="h-5 w-5 text-gray-400 dark:text-gray-500 shrink-0" />
+                                <Icon className="h-5 w-5 text-muted-foreground/50 shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                  <p className="text-sm font-medium text-foreground">
                                     {formatCLDate(t.fechaHora, "d 'de' MMMM")} · {t.hora}
                                   </p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                  <p className="text-xs text-muted-foreground/70 truncate">
                                     {t.motivo || t.tipoConsulta}
                                   </p>
                                 </div>
                                 <Badge
                                   variant="outline"
-                                  className="text-[10px] dark:border-gray-700 dark:text-gray-400"
+                                  className="text-[10px]"
                                 >
                                   {getTurnoLabel(t.estado)}
                                 </Badge>
@@ -699,25 +704,25 @@ export default function PortalDashboardClient({
                     <motion.div variants={staggerContainer} initial="hidden" animate="animate">
                       {historial.map((h) => (
                         <motion.div key={h.id} variants={itemVariants} className="mb-2">
-                          <Card className="transition-all duration-200 hover:shadow-sm bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800">
+                          <Card className="transition-all duration-200 hover:shadow-sm bg-card border-border/50">
                             <CardContent className="p-3">
                               <div className="flex items-start justify-between">
-                                <p className="font-medium text-sm text-gray-900 dark:text-gray-100">
+                                <p className="font-medium text-sm text-foreground">
                                   {h.titulo}
                                 </p>
-                                <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                                <span className="text-[10px] text-muted-foreground/60">
                                   {formatCLShort(h.createdAt)}
                                 </span>
                               </div>
                               {h.descripcion && (
-                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                <p className="text-xs text-muted-foreground mt-1">
                                   {h.descripcion}
                                 </p>
                               )}
-                              <Badge
-                                variant="outline"
-                                className="mt-1 text-[10px] dark:border-gray-700 dark:text-gray-400"
-                              >
+                                <Badge
+                                  variant="outline"
+                                  className="mt-1 text-[10px]"
+                                >
                                 {h.tipo}
                               </Badge>
                             </CardContent>
@@ -734,13 +739,15 @@ export default function PortalDashboardClient({
           {/* ── Recetas ── */}
           <TabsContent value="recetas" className="mt-4">
             {recetas.length === 0 ? (
-              <Card className="bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800">
+              <Card className="bg-card border-border/50">
                 <CardContent className="flex flex-col items-center justify-center py-10 text-center">
-                  <Syringe className="h-10 w-10 text-gray-300 dark:text-gray-600 mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400 font-medium">
+                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                    <Syringe className="h-6 w-6 text-muted-foreground/60" />
+                  </div>
+                  <p className="text-muted-foreground font-medium">
                     Sin recetas activas
                   </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground/60 mt-1">
                     Las recetas aparecerán aquí cuando el médico las recete
                   </p>
                 </CardContent>
@@ -754,12 +761,12 @@ export default function PortalDashboardClient({
               >
                 {recetas.map((r) => (
                   <motion.div key={r.id} variants={itemVariants}>
-                    <Card className="transition-all duration-200 hover:shadow-sm bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800">
+                      <Card className="transition-all duration-200 hover:shadow-sm bg-card border-border/50">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <Syringe className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                            <p className="font-semibold text-gray-900 dark:text-gray-100">
+                            <Syringe className="h-4 w-4 text-primary" />
+                            <p className="font-semibold text-foreground">
                               {r.medicamento}
                             </p>
                           </div>
@@ -767,20 +774,20 @@ export default function PortalDashboardClient({
                             {r.estado === 'activa' ? 'Activa' : 'Vencida'}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-muted-foreground">
                           {r.dosis} · {r.frecuencia}
                         </p>
                         {r.duracion && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <p className="text-xs text-muted-foreground/70 mt-1">
                             Duración: {r.duracion}
                           </p>
                         )}
                         {r.indicaciones && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic bg-gray-50 dark:bg-gray-800/50 p-2 rounded">
+                          <p className="text-xs text-muted-foreground mt-1 italic bg-muted/50 p-2 rounded-lg">
                             {r.indicaciones}
                           </p>
                         )}
-                        <div className="flex items-center gap-4 mt-2 text-[11px] text-gray-400 dark:text-gray-500">
+                        <div className="flex items-center gap-4 mt-2 text-[11px] text-muted-foreground/60">
                           {r.fechaInicio && <span>Desde: {formatCLShort(r.fechaInicio)}</span>}
                           {r.fechaFin && <span>Hasta: {formatCLShort(r.fechaFin)}</span>}
                           {r.medicoNombre && <span>Dr/a. {r.medicoNombre}</span>}
@@ -796,7 +803,7 @@ export default function PortalDashboardClient({
       </div>
 
       {/* Footer */}
-      <p className="text-center text-[10px] text-gray-400 dark:text-gray-600 pb-4">
+      <p className="text-center text-[10px] text-muted-foreground/50 pb-4">
         Portal del Paciente — {paciente.nombre} {paciente.apellido}
       </p>
     </div>

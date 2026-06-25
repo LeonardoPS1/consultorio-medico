@@ -1,8 +1,9 @@
 /**
  * Portal del Paciente — Login / Landing público
  *
- * Rediseño premium con transiciones fluidas vía framer-motion.
+ * Rediseño premium con paleta teal, animaciones fluidas vía framer-motion.
  * Estados: landing → formulario → enlace enviado.
+ * AicoreMed — Portal Salud
  */
 
 'use client';
@@ -18,8 +19,9 @@ import {
   Activity,
   Calendar,
   Shield,
-  Stethoscope,
+  HeartPulse,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 import { isValidPhone } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -50,7 +52,7 @@ const springPop = {
 const BENEFICIOS = [
   {
     icon: Calendar,
-    titulo: 'Agendá tus horas',
+    titulo: 'Agenda tus horas',
     desc: 'Sin llamar, desde tu celular',
   },
   {
@@ -59,7 +61,7 @@ const BENEFICIOS = [
     desc: 'Recetas, certificados y más',
   },
   {
-    icon: Stethoscope,
+    icon: HeartPulse,
     titulo: 'Seguimiento de tu salud',
     desc: 'Historial clínico en un solo lugar',
   },
@@ -148,22 +150,22 @@ export default function PortalLogin() {
             variants={springPop}
             initial="initial"
             animate="animate"
-            className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-success/10 mb-6"
+            className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-primary/10 mb-6"
           >
-            <CheckCircle className="h-10 w-10 text-success" />
+            <CheckCircle className="h-10 w-10 text-primary" />
           </motion.div>
 
-          <h1 className="text-2xl font-bold mb-2">Enlace enviado</h1>
+          <h1 className="text-2xl font-bold mb-2 text-foreground">Enlace enviado</h1>
           <p className="text-muted-foreground mb-6 leading-relaxed">
             Te enviamos un enlace de acceso por WhatsApp al número{' '}
             <strong className="text-foreground">{telefono}</strong>.
           </p>
 
-          <div className="bg-accent/50 rounded-xl p-4 mb-6 text-left border border-border/50">
-            <p className="text-sm font-medium mb-1">¿No te llega el mensaje?</p>
+          <div className="bg-accent/60 rounded-xl p-4 mb-6 text-left border border-border/50">
+            <p className="text-sm font-medium mb-1 text-foreground">¿No te llega el mensaje?</p>
             <p className="text-xs text-muted-foreground">
-              Verificá que el número ingresado sea el mismo que registraste en el consultorio. Si el
-              problema persiste, contactanos por WhatsApp.
+              Verifica que el número ingresado sea el mismo que registraste en el consultorio. Si el
+              problema persiste, contáctanos por WhatsApp.
             </p>
           </div>
 
@@ -188,12 +190,13 @@ export default function PortalLogin() {
 
   /* ─── Landing / Form ─────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-primary/90 to-primary/80 flex flex-col relative overflow-hidden">
-      {/* Decoración de fondo */}
+    <div className="min-h-screen bg-gradient-to-br from-[#0d6d4a] via-[#0f7c54] to-[#0a5c3c] flex flex-col relative overflow-hidden">
+      {/* Decoración de fondo — orbes sutiles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-white/[0.04] blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.07)_0%,transparent_70%)]" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-white/8 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-emerald-300/10 blur-3xl" />
+        <div className="absolute top-1/3 -left-20 w-60 h-60 rounded-full bg-teal-300/8 blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.06)_0%,transparent_70%)]" />
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-8 text-center relative z-10">
@@ -208,19 +211,21 @@ export default function PortalLogin() {
                 animate="animate"
                 exit="exit"
               >
-                {/* Brand */}
+                {/* Brand — logo + nombre */}
                 <div className="mb-10">
                   <motion.div
                     variants={springPop}
                     initial="initial"
                     animate="animate"
-                    className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-white/15 backdrop-blur-sm mb-5 shadow-lg ring-1 ring-white/10"
+                    className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-white/15 backdrop-blur-sm mb-5 shadow-lg ring-1 ring-white/15"
                   >
-                    <Activity className="h-8 w-8 text-white" />
+                    <HeartPulse className="h-8 w-8 text-white" />
                   </motion.div>
-                  <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">AicoreMed</h1>
+                  <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">
+                    Portal Salud
+                  </h1>
                   <p className="text-white/70 text-sm font-medium tracking-wide">
-                    Portal del Paciente
+                    Tu salud, siempre contigo
                   </p>
                 </div>
 
@@ -252,11 +257,16 @@ export default function PortalLogin() {
                 <Button
                   onClick={() => setMostrarForm(true)}
                   size="lg"
-                  className="w-full h-12 text-base bg-white text-primary hover:bg-white/90 shadow-lg shadow-primary/30"
+                  className="w-full h-12 text-base bg-white text-emerald-800 hover:bg-white/90 shadow-lg shadow-black/20 hover:shadow-black/30 transition-all duration-200"
                 >
                   Ingresar al Portal
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
+
+                <p className="mt-4 text-xs text-white/50">
+                  <Sparkles className="inline h-3 w-3 mr-1" />
+                  Acceso seguro mediante enlace por WhatsApp
+                </p>
               </motion.div>
             ) : (
               /* ── Formulario ──────────────────────────── */
@@ -267,9 +277,9 @@ export default function PortalLogin() {
                 animate="animate"
                 exit="exit"
               >
-                <div className="bg-white rounded-2xl shadow-xl shadow-primary/10 p-6 text-left">
-                  <h2 className="text-xl font-bold text-gray-900 mb-1">Ingresá al Portal</h2>
-                  <p className="text-sm text-gray-500 mb-6">Recibí un enlace mágico por WhatsApp</p>
+                <div className="bg-white rounded-2xl shadow-2xl shadow-emerald-900/20 p-6 text-left">
+                  <h2 className="text-xl font-bold text-gray-900 mb-1">Ingresa al Portal</h2>
+                  <p className="text-sm text-gray-500 mb-6">Recibe un enlace mágico por WhatsApp</p>
 
                   <form onSubmit={handleSubmit} className="space-y-5">
                     {error && (
@@ -294,7 +304,7 @@ export default function PortalLogin() {
                           value={telefono}
                           onChange={(e) => setTelefono(e.target.value)}
                           placeholder="+56 9 1234 5678"
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary text-base outline-none transition-all"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary text-base outline-none transition-all bg-gray-50/50"
                           autoFocus
                           disabled={loading}
                         />
@@ -342,8 +352,8 @@ export default function PortalLogin() {
                 transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] as const }}
                 className="mt-6"
               >
-                <div className="border-t border-white/20 pt-6">
-                  <p className="text-xs text-white/60 text-center mb-3">
+                <div className="border-t border-white/15 pt-6">
+                  <p className="text-xs text-white/50 text-center mb-3">
                     Modo desarrollo — acceso directo sin autenticación
                   </p>
                   <Button

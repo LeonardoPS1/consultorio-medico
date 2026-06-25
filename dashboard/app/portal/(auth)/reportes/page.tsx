@@ -80,14 +80,14 @@ function MiniBarChart({ data }: { data: Array<{ mes: string; value: number }> })
         const pct = (d.value / max) * 100;
         return (
           <div key={d.mes} className="flex-1 flex flex-col items-center gap-1">
-            <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+            <span className="text-[10px] font-medium text-muted-foreground">
               {d.value}
             </span>
             <div
-              className="w-full rounded-t-md bg-blue-500 dark:bg-blue-400 transition-all duration-500"
+              className="w-full rounded-t-md bg-primary dark:bg-primary transition-all duration-500"
               style={{ height: `${Math.max(pct, 4)}%` }}
             />
-            <span className="text-[8px] text-gray-400 dark:text-gray-500 rotate-[-45deg] origin-left whitespace-nowrap">
+            <span className="text-[8px] text-muted-foreground/70 rotate-[-45deg] origin-left whitespace-nowrap">
               {formatShortMonth(d.mes)}
             </span>
           </div>
@@ -125,7 +125,7 @@ function StatCard({
       <Card className={`bg-gradient-to-br ${gradient} border-0 shadow-sm`}>
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{label}</span>
+            <span className="text-xs font-medium text-muted-foreground">{label}</span>
             <Icon className={`h-4 w-4 ${iconColor}`} />
           </div>
           <p className={`text-2xl font-bold ${iconColor}`}>
@@ -155,15 +155,15 @@ export default function PortalReportesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="text-center py-16 text-gray-400">
-        <TrendingUp className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+      <div className="text-center py-16 text-muted-foreground/70">
+        <TrendingUp className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
         <p>No se pudieron cargar las estadísticas</p>
       </div>
     );
@@ -177,8 +177,8 @@ export default function PortalReportesPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Mis Estadísticas</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <h1 className="text-2xl font-bold text-foreground">Mis Estadísticas</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Resumen de tu actividad en el consultorio
         </p>
       </motion.div>
@@ -189,8 +189,8 @@ export default function PortalReportesPage() {
           icon={Calendar}
           label="Total visitas"
           value={data.totalVisitas}
-          gradient="from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20"
-          iconColor="text-blue-600 dark:text-blue-400"
+          gradient="from-primary/5 to-primary/10 dark:from-primary/20 dark:to-primary/10"
+          iconColor="text-primary"
           delay={0}
         />
         <StatCard
@@ -205,8 +205,8 @@ export default function PortalReportesPage() {
           icon={DollarSign}
           label="Total gastado"
           value={formatCLPrice(data.totalGastado)}
-          gradient="from-purple-50 to-purple-100/50 dark:from-purple-950/30 dark:to-purple-900/20"
-          iconColor="text-purple-600 dark:text-purple-400"
+          gradient="from-primary/5 to-primary/10 dark:from-primary/20 dark:to-primary/10"
+          iconColor="text-primary"
           delay={0.1}
         />
         <StatCard
@@ -226,19 +226,19 @@ export default function PortalReportesPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Card className="bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 shadow-sm">
+          <Card className="bg-card border-border/50 shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Clock className="h-4 w-4 text-blue-500" />
-                <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                <Clock className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold text-sm text-foreground">
                   Última visita
                 </h3>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 {formatDateCL(data.ultimaVisita.fecha)}
               </p>
               {data.ultimaVisita.medico && (
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                <p className="text-xs text-muted-foreground/70 mt-0.5">
                   Dr/a. {data.ultimaVisita.medico}
                 </p>
               )}
@@ -254,28 +254,28 @@ export default function PortalReportesPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Card className="bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 shadow-sm">
+          <Card className="bg-card border-border/50 shadow-sm">
             <CardContent className="p-4">
-              <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                <Eye className="h-4 w-4 text-gray-400" />
+              <h3 className="font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
+                <Eye className="h-4 w-4 text-muted-foreground/50" />
                 Tipo de consultas
               </h3>
               <div className="space-y-2">
                 {data.visitasPorTipo.map((tipo) => (
                   <div key={tipo.tipo} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm text-muted-foreground">
                       {tipoLabels[tipo.tipo] || tipo.tipo}
                     </span>
                     <div className="flex items-center gap-2">
-                      <div className="w-24 h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                      <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-blue-500 dark:bg-blue-400 transition-all duration-500"
+                          className="h-full rounded-full bg-primary dark:bg-primary transition-all duration-500"
                           style={{
                             width: `${data.totalVisitas > 0 ? (tipo.value / data.totalVisitas) * 100 : 0}%`,
                           }}
                         />
                       </div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-6 text-right">
+                      <span className="text-sm font-medium text-foreground/80 w-6 text-right">
                         {tipo.value}
                       </span>
                     </div>
@@ -294,10 +294,10 @@ export default function PortalReportesPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Card className="bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 shadow-sm">
+          <Card className="bg-card border-border/50 shadow-sm">
             <CardContent className="p-4">
-              <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-gray-400" />
+              <h3 className="font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-muted-foreground/50" />
                 Visitas por mes
               </h3>
               <MiniBarChart data={data.visitasPorMes} />
@@ -312,11 +312,11 @@ export default function PortalReportesPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-12 text-gray-400 dark:text-gray-500"
+            className="text-center py-12 text-muted-foreground/30"
           >
-            <TrendingUp className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-            <p className="font-medium text-gray-500 dark:text-gray-400">Sin actividad aún</p>
-            <p className="text-sm mt-1">
+            <TrendingUp className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
+            <p className="font-medium text-muted-foreground/70">Sin actividad aún</p>
+            <p className="text-sm mt-1 text-muted-foreground">
               Tus estadísticas aparecerán aquí cuando tengas visitas registradas.
             </p>
           </motion.div>

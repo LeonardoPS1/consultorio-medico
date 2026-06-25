@@ -66,15 +66,15 @@ export default function PortalConsentimientosPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Consentimientos</h1>
-      <p className="text-sm text-gray-500 mb-6">
+      <h1 className="text-2xl font-bold text-foreground mb-1">Consentimientos</h1>
+      <p className="text-sm text-muted-foreground mb-6">
         Documentos que requieren o han recibido tu firma digital
       </p>
 
@@ -82,8 +82,8 @@ export default function PortalConsentimientosPage() {
         <div
           className={`mb-4 p-3 rounded-lg text-sm ${
             msg.type === 'success'
-              ? 'bg-green-50 text-green-700 border border-green-200'
-              : 'bg-red-50 text-red-700 border border-red-200'
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              : 'bg-destructive/5 text-destructive border border-destructive/10'
           }`}
         >
           {msg.text}
@@ -91,8 +91,10 @@ export default function PortalConsentimientosPage() {
       )}
 
       {consentimientos.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <FileText className="h-12 w-12 mx-auto mb-3" />
+        <div className="text-center py-16 text-muted-foreground/70">
+          <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mx-auto mb-3">
+            <FileText className="h-6 w-6" />
+          </div>
           <p>No tienes consentimientos pendientes</p>
           <p className="text-sm mt-2">
             Cuando tu médico registre un consentimiento, aparecerá aquí para que lo firmes
@@ -105,36 +107,36 @@ export default function PortalConsentimientosPage() {
             return (
               <div
                 key={c.id}
-                className={`bg-white rounded-lg border p-4 ${
-                  firmado ? 'border-green-200' : 'border-gray-200'
+                className={`bg-card rounded-xl border p-4 ${
+                  firmado ? 'border-green-200' : 'border-border/50'
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       {firmado ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
                       ) : (
-                        <FileText className="h-4 w-4 text-amber-500 shrink-0" />
+                        <FileText className="h-4 w-4 text-primary shrink-0" />
                       )}
-                      <h3 className="font-medium text-gray-900 truncate">{c.titulo}</h3>
+                      <h3 className="font-medium text-foreground truncate">{c.titulo}</h3>
                       {firmado && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full shrink-0">
+                        <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full shrink-0">
                           Firmado
                         </span>
                       )}
                       {!firmado && (
-                        <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full shrink-0">
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full shrink-0">
                           Pendiente
                         </span>
                       )}
                     </div>
 
                     {c.descripcion && (
-                      <p className="text-sm text-gray-600 mb-1 line-clamp-2">{c.descripcion}</p>
+                      <p className="text-sm text-muted-foreground/80 mb-1 line-clamp-2">{c.descripcion}</p>
                     )}
 
-                    <div className="text-xs text-gray-400 space-x-2">
+                    <div className="text-xs text-muted-foreground/70 space-x-2">
                       <span>{formatDate(c.createdAt)}</span>
                       {c.medicoNombre && <span>· Dr/a. {c.medicoNombre}</span>}
                       {firmado && c.fechaFirma && (
@@ -148,7 +150,7 @@ export default function PortalConsentimientosPage() {
                       <button
                         onClick={() => firmar(c.id)}
                         disabled={firmando === c.id}
-                        className="inline-flex items-center gap-1 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-1 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 disabled:opacity-50 px-3 py-1.5 rounded-xl transition-colors"
                       >
                         {firmando === c.id ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -162,7 +164,7 @@ export default function PortalConsentimientosPage() {
                       <a
                         href={c.documentoPdf}
                         target="_blank"
-                        className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground bg-muted hover:bg-muted/80 px-3 py-1.5 rounded-xl transition-colors"
                       >
                         <Eye className="h-3.5 w-3.5" />
                         Ver

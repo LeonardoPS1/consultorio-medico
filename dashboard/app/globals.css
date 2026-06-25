@@ -19,67 +19,68 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 16% 95%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 16% 95%;
-    --muted-foreground: 215.4 16.3% 35%;
-    --accent: 210 16% 95%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --primary: 168 76% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 168 30% 95%;
+    --secondary-foreground: 168 50% 20%;
+    --muted: 168 16% 95%;
+    --muted-foreground: 168 12% 40%;
+    --accent: 168 20% 94%;
+    --accent-foreground: 168 50% 20%;
     --destructive: 0 72% 55%;
-    --destructive-foreground: 210 40% 98%;
-    --success: 142.1 50% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142.1 60% 40%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 80% 45%;
+    --warning: 38 80% 50%;
     --warning-foreground: 0 0% 100%;
-    --border: 214.3 16% 90%;
-    --input: 214.3 16% 90%;
-    --ring: 221.2 83.2% 53.3%;
+    --border: 168 12% 88%;
+    --input: 168 12% 88%;
+    --ring: 168 76% 42%;
     --radius: 0.75rem;
 
-    /* Sidebar */
+    /* Sidebar (dashboard médico) */
     --sidebar-background: 222.2 84% 4.9%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-muted: 217.2 32.6% 17.5%;
     --sidebar-accent: 217.2 32.6% 17.5%;
 
-    /* Chart colors */
-    --chart-1: 221.2 83.2% 53.3%;
-    --chart-2: 142.1 76.2% 36.3%;
-    --chart-3: 38 92% 50%;
-    --chart-4: 271 75% 56%;
+    /* Chart colors — base teal */
+    --chart-1: 168 76% 42%;
+    --chart-2: 142.1 60% 40%;
+    --chart-3: 38 80% 50%;
+    --chart-4: 271 72% 56%;
     --chart-5: 0 72% 55%;
 
-    /* Card shadows — taste profile: ultra-subtle default, soft on hover */
+    /* Card shadows — ultra-subtle default, soft on hover */
     --shadow-card: 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.06);
+    --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-card-lg: 0 8px 24px rgba(0,0,0,0.06);
   }
 
   .dark {
-    --background: 225 20% 8%;
-    --foreground: 210 40% 96%;
-    --card: 225 18% 12%;
-    --card-foreground: 210 40% 96%;
-    --popover: 225 18% 12%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 217.2 85% 62%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 22% 16%;
-    --secondary-foreground: 210 40% 94%;
-    --muted: 217.2 22% 14%;
-    --muted-foreground: 215 18% 72%;
-    --accent: 217.2 22% 16%;
-    --accent-foreground: 210 40% 94%;
-    --destructive: 0 62.8% 32%;
-    --destructive-foreground: 210 40% 96%;
-    --success: 142.1 60% 40%;
+    --background: 168 15% 6%;
+    --foreground: 168 10% 95%;
+    --card: 168 12% 10%;
+    --card-foreground: 168 10% 95%;
+    --popover: 168 12% 10%;
+    --popover-foreground: 168 10% 95%;
+    --primary: 168 72% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 168 20% 16%;
+    --secondary-foreground: 168 10% 92%;
+    --muted: 168 14% 14%;
+    --muted-foreground: 168 12% 65%;
+    --accent: 168 16% 15%;
+    --accent-foreground: 168 10% 92%;
+    --destructive: 0 62.8% 35%;
+    --destructive-foreground: 0 0% 96%;
+    --success: 142.1 60% 42%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 85% 42%;
+    --warning: 38 85% 45%;
     --warning-foreground: 0 0% 100%;
-    --border: 217.2 16% 18%;
-    --input: 217.2 16% 18%;
-    --ring: 224.3 76.3% 50%;
+    --border: 168 10% 18%;
+    --input: 168 10% 18%;
+    --ring: 168 72% 50%;
 
     --sidebar-background: 225 25% 6%;
     --sidebar-foreground: 210 40% 94%;
@@ -87,15 +88,16 @@
     --sidebar-accent: 217.2 22% 15%;
 
     /* Chart colors */
-    --chart-1: 217.2 85% 62%;
-    --chart-2: 142.1 70.6% 45.3%;
-    --chart-3: 38 92% 50%;
+    --chart-1: 168 72% 50%;
+    --chart-2: 142.1 60% 45%;
+    --chart-3: 38 85% 50%;
     --chart-4: 271 72% 58%;
     --chart-5: 0 68% 48%;
 
     /* Card shadows for dark mode */
     --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
-    --shadow-card-hover: 0 4px 16px rgba(0,0,0,0.4);
+    --shadow-card-hover: 0 4px 16px rgba(0,0,0,0.45);
+    --shadow-card-lg: 0 8px 32px rgba(0,0,0,0.35);
   }
 }
 
