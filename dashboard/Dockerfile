@@ -58,17 +58,16 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copiar standalone output de Next.js (plano: server.js, .next, node_modules en raíz)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
 
-# ⚠️ Next.js 14.2.21+ con pnpm NO incluye 'next' en el standalone node_modules.
-# El standalone node_modules tiene symlinks de pnpm (no sobreviven multi-stage).
-
-# Paso 1: Reemplazar node_modules symlinks con archivos planos via npm install
-# (basado en standalone/package.json que lista react, react-dom y sus deps)
-RUN rm -rf node_modules && npm install --omit=dev --no-audit --no-fund --ignore-scripts
-
-# Paso 2: Copiar 'next' desde builder. Docker COPY --from=builder sigue symlinks
-# automáticamente: la symlink next → .pnpm/next@.../node_modules/next se resuelve
-# a los archivos reales.
-COPY --from=builder --chown=nextjs:nodejs /app/dashboard/node_modules/next ./node_modules/next
+# ⚠️ Next.js 14.2.21+ con pnpm genera un standalone/package.json con las deps
+# de producción, pero SIN node_modules/ (está vacío). npm install sobre ese
+# package.json falla con npm ≥10 por resolución estricta de peer deps
+# (next-auth vs next).
+#
+# En vez de reinstalar, copiamos node_modules desde el builder. Docker COPY
+# --from=builder SIGUE symlinks → aplana la estrutura de pnpm a archivos reales.
+# Esto nos da exactamente las mismas versiones que se usaron en build, sin riesgos
+# de resolución de dependencias.
+COPY --from=builder --chown=nextjs:nodejs /app/dashboard/node_modules ./node_modules
 
 # Copiar static assets (junto a server.js, no bajo dashboard/)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./.next/static
