@@ -29,6 +29,8 @@ export default function PortalConsentimientosPage() {
   const [loading, setLoading] = useState(true);
   const [firmando, setFirmando] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [hoverFirmar, setHoverFirmar] = useState<string | null>(null);
+  const [hoverVer, setHoverVer] = useState<string | null>(null);
 
   const cargar = useCallback(() => {
     fetch('/api/portal/consentimientos')
@@ -66,34 +68,43 @@ export default function PortalConsentimientosPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'hsl(var(--portal-primary))' }} />
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground mb-1">Consentimientos</h1>
-      <p className="text-sm text-muted-foreground mb-6">
+      <h1 className="text-2xl font-bold mb-1" style={{ color: 'hsl(var(--portal-foreground))' }}>Consentimientos</h1>
+      <p className="text-sm mb-6" style={{ color: 'hsl(var(--portal-muted-foreground))' }}>
         Documentos que requieren o han recibido tu firma digital
       </p>
 
       {msg && (
         <div
-          className={`mb-4 p-3 rounded-lg text-sm ${
+          className="mb-4 p-3 rounded-lg text-sm"
+          style={
             msg.type === 'success'
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              : 'bg-destructive/5 text-destructive border border-destructive/10'
-          }`}
+              ? {
+                  background: 'hsl(var(--portal-primary) / 0.08)',
+                  color: 'hsl(var(--portal-primary))',
+                  border: '1px solid hsl(var(--portal-primary) / 0.25)',
+                }
+              : {
+                  background: 'hsl(var(--portal-destructive) / 0.08)',
+                  color: 'hsl(var(--portal-destructive))',
+                  border: '1px solid hsl(var(--portal-destructive) / 0.15)',
+                }
+          }
         >
           {msg.text}
         </div>
       )}
 
       {consentimientos.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground/70">
-          <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mx-auto mb-3">
-            <FileText className="h-6 w-6" />
+        <div className="text-center py-16" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
+          <div className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3" style={{ background: 'hsl(var(--portal-muted))' }}>
+            <FileText className="h-6 w-6" style={{ color: 'hsl(var(--portal-muted-foreground))' }} />
           </div>
           <p>No tienes consentimientos pendientes</p>
           <p className="text-sm mt-2">
@@ -107,36 +118,48 @@ export default function PortalConsentimientosPage() {
             return (
               <div
                 key={c.id}
-                className={`bg-card rounded-xl border p-4 ${
-                  firmado ? 'border-green-200' : 'border-border/50'
-                }`}
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--portal-bg-alt)',
+                  border: firmado
+                    ? '1px solid hsl(var(--portal-primary) / 0.3)'
+                    : '1px solid hsl(var(--portal-border-light))',
+                }}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       {firmado ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: 'hsl(var(--portal-primary))' }} />
                       ) : (
-                        <FileText className="h-4 w-4 text-primary shrink-0" />
+                        <FileText className="h-4 w-4 shrink-0" style={{ color: 'hsl(var(--portal-primary))' }} />
                       )}
-                      <h3 className="font-medium text-foreground truncate">{c.titulo}</h3>
+                      <h3 className="font-medium truncate" style={{ color: 'hsl(var(--portal-foreground))' }}>{c.titulo}</h3>
                       {firmado && (
-                        <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full shrink-0">
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full shrink-0"
+                          style={{ background: 'hsl(var(--portal-primary) / 0.12)', color: 'hsl(var(--portal-primary))' }}
+                        >
                           Firmado
                         </span>
                       )}
                       {!firmado && (
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full shrink-0">
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full shrink-0"
+                          style={{ background: 'hsl(var(--portal-primary) / 0.1)', color: 'hsl(var(--portal-primary))' }}
+                        >
                           Pendiente
                         </span>
                       )}
                     </div>
 
                     {c.descripcion && (
-                      <p className="text-sm text-muted-foreground/80 mb-1 line-clamp-2">{c.descripcion}</p>
+                      <p className="text-sm mb-1 line-clamp-2" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.8)' }}>
+                        {c.descripcion}
+                      </p>
                     )}
 
-                    <div className="text-xs text-muted-foreground/70 space-x-2">
+                    <div className="text-xs space-x-2" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
                       <span>{formatDate(c.createdAt)}</span>
                       {c.medicoNombre && <span>· Dr/a. {c.medicoNombre}</span>}
                       {firmado && c.fechaFirma && (
@@ -150,7 +173,15 @@ export default function PortalConsentimientosPage() {
                       <button
                         onClick={() => firmar(c.id)}
                         disabled={firmando === c.id}
-                        className="inline-flex items-center gap-1 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 disabled:opacity-50 px-3 py-1.5 rounded-xl transition-colors"
+                        className="inline-flex items-center gap-1 text-sm font-medium disabled:opacity-50 px-3 py-1.5 rounded-xl"
+                        style={{
+                          color: 'white',
+                          background: 'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
+                          opacity: hoverFirmar === c.id ? 0.9 : 1,
+                          transition: 'opacity 200ms ease-out',
+                        }}
+                        onMouseEnter={() => setHoverFirmar(c.id)}
+                        onMouseLeave={() => setHoverFirmar(null)}
                       >
                         {firmando === c.id ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -164,7 +195,14 @@ export default function PortalConsentimientosPage() {
                       <a
                         href={c.documentoPdf}
                         target="_blank"
-                        className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground bg-muted hover:bg-muted/80 px-3 py-1.5 rounded-xl transition-colors"
+                        className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-xl"
+                        style={{
+                          color: hoverVer === c.id ? 'hsl(var(--portal-foreground))' : 'hsl(var(--portal-muted-foreground))',
+                          background: hoverVer === c.id ? 'hsl(var(--portal-muted) / 0.9)' : 'hsl(var(--portal-muted))',
+                          transition: 'all 200ms ease-out',
+                        }}
+                        onMouseEnter={() => setHoverVer(c.id)}
+                        onMouseLeave={() => setHoverVer(null)}
                       >
                         <Eye className="h-3.5 w-3.5" />
                         Ver
