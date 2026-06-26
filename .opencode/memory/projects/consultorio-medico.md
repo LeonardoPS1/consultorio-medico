@@ -87,7 +87,7 @@ Health check: solo server response (sin DB).
 - DB: PostgreSQL 16
 - Infra: Docker Swarm via Dokploy (Simple App)
 - Automatización: n8n (self-hosted)
-- IA Local: Ollama + Mistral
+- IA Local: Ollama + Gemma3
 - Comunicación: Twilio (WhatsApp/SMS/voz)
 
 ### Acceso VPS
