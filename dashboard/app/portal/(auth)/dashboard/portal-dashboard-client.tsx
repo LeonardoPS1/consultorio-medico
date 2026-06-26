@@ -252,17 +252,38 @@ function QuickSurveyCard({
       className={`${staggerItem}`}
       style={staggerDelay(2)}
     >
-      <Card className="shadow-sm border-primary/10 dark:border-primary/20 bg-gradient-to-br from-primary/5 to-white dark:from-primary/10 dark:to-gray-900">
+      <Card
+        className="shadow-sm border-0"
+        style={{
+          background: 'var(--portal-bg-alt)',
+          border: '1px solid hsl(var(--portal-border))',
+          boxShadow: 'var(--portal-shadow-sm)',
+        }}
+      >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
-              <Star className="h-4 w-4 text-primary" />
+            <div
+              className="h-8 w-8 rounded-lg flex items-center justify-center"
+              style={{
+                background: 'hsl(var(--portal-primary) / 0.1)',
+              }}
+            >
+              <Star
+                className="h-4 w-4"
+                style={{ color: 'hsl(var(--portal-primary))' }}
+              />
             </div>
             <div>
-              <h3 className="font-semibold text-sm text-foreground">
-                  Calificá tu atención
-                </h3>
-                <p className="text-xs text-muted-foreground">
+              <h3
+                className="font-semibold text-sm"
+                style={{ color: 'hsl(var(--portal-foreground))' }}
+              >
+                Calificá tu atención
+              </h3>
+              <p
+                className="text-xs"
+                style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+              >
                 {turnoActual.medicoNombre
                   ? `Tu visita con ${turnoActual.medicoNombre} del ${formatCLShort(turnoActual.fechaHora)}`
                   : `Tu visita del ${formatCLShort(turnoActual.fechaHora)}`}
@@ -406,7 +427,7 @@ export default function PortalDashboardClient({
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
@@ -415,20 +436,38 @@ export default function PortalDashboardClient({
         className="flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm">
+          <div
+            className="h-12 w-12 rounded-full flex items-center justify-center shadow-sm"
+            style={{
+              background:
+                'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
+              boxShadow:
+                '0 2px 8px hsl(var(--portal-primary) / 0.2)',
+            }}
+          >
             <User className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-foreground">
+            <h1
+              className="text-lg font-bold"
+              style={{ color: 'hsl(var(--portal-foreground))' }}
+            >
               Hola, {paciente.nombre}
             </h1>
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
-              <Phone className="h-3 w-3" /> {formatCLPhone(paciente.telefono)}
+            <p
+              className="text-xs"
+              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+            >
+              <Phone className="inline h-3 w-3 mr-1 align-middle" />
+              {formatCLPhone(paciente.telefono)}
             </p>
           </div>
         </div>
 
-        <ChevronRight className="h-5 w-5 text-muted-foreground/30" />
+        <ChevronRight
+          className="h-5 w-5"
+          style={{ color: 'hsl(var(--portal-muted-foreground) / 0.2)' }}
+        />
       </motion.div>
 
       {/* Quick Survey */}
@@ -439,48 +478,64 @@ export default function PortalDashboardClient({
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2.5">
         {[
           {
             label: 'Turnos',
             valor: turnos.length,
             icon: Calendar,
-            gradient:
-              'from-teal-50 to-teal-100/50 dark:from-teal-950/30 dark:to-teal-900/20',
-            iconColor: 'text-teal-600 dark:text-teal-400',
-            textColor: 'text-teal-700 dark:text-teal-300',
+            hue: 'var(--portal-primary)',
+            bg: 'hsl(var(--portal-primary) / 0.06)',
           },
           {
             label: 'Próximos',
             valor: turnosProximos.length,
             icon: Clock,
-            gradient:
-              'from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/20',
-            iconColor: 'text-emerald-600 dark:text-emerald-400',
-            textColor: 'text-emerald-700 dark:text-emerald-300',
+            hue: 'var(--portal-accent)',
+            bg: 'hsl(var(--portal-accent) / 0.06)',
           },
           {
             label: 'Recetas',
             valor: recetas.length,
             icon: HeartPulse,
-            gradient:
-              'from-cyan-50 to-cyan-100/50 dark:from-cyan-950/30 dark:to-cyan-900/20',
-            iconColor: 'text-cyan-600 dark:text-cyan-400',
-            textColor: 'text-cyan-700 dark:text-cyan-300',
+            hue: '168 60% 35%',
+            bg: 'hsl(168 60% 35% / 0.06)',
           },
         ].map((stat, i) => (
           <div
             key={stat.label}
-            className={`${staggerItem} group transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]`}
-            style={staggerDelay(i)}
+            className="group transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+            style={{
+              animationName: 'portalFadeIn',
+              animationDuration: '0.3s',
+              animationDelay: `${i * 0.08}s`,
+              animationFillMode: 'both',
+            }}
           >
             <Card
-              className={`bg-gradient-to-br ${stat.gradient} border-0 shadow-sm transition-shadow duration-200 group-hover:shadow-md`}
+              className="border-0"
+              style={{
+                background: stat.bg,
+                boxShadow: 'var(--portal-shadow-sm)',
+              }}
             >
               <CardContent className="p-3 text-center">
-                <stat.icon className={`h-5 w-5 ${stat.iconColor} mx-auto mb-1`} />
-                <p className={`text-xl font-bold ${stat.textColor}`}>{stat.valor}</p>
-                <p className={`text-[10px] ${stat.iconColor}/70 font-medium`}>{stat.label}</p>
+                <stat.icon
+                  className="h-5 w-5 mx-auto mb-1"
+                  style={{ color: `hsl(${stat.hue})` }}
+                />
+                <p
+                  className="text-lg font-bold"
+                  style={{ color: `hsl(${stat.hue})` }}
+                >
+                  {stat.valor}
+                </p>
+                <p
+                  className="text-[10px] font-medium"
+                  style={{ color: `hsl(${stat.hue} / 0.65)` }}
+                >
+                  {stat.label}
+                </p>
               </CardContent>
             </Card>
           </div>

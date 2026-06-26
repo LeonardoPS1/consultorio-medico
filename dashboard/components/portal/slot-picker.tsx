@@ -98,7 +98,14 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
   return (
     <div className="space-y-4">
       {/* ─── Calendario semanal ──────────────────────────── */}
-      <div className="bg-card rounded-xl border border-border/50 p-3">
+      <div
+        className="rounded-xl p-3"
+        style={{
+          background: 'var(--portal-bg-alt)',
+          border: '1px solid hsl(var(--portal-border-light))',
+          boxShadow: 'var(--portal-shadow-sm)',
+        }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <Button

@@ -33,7 +33,6 @@ import {
   Stethoscope,
   CreditCard,
   ExternalLink,
-  Circle,
 } from 'lucide-react';
 import type {
   MedicoPortal,
@@ -101,29 +100,49 @@ function StepIndicator({ currentStep, showPago }: { currentStep: Step; showPago:
               {i > 0 && (
                 <div
                   className={cn(
-                    'h-px w-6 sm:w-10 transition-colors duration-300',
-                    isActive ? 'bg-primary' : 'bg-border',
+                    'h-px w-6 sm:w-8 transition-all duration-400',
+                    isActive
+                      ? 'bg-primary'
+                      : 'bg-border',
                   )}
+                  style={{
+                    transition: 'background 0.3s var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1))',
+                  }}
                 />
               )}
               <div className="flex flex-col items-center gap-1">
                 <div
                   className={cn(
                     'flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium transition-all duration-300',
-                    isCurrent
-                      ? 'bg-primary text-primary-foreground ring-2 ring-primary/30 ring-offset-2 ring-offset-background'
-                      : isActive
-                        ? 'bg-primary/15 text-primary'
-                        : 'bg-muted text-muted-foreground',
                   )}
+                  style={{
+                    background: isCurrent
+                      ? 'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))'
+                      : isActive
+                        ? 'hsl(var(--portal-primary) / 0.15)'
+                        : 'hsl(var(--portal-muted))',
+                    color: isCurrent
+                      ? '#fff'
+                      : isActive
+                        ? 'hsl(var(--portal-primary))'
+                        : 'hsl(var(--portal-muted-foreground))',
+                    boxShadow: isCurrent
+                      ? '0 0 0 3px hsl(var(--portal-primary) / 0.15), 0 1px 3px hsl(var(--portal-primary) / 0.2)'
+                      : 'none',
+                    transition: 'all 0.3s cubic-bezier(0.23, 1, 0.32, 1)',
+                  }}
                 >
                   {isActive && !isCurrent ? <Check className="h-3.5 w-3.5" /> : i + 1}
                 </div>
                 <span
                   className={cn(
-                    'hidden sm:block text-[11px] font-medium transition-colors duration-300',
-                    isActive ? 'text-foreground' : 'text-muted-foreground',
+                    'hidden sm:block text-[11px] font-medium transition-all duration-300',
                   )}
+                  style={{
+                    color: isActive
+                      ? 'hsl(var(--portal-foreground))'
+                      : 'hsl(var(--portal-muted-foreground))',
+                  }}
                 >
                   {STEP_LABELS[s]}
                 </span>
@@ -415,10 +434,24 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
         <ArrowLeft className="mr-2 h-4 w-4" />
         Volver
       </Button>
-      <Card>
+      <Card
+        style={{
+          background: 'var(--portal-bg-alt)',
+          border: '1px solid hsl(var(--portal-border))',
+          boxShadow: 'var(--portal-shadow-md)',
+        }}
+      >
         <CardHeader>
-          <CardTitle>Confirmar turno</CardTitle>
-          <CardDescription>Revisá los detalles antes de confirmar</CardDescription>
+          <CardTitle
+            style={{ color: 'hsl(var(--portal-foreground))' }}
+          >
+            Confirmar turno
+          </CardTitle>
+          <CardDescription
+            style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+          >
+            Revisá los detalles antes de confirmar
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between text-sm">
@@ -511,13 +544,27 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
       exit="exit"
       className="max-w-md mx-auto"
     >
-      <Card>
+      <Card
+        style={{
+          background: 'var(--portal-bg-alt)',
+          border: '1px solid hsl(var(--portal-border))',
+          boxShadow: 'var(--portal-shadow-md)',
+        }}
+      >
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-primary" />
+          <CardTitle
+            className="flex items-center gap-2"
+            style={{ color: 'hsl(var(--portal-foreground))' }}
+          >
+            <CreditCard
+              className="h-5 w-5"
+              style={{ color: 'hsl(var(--portal-primary))' }}
+            />
             Pago pendiente
           </CardTitle>
-          <CardDescription>
+          <CardDescription
+            style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+          >
             Completá el pago para confirmar tu turno. Podés pagar ahora o hacerlo después desde el
             portal.
           </CardDescription>
@@ -603,17 +650,31 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
         variants={springPop}
         initial="initial"
         animate="animate"
-        className="rounded-full bg-primary/10 w-20 h-20 flex items-center justify-center mx-auto mb-6"
+        className="rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6"
+        style={{
+          background: 'hsl(var(--portal-primary) / 0.1)',
+        }}
       >
-        <Check className="h-10 w-10 text-primary" />
+        <Check
+          className="h-10 w-10"
+          style={{ color: 'hsl(var(--portal-primary))' }}
+        />
       </motion.div>
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15, duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
       >
-        <h2 className="text-xl font-semibold mb-2">Turno agendado con éxito</h2>
-        <p className="text-muted-foreground mb-8">
+        <h2
+          className="text-xl font-semibold mb-2"
+          style={{ color: 'hsl(var(--portal-foreground))' }}
+        >
+          Turno agendado con éxito
+        </h2>
+        <p
+          className="mb-8"
+          style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+        >
           Te enviamos los detalles por WhatsApp. Recordá que podés cancelar con hasta 24h de
           anticipación.
         </p>

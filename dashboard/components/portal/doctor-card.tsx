@@ -14,14 +14,14 @@ interface DoctorCardProps {
 }
 
 const AVATAR_COLORS = [
-  'bg-teal-500',
-  'bg-emerald-500',
-  'bg-cyan-500',
-  'bg-amber-500',
-  'bg-rose-500',
-  'bg-sky-500',
-  'bg-pink-500',
-  'bg-indigo-500',
+  'hsl(168 76% 42%)',
+  'hsl(168 60% 50%)',
+  'hsl(168 50% 38%)',
+  'hsl(168 70% 45%)',
+  'hsl(168 55% 48%)',
+  'hsl(168 65% 40%)',
+  'hsl(168 45% 52%)',
+  'hsl(168 75% 44%)',
 ];
 
 function getInitials(nombre: string): string {
@@ -45,27 +45,66 @@ function getAvatarColor(nombre: string): string {
 export function DoctorCard({ medico, selected, onSelect }: DoctorCardProps) {
   return (
     <Card
-      className={`cursor-pointer transition-all duration-200 hoverable:hover:-translate-y-0.5 hoverable:hover:shadow-card-hover active:scale-[0.98] ${
-        selected ? 'ring-2 ring-primary shadow-card-hover' : ''
-      }`}
+      className="cursor-pointer transition-all duration-200 active:scale-[0.98]"
+      style={{
+        background: 'var(--portal-bg-alt)',
+        border: selected
+          ? '1px solid hsl(var(--portal-primary) / 0.3)'
+          : '1px solid hsl(var(--portal-border-light))',
+        boxShadow: selected
+          ? 'var(--portal-shadow-md), 0 0 0 1px hsl(var(--portal-primary) / 0.15)'
+          : 'var(--portal-shadow-sm)',
+      }}
       onClick={() => onSelect(medico)}
+      onMouseEnter={(e) => {
+        if (!selected) {
+          e.currentTarget.style.boxShadow = 'var(--portal-shadow-md)';
+          e.currentTarget.style.borderColor =
+            'hsl(var(--portal-primary) / 0.15)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!selected) {
+          e.currentTarget.style.boxShadow = 'var(--portal-shadow-sm)';
+          e.currentTarget.style.borderColor =
+            'hsl(var(--portal-border-light))';
+        }
+      }}
     >
       <CardHeader className="pb-2">
         <div className="flex items-start gap-3">
           <Avatar className="h-12 w-12 shrink-0">
             <AvatarImage src={medico.fotoUrl || undefined} alt={medico.nombre} />
             <AvatarFallback
-              className={`${getAvatarColor(medico.nombre)} text-white text-sm font-semibold`}
+              className="text-white text-sm font-semibold"
+              style={{ background: getAvatarColor(medico.nombre) }}
             >
               {getInitials(medico.nombre)}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-base truncate">{medico.nombre}</CardTitle>
-            <p className="text-sm text-muted-foreground">{medico.especialidad}</p>
+            <CardTitle
+              className="text-base truncate"
+              style={{ color: 'hsl(var(--portal-foreground))' }}
+            >
+              {medico.nombre}
+            </CardTitle>
+            <p
+              className="text-sm"
+              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+            >
+              {medico.especialidad}
+            </p>
           </div>
           {medico.matricula && (
-            <Badge variant="outline" className="text-xs shrink-0">
+            <Badge
+              variant="outline"
+              className="text-xs shrink-0"
+              style={{
+                borderColor: 'hsl(var(--portal-border))',
+                color: 'hsl(var(--portal-muted-foreground))',
+              }}
+            >
               Mat. {medico.matricula}
             </Badge>
           )}
