@@ -8,6 +8,7 @@ import Link from 'next/link';
 import PortalNav from './portal-nav';
 import { PortalContent } from './portal-content';
 import { PortalThemeToggle } from '@/components/portal/theme-toggle';
+import { PortalLogoutButton } from '@/components/portal/logout-button';
 
 export const metadata = {
   title: 'Portal del Paciente — AicoreMed',
@@ -74,6 +75,8 @@ export default function PortalAuthLayout({ children }: { children: React.ReactNo
 
           <div className="flex items-center gap-1">
             <PortalThemeToggle />
+            <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-0.5" />
+            <PortalLogoutButton />
           </div>
         </div>
       </header>

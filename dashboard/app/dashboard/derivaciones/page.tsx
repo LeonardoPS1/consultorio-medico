@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Cie10Search } from '@/components/ui/cie10-search';
 import { toast } from '@/components/ui/use-toast';
 import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 import {
@@ -582,10 +583,11 @@ export default function DerivacionesPage() {
               </div>
               <div className="space-y-2">
                 <Label>Código CIE-10</Label>
-                <Input
-                  placeholder="Ej: I10"
+                <Cie10Search
                   value={form.cie10Codigo}
-                  onChange={(e) => setForm((f) => ({ ...f, cie10Codigo: e.target.value }))}
+                  onSelect={(entry) => setForm((f) => ({ ...f, cie10Codigo: entry.codigo }))}
+                  onChange={(val) => setForm((f) => ({ ...f, cie10Codigo: val }))}
+                  placeholder="Ej: I10 — Hipertensión esencial"
                 />
               </div>
             </div>
