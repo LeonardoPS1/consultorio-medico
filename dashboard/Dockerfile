@@ -34,6 +34,13 @@ ENV NODE_ENV=production
 
 RUN corepack enable && corepack prepare pnpm@latest --activate && pnpm build
 
+# ─── Fix standalone deps: instalar deps de producción en el standalone ──────
+# Next.js standalone output con pnpm genera package.json pero node_modules vacío.
+# Usamos npm ci --production --ignore-scripts dentro del standalone para poblarlo.
+WORKDIR /app/dashboard/.next/standalone
+RUN npm ci --production --ignore-scripts --prefer-offline 2>/dev/null || npm install --production --ignore-scripts
+WORKDIR /app
+
 # No necesitamos tar: Docker COPY --from=builder sigue symlinks automáticamente.
 # El COPY del standalone más abajo ya trae node_modules/ del output.
 
@@ -56,18 +63,8 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Por eso CMD apunta a server.js sin el prefijo dashboard/
 
 # Copiar standalone output de Next.js (plano: server.js, .next, node_modules en raíz)
+# Ahora YA incluye node_modules poblado desde el builder
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
-
-# ⚠️ Next.js 14.2.21+ con pnpm genera un standalone/package.json con las deps
-# de producción, pero SIN node_modules/ (está vacío). npm install sobre ese
-# package.json falla con npm ≥10 por resolución estricta de peer deps
-# (next-auth vs next).
-#
-# En vez de reinstalar, copiamos node_modules desde el builder (del dashboard).
-# Docker COPY --from=builder SIGUE symlinks → aplana la estrutura de pnpm
-# a archivos reales. Esto nos da exactamente las mismas versiones que se
-# usaron en build, sin riesgos de resolución de dependencias.
-COPY --from=builder --chown=nextjs:nodejs /app/dashboard/node_modules ./node_modules
 
 # Copiar static assets (junto a server.js, no bajo dashboard/)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./.next/static
