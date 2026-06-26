@@ -11,7 +11,7 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 
 # Cache buster: cambiar este valor para forzar rebuild completo
-ARG CACHEBUST=2
+ARG CACHEBUST=3
 
 # Corepack para pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
