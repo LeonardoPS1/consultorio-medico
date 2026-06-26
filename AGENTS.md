@@ -2,7 +2,7 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 03/06/2026
+**Última actualización:** 26/06/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
@@ -115,7 +115,7 @@ PACIENTES
 Twilio WhatsApp / IMAP Email
   │
   ▼
-n8n (9 Workflows)
+n8n (10 Workflows)
   │  ├── WF-01: WhatsApp Inbound + Triaje IA
   │  ├── WF-02: Gestión de Turnos
   │  ├── WF-03: Recordatorios Automáticos
@@ -124,7 +124,8 @@ n8n (9 Workflows)
   │  ├── WF-06: Recetas y Renovaciones
   │  ├── WF-07: Backup Automático Encriptado
   │  ├── WF-08: Google Calendar Sync
-  │  └── WF-09: Anonimización Post-Retención
+  │  ├── WF-09: Anonimización Post-Retención
+  │  └── WF-10: Expiración Waitlist
   │
   ▼
 Ollama (Gemma3 - IA Local)
@@ -176,10 +177,8 @@ consultorio-medico/
 │   ├── lib/                   # auth, db, planes, features, servicios
 │   ├── drizzle/               # Schema Drizzle + migraciones
 │   └── public/                # Landing page + assets
-├── n8n-workflows/             # 9 workflows JSON
-│   ├── current/               # Activos (WF-01 a WF-09)
-│   └── archive/               # Versiones legacy + designs
-├── database/                  # Migraciones SQL, seed data
+├── n8n-workflows/             # 10 workflows JSON
+│   └── current/               # Activos (WF-01 a WF-10)
 ├── scripts/                   # Backup, deploy, migrate
 ├── docs/                      # Arquitectura, workflows, DB, seguridad
 └── AGENTS.md                  # ← Este archivo
@@ -406,6 +405,26 @@ consultorio-medico/
 
 ---
 
+### WF-10: Expiración Waitlist
+
+| Propiedad | Valor |
+|-----------|-------|
+| **Archivo** | `n8n-workflows/current/workflow-10-expiracion-waitlist.json` |
+| **Trigger** | Cron (diario) |
+| **Estado** | ✅ **ACTIVO** |
+
+**Flujo:**
+1. Cron diario verifica ofertas de waitlist expiradas
+2. Cambia estado de `pendiente` a `expirada` en PostgreSQL
+3. Notifica a pacientes vía Twilio WhatsApp si corresponde
+4. Loggea el resultado en `workflow_logs`
+
+**Integración con Dashboard:**
+- Endpoint `POST /api/waitlist/reasignar` para reasignar ofertas
+- Ofertas se crean con TTL configurable (default 24h)
+
+---
+
 ### Matriz Resumen de Agentes
 
 | # | Nombre | Trigger | Ollama | Twilio | PG | GCal | IMAP | Webhook |
@@ -419,6 +438,7 @@ consultorio-medico/
 | **WF-07** | Backup Automático | Cron | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **WF-08** | Google Calendar Sync | Webhook | ❌ | ❌ | ✅ | ✅ | ❌ | `/google-calendar-sync` |
 | **WF-09** | Anonimización Post-Retención | Cron | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **WF-10** | Expiración Waitlist | Cron | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
 
 ---
 
@@ -492,7 +512,7 @@ consultorio-medico/
 | API | `http://172.18.0.1:5678` (interno, sin Cloudflare) |
 | API Key | JWT |
 | Versión | 2.19.5 |
-| Workflows activos | 9 |
+| Workflows activos | 10 |
 | Webhook auth | `x-webhook-secret` |
 | Credenciales | PostgreSQL, Twilio (Basic Auth + API), Ollama |
 
@@ -547,7 +567,7 @@ consultorio-medico/
 | **Múltiples médicos** | Sesión con medicoId, scoping en 7 rutas API, agenda-scope utility | 29/05 |
 | ~~Google Calendar sync~~ | `turnosService.create/update/delete()` con GCal sync | 28/05 |
 | ~~ARCO - Derecho de Supresión~~ | `privacidadService` con baja, cascada de datos, anonimización, WF-09 retención 90 días | 28/05 |
-| **Adaptación Chile** | Isapre/Fonasa, español neutro, precios CLP, regiones/comunas, RUT, teléfono +569 | 02/06 |
+| **Portal Paciente** | Magic link WhatsApp + JWT 24h + Booking Wizard 4 pasos + gestión turnos/recetas/historial | 26/06 |
 
 ### 🟡 Prioridad Media
 
@@ -571,7 +591,6 @@ consultorio-medico/
 | Sistema de derivaciones | Derivar pacientes entre especialistas |
 
 ### 💡 Ideas a Futuro
-- Portal del paciente (login para ver turnos, recetas, historial)
 - Chat en vivo en dashboard (WebSocket)
 - Recordatorios vía email
 - Historial clínico digital expandido
@@ -705,16 +724,3 @@ git diff
 ---
 
 > **Este archivo debe ser consultado al inicio de cada sesión y actualizado cuando se agreguen, modifiquen o eliminen agentes, integraciones o cambios significativos en la arquitectura.**
-
-## graphify
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-When the user types `/graphify`, invoke the `skill` tool with `skill: "graphify"` before doing anything else.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).

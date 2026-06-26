@@ -1,7 +1,7 @@
 # 🔄 Workflows n8n — AicoreMed
 
-> **9 workflows activos** · Automatización inteligente del consultorio
-> **Última actualización:** 03/06/2026
+> **10 workflows activos** · Automatización inteligente del consultorio
+> **Última actualización:** 26/06/2026
 
 ---
 
@@ -36,7 +36,8 @@ n8n-workflows/
 │   ├── workflow-06-recetas.json
 │   ├── workflow-07-backup.json
 │   ├── workflow-08-google-calendar-sync.json
-│   └── workflow-09-anonimizar.json
+│   ├── workflow-09-anonimizar.json
+│   └── workflow-10-expiracion-waitlist.json
 │
 └── archive/                          # Versiones legacy y diseños
 ```
@@ -56,6 +57,7 @@ n8n-workflows/
 | **07** | Backup Automático | Cron (3:00 AM) | 2 | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **08** | Google Calendar Sync | Webhook | 8 | ❌ | ❌ | ✅ | ✅ | ❌ |
 | **09** | Anonimización Post-Retención | Cron (4:00 AM) | 5 | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **10** | Expiración Waitlist | Cron (diario) | — | ❌ | ✅ | ✅ | ❌ | ❌ |
 
 ---
 
@@ -73,7 +75,7 @@ Twilio → Webhook (x-webhook-secret validado) →
   → Busca/crea paciente en PostgreSQL por teléfono →
   → Consulta turnos próximos y recetas activas →
   → Construye contexto estructurado →
-  → AI Agent (Ollama Mistral + Chat Memory) →
+  → AI Agent (Ollama Gemma3 + Chat Memory) →
   → Analiza intención →
   → Ejecuta acción (responder, crear turno, etc.) →
   → Envía respuesta vía Twilio WhatsApp →
@@ -83,7 +85,7 @@ Twilio → Webhook (x-webhook-secret validado) →
 ### Configuración IA
 | Parámetro | Valor |
 |-----------|-------|
-| Modelo | `mistral` |
+| Modelo | `gemma3` |
 | Base URL | `http://ollama:11434` |
 | Temperatura | 0.3 |
 | Chat Memory | Postgres (`n8n_chat_histories`, sessionKey=teléfono, contextWindow=10) |
@@ -115,8 +117,8 @@ Webhook → Ollama extrae info (motivo, fecha, horario, médico) →
 ```
 
 ### Configuración IA
-- Extracción: `mistral`, temp=0.1 (estricto, JSON)
-- Respuesta: `mistral`, temp=0.7 (creativo, friendly)
+- Extracción: `gemma3`, temp=0.1 (estricto, JSON)
+- Respuesta: `gemma3`, temp=0.7 (creativo, friendly)
 
 ---
 

@@ -22,7 +22,7 @@
 
 <div align="center">
 
-`TypeScript` `Next.js 14` `PostgreSQL` `Drizzle ORM` `n8n` `Ollama` `Mistral` `Twilio` `Docker` `MercadoPago` `LiveKit`
+`TypeScript` `Next.js 14` `PostgreSQL` `Drizzle ORM` `n8n` `Ollama` `Gemma3` `Twilio` `Docker` `MercadoPago` `LiveKit`
 
 [![Estado](https://img.shields.io/badge/Estado-Producci%C3%B3n-10b981?style=flat-square)](https://med.aicorebots.com)
 [![Next.js](https://img.shields.io/badge/Next.js-14.2-000000?style=flat-square&logo=next.js)](https://nextjs.org/)
@@ -54,7 +54,7 @@
 
 ## 🏥 Descripción General
 
-**AicoreMed** es un sistema de gestión integral para consultorios médicos desarrollado por [Aicore](https://aicorebots.com). Combina un dashboard web moderno con automatización inteligente vía **WhatsApp**, **IA local** con **Ollama + Mistral**, y una arquitectura robusta sobre **PostgreSQL** y **Docker Swarm**.
+**AicoreMed** es un sistema de gestión integral para consultorios médicos desarrollado por [Aicore](https://aicorebots.com). Combina un dashboard web moderno con automatización inteligente vía **WhatsApp**, **IA local** con **Ollama + Gemma3**, y una arquitectura robusta sobre **PostgreSQL** y **Docker Swarm**.
 
 ### ¿Qué lo hace diferente?
 
@@ -85,12 +85,12 @@
                     ┌───────▼──────────────▼─────────────────▼─────────────┐
                     │              CAPA DE AUTOMATIZACIÓN                   │
                     │  ┌──────────────────────────────────────────────┐    │
-                    │  │              n8n (9 Workflows)               │    │
+                    │  │              n8n (10 Workflows)              │    │
                     │  │  WF-01  WF-02  WF-03  WF-04  WF-05          │    │
-                    │  │  WF-06  WF-07  WF-08  WF-09                 │    │
+                    │  │  WF-06  WF-07  WF-08  WF-09  WF-10         │    │
                     │  └───────────────────┬──────────────────────────┘    │
                     │  ┌───────────────────▼──────────────────────────┐    │
-                    │  │         Ollama (Mistral - IA Local)          │    │
+                    │  │         Ollama (Gemma3 - IA Local)           │    │
                     │  └───────────────────┬──────────────────────────┘    │
                     └──────────────────────┼──────────────────────────────┘
                                            │
@@ -120,7 +120,7 @@ Twilio → Webhook Dashboard (HMAC validation) →
   → Forward a n8n WF-01 (x-webhook-secret) →
   → Busca paciente en DB →
   → Construye contexto (turnos, recetas, historial) →
-  → AI Agent (Ollama Mistral + Postgres Chat Memory) →
+  → AI Agent (Ollama Gemma3 + Postgres Chat Memory) →
   → Analiza intención → Ejecuta acción →
   → Twilio responde al paciente
 ```
@@ -182,7 +182,7 @@ Twilio → Webhook Dashboard (HMAC validation) →
 | **ORM** | Drizzle ORM | 0.31.x | Queries tipadas y migraciones |
 | **Base de Datos** | PostgreSQL 16 | 16 | Almacenamiento principal |
 | **Automatización** | n8n | 2.19.x | Workflows de negocio |
-| **IA Local** | Ollama + Mistral | latest | Asistente virtual y triaje |
+| **IA Local** | Ollama + Gemma3 | latest | Asistente virtual y triaje |
 | **Videollamada** | LiveKit (self-hosted) | 1.9.x | Telemedicina en vivo (WSS + TURN) |
 | **WhatsApp** | Twilio API | 5.x | Mensajería con pacientes |
 | **Pagos** | MercadoPago | 2.x | Suscripciones en CLP |
@@ -290,6 +290,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 | **07** | Backup Automático | Cron (3:00 AM) | 2 | ❌ | Backup cifrado con limpieza 30 días |
 | **08** | Google Calendar Sync | Webhook | 8 | ❌ | Sincronización bidireccional de turnos |
 | **09** | Anonimización | Cron (4:00 AM) | 5 | ❌ | Elimina datos post-retención (90 días) |
+| **10** | Expiración Waitlist | Cron (diario) | — | ❌ | Expira ofertas de lista de espera |
 
 > 📖 **Documentación completa de workflows**: [`docs/workflows.md`](docs/workflows.md)
 
@@ -361,11 +362,9 @@ consultorio-medico/
 │   ├── livekit.yaml                     # Config del servidor (keys, TURN, Ingress)
 │   └── traefik-livekit.yml              # Routing Traefik para livekit.aicorebots.com
 │
-├── n8n-workflows/                      # ★ 9 workflows JSON
-│   ├── current/                        # Activos (WF-01 a WF-09)
-│   └── archive/                        # Versiones legacy
+├── n8n-workflows/                      # ★ 10 workflows JSON
+│   └── current/                        # Activos (WF-01 a WF-10)
 │
-├── database/                           # Migraciones SQL históricas
 ├── scripts/                            # Deploy, backup, utilidades
 ├── docs/                               # Documentación completa
 │
@@ -414,11 +413,11 @@ consultorio-medico/
 - [x] Encuestas post-consulta con análisis de sentimiento ML
 - [x] Rediseño Premium (animaciones, cards, popovers, KPIs count-up)
 - [x] Telemedicina en vivo con LiveKit (videoconsultas, link WhatsApp, tokens seguros)
+- [x] Portal del Paciente (Magic link WhatsApp + JWT 24h + Booking Wizard 4 pasos + gestión turnos/recetas/historial)
 
 ### 🟡 En Progreso / Próximo
 - [ ] Tests de integración (Playwright)
 - [ ] Correo Inteligente completo (WF-04 — requiere IMAP/SMTP)
-- [ ] Portal del Paciente (turnos, recetas, historial)
 
 ### 🔮 Futuro
 - [ ] Chat en vivo WebSocket
