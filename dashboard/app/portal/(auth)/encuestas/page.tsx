@@ -16,6 +16,8 @@ import {
   ChevronRight,
   User as UserIcon,
 } from 'lucide-react';
+import { PortalCard } from '@/components/portal/portal-card';
+import { PortalButton } from '@/components/portal/portal-button';
 
 interface Encuesta {
   id: string;
@@ -147,14 +149,7 @@ function PendingSurveyForm({
       animate={{ opacity: 1, y: 0 }}
       className="mb-6"
     >
-      <div
-        className="rounded-2xl p-4"
-        style={{
-          background: 'var(--portal-bg-alt)',
-          border: '1px solid hsl(var(--portal-border-light))',
-          boxShadow: 'var(--portal-shadow-sm)',
-        }}
-      >
+      <PortalCard>
         <div className="flex items-center gap-2 mb-3">
           <div
             className="h-8 w-8 rounded-lg flex items-center justify-center"
@@ -335,33 +330,19 @@ function PendingSurveyForm({
                 </p>
               )}
 
-              <button
+              <PortalButton
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-150 disabled:opacity-50 active:scale-[0.97]"
-                style={{
-                  background:
-                    'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
-                  color: '#fff',
-                  boxShadow:
-                    '0 4px 12px hsl(var(--portal-primary) / 0.25)',
-                }}
+                loading={submitting}
+                fullWidth
               >
-                {submitting ? (
-                  <div
-                    className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
-                  />
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Enviar calificación
-                  </>
-                )}
-              </button>
+                <Send className="h-4 w-4" />
+                Enviar calificación
+              </PortalButton>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </PortalCard>
     </motion.div>
   );
 }
@@ -511,15 +492,7 @@ export default function PortalEncuestasPage() {
                   ease: [0.16, 1, 0.3, 1],
                 }}
               >
-                <div
-                  className="rounded-2xl p-4 transition-all"
-                  style={{
-                    background: 'var(--portal-bg-alt)',
-                    border:
-                      '1px solid hsl(var(--portal-border-light))',
-                    boxShadow: 'var(--portal-shadow-sm)',
-                  }}
-                >
+                <PortalCard>
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex items-center gap-2">
                       <StarRating puntaje={puntaje} />
@@ -576,7 +549,7 @@ export default function PortalEncuestasPage() {
                         <p>{e.descripcion}</p>
                       </div>
                     )}
-                </div>
+                </PortalCard>
               </motion.div>
             );
           })}

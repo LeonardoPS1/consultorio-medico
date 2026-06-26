@@ -1,8 +1,9 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { PortalCard } from '@/components/portal/portal-card';
 import { CalendarIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { MedicoPortal } from '@/lib/services/portal-booking';
@@ -44,32 +45,15 @@ function getAvatarColor(nombre: string): string {
 
 export function DoctorCard({ medico, selected, onSelect }: DoctorCardProps) {
   return (
-    <Card
-      className="cursor-pointer transition-all duration-200 active:scale-[0.98]"
-      style={{
-        background: 'var(--portal-bg-alt)',
-        border: selected
-          ? '1px solid hsl(var(--portal-primary) / 0.3)'
-          : '1px solid hsl(var(--portal-border-light))',
-        boxShadow: selected
-          ? 'var(--portal-shadow-md), 0 0 0 1px hsl(var(--portal-primary) / 0.15)'
-          : 'var(--portal-shadow-sm)',
-      }}
+    <PortalCard
+      hover
+      padding="none"
       onClick={() => onSelect(medico)}
-      onMouseEnter={(e) => {
-        if (!selected) {
-          e.currentTarget.style.boxShadow = 'var(--portal-shadow-md)';
-          e.currentTarget.style.borderColor =
-            'hsl(var(--portal-primary) / 0.15)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!selected) {
-          e.currentTarget.style.boxShadow = 'var(--portal-shadow-sm)';
-          e.currentTarget.style.borderColor =
-            'hsl(var(--portal-border-light))';
-        }
-      }}
+      className="cursor-pointer"
+      style={selected ? {
+        borderColor: 'hsl(var(--portal-primary) / 0.3)',
+        boxShadow: 'var(--portal-shadow-md), 0 0 0 1px hsl(var(--portal-primary) / 0.15)',
+      } : undefined}
     >
       <CardHeader className="pb-2">
         <div className="flex items-start gap-3">
@@ -132,6 +116,6 @@ export function DoctorCard({ medico, selected, onSelect }: DoctorCardProps) {
           {selected ? 'Seleccionado' : 'Agendar turno'}
         </Button>
       </CardContent>
-    </Card>
+    </PortalCard>
   );
 }

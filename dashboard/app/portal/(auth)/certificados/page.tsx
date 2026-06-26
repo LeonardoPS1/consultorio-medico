@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { FileText, Download, ExternalLink, Loader2, SearchX } from 'lucide-react';
+import { PortalCard } from '@/components/portal/portal-card';
 
 interface Certificado {
   id: string;
@@ -48,13 +49,13 @@ export default function PortalCertificadosPage() {
     return (
       <div>
         <h1 className="text-2xl font-bold mb-6" style={{ color: 'hsl(var(--portal-foreground))' }}>Mis Certificados</h1>
-        <div className="text-center py-16" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
+        <PortalCard padding="lg" className="text-center" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
           <div className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3" style={{ background: 'hsl(var(--portal-muted))' }}>
             <FileText className="h-6 w-6" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }} />
           </div>
           <p>No tienes certificados médicos emitidos</p>
           <p className="text-sm mt-2">Cuando tu médico emita un certificado, aparecerá aquí</p>
-        </div>
+        </PortalCard>
       </div>
     );
   }
@@ -65,14 +66,7 @@ export default function PortalCertificadosPage() {
 
       <div className="space-y-2">
         {certificados.map((c) => (
-          <div
-            key={c.id}
-            className="rounded-xl p-4 flex items-start justify-between gap-3"
-            style={{
-              background: 'var(--portal-bg-alt)',
-              border: '1px solid hsl(var(--portal-border-light))',
-            }}
-          >
+          <PortalCard key={c.id} hover className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <FileText className="h-4 w-4 shrink-0" style={{ color: 'hsl(var(--portal-primary))' }} />
@@ -101,7 +95,7 @@ export default function PortalCertificadosPage() {
               PDF
               <ExternalLink className="h-3 w-3" />
             </a>
-          </div>
+          </PortalCard>
         ))}
       </div>
     </div>

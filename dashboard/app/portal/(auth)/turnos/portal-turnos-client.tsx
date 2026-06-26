@@ -19,6 +19,8 @@ import {
   RefreshCw,
   Receipt,
 } from 'lucide-react';
+import { PortalCard } from '@/components/portal/portal-card';
+import { PortalBadge } from '@/components/portal/portal-badge';
 
 interface Turno {
   id: string;
@@ -52,14 +54,6 @@ function formatDate(date: string): string {
     month: 'long',
   });
 }
-
-/* ─── Reusable styles ───────────────────────────────────── */
-const cardStyle: React.CSSProperties = {
-  background: 'var(--portal-bg-alt)',
-  border: '1px solid hsl(var(--portal-border-light))',
-  borderRadius: '0.75rem',
-  boxShadow: 'var(--portal-shadow-sm)',
-};
 
 export default function PortalTurnosClient({ turnos }: Props) {
   const router = useRouter();
@@ -160,20 +154,11 @@ export default function PortalTurnosClient({ turnos }: Props) {
           </h2>
           <div className="space-y-3">
             {pendientes.map((t) => (
-              <div
+              <PortalCard
                 key={t.id}
-                style={{
-                  ...cardStyle,
-                  padding: '1rem',
-                  transition: 'box-shadow 200ms ease-out',
-                  opacity: cancelados.has(t.id) ? 0.5 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = 'var(--portal-shadow-md)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'var(--portal-shadow-sm)';
-                }}
+                padding="md"
+                hover
+                style={{ opacity: cancelados.has(t.id) ? 0.5 : 1 }}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
@@ -290,7 +275,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                     )}
                   </div>
                 </div>
-              </div>
+              </PortalCard>
             ))}
           </div>
         </div>
@@ -306,22 +291,11 @@ export default function PortalTurnosClient({ turnos }: Props) {
           </h2>
           <div className="space-y-2">
             {pasados.map((t) => (
-              <div
+              <PortalCard
                 key={t.id}
-                style={{
-                  ...cardStyle,
-                  padding: '0.75rem 1rem',
-                  transition: 'box-shadow 200ms ease-out',
-                  opacity: 0.8,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = '1';
-                  e.currentTarget.style.boxShadow = 'var(--portal-shadow-md)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '0.8';
-                  e.currentTarget.style.boxShadow = 'var(--portal-shadow-sm)';
-                }}
+                padding="sm"
+                hover
+                style={{ opacity: 0.8 }}
               >
                 <div className="flex justify-between items-start gap-2">
                   <div className="min-w-0">
@@ -355,66 +329,55 @@ export default function PortalTurnosClient({ turnos }: Props) {
                         Recibo
                       </a>
                     )}
-                    <span
-                      className="text-[11px] font-medium px-2.5 py-0.5 rounded-full"
-                      style={
+                    <PortalBadge
+                      variant={
                         t.estado === 'atendido'
-                          ? {
-                              background:
-                                'hsl(var(--portal-primary) / 0.12)',
-                              color: 'hsl(var(--portal-primary))',
-                            }
+                          ? 'success'
                           : t.estado === 'cancelada'
-                            ? {
-                                background:
-                                  'hsl(var(--portal-destructive) / 0.12)',
-                                color: 'hsl(var(--portal-destructive))',
-                              }
-                            : {
-                                background:
-                                  'hsl(38 92% 50% / 0.12)',
-                                color: 'hsl(38 92% 40%)',
-                              }
+                            ? 'destructive'
+                            : 'warning'
                       }
                     >
                       {t.estado}
-                    </span>
+                    </PortalBadge>
                   </div>
                 </div>
-              </div>
+              </PortalCard>
             ))}
           </div>
         </div>
       )}
 
       {turnos.length === 0 && (
-        <div className="text-center py-16">
-          <div
-            className="h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4"
-            style={{ background: 'hsl(var(--portal-muted))' }}
-          >
-            <Calendar
-              className="h-8 w-8"
+        <PortalCard padding="lg" className="text-center">
+          <div className="py-8">
+            <div
+              className="h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{ background: 'hsl(var(--portal-muted))' }}
+            >
+              <Calendar
+                className="h-8 w-8"
+                style={{
+                  color: 'hsl(var(--portal-muted-foreground) / 0.4)',
+                }}
+              />
+            </div>
+            <p
+              className="font-medium"
+              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+            >
+              No tienes turnos registrados
+            </p>
+            <p
+              className="text-xs mt-1"
               style={{
-                color: 'hsl(var(--portal-muted-foreground) / 0.4)',
+                color: 'hsl(var(--portal-muted-foreground) / 0.6)',
               }}
-            />
+            >
+              Agendá tu primer turno desde la sección Agendar
+            </p>
           </div>
-          <p
-            className="font-medium"
-            style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-          >
-            No tienes turnos registrados
-          </p>
-          <p
-            className="text-xs mt-1"
-            style={{
-              color: 'hsl(var(--portal-muted-foreground) / 0.6)',
-            }}
-          >
-            Agendá tu primer turno desde la sección Agendar
-          </p>
-        </div>
+        </PortalCard>
       )}
     </div>
   );

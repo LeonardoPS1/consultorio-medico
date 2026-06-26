@@ -7,6 +7,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Send, MessageSquare, Loader2, Bot } from 'lucide-react';
+import { PortalButton } from '@/components/portal/portal-button';
+import { PortalCard } from '@/components/portal/portal-card';
 
 interface Mensaje {
   id: string;
@@ -170,12 +172,7 @@ export default function PortalChatPage() {
         )}
 
         {mensajes.length === 0 && !error && (
-          <div
-            className="text-center py-12"
-            style={{
-              color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-            }}
-          >
+          <PortalCard className="text-center py-12" padding="lg" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
             <Bot
               className="h-12 w-12 mx-auto mb-3"
               style={{ opacity: 0.5 }}
@@ -184,7 +181,7 @@ export default function PortalChatPage() {
             <p className="text-xs mt-1">
               Escribinos tu consulta y te responderemos a la brevedad
             </p>
-          </div>
+          </PortalCard>
         )}
 
         {mensajes.map((msg) => (
@@ -277,24 +274,26 @@ export default function PortalChatPage() {
               e.currentTarget.style.boxShadow = 'none';
             }}
           />
-          <button
+          <PortalButton
             onClick={sendMessage}
             disabled={!input.trim() || sending || !!error}
-            className="rounded-full p-2.5 transition-all duration-200 disabled:opacity-40 active:scale-90"
+            variant="primary"
             style={{
-              background:
-                'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
-              color: '#fff',
+              borderRadius: '9999px',
+              padding: '0.625rem',
+              height: 'auto',
+              width: '2.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             {sending ? (
-              <span
-                className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin block"
-              />
+              <span className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin block" />
             ) : (
               <Send className="h-5 w-5" />
             )}
-          </button>
+          </PortalButton>
         </div>
       </div>
     </div>

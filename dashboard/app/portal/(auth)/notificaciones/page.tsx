@@ -15,6 +15,7 @@ import {
   MessageSquare,
   FileText,
 } from 'lucide-react';
+import { PortalCard } from '@/components/portal/portal-card';
 
 interface Notificacion {
   id: string;
@@ -167,7 +168,7 @@ export default function PortalNotificacionesPage() {
       )}
 
       {notificaciones.length === 0 ? (
-        <div className="text-center py-16">
+        <PortalCard className="text-center py-12" padding="lg">
           <div
             className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3"
             style={{ background: 'hsl(var(--portal-muted))' }}
@@ -187,84 +188,67 @@ export default function PortalNotificacionesPage() {
           >
             No tienes notificaciones
           </p>
-        </div>
+        </PortalCard>
       ) : (
         <div className="space-y-1">
           {notificaciones.map((n) => {
             const Icon = TIPO_ICONS[n.tipo] || TIPO_ICONS.sistema;
 
             return (
-              <div key={n.id} className="block">
-                <button
-                  onClick={() => {
-                    if (!n.leido) marcarLeida(n.id);
-                    if (n.href) window.location.href = n.href;
-                  }}
-                  className="w-full text-left flex items-start gap-3 p-3 rounded-lg transition-colors"
-                  style={
-                    n.leido
-                      ? {
-                          background: 'var(--portal-bg-alt)',
-                        }
-                      : {
-                          background:
-                            'hsl(var(--portal-primary) / 0.05)',
-                        }
-                  }
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background =
-                      'hsl(var(--portal-primary) / 0.08)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = n.leido
-                      ? 'var(--portal-bg-alt)'
-                      : 'hsl(var(--portal-primary) / 0.05)';
-                  }}
-                >
-                  <div className="mt-0.5 shrink-0">{Icon}</div>
-                  <div className="flex-1 min-w-0 text-left">
+              <PortalCard
+                key={n.id}
+                hover
+                padding="sm"
+                className="w-full flex items-start gap-3"
+                style={{ background: n.leido ? 'var(--portal-bg-alt)' : 'hsl(var(--portal-primary) / 0.05)' }}
+                onClick={() => {
+                  if (!n.leido) marcarLeida(n.id);
+                  if (n.href) window.location.href = n.href;
+                }}
+              >
+                <div className="mt-0.5 shrink-0">{Icon}</div>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-sm"
+                    style={{
+                      color: n.leido
+                        ? 'hsl(var(--portal-muted-foreground) / 0.8)'
+                        : 'hsl(var(--portal-foreground))',
+                      fontWeight: n.leido ? 400 : 600,
+                    }}
+                  >
+                    {n.titulo}
+                  </p>
+                  {n.descripcion && (
                     <p
-                      className="text-sm"
-                      style={{
-                        color: n.leido
-                          ? 'hsl(var(--portal-muted-foreground) / 0.8)'
-                          : 'hsl(var(--portal-foreground))',
-                        fontWeight: n.leido ? 400 : 600,
-                      }}
-                    >
-                      {n.titulo}
-                    </p>
-                    {n.descripcion && (
-                      <p
-                        className="text-xs mt-0.5 line-clamp-2"
-                        style={{
-                          color:
-                            'hsl(var(--portal-muted-foreground) / 0.7)',
-                        }}
-                      >
-                        {n.descripcion}
-                      </p>
-                    )}
-                    <p
-                      className="text-[10px] mt-1"
+                      className="text-xs mt-0.5 line-clamp-2"
                       style={{
                         color:
-                          'hsl(var(--portal-muted-foreground) / 0.5)',
+                          'hsl(var(--portal-muted-foreground) / 0.7)',
                       }}
                     >
-                      {formatDate(n.createdAt)}
+                      {n.descripcion}
                     </p>
-                  </div>
-                  {!n.leido && (
-                    <span
-                      className="w-2 h-2 rounded-full mt-2 shrink-0"
-                      style={{
-                        background: 'hsl(var(--portal-primary))',
-                      }}
-                    />
                   )}
-                </button>
-              </div>
+                  <p
+                    className="text-[10px] mt-1"
+                    style={{
+                      color:
+                        'hsl(var(--portal-muted-foreground) / 0.5)',
+                    }}
+                  >
+                    {formatDate(n.createdAt)}
+                  </p>
+                </div>
+                {!n.leido && (
+                  <span
+                    className="w-2 h-2 rounded-full mt-2 shrink-0"
+                    style={{
+                      background: 'hsl(var(--portal-primary))',
+                    }}
+                  />
+                )}
+              </PortalCard>
             );
           })}
         </div>

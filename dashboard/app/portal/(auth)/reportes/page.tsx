@@ -17,6 +17,7 @@ import {
   Activity,
   Eye,
 } from 'lucide-react';
+import { PortalCard } from '@/components/portal/portal-card';
 
 interface ReportesData {
   totalVisitas: number;
@@ -131,14 +132,7 @@ function StatCard({
         ease: [0.16, 1, 0.3, 1],
       }}
     >
-      <div
-        className="rounded-2xl p-4"
-        style={{
-          background: bg,
-          border: '1px solid hsl(var(--portal-border-light))',
-          boxShadow: 'var(--portal-shadow-sm)',
-        }}
-      >
+      <PortalCard style={{ background: bg }}>
         <div className="flex items-center justify-between mb-2">
           <span
             className="text-xs font-medium"
@@ -156,7 +150,7 @@ function StatCard({
             </span>
           )}
         </p>
-      </div>
+      </PortalCard>
     </motion.div>
   );
 }
@@ -187,12 +181,7 @@ export default function PortalReportesPage() {
 
   if (!data) {
     return (
-      <div
-        className="text-center py-16"
-        style={{
-          color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-        }}
-      >
+      <PortalCard className="text-center" padding="lg" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
         <TrendingUp
           className="h-12 w-12 mx-auto mb-3"
           style={{
@@ -200,7 +189,7 @@ export default function PortalReportesPage() {
           }}
         />
         <p>No se pudieron cargar las estadísticas</p>
-      </div>
+      </PortalCard>
     );
   }
 
@@ -273,14 +262,7 @@ export default function PortalReportesPage() {
             ease: [0.16, 1, 0.3, 1],
           }}
         >
-          <div
-            className="rounded-2xl p-4"
-            style={{
-              background: 'var(--portal-bg-alt)',
-              border: '1px solid hsl(var(--portal-border-light))',
-              boxShadow: 'var(--portal-shadow-sm)',
-            }}
-          >
+          <PortalCard>
             <div className="flex items-center gap-2 mb-2">
               <Clock
                 className="h-4 w-4"
@@ -310,7 +292,7 @@ export default function PortalReportesPage() {
                 Dr/a. {data.ultimaVisita.medico}
               </p>
             )}
-          </div>
+          </PortalCard>
         </motion.div>
       )}
 
@@ -325,14 +307,7 @@ export default function PortalReportesPage() {
             ease: [0.16, 1, 0.3, 1],
           }}
         >
-          <div
-            className="rounded-2xl p-4"
-            style={{
-              background: 'var(--portal-bg-alt)',
-              border: '1px solid hsl(var(--portal-border-light))',
-              boxShadow: 'var(--portal-shadow-sm)',
-            }}
-          >
+          <PortalCard>
             <h3
               className="font-semibold text-sm mb-3 flex items-center gap-2"
               style={{ color: 'hsl(var(--portal-foreground))' }}
@@ -395,7 +370,7 @@ export default function PortalReportesPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </PortalCard>
         </motion.div>
       )}
 
@@ -410,14 +385,7 @@ export default function PortalReportesPage() {
             ease: [0.16, 1, 0.3, 1],
           }}
         >
-          <div
-            className="rounded-2xl p-4"
-            style={{
-              background: 'var(--portal-bg-alt)',
-              border: '1px solid hsl(var(--portal-border-light))',
-              boxShadow: 'var(--portal-shadow-sm)',
-            }}
-          >
+          <PortalCard>
             <h3
               className="font-semibold text-sm mb-3 flex items-center gap-2"
               style={{ color: 'hsl(var(--portal-foreground))' }}
@@ -432,7 +400,7 @@ export default function PortalReportesPage() {
               Visitas por mes
             </h3>
             <MiniBarChart data={data.visitasPorMes} />
-          </div>
+          </PortalCard>
         </motion.div>
       )}
 
@@ -442,30 +410,28 @@ export default function PortalReportesPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-12"
-            style={{
-              color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-            }}
           >
-            <TrendingUp
-              className="h-12 w-12 mx-auto mb-3"
-              style={{
-                color:
-                  'hsl(var(--portal-muted-foreground) / 0.3)',
-              }}
-            />
-            <p
-              className="font-medium"
-              style={{
-                color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-              }}
-            >
-              Sin actividad aún
-            </p>
-            <p className="text-sm mt-1">
-              Tus estadísticas aparecerán aquí cuando tengas
-              visitas registradas.
-            </p>
+            <PortalCard className="text-center" padding="lg" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
+              <TrendingUp
+                className="h-12 w-12 mx-auto mb-3"
+                style={{
+                  color:
+                    'hsl(var(--portal-muted-foreground) / 0.3)',
+                }}
+              />
+              <p
+                className="font-medium"
+                style={{
+                  color: 'hsl(var(--portal-muted-foreground) / 0.7)',
+                }}
+              >
+                Sin actividad aún
+              </p>
+              <p className="text-sm mt-1">
+                Tus estadísticas aparecerán aquí cuando tengas
+                visitas registradas.
+              </p>
+            </PortalCard>
           </motion.div>
         )}
     </div>

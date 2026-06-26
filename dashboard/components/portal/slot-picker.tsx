@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { PortalCard } from '@/components/portal/portal-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChevronLeft, ChevronRight, Clock, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -98,14 +98,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
   return (
     <div className="space-y-4">
       {/* ─── Calendario semanal ──────────────────────────── */}
-      <div
-        className="rounded-xl p-3"
-        style={{
-          background: 'var(--portal-bg-alt)',
-          border: '1px solid hsl(var(--portal-border-light))',
-          boxShadow: 'var(--portal-shadow-sm)',
-        }}
-      >
+      <PortalCard padding="sm">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <Button
@@ -166,7 +159,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
             );
           })}
         </div>
-      </div>
+        </PortalCard>
 
       {/* ─── Slots disponibles ──────────────────────────── */}
       {selectedDate && (

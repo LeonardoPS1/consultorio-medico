@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Calendar,
   FileText,
@@ -16,13 +16,10 @@ import {
   FlaskConical,
   ClipboardCheck,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
   TrendingUp,
   History,
   HeartPulse,
   ScrollText,
-  ShieldCheck,
 } from 'lucide-react';
 
 // ─── Nav Items ──────────────────────────────────────────────
@@ -64,32 +61,13 @@ const itemVariants = {
   },
 };
 
-const scrollIndicatorVariants = {
-  hidden: { opacity: 0, x: -8 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      duration: 0.2,
-      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
-    },
-  },
-};
-
-const badgeVariants = {
-  initial: { scale: 0, opacity: 0 },
-  animate: {
-    scale: 1,
-    opacity: 1,
-    transition: {
-      type: 'spring' as const,
-      stiffness: 500,
-      damping: 15,
-      mass: 0.5,
-    },
-  },
-  exit: { scale: 0, opacity: 0, transition: { duration: 0.15 } },
-} as const;
+// ─── Helper: compute CSS mask class ─────────────────────────
+function scrollMaskClass(left: boolean, right: boolean): string {
+  if (left && right) return 'portal-nav-scroll-mask-both';
+  if (left) return 'portal-nav-scroll-mask-start';
+  if (right) return 'portal-nav-scroll-mask-end';
+  return '';
+}
 
 // ─── Component ──────────────────────────────────────────────
 export default function PortalNav() {
@@ -154,12 +132,12 @@ export default function PortalNav() {
     return pathname.startsWith(href);
   };
 
+  const maskClass = scrollMaskClass(canScrollLeft, canScrollRight);
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-20"
-      style={{
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-      }}
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       {/* Glass background */}
       <div
@@ -175,38 +153,10 @@ export default function PortalNav() {
       />
 
       <div className="relative max-w-2xl mx-auto">
-        {/* ── Scroll Left Indicator ── */}
-        <AnimatePresence>
-          {canScrollLeft && (
-            <motion.div
-              key="scroll-left"
-              variants={scrollIndicatorVariants}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              className="absolute left-0 top-0 bottom-0 w-14 z-10 flex items-center justify-start pointer-events-none"
-              style={{
-                background:
-                  'linear-gradient(to right, hsl(var(--portal-bg)) 20%, transparent)',
-              }}
-            >
-              <div
-                className="ml-2 flex items-center justify-center w-5 h-5 rounded-full"
-                style={{ background: 'hsl(var(--portal-muted) / 0.6)' }}
-              >
-                <ChevronLeft
-                  className="h-3 w-3"
-                  style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* ── Scrollable Nav Items ── */}
         <div
           ref={scrollRef}
-          className="flex overflow-x-auto scrollbar-none gap-0.5 px-4 py-2"
+          className={`flex overflow-x-auto scrollbar-none gap-0.5 px-4 py-2 portal-nav-scroll ${maskClass}`}
         >
           {navItems.map((item) => {
             const active = isActive(item.href);
@@ -222,7 +172,7 @@ export default function PortalNav() {
                 <Link
                   href={item.href}
                   data-active={active ? 'true' : undefined}
-                  className="relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-[60px] transition-colors duration-150"
+                  className="portal-nav-item relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors duration-150"
                   style={{
                     color: active
                       ? 'hsl(var(--portal-primary))'
@@ -234,11 +184,7 @@ export default function PortalNav() {
                   {active && mounted && (
                     <motion.div
                       layoutId="portal-nav-pill"
-                      className="absolute inset-0 rounded-xl"
-                      style={{
-                        background: 'hsl(var(--portal-primary) / 0.1)',
-                        boxShadow: '0 1px 2px hsl(var(--portal-primary) / 0.05)',
-                      }}
+                      className="absolute inset-0 rounded-xl portal-nav-pill"
                       transition={{
                         type: 'spring',
                         stiffness: 400,
@@ -294,7 +240,7 @@ export default function PortalNav() {
           >
             <Link
               href="/portal/notificaciones"
-              className="relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-[60px]"
+              className="portal-nav-item relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors duration-150"
               style={{
                 color:
                   pathname === '/portal/notificaciones'
@@ -306,11 +252,7 @@ export default function PortalNav() {
               {pathname === '/portal/notificaciones' && mounted && (
                 <motion.div
                   layoutId="portal-nav-pill"
-                  className="absolute inset-0 rounded-xl"
-                  style={{
-                    background: 'hsl(var(--portal-primary) / 0.1)',
-                    boxShadow: '0 1px 2px hsl(var(--portal-primary) / 0.05)',
-                  }}
+                  className="absolute inset-0 rounded-xl portal-nav-pill"
                   transition={{
                     type: 'spring',
                     stiffness: 400,
@@ -324,28 +266,22 @@ export default function PortalNav() {
                   className="h-[18px] w-[18px] transition-all duration-200"
                   style={{
                     transform:
-                      pathname === '/portal/notificaciones' ? 'scale(1.1)' : 'scale(1)',
+                      pathname === '/portal/notificaciones'
+                        ? 'scale(1.1)'
+                        : 'scale(1)',
                   }}
                 />
-                <AnimatePresence mode="popLayout">
-                  {unreadCount > 0 && (
-                    <motion.span
-                      key={unreadCount}
-                      variants={badgeVariants}
-                      initial="initial"
-                      animate="animate"
-                      exit="exit"
-                      layout
-                      className="absolute -top-1.5 -right-1.5 text-[9px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 shadow-sm"
-                      style={{
-                        background: 'hsl(var(--portal-destructive))',
-                        color: '#fff',
-                      }}
-                    >
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+                {unreadCount > 0 && (
+                  <span
+                    className="absolute -top-1.5 -right-1.5 text-[9px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 shadow-sm"
+                    style={{
+                      background: 'hsl(var(--portal-destructive))',
+                      color: '#fff',
+                    }}
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </div>
               <span
                 className="relative z-[1] text-[10px] font-medium leading-tight whitespace-nowrap"
@@ -371,7 +307,7 @@ export default function PortalNav() {
           >
             <button
               onClick={handleLogout}
-              className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-[60px] transition-colors duration-150"
+              className="portal-nav-item flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors duration-150"
               style={{
                 color: 'hsl(var(--portal-muted-foreground) / 0.4)',
               }}
@@ -382,34 +318,6 @@ export default function PortalNav() {
             </button>
           </motion.div>
         </div>
-
-        {/* ── Scroll Right Indicator ── */}
-        <AnimatePresence>
-          {canScrollRight && (
-            <motion.div
-              key="scroll-right"
-              variants={scrollIndicatorVariants}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              className="absolute right-0 top-0 bottom-0 w-14 z-10 flex items-center justify-end pointer-events-none"
-              style={{
-                background:
-                  'linear-gradient(to left, hsl(var(--portal-bg)) 20%, transparent)',
-              }}
-            >
-              <div
-                className="mr-2 flex items-center justify-center w-5 h-5 rounded-full"
-                style={{ background: 'hsl(var(--portal-muted) / 0.6)' }}
-              >
-                <ChevronRight
-                  className="h-3 w-3"
-                  style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </nav>
   );

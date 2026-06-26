@@ -6,6 +6,8 @@
 'use client';
 
 import { FileText, Pill, Download } from 'lucide-react';
+import { PortalCard } from '@/components/portal/portal-card';
+import { PortalBadge } from '@/components/portal/portal-badge';
 
 interface Receta {
   id: string;
@@ -34,14 +36,6 @@ function formatDate(date: string): string {
   });
 }
 
-/* ─── Reusable card style ───────────────────────────────── */
-const cardStyle: React.CSSProperties = {
-  background: 'var(--portal-bg-alt)',
-  border: '1px solid hsl(var(--portal-border-light))',
-  borderRadius: '0.75rem',
-  boxShadow: 'var(--portal-shadow-sm)',
-};
-
 export default function PortalRecetasClient({ recetas }: Props) {
   return (
     <div>
@@ -55,20 +49,7 @@ export default function PortalRecetasClient({ recetas }: Props) {
       {recetas.length > 0 ? (
         <div className="space-y-3">
           {recetas.map((r) => (
-            <div
-              key={r.id}
-              style={{
-                ...cardStyle,
-                padding: '1rem',
-                transition: 'box-shadow 200ms ease-out',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = 'var(--portal-shadow-md)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = 'var(--portal-shadow-sm)';
-              }}
-            >
+            <PortalCard key={r.id} hover padding="md">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Pill
@@ -82,29 +63,9 @@ export default function PortalRecetasClient({ recetas }: Props) {
                     {r.medicamento}
                   </span>
                 </div>
-                <span
-                  className="text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ml-2"
-                  style={
-                    r.estado === 'activa'
-                      ? {
-                          background:
-                            'hsl(var(--portal-primary) / 0.12)',
-                          color: 'hsl(var(--portal-primary))',
-                        }
-                      : r.estado === 'vencida'
-                        ? {
-                            background:
-                              'hsl(var(--portal-destructive) / 0.12)',
-                            color: 'hsl(var(--portal-destructive))',
-                          }
-                        : {
-                            background: 'hsl(var(--portal-muted))',
-                            color: 'hsl(var(--portal-muted-foreground))',
-                          }
-                  }
-                >
+                <PortalBadge variant={r.estado === 'activa' ? 'success' : 'destructive'}>
                   {r.estado}
-                </span>
+                </PortalBadge>
               </div>
 
               <div
@@ -181,7 +142,7 @@ export default function PortalRecetasClient({ recetas }: Props) {
                   PDF
                 </a>
               </div>
-            </div>
+            </PortalCard>
           ))}
         </div>
       ) : (

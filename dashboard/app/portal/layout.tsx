@@ -4,6 +4,7 @@
  * Se aplica un reset mínimo para evitar flickers.
  */
 import Script from 'next/script';
+import './portal.css';
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   return (

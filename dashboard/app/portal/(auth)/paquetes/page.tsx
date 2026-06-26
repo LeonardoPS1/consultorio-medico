@@ -6,7 +6,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Package, CheckCircle, ArrowRight, CreditCard } from 'lucide-react';
+import { Package, ArrowRight, CreditCard } from 'lucide-react';
+import { PortalCard } from '@/components/portal/portal-card';
+import { PortalButton } from '@/components/portal/portal-button';
 
 interface Paquete {
   id: string;
@@ -30,7 +32,6 @@ export default function PaquetesPage() {
   const [suscripciones, setSuscripciones] = useState<Suscripcion[]>([]);
   const [loading, setLoading] = useState(true);
   const [buyingId, setBuyingId] = useState<string | null>(null);
-  const [hoverComprar, setHoverComprar] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/portal/paquetes')
@@ -88,8 +89,7 @@ export default function PaquetesPage() {
       </div>
 
       {suscripcionActiva && (
-        <div
-          className="rounded-xl p-4"
+        <PortalCard
           style={{
             background: 'hsl(var(--portal-primary) / 0.06)',
             border: '1px solid hsl(var(--portal-primary) / 0.2)',
@@ -114,7 +114,7 @@ export default function PaquetesPage() {
               }}
             />
           </div>
-        </div>
+        </PortalCard>
       )}
 
       {paquetes.length === 0 ? (
@@ -125,14 +125,7 @@ export default function PaquetesPage() {
       ) : (
         <div className="space-y-4">
           {paquetes.map((p) => (
-            <div
-              key={p.id}
-              className="rounded-xl p-5 flex items-center justify-between"
-              style={{
-                background: 'var(--portal-bg-alt)',
-                border: '1px solid hsl(var(--portal-border-light))',
-              }}
-            >
+            <PortalCard key={p.id} hover padding="lg" className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold" style={{ color: 'hsl(var(--portal-foreground))' }}>{p.nombre}</h3>
                 {p.descripcion && (
@@ -149,38 +142,20 @@ export default function PaquetesPage() {
                 <p className="text-xs" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
                   ${Math.round(p.precio / p.cantidadTurnos).toLocaleString('es-CL')} c/u
                 </p>
-                <button
+                <PortalButton
                   onClick={() => comprarPaquete(p.id)}
-                  disabled={buyingId === p.id}
-                  className="mt-2 inline-flex items-center gap-1 text-sm font-medium disabled:opacity-50 px-4 py-2 rounded-xl"
-                  style={{
-                    color: 'white',
-                    background: 'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
-                    opacity: hoverComprar === p.id ? 0.9 : 1,
-                    transition: 'opacity 200ms ease-out',
-                  }}
-                  onMouseEnter={() => setHoverComprar(p.id)}
-                  onMouseLeave={() => setHoverComprar(null)}
+                  loading={buyingId === p.id}
                 >
-                  {buyingId === p.id ? (
-                    <span
-                      className="h-4 w-4 rounded-full inline-block animate-spin"
-                      style={{ border: '2px solid white', borderTopColor: 'transparent' }}
-                    />
-                  ) : (
-                    <>
-                      Comprar <CreditCard className="h-3.5 w-3.5" />
-                    </>
-                  )}
-                </button>
+                  Comprar <CreditCard className="h-3.5 w-3.5" />
+                </PortalButton>
               </div>
-            </div>
+            </PortalCard>
           ))}
         </div>
       )}
 
-      <div
-        className="rounded-xl p-4 text-sm"
+      <PortalCard
+        className="text-sm"
         style={{
           background: 'hsl(var(--portal-primary) / 0.06)',
           border: '1px solid hsl(var(--portal-primary) / 0.12)',
@@ -193,7 +168,7 @@ export default function PaquetesPage() {
           <li>• Al agendar, podés usar un turno de tu paquete sin pagar extra</li>
           <li>• Los turnos del paquete no vencen (salvo que se indique lo contrario)</li>
         </ul>
-      </div>
+      </PortalCard>
 
       <div className="flex justify-center">
         <a

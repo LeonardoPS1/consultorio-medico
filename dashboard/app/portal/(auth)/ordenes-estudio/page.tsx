@@ -16,6 +16,8 @@ import {
   Clock,
   XCircle,
 } from 'lucide-react';
+import { PortalCard } from '@/components/portal/portal-card';
+import { PortalBadge } from '@/components/portal/portal-badge';
 
 interface OrdenEstudio {
   id: string;
@@ -48,30 +50,21 @@ function getEstadoBadge(estado: string) {
   switch (estado) {
     case 'completada':
       return (
-        <span
-          className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0"
-          style={{ background: 'hsl(var(--portal-primary) / 0.12)', color: 'hsl(var(--portal-primary))' }}
-        >
+        <PortalBadge variant="success" className="flex items-center gap-1">
           <CheckCircle2 className="h-3 w-3" /> Completada
-        </span>
+        </PortalBadge>
       );
     case 'pendiente':
       return (
-        <span
-          className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0"
-          style={{ background: 'hsl(var(--portal-muted))', color: 'hsl(var(--portal-muted-foreground))' }}
-        >
+        <PortalBadge variant="warning" className="flex items-center gap-1">
           <Clock className="h-3 w-3" /> Pendiente
-        </span>
+        </PortalBadge>
       );
     case 'cancelada':
       return (
-        <span
-          className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0"
-          style={{ background: 'hsl(var(--portal-destructive) / 0.12)', color: 'hsl(var(--portal-destructive))' }}
-        >
+        <PortalBadge variant="destructive" className="flex items-center gap-1">
           <XCircle className="h-3 w-3" /> Cancelada
-        </span>
+        </PortalBadge>
       );
     default:
       return <span className="text-xs" style={{ color: 'hsl(var(--portal-muted-foreground))' }}>{estado}</span>;
@@ -129,14 +122,7 @@ export default function PortalOrdenesEstudioPage() {
 
       <div className="space-y-3">
         {ordenes.map((o) => (
-          <div
-            key={o.id}
-            className="rounded-xl p-4"
-            style={{
-              background: 'var(--portal-bg-alt)',
-              border: '1px solid hsl(var(--portal-border-light))',
-            }}
-          >
+          <PortalCard key={o.id} hover className="flex items-start gap-3">
             <div className="flex items-start gap-3">
               <div
                 className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
@@ -195,7 +181,7 @@ export default function PortalOrdenesEstudioPage() {
                 )}
               </div>
             </div>
-          </div>
+          </PortalCard>
         ))}
       </div>
     </div>

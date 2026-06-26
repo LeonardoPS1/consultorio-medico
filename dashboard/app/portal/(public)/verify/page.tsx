@@ -11,14 +11,16 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
+import { PortalCard } from '@/components/portal/portal-card';
+import { PortalButton } from '@/components/portal/portal-button';
 
 export default function PortalVerify() {
   return (
     <Suspense
       fallback={
         <div
-          className="min-h-screen flex items-center justify-center p-4"
-          style={{ background: 'hsl(var(--portal-bg))' }}
+      className="portal-layout min-h-screen flex items-center justify-center p-4"
+      style={{ background: 'hsl(var(--portal-bg))' }}
         >
           <Loader2
             className="h-10 w-10 animate-spin"
@@ -84,14 +86,7 @@ function PortalVerifyContent() {
       className="min-h-screen flex items-center justify-center p-4 portal-layout"
       style={{ background: 'hsl(var(--portal-bg))' }}
     >
-      <div
-        className="max-w-sm w-full rounded-2xl p-8 text-center"
-        style={{
-          background: 'var(--portal-bg-alt)',
-          border: '1px solid hsl(var(--portal-border))',
-          boxShadow: 'var(--portal-shadow-lg)',
-        }}
-      >
+      <PortalCard padding="lg" className="max-w-sm w-full text-center">
         {verifying ? (
           <>
             <div
@@ -143,30 +138,12 @@ function PortalVerifyContent() {
             >
               {error}
             </p>
-            <Link
-              href="/portal"
-              className="inline-flex items-center gap-2 font-semibold py-2.5 px-6 rounded-xl transition-all duration-200 active:scale-[0.97]"
-              style={{
-                background:
-                  'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
-                color: '#fff',
-                boxShadow:
-                  '0 4px 12px hsl(var(--portal-primary) / 0.25)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow =
-                  '0 6px 20px hsl(var(--portal-primary) / 0.3)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow =
-                  '0 4px 12px hsl(var(--portal-primary) / 0.25)';
-              }}
-            >
+            <PortalButton variant="primary" fullWidth onClick={() => router.push('/portal')}>
               Volver al inicio
-            </Link>
+            </PortalButton>
           </>
         )}
-      </div>
+      </PortalCard>
     </div>
   );
 }

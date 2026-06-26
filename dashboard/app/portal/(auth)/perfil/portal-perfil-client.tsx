@@ -10,6 +10,8 @@ import { useState, useEffect } from 'react';
 import { User, Mail, Phone, Shield, Save, MapPin, Heart } from 'lucide-react';
 import { ISAPRES_CHILENAS } from '@/lib/isapres';
 import { PushNotificationToggle } from '@/components/portal/PushNotificationToggle';
+import { PortalCard } from '@/components/portal/portal-card';
+import { PortalButton } from '@/components/portal/portal-button';
 
 interface Region {
   id: string;
@@ -50,14 +52,6 @@ const SISTEMAS_SALUD = [
   { value: 'particular', label: 'Particular' },
   { value: 'otro', label: 'Otro' },
 ];
-
-/* ─── Reusable styles ───────────────────────────────────── */
-const cardStyle: React.CSSProperties = {
-  background: 'var(--portal-bg-alt)',
-  border: '1px solid hsl(var(--portal-border-light))',
-  borderRadius: '0.75rem',
-  boxShadow: 'var(--portal-shadow-sm)',
-};
 
 const inputStyle: React.CSSProperties = {
   border: '1px solid hsl(var(--portal-border-light))',
@@ -160,7 +154,7 @@ export default function PortalPerfilClient({
       </h1>
 
       {/* ── Datos fijos ── */}
-      <div style={{ ...cardStyle, padding: '1rem', marginBottom: '1.5rem' }}>
+      <PortalCard padding="md" className="mb-6">
         <h2
           className="text-xs font-semibold uppercase tracking-wider mb-3"
           style={{ color: 'hsl(var(--portal-muted-foreground))' }}
@@ -257,121 +251,86 @@ export default function PortalPerfilClient({
             </div>
           )}
         </div>
-      </div>
+      </PortalCard>
 
       {/* ── Datos editables ── */}
-      <form
-        onSubmit={handleSave}
-        style={{ ...cardStyle, padding: '1rem' }}
-      >
-        <h2
-          className="text-xs font-semibold uppercase tracking-wider mb-3"
-          style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-        >
-          Configuración y contacto
-        </h2>
-
-        {error && (
-          <div
-            className="text-sm px-3 py-2 rounded-lg mb-3"
-            style={{
-              color: 'hsl(var(--portal-destructive))',
-              background: 'hsl(var(--portal-destructive) / 0.1)',
-            }}
+      <PortalCard padding="md">
+        <form onSubmit={handleSave}>
+          <h2
+            className="text-xs font-semibold uppercase tracking-wider mb-3"
+            style={{ color: 'hsl(var(--portal-muted-foreground))' }}
           >
-            {error}
-          </div>
-        )}
+            Configuración y contacto
+          </h2>
 
-        {saved && (
-          <div
-            className="text-sm px-3 py-2 rounded-lg mb-3"
-            style={{
-              color: 'hsl(var(--portal-primary))',
-              background: 'hsl(var(--portal-primary) / 0.1)',
-            }}
-          >
-            Cambios guardados correctamente
-          </div>
-        )}
-
-        <div className="space-y-4">
-          {/* Email */}
-          <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
-            >
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 text-sm outline-none transition-all"
-              style={inputStyle}
-              placeholder="tu@email.com"
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor =
-                  'hsl(var(--portal-primary) / 0.5)';
-                e.currentTarget.style.boxShadow =
-                  '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor =
-                  'hsl(var(--portal-border-light))';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            />
-          </div>
-
-          {/* Sistema de salud */}
-          <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
-            >
-              Sistema de Salud
-            </label>
-            <select
-              value={sistemaSalud}
-              onChange={(e) => {
-                setSistemaSalud(e.target.value);
-                setIsapreNombre('');
-              }}
-              className="w-full px-3 py-2 text-sm outline-none transition-all"
-              style={inputStyle}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor =
-                  'hsl(var(--portal-primary) / 0.5)';
-                e.currentTarget.style.boxShadow =
-                  '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor =
-                  'hsl(var(--portal-border-light))';
-                e.currentTarget.style.boxShadow = 'none';
+          {error && (
+            <div
+              className="text-sm px-3 py-2 rounded-lg mb-3"
+              style={{
+                color: 'hsl(var(--portal-destructive))',
+                background: 'hsl(var(--portal-destructive) / 0.1)',
               }}
             >
-              {SISTEMAS_SALUD.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
+              {error}
+            </div>
+          )}
 
-          {sistemaSalud === 'isapre' && (
+          {saved && (
+            <div
+              className="text-sm px-3 py-2 rounded-lg mb-3"
+              style={{
+                color: 'hsl(var(--portal-primary))',
+                background: 'hsl(var(--portal-primary) / 0.1)',
+              }}
+            >
+              Cambios guardados correctamente
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {/* Email */}
             <div>
               <label
                 className="block text-sm font-medium mb-1"
                 style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
               >
-                Isapre
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-3 py-2 text-sm outline-none transition-all"
+                style={inputStyle}
+                placeholder="tu@email.com"
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor =
+                    'hsl(var(--portal-primary) / 0.5)';
+                  e.currentTarget.style.boxShadow =
+                    '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor =
+                    'hsl(var(--portal-border-light))';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              />
+            </div>
+
+            {/* Sistema de salud */}
+            <div>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+              >
+                Sistema de Salud
               </label>
               <select
-                value={isapreNombre}
-                onChange={(e) => setIsapreNombre(e.target.value)}
+                value={sistemaSalud}
+                onChange={(e) => {
+                  setSistemaSalud(e.target.value);
+                  setIsapreNombre('');
+                }}
                 className="w-full px-3 py-2 text-sm outline-none transition-all"
                 style={inputStyle}
                 onFocus={(e) => {
@@ -386,195 +345,210 @@ export default function PortalPerfilClient({
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <option value="">
-                  Selecciona una Isapre...
-                </option>
-                {ISAPRES_CHILENAS.map((i) => (
-                  <option key={i.value} value={i.value}>
-                    {i.label}
+                {SISTEMAS_SALUD.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
                   </option>
                 ))}
               </select>
             </div>
-          )}
 
-          {/* Región */}
-          <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
-            >
-              Región
-            </label>
-            <select
-              value={regionId}
-              onChange={(e) => {
-                setRegionId(e.target.value);
-                setComunaId('');
-              }}
-              className="w-full px-3 py-2 text-sm outline-none transition-all"
-              style={inputStyle}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor =
-                  'hsl(var(--portal-primary) / 0.5)';
-                e.currentTarget.style.boxShadow =
-                  '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor =
-                  'hsl(var(--portal-border-light))';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              <option value="">Seleccionar región...</option>
-              {regiones.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.numeroRomano
-                    ? `${r.numeroRomano} - `
-                    : ''}
-                  {r.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Comuna */}
-          <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
-            >
-              Comuna
-            </label>
-            <select
-              value={comunaId}
-              onChange={(e) => setComunaId(e.target.value)}
-              disabled={!regionId || loadingComunas}
-              className="w-full px-3 py-2 text-sm outline-none transition-all disabled:cursor-not-allowed"
-              style={{
-                ...inputStyle,
-                opacity: !regionId || loadingComunas ? 0.6 : 1,
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor =
-                  'hsl(var(--portal-primary) / 0.5)';
-                e.currentTarget.style.boxShadow =
-                  '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor =
-                  'hsl(var(--portal-border-light))';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              <option value="">
-                {loadingComunas
-                  ? 'Cargando...'
-                  : 'Seleccionar comuna...'}
-              </option>
-              {comunas.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Consentimientos */}
-          <div className="flex items-center justify-between">
-            <div>
-              <div
-                className="text-sm font-medium"
-                style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
-              >
-                Notificaciones por WhatsApp
+            {sistemaSalud === 'isapre' && (
+              <div>
+                <label
+                  className="block text-sm font-medium mb-1"
+                  style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+                >
+                  Isapre
+                </label>
+                <select
+                  value={isapreNombre}
+                  onChange={(e) => setIsapreNombre(e.target.value)}
+                  className="w-full px-3 py-2 text-sm outline-none transition-all"
+                  style={inputStyle}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor =
+                      'hsl(var(--portal-primary) / 0.5)';
+                    e.currentTarget.style.boxShadow =
+                      '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor =
+                      'hsl(var(--portal-border-light))';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <option value="">
+                    Selecciona una Isapre...
+                  </option>
+                  {ISAPRES_CHILENAS.map((i) => (
+                    <option key={i.value} value={i.value}>
+                      {i.label}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div
-                className="text-xs"
-                style={{
-                  color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-                }}
-              >
-                Recordatorios y avisos de turnos
-              </div>
-            </div>
-            <input
-              type="checkbox"
-              checked={consentimientoWhatsapp}
-              onChange={(e) =>
-                setConsentimientoWhatsapp(e.target.checked)
-              }
-              className="h-5 w-5 rounded"
-              style={{
-                accentColor: 'hsl(var(--portal-primary))',
-              }}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <div
-                className="text-sm font-medium"
-                style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
-              >
-                Notificaciones por Email
-              </div>
-              <div
-                className="text-xs"
-                style={{
-                  color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-                }}
-              >
-                Resúmenes y novedades
-              </div>
-            </div>
-            <input
-              type="checkbox"
-              checked={consentimientoEmail}
-              onChange={(e) =>
-                setConsentimientoEmail(e.target.checked)
-              }
-              className="h-5 w-5 rounded"
-              style={{
-                accentColor: 'hsl(var(--portal-primary))',
-              }}
-            />
-          </div>
-
-          {/* Push Notifications */}
-          <div
-            className="pt-2"
-            style={{
-              borderTop: '1px solid hsl(var(--portal-border-light))',
-            }}
-          >
-            <PushNotificationToggle />
-          </div>
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full flex items-center justify-center gap-2 font-semibold py-2.5 rounded-xl transition-all duration-200 disabled:opacity-50 active:scale-[0.97]"
-            style={{
-              background:
-                'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
-              color: '#fff',
-              boxShadow:
-                '0 4px 12px hsl(var(--portal-primary) / 0.25)',
-            }}
-          >
-            {saving ? (
-              <span
-                className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"
-              />
-            ) : (
-              <>
-                <Save className="h-4 w-4" /> Guardar cambios
-              </>
             )}
-          </button>
-        </div>
-      </form>
+
+            {/* Región */}
+            <div>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+              >
+                Región
+              </label>
+              <select
+                value={regionId}
+                onChange={(e) => {
+                  setRegionId(e.target.value);
+                  setComunaId('');
+                }}
+                className="w-full px-3 py-2 text-sm outline-none transition-all"
+                style={inputStyle}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor =
+                    'hsl(var(--portal-primary) / 0.5)';
+                  e.currentTarget.style.boxShadow =
+                    '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor =
+                    'hsl(var(--portal-border-light))';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <option value="">Seleccionar región...</option>
+                {regiones.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.numeroRomano
+                      ? `${r.numeroRomano} - `
+                      : ''}
+                    {r.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Comuna */}
+            <div>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+              >
+                Comuna
+              </label>
+              <select
+                value={comunaId}
+                onChange={(e) => setComunaId(e.target.value)}
+                disabled={!regionId || loadingComunas}
+                className="w-full px-3 py-2 text-sm outline-none transition-all disabled:cursor-not-allowed"
+                style={{
+                  ...inputStyle,
+                  opacity: !regionId || loadingComunas ? 0.6 : 1,
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor =
+                    'hsl(var(--portal-primary) / 0.5)';
+                  e.currentTarget.style.boxShadow =
+                    '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor =
+                    'hsl(var(--portal-border-light))';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <option value="">
+                  {loadingComunas
+                    ? 'Cargando...'
+                    : 'Seleccionar comuna...'}
+                </option>
+                {comunas.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Consentimientos */}
+            <div className="flex items-center justify-between">
+              <div>
+                <div
+                  className="text-sm font-medium"
+                  style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+                >
+                  Notificaciones por WhatsApp
+                </div>
+                <div
+                  className="text-xs"
+                  style={{
+                    color: 'hsl(var(--portal-muted-foreground) / 0.7)',
+                  }}
+                >
+                  Recordatorios y avisos de turnos
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={consentimientoWhatsapp}
+                onChange={(e) =>
+                  setConsentimientoWhatsapp(e.target.checked)
+                }
+                className="h-5 w-5 rounded"
+                style={{
+                  accentColor: 'hsl(var(--portal-primary))',
+                }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <div
+                  className="text-sm font-medium"
+                  style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+                >
+                  Notificaciones por Email
+                </div>
+                <div
+                  className="text-xs"
+                  style={{
+                    color: 'hsl(var(--portal-muted-foreground) / 0.7)',
+                  }}
+                >
+                  Resúmenes y novedades
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={consentimientoEmail}
+                onChange={(e) =>
+                  setConsentimientoEmail(e.target.checked)
+                }
+                className="h-5 w-5 rounded"
+                style={{
+                  accentColor: 'hsl(var(--portal-primary))',
+                }}
+              />
+            </div>
+
+            {/* Push Notifications */}
+            <div
+              className="pt-2"
+              style={{
+                borderTop: '1px solid hsl(var(--portal-border-light))',
+              }}
+            >
+              <PushNotificationToggle />
+            </div>
+
+            <PortalButton type="submit" disabled={saving} fullWidth loading={saving}>
+              <Save className="h-4 w-4" /> Guardar cambios
+            </PortalButton>
+          </div>
+        </form>
+      </PortalCard>
     </div>
   );
 }

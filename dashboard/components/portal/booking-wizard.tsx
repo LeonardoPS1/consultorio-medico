@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DoctorCard } from './doctor-card';
 import { SlotPicker } from './slot-picker';
+import { PortalCard } from '@/components/portal/portal-card';
+import { PortalButton } from '@/components/portal/portal-button';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,14 +16,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
   CardFooter,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
@@ -369,10 +369,10 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
               servicios.
             </div>
           ) : (
-            <Button onClick={handleIrASlots} className="w-full sm:w-auto">
+            <PortalButton variant="primary" onClick={handleIrASlots}>
               <CalendarIcon className="mr-2 h-4 w-4" />
               Ver horarios disponibles
-            </Button>
+            </PortalButton>
           )}
         </div>
       )}
@@ -389,10 +389,12 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
       exit="exit"
       className="space-y-4"
     >
-      <Button variant="ghost" onClick={() => setStep('medico')} className="mb-2">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Volver a médicos
-      </Button>
+      <div className="mb-2">
+        <PortalButton variant="ghost" onClick={() => setStep('medico')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Volver a médicos
+        </PortalButton>
+      </div>
       <div>
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <CalendarIcon className="h-5 w-5 text-primary" />
@@ -413,9 +415,9 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
         />
       )}
       {selectedSlot && (
-        <Button onClick={handleIrAConfirmar} className="w-full sm:w-auto">
+        <PortalButton variant="primary" onClick={handleIrAConfirmar}>
           Continuar
-        </Button>
+        </PortalButton>
       )}
     </motion.div>
   );
@@ -430,17 +432,13 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
       exit="exit"
       className="max-w-md mx-auto"
     >
-      <Button variant="ghost" onClick={() => setStep('slot')} className="mb-2">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Volver
-      </Button>
-      <Card
-        style={{
-          background: 'var(--portal-bg-alt)',
-          border: '1px solid hsl(var(--portal-border))',
-          boxShadow: 'var(--portal-shadow-md)',
-        }}
-      >
+      <div className="mb-2">
+        <PortalButton variant="ghost" onClick={() => setStep('slot')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Volver
+        </PortalButton>
+      </div>
+      <PortalCard padding="none">
         <CardHeader>
           <CardTitle
             style={{ color: 'hsl(var(--portal-foreground))' }}
@@ -513,28 +511,20 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
           </div>
         </CardContent>
         <CardFooter className="flex-col gap-2">
-          <Button onClick={handleConfirmar} disabled={loading} className="w-full">
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirmando...
-              </>
-            ) : (
-              <>
-                <Check className="mr-2 h-4 w-4" /> Confirmar turno
-              </>
-            )}
-          </Button>
+          <PortalButton variant="primary" fullWidth onClick={handleConfirmar} disabled={loading} loading={loading}>
+            <Check className="mr-2 h-4 w-4" /> Confirmar turno
+          </PortalButton>
           {selectedSlot?.precio != null && selectedSlot.precio > 0 && (
             <p className="text-xs text-muted-foreground text-center">
               El pago se procesará al confirmar
             </p>
           )}
-        </CardFooter>
-      </Card>
-    </motion.div>
-  );
+            </CardFooter>
+          </PortalCard>
+        </motion.div>
+      );
 
-  /* ─── Step: Pago ────────────────────────────────────── */
+      /* ─── Step: Pago ────────────────────────────────────── */
   const stepPago = (
     <motion.div
       key="pago"
@@ -544,13 +534,7 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
       exit="exit"
       className="max-w-md mx-auto"
     >
-      <Card
-        style={{
-          background: 'var(--portal-bg-alt)',
-          border: '1px solid hsl(var(--portal-border))',
-          boxShadow: 'var(--portal-shadow-md)',
-        }}
-      >
+      <PortalCard padding="none">
         <CardHeader>
           <CardTitle
             className="flex items-center gap-2"
@@ -603,36 +587,23 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
             </motion.div>
           ) : (
             <div className="space-y-3">
-              <Button
-                onClick={handlePagarAhora}
-                disabled={!pagoInfo || pagando}
-                className="w-full"
-                size="lg"
-              >
-                {pagando ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Esperando pago...
-                  </>
-                ) : (
-                  <>
-                    <ExternalLink className="mr-2 h-4 w-4" /> Pagar con MercadoPago
-                  </>
-                )}
-              </Button>
-              <Button onClick={handleOmitirPago} variant="ghost" className="w-full">
+              <PortalButton variant="primary" fullWidth onClick={handlePagarAhora} disabled={!pagoInfo || pagando} loading={pagando}>
+                <ExternalLink className="mr-2 h-4 w-4" /> Pagar con MercadoPago
+              </PortalButton>
+              <PortalButton variant="ghost" fullWidth onClick={handleOmitirPago}>
                 Pagar después
-              </Button>
+              </PortalButton>
             </div>
           )}
         </CardContent>
         <CardFooter className="flex-col">
           {pagoCompletado && (
-            <Button onClick={() => setStep('completado')} className="w-full">
+            <PortalButton variant="primary" fullWidth onClick={() => setStep('completado')}>
               <Check className="mr-2 h-4 w-4" /> Continuar
-            </Button>
+            </PortalButton>
           )}
         </CardFooter>
-      </Card>
+      </PortalCard>
     </motion.div>
   );
 

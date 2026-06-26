@@ -6,6 +6,8 @@
 'use client';
 
 import { ClipboardList, Stethoscope, FileText } from 'lucide-react';
+import { PortalCard } from '@/components/portal/portal-card';
+import { PortalBadge } from '@/components/portal/portal-badge';
 
 interface HistorialEntry {
   id: string;
@@ -31,14 +33,6 @@ function formatDate(date: string): string {
   });
 }
 
-/* ─── Reusable card style ───────────────────────────────── */
-const cardStyle: React.CSSProperties = {
-  background: 'var(--portal-bg-alt)',
-  border: '1px solid hsl(var(--portal-border-light))',
-  borderRadius: '0.75rem',
-  boxShadow: 'var(--portal-shadow-sm)',
-};
-
 export default function PortalHistorialClient({
   historial,
 }: Props) {
@@ -54,20 +48,7 @@ export default function PortalHistorialClient({
       {historial.length > 0 ? (
         <div className="space-y-3">
           {historial.map((h) => (
-            <div
-              key={h.id}
-              style={{
-                ...cardStyle,
-                padding: '1rem',
-                transition: 'box-shadow 200ms ease-out',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = 'var(--portal-shadow-md)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = 'var(--portal-shadow-sm)';
-              }}
-            >
+            <PortalCard key={h.id} hover padding="md">
               <div className="flex items-start gap-3 mb-2">
                 <div
                   className="mt-1 shrink-0"
@@ -114,13 +95,7 @@ export default function PortalHistorialClient({
                     </p>
                   )}
                   {h.diagnosticoDescripcion && (
-                    <div
-                      className="inline-block rounded-lg px-3 py-1.5 text-sm"
-                      style={{
-                        background: 'hsl(var(--portal-muted))',
-                        color: 'hsl(var(--portal-muted-foreground))',
-                      }}
-                    >
+                    <PortalBadge variant="muted" className="rounded-lg px-3 py-1.5 text-sm font-normal">
                       <span
                         className="text-xs"
                         style={{
@@ -131,22 +106,16 @@ export default function PortalHistorialClient({
                         Diagnóstico:{' '}
                       </span>
                       {h.diagnosticoCodigo && (
-                        <span
-                          className="font-mono text-xs px-1 rounded mr-1"
-                          style={{
-                            background:
-                              'hsl(var(--portal-muted-foreground) / 0.15)',
-                          }}
-                        >
+                        <span className="font-mono text-xs">
                           {h.diagnosticoCodigo}
                         </span>
                       )}
                       {h.diagnosticoDescripcion}
-                    </div>
+                    </PortalBadge>
                   )}
                 </div>
               </div>
-            </div>
+            </PortalCard>
           ))}
         </div>
       ) : (

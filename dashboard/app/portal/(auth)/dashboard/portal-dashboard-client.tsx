@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { useState, type MouseEvent } from 'react';
+import { PortalCard } from '@/components/portal/portal-card';
+import { PortalBadge } from '@/components/portal/portal-badge';
+import { PortalButton } from '@/components/portal/portal-button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -26,7 +28,6 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { staggerContainer, itemVariants } from '@/components/portal/page-transition';
 
 // ─── Types ────────────────────────────────────────────────
@@ -136,17 +137,6 @@ function getTurnoLabel(estado: string) {
   return labels[estado] || estado;
 }
 
-function getEstadoRecetaColor(estado: string) {
-  switch (estado) {
-    case 'activa':
-      return 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800';
-    case 'vencida':
-      return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800';
-    default:
-      return 'bg-muted text-muted-foreground';
-  }
-}
-
 function getSistemaSaludLabel(s: string | null) {
   if (!s) return null;
   const labels: Record<string, string> = {
@@ -252,151 +242,137 @@ function QuickSurveyCard({
       className={`${staggerItem}`}
       style={staggerDelay(2)}
     >
-      <Card
-        className="shadow-sm border-0"
-        style={{
-          background: 'var(--portal-bg-alt)',
-          border: '1px solid hsl(var(--portal-border))',
-          boxShadow: 'var(--portal-shadow-sm)',
-        }}
-      >
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div
-              className="h-8 w-8 rounded-lg flex items-center justify-center"
-              style={{
-                background: 'hsl(var(--portal-primary) / 0.1)',
-              }}
-            >
-              <Star
-                className="h-4 w-4"
-                style={{ color: 'hsl(var(--portal-primary))' }}
-              />
-            </div>
-            <div>
-              <h3
-                className="font-semibold text-sm"
-                style={{ color: 'hsl(var(--portal-foreground))' }}
-              >
-                Calificá tu atención
-              </h3>
-              <p
-                className="text-xs"
-                style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-              >
-                {turnoActual.medicoNombre
-                  ? `Tu visita con ${turnoActual.medicoNombre} del ${formatCLShort(turnoActual.fechaHora)}`
-                  : `Tu visita del ${formatCLShort(turnoActual.fechaHora)}`}
-              </p>
-            </div>
+      <PortalCard padding="md">
+        <div className="flex items-center gap-2 mb-3">
+          <div
+            className="h-8 w-8 rounded-lg flex items-center justify-center"
+            style={{
+              background: 'hsl(var(--portal-primary) / 0.1)',
+            }}
+          >
+            <Star
+              className="h-4 w-4"
+              style={{ color: 'hsl(var(--portal-primary))' }}
+            />
           </div>
+          <div>
+            <h3
+              className="font-semibold text-sm"
+              style={{ color: 'hsl(var(--portal-foreground))' }}
+            >
+              Calificá tu atención
+            </h3>
+            <p
+              className="text-xs"
+              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+            >
+              {turnoActual.medicoNombre
+                ? `Tu visita con ${turnoActual.medicoNombre} del ${formatCLShort(turnoActual.fechaHora)}`
+                : `Tu visita del ${formatCLShort(turnoActual.fechaHora)}`}
+            </p>
+          </div>
+        </div>
 
-          {turnosSinEncuesta.length > 1 && (
-            <div className="flex gap-1.5 mb-3 flex-wrap">
-              {turnosSinEncuesta.slice(0, 3).map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    setSelectedTurno(t.id);
-                    setPuntaje(0);
-                    setComentario('');
-                    setSubmitted(false);
-                  }}
-                  className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
-                    (selectedTurno || turnosSinEncuesta[0].id) === t.id
-                      ? 'bg-primary/10 dark:bg-primary/20 border-primary/30 text-primary'
-                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'
-                  }`}
-                >
-                  {formatCLShort(t.fechaHora)}
-                </button>
-              ))}
-              {turnosSinEncuesta.length > 3 && (
-                <span className="text-[11px] text-gray-400 self-center">
-                  +{turnosSinEncuesta.length - 3} más
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Puntaje (estrellas) */}
-          <div className="flex items-center gap-1.5 mb-3">
-            {[1, 2, 3, 4, 5].map((n) => (
+        {turnosSinEncuesta.length > 1 && (
+          <div className="flex gap-1.5 mb-3 flex-wrap">
+            {turnosSinEncuesta.slice(0, 3).map((t) => (
               <button
-                key={n}
-                onClick={() => setPuntaje(n)}
-                className={`transition-all duration-150 active:scale-75 ${
-                  n <= puntaje ? 'scale-110' : 'opacity-50 hover:opacity-80'
+                key={t.id}
+                onClick={() => {
+                  setSelectedTurno(t.id);
+                  setPuntaje(0);
+                  setComentario('');
+                  setSubmitted(false);
+                }}
+                className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
+                  (selectedTurno || turnosSinEncuesta[0].id) === t.id
+                    ? 'bg-primary/10 dark:bg-primary/20 border-primary/30 text-primary'
+                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'
                 }`}
-                aria-label={`Puntuar ${n} de 5`}
               >
-                <Star
-                  className={`h-7 w-7 ${
-                    n <= puntaje
-                      ? 'fill-yellow-400 text-yellow-400 drop-shadow-sm'
-                      : 'fill-gray-200 dark:fill-gray-700 text-gray-200 dark:text-gray-700'
-                  } transition-colors duration-150`}
-                />
+                {formatCLShort(t.fechaHora)}
               </button>
             ))}
-            {puntaje > 0 && (
-              <span className="ml-1 text-sm font-medium text-muted-foreground">
-                {puntaje === 1
-                  ? 'Muy malo'
-                  : puntaje === 2
-                    ? 'Malo'
-                    : puntaje === 3
-                      ? 'Regular'
-                      : puntaje === 4
-                        ? 'Bueno'
-                        : 'Excelente'}
+            {turnosSinEncuesta.length > 3 && (
+              <span className="text-[11px] text-gray-400 self-center">
+                +{turnosSinEncuesta.length - 3} más
               </span>
             )}
           </div>
+        )}
 
-          {/* Comentario (solo si puntaje > 0) */}
-          <AnimatePresence>
-            {puntaje > 0 && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
+        {/* Puntaje (estrellas) */}
+        <div className="flex items-center gap-1.5 mb-3">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              onClick={() => setPuntaje(n)}
+              className={`transition-all duration-150 active:scale-75 ${
+                n <= puntaje ? 'scale-110' : 'opacity-50 hover:opacity-80'
+              }`}
+              aria-label={`Puntuar ${n} de 5`}
+            >
+              <Star
+                className={`h-7 w-7 ${
+                  n <= puntaje
+                    ? 'fill-yellow-400 text-yellow-400 drop-shadow-sm'
+                    : 'fill-gray-200 dark:fill-gray-700 text-gray-200 dark:text-gray-700'
+                } transition-colors duration-150`}
+              />
+            </button>
+          ))}
+          {puntaje > 0 && (
+            <span className="ml-1 text-sm font-medium text-muted-foreground">
+              {puntaje === 1
+                ? 'Muy malo'
+                : puntaje === 2
+                  ? 'Malo'
+                  : puntaje === 3
+                    ? 'Regular'
+                    : puntaje === 4
+                      ? 'Bueno'
+                      : 'Excelente'}
+            </span>
+          )}
+        </div>
+
+        {/* Comentario (solo si puntaje > 0) */}
+        <AnimatePresence>
+          {puntaje > 0 && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 mb-3 focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary transition-all">
+                <MessageSquareText className="h-4 w-4 text-gray-400 dark:text-gray-500 shrink-0" />
+                <input
+                  type="text"
+                  value={comentario}
+                  onChange={(e) => setComentario(e.target.value)}
+                  placeholder="Contanos cómo fue tu experiencia (opcional)"
+                  className="flex-1 text-sm bg-transparent border-none outline-none text-gray-700 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                  maxLength={500}
+                />
+              </div>
+
+              {error && <p className="text-xs text-red-500 dark:text-red-400 mb-2">{error}</p>}
+
+              <PortalButton
+                onClick={handleSubmit}
+                disabled={submitting}
+                fullWidth
+                loading={submitting}
               >
-                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 mb-3 focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary transition-all">
-                  <MessageSquareText className="h-4 w-4 text-gray-400 dark:text-gray-500 shrink-0" />
-                  <input
-                    type="text"
-                    value={comentario}
-                    onChange={(e) => setComentario(e.target.value)}
-                    placeholder="Contanos cómo fue tu experiencia (opcional)"
-                    className="flex-1 text-sm bg-transparent border-none outline-none text-gray-700 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                    maxLength={500}
-                  />
-                </div>
-
-                {error && <p className="text-xs text-red-500 dark:text-red-400 mb-2">{error}</p>}
-
-                <Button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className="w-full rounded-xl shadow-sm"
-                >
-                  {submitting ? (
-                    <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      Enviar calificación
-                    </>
-                  )}
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </CardContent>
-      </Card>
+                <Send className="h-4 w-4" />
+                Enviar calificación
+              </PortalButton>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </PortalCard>
     </motion.div>
   );
 }
@@ -478,7 +454,7 @@ export default function PortalDashboardClient({
       />
 
       {/* Stats */}
-        <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-3 gap-2.5">
         {[
           {
             label: 'Turnos',
@@ -512,14 +488,13 @@ export default function PortalDashboardClient({
               animationFillMode: 'both',
             }}
           >
-            <Card
-              className="border-0"
+            <PortalCard
+              padding="sm"
               style={{
                 background: stat.bg,
-                boxShadow: 'var(--portal-shadow-sm)',
               }}
             >
-              <CardContent className="p-3 text-center">
+              <div className="text-center">
                 <stat.icon
                   className="h-5 w-5 mx-auto mb-1"
                   style={{ color: `hsl(${stat.hue})` }}
@@ -536,70 +511,68 @@ export default function PortalDashboardClient({
                 >
                   {stat.label}
                 </p>
-              </CardContent>
-            </Card>
+              </div>
+            </PortalCard>
           </div>
         ))}
       </div>
 
       {/* Datos del paciente */}
       <div className={`${staggerItem}`} style={staggerDelay(3)}>
-        <Card className="shadow-sm border-border/50 bg-card transition-colors duration-300">
-          <CardContent className="p-4">
-            <h2 className="font-semibold text-sm text-muted-foreground mb-3 uppercase tracking-wider">
-              Mis datos
-            </h2>
-            <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
+        <PortalCard padding="md">
+          <h2 className="font-semibold text-sm text-muted-foreground mb-3 uppercase tracking-wider">
+            Mis datos
+          </h2>
+          <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
+            <div>
+              <p className="text-xs text-muted-foreground/70">Nombre completo</p>
+              <p className="font-medium text-foreground">
+                {paciente.nombre} {paciente.apellido}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground/70">Teléfono</p>
+              <p className="font-medium text-foreground">
+                {formatCLPhone(paciente.telefono)}
+              </p>
+            </div>
+            {paciente.rut && (
               <div>
-                <p className="text-xs text-muted-foreground/70">Nombre completo</p>
-                <p className="font-medium text-foreground">
-                  {paciente.nombre} {paciente.apellido}
+                <p className="text-xs text-muted-foreground/70">RUT</p>
+                <p className="font-medium text-foreground">{paciente.rut}</p>
+              </div>
+            )}
+            {paciente.email && (
+              <div>
+                <p className="text-xs text-muted-foreground/70">Email</p>
+                <p className="font-medium text-foreground truncate">
+                  {paciente.email}
                 </p>
               </div>
+            )}
+            {paciente.sistemaSalud && (
               <div>
-                <p className="text-xs text-muted-foreground/70">Teléfono</p>
-                <p className="font-medium text-foreground">
-                  {formatCLPhone(paciente.telefono)}
-                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Sistema de salud</p>
+                <Badge
+                  variant="outline"
+                  className={`mt-0.5 ${getSistemaSaludBadge(paciente.sistemaSalud)}`}
+                >
+                  <Shield className="h-3 w-3 mr-1" />
+                  {getSistemaSaludLabel(paciente.sistemaSalud)}
+                </Badge>
               </div>
-              {paciente.rut && (
-                <div>
-                  <p className="text-xs text-muted-foreground/70">RUT</p>
-                  <p className="font-medium text-foreground">{paciente.rut}</p>
-                </div>
-              )}
-              {paciente.email && (
-                <div>
-                  <p className="text-xs text-muted-foreground/70">Email</p>
-                  <p className="font-medium text-foreground truncate">
-                    {paciente.email}
-                  </p>
-                </div>
-              )}
-              {paciente.sistemaSalud && (
-                <div>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">Sistema de salud</p>
-                  <Badge
-                    variant="outline"
-                    className={`mt-0.5 ${getSistemaSaludBadge(paciente.sistemaSalud)}`}
-                  >
-                    <Shield className="h-3 w-3 mr-1" />
-                    {getSistemaSaludLabel(paciente.sistemaSalud)}
-                  </Badge>
-                </div>
-              )}
-              {(paciente.comuna || paciente.region) && (
-                <div>
+            )}
+            {(paciente.comuna || paciente.region) && (
+              <div>
                 <p className="text-xs text-muted-foreground/70">Ubicación</p>
                 <p className="font-medium text-foreground flex items-center gap-1">
                   <MapPin className="h-3 w-3 text-muted-foreground/50" />
-                    {[paciente.comuna, paciente.region].filter(Boolean).join(', ')}
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                  {[paciente.comuna, paciente.region].filter(Boolean).join(', ')}
+                </p>
+              </div>
+            )}
+          </div>
+        </PortalCard>
       </div>
 
       {/* Tabs principales */}
@@ -632,8 +605,8 @@ export default function PortalDashboardClient({
           {/* ── Próximos turnos ── */}
           <TabsContent value="proximos" className="mt-4">
             {turnosProximos.length === 0 ? (
-              <Card className="bg-card border-border/50">
-                <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+              <PortalCard padding="md" className="text-center">
+                <div className="flex flex-col items-center justify-center py-10">
                   <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
                     <Calendar className="h-6 w-6 text-muted-foreground/60" />
                   </div>
@@ -643,8 +616,8 @@ export default function PortalDashboardClient({
                   <p className="text-xs text-muted-foreground/60 mt-1">
                     Los turnos aparecerán aquí cuando los agendes
                   </p>
-                </CardContent>
-              </Card>
+                </div>
+              </PortalCard>
             ) : (
               <motion.div
                 className="space-y-3"
@@ -654,43 +627,39 @@ export default function PortalDashboardClient({
               >
                 {turnosProximos.map((t) => (
                   <motion.div key={t.id} variants={itemVariants}>
-                    <Card
-                      className="border-l-4 overflow-hidden shadow-sm border-border/50 bg-card transition-all duration-200 hover:shadow-card-hover hoverable:hover:-translate-y-0.5"
-                      style={{ borderLeftColor: getTurnoColor(t.estado) }}
+                    <PortalCard
+                      padding="md"
+                      style={{ borderLeft: `4px solid ${getTurnoColor(t.estado)}` }}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <p className="font-semibold text-foreground">
-                              {formatCLDate(t.fechaHora, "EEEE d 'de' MMMM")}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {t.hora} · {t.duracionMinutos} min
-                            </p>
-                          </div>
-                          <Badge
-                            style={{
-                              backgroundColor: `${getTurnoColor(t.estado)}18`,
-                              color: getTurnoColor(t.estado),
-                            }}
-                            variant="outline"
-                            className="border-0 text-xs font-semibold"
-                          >
-                            {getTurnoLabel(t.estado)}
-                          </Badge>
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-semibold text-foreground">
+                            {formatCLDate(t.fechaHora, "EEEE d 'de' MMMM")}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {t.hora} · {t.duracionMinutos} min
+                          </p>
                         </div>
-                        {t.motivo && (
-                          <p className="text-sm text-muted-foreground mb-1">
-                            {t.motivo}
-                          </p>
-                        )}
-                        {t.medicoNombre && (
-                          <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
-                            <User className="h-3 w-3" /> Dr/a. {t.medicoNombre}
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
+                        <PortalBadge
+                          style={{
+                            backgroundColor: `${getTurnoColor(t.estado)}18`,
+                            color: getTurnoColor(t.estado),
+                          }}
+                        >
+                          {getTurnoLabel(t.estado)}
+                        </PortalBadge>
+                      </div>
+                      {t.motivo && (
+                        <p className="text-sm text-muted-foreground mb-1">
+                          {t.motivo}
+                        </p>
+                      )}
+                      {t.medicoNombre && (
+                        <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
+                          <User className="h-3 w-3" /> Dr/a. {t.medicoNombre}
+                        </p>
+                      )}
+                    </PortalCard>
                   </motion.div>
                 ))}
               </motion.div>
@@ -700,8 +669,8 @@ export default function PortalDashboardClient({
           {/* ── Historial ── */}
           <TabsContent value="historial" className="mt-4">
             {turnosPasados.length === 0 && historial.length === 0 ? (
-              <Card className="bg-card border-border/50">
-                <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+              <PortalCard padding="md" className="text-center">
+                <div className="flex flex-col items-center justify-center py-10">
                   <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
                     <ClipboardList className="h-6 w-6 text-muted-foreground/60" />
                   </div>
@@ -709,8 +678,8 @@ export default function PortalDashboardClient({
                   <p className="text-xs text-muted-foreground/60 mt-1">
                     Tus visitas anteriores aparecerán aquí
                   </p>
-                </CardContent>
-              </Card>
+                </div>
+              </PortalCard>
             ) : (
               <div className="space-y-3">
                 {/* Turnos pasados */}
@@ -724,8 +693,14 @@ export default function PortalDashboardClient({
                         const Icon = getEstadoIcon(t.estado);
                         return (
                           <motion.div key={t.id} variants={itemVariants} className="mb-2">
-                            <Card className="opacity-80 transition-all duration-200 hover:opacity-100 hover:shadow-sm bg-card border-border/50">
-                              <CardContent className="p-3 flex items-center gap-3">
+                            <PortalCard
+                              padding="sm"
+                              className="opacity-80"
+                              style={{ transition: 'opacity 200ms' }}
+                              onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.8'; }}
+                            >
+                              <div className="flex items-center gap-3">
                                 <Icon className="h-5 w-5 text-muted-foreground/50 shrink-0" />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-foreground">
@@ -735,14 +710,11 @@ export default function PortalDashboardClient({
                                     {t.motivo || t.tipoConsulta}
                                   </p>
                                 </div>
-                                <Badge
-                                  variant="outline"
-                                  className="text-[10px]"
-                                >
+                                <PortalBadge className="text-[10px]">
                                   {getTurnoLabel(t.estado)}
-                                </Badge>
-                              </CardContent>
-                            </Card>
+                                </PortalBadge>
+                              </div>
+                            </PortalCard>
                           </motion.div>
                         );
                       })}
@@ -759,29 +731,24 @@ export default function PortalDashboardClient({
                     <motion.div variants={staggerContainer} initial="hidden" animate="animate">
                       {historial.map((h) => (
                         <motion.div key={h.id} variants={itemVariants} className="mb-2">
-                          <Card className="transition-all duration-200 hover:shadow-sm bg-card border-border/50">
-                            <CardContent className="p-3">
-                              <div className="flex items-start justify-between">
-                                <p className="font-medium text-sm text-foreground">
-                                  {h.titulo}
-                                </p>
-                                <span className="text-[10px] text-muted-foreground/60">
-                                  {formatCLShort(h.createdAt)}
-                                </span>
-                              </div>
-                              {h.descripcion && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {h.descripcion}
-                                </p>
-                              )}
-                                <Badge
-                                  variant="outline"
-                                  className="mt-1 text-[10px]"
-                                >
-                                {h.tipo}
-                              </Badge>
-                            </CardContent>
-                          </Card>
+                          <PortalCard padding="sm">
+                            <div className="flex items-start justify-between">
+                              <p className="font-medium text-sm text-foreground">
+                                {h.titulo}
+                              </p>
+                              <span className="text-[10px] text-muted-foreground/60">
+                                {formatCLShort(h.createdAt)}
+                              </span>
+                            </div>
+                            {h.descripcion && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {h.descripcion}
+                              </p>
+                            )}
+                            <PortalBadge className="mt-1 text-[10px]">
+                              {h.tipo}
+                            </PortalBadge>
+                          </PortalCard>
                         </motion.div>
                       ))}
                     </motion.div>
@@ -794,8 +761,8 @@ export default function PortalDashboardClient({
           {/* ── Recetas ── */}
           <TabsContent value="recetas" className="mt-4">
             {recetas.length === 0 ? (
-              <Card className="bg-card border-border/50">
-                <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+              <PortalCard padding="md" className="text-center">
+                <div className="flex flex-col items-center justify-center py-10">
                   <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
                     <Syringe className="h-6 w-6 text-muted-foreground/60" />
                   </div>
@@ -805,8 +772,8 @@ export default function PortalDashboardClient({
                   <p className="text-xs text-muted-foreground/60 mt-1">
                     Las recetas aparecerán aquí cuando el médico las recete
                   </p>
-                </CardContent>
-              </Card>
+                </div>
+              </PortalCard>
             ) : (
               <motion.div
                 className="space-y-3"
@@ -816,39 +783,37 @@ export default function PortalDashboardClient({
               >
                 {recetas.map((r) => (
                   <motion.div key={r.id} variants={itemVariants}>
-                      <Card className="transition-all duration-200 hover:shadow-sm bg-card border-border/50">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <Syringe className="h-4 w-4 text-primary" />
-                            <p className="font-semibold text-foreground">
-                              {r.medicamento}
-                            </p>
-                          </div>
-                          <Badge className={getEstadoRecetaColor(r.estado)} variant="outline">
-                            {r.estado === 'activa' ? 'Activa' : 'Vencida'}
-                          </Badge>
+                    <PortalCard padding="md">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Syringe className="h-4 w-4 text-primary" />
+                          <p className="font-semibold text-foreground">
+                            {r.medicamento}
+                          </p>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {r.dosis} · {r.frecuencia}
+                        <PortalBadge variant={r.estado === 'activa' ? 'success' : 'destructive'}>
+                          {r.estado === 'activa' ? 'Activa' : 'Vencida'}
+                        </PortalBadge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {r.dosis} · {r.frecuencia}
+                      </p>
+                      {r.duracion && (
+                        <p className="text-xs text-muted-foreground/70 mt-1">
+                          Duración: {r.duracion}
                         </p>
-                        {r.duracion && (
-                          <p className="text-xs text-muted-foreground/70 mt-1">
-                            Duración: {r.duracion}
-                          </p>
-                        )}
-                        {r.indicaciones && (
-                          <p className="text-xs text-muted-foreground mt-1 italic bg-muted/50 p-2 rounded-lg">
-                            {r.indicaciones}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-4 mt-2 text-[11px] text-muted-foreground/60">
-                          {r.fechaInicio && <span>Desde: {formatCLShort(r.fechaInicio)}</span>}
-                          {r.fechaFin && <span>Hasta: {formatCLShort(r.fechaFin)}</span>}
-                          {r.medicoNombre && <span>Dr/a. {r.medicoNombre}</span>}
-                        </div>
-                      </CardContent>
-                    </Card>
+                      )}
+                      {r.indicaciones && (
+                        <p className="text-xs text-muted-foreground mt-1 italic bg-muted/50 p-2 rounded-lg">
+                          {r.indicaciones}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-4 mt-2 text-[11px] text-muted-foreground/60">
+                        {r.fechaInicio && <span>Desde: {formatCLShort(r.fechaInicio)}</span>}
+                        {r.fechaFin && <span>Hasta: {formatCLShort(r.fechaFin)}</span>}
+                        {r.medicoNombre && <span>Dr/a. {r.medicoNombre}</span>}
+                      </div>
+                    </PortalCard>
                   </motion.div>
                 ))}
               </motion.div>

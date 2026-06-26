@@ -7,6 +7,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { FileText, PenSquare, CheckCircle2, Loader2, Eye } from 'lucide-react';
+import { PortalCard } from '@/components/portal/portal-card';
+import { PortalBadge } from '@/components/portal/portal-badge';
+import { PortalButton } from '@/components/portal/portal-button';
 
 interface Consentimiento {
   id: string;
@@ -29,8 +32,6 @@ export default function PortalConsentimientosPage() {
   const [loading, setLoading] = useState(true);
   const [firmando, setFirmando] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [hoverFirmar, setHoverFirmar] = useState<string | null>(null);
-  const [hoverVer, setHoverVer] = useState<string | null>(null);
 
   const cargar = useCallback(() => {
     fetch('/api/portal/consentimientos')
@@ -116,15 +117,10 @@ export default function PortalConsentimientosPage() {
           {consentimientos.map((c) => {
             const firmado = !!c.fechaFirma;
             return (
-              <div
+              <PortalCard
                 key={c.id}
-                className="rounded-xl p-4"
-                style={{
-                  background: 'var(--portal-bg-alt)',
-                  border: firmado
-                    ? '1px solid hsl(var(--portal-primary) / 0.3)'
-                    : '1px solid hsl(var(--portal-border-light))',
-                }}
+                hover
+                style={firmado ? { border: '1px solid hsl(var(--portal-primary) / 0.3)' } : undefined}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
@@ -136,20 +132,14 @@ export default function PortalConsentimientosPage() {
                       )}
                       <h3 className="font-medium truncate" style={{ color: 'hsl(var(--portal-foreground))' }}>{c.titulo}</h3>
                       {firmado && (
-                        <span
-                          className="text-xs px-2 py-0.5 rounded-full shrink-0"
-                          style={{ background: 'hsl(var(--portal-primary) / 0.12)', color: 'hsl(var(--portal-primary))' }}
-                        >
+                        <PortalBadge variant="primary">
                           Firmado
-                        </span>
+                        </PortalBadge>
                       )}
                       {!firmado && (
-                        <span
-                          className="text-xs px-2 py-0.5 rounded-full shrink-0"
-                          style={{ background: 'hsl(var(--portal-primary) / 0.1)', color: 'hsl(var(--portal-primary))' }}
-                        >
+                        <PortalBadge variant="warning">
                           Pendiente
-                        </span>
+                        </PortalBadge>
                       )}
                     </div>
 
@@ -170,39 +160,24 @@ export default function PortalConsentimientosPage() {
 
                   <div className="shrink-0 flex flex-col gap-1.5">
                     {!firmado && (
-                      <button
+                      <PortalButton
                         onClick={() => firmar(c.id)}
-                        disabled={firmando === c.id}
-                        className="inline-flex items-center gap-1 text-sm font-medium disabled:opacity-50 px-3 py-1.5 rounded-xl"
-                        style={{
-                          color: 'white',
-                          background: 'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
-                          opacity: hoverFirmar === c.id ? 0.9 : 1,
-                          transition: 'opacity 200ms ease-out',
-                        }}
-                        onMouseEnter={() => setHoverFirmar(c.id)}
-                        onMouseLeave={() => setHoverFirmar(null)}
+                        loading={firmando === c.id}
+                        variant="primary"
                       >
-                        {firmando === c.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <PenSquare className="h-3.5 w-3.5" />
-                        )}
+                        <PenSquare className="h-3.5 w-3.5" />
                         Firmar
-                      </button>
+                      </PortalButton>
                     )}
                     {c.documentoPdf && (
                       <a
                         href={c.documentoPdf}
                         target="_blank"
-                        className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-xl"
+                        className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-hsl(var(--portal-muted) / 0.9) hover:text-hsl(var(--portal-foreground))"
                         style={{
-                          color: hoverVer === c.id ? 'hsl(var(--portal-foreground))' : 'hsl(var(--portal-muted-foreground))',
-                          background: hoverVer === c.id ? 'hsl(var(--portal-muted) / 0.9)' : 'hsl(var(--portal-muted))',
-                          transition: 'all 200ms ease-out',
+                          color: 'hsl(var(--portal-muted-foreground))',
+                          background: 'hsl(var(--portal-muted))',
                         }}
-                        onMouseEnter={() => setHoverVer(c.id)}
-                        onMouseLeave={() => setHoverVer(null)}
                       >
                         <Eye className="h-3.5 w-3.5" />
                         Ver
@@ -210,7 +185,7 @@ export default function PortalConsentimientosPage() {
                     )}
                   </div>
                 </div>
-              </div>
+              </PortalCard>
             );
           })}
         </div>

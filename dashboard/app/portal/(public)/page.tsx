@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { isValidPhone } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { PortalCard } from '@/components/portal/portal-card';
+import { PortalButton } from '@/components/portal/portal-button';
 
 /* ─── Variants ─────────────────────────────────────────── */
 const fadeSlideUp = {
@@ -176,14 +178,7 @@ export default function PortalLogin() {
           animate="animate"
           className="max-w-sm w-full"
         >
-          <div
-            className="p-8 rounded-2xl text-center"
-            style={{
-              background: 'var(--portal-bg-alt)',
-              border: '1px solid hsl(var(--portal-border))',
-              boxShadow: 'var(--portal-shadow-lg)',
-            }}
-          >
+          <PortalCard padding="lg" className="text-center">
             <motion.div
               variants={springPop}
               initial="initial"
@@ -214,13 +209,7 @@ export default function PortalLogin() {
               .
             </p>
 
-            <div
-              className="rounded-xl p-4 mb-6 text-left"
-              style={{
-                background: 'hsl(var(--portal-muted))',
-                border: '1px solid hsl(var(--portal-border-light))',
-              }}
-            >
+            <PortalCard padding="md" className="mb-6 text-left">
               <p
                 className="text-sm font-medium mb-1"
                 style={{ color: 'hsl(var(--portal-foreground))' }}
@@ -234,7 +223,7 @@ export default function PortalLogin() {
                 Verifica que el número ingresado sea el mismo que registraste en
                 el consultorio. Si el problema persiste, contáctanos por WhatsApp.
               </p>
-            </div>
+              </PortalCard>
 
             <p
               className="text-sm mb-6"
@@ -253,7 +242,7 @@ export default function PortalLogin() {
             >
               ← Ingresar otro número
             </Button>
-          </div>
+          </PortalCard>
         </motion.div>
       </div>
     );
@@ -331,74 +320,52 @@ export default function PortalLogin() {
                       variants={staggerItem(i)}
                       initial="initial"
                       animate="animate"
-                      className="rounded-xl p-4 flex items-start gap-3"
-                      style={{
-                        background: 'var(--portal-bg-alt)',
-                        border: '1px solid hsl(var(--portal-border-light))',
-                        boxShadow: 'var(--portal-shadow-sm)',
-                      }}
                     >
-                      <div
-                        className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                        style={{
-                          background:
-                            'hsl(var(--portal-primary) / 0.1)',
-                        }}
-                      >
-                        <b.icon
-                          className="h-5 w-5"
+                      <PortalCard className="flex items-start gap-3" padding="md">
+                        <div
+                          className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
                           style={{
-                            color: 'hsl(var(--portal-primary))',
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <p
-                          className="font-medium text-sm"
-                          style={{
-                            color: 'hsl(var(--portal-foreground))',
+                            background:
+                              'hsl(var(--portal-primary) / 0.1)',
                           }}
                         >
-                          {b.titulo}
-                        </p>
-                        <p
-                          className="text-xs"
-                          style={{
-                            color:
-                              'hsl(var(--portal-muted-foreground))',
-                          }}
-                        >
-                          {b.desc}
-                        </p>
-                      </div>
+                          <b.icon
+                            className="h-5 w-5"
+                            style={{
+                              color: 'hsl(var(--portal-primary))',
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <p
+                            className="font-medium text-sm"
+                            style={{
+                              color: 'hsl(var(--portal-foreground))',
+                            }}
+                          >
+                            {b.titulo}
+                          </p>
+                          <p
+                            className="text-xs"
+                            style={{
+                              color:
+                                'hsl(var(--portal-muted-foreground))',
+                            }}
+                          >
+                            {b.desc}
+                          </p>
+                        </div>
+                      </PortalCard>
                     </motion.div>
                   ))}
                 </div>
 
-                <button
-                  onClick={() => setStep('form')}
-                  className="w-full h-12 rounded-xl text-base font-semibold shadow-lg transition-all duration-200 active:scale-[0.97]"
-                  style={{
-                    background:
-                      'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
-                    color: '#fff',
-                    boxShadow:
-                      '0 4px 16px hsl(var(--portal-primary) / 0.3), 0 1px 4px hsl(var(--portal-primary) / 0.15)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow =
-                      '0 6px 24px hsl(var(--portal-primary) / 0.35), 0 2px 8px hsl(var(--portal-primary) / 0.2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow =
-                      '0 4px 16px hsl(var(--portal-primary) / 0.3), 0 1px 4px hsl(var(--portal-primary) / 0.15)';
-                  }}
-                >
+                <PortalButton variant="primary" fullWidth onClick={() => setStep('form')} style={{ height: '3rem', fontSize: '1rem' }}>
                   <span className="flex items-center justify-center gap-2">
                     Ingresar al Portal
                     <ArrowRight className="h-5 w-5" />
                   </span>
-                </button>
+                </PortalButton>
 
                 <p
                   className="mt-4 text-xs"
@@ -418,14 +385,7 @@ export default function PortalLogin() {
                 animate="animate"
                 exit="exit"
               >
-                <div
-                  className="rounded-2xl p-6 text-left"
-                  style={{
-                    background: 'var(--portal-bg-alt)',
-                    border: '1px solid hsl(var(--portal-border))',
-                    boxShadow: 'var(--portal-shadow-lg)',
-                  }}
-                >
+                <PortalCard padding="lg" className="text-left">
                   <h2
                     className="text-xl font-bold mb-1"
                     style={{ color: 'hsl(var(--portal-foreground))' }}
@@ -506,56 +466,20 @@ export default function PortalLogin() {
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      disabled={
-                        loading ||
-                        !isValidPhone(
-                          telefono.replace(/[\s\-()]/g, ''),
-                        )
-                      }
-                      className="w-full h-11 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-50 active:scale-[0.97]"
-                      style={{
-                        background:
-                          'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
-                        color: '#fff',
-                      }}
-                    >
-                      {loading ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />{' '}
-                          Enviando...
-                        </span>
-                      ) : (
-                        <span className="flex items-center justify-center gap-2">
-                          Enviar enlace
-                          <ArrowRight className="h-4 w-4" />
-                        </span>
-                      )}
-                    </button>
+                    <PortalButton variant="primary" fullWidth type="submit" disabled={loading || !isValidPhone(telefono.replace(/[\s\-()]/g, ''))} loading={loading}>
+                      <span className="flex items-center justify-center gap-2">
+                        Enviar enlace
+                        <ArrowRight className="h-4 w-4" />
+                      </span>
+                    </PortalButton>
                   </form>
 
-                  <button
-                    onClick={() => setStep('landing')}
-                    className="mt-4 w-full text-sm transition-colors"
-                    style={{
-                      color:
-                        'hsl(var(--portal-muted-foreground) / 0.6)',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color =
-                        'hsl(var(--portal-muted-foreground))';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color =
-                        'hsl(var(--portal-muted-foreground) / 0.6)';
-                    }}
-                  >
+                  <PortalButton variant="ghost" fullWidth onClick={() => setStep('landing')} style={{ marginTop: '1rem' }}>
                     ← Volver
-                  </button>
-                </div>
-              </motion.div>
-            )}
+                  </PortalButton>
+                  </PortalCard>
+                </motion.div>
+              )}
           </AnimatePresence>
 
           {/* Bypass — solo si está activo */}
