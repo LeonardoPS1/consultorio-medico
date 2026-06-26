@@ -9,7 +9,6 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   FileText,
   Loader2,
-  SearchX,
   FlaskConical,
   Image,
   CheckCircle2,

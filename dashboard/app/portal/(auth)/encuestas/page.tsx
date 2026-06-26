@@ -13,7 +13,6 @@ import {
   Loader2,
   ClipboardCheck,
   Send,
-  ChevronRight,
   User as UserIcon,
 } from 'lucide-react';
 import { PortalCard } from '@/components/portal/portal-card';

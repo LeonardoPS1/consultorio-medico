@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Download, ExternalLink, Loader2, SearchX } from 'lucide-react';
+import { FileText, Download, ExternalLink, Loader2 } from 'lucide-react';
 import { PortalCard } from '@/components/portal/portal-card';
 
 interface Certificado {

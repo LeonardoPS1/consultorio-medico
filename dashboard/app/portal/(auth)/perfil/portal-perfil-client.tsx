@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Mail, Phone, Shield, Save, MapPin, Heart } from 'lucide-react';
+import { User, Phone, Shield, Save, MapPin, Heart } from 'lucide-react';
 import { ISAPRES_CHILENAS } from '@/lib/isapres';
 import { PushNotificationToggle } from '@/components/portal/PushNotificationToggle';
 import { PortalCard } from '@/components/portal/portal-card';

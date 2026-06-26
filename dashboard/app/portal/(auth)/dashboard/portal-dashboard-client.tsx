@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type MouseEvent } from 'react';
+import { useState } from 'react';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalBadge } from '@/components/portal/portal-badge';
 import { PortalButton } from '@/components/portal/portal-button';
