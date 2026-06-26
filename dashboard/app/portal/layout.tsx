@@ -1,9 +1,9 @@
 /**
- * Portal Layout — Permite que el ThemeProvider global maneje el modo.
- * Ya no forza modo claro, el portal se adapta al tema del sistema/usuario.
- * Se aplica un reset mínimo para evitar flickers.
+ * Portal Layout — Maneja el tema y previene flicker.
+ * Envuelve con ClientThemeProvider para reducir profundidad de providers globales.
  */
 import Script from 'next/script';
+import { ClientThemeProvider } from '@/components/client-theme-provider';
 import './portal.css';
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
@@ -30,7 +30,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           `,
         }}
       />
-      {children}
+      <ClientThemeProvider>{children}</ClientThemeProvider>
     </>
   );
 }
