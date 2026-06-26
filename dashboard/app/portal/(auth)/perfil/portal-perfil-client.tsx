@@ -1,8 +1,7 @@
 /**
  * Portal Perfil Client — Editar datos del perfil del paciente
+ * Rediseñado con portal design system tokens.
  * Incluye campos chilenos: RUT, sistema salud, región, comuna
- *
- * "regionalización chilena completa"
  */
 
 'use client';
@@ -52,10 +51,31 @@ const SISTEMAS_SALUD = [
   { value: 'otro', label: 'Otro' },
 ];
 
-export default function PortalPerfilClient({ paciente }: Props) {
+/* ─── Reusable styles ───────────────────────────────────── */
+const cardStyle: React.CSSProperties = {
+  background: 'var(--portal-bg-alt)',
+  border: '1px solid hsl(var(--portal-border-light))',
+  borderRadius: '0.75rem',
+  boxShadow: 'var(--portal-shadow-sm)',
+};
+
+const inputStyle: React.CSSProperties = {
+  border: '1px solid hsl(var(--portal-border-light))',
+  background: 'hsl(var(--portal-muted) / 0.3)',
+  color: 'hsl(var(--portal-foreground))',
+  borderRadius: '0.75rem',
+};
+
+export default function PortalPerfilClient({
+  paciente,
+}: Props) {
   const [email, setEmail] = useState(paciente.email || '');
-  const [sistemaSalud, setSistemaSalud] = useState(paciente.sistemaSalud || '');
-  const [isapreNombre, setIsapreNombre] = useState(paciente.isapreNombre || '');
+  const [sistemaSalud, setSistemaSalud] = useState(
+    paciente.sistemaSalud || '',
+  );
+  const [isapreNombre, setIsapreNombre] = useState(
+    paciente.isapreNombre || '',
+  );
   const [regionId, setRegionId] = useState(paciente.regionId || '');
   const [comunaId, setComunaId] = useState(paciente.comunaId || '');
   const [consentimientoWhatsapp, setConsentimientoWhatsapp] = useState(
@@ -72,7 +92,6 @@ export default function PortalPerfilClient({ paciente }: Props) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
-  // Cargar regiones al montar
   useEffect(() => {
     fetch('/api/regiones')
       .then((r) => r.json())
@@ -80,7 +99,6 @@ export default function PortalPerfilClient({ paciente }: Props) {
       .catch(() => {});
   }, []);
 
-  // Cargar comunas al cambiar región
   useEffect(() => {
     if (!regionId) {
       setComunas([]);
@@ -107,7 +125,10 @@ export default function PortalPerfilClient({ paciente }: Props) {
         body: JSON.stringify({
           email,
           sistemaSalud: sistemaSalud || undefined,
-          isapreNombre: sistemaSalud === 'isapre' ? isapreNombre || undefined : undefined,
+          isapreNombre:
+            sistemaSalud === 'isapre'
+              ? isapreNombre || undefined
+              : undefined,
           regionId: regionId || undefined,
           comunaId: comunaId || undefined,
           consentimientoWhatsapp,
@@ -131,39 +152,74 @@ export default function PortalPerfilClient({ paciente }: Props) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground mb-6">Mi Perfil</h1>
+      <h1
+        className="text-2xl font-bold mb-6"
+        style={{ color: 'hsl(var(--portal-foreground))' }}
+      >
+        Mi Perfil
+      </h1>
 
-      {/* Datos fijos (no editables) */}
-      <div className="bg-card rounded-xl border border-border/50 p-4 mb-6">
-        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Datos personales</h2>
+      {/* ── Datos fijos ── */}
+      <div style={{ ...cardStyle, padding: '1rem', marginBottom: '1.5rem' }}>
+        <h2
+          className="text-xs font-semibold uppercase tracking-wider mb-3"
+          style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+        >
+          Datos personales
+        </h2>
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <User className="h-5 w-5 text-muted-foreground/50" />
+            <User
+              className="h-5 w-5 shrink-0"
+              style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
+            />
             <div>
-              <div className="font-medium text-foreground">
+              <div
+                className="font-medium"
+                style={{ color: 'hsl(var(--portal-foreground))' }}
+              >
                 {paciente.nombre} {paciente.apellido}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Phone className="h-5 w-5 text-muted-foreground/50" />
+            <Phone
+              className="h-5 w-5 shrink-0"
+              style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
+            />
             <div>
-              <div className="text-foreground/90">{paciente.telefono}</div>
+              <div
+                style={{ color: 'hsl(var(--portal-foreground) / 0.9)' }}
+              >
+                {paciente.telefono}
+              </div>
             </div>
           </div>
           {paciente.rut && (
             <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-muted-foreground/50" />
+              <Shield
+                className="h-5 w-5 shrink-0"
+                style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
+              />
               <div>
-                <div className="text-foreground/90">RUT: {paciente.rut}</div>
+                <div
+                  style={{ color: 'hsl(var(--portal-foreground) / 0.9)' }}
+                >
+                  RUT: {paciente.rut}
+                </div>
               </div>
             </div>
           )}
           {paciente.region && paciente.comuna && (
             <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-muted-foreground/50" />
+              <MapPin
+                className="h-5 w-5 shrink-0"
+                style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
+              />
               <div>
-                <div className="text-foreground/90">
+                <div
+                  style={{ color: 'hsl(var(--portal-foreground) / 0.9)' }}
+                >
                   {paciente.comuna}, {paciente.region}
                 </div>
               </div>
@@ -171,35 +227,70 @@ export default function PortalPerfilClient({ paciente }: Props) {
           )}
           {paciente.sistemaSalud && (
             <div className="flex items-center gap-3">
-              <Heart className="h-5 w-5 text-muted-foreground/50" />
+              <Heart
+                className="h-5 w-5 shrink-0"
+                style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
+              />
               <div>
-                <div className="text-foreground/90 capitalize">{paciente.sistemaSalud}</div>
+                <div
+                  className="capitalize"
+                  style={{ color: 'hsl(var(--portal-foreground) / 0.9)' }}
+                >
+                  {paciente.sistemaSalud}
+                </div>
               </div>
             </div>
           )}
           {paciente.obraSocial && (
             <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-muted-foreground/50" />
+              <Shield
+                className="h-5 w-5 shrink-0"
+                style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
+              />
               <div>
-                <div className="text-foreground/90">{paciente.obraSocial}</div>
+                <div
+                  style={{ color: 'hsl(var(--portal-foreground) / 0.9)' }}
+                >
+                  {paciente.obraSocial}
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Datos editables */}
-      <form onSubmit={handleSave} className="bg-card rounded-xl border border-border/50 p-4">
-        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+      {/* ── Datos editables ── */}
+      <form
+        onSubmit={handleSave}
+        style={{ ...cardStyle, padding: '1rem' }}
+      >
+        <h2
+          className="text-xs font-semibold uppercase tracking-wider mb-3"
+          style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+        >
           Configuración y contacto
         </h2>
 
         {error && (
-          <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg mb-3">{error}</div>
+          <div
+            className="text-sm px-3 py-2 rounded-lg mb-3"
+            style={{
+              color: 'hsl(var(--portal-destructive))',
+              background: 'hsl(var(--portal-destructive) / 0.1)',
+            }}
+          >
+            {error}
+          </div>
         )}
 
         {saved && (
-          <div className="text-sm text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg mb-3">
+          <div
+            className="text-sm px-3 py-2 rounded-lg mb-3"
+            style={{
+              color: 'hsl(var(--portal-primary))',
+              background: 'hsl(var(--portal-primary) / 0.1)',
+            }}
+          >
             Cambios guardados correctamente
           </div>
         )}
@@ -207,26 +298,60 @@ export default function PortalPerfilClient({ paciente }: Props) {
         <div className="space-y-4">
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-foreground/80 mb-1">Email</label>
+            <label
+              className="block text-sm font-medium mb-1"
+              style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+            >
+              Email
+            </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-border/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm"
+              className="w-full px-3 py-2 text-sm outline-none transition-all"
+              style={inputStyle}
               placeholder="tu@email.com"
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor =
+                  'hsl(var(--portal-primary) / 0.5)';
+                e.currentTarget.style.boxShadow =
+                  '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor =
+                  'hsl(var(--portal-border-light))';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             />
           </div>
 
           {/* Sistema de salud */}
           <div>
-            <label className="block text-sm font-medium text-foreground/80 mb-1">Sistema de Salud</label>
+            <label
+              className="block text-sm font-medium mb-1"
+              style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+            >
+              Sistema de Salud
+            </label>
             <select
               value={sistemaSalud}
               onChange={(e) => {
                 setSistemaSalud(e.target.value);
                 setIsapreNombre('');
               }}
-              className="w-full px-3 py-2 border border-border/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm bg-white"
+              className="w-full px-3 py-2 text-sm outline-none transition-all"
+              style={inputStyle}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor =
+                  'hsl(var(--portal-primary) / 0.5)';
+                e.currentTarget.style.boxShadow =
+                  '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor =
+                  'hsl(var(--portal-border-light))';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
               {SISTEMAS_SALUD.map((s) => (
                 <option key={s.value} value={s.value}>
@@ -238,13 +363,32 @@ export default function PortalPerfilClient({ paciente }: Props) {
 
           {sistemaSalud === 'isapre' && (
             <div>
-              <label className="block text-sm font-medium text-foreground/80 mb-1">Isapre</label>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+              >
+                Isapre
+              </label>
               <select
                 value={isapreNombre}
                 onChange={(e) => setIsapreNombre(e.target.value)}
-                className="w-full px-3 py-2 border border-border/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm bg-white"
+                className="w-full px-3 py-2 text-sm outline-none transition-all"
+                style={inputStyle}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor =
+                    'hsl(var(--portal-primary) / 0.5)';
+                  e.currentTarget.style.boxShadow =
+                    '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor =
+                    'hsl(var(--portal-border-light))';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
               >
-                <option value="">Selecciona una Isapre...</option>
+                <option value="">
+                  Selecciona una Isapre...
+                </option>
                 {ISAPRES_CHILENAS.map((i) => (
                   <option key={i.value} value={i.value}>
                     {i.label}
@@ -256,19 +400,38 @@ export default function PortalPerfilClient({ paciente }: Props) {
 
           {/* Región */}
           <div>
-            <label className="block text-sm font-medium text-foreground/80 mb-1">Región</label>
+            <label
+              className="block text-sm font-medium mb-1"
+              style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+            >
+              Región
+            </label>
             <select
               value={regionId}
               onChange={(e) => {
                 setRegionId(e.target.value);
                 setComunaId('');
               }}
-              className="w-full px-3 py-2 border border-border/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm bg-white"
+              className="w-full px-3 py-2 text-sm outline-none transition-all"
+              style={inputStyle}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor =
+                  'hsl(var(--portal-primary) / 0.5)';
+                e.currentTarget.style.boxShadow =
+                  '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor =
+                  'hsl(var(--portal-border-light))';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
               <option value="">Seleccionar región...</option>
               {regiones.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.numeroRomano ? `${r.numeroRomano} - ` : ''}
+                  {r.numeroRomano
+                    ? `${r.numeroRomano} - `
+                    : ''}
                   {r.nombre}
                 </option>
               ))}
@@ -277,14 +440,38 @@ export default function PortalPerfilClient({ paciente }: Props) {
 
           {/* Comuna */}
           <div>
-            <label className="block text-sm font-medium text-foreground/80 mb-1">Comuna</label>
+            <label
+              className="block text-sm font-medium mb-1"
+              style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+            >
+              Comuna
+            </label>
             <select
               value={comunaId}
               onChange={(e) => setComunaId(e.target.value)}
               disabled={!regionId || loadingComunas}
-              className="w-full px-3 py-2 border border-border/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm bg-white disabled:bg-muted disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 text-sm outline-none transition-all disabled:cursor-not-allowed"
+              style={{
+                ...inputStyle,
+                opacity: !regionId || loadingComunas ? 0.6 : 1,
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor =
+                  'hsl(var(--portal-primary) / 0.5)';
+                e.currentTarget.style.boxShadow =
+                  '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor =
+                  'hsl(var(--portal-border-light))';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
-              <option value="">{loadingComunas ? 'Cargando...' : 'Seleccionar comuna...'}</option>
+              <option value="">
+                {loadingComunas
+                  ? 'Cargando...'
+                  : 'Seleccionar comuna...'}
+              </option>
               {comunas.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nombre}
@@ -296,42 +483,90 @@ export default function PortalPerfilClient({ paciente }: Props) {
           {/* Consentimientos */}
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-foreground/80">Notificaciones por WhatsApp</div>
-              <div className="text-xs text-muted-foreground/70">Recordatorios y avisos de turnos</div>
+              <div
+                className="text-sm font-medium"
+                style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+              >
+                Notificaciones por WhatsApp
+              </div>
+              <div
+                className="text-xs"
+                style={{
+                  color: 'hsl(var(--portal-muted-foreground) / 0.7)',
+                }}
+              >
+                Recordatorios y avisos de turnos
+              </div>
             </div>
             <input
               type="checkbox"
               checked={consentimientoWhatsapp}
-              onChange={(e) => setConsentimientoWhatsapp(e.target.checked)}
-              className="h-5 w-5 rounded border-border/50 text-primary focus:ring-primary/30"
+              onChange={(e) =>
+                setConsentimientoWhatsapp(e.target.checked)
+              }
+              className="h-5 w-5 rounded"
+              style={{
+                accentColor: 'hsl(var(--portal-primary))',
+              }}
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-foreground/80">Notificaciones por Email</div>
-              <div className="text-xs text-muted-foreground/70">Resúmenes y novedades</div>
+              <div
+                className="text-sm font-medium"
+                style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+              >
+                Notificaciones por Email
+              </div>
+              <div
+                className="text-xs"
+                style={{
+                  color: 'hsl(var(--portal-muted-foreground) / 0.7)',
+                }}
+              >
+                Resúmenes y novedades
+              </div>
             </div>
             <input
               type="checkbox"
               checked={consentimientoEmail}
-              onChange={(e) => setConsentimientoEmail(e.target.checked)}
-              className="h-5 w-5 rounded border-border/50 text-primary focus:ring-primary/30"
+              onChange={(e) =>
+                setConsentimientoEmail(e.target.checked)
+              }
+              className="h-5 w-5 rounded"
+              style={{
+                accentColor: 'hsl(var(--portal-primary))',
+              }}
             />
           </div>
 
           {/* Push Notifications */}
-          <div className="pt-2 border-t border-border/30">
+          <div
+            className="pt-2"
+            style={{
+              borderTop: '1px solid hsl(var(--portal-border-light))',
+            }}
+          >
             <PushNotificationToggle />
           </div>
 
           <button
             type="submit"
             disabled={saving}
-            className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold py-2.5 rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-all duration-200 active:scale-[0.98]"
+            className="w-full flex items-center justify-center gap-2 font-semibold py-2.5 rounded-xl transition-all duration-200 disabled:opacity-50 active:scale-[0.97]"
+            style={{
+              background:
+                'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
+              color: '#fff',
+              boxShadow:
+                '0 4px 12px hsl(var(--portal-primary) / 0.25)',
+            }}
           >
             {saving ? (
-              <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span
+                className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+              />
             ) : (
               <>
                 <Save className="h-4 w-4" /> Guardar cambios

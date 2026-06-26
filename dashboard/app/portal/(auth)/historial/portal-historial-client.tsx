@@ -1,5 +1,6 @@
 /**
  * Portal Historial Client
+ * Rediseñado con portal design system tokens.
  */
 
 'use client';
@@ -30,36 +31,113 @@ function formatDate(date: string): string {
   });
 }
 
-export default function PortalHistorialClient({ historial }: Props) {
+/* ─── Reusable card style ───────────────────────────────── */
+const cardStyle: React.CSSProperties = {
+  background: 'var(--portal-bg-alt)',
+  border: '1px solid hsl(var(--portal-border-light))',
+  borderRadius: '0.75rem',
+  boxShadow: 'var(--portal-shadow-sm)',
+};
+
+export default function PortalHistorialClient({
+  historial,
+}: Props) {
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground mb-6">Historial Médico</h1>
+      <h1
+        className="text-2xl font-bold mb-6"
+        style={{ color: 'hsl(var(--portal-foreground))' }}
+      >
+        Historial Médico
+      </h1>
 
       {historial.length > 0 ? (
         <div className="space-y-3">
           {historial.map((h) => (
-            <div key={h.id} className="bg-card rounded-xl border border-border/50 p-4">
+            <div
+              key={h.id}
+              style={{
+                ...cardStyle,
+                padding: '1rem',
+                transition: 'box-shadow 200ms ease-out',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = 'var(--portal-shadow-md)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = 'var(--portal-shadow-sm)';
+              }}
+            >
               <div className="flex items-start gap-3 mb-2">
-                <div className="mt-1">
+                <div
+                  className="mt-1 shrink-0"
+                  style={
+                    h.tipo === 'consulta'
+                      ? { color: 'hsl(var(--portal-primary))' }
+                      : h.tipo === 'encuesta'
+                        ? { color: 'hsl(var(--portal-accent))' }
+                        : {
+                            color:
+                              'hsl(var(--portal-muted-foreground))',
+                          }
+                  }
+                >
                   {h.tipo === 'consulta' ? (
-                    <Stethoscope className="h-5 w-5 text-primary" />
+                    <Stethoscope className="h-5 w-5" />
                   ) : h.tipo === 'encuesta' ? (
-                    <FileText className="h-5 w-5 text-amber-500" />
+                    <FileText className="h-5 w-5" />
                   ) : (
-                    <ClipboardList className="h-5 w-5 text-muted-foreground" />
+                    <ClipboardList className="h-5 w-5" />
                   )}
                 </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-foreground">{h.titulo}</div>
-                  <div className="text-sm text-muted-foreground mb-2">
+                <div className="flex-1 min-w-0">
+                  <div
+                    className="font-semibold"
+                    style={{ color: 'hsl(var(--portal-foreground))' }}
+                  >
+                    {h.titulo}
+                  </div>
+                  <div
+                    className="text-sm mb-2"
+                    style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+                  >
                     {formatDate(h.createdAt)} · Dr/a. {h.medicoNombre}
                   </div>
-                  {h.descripcion && <p className="text-sm text-muted-foreground/80 mb-2">{h.descripcion}</p>}
+                  {h.descripcion && (
+                    <p
+                      className="text-sm mb-2"
+                      style={{
+                        color: 'hsl(var(--portal-muted-foreground) / 0.8)',
+                      }}
+                    >
+                      {h.descripcion}
+                    </p>
+                  )}
                   {h.diagnosticoDescripcion && (
-                    <div className="inline-block bg-muted rounded-lg px-3 py-1.5 text-sm text-muted-foreground">
-                      <span className="text-gray-400 text-xs">Diagnóstico: </span>
+                    <div
+                      className="inline-block rounded-lg px-3 py-1.5 text-sm"
+                      style={{
+                        background: 'hsl(var(--portal-muted))',
+                        color: 'hsl(var(--portal-muted-foreground))',
+                      }}
+                    >
+                      <span
+                        className="text-xs"
+                        style={{
+                          color:
+                            'hsl(var(--portal-muted-foreground) / 0.6)',
+                        }}
+                      >
+                        Diagnóstico:{' '}
+                      </span>
                       {h.diagnosticoCodigo && (
-                        <span className="font-mono text-xs bg-muted-foreground/20 px-1 rounded mr-1">
+                        <span
+                          className="font-mono text-xs px-1 rounded mr-1"
+                          style={{
+                            background:
+                              'hsl(var(--portal-muted-foreground) / 0.15)',
+                          }}
+                        >
                           {h.diagnosticoCodigo}
                         </span>
                       )}
@@ -72,11 +150,21 @@ export default function PortalHistorialClient({ historial }: Props) {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 text-muted-foreground/70">
-          <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mx-auto mb-3">
-            <ClipboardList className="h-6 w-6" />
+        <div className="text-center py-12">
+          <div
+            className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3"
+            style={{ background: 'hsl(var(--portal-muted))' }}
+          >
+            <ClipboardList
+              className="h-6 w-6"
+              style={{
+                color: 'hsl(var(--portal-muted-foreground) / 0.5)',
+              }}
+            />
           </div>
-          <p>No tienes historial médico registrado</p>
+          <p style={{ color: 'hsl(var(--portal-muted-foreground))' }}>
+            No tienes historial médico registrado
+          </p>
         </div>
       )}
     </div>
