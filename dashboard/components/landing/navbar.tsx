@@ -94,9 +94,9 @@ export function Navbar() {
       <AnimatePresence>
         {mobileMenu && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, maxHeight: 0 }}
+            animate={{ opacity: 1, maxHeight: 600 }}
+            exit={{ opacity: 0, maxHeight: 0 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="md:hidden border-t bg-background/95 backdrop-blur-xl overflow-hidden"
           >

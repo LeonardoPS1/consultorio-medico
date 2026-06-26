@@ -97,9 +97,9 @@ export function FAQ({ items }: FAQProps = {}) {
               <AnimatePresence>
                 {openIndex === i && (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
+                    initial={{ maxHeight: 0, opacity: 0 }}
+                    animate={{ maxHeight: 500, opacity: 1 }}
+                    exit={{ maxHeight: 0, opacity: 0 }}
                     transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] as const }}
                     className="overflow-hidden"
                   >

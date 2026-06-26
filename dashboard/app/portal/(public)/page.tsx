@@ -404,9 +404,9 @@ export default function PortalLogin() {
                   <form onSubmit={handleSubmit} className="space-y-5">
                     {error && (
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm"
+                        initial={{ opacity: 0, maxHeight: 0 }}
+                        animate={{ opacity: 1, maxHeight: 200 }}
+                        className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm overflow-hidden"
                         style={{
                           color: 'hsl(var(--portal-destructive))',
                           background:
