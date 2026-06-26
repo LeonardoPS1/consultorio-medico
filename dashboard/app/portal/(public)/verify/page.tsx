@@ -81,7 +81,7 @@ function PortalVerifyContent() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
+      className="min-h-screen flex items-center justify-center p-4 portal-layout"
       style={{ background: 'hsl(var(--portal-bg))' }}
     >
       <div

@@ -262,7 +262,7 @@ export default function PortalLogin() {
   /* ════════════════════════════════════════ Landing ════ */
   return (
     <div
-      className="min-h-screen flex flex-col relative overflow-hidden"
+      className="min-h-screen flex flex-col relative overflow-hidden portal-layout"
       style={{ background: 'hsl(var(--portal-bg))' }}
     >
       {/* Ambient gradient orbs */}
