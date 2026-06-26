@@ -1,5 +1,6 @@
 /**
  * Portal Chat — Página de mensajes del paciente
+ * Rediseñado con portal design system tokens.
  */
 
 'use client';
@@ -14,6 +15,17 @@ interface Mensaje {
   createdAt: string;
 }
 
+/* ─── Reusable styles ───────────────────────────────────── */
+const headerStyle: React.CSSProperties = {
+  background: 'var(--portal-bg-alt)',
+  borderBottom: '1px solid hsl(var(--portal-border-light))',
+};
+
+const inputBarStyle: React.CSSProperties = {
+  background: 'var(--portal-bg-alt)',
+  borderTop: '1px solid hsl(var(--portal-border-light))',
+};
+
 export default function PortalChatPage() {
   const [convId, setConvId] = useState<string | null>(null);
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
@@ -23,7 +35,6 @@ export default function PortalChatPage() {
   const [error, setError] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Obtener o crear conversación
   useEffect(() => {
     fetch('/api/portal/chat')
       .then((r) => r.json())
@@ -38,7 +49,6 @@ export default function PortalChatPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Obtener mensajes cuando tengamos convId
   useEffect(() => {
     if (!convId) return;
     const fetchMensajes = async () => {
@@ -55,7 +65,6 @@ export default function PortalChatPage() {
     return () => clearInterval(interval);
   }, [convId]);
 
-  // Auto-scroll al último mensaje
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [mensajes]);
@@ -66,11 +75,15 @@ export default function PortalChatPage() {
     const content = input.trim();
     setInput('');
 
-    // Optimistic update
     const tempId = `temp-${Date.now()}`;
     setMensajes((prev) => [
       ...prev,
-      { id: tempId, rol: 'paciente', contenido: content, createdAt: new Date().toISOString() },
+      {
+        id: tempId,
+        rol: 'paciente',
+        contenido: content,
+        createdAt: new Date().toISOString(),
+      },
     ]);
 
     try {
@@ -81,8 +94,9 @@ export default function PortalChatPage() {
       });
       if (r.ok) {
         const res = await r.json();
-        // Reemplazar el mensaje temporal con el real
-        setMensajes((prev) => prev.map((m) => (m.id === tempId ? res.data : m)));
+        setMensajes((prev) =>
+          prev.map((m) => (m.id === tempId ? res.data : m)),
+        );
       } else {
         setMensajes((prev) => prev.filter((m) => m.id !== tempId));
         setInput(content);
@@ -97,37 +111,79 @@ export default function PortalChatPage() {
 
   function formatTime(dateStr: string): string {
     const d = new Date(dateStr);
-    return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString('es-CL', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2
+          className="h-8 w-8 animate-spin"
+          style={{ color: 'hsl(var(--portal-primary))' }}
+        />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] max-w-lg mx-auto">
+    <div
+      className="flex flex-col"
+      style={{
+        height: 'calc(100vh - 12rem)',
+      }}
+    >
       {/* Header */}
-      <div className="bg-card px-4 py-3 border-b border-border/50">
-        <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-primary" />
+      <div style={{ ...headerStyle, padding: '0.75rem 1rem' }}>
+        <h1
+          className="text-lg font-semibold flex items-center gap-2"
+          style={{ color: 'hsl(var(--portal-foreground))' }}
+        >
+          <MessageSquare
+            className="h-5 w-5"
+            style={{ color: 'hsl(var(--portal-primary))' }}
+          />
           Mensajes
         </h1>
-        <p className="text-xs text-muted-foreground mt-0.5">Consultá con el equipo médico por este canal</p>
+        <p
+          className="text-xs mt-0.5"
+          style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+        >
+          Consultá con el equipo médico por este canal
+        </p>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-muted/30">
-        {error && <div className="text-center text-destructive text-sm py-8">{error}</div>}
+      {/* Messages area */}
+      <div
+        className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
+        style={{ background: 'hsl(var(--portal-muted) / 0.3)' }}
+      >
+        {error && (
+          <div
+            className="text-center text-sm py-8"
+            style={{ color: 'hsl(var(--portal-destructive))' }}
+          >
+            {error}
+          </div>
+        )}
 
         {mensajes.length === 0 && !error && (
-          <div className="text-center text-muted-foreground/70 py-12">
-            <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
+          <div
+            className="text-center py-12"
+            style={{
+              color: 'hsl(var(--portal-muted-foreground) / 0.7)',
+            }}
+          >
+            <Bot
+              className="h-12 w-12 mx-auto mb-3"
+              style={{ opacity: 0.5 }}
+            />
             <p className="text-sm">No hay mensajes todavía</p>
-            <p className="text-xs mt-1">Escribinos tu consulta y te responderemos a la brevedad</p>
+            <p className="text-xs mt-1">
+              Escribinos tu consulta y te responderemos a la brevedad
+            </p>
           </div>
         )}
 
@@ -137,14 +193,34 @@ export default function PortalChatPage() {
             className={`flex ${msg.rol === 'paciente' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
+              className="max-w-[80%] rounded-2xl px-4 py-2.5 text-sm"
+              style={
                 msg.rol === 'paciente'
-                  ? 'bg-primary text-primary-foreground rounded-br-md'
-                  : 'bg-card border border-border/50 text-foreground/90 rounded-bl-md'
-              }`}
+                  ? {
+                      background:
+                        'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
+                      color: '#fff',
+                      borderBottomRightRadius: '0.375rem',
+                    }
+                  : {
+                      background: 'var(--portal-bg-alt)',
+                      border:
+                        '1px solid hsl(var(--portal-border-light))',
+                      color: 'hsl(var(--portal-foreground) / 0.9)',
+                      borderBottomLeftRadius: '0.375rem',
+                    }
+              }
             >
               {msg.rol !== 'paciente' && (
-                <div className="text-[10px] font-medium text-primary mb-1 uppercase tracking-wider">
+                <div
+                  className="text-[10px] font-medium uppercase tracking-wider mb-1"
+                  style={{
+                    color:
+                      msg.rol === 'asistente_ia'
+                        ? 'hsl(var(--portal-accent))'
+                        : 'hsl(var(--portal-primary))',
+                  }}
+                >
                   {msg.rol === 'asistente_ia'
                     ? '🤖 Asistente IA'
                     : msg.rol === 'medico'
@@ -152,14 +228,19 @@ export default function PortalChatPage() {
                       : '📋 Secretaría'}
                 </div>
               )}
-              <div className="whitespace-pre-wrap break-words">{msg.contenido}</div>
+              <div className="whitespace-pre-wrap break-words">
+                {msg.contenido}
+              </div>
               <div
-                className={`text-[10px] mt-1 ${
-                  msg.rol === 'paciente' ? 'text-primary-foreground/70' : 'text-muted-foreground/70'
-                }`}
+                className="text-[10px] mt-1"
+                style={{
+                  opacity: msg.rol === 'paciente' ? 0.7 : 0.7,
+                }}
               >
                 {formatTime(msg.createdAt)}
-                {msg.id.startsWith('temp-') && <span className="ml-1 italic">enviando...</span>}
+                {msg.id.startsWith('temp-') && (
+                  <span className="ml-1 italic">enviando...</span>
+                )}
               </div>
             </div>
           </div>
@@ -167,8 +248,8 @@ export default function PortalChatPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <div className="bg-card border-t border-border/50 px-4 py-3">
+      {/* Input bar */}
+      <div style={{ ...inputBarStyle, padding: '0.75rem 1rem' }}>
         <div className="flex items-center gap-2">
           <input
             type="text"
@@ -183,14 +264,36 @@ export default function PortalChatPage() {
             placeholder="Escribí tu mensaje..."
             maxLength={1000}
             disabled={sending || !!error}
-            className="flex-1 px-4 py-2.5 bg-muted rounded-full text-sm border-0 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 rounded-full text-sm border-0 outline-none disabled:opacity-50"
+            style={{
+              background: 'hsl(var(--portal-muted))',
+              color: 'hsl(var(--portal-foreground))',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.boxShadow =
+                '0 0 0 2px hsl(var(--portal-primary) / 0.2)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.boxShadow = 'none';
+            }}
           />
           <button
             onClick={sendMessage}
             disabled={!input.trim() || sending || !!error}
-            className="bg-primary hover:bg-primary/90 disabled:opacity-40 text-primary-foreground rounded-full p-2.5 transition-all duration-200"
+            className="rounded-full p-2.5 transition-all duration-200 disabled:opacity-40 active:scale-90"
+            style={{
+              background:
+                'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
+              color: '#fff',
+            }}
           >
-            <Send className="h-5 w-5" />
+            {sending ? (
+              <span
+                className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin block"
+              />
+            ) : (
+              <Send className="h-5 w-5" />
+            )}
           </button>
         </div>
       </div>

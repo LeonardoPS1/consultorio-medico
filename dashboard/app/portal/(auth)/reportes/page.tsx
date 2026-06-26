@@ -1,6 +1,6 @@
 /**
  * Portal Reportes — Estadísticas personales del paciente
- * Muestra visitas, gastos, recetas activas y últimas atenciones
+ * Rediseñado con portal design system tokens.
  */
 
 'use client';
@@ -16,11 +16,7 @@ import {
   Loader2,
   Activity,
   Eye,
-  ArrowUpRight,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-
-// ─── Types ────────────────────────────────────────────────
 
 interface ReportesData {
   totalVisitas: number;
@@ -32,8 +28,6 @@ interface ReportesData {
   ultimaVisita: { fecha: string; medico: string | null } | null;
 }
 
-// ─── Helpers ──────────────────────────────────────────────
-
 function formatCLPrice(amount: number): string {
   if (amount === 0) return '$0';
   return '$' + amount.toLocaleString('es-CL');
@@ -42,25 +36,19 @@ function formatCLPrice(amount: number): string {
 function formatShortMonth(mes: string): string {
   const [year, month] = mes.split('-');
   const months = [
-    'Ene',
-    'Feb',
-    'Mar',
-    'Abr',
-    'May',
-    'Jun',
-    'Jul',
-    'Ago',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dic',
+    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
   ];
   return `${months[parseInt(month, 10) - 1]} ${year.slice(2)}`;
 }
 
 function formatDateCL(dateStr: string): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString('es-CL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 }
 
 const tipoLabels: Record<string, string> = {
@@ -69,9 +57,12 @@ const tipoLabels: Record<string, string> = {
   domicilio: 'Domicilio',
 };
 
-// ─── Bar Chart Simple ─────────────────────────────────────
-
-function MiniBarChart({ data }: { data: Array<{ mes: string; value: number }> }) {
+/* ─── Mini Bar Chart ───────────────────────────────────── */
+function MiniBarChart({
+  data,
+}: {
+  data: Array<{ mes: string; value: number }>;
+}) {
   const max = Math.max(...data.map((d) => d.value), 1);
 
   return (
@@ -79,15 +70,30 @@ function MiniBarChart({ data }: { data: Array<{ mes: string; value: number }> })
       {data.map((d) => {
         const pct = (d.value / max) * 100;
         return (
-          <div key={d.mes} className="flex-1 flex flex-col items-center gap-1">
-            <span className="text-[10px] font-medium text-muted-foreground">
+          <div
+            key={d.mes}
+            className="flex-1 flex flex-col items-center gap-1"
+          >
+            <span
+              className="text-[10px] font-medium"
+              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+            >
               {d.value}
             </span>
             <div
-              className="w-full rounded-t-md bg-primary dark:bg-primary transition-all duration-500"
-              style={{ height: `${Math.max(pct, 4)}%` }}
+              className="w-full rounded-t-md transition-all duration-500"
+              style={{
+                height: `${Math.max(pct, 4)}%`,
+                background:
+                  'linear-gradient(180deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
+              }}
             />
-            <span className="text-[8px] text-muted-foreground/70 rotate-[-45deg] origin-left whitespace-nowrap">
+            <span
+              className="text-[8px] rotate-[-45deg] origin-left whitespace-nowrap"
+              style={{
+                color: 'hsl(var(--portal-muted-foreground) / 0.7)',
+              }}
+            >
               {formatShortMonth(d.mes)}
             </span>
           </div>
@@ -97,13 +103,12 @@ function MiniBarChart({ data }: { data: Array<{ mes: string; value: number }> })
   );
 }
 
-// ─── Stat Card ────────────────────────────────────────────
-
+/* ─── Stat Card ──────────────────────────────────────────── */
 function StatCard({
   icon: Icon,
   label,
   value,
-  gradient,
+  bg,
   iconColor,
   delay,
   suffix,
@@ -111,7 +116,7 @@ function StatCard({
   icon: React.ElementType;
   label: string;
   value: string | number;
-  gradient: string;
+  bg: string;
   iconColor: string;
   delay: number;
   suffix?: string;
@@ -120,26 +125,43 @@ function StatCard({
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+      transition={{
+        delay,
+        duration: 0.25,
+        ease: [0.16, 1, 0.3, 1],
+      }}
     >
-      <Card className={`bg-gradient-to-br ${gradient} border-0 shadow-sm`}>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-muted-foreground">{label}</span>
-            <Icon className={`h-4 w-4 ${iconColor}`} />
-          </div>
-          <p className={`text-2xl font-bold ${iconColor}`}>
-            {value}
-            {suffix && <span className="text-sm font-normal ml-0.5">{suffix}</span>}
-          </p>
-        </CardContent>
-      </Card>
+      <div
+        className="rounded-2xl p-4"
+        style={{
+          background: bg,
+          border: '1px solid hsl(var(--portal-border-light))',
+          boxShadow: 'var(--portal-shadow-sm)',
+        }}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span
+            className="text-xs font-medium"
+            style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+          >
+            {label}
+          </span>
+          <Icon className={`h-4 w-4 ${iconColor}`} />
+        </div>
+        <p className={`text-2xl font-bold ${iconColor}`}>
+          {value}
+          {suffix && (
+            <span className="text-sm font-normal ml-0.5">
+              {suffix}
+            </span>
+          )}
+        </p>
+      </div>
     </motion.div>
   );
 }
 
-// ─── Página Principal ─────────────────────────────────────
-
+/* ─── Página Principal ──────────────────────────────────── */
 export default function PortalReportesPage() {
   const [data, setData] = useState<ReportesData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -155,15 +177,28 @@ export default function PortalReportesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2
+          className="h-8 w-8 animate-spin"
+          style={{ color: 'hsl(var(--portal-primary))' }}
+        />
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="text-center py-16 text-muted-foreground/70">
-        <TrendingUp className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
+      <div
+        className="text-center py-16"
+        style={{
+          color: 'hsl(var(--portal-muted-foreground) / 0.7)',
+        }}
+      >
+        <TrendingUp
+          className="h-12 w-12 mx-auto mb-3"
+          style={{
+            color: 'hsl(var(--portal-muted-foreground) / 0.3)',
+          }}
+        />
         <p>No se pudieron cargar las estadísticas</p>
       </div>
     );
@@ -177,8 +212,16 @@ export default function PortalReportesPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
-        <h1 className="text-2xl font-bold text-foreground">Mis Estadísticas</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1
+          className="text-2xl font-bold"
+          style={{ color: 'hsl(var(--portal-foreground))' }}
+        >
+          Mis Estadísticas
+        </h1>
+        <p
+          className="text-sm mt-1"
+          style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+        >
           Resumen de tu actividad en el consultorio
         </p>
       </motion.div>
@@ -189,32 +232,32 @@ export default function PortalReportesPage() {
           icon={Calendar}
           label="Total visitas"
           value={data.totalVisitas}
-          gradient="from-primary/5 to-primary/10 dark:from-primary/20 dark:to-primary/10"
-          iconColor="text-primary"
+          bg="hsl(var(--portal-primary) / 0.06)"
+          iconColor=""
           delay={0}
         />
         <StatCard
           icon={Activity}
           label="Este mes"
           value={data.visitasEsteMes}
-          gradient="from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/20"
-          iconColor="text-emerald-600 dark:text-emerald-400"
+          bg="hsl(var(--portal-accent) / 0.06)"
+          iconColor=""
           delay={0.05}
         />
         <StatCard
           icon={DollarSign}
           label="Total gastado"
           value={formatCLPrice(data.totalGastado)}
-          gradient="from-primary/5 to-primary/10 dark:from-primary/20 dark:to-primary/10"
-          iconColor="text-primary"
+          bg="hsl(var(--portal-primary) / 0.06)"
+          iconColor=""
           delay={0.1}
         />
         <StatCard
           icon={Syringe}
           label="Recetas activas"
           value={data.recetasActivas}
-          gradient="from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20"
-          iconColor="text-amber-600 dark:text-amber-400"
+          bg="hsl(38 92% 50% / 0.06)"
+          iconColor=""
           delay={0.15}
         />
       </div>
@@ -224,26 +267,50 @@ export default function PortalReportesPage() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          transition={{
+            delay: 0.2,
+            duration: 0.25,
+            ease: [0.16, 1, 0.3, 1],
+          }}
         >
-          <Card className="bg-card border-border/50 shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold text-sm text-foreground">
-                  Última visita
-                </h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {formatDateCL(data.ultimaVisita.fecha)}
+          <div
+            className="rounded-2xl p-4"
+            style={{
+              background: 'var(--portal-bg-alt)',
+              border: '1px solid hsl(var(--portal-border-light))',
+              boxShadow: 'var(--portal-shadow-sm)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Clock
+                className="h-4 w-4"
+                style={{ color: 'hsl(var(--portal-primary))' }}
+              />
+              <h3
+                className="font-semibold text-sm"
+                style={{ color: 'hsl(var(--portal-foreground))' }}
+              >
+                Última visita
+              </h3>
+            </div>
+            <p
+              className="text-sm"
+              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+            >
+              {formatDateCL(data.ultimaVisita.fecha)}
+            </p>
+            {data.ultimaVisita.medico && (
+              <p
+                className="text-xs mt-0.5"
+                style={{
+                  color:
+                    'hsl(var(--portal-muted-foreground) / 0.7)',
+                }}
+              >
+                Dr/a. {data.ultimaVisita.medico}
               </p>
-              {data.ultimaVisita.medico && (
-                <p className="text-xs text-muted-foreground/70 mt-0.5">
-                  Dr/a. {data.ultimaVisita.medico}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+            )}
+          </div>
         </motion.div>
       )}
 
@@ -252,38 +319,83 @@ export default function PortalReportesPage() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          transition={{
+            delay: 0.25,
+            duration: 0.25,
+            ease: [0.16, 1, 0.3, 1],
+          }}
         >
-          <Card className="bg-card border-border/50 shadow-sm">
-            <CardContent className="p-4">
-              <h3 className="font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
-                <Eye className="h-4 w-4 text-muted-foreground/50" />
-                Tipo de consultas
-              </h3>
-              <div className="space-y-2">
-                {data.visitasPorTipo.map((tipo) => (
-                  <div key={tipo.tipo} className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      {tipoLabels[tipo.tipo] || tipo.tipo}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-primary dark:bg-primary transition-all duration-500"
-                          style={{
-                            width: `${data.totalVisitas > 0 ? (tipo.value / data.totalVisitas) * 100 : 0}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-foreground/80 w-6 text-right">
-                        {tipo.value}
-                      </span>
+          <div
+            className="rounded-2xl p-4"
+            style={{
+              background: 'var(--portal-bg-alt)',
+              border: '1px solid hsl(var(--portal-border-light))',
+              boxShadow: 'var(--portal-shadow-sm)',
+            }}
+          >
+            <h3
+              className="font-semibold text-sm mb-3 flex items-center gap-2"
+              style={{ color: 'hsl(var(--portal-foreground))' }}
+            >
+              <Eye
+                className="h-4 w-4"
+                style={{
+                  color:
+                    'hsl(var(--portal-muted-foreground) / 0.5)',
+                }}
+              />
+              Tipo de consultas
+            </h3>
+            <div className="space-y-2">
+              {data.visitasPorTipo.map((tipo) => (
+                <div
+                  key={tipo.tipo}
+                  className="flex items-center justify-between"
+                >
+                  <span
+                    className="text-sm"
+                    style={{
+                      color: 'hsl(var(--portal-muted-foreground))',
+                    }}
+                  >
+                    {tipoLabels[tipo.tipo] || tipo.tipo}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-24 h-2 rounded-full overflow-hidden"
+                      style={{
+                        background: 'hsl(var(--portal-muted))',
+                      }}
+                    >
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${
+                            data.totalVisitas > 0
+                              ? (tipo.value /
+                                  data.totalVisitas) *
+                                100
+                              : 0
+                          }%`,
+                          background:
+                            'linear-gradient(90deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
+                        }}
+                      />
                     </div>
+                    <span
+                      className="text-sm font-medium w-6 text-right"
+                      style={{
+                        color:
+                          'hsl(var(--portal-foreground) / 0.8)',
+                      }}
+                    >
+                      {tipo.value}
+                    </span>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              ))}
+            </div>
+          </div>
         </motion.div>
       )}
 
@@ -292,17 +404,35 @@ export default function PortalReportesPage() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          transition={{
+            delay: 0.3,
+            duration: 0.25,
+            ease: [0.16, 1, 0.3, 1],
+          }}
         >
-          <Card className="bg-card border-border/50 shadow-sm">
-            <CardContent className="p-4">
-              <h3 className="font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-muted-foreground/50" />
-                Visitas por mes
-              </h3>
-              <MiniBarChart data={data.visitasPorMes} />
-            </CardContent>
-          </Card>
+          <div
+            className="rounded-2xl p-4"
+            style={{
+              background: 'var(--portal-bg-alt)',
+              border: '1px solid hsl(var(--portal-border-light))',
+              boxShadow: 'var(--portal-shadow-sm)',
+            }}
+          >
+            <h3
+              className="font-semibold text-sm mb-3 flex items-center gap-2"
+              style={{ color: 'hsl(var(--portal-foreground))' }}
+            >
+              <TrendingUp
+                className="h-4 w-4"
+                style={{
+                  color:
+                    'hsl(var(--portal-muted-foreground) / 0.5)',
+                }}
+              />
+              Visitas por mes
+            </h3>
+            <MiniBarChart data={data.visitasPorMes} />
+          </div>
         </motion.div>
       )}
 
@@ -312,12 +442,29 @@ export default function PortalReportesPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-12 text-muted-foreground/30"
+            className="text-center py-12"
+            style={{
+              color: 'hsl(var(--portal-muted-foreground) / 0.7)',
+            }}
           >
-            <TrendingUp className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
-            <p className="font-medium text-muted-foreground/70">Sin actividad aún</p>
-            <p className="text-sm mt-1 text-muted-foreground">
-              Tus estadísticas aparecerán aquí cuando tengas visitas registradas.
+            <TrendingUp
+              className="h-12 w-12 mx-auto mb-3"
+              style={{
+                color:
+                  'hsl(var(--portal-muted-foreground) / 0.3)',
+              }}
+            />
+            <p
+              className="font-medium"
+              style={{
+                color: 'hsl(var(--portal-muted-foreground) / 0.7)',
+              }}
+            >
+              Sin actividad aún
+            </p>
+            <p className="text-sm mt-1">
+              Tus estadísticas aparecerán aquí cuando tengas
+              visitas registradas.
             </p>
           </motion.div>
         )}

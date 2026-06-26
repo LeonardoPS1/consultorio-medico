@@ -1,6 +1,6 @@
 /**
  * Portal Encuestas Page
- * Lista encuestas respondidas + permite responder turnos sin calificar
+ * Rediseñado con portal design system tokens.
  */
 
 'use client';
@@ -16,10 +16,6 @@ import {
   ChevronRight,
   User as UserIcon,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-
-// ─── Types ────────────────────────────────────────────────
 
 interface Encuesta {
   id: string;
@@ -37,8 +33,6 @@ interface TurnoPendiente {
   hora: string;
   medicoNombre: string | null;
 }
-
-// ─── Helpers ──────────────────────────────────────────────
 
 function formatDate(date: string): string {
   const d = new Date(date);
@@ -64,27 +58,35 @@ function extractPuntaje(titulo: string): number {
   return match ? parseInt(match[1], 10) : 0;
 }
 
-// ─── Componentes ──────────────────────────────────────────
-
-function StarRating({ puntaje, size = 'sm' }: { puntaje: number; size?: 'sm' | 'md' }) {
+function StarRating({
+  puntaje,
+  size = 'sm',
+}: {
+  puntaje: number;
+  size?: 'sm' | 'md';
+}) {
   const h = size === 'md' ? 'h-5' : 'h-4';
   return (
     <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
-          className={`${h} w-4 ${
-            star <= puntaje
-              ? 'fill-yellow-400 text-yellow-400'
-              : 'fill-gray-200 dark:fill-gray-700 text-gray-200 dark:text-gray-700'
-          }`}
+          className={`${h} w-4`}
+          style={{
+            fill:
+              star <= puntaje
+                ? 'hsl(38 92% 50%)'
+                : 'hsl(var(--portal-muted-foreground) / 0.15)',
+            color:
+              star <= puntaje
+                ? 'hsl(38 92% 50%)'
+                : 'hsl(var(--portal-muted-foreground) / 0.15)',
+          }}
         />
       ))}
     </div>
   );
 }
-
-// ─── Formulario para encuestas pendientes ────────────────
 
 function PendingSurveyForm({
   turnos,
@@ -93,7 +95,9 @@ function PendingSurveyForm({
   turnos: TurnoPendiente[];
   onComplete: () => void;
 }) {
-  const [selectedId, setSelectedId] = useState<string>(turnos[0]?.id || '');
+  const [selectedId, setSelectedId] = useState<string>(
+    turnos[0]?.id || '',
+  );
   const [puntaje, setPuntaje] = useState(0);
   const [comentario, setComentario] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -101,7 +105,8 @@ function PendingSurveyForm({
 
   if (turnos.length === 0) return null;
 
-  const selected = turnos.find((t) => t.id === selectedId) || turnos[0];
+  const selected =
+    turnos.find((t) => t.id === selectedId) || turnos[0];
 
   async function handleSubmit() {
     if (puntaje === 0) return;
@@ -137,128 +142,229 @@ function PendingSurveyForm({
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-        <Card className="border-primary/10 dark:border-primary/20 bg-gradient-to-br from-primary/5 to-white dark:from-primary/10 dark:to-gray-900 shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
-              <ClipboardCheck className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-sm text-foreground">
-                Calificá tu atención
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                {turnos.length} turno{turnos.length !== 1 ? 's' : ''} sin calificar
-              </p>
-            </div>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mb-6"
+    >
+      <div
+        className="rounded-2xl p-4"
+        style={{
+          background: 'var(--portal-bg-alt)',
+          border: '1px solid hsl(var(--portal-border-light))',
+          boxShadow: 'var(--portal-shadow-sm)',
+        }}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <div
+            className="h-8 w-8 rounded-lg flex items-center justify-center"
+            style={{
+              background: 'hsl(var(--portal-primary) / 0.1)',
+            }}
+          >
+            <ClipboardCheck
+              className="h-4 w-4"
+              style={{ color: 'hsl(var(--portal-primary))' }}
+            />
           </div>
-
-          {/* Selector de turnos */}
-          {turnos.length > 1 && (
-            <div className="flex gap-1.5 mb-3 flex-wrap">
-              {turnos.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    setSelectedId(t.id);
-                    setPuntaje(0);
-                    setComentario('');
-                  }}
-                  className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
-                    t.id === selectedId
-                      ? 'bg-primary/10 dark:bg-primary/20 border-primary/20 text-primary'
-                      : 'bg-card dark:bg-gray-800 border-border/50 text-muted-foreground hover:border-primary/50'
-                  }`}
-                >
-                  {formatShort(t.fechaHora)}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Info del turno seleccionado */}
-          <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground bg-card rounded-xl px-3 py-2 border border-border/30">
-            <UserIcon className="h-4 w-4 text-gray-400" />
-            {selected.medicoNombre && <span>Dr/a. {selected.medicoNombre} · </span>}
-            <span>{formatShort(selected.fechaHora)}</span>
+          <div>
+            <h2
+              className="font-semibold text-sm"
+              style={{ color: 'hsl(var(--portal-foreground))' }}
+            >
+              Calificá tu atención
+            </h2>
+            <p
+              className="text-xs"
+              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+            >
+              {turnos.length} turno
+              {turnos.length !== 1 ? 's' : ''} sin calificar
+            </p>
           </div>
+        </div>
 
-          {/* Estrellas */}
-          <div className="flex items-center gap-1.5 mb-3">
-            {[1, 2, 3, 4, 5].map((n) => (
+        {turnos.length > 1 && (
+          <div className="flex gap-1.5 mb-3 flex-wrap">
+            {turnos.map((t) => (
               <button
-                key={n}
-                onClick={() => setPuntaje(n)}
-                className={`transition-all duration-150 active:scale-75 ${
-                  n <= puntaje ? 'scale-110' : 'opacity-50 hover:opacity-80'
-                }`}
-                aria-label={`Puntuar ${n} de 5`}
+                key={t.id}
+                onClick={() => {
+                  setSelectedId(t.id);
+                  setPuntaje(0);
+                  setComentario('');
+                }}
+                className="text-[11px] px-2.5 py-1 rounded-lg border transition-all"
+                style={
+                  t.id === selectedId
+                    ? {
+                        background:
+                          'hsl(var(--portal-primary) / 0.1)',
+                        borderColor:
+                          'hsl(var(--portal-primary) / 0.2)',
+                        color: 'hsl(var(--portal-primary))',
+                      }
+                    : {
+                        background: 'var(--portal-bg-alt)',
+                        borderColor:
+                          'hsl(var(--portal-border-light))',
+                        color:
+                          'hsl(var(--portal-muted-foreground))',
+                      }
+                }
               >
-                <Star
-                  className={`h-8 w-8 ${
-                    n <= puntaje
-                      ? 'fill-yellow-400 text-yellow-400 drop-shadow-sm'
-                      : 'fill-gray-200 dark:fill-gray-700 text-gray-200 dark:text-gray-700'
-                  } transition-colors duration-150`}
-                />
+                {formatShort(t.fechaHora)}
               </button>
             ))}
-            {puntaje > 0 && (
-              <span className="ml-1 text-sm font-medium text-gray-600 dark:text-gray-400">
-                {['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'][puntaje]}
-              </span>
-            )}
           </div>
+        )}
 
-          {/* Comentario */}
-          <AnimatePresence>
-            {puntaje > 0 && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
+        <div
+          className="flex items-center gap-2 mb-3 text-sm rounded-xl px-3 py-2"
+          style={{
+            background: 'hsl(var(--portal-muted) / 0.3)',
+            color: 'hsl(var(--portal-muted-foreground))',
+            border: '1px solid hsl(var(--portal-border-light))',
+          }}
+        >
+          <UserIcon
+            className="h-4 w-4 shrink-0"
+            style={{
+              color: 'hsl(var(--portal-muted-foreground) / 0.5)',
+            }}
+          />
+          {selected.medicoNombre && (
+            <span>Dr/a. {selected.medicoNombre} · </span>
+          )}
+          <span>{formatShort(selected.fechaHora)}</span>
+        </div>
+
+        <div className="flex items-center gap-1.5 mb-3">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              onClick={() => setPuntaje(n)}
+              className={`transition-all duration-150 active:scale-75 ${
+                n <= puntaje ? 'scale-110' : 'opacity-50 hover:opacity-80'
+              }`}
+              aria-label={`Puntuar ${n} de 5`}
+            >
+              <Star
+                className="h-8 w-8 transition-colors duration-150"
+                style={{
+                  fill:
+                    n <= puntaje
+                      ? 'hsl(38 92% 50%)'
+                      : 'hsl(var(--portal-muted-foreground) / 0.15)',
+                  color:
+                    n <= puntaje
+                      ? 'hsl(38 92% 50%)'
+                      : 'hsl(var(--portal-muted-foreground) / 0.15)',
+                  filter:
+                    n <= puntaje
+                      ? 'drop-shadow(0 1px 2px hsl(38 92% 50% / 0.3))'
+                      : 'none',
+                }}
+              />
+            </button>
+          ))}
+          {puntaje > 0 && (
+            <span
+              className="ml-1 text-sm font-medium"
+              style={{
+                color: 'hsl(var(--portal-foreground) / 0.7)',
+              }}
+            >
+              {[
+                '',
+                'Muy malo',
+                'Malo',
+                'Regular',
+                'Bueno',
+                'Excelente',
+              ][puntaje]}
+            </span>
+          )}
+        </div>
+
+        <AnimatePresence>
+          {puntaje > 0 && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div
+                className="flex items-center gap-2 rounded-xl px-3 py-2 mb-3 transition-all"
+                style={{
+                  background: 'hsl(var(--portal-muted) / 0.3)',
+                  border:
+                    '1px solid hsl(var(--portal-border-light))',
+                }}
               >
-                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 mb-3 focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary/50 transition-all">
-                  <MessageSquareText className="h-4 w-4 text-gray-400 dark:text-gray-500 shrink-0" />
-                  <input
-                    type="text"
-                    value={comentario}
-                    onChange={(e) => setComentario(e.target.value)}
-                    placeholder="Contanos cómo fue tu experiencia (opcional)"
-                    className="flex-1 text-sm bg-transparent border-none outline-none text-foreground/90 placeholder:text-gray-400"
-                    maxLength={500}
-                  />
-                </div>
+                <MessageSquareText
+                  className="h-4 w-4 shrink-0"
+                  style={{
+                    color:
+                      'hsl(var(--portal-muted-foreground) / 0.5)',
+                  }}
+                />
+                <input
+                  type="text"
+                  value={comentario}
+                  onChange={(e) => setComentario(e.target.value)}
+                  placeholder="Contanos cómo fue tu experiencia (opcional)"
+                  className="flex-1 text-sm bg-transparent border-none outline-none"
+                  style={{
+                    color: 'hsl(var(--portal-foreground) / 0.9)',
+                  }}
+                  maxLength={500}
+                />
+              </div>
 
-                {error && <p className="text-xs text-red-500 dark:text-red-400 mb-2">{error}</p>}
-
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 active:scale-[0.98] disabled:opacity-50 text-primary-foreground text-sm font-medium rounded-xl transition-all duration-150 shadow-sm"
+              {error && (
+                <p
+                  className="text-xs mb-2"
+                  style={{
+                    color: 'hsl(var(--portal-destructive))',
+                  }}
                 >
-                  {submitting ? (
-                    <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      Enviar calificación
-                    </>
-                  )}
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </CardContent>
-      </Card>
+                  {error}
+                </p>
+              )}
+
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-150 disabled:opacity-50 active:scale-[0.97]"
+                style={{
+                  background:
+                    'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
+                  color: '#fff',
+                  boxShadow:
+                    '0 4px 12px hsl(var(--portal-primary) / 0.25)',
+                }}
+              >
+                {submitting ? (
+                  <div
+                    className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+                  />
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Enviar calificación
+                  </>
+                )}
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </motion.div>
   );
 }
-
-// ─── Página Principal ─────────────────────────────────────
 
 export default function PortalEncuestasPage() {
   const [encuestas, setEncuestas] = useState<Encuesta[]>([]);
@@ -303,7 +409,10 @@ export default function PortalEncuestasPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2
+          className="h-8 w-8 animate-spin"
+          style={{ color: 'hsl(var(--portal-primary))' }}
+        />
       </div>
     );
   }
@@ -316,8 +425,16 @@ export default function PortalEncuestasPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
-        <h1 className="text-2xl font-bold text-foreground">Mis Encuestas</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1
+          className="text-2xl font-bold"
+          style={{ color: 'hsl(var(--portal-foreground))' }}
+        >
+          Mis Encuestas
+        </h1>
+        <p
+          className="text-sm mt-1"
+          style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+        >
           Calificá tu atención y ayudanos a mejorar
         </p>
       </motion.div>
@@ -334,28 +451,49 @@ export default function PortalEncuestasPage() {
       {/* Separador */}
       {pendientes.length > 0 && encuestas.length > 0 && (
         <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-xs text-muted-foreground/70 font-medium uppercase tracking-wider">
+          <div
+            className="flex-1 h-px"
+            style={{ background: 'hsl(var(--portal-border-light))' }}
+          />
+          <span
+            className="text-xs font-medium uppercase tracking-wider"
+            style={{
+              color: 'hsl(var(--portal-muted-foreground) / 0.7)',
+            }}
+          >
             Historial
           </span>
-          <div className="flex-1 h-px bg-border" />
+          <div
+            className="flex-1 h-px"
+            style={{ background: 'hsl(var(--portal-border-light))' }}
+          />
         </div>
       )}
 
-      {/* Historial de encuestas */}
       {encuestas.length === 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-16 text-muted-foreground/70"
+          className="text-center py-16"
+          style={{
+            color: 'hsl(var(--portal-muted-foreground) / 0.7)',
+          }}
         >
-          <ClipboardCheck className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
-          <p className="font-medium text-muted-foreground">
+          <ClipboardCheck
+            className="h-12 w-12 mx-auto mb-3"
+            style={{
+              color: 'hsl(var(--portal-muted-foreground) / 0.3)',
+            }}
+          />
+          <p
+            className="font-medium"
+            style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+          >
             No tienes encuestas registradas
           </p>
-          <p className="text-sm mt-2 text-muted-foreground/70">
-            Después de cada consulta, recibirás una encuesta por WhatsApp para calificar tu
-            atención.
+          <p className="text-sm mt-2">
+            Después de cada consulta, recibirás una encuesta por
+            WhatsApp para calificar tu atención.
           </p>
         </motion.div>
       ) : (
@@ -367,37 +505,78 @@ export default function PortalEncuestasPage() {
                 key={e.id}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04, duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                transition={{
+                  delay: i * 0.04,
+                  duration: 0.25,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
               >
-                <Card className="bg-card border-border/50 shadow-sm hover:shadow-md transition-all duration-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <div className="flex items-center gap-2">
-                        <StarRating puntaje={puntaje} />
-                        <span className="text-sm font-medium text-foreground/80">
-                          {puntaje}/5
-                        </span>
-                      </div>
-                      <span className="text-xs text-muted-foreground/70 shrink-0">
-                        {formatDate(e.createdAt)}
+                <div
+                  className="rounded-2xl p-4 transition-all"
+                  style={{
+                    background: 'var(--portal-bg-alt)',
+                    border:
+                      '1px solid hsl(var(--portal-border-light))',
+                    boxShadow: 'var(--portal-shadow-sm)',
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2">
+                      <StarRating puntaje={puntaje} />
+                      <span
+                        className="text-sm font-medium"
+                        style={{
+                          color:
+                            'hsl(var(--portal-foreground) / 0.8)',
+                        }}
+                      >
+                        {puntaje}/5
                       </span>
                     </div>
+                    <span
+                      className="text-xs shrink-0"
+                      style={{
+                        color:
+                          'hsl(var(--portal-muted-foreground) / 0.7)',
+                      }}
+                    >
+                      {formatDate(e.createdAt)}
+                    </span>
+                  </div>
 
-                    {e.medicoNombre && (
-                      <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
-                        <UserIcon className="h-3.5 w-3.5" />
-                        Dr/a. {e.medicoNombre}
-                      </p>
-                    )}
+                  {e.medicoNombre && (
+                    <p
+                      className="text-sm mb-1 flex items-center gap-1"
+                      style={{
+                        color: 'hsl(var(--portal-muted-foreground))',
+                      }}
+                    >
+                      <UserIcon className="h-3.5 w-3.5" />
+                      Dr/a. {e.medicoNombre}
+                    </p>
+                  )}
 
-                    {e.descripcion && e.descripcion !== 'Sin comentarios' && (
-                      <div className="flex items-start gap-1.5 mt-2 text-sm text-muted-foreground bg-muted rounded-xl p-3">
-                        <MessageSquareText className="h-4 w-4 text-muted-foreground/70 mt-0.5 shrink-0" />
+                  {e.descripcion &&
+                    e.descripcion !== 'Sin comentarios' && (
+                      <div
+                        className="flex items-start gap-1.5 mt-2 text-sm rounded-xl p-3"
+                        style={{
+                          background: 'hsl(var(--portal-muted))',
+                          color:
+                            'hsl(var(--portal-muted-foreground))',
+                        }}
+                      >
+                        <MessageSquareText
+                          className="h-4 w-4 mt-0.5 shrink-0"
+                          style={{
+                            color:
+                              'hsl(var(--portal-muted-foreground) / 0.7)',
+                          }}
+                        />
                         <p>{e.descripcion}</p>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                </div>
               </motion.div>
             );
           })}

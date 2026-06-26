@@ -1,5 +1,6 @@
 /**
  * Portal — Página de notificaciones
+ * Rediseñado con portal design system tokens.
  */
 
 'use client';
@@ -14,7 +15,6 @@ import {
   MessageSquare,
   FileText,
 } from 'lucide-react';
-import Link from 'next/link';
 
 interface Notificacion {
   id: string;
@@ -27,10 +27,30 @@ interface Notificacion {
 }
 
 const TIPO_ICONS: Record<string, React.ReactNode> = {
-  turno: <Calendar className="h-4 w-4 text-primary" />,
-  mensaje: <MessageSquare className="h-4 w-4 text-emerald-500" />,
-  receta: <FileText className="h-4 w-4 text-amber-500" />,
-  sistema: <Bell className="h-4 w-4 text-primary" />,
+  turno: (
+    <Calendar
+      className="h-4 w-4"
+      style={{ color: 'hsl(var(--portal-primary))' }}
+    />
+  ),
+  mensaje: (
+    <MessageSquare
+      className="h-4 w-4"
+      style={{ color: 'hsl(var(--portal-accent))' }}
+    />
+  ),
+  receta: (
+    <FileText
+      className="h-4 w-4"
+      style={{ color: 'hsl(38 92% 50%)' }}
+    />
+  ),
+  sistema: (
+    <Bell
+      className="h-4 w-4"
+      style={{ color: 'hsl(var(--portal-primary))' }}
+    />
+  ),
 };
 
 function formatDate(dateStr: string): string {
@@ -40,11 +60,16 @@ function formatDate(dateStr: string): string {
   if (diff < 60000) return 'Ahora';
   if (diff < 3600000) return `${Math.floor(diff / 60000)} min`;
   if (diff < 86400000) return `Hace ${Math.floor(diff / 3600000)}h`;
-  return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
+  return d.toLocaleDateString('es-CL', {
+    day: 'numeric',
+    month: 'short',
+  });
 }
 
 export default function PortalNotificacionesPage() {
-  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
+  const [notificaciones, setNotificaciones] = useState<Notificacion[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -69,13 +94,18 @@ export default function PortalNotificacionesPage() {
   }, [fetchNotificaciones]);
 
   async function marcarLeida(id: string) {
-    // Optimistic update
-    setNotificaciones((prev) => prev.map((n) => (n.id === id ? { ...n, leido: true } : n)));
-    await fetch(`/api/portal/notificaciones/${id}`, { method: 'PATCH' });
+    setNotificaciones((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, leido: true } : n)),
+    );
+    await fetch(`/api/portal/notificaciones/${id}`, {
+      method: 'PATCH',
+    });
   }
 
   async function marcarTodasLeidas() {
-    setNotificaciones((prev) => prev.map((n) => ({ ...n, leido: true })));
+    setNotificaciones((prev) =>
+      prev.map((n) => ({ ...n, leido: true })),
+    );
     await fetch('/api/portal/notificaciones', { method: 'PATCH' });
   }
 
@@ -84,7 +114,10 @@ export default function PortalNotificacionesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground/70" />
+        <RefreshCw
+          className="h-6 w-6 animate-spin"
+          style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}
+        />
       </div>
     );
   }
@@ -93,13 +126,26 @@ export default function PortalNotificacionesPage() {
     <div className="pb-24">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Notificaciones</h1>
-          {noLeidas > 0 && <p className="text-sm text-muted-foreground">{noLeidas} sin leer</p>}
+          <h1
+            className="text-xl font-bold"
+            style={{ color: 'hsl(var(--portal-foreground))' }}
+          >
+            Notificaciones
+          </h1>
+          {noLeidas > 0 && (
+            <p
+              className="text-sm"
+              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+            >
+              {noLeidas} sin leer
+            </p>
+          )}
         </div>
         {noLeidas > 0 && (
           <button
             onClick={marcarTodasLeidas}
-            className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1"
+            className="text-xs font-medium flex items-center gap-1 transition-colors"
+            style={{ color: 'hsl(var(--portal-primary))' }}
           >
             <CheckCheck className="h-3.5 w-3.5" />
             Marcar todas leídas
@@ -108,15 +154,39 @@ export default function PortalNotificacionesPage() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 text-destructive bg-destructive/5 border border-destructive/10 px-3 py-2 rounded-xl text-sm mb-4">
+        <div
+          className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm mb-4"
+          style={{
+            color: 'hsl(var(--portal-destructive))',
+            background: 'hsl(var(--portal-destructive) / 0.08)',
+            border: '1px solid hsl(var(--portal-destructive) / 0.15)',
+          }}
+        >
           <AlertCircle className="h-4 w-4" /> {error}
         </div>
       )}
 
       {notificaciones.length === 0 ? (
         <div className="text-center py-16">
-          <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mx-auto mb-3"><Bell className="h-6 w-6 text-muted-foreground/50" /></div>
-          <p className="text-muted-foreground/70 text-sm">No tienes notificaciones</p>
+          <div
+            className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3"
+            style={{ background: 'hsl(var(--portal-muted))' }}
+          >
+            <Bell
+              className="h-6 w-6"
+              style={{
+                color: 'hsl(var(--portal-muted-foreground) / 0.5)',
+              }}
+            />
+          </div>
+          <p
+            className="text-sm"
+            style={{
+              color: 'hsl(var(--portal-muted-foreground) / 0.7)',
+            }}
+          >
+            No tienes notificaciones
+          </p>
         </div>
       ) : (
         <div className="space-y-1">
@@ -130,23 +200,69 @@ export default function PortalNotificacionesPage() {
                     if (!n.leido) marcarLeida(n.id);
                     if (n.href) window.location.href = n.href;
                   }}
-                  className={`w-full text-left flex items-start gap-3 p-3 rounded-lg transition-colors ${
-                    n.leido ? 'bg-card hover:bg-accent/50' : 'bg-primary/5 hover:bg-primary/10'
-                  }`}
+                  className="w-full text-left flex items-start gap-3 p-3 rounded-lg transition-colors"
+                  style={
+                    n.leido
+                      ? {
+                          background: 'var(--portal-bg-alt)',
+                        }
+                      : {
+                          background:
+                            'hsl(var(--portal-primary) / 0.05)',
+                        }
+                  }
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background =
+                      'hsl(var(--portal-primary) / 0.08)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = n.leido
+                      ? 'var(--portal-bg-alt)'
+                      : 'hsl(var(--portal-primary) / 0.05)';
+                  }}
                 >
                   <div className="mt-0.5 shrink-0">{Icon}</div>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 text-left">
                     <p
-                      className={`text-sm ${n.leido ? 'text-muted-foreground/80' : 'text-foreground font-medium'}`}
+                      className="text-sm"
+                      style={{
+                        color: n.leido
+                          ? 'hsl(var(--portal-muted-foreground) / 0.8)'
+                          : 'hsl(var(--portal-foreground))',
+                        fontWeight: n.leido ? 400 : 600,
+                      }}
                     >
                       {n.titulo}
                     </p>
                     {n.descripcion && (
-                      <p className="text-xs text-muted-foreground/70 mt-0.5 line-clamp-2">{n.descripcion}</p>
+                      <p
+                        className="text-xs mt-0.5 line-clamp-2"
+                        style={{
+                          color:
+                            'hsl(var(--portal-muted-foreground) / 0.7)',
+                        }}
+                      >
+                        {n.descripcion}
+                      </p>
                     )}
-                    <p className="text-[10px] text-muted-foreground/50 mt-1">{formatDate(n.createdAt)}</p>
+                    <p
+                      className="text-[10px] mt-1"
+                      style={{
+                        color:
+                          'hsl(var(--portal-muted-foreground) / 0.5)',
+                      }}
+                    >
+                      {formatDate(n.createdAt)}
+                    </p>
                   </div>
-                  {!n.leido && <span className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />}
+                  {!n.leido && (
+                    <span
+                      className="w-2 h-2 rounded-full mt-2 shrink-0"
+                      style={{
+                        background: 'hsl(var(--portal-primary))',
+                      }}
+                    />
+                  )}
                 </button>
               </div>
             );
