@@ -67,7 +67,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
 # --from=builder SIGUE symlinks → aplana la estrutura de pnpm a archivos reales.
 # Esto nos da exactamente las mismas versiones que se usaron en build, sin riesgos
 # de resolución de dependencias.
-COPY --from=builder --chown=nextjs:nodejs /app/dashboard/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 # Copiar static assets (junto a server.js, no bajo dashboard/)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./.next/static
