@@ -52,7 +52,7 @@ export const PATCH = apiHandler(
       .update(turnos)
       .set({
         estado: 'cancelada',
-        canceladoPor: session.pacienteId,
+        canceladoPor: 'paciente',
         motivoCancelacion: motivo,
       })
       .where(eq(turnos.id, turnoId));
@@ -64,7 +64,9 @@ export const PATCH = apiHandler(
         const { calcularReembolso, getRefundPolicy, procesarReembolso } =
           await import('@/lib/services/portal-reembolsos');
         const policy = getRefundPolicy();
-        const refundCalc = calcularReembolso(turno.fechaHora, -1, policy); // monto se obtiene aparte
+
+        // Normalizar a Date (postgres-js puede devolver string)
+        const fechaHora = new Date(turno.fechaHora);
 
         // Necesitamos el monto real del pago
         const { portalPagos } = await import('@/drizzle/schema');
@@ -78,7 +80,7 @@ export const PATCH = apiHandler(
 
         if (pago) {
           const montoPagado = Number(pago.monto);
-          const refundFinal = calcularReembolso(turno.fechaHora, montoPagado, policy);
+          const refundFinal = calcularReembolso(fechaHora, montoPagado, policy);
 
           if (refundFinal.eligible && refundFinal.montoReembolso > 0) {
             const result = await procesarReembolso(turnoId, session.pacienteId, refundFinal);

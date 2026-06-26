@@ -43,14 +43,16 @@ export interface RefundCalculation {
 
 /**
  * Calcula el reembolso según política y tiempo restante.
+ * Acepta Date o string (postgres-js puede devolver timestamp como string).
  */
 export function calcularReembolso(
-  fechaHoraTurno: Date,
+  fechaHoraTurno: Date | string,
   montoPagado: number,
   policy: RefundPolicy,
 ): RefundCalculation {
+  const fecha = fechaHoraTurno instanceof Date ? fechaHoraTurno : new Date(fechaHoraTurno);
   const ahora = new Date();
-  const horasRestantes = (fechaHoraTurno.getTime() - ahora.getTime()) / (1000 * 60 * 60);
+  const horasRestantes = (fecha.getTime() - ahora.getTime()) / (1000 * 60 * 60);
 
   // Turno ya pasó
   if (horasRestantes < 0) {
