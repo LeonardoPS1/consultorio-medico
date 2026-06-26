@@ -82,3 +82,6 @@ DEPLOYMENT_SUMMARY.md
 # Credenciales (NO subir a git)
 docs/ACCESS.md
 docs/update.pdf
+
+# Graphify output (generated artifacts)
+graphify-out/
