@@ -20,6 +20,8 @@ import {
   History,
   HeartPulse,
   ScrollText,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 // ─── Nav Items ──────────────────────────────────────────────
@@ -132,6 +134,14 @@ export default function PortalNav() {
     return pathname.startsWith(href);
   };
 
+  const SCROLL_AMOUNT = 220;
+
+  function scrollNav(direction: 'left' | 'right') {
+    if (!scrollRef.current) return;
+    const amount = direction === 'left' ? -SCROLL_AMOUNT : SCROLL_AMOUNT;
+    scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+  }
+
   const maskClass = scrollMaskClass(canScrollLeft, canScrollRight);
 
   return (
@@ -153,6 +163,46 @@ export default function PortalNav() {
       />
 
       <div className="relative max-w-2xl mx-auto">
+        {/* ── Scroll Left Arrow ── */}
+        {canScrollLeft && (
+          <button
+            onClick={() => scrollNav('left')}
+            className="absolute left-0 top-0 bottom-0 z-10 w-10 flex items-center justify-center transition-opacity duration-200 hover:opacity-100"
+            style={{ opacity: 0.7 }}
+            aria-label="Navegar a la izquierda"
+          >
+            <div
+              className="flex items-center justify-center w-6 h-6 rounded-full"
+              style={{ background: 'hsl(var(--portal-muted) / 0.8)' }}
+            >
+              <ChevronLeft
+                className="h-4 w-4"
+                style={{ color: 'hsl(var(--portal-muted-foreground) / 0.6)' }}
+              />
+            </div>
+          </button>
+        )}
+
+        {/* ── Scroll Right Arrow ── */}
+        {canScrollRight && (
+          <button
+            onClick={() => scrollNav('right')}
+            className="absolute right-0 top-0 bottom-0 z-10 w-10 flex items-center justify-center transition-opacity duration-200 hover:opacity-100"
+            style={{ opacity: 0.7 }}
+            aria-label="Navegar a la derecha"
+          >
+            <div
+              className="flex items-center justify-center w-6 h-6 rounded-full"
+              style={{ background: 'hsl(var(--portal-muted) / 0.8)' }}
+            >
+              <ChevronRight
+                className="h-4 w-4"
+                style={{ color: 'hsl(var(--portal-muted-foreground) / 0.6)' }}
+              />
+            </div>
+          </button>
+        )}
+
         {/* ── Scrollable Nav Items ── */}
         <div
           ref={scrollRef}
