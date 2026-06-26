@@ -63,7 +63,9 @@ export default function PortalChatPage() {
       }
     };
     fetchMensajes();
-    const interval = setInterval(fetchMensajes, 10000);
+    const interval = setInterval(() => {
+      if (!document.hidden) fetchMensajes();
+    }, 20000);
     return () => clearInterval(interval);
   }, [convId]);
 

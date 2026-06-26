@@ -281,9 +281,18 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
     setPagando(true);
     window.open(url, '_blank');
 
-    // Poll every 5s to check payment status
+    // Poll every 5s to check payment status (max 30 attempts = 2.5 min)
+    let attempts = 0;
+    const MAX_ATTEMPTS = 30;
     pollingRef.current = setInterval(async () => {
+      attempts++;
+      if (attempts > MAX_ATTEMPTS) {
+        stopPolling();
+        return;
+      }
       if (!ultimoTurno) return;
+      // Pausar si la pestaña está oculta
+      if (document.hidden) return;
       try {
         const res = await fetch(`/api/portal/pagos/${ultimoTurno.id}`);
         const data = await res.json();

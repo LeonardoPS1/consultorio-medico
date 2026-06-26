@@ -354,7 +354,8 @@ export async function getMensajesByConversacion(conversacionId: string): Promise
     .select()
     .from(mensajes)
     .where(eq(mensajes.conversacionId, conversacionId))
-    .orderBy(asc(mensajes.createdAt));
+    .orderBy(asc(mensajes.createdAt))
+    .limit(50);
   return result.map((m) => ({
     id: m.id,
     conversacionId: m.conversacionId,

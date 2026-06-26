@@ -14,6 +14,7 @@ const nextConfig = withBundleAnalyzer({
   staticPageGenerationTimeout: 180,
   images: {
     domains: ['localhost'],
+    formats: ['image/avif', 'image/webp'],
   },
   // Solo usar standalone output en Docker/Linux: pnpm symlinks causan EPERM en Windows
   output: process.env.DISABLE_STANDALONE === 'true' ? undefined : 'standalone',
