@@ -1,39 +1,43 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+
+const pageVariants = {
+  initial: { opacity: 0, y: 12, scale: 0.98 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  },
+  exit: {
+    opacity: 0,
+    y: -8,
+    scale: 0.98,
+    transition: { duration: 0.18, ease: [0.65, 0, 0.35, 1] as [number, number, number, number] },
+  },
+} as const;
 
 /**
- * PortalContent — Wrapper con fade-in en cada navegación.
- *
- * 🔥 FIX: Se quitó PageTransition (que tenía AnimatePresence mode="wait").
- * El mode="wait" bloqueaba el montaje de la página entrante si la salida
- * no completaba, obligando a presionar F5 para ver el contenido.
- *
- * Ahora usamos AnimatePresence mode="popLayout" + inline motion.div
- * para que ambas animaciones (salida/entrada) no se bloqueen mutuamente.
- * key={pathname} garantiza re-montaje en cada ruta.
+ * PortalContent — Wrapper con fade + slide en cada navegación.
+ * Usa AnimatePresence mode="popLayout" para que la página de salida
+ * no bloquee la entrada (fix del bug que requería F5).
  */
 export function PortalContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
     <AnimatePresence mode="popLayout">
-      <div
+      <motion.div
         key={pathname}
-        style={{
-          animation: 'portalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both',
-        }}
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
       >
-        {/* CSS keyframe definido en globals.css */}
-        <style>{`
-          @keyframes portalFadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-          }
-        `}</style>
         {children}
-      </div>
+      </motion.div>
     </AnimatePresence>
   );
 }

@@ -25,6 +25,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 
+// ─── Nav Items ──────────────────────────────────────────────
 const navItems = [
   { href: '/portal/dashboard', label: 'Inicio', icon: HeartPulse },
   { href: '/portal/agendar', label: 'Agendar', icon: PlusCircle },
@@ -41,13 +42,63 @@ const navItems = [
   { href: '/portal/perfil', label: 'Perfil', icon: User },
 ];
 
+// ─── Motion variants ────────────────────────────────────────
+const itemVariants = {
+  idle: { scale: 1, y: 0 },
+  hover: {
+    scale: 1.05,
+    y: -1,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 400,
+      damping: 17,
+    },
+  },
+  tap: {
+    scale: 0.92,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 600,
+      damping: 20,
+    },
+  },
+};
+
+const scrollIndicatorVariants = {
+  hidden: { opacity: 0, x: -8 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.2,
+      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+    },
+  },
+};
+
+const badgeVariants = {
+  initial: { scale: 0, opacity: 0 },
+  animate: {
+    scale: 1,
+    opacity: 1,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 500,
+      damping: 15,
+      mass: 0.5,
+    },
+  },
+  exit: { scale: 0, opacity: 0, transition: { duration: 0.15 } },
+} as const;
+
+// ─── Component ──────────────────────────────────────────────
 export default function PortalNav() {
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [prevCount, setPrevCount] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const checkScroll = useCallback(() => {
     if (!scrollRef.current) return;
@@ -61,16 +112,15 @@ export default function PortalNav() {
       const res = await fetch('/api/portal/notificaciones?count=true');
       if (res.ok) {
         const data = await res.json();
-        setPrevCount(unreadCount);
         setUnreadCount(data.count ?? 0);
       }
     } catch {
       // silently fail
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
+    setMounted(true);
     fetchCount();
     const interval = setInterval(fetchCount, 30000);
     return () => clearInterval(interval);
@@ -106,121 +156,257 @@ export default function PortalNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl border-t border-border/50 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.2)]"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      className="fixed bottom-0 left-0 right-0 z-20"
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
     >
+      {/* Glass background */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'var(--portal-glass-bg)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderTop: '1px solid var(--portal-glass-border)',
+          boxShadow:
+            '0 -4px 20px hsl(225 8% 14% / 0.04), 0 -1px 4px hsl(225 8% 14% / 0.02)',
+        }}
+      />
+
       <div className="relative max-w-2xl mx-auto">
-        {/* Scroll indicator left */}
+        {/* ── Scroll Left Indicator ── */}
         <AnimatePresence>
           {canScrollLeft && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute left-0 top-0 bottom-0 w-14 bg-gradient-to-r from-white dark:from-gray-950 to-transparent z-10 flex items-center justify-start pl-1.5 pointer-events-none"
+              key="scroll-left"
+              variants={scrollIndicatorVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              className="absolute left-0 top-0 bottom-0 w-14 z-10 flex items-center justify-start pointer-events-none"
+              style={{
+                background:
+                  'linear-gradient(to right, hsl(var(--portal-bg)) 20%, transparent)',
+              }}
             >
-              <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground/40" />
+              <div
+                className="ml-2 flex items-center justify-center w-5 h-5 rounded-full"
+                style={{ background: 'hsl(var(--portal-muted) / 0.6)' }}
+              >
+                <ChevronLeft
+                  className="h-3 w-3"
+                  style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
+                />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div ref={scrollRef} className="flex overflow-x-auto scrollbar-none gap-3 px-6 py-2">
+        {/* ── Scrollable Nav Items ── */}
+        <div
+          ref={scrollRef}
+          className="flex overflow-x-auto scrollbar-none gap-0.5 px-4 py-2"
+        >
           {navItems.map((item) => {
             const active = isActive(item.href);
             return (
-              <Link
+              <motion.div
                 key={item.href}
-                href={item.href}
-                data-active={active ? 'true' : undefined}
-                className={`
-                  relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[60px] shrink-0
-                  transition-all duration-200
-                  active:scale-95
-                  ${active ? 'text-primary' : 'text-muted-foreground/60 hover:text-foreground/70 hover:bg-accent/50'}
-                `}
+                variants={itemVariants}
+                initial="idle"
+                whileHover="hover"
+                whileTap="tap"
+                className="shrink-0"
               >
-                {active && (
-                  <motion.div
-                    layoutId="nav-active"
-                    className="absolute inset-0 rounded-xl bg-primary/8"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  />
-                )}
-                <div className="relative z-[1]">
-                  <item.icon className={`h-[18px] w-[18px] ${active ? 'drop-shadow-sm scale-110' : ''} transition-all duration-200`} />
-                  {/* Active underline indicator */}
-                  {active && (
+                <Link
+                  href={item.href}
+                  data-active={active ? 'true' : undefined}
+                  className="relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-[60px] transition-colors duration-150"
+                  style={{
+                    color: active
+                      ? 'hsl(var(--portal-primary))'
+                      : 'hsl(var(--portal-muted-foreground) / 0.6)',
+                  }}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  {/* Active pill background */}
+                  {active && mounted && (
                     <motion.div
-                      layoutId="nav-underline"
-                      className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-4 h-[3px] rounded-full bg-primary"
-                      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+                      layoutId="portal-nav-pill"
+                      className="absolute inset-0 rounded-xl"
+                      style={{
+                        background: 'hsl(var(--portal-primary) / 0.1)',
+                        boxShadow: '0 1px 2px hsl(var(--portal-primary) / 0.05)',
+                      }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 400,
+                        damping: 28,
+                        mass: 0.5,
+                      }}
                     />
                   )}
-                </div>
-                <span className="relative z-[1] text-[10px] font-medium leading-tight whitespace-nowrap">
-                  {item.label}
-                </span>
-              </Link>
+
+                  {/* Icon */}
+                  <div className="relative z-[1] flex flex-col items-center">
+                    <item.icon
+                      className="h-[18px] w-[18px] transition-all duration-200"
+                      style={{
+                        filter: active
+                          ? 'drop-shadow(0 1px 2px hsl(var(--portal-primary) / 0.3))'
+                          : 'none',
+                        transform: active ? 'scale(1.1)' : 'scale(1)',
+                      }}
+                    />
+                  </div>
+
+                  {/* Label */}
+                  <span
+                    className="relative z-[1] text-[10px] font-medium leading-tight whitespace-nowrap transition-all duration-150"
+                    style={{
+                      color: active
+                        ? 'hsl(var(--portal-primary))'
+                        : 'hsl(var(--portal-muted-foreground) / 0.6)',
+                      fontWeight: active ? 600 : 500,
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                </Link>
+              </motion.div>
             );
           })}
 
-          {/* Notificaciones */}
-          <Link
-            href="/portal/notificaciones"
-            className={`
-              relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[60px] shrink-0
-              transition-all duration-200
-              active:scale-95
-              ${pathname === '/portal/notificaciones' ? 'text-primary' : 'text-muted-foreground/60 hover:text-foreground/70 hover:bg-accent/50'}
-            `}
-          >
-            {pathname === '/portal/notificaciones' && (
-              <motion.div
-                layoutId="nav-active"
-                className="absolute inset-0 rounded-xl bg-primary/8"
-                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-              />
-            )}
-            <div className="relative z-[1]">
-              <Bell className={`h-[18px] w-[18px] ${pathname === '/portal/notificaciones' ? 'scale-110' : ''} transition-all duration-200`} />
-              <AnimatePresence>
-                {unreadCount > 0 && (
-                  <motion.span
-                    key={unreadCount}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 shadow-sm"
-                  >
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </div>
-            <span className="relative z-[1] text-[10px] font-medium leading-tight">Alertas</span>
-          </Link>
+          {/* ── Divider ── */}
+          <div
+            className="shrink-0 w-px mx-1 self-center h-8"
+            style={{ background: 'hsl(var(--portal-border-light))' }}
+          />
 
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[60px] shrink-0 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/5 transition-all duration-200 active:scale-95"
+          {/* ── Notificaciones ── */}
+          <motion.div
+            variants={itemVariants}
+            initial="idle"
+            whileHover="hover"
+            whileTap="tap"
+            className="shrink-0"
           >
-            <LogOut className="h-[18px] w-[18px]" />
-            <span className="text-[10px] font-medium leading-tight">Salir</span>
-          </button>
+            <Link
+              href="/portal/notificaciones"
+              className="relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-[60px]"
+              style={{
+                color:
+                  pathname === '/portal/notificaciones'
+                    ? 'hsl(var(--portal-primary))'
+                    : 'hsl(var(--portal-muted-foreground) / 0.6)',
+              }}
+              aria-current={pathname === '/portal/notificaciones' ? 'page' : undefined}
+            >
+              {pathname === '/portal/notificaciones' && mounted && (
+                <motion.div
+                  layoutId="portal-nav-pill"
+                  className="absolute inset-0 rounded-xl"
+                  style={{
+                    background: 'hsl(var(--portal-primary) / 0.1)',
+                    boxShadow: '0 1px 2px hsl(var(--portal-primary) / 0.05)',
+                  }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 400,
+                    damping: 28,
+                    mass: 0.5,
+                  }}
+                />
+              )}
+              <div className="relative z-[1] flex flex-col items-center">
+                <Bell
+                  className="h-[18px] w-[18px] transition-all duration-200"
+                  style={{
+                    transform:
+                      pathname === '/portal/notificaciones' ? 'scale(1.1)' : 'scale(1)',
+                  }}
+                />
+                <AnimatePresence mode="popLayout">
+                  {unreadCount > 0 && (
+                    <motion.span
+                      key={unreadCount}
+                      variants={badgeVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      layout
+                      className="absolute -top-1.5 -right-1.5 text-[9px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 shadow-sm"
+                      style={{
+                        background: 'hsl(var(--portal-destructive))',
+                        color: '#fff',
+                      }}
+                    >
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
+              <span
+                className="relative z-[1] text-[10px] font-medium leading-tight whitespace-nowrap"
+                style={{
+                  color:
+                    pathname === '/portal/notificaciones'
+                      ? 'hsl(var(--portal-primary))'
+                      : 'hsl(var(--portal-muted-foreground) / 0.6)',
+                }}
+              >
+                Alertas
+              </span>
+            </Link>
+          </motion.div>
+
+          {/* ── Logout ── */}
+          <motion.div
+            variants={itemVariants}
+            initial="idle"
+            whileHover="hover"
+            whileTap="tap"
+            className="shrink-0"
+          >
+            <button
+              onClick={handleLogout}
+              className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-[60px] transition-colors duration-150"
+              style={{
+                color: 'hsl(var(--portal-muted-foreground) / 0.4)',
+              }}
+              aria-label="Cerrar sesión"
+            >
+              <LogOut className="h-[18px] w-[18px]" />
+              <span className="text-[10px] font-medium leading-tight">Salir</span>
+            </button>
+          </motion.div>
         </div>
 
-        {/* Scroll indicator right */}
+        {/* ── Scroll Right Indicator ── */}
         <AnimatePresence>
           {canScrollRight && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-white dark:from-gray-950 to-transparent z-10 flex items-center justify-end pr-1.5 pointer-events-none"
+              key="scroll-right"
+              variants={scrollIndicatorVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              className="absolute right-0 top-0 bottom-0 w-14 z-10 flex items-center justify-end pointer-events-none"
+              style={{
+                background:
+                  'linear-gradient(to left, hsl(var(--portal-bg)) 20%, transparent)',
+              }}
             >
-              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40" />
+              <div
+                className="mr-2 flex items-center justify-center w-5 h-5 rounded-full"
+                style={{ background: 'hsl(var(--portal-muted) / 0.6)' }}
+              >
+                <ChevronRight
+                  className="h-3 w-3"
+                  style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
+                />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

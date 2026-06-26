@@ -1,7 +1,7 @@
 /**
  * Layout del Portal del Paciente — Grupo autenticado
- * Rediseño premium: max-w-2xl para mejor legibilidad en desktop,
- * header con glow tenue y navegación mejorada.
+ * Rediseño Premium Aicore: glassmorphism, animaciones suaves,
+ * tipografía cuidada, paleta cálida y profesional.
  */
 
 import Link from 'next/link';
@@ -16,37 +16,60 @@ export const metadata = {
 
 export default function PortalAuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className="min-h-screen bg-gradient-to-b from-violet-50/20 via-background to-white dark:from-violet-950/8 dark:via-background dark:to-gray-950"
-      style={{ transition: 'background 300ms var(--ease-out)' }}
-    >
+    <div className="portal-layout min-h-screen">
+      {/* Ambient gradient background */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(ellipse 80% 60% at 50% -20%, hsl(var(--portal-primary) / 0.06), transparent), radial-gradient(ellipse 60% 50% at 80% 80%, hsl(var(--portal-accent) / 0.04), transparent)',
+        }}
+      />
+
       {/* Header premium */}
       <header
-        className="sticky top-0 z-10 bg-background/70 dark:bg-background/70 backdrop-blur-xl border-b border-border/40"
+        className="sticky top-0 z-20"
         style={{
-          transition:
-            'background 300ms var(--ease-out), border-color 300ms var(--ease-out)',
+          background: 'var(--portal-glass-bg)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid var(--portal-glass-border)',
+          boxShadow: 'var(--portal-shadow-sm)',
         }}
       >
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link
             href="/portal/dashboard"
-            className="flex items-center gap-2 font-semibold text-base tracking-tight group"
+            className="flex items-center gap-2.5 group"
           >
-            <div className="h-7 w-7 rounded-lg bg-primary shadow-sm flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+            {/* Logo icon with subtle gradient */}
+            <div
+              className="h-7 w-7 rounded-lg flex items-center justify-center shadow-sm transition-transform duration-200 group-hover:scale-105"
+              style={{
+                background: 'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
+              }}
+            >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2.5"
-                className="h-4 w-4 text-primary-foreground"
+                className="h-4 w-4 text-white"
               >
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
             </div>
-            <span className="text-foreground/80 dark:text-foreground/80">
-              Portal <span className="text-primary font-bold">Salud</span>
-            </span>
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm font-semibold tracking-tight" style={{ color: 'hsl(var(--portal-foreground))' }}>
+                Portal <span style={{ color: 'hsl(var(--portal-primary))' }}>Salud</span>
+              </span>
+              <span
+                className="text-[10px] font-medium tracking-wide"
+                style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+              >
+                AicoreMed
+              </span>
+            </div>
           </Link>
 
           <div className="flex items-center gap-1">
@@ -55,7 +78,8 @@ export default function PortalAuthLayout({ children }: { children: React.ReactNo
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6 pb-28">
+      {/* Main content */}
+      <main className="max-w-2xl mx-auto px-4 py-5 pb-28">
         <PortalContent>{children}</PortalContent>
       </main>
 
