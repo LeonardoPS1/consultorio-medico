@@ -74,13 +74,18 @@ interface PacienteEditData {
 
 interface PacientesClientProps {
   initialPacientes: Paciente[];
+  initialTotal: number;
 }
+
+const PAGE_SIZE = 25;
 
 // ─── Component ─────────────────────────────────────────────
 
-export function PacientesClient({ initialPacientes }: PacientesClientProps) {
+export function PacientesClient({ initialPacientes, initialTotal }: PacientesClientProps) {
   const { sucursalId } = useSucursal();
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(initialTotal);
   const [showNewPaciente, setShowNewPaciente] = useState(false);
   const [showEditPaciente, setShowEditPaciente] = useState(false);
   const [editPacienteData, setEditPacienteData] = useState<PacienteEditData | null>(null);
@@ -150,58 +155,58 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
     toast({ title: 'Paciente actualizado', description: `${updated.nombre} ${updated.apellido}` });
   };
 
+  // ─── Fetch pacientes con paginación + búsqueda ──────────
+  const fetchPacientes = useCallback(async (q: string, pg: number) => {
+    setSearching(true);
+    try {
+      const offset = (pg - 1) * PAGE_SIZE;
+      const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) });
+      if (q.trim()) params.set('search', q.trim());
+      if (sucursalId) params.set('sucursalId', sucursalId);
+      const res = await fetch(`/api/pacientes?${params.toString()}`);
+      if (res.ok) {
+        const json = await res.json();
+        setPacientesList(json.data || []);
+        setTotal(json.total ?? 0);
+      }
+    } catch {
+      // fallback silencioso
+    } finally {
+      setSearching(false);
+    }
+  }, [sucursalId]);
+
   // Búsqueda debounced vía API
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
-    debounceRef.current = setTimeout(async () => {
-      if (!search.trim()) {
-        // Sin búsqueda, restaurar lista inicial
-        setPacientesList(initialPacientes);
-        setSearching(false);
-        return;
-      }
-      setSearching(true);
-      try {
-        const params = new URLSearchParams({ search, limit: '100' });
-        if (sucursalId) params.set('sucursalId', sucursalId);
-        const res = await fetch(`/api/pacientes?${params.toString()}`);
-        if (res.ok) {
-          const json = await res.json();
-          setPacientesList(json.data || []);
-        }
-      } catch {
-        // fallback silencioso
-      } finally {
-        setSearching(false);
-      }
+    if (!search.trim() && page === 1) {
+      setPacientesList(initialPacientes);
+      setTotal(initialTotal);
+      return;
+    }
+
+    debounceRef.current = setTimeout(() => {
+      fetchPacientes(search, page);
     }, 300);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [search, sucursalId, initialPacientes]);
+  }, [search, page, sucursalId, fetchPacientes, initialPacientes, initialTotal]);
 
-  const filtered = useMemo(
-    () =>
-      !search.trim()
-        ? pacientesList
-        : pacientesList.filter(
-            (p) =>
-              p.nombre.toLowerCase().includes(search.toLowerCase()) ||
-              p.apellido.toLowerCase().includes(search.toLowerCase()) ||
-              p.telefono.includes(search) ||
-              (p.email && p.email.toLowerCase().includes(search.toLowerCase())) ||
-              (p.obraSocial && p.obraSocial.toLowerCase().includes(search.toLowerCase())) ||
-              (p.sistemaSalud && p.sistemaSalud.toLowerCase().includes(search.toLowerCase())) ||
-              (p.isapreNombre && p.isapreNombre.toLowerCase().includes(search.toLowerCase())),
-          ),
-    [pacientesList, search],
-  );
+  // Cuando cambia página con búsqueda vacía y page > 1, fetch inmediato
+  useEffect(() => {
+    if (page > 1 && !search.trim()) {
+      fetchPacientes('', page);
+    }
+  }, [page, search, fetchPacientes]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   // Fetch scoring para pacientes visibles
   useEffect(() => {
-    const visibleIds = filtered.map((p) => p.id);
+    const visibleIds = pacientesList.map((p) => p.id);
     if (visibleIds.length === 0) return;
     const params = new URLSearchParams({ ids: visibleIds.join(',') });
     fetch(`/api/pacientes/scoring?${params.toString()}`)
@@ -218,12 +223,12 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
       .catch(() => {
         /* silencioso */
       });
-  }, [filtered]);
+  }, [pacientesList]);
 
   // ─── Selección múltiple (helpers) ──────────────────────────
   const selectedArray = useMemo(
-    () => filtered.filter((p) => selectedIds.has(p.id)),
-    [filtered, selectedIds],
+    () => pacientesList.filter((p) => selectedIds.has(p.id)),
+    [pacientesList, selectedIds],
   );
 
   const toggleSelect = (id: string) => {
@@ -236,10 +241,10 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === filtered.length) {
+    if (selectedIds.size === pacientesList.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filtered.map((p) => p.id)));
+      setSelectedIds(new Set(pacientesList.map((p) => p.id)));
     }
   };
 
@@ -419,7 +424,7 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
       {/* Lista */}
       <Card>
         <CardContent className="p-0">
-          {filtered.length === 0 ? (
+          {pacientesList.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Search className="h-12 w-12 text-muted-foreground/30 mb-4" />
               <p className="text-lg font-medium text-muted-foreground">
@@ -440,17 +445,17 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
               {/* Select All header */}
               <div className="flex items-center gap-4 px-4 py-2 text-xs text-muted-foreground border-b">
                 <Checkbox
-                  checked={filtered.length > 0 && selectedIds.size === filtered.length}
+                  checked={pacientesList.length > 0 && selectedIds.size === pacientesList.length}
                   onCheckedChange={toggleSelectAll}
                   aria-label="Seleccionar todo"
                 />
                 <span>
-                  {selectedIds.size === filtered.length
+                  {selectedIds.size === pacientesList.length
                     ? 'Todos seleccionados'
-                    : `${filtered.length} pacientes`}
+                    : `${pacientesList.length} pacientes`}
                 </span>
               </div>
-              {filtered.map((paciente) => (
+              {pacientesList.map((paciente) => (
                 <div
                   key={paciente.id}
                   className={`flex items-center gap-4 p-4 transition-colors ${
@@ -578,6 +583,33 @@ export function PacientesClient({ initialPacientes }: PacientesClientProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* ─── Paginación ──────────────────────────────────── */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-1 py-3">
+          <p className="text-sm text-muted-foreground">
+            Página {page} de {totalPages} ({total} pacientes)
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Siguiente
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Modal Nuevo Paciente */}
       <NuevoPacienteModal

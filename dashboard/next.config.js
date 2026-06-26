@@ -12,6 +12,17 @@ const nextConfig = withBundleAnalyzer({
   // Aumenta timeout de generación de páginas estáticas (default 60s)
   // Previene timeout en /_not-found durante build en VPS con recursos limitados
   staticPageGenerationTimeout: 180,
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'date-fns',
+      '@radix-ui/react-select',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-avatar',
+    ],
+  },
   images: {
     domains: ['localhost'],
     formats: ['image/avif', 'image/webp'],

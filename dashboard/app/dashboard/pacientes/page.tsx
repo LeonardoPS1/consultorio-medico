@@ -40,7 +40,7 @@ export default async function PacientesPage() {
       </div>
 
       {/* Lista + búsqueda + modal (client) */}
-      <PacientesClient initialPacientes={pacientes} />
+      <PacientesClient initialPacientes={pacientes} initialTotal={total} />
     </div>
   );
 }

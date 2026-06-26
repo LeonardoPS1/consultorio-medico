@@ -9,17 +9,26 @@ export function ScrollToTopButton() {
   const [atBottom, setAtBottom] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const docHeight = document.documentElement.scrollHeight;
+    let rafId: number | null = null;
 
-      setShow(scrollY > 300);
-      setAtBottom(scrollY + windowHeight >= docHeight - 100);
+    const handleScroll = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        const scrollY = window.scrollY;
+        const windowHeight = window.innerHeight;
+        const docHeight = document.documentElement.scrollHeight;
+
+        setShow(scrollY > 300);
+        setAtBottom(scrollY + windowHeight >= docHeight - 100);
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   const scrollToTop = () => {

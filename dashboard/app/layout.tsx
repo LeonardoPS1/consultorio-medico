@@ -60,7 +60,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="application-name" content={tenantName} />
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="preconnect" href="https://med.aicorebots.com" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
         <link rel="dns-prefetch" href="https://api.mercadopago.com" />
       </head>
       <body className={inter.className}>
