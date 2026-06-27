@@ -53,7 +53,12 @@ export type FeatureId =
   | 'blacklist'
   | 'consentimiento-informado'
   | 'telemedicina'
-  | 'onboarding';
+  | 'onboarding'
+  | 'scoring-pacientes'
+  | 'web-vitals'
+  | 'portal-analytics'
+  | 'data-cache'
+  | 'carga-masiva';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -70,27 +75,20 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   horarios: 'starter',
   notificaciones: 'starter',
   'notas-soap': 'starter',
+  encuestas: 'starter',
+  'scoring-pacientes': 'starter',
+  pwa: 'free',
+  onboarding: 'free',
   'certificados-qr': 'professional',
   'reportes-avanzados': 'professional',
   'ia-assistant': 'professional',
   plantillas: 'professional',
   '2fa': 'professional',
   equipo: 'professional',
-  integraciones: 'premium',
-  auditoria: 'premium',
-  'backup-encriptado': 'premium',
-  'webhooks-log': 'premium',
-  credenciales: 'premium',
   'api-publica': 'professional',
-  'portal-paciente': 'premium',
-  'multi-sucursal': 'enterprise',
-  encuestas: 'starter',
   'lista-espera': 'professional',
-  'n8n-monitor': 'premium',
-  pwa: 'free',
   'firma-digital': 'professional',
   exportacion: 'professional',
-  'gcal-sync': 'premium',
   'ia-autorespuestas': 'professional',
   'ia-triaje': 'professional',
   'ia-renovacion': 'professional',
@@ -99,7 +97,19 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   blacklist: 'professional',
   'consentimiento-informado': 'professional',
   telemedicina: 'professional',
-  onboarding: 'free',
+  integraciones: 'premium',
+  auditoria: 'premium',
+  'backup-encriptado': 'premium',
+  'webhooks-log': 'premium',
+  credenciales: 'premium',
+  'portal-paciente': 'premium',
+  'n8n-monitor': 'premium',
+  'gcal-sync': 'premium',
+  'web-vitals': 'premium',
+  'portal-analytics': 'premium',
+  'data-cache': 'premium',
+  'multi-sucursal': 'enterprise',
+  'carga-masiva': 'enterprise',
 };
 
 // ============================================================

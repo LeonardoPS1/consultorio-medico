@@ -10,6 +10,8 @@ import {
   Users,
   ChevronRight,
   Video,
+  TrendingUp,
+  Gauge,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -41,7 +43,7 @@ const defaultFeatures: FeatureItem[] = [
   {
     icon: Bot,
     title: 'Asistente IA Local',
-    desc: 'Asistente con Ollama + Mistral que entiende el contexto de cada paciente. Sin costos de API externas, sin enviar datos a la nube. Privacidad total.',
+    desc: 'Asistente con Ollama + Gemma3 que entiende el contexto de cada paciente. Sin costos de API externas, sin enviar datos a la nube. Privacidad total.',
   },
   {
     icon: Syringe,
@@ -64,9 +66,19 @@ const defaultFeatures: FeatureItem[] = [
     desc: 'Videoconsultas integradas con LiveKit. Creá turnos virtuales, el link se genera automáticamente y el paciente lo recibe por WhatsApp. Sin descargas ni instalaciones.',
   },
   {
+    icon: TrendingUp,
+    title: 'Scoring de Pacientes',
+    desc: 'Predicción automática de riesgo de inasistencia con badge visual (verde/amarillo/rojo). Bloqueo automático a lista negra para pacientes con alto score.',
+  },
+  {
     icon: Shield,
     title: 'Seguridad y Auditoría',
     desc: 'Autenticación 2FA, rate limiting, registro de accesos, contraseñas seguras y backup encriptado automático. Cumplimiento de normativas de salud.',
+  },
+  {
+    icon: Gauge,
+    title: 'Rendimiento Web Vitals',
+    desc: 'Monitoreo en tiempo real de LCP, INP, CLS. Analytics del portal del paciente y rendimiento por sección. Optimización continua para mejor experiencia.',
   },
   {
     icon: Smartphone,

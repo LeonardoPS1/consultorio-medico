@@ -177,11 +177,12 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       {
         titulo: 'Portal del Paciente (Premium+)',
         descripcion:
-          'Los pacientes acceden a su información desde consultorio.aicorebots.com/portal (disponible en plan Premium+).',
+          'Los pacientes acceden a su información desde med.aicorebots.com/portal (disponible en plan Premium o superior).',
         tips: [
           'Ingresan con su número de teléfono +569',
           'Reciben un magic link por WhatsApp para acceder',
-          'Pueden ver turnos, recetas, historial y editar su perfil',
+          'Pueden ver turnos, recetas, historial, paquetes y editar su perfil',
+          'Booking Wizard: 4 pasos para agendar turno desde el portal',
         ],
         enlace: { href: '/portal', label: 'Ir al Portal' },
       },
@@ -765,12 +766,24 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         enlace: { href: '/dashboard/configuracion?tab=suscripcion', label: 'Ir a Suscripción' },
       },
       {
+        titulo: 'Planes disponibles',
+        descripcion: 'Elegí el plan que mejor se adapte a tu consultorio.',
+        tips: [
+          'Free: Para probar la plataforma (20 pacientes, 5 turnos/mes)',
+          'Starter ($79/mes): Consultorios individuales — hasta 500 pacientes, scoring, PWA',
+          'Profesional ($149/mes): Crecimiento — IA, telemedicina, firma digital, API',
+          'Premium ($249/mes): Clínicas — Portal paciente, n8n, auditoría, Web Vitals',
+          'Enterprise ($549/mes): Redes médicas — Multi-sucursal, integraciones, carga masiva',
+        ],
+      },
+      {
         titulo: 'Cambiar de plan',
         descripcion: 'Actualiza o cancela tu suscripción.',
         tips: [
           'Los pagos se procesan via MercadoPago',
           'Puedes pagar con tarjeta de crédito o débito',
           'El cambio es inmediato al confirmar el pago',
+          '14 días de prueba gratis en todos los planes',
         ],
       },
     ],
@@ -778,7 +791,12 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       {
         pregunta: '¿Puedo probar features Premium antes de contratar?',
         respuesta:
-          'Los features bloqueados muestran el plan requerido. No hay período de prueba automático, contactanos para evaluar tu caso.',
+          'Todos los planes incluyen 14 días de prueba gratis. Durante ese período podés probar todas las funcionalidades del plan seleccionado sin compromiso.',
+      },
+      {
+        pregunta: '¿Qué pasa si supero el límite de pacientes de mi plan?',
+        respuesta:
+          'El sistema te notificará cuando te acerques al límite. Para agregar más pacientes, necesitarás actualizar tu plan al siguiente nivel.',
       },
     ],
   },
@@ -1013,6 +1031,130 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         pregunta: '¿Puedo generar un PDF del consentimiento?',
         respuesta:
           'Sí. Podés generar y adjuntar un PDF con la información del consentimiento y la firma del paciente para tener un respaldo físico.',
+      },
+    ],
+  },
+  {
+    id: 'scoring-pacientes',
+    titulo: 'Scoring de Pacientes',
+    descripcion: 'Predicción automática de riesgo de inasistencia con badge visual',
+    icono: 'TrendingUp',
+    pasos: [
+      {
+        titulo: 'Cómo funciona el scoring',
+        descripcion: 'Cada paciente tiene un puntaje de 0 a 100 que predice su probabilidad de inasistencia.',
+        tips: [
+          'Disponible en plan Starter o superior',
+          'Algoritmo ponderado: no-shows x40, cancelaciones x25, confirmaciones x20, recordatorios x10, asistencia x5',
+          'Se recalcula automáticamente con cada turno',
+          'Badge visual: verde (<40), amarillo (40-69), rojo (≥70)',
+        ],
+        enlace: { href: '/dashboard/pacientes', label: 'Ir a Pacientes' },
+      },
+      {
+        titulo: 'Bloqueo automático',
+        descripcion: 'El sistema puede bloquear automáticamente a pacientes con score alto.',
+        tips: [
+          'Si un paciente tiene score ≥80 y 2+ inasistencias, se agrega a la Lista Negra',
+          'Podés configurar el umbral desde Ajustes del sistema',
+          'Las alertas de score alto se integran en el panel lateral',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Puedo desactivar el scoring?',
+        respuesta:
+          'El scoring se calcula siempre pero podés ocultar los badges desde Feature Toggles en Sistema (admin).',
+      },
+      {
+        pregunta: '¿Con qué frecuencia se actualiza el score?',
+        respuesta:
+          'Se recalcula automáticamente después de cada turno (asistencia, inasistencia o cancelación). No requiere acción manual.',
+      },
+    ],
+  },
+  {
+    id: 'portal-analytics',
+    titulo: 'Rendimiento y Web Vitals',
+    descripcion: 'Métricas de rendimiento del dashboard y portal del paciente',
+    icono: 'Gauge',
+    pasos: [
+      {
+        titulo: 'Panel de Rendimiento (Admin)',
+        descripcion: 'Visualizá las métricas de rendimiento del dashboard en tiempo real.',
+        tips: [
+          'Disponible en plan Premium o superior',
+          'LCP, INP, CLS, FCP, TTFB con percentiles y tendencias',
+          'Filtrá por sección: dashboard, portal, landing o todas',
+          'Exportá datos a CSV para análisis externo',
+          'Los datos se actualizan automáticamente cada 30 segundos',
+        ],
+        enlace: { href: '/dashboard/admin/rendimiento', label: 'Ir a Rendimiento' },
+      },
+      {
+        titulo: 'Portal Analytics',
+        descripcion: 'Métricas específicas del portal del paciente.',
+        tips: [
+          'KPIs del portal: LCP, INP, compliance móvil, distribución de dispositivos',
+          'Tabla por sección (Booking Wizard, Mis Turnos, etc.)',
+          'Timeline de evolución temporal',
+          'Comparativa desktop vs mobile',
+        ],
+        enlace: { href: '/dashboard/admin/portal-analytics', label: 'Ir a Portal Analytics' },
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Qué son las Web Vitals?',
+        respuesta:
+          'Son métricas de Google que miden la experiencia real del usuario: LCP (velocidad de carga), INP (interactividad), CLS (estabilidad visual), FCP (primera pintura) y TTFB (tiempo de respuesta del servidor).',
+      },
+      {
+        pregunta: '¿Los datos de Web Vitals son reales?',
+        respuesta:
+          'Sí, se capturan automáticamente desde los navegadores reales de tus usuarios cuando navegan el dashboard o portal.',
+      },
+    ],
+  },
+  {
+    id: 'carga-masiva',
+    titulo: 'Carga Masiva de Pacientes',
+    descripcion: 'Importá pacientes desde archivos Excel o CSV',
+    icono: 'Upload',
+    pasos: [
+      {
+        titulo: 'Preparar el archivo',
+        descripcion: 'Descargá la plantilla Excel y completá los datos de tus pacientes.',
+        tips: [
+          'Disponible en plan Enterprise',
+          'Campos obligatorios: nombre, apellido, teléfono',
+          'Campos opcionales: RUT, email, sistema de salud, región, comuna',
+          'Formatos aceptados: .xlsx y .csv',
+        ],
+      },
+      {
+        titulo: 'Subir el archivo',
+        descripcion: 'Cargá el archivo desde el panel de Pacientes.',
+        tips: [
+          'El sistema valida cada fila antes de importar',
+          'Los errores se muestran con detalle para corrección',
+          'Los pacientes duplicados se omiten automáticamente (por RUT o teléfono)',
+          'Máximo 5,000 pacientes por archivo',
+        ],
+        enlace: { href: '/dashboard/pacientes', label: 'Ir a Pacientes' },
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Qué pasa si hay errores en el archivo?',
+        respuesta:
+          'El sistema muestra un resumen con las filas que tienen errores para que las corrijas. Los pacientes sin error se importan correctamente.',
+      },
+      {
+        pregunta: '¿Puedo usar el mismo formato que Dentalink o Medilink?',
+        respuesta:
+          'No directamente, pero podemos crear una integración personalizada vía n8n que sincronice los datos automáticamente.',
       },
     ],
   },

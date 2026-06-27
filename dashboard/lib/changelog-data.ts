@@ -12,7 +12,48 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '1.10.0',
+    version: '1.13.0',
+    date: '27/06/2026',
+    title: 'Rendimiento, Portal Analytics y Nuevos Precios',
+    items: [
+      'Server Components: 15 páginas migradas a SC wrapper + client islands para mejor performance',
+      'Sistema de caché con revalidateTag: invalidate selectiva en 7 endpoints de API',
+      'Web Vitals: migración 0041 + endpoint POST /api/web-vitals para métricas reales',
+      'Portal Analytics: panel dedicado con KPIs del portal (LCP, INP, compliance, dispositivos)',
+      'Section filter: filtra Web Vitals por sección (dashboard, portal, landing, all)',
+      'Framer Motion → motion standalone: 4,621KB → 659KB (34 archivos migrados)',
+      'Nuevos precios: Starter $79, Profesional $149, Premium $249, Enterprise $549',
+      'Nuevo feature: scoring-pacientes disponible en Starter (predicción de inasistencia)',
+      'Nuevo feature: web-vitals y portal-analytics en Premium',
+      'Nuevo feature: carga-masiva de pacientes en Enterprise',
+      'Nuevo feature: data-cache en Premium (caché inteligente con invalidación selectiva)',
+    ],
+  },
+  {
+    version: '1.12.0',
+    date: '26/06/2026',
+    title: 'Portal del Paciente + Cleanup',
+    items: [
+      'Portal del Paciente: magic link WhatsApp + JWT 24h + Booking Wizard 4 pasos',
+      'Gestión de turnos, recetas e historial desde el portal',
+      'Limpieza profunda del proyecto: dead code, archivos obsoletos, imports huérfanos',
+      'Bad Gateway fix: standalone deps en Docker para build de producción',
+    ],
+  },
+  {
+    version: '1.11.0',
+    date: '24/06/2026',
+    title: 'Hardening de Seguridad',
+    items: [
+      'Webhook secret con timingSafeEqual en 3 endpoints (n8n, anonimizar, waitlist)',
+      'Docker secrets para credenciales sensibles + env fallback',
+      'CSP centralizado en middleware + headers COOP/COEP/CORP',
+      'Rate limiting PostgreSQL en endpoints sensibles',
+      'Migraciones productivas con permisos mínimos (revoca CREATE)',
+      'CI: pnpm audit + Trivy scan + Dependabot (npm+docker+actions)',
+    ],
+  },
+  {
     date: '19/06/2026',
     title: 'Scoring de Pacientes, Seguridad y Conexión IA Real',
     items: [
