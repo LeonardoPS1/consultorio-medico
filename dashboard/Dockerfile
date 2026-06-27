@@ -7,7 +7,7 @@
 # =============================================================================
 
 # ─── Stage 1: Dependencias ───────────────────────────────────────────────────
-FROM node:22-alpine AS deps
+FROM node:26-alpine AS deps
 WORKDIR /app
 
 # Corepack para pnpm
@@ -18,7 +18,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # ─── Stage 2: Build ──────────────────────────────────────────────────────────
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 
 # Cache buster: cambiar este valor para forzar rebuild completo
@@ -47,7 +47,7 @@ WORKDIR /app
 # El COPY del standalone más abajo ya trae node_modules/ del output.
 
 # ─── Stage 3: Runner (producción) ────────────────────────────────────────────
-FROM node:22-alpine AS runner
+FROM node:26-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
