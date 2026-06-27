@@ -22,12 +22,20 @@ import { PageHeader } from '@/components/page-header';
 // ─── Types ─────────────────────────────────────────────────
 
 type Period = '24h' | '7d' | '30d' | 'all';
+type Section = 'all' | 'dashboard' | 'portal' | 'landing';
 
 const PERIODS: { value: Period; label: string }[] = [
   { value: '24h', label: '24 horas' },
   { value: '7d', label: '7 días' },
   { value: '30d', label: '30 días' },
   { value: 'all', label: 'Todo' },
+];
+
+const SECTIONS: { value: Section; label: string }[] = [
+  { value: 'all', label: 'Todas' },
+  { value: 'dashboard', label: 'Dashboard' },
+  { value: 'portal', label: 'Portal' },
+  { value: 'landing', label: 'Landing' },
 ];
 
 const METRIC_LABELS: Record<string, string> = {
@@ -133,6 +141,7 @@ interface HeatmapRow { hour: number; name: string; avgValue: number; count: numb
 
 export function WebVitalsClient() {
   const [period, setPeriod] = useState<Period>('24h');
+  const [section, setSection] = useState<Section>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(false);
@@ -173,25 +182,26 @@ export function WebVitalsClient() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [autoRefresh, period]);
+  }, [autoRefresh, period, section]);
 
   // ─── Fetch all data ────────────────────────────────────
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
+      const base = `/api/web-vitals?period=${period}&section=${section}`;
       const [
         statsRes, recentRes, urlRes,
         timelineRes, percRes, compRes, deviceRes, heatRes,
       ] = await Promise.all([
-        fetch(`/api/web-vitals?period=${period}&view=stats`),
-        fetch(`/api/web-vitals?period=${period}&view=recent`),
-        fetch(`/api/web-vitals?period=${period}&view=by-url`),
-        fetch(`/api/web-vitals?period=${period}&view=timeline`),
-        fetch(`/api/web-vitals?period=${period}&view=percentiles`),
-        fetch(`/api/web-vitals?period=${period}&view=comparison`),
-        fetch(`/api/web-vitals?period=${period}&view=device`),
-        fetch(`/api/web-vitals?period=${period}&view=heatmap`),
+        fetch(`${base}&view=stats`),
+        fetch(`${base}&view=recent`),
+        fetch(`${base}&view=by-url`),
+        fetch(`${base}&view=timeline`),
+        fetch(`${base}&view=percentiles`),
+        fetch(`${base}&view=comparison`),
+        fetch(`${base}&view=device`),
+        fetch(`${base}&view=heatmap`),
       ]);
 
       if (!statsRes.ok || !recentRes.ok || !urlRes.ok) {
@@ -220,7 +230,7 @@ export function WebVitalsClient() {
     } finally {
       setLoading(false);
     }
-  }, [period]);
+  }, [period, section]);
 
   useEffect(() => {
     fetchData();
@@ -315,6 +325,24 @@ export function WebVitalsClient() {
           <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={fetchData} disabled={loading}>
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
           </Button>
+        </div>
+      </div>
+
+      {/* Section filter row */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground font-medium shrink-0">Sección:</span>
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+          {SECTIONS.map((s) => (
+            <Button
+              key={s.value}
+              variant={section === s.value ? 'secondary' : 'ghost'}
+              size="sm"
+              className="text-xs h-7"
+              onClick={() => setSection(s.value)}
+            >
+              {s.label}
+            </Button>
+          ))}
         </div>
       </div>
 

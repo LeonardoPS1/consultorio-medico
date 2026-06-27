@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { webVitalsMetrics } from '@/drizzle/schema';
 import { apiHandler, success, fail } from '@/lib/api-handler';
 import { auth } from '@/lib/auth';
-import { and, gte, desc, sql, count, avg, min, max, lte, lt } from 'drizzle-orm';
+import { and, gte, desc, sql, count, avg, min, max, lte, lt, like, not, isNull, or } from 'drizzle-orm';
 
 // ─── Helpers ─────────────────────────────────────────────────
 
@@ -24,10 +24,27 @@ function getPreviousPeriodRange(period: string, now: Date = new Date()): { since
   };
 }
 
-function buildWhere(since?: Date, until?: Date) {
+function getSectionCondition(section: string) {
+  if (section === 'dashboard') return like(webVitalsMetrics.url, '/dashboard/%');
+  if (section === 'portal') return like(webVitalsMetrics.url, '/portal/%');
+  if (section === 'landing') return or(
+    isNull(webVitalsMetrics.url),
+    and(
+      not(like(webVitalsMetrics.url, '/dashboard/%')),
+      not(like(webVitalsMetrics.url, '/portal/%')),
+    ),
+  );
+  return undefined;
+}
+
+function buildWhere(since?: Date, until?: Date, section?: string) {
   const conds: any[] = [];
   if (since) conds.push(gte(webVitalsMetrics.createdAt, since));
   if (until) conds.push(lt(webVitalsMetrics.createdAt, until));
+  if (section && section !== 'all') {
+    const sectionCond = getSectionCondition(section);
+    if (sectionCond) conds.push(sectionCond);
+  }
   return conds.length > 0 ? and(...conds) : undefined;
 }
 
@@ -59,10 +76,11 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const { searchParams } = request.nextUrl;
   const period = searchParams.get('period') || '24h';
   const view = searchParams.get('view') || 'stats';
+  const section = searchParams.get('section') || 'all';
 
   const now = new Date();
   const { since, until } = getPeriodRange(period, now);
-  const where = buildWhere(since, until);
+  const where = buildWhere(since, until, section);
 
   // ── timeline ── data agrupada por hora para línea de tendencia
   if (view === 'timeline') {
@@ -95,6 +113,17 @@ export const GET = apiHandler(async (request: NextRequest) => {
 
   // ── percentiles ── P50, P75, P95, P99
   if (view === 'percentiles') {
+    const percConds: any[] = [];
+    if (since) percConds.push(sql`created_at >= ${since}`);
+    if (section && section !== 'all') {
+      if (section === 'dashboard') percConds.push(sql`url LIKE '/dashboard/%'`);
+      else if (section === 'portal') percConds.push(sql`url LIKE '/portal/%'`);
+      else if (section === 'landing') percConds.push(sql`(url IS NULL OR (url NOT LIKE '/dashboard/%' AND url NOT LIKE '/portal/%'))`);
+    }
+    const percWhere = percConds.length > 0
+      ? sql`WHERE ${sql.join(percConds, sql` AND `)}`
+      : sql``;
+
     const raw = await db.execute(sql`
       SELECT
         name,
@@ -104,12 +133,12 @@ export const GET = apiHandler(async (request: NextRequest) => {
         percentile_cont(0.99) WITHIN GROUP (ORDER BY value::numeric) AS p99,
         COUNT(*)::int AS count
       FROM web_vitals_metrics
-      ${since ? sql`WHERE created_at >= ${since}` : sql``}
+      ${percWhere}
       GROUP BY name
       ORDER BY name
     `);
 
-    const data = (raw.rows || []).map((r: any) => ({
+    const data = ((raw as any).rows || []).map((r: any) => ({
       name: r.name,
       p50: Number(r.p50),
       p75: Number(r.p75),
