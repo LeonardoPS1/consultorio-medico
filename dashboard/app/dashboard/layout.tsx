@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { CommandPalette } from '@/components/layout/command-palette';
 import { GatedContent } from '@/components/gated-content';
 import { ClientThemeProvider } from '@/components/client-theme-provider';
 import { auth } from '@/lib/auth';
@@ -20,6 +21,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header />
+          <CommandPalette />
           <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 page-enter">
             <Suspense fallback={<MainSkeleton />}>
               <GatedContent>{children}</GatedContent>

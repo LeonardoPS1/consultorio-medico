@@ -21,6 +21,7 @@ import {
   Trash2,
   EyeOff,
   Eye,
+  Search,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getInitials, formatRelative } from '@/lib/utils';
@@ -242,6 +243,22 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2">
+        {/* Command Palette trigger */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 gap-2 rounded-lg border border-border/60 bg-muted/40 px-3 text-muted-foreground hover:text-foreground hover:bg-accent hidden sm:flex"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('open-command-palette'));
+          }}
+          title="Buscar (⌘K)"
+        >
+          <Search className="h-3.5 w-3.5" />
+          <span className="text-xs">Buscar</span>
+          <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+            <span className="text-xs">⌘</span>K
+          </kbd>
+        </Button>
         {/* Toggle tema con dropdown (Light / Dark / System) */}
         {mounted && (
           <DropdownMenu>

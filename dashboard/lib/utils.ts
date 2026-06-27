@@ -186,3 +186,11 @@ export function slugify(text: string) {
     .replace(/^-+|-+$/g, '')
     .trim();
 }
+
+/**
+ * Detecta si el usuario está en macOS (para mostrar ⌘ vs Ctrl)
+ */
+export function isMac(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /Mac|iPod|iPhone|iPad/.test(navigator.platform ?? navigator.userAgent);
+}
