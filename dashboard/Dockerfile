@@ -64,13 +64,13 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 # Copiar standalone output de Next.js (plano: server.js, .next, node_modules en raíz)
 # Ahora YA incluye node_modules poblado desde el builder
-COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 
 # Copiar static assets (junto a server.js, no bajo dashboard/)
-COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Copiar assets públicos (en raíz, no bajo dashboard/)
-COPY --from=builder --chown=nodejs:nodejs /app/dashboard/public ./public
+COPY --from=builder --chown=nodejs:nodejs /app/public ./public
 
 # Crear directorio para cache de Next.js con permisos correctos
 RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
