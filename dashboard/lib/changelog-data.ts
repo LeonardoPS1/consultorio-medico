@@ -54,6 +54,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
+    version: '1.10.0',
     date: '19/06/2026',
     title: 'Scoring de Pacientes, Seguridad y Conexión IA Real',
     items: [
