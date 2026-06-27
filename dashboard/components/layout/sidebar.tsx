@@ -37,6 +37,7 @@ import {
   FileSignature,
   LockKeyhole,
   Video,
+  Smartphone,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
@@ -443,6 +444,21 @@ export function Sidebar() {
                 >
                   <BarChart3 className="h-5 w-5 shrink-0" />
                   {!collapsed && <span className="flex-1 truncate">Rendimiento</span>}
+                </Link>
+                <Link
+                  href="/dashboard/admin/portal-analytics"
+                  onClick={closeMobile}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
+                    pathname === '/dashboard/admin/portal-analytics'
+                      ? 'nav-active-indicator bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
+                  )}
+                  aria-current={pathname === '/dashboard/admin/portal-analytics' ? 'page' : undefined}
+                  title={collapsed ? 'Portal' : undefined}
+                >
+                  <Smartphone className="h-5 w-5 shrink-0" />
+                  {!collapsed && <span className="flex-1 truncate">Portal Analytics</span>}
                 </Link>
                 <Link
                   href="/dashboard/webhooks"
