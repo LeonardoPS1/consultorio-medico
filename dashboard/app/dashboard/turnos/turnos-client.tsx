@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useSucursal } from '@/lib/sucursal-context';
-import { Calendar, Plus, ChevronLeft, ChevronRight, List } from 'lucide-react';
+import { Calendar, Plus, ChevronLeft, ChevronRight, List, Clock } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { PageAnimation } from '@/components/dashboard/page-animation';
 import { motion } from 'motion/react';
@@ -22,6 +22,7 @@ import { TurnosFilters } from '@/components/turnos/turnos-filters';
 import { TurnosTable } from '@/components/turnos/turnos-table';
 import { TurnosCalendar } from '@/components/turnos/turnos-calendar';
 import { TurnoDetailModal, CancelTurnoDialog } from '@/components/turnos/turno-detail-modal';
+import { DayTimeline } from '@/components/turnos/day-timeline';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -65,7 +66,7 @@ export function TurnosClient({
   initialFecha,
 }: TurnosClientProps) {
   const { sucursalId } = useSucursal();
-  const [view, setView] = useState<'lista' | 'calendario'>('lista');
+  const [view, setView] = useState<'lista' | 'calendario' | 'dia'>('lista');
   const [selectedDate, setSelectedDate] = useState(() => new Date(initialFecha + 'T12:00:00'));
   const [calendarViewMode, setCalendarViewMode] = useState<'mes' | 'dia'>('mes');
   const [showNewTurno, setShowNewTurno] = useState(false);
@@ -110,6 +111,14 @@ export function TurnosClient({
   const [filtroTipo, setFiltroTipo] = useState('__all__');
   const [searchText, setSearchText] = useState('');
   const [savingStates, setSavingStates] = useState<Set<string>>(new Set());
+
+  // Day-view state
+  const [dayViewData, setDayViewData] = useState<{
+    medicos: any[];
+    turnos: any[];
+    fecha: string;
+  } | null>(null);
+  const [dayViewLoading, setDayViewLoading] = useState(false);
 
   // Unique values for filters
   const medicos = useMemo(
@@ -225,10 +234,43 @@ export function TurnosClient({
     }
   }, [view, calendarViewMode, selectedDate, fetchTurnos, fetchTurnosMes]);
 
-  // ─── Debounced search ──────────────────────────────────
+  // ─── Fetch day-view data ─────────────────────────────────
+  const fetchDayView = useCallback(
+    async (fecha: Date) => {
+      setDayViewLoading(true);
+      try {
+        const fechaStr = fecha.toISOString().split('T')[0];
+        const params = new URLSearchParams({ fecha: fechaStr });
+        if (sucursalId) params.set('sucursalId', sucursalId);
+        const res = await fetch(`/api/turnos/day-view?${params.toString()}`);
+        if (!res.ok) throw new Error('Error al cargar vista del día');
+        const json = await res.json();
+        setDayViewData(json);
+      } catch {
+        toast({
+          title: 'Error',
+          description: 'No se pudieron cargar los datos del día',
+          variant: 'destructive',
+        });
+      } finally {
+        setDayViewLoading(false);
+      }
+    },
+    [sucursalId],
+  );
+
+  // Fetch day-view when switching to it or changing date
+  useEffect(() => {
+    if (view === 'dia') {
+      fetchDayView(selectedDate);
+    }
+  }, [view, selectedDate, fetchDayView]);
+
+  // ─── Debounced search (lista view only) ────────────────────
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
+    if (view !== 'lista') return;
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     if (searchText.trim()) {
       searchTimeoutRef.current = setTimeout(() => {
@@ -240,7 +282,7 @@ export function TurnosClient({
     return () => {
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     };
-  }, [searchText, selectedDate, fetchTurnos]);
+  }, [searchText, selectedDate, fetchTurnos, view]);
 
   // ─── Date navigation ───────────────────────────────
 
@@ -250,17 +292,17 @@ export function TurnosClient({
       newDate.setDate(newDate.getDate() + delta);
       setSelectedDate(newDate);
       if (searchText) setSearchText('');
-      else fetchTurnos(newDate);
+      else if (view === 'lista') fetchTurnos(newDate);
     },
-    [selectedDate, fetchTurnos, searchText],
+    [selectedDate, fetchTurnos, searchText, view],
   );
 
   const goToToday = useCallback(() => {
     const today = new Date();
     setSelectedDate(today);
     if (searchText) setSearchText('');
-    else fetchTurnos(today);
-  }, [fetchTurnos, searchText]);
+    else if (view === 'lista') fetchTurnos(today);
+  }, [fetchTurnos, searchText, view]);
 
   // ─── Filtered turnos ──────────────────────────────────
 
@@ -606,6 +648,15 @@ export function TurnosClient({
               <Calendar className="h-4 w-4 md:mr-1" />
               <span className="hidden md:inline">Calendario</span>
             </Button>
+            <Button
+              variant={view === 'dia' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setView('dia')}
+              aria-label="Vista del día"
+            >
+              <Clock className="h-4 w-4 md:mr-1" />
+              <span className="hidden md:inline">Día</span>
+            </Button>
           </div>
         </div>
         <Button onClick={() => setShowNewTurno(true)} size="sm" className="text-xs md:text-sm">
@@ -701,6 +752,75 @@ export function TurnosClient({
           onViewModeChange={setCalendarViewMode}
           onDateChange={handleCalendarDateChange}
         />
+      )}
+
+      {/* Day View (Timeline) */}
+      {view === 'dia' && (
+        <div className="space-y-3">
+          {/* Date navigation for day view */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={() => navigateDate(-1)} aria-label="Fecha anterior">
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <h3 className="text-sm sm:text-lg font-semibold min-w-[120px] sm:min-w-[200px] text-center">
+                {selectedDate.toLocaleDateString('es-CL', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </h3>
+              <Button variant="outline" size="icon" onClick={() => navigateDate(1)} aria-label="Fecha siguiente">
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" className="ml-2" onClick={goToToday}>
+                Hoy
+              </Button>
+            </div>
+            {dayViewData && (
+              <span className="text-xs text-muted-foreground">
+                {dayViewData.turnos.length} turno{dayViewData.turnos.length !== 1 ? 's' : ''} · {dayViewData.medicos.length} médico{dayViewData.medicos.length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+
+          {/* DayTimeline component */}
+          {dayViewLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            </div>
+          ) : dayViewData ? (
+            <DayTimeline
+              medicos={dayViewData.medicos}
+              turnos={dayViewData.turnos}
+              fecha={dayViewData.fecha}
+              onTurnoClick={(turno) => {
+                // Find matching TurnoData for the detail modal
+                const match = turnos.find((t) => t.id === turno.id);
+                if (match) setEditTurno(match);
+                else {
+                  // Construct from day-view data
+                  const medico = dayViewData.medicos.find((m: any) => m.id === turno.medicoId);
+                  setEditTurno({
+                    id: turno.id,
+                    hora: turno.hora,
+                    paciente: turno.paciente,
+                    tipo: turno.motivo || 'Consulta',
+                    medico: medico?.nombre || '',
+                    medicoId: turno.medicoId,
+                    pacienteId: turno.pacienteId || '',
+                    estado: turno.estado,
+                    fecha: dayViewData.fecha,
+                  });
+                }
+              }}
+              onSlotClick={(medicoId, hora) => {
+                setShowNewTurno(true);
+              }}
+            />
+          ) : null}
+        </div>
       )}
 
       {/* State legend */}

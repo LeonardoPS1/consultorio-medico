@@ -508,4 +508,104 @@ export const turnosService = {
 
     return { deleted: true };
   },
+
+  /** Obtener datos para la Vista Citas del Día: médicos con horarios + turnos */
+  async dayView(fechaStr: string, sucursalId?: string, medicoIdFilter?: string) {
+    const cacheKey = `turnos:dayview:${fechaStr}:${sucursalId ?? ''}:${medicoIdFilter ?? ''}`;
+    return cache.getOrSet(
+      cacheKey,
+      async () => {
+        // 1) Obtener médicos activos (con sus horarios y color)
+        const medicoConditions = [
+          sql`${medicos.deletedAt} IS NULL`,
+          eq(medicos.activo, true),
+        ];
+        if (medicoIdFilter) medicoConditions.push(eq(medicos.id, medicoIdFilter));
+        if (sucursalId) medicoConditions.push(eq(medicos.sucursalId, sucursalId));
+
+        const medicosList = await db
+          .select({
+            id: medicos.id,
+            nombre: medicos.nombre,
+            especialidad: medicos.especialidad,
+            colorEvento: medicos.colorEvento,
+            horarios: medicos.horarios,
+            duracionTurnoMinutos: medicos.duracionTurnoMinutos,
+          })
+          .from(medicos)
+          .where(and(...medicoConditions))
+          .orderBy(medicos.nombre);
+
+        // 2) Obtener turnos del día
+        const turnoConditions = [
+          sql`${turnos.fechaHora} >= ${fechaStr + 'T00:00:00.000Z'}::timestamptz`,
+          sql`${turnos.fechaHora} < ${new Date(new Date(fechaStr + 'T00:00:00.000Z').getTime() + 86400000).toISOString()}::timestamptz`,
+          sql`${turnos.deletedAt} IS NULL`,
+        ];
+        if (medicoIdFilter) turnoConditions.push(eq(turnos.medicoId, medicoIdFilter));
+        if (sucursalId) turnoConditions.push(eq(turnos.sucursalId, sucursalId));
+
+        const turnosList = await db
+          .select({
+            id: turnos.id,
+            hora: sql<string>`TO_CHAR(${turnos.fechaHora}, 'HH24:MI')`,
+            estado: turnos.estado,
+            tipoConsulta: turnos.tipoConsulta,
+            motivo: turnos.motivo,
+            duracionMinutos: turnos.duracionMinutos,
+            medicoId: turnos.medicoId,
+            pacienteId: turnos.pacienteId,
+            pacienteNombre: pacientes.nombre,
+            pacienteApellido: pacientes.apellido,
+            linkVideollamada: turnos.linkVideollamada,
+          })
+          .from(turnos)
+          .leftJoin(pacientes, eq(turnos.pacienteId, pacientes.id))
+          .where(and(...turnoConditions))
+          .orderBy(turnos.fechaHora);
+
+        // 3) Obtener bloqueos del día
+        const bloqueosList = await db
+          .select({
+            medicoId: bloqueosAgenda.medicoId,
+            titulo: bloqueosAgenda.titulo,
+            tipo: bloqueosAgenda.tipo,
+          })
+          .from(bloqueosAgenda)
+          .where(
+            and(
+              sql`${bloqueosAgenda.fechaInicio} <= ${fechaStr + 'T23:59:59.999Z'}::timestamptz`,
+              sql`${bloqueosAgenda.fechaFin} >= ${fechaStr + 'T00:00:00.000Z'}::timestamptz`,
+            ),
+          );
+
+        // 4) Mapear respuesta
+        const medicosData = medicosList.map((m) => ({
+          id: m.id,
+          nombre: m.nombre,
+          especialidad: m.especialidad,
+          colorEvento: m.colorEvento || '#3B82F6',
+          horarios: m.horarios as Record<string, { activo?: boolean; inicio?: string; fin?: string; tipo?: string; inicio2?: string | null; fin2?: string | null }>,
+          duracionTurnoMinutos: m.duracionTurnoMinutos,
+          bloqueos: bloqueosList.filter((b) => b.medicoId === m.id),
+        }));
+
+        const turnosData = turnosList.map((t) => ({
+          id: t.id,
+          hora: t.hora,
+          duracionMinutos: t.duracionMinutos,
+          estado: t.estado,
+          tipoConsulta: t.tipoConsulta,
+          motivo: t.motivo,
+          medicoId: t.medicoId,
+          pacienteId: t.pacienteId,
+          paciente: `${t.pacienteNombre || ''} ${t.pacienteApellido || ''}`.trim() || 'Paciente',
+          linkVideollamada: t.linkVideollamada,
+        }));
+
+        return { medicos: medicosData, turnos: turnosData, fecha: fechaStr };
+      },
+      10_000,
+    );
+  },
 };
