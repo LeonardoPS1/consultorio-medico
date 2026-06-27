@@ -1,5 +1,28 @@
 # consultorio-medico
 
+## 27/06 — Item 11 + 12 + 13 COMPLETOS ✅
+
+### Item 12: React.cache() + unstable_cache + revalidateTag
+- New `lib/data-cache.ts`: CACHE_TAGS (15 tags), unstableCache(), revalidate()
+- React.cache() in `server-page-data.ts` (3 functions — turnos, pacientes, recetas)
+- revalidateTag in 7 mutation endpoints: turnos (POST/PATCH/DELETE), pacientes (POST/PATCH/DELETE), recetas (POST/PATCH/DELETE)
+- Build: 0 TS errors
+
+### Item 13: Web Vitals analytics endpoint
+- API endpoint `POST /api/web-vitals` → insert in `web_vitals_metrics` table
+- Migration 0041_web_vitals.sql + drizzle schema
+- Frontend already existed (components/web-vitals.tsx → already POST'd to /api/web-vitals)
+- Build: 0 TS errors
+
+### Item 11: Migration 15 Client Pages → SC wrapper + client islands
+All 15 dashboard client pages migrated. Each page: Server Component (auth + data fetch) + Client Component island (interactivity with `useState(initialData)`).
+
+Pages migrated: Telemedicina, Notificaciones, Derivaciones, Consentimientos, Ayuda, Onboarding, Blacklist, Admin Auditoria, Admin Tenants, Admin Sucursales, Admin Sistema, Conversaciones, Reportes, Atencion (dnd-kit Kanban), Configuracion (1525 lines).
+
+Build: ✓ Compiled successfully, 0 TS errors.
+
+---
+
 ## 📌 11/06 — Fix SW: POST no se cachean + Onboarding re-ejecutar+persistencia
 
 **Commits:** `69628e8` (SW v4), `f0aea33` (onboarding progreso), `0f8e0cf` (re-ejecutar)

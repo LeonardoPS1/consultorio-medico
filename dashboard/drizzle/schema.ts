@@ -9,6 +9,7 @@ import {
   decimal,
   date,
   jsonb,
+  numeric,
   uniqueIndex,
   index,
   primaryKey,
@@ -1473,3 +1474,30 @@ export const ordenesEstudio = pgTable(
 
 export type OrdenEstudio = InferSelectModel<typeof ordenesEstudio>;
 export type NewOrdenEstudio = InferInsertModel<typeof ordenesEstudio>;
+
+// ============================================================
+// WEB VITALS METRICS
+// ============================================================
+export const webVitalsMetrics = pgTable(
+  'web_vitals_metrics',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: varchar('name', { length: 20 }).notNull(), // LCP, INP, CLS, FCP, TTFB
+    value: numeric('value').notNull(),
+    rating: varchar('rating', { length: 20 }).notNull(), // good, needs-improvement, poor
+    url: text('url'),
+    userAgent: text('user_agent'),
+    medicoId: uuid('medico_id'),
+    tenantId: uuid('tenant_id'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    idxWebVitalsName: index('idx_web_vitals_name').on(table.name),
+    idxWebVitalsCreatedAt: index('idx_web_vitals_created_at').on(table.createdAt),
+    idxWebVitalsUrl: index('idx_web_vitals_url').on(table.url),
+    idxWebVitalsTenant: index('idx_web_vitals_tenant').on(table.tenantId),
+  }),
+);
+
+export type WebVitalsMetric = InferSelectModel<typeof webVitalsMetrics>;
+export type NewWebVitalsMetric = InferInsertModel<typeof webVitalsMetrics>;

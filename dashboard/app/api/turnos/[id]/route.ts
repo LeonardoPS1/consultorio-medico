@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { turnos, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
 
 /**
  * GET /api/turnos/[id] - Detalle individual de turno
@@ -77,6 +78,7 @@ export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
   }
 
   const result = await turnosService.delete(params.id);
+  revalidate([CACHE_TAGS.TURNOS, CACHE_TAGS.PACIENTES, CACHE_TAGS.DASHBOARD_STATS]);
   return success(result);
 });
 
@@ -108,5 +110,6 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
 
   // El sync a Google Calendar ahora lo maneja turnosService.update()
 
+  revalidate([CACHE_TAGS.TURNOS, CACHE_TAGS.PACIENTES, CACHE_TAGS.DASHBOARD_STATS]);
   return success(updated);
 });

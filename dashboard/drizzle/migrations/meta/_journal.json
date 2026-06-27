@@ -211,6 +211,13 @@
       "when": 1782264214662,
       "tag": "0040_rut_index",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1783219200000,
+      "tag": "0041_web_vitals",
+      "breakpoints": true
     }
   ]
 }

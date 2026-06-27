@@ -7,6 +7,7 @@ import { recetasService } from '@/lib/services/recetas';
 import { apiHandler, created, notFound } from '@/lib/api-handler';
 import { parseBody, parseQuery, createRecetaSchema } from '@/lib/validations';
 import { z } from 'zod';
+import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
 
 const recetasQuerySchema = z.object({
   estado: z.string().optional(),
@@ -92,5 +93,6 @@ export const POST = apiHandler(async (request: NextRequest) => {
     medicoId: medicoFinal,
   });
 
+  revalidate([CACHE_TAGS.RECETAS, CACHE_TAGS.DASHBOARD_STATS]);
   return created(nueva);
 });

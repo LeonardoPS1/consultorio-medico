@@ -11,6 +11,7 @@ import { parseBody } from '@/lib/validations';
 import { createPacienteSchema } from '@/lib/validations';
 import { pacientesService } from '@/lib/services/pacientes';
 import { auth } from '@/lib/auth';
+import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
 
 export const GET = apiHandler(async (request: NextRequest) => {
   const session = await auth();
@@ -31,5 +32,6 @@ export const GET = apiHandler(async (request: NextRequest) => {
 export const POST = apiHandler(async (request: NextRequest) => {
   const body = await parseBody(request, createPacienteSchema);
   const paciente = await pacientesService.create(body);
+  revalidate([CACHE_TAGS.PACIENTES, CACHE_TAGS.DASHBOARD_STATS]);
   return created(paciente);
 });

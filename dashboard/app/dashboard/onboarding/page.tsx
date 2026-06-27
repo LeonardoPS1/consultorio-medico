@@ -1,58 +1,37 @@
 /**
  * Onboarding Wizard — Configuración inicial asistida por IA.
  *
- * Guía al usuario paso a paso para configurar WhatsApp, médicos,
- * horarios, pacientes y notificaciones. Cada paso tiene un tip
- * contextual generado por Ollama.
- *
- * Client component: obtiene el estado del onboarding vía API
- * para evitar problemas de auth() en server components (SSR).
- * OnboardingClient: maneja interactividad, progreso y tips de IA.
+ * Server Component: carga el estado del onboarding server-side
+ * usando getOnboardingState(), y pasa todo al OnboardingClient.
  */
 
-'use client';
+export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from 'react';
-import { Sparkles as SparklesIcon } from 'lucide-react';
-import { Loader2 } from 'lucide-react';
+import { auth } from '@/lib/auth';
+import { getOnboardingState } from '@/lib/onboarding';
 import { OnboardingClient } from './onboarding-client';
 import type { OnboardingState } from '@/lib/onboarding-types';
 
-export default function OnboardingPage({
-  searchParams,
-}: {
+interface OnboardingPageProps {
   searchParams?: { reiniciar?: string; 'ver-progreso'?: string };
-}) {
+}
+
+export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
   const isForceRestart = searchParams?.reiniciar === 'true';
   const verProgreso = searchParams?.['ver-progreso'] === 'true';
 
-  const [state, setState] = useState<OnboardingState | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const session = await auth();
+  let state: OnboardingState | null = null;
 
-  useEffect(() => {
-    async function fetchOnboardingState() {
-      try {
-        const res = await fetch('/api/onboarding', {
-          credentials: 'include',
-        });
-        if (!res.ok) {
-          throw new Error(`Error ${res.status}: ${res.statusText}`);
-        }
-        const data = await res.json();
-        setState(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error al cargar onboarding');
-      } finally {
-        setLoading(false);
-      }
-    }
+  try {
+    state = await getOnboardingState(session?.user?.id);
+  } catch {
+    // Si falla auth en SSR, devolvemos estado vacío
+  }
 
-    if (!isForceRestart) {
-      fetchOnboardingState();
-    } else {
-      // En modo reiniciar, no necesitamos cargar estado del servidor
-      setState({
+  // Modo reiniciar: sobreescribe el estado
+  const initialState = isForceRestart
+    ? ({
         completedSteps: [],
         progress: 0,
         isComplete: false,
@@ -64,44 +43,13 @@ export default function OnboardingPage({
           actionLink: '',
           actionLabel: '',
         },
-      });
-      setLoading(false);
-    }
-  }, [isForceRestart]);
+      } as OnboardingState)
+    : state;
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 px-4">
-        <div className="flex items-center gap-3">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <span className="text-sm text-muted-foreground">Cargando asistente IA...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
+  if (!initialState) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-        <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-destructive/10 text-destructive shrink-0 mb-4">
-          <Loader2 className="h-6 w-6" />
-        </div>
-        <h3 className="text-lg font-semibold mb-1">Error al cargar onboarding</h3>
-        <p className="text-sm text-muted-foreground max-w-md mb-4">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="text-sm text-primary hover:underline"
-        >
-          Reintentar
-        </button>
-      </div>
-    );
-  }
-
-  if (!state) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 px-4">
-        <span className="text-sm text-muted-foreground">Cargando...</span>
+        <p className="text-sm text-muted-foreground">No se pudo cargar el estado del onboarding.</p>
       </div>
     );
   }
@@ -112,7 +60,20 @@ export default function OnboardingPage({
       <div className="rounded-xl bg-gradient-to-br from-primary/5 via-primary/[0.02] to-background border p-6 shadow-sm">
         <div className="flex items-start gap-4">
           <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-primary/10 text-primary shrink-0 shadow-sm">
-            <SparklesIcon className="h-6 w-6" />
+            <svg
+              className="h-6 w-6"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+            </svg>
           </div>
           <div className="space-y-1">
             <h1 className="text-xl font-semibold tracking-tight">Asistente IA</h1>
@@ -127,8 +88,8 @@ export default function OnboardingPage({
 
       <OnboardingClient
         key={isForceRestart ? 'reiniciar' : 'onboarding'}
-        initialCompleted={isForceRestart ? [] : state.completedSteps}
-        isComplete={state.isComplete && !isForceRestart}
+        initialCompleted={isForceRestart ? [] : initialState.completedSteps}
+        isComplete={initialState.isComplete && !isForceRestart}
         isForceRestart={isForceRestart}
         verProgreso={verProgreso}
       />

@@ -6,6 +6,7 @@ import { recetasService } from '@/lib/services/recetas';
 import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
 import { parseBody, updateRecetaSchema } from '@/lib/validations';
+import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
 
 export const GET = apiHandler(
   async (request: NextRequest, { params }: { params: { id: string } }) => {
@@ -51,6 +52,7 @@ export const PATCH = apiHandler(
 
     const actualizada = await recetasService.actualizar(params.id, body);
 
+    revalidate([CACHE_TAGS.RECETAS, CACHE_TAGS.PACIENTES, CACHE_TAGS.DASHBOARD_STATS]);
     return success(actualizada);
   },
 );
@@ -79,6 +81,7 @@ export const DELETE = apiHandler(
       estado: 'historial' as const,
     });
 
+    revalidate([CACHE_TAGS.RECETAS, CACHE_TAGS.PACIENTES, CACHE_TAGS.DASHBOARD_STATS]);
     return success(actualizada);
   },
 );

@@ -4,12 +4,18 @@
  *
  * Beneficio: evita round-trip HTTP + serialización JSON innecesaria.
  * Los services ya tienen cache in-memory con TTL.
+ *
+ * Las funciones están envueltas con React.cache() + unstable_cache:
+ * - React.cache(): deduplica llamadas dentro del mismo render
+ * - unstable_cache(): cachea entre requests con tag-based revalidation
  */
 
 import { auth } from '@/lib/auth';
 import { turnosService } from '@/lib/services/turnos';
 import { pacientesService } from '@/lib/services/pacientes';
 import { recetasService } from '@/lib/services/recetas';
+import { cache as reactCache } from 'react';
+import { CACHE_TAGS } from '@/lib/data-cache';
 
 // ─── Turnos ────────────────────────────────────────────────
 
@@ -33,10 +39,10 @@ export interface TurnoPageData {
   fecha: string;
 }
 
-export async function getServerTurnos(
+export const getServerTurnos = reactCache(async (
   sucursalId?: string,
   fecha?: string,
-): Promise<TurnoPageData | null> {
+): Promise<TurnoPageData | null> => {
   try {
     const session = await auth();
     const sessionMedicoId = session?.user?.medicoId;
@@ -71,7 +77,7 @@ export async function getServerTurnos(
   } catch {
     return null;
   }
-}
+});
 
 // ─── Pacientes ─────────────────────────────────────────────
 
@@ -95,9 +101,9 @@ export interface PacientePageData {
   nuevos: number;
 }
 
-export async function getServerPacientes(
+export const getServerPacientes = reactCache(async (
   sucursalId?: string,
-): Promise<PacientePageData | null> {
+): Promise<PacientePageData | null> => {
   try {
     const session = await auth();
     const sessionMedicoId = session?.user?.medicoId;
@@ -121,7 +127,7 @@ export async function getServerPacientes(
   } catch {
     return null;
   }
-}
+});
 
 // ─── Recetas ───────────────────────────────────────────────
 
@@ -144,7 +150,7 @@ export interface RecetaPageData {
   historial: number;
 }
 
-export async function getServerRecetas(): Promise<RecetaPageData | null> {
+export const getServerRecetas = reactCache(async (): Promise<RecetaPageData | null> => {
   try {
     const session = await auth();
     const sessionMedicoId = session?.user?.medicoId;
@@ -167,4 +173,4 @@ export async function getServerRecetas(): Promise<RecetaPageData | null> {
   } catch {
     return null;
   }
-}
+});

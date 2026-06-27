@@ -15,6 +15,7 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { pacientes, turnos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
 
 // Helper: verifica que el médico tenga acceso a este paciente
 async function verifyPacienteAccess(
@@ -89,6 +90,7 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
 
   const body = await parseBody(request, updatePacienteSchema);
   const updated = await pacientesService.update(params.id, body);
+  revalidate([CACHE_TAGS.PACIENTES, CACHE_TAGS.DASHBOARD_STATS]);
   return success(updated);
 });
 
@@ -100,5 +102,6 @@ export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
   await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
 
   const result = await pacientesService.delete(params.id);
+  revalidate([CACHE_TAGS.PACIENTES, CACHE_TAGS.DASHBOARD_STATS]);
   return success(result);
 });

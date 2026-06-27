@@ -15,6 +15,7 @@ import { db } from '@/lib/db';
 import { pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { buildGCalPayload } from '@/lib/google-calendar-sync';
+import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
 
 export const GET = apiHandler(async (request: NextRequest) => {
   const session = await auth();
@@ -54,5 +55,6 @@ export const POST = apiHandler(async (request: NextRequest) => {
   const body = await parseBody(request, createTurnoSchema);
   const turno = await turnosService.create(body);
 
+  revalidate([CACHE_TAGS.TURNOS, CACHE_TAGS.PACIENTES, CACHE_TAGS.DASHBOARD_STATS]);
   return created(turno);
 });

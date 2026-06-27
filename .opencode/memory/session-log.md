@@ -1,5 +1,27 @@
 # 📜 Log Global de Sesiones
 
+## 27/06 — Item 11 + 12 + 13 COMPLETOS ✅
+
+### Item 12: React.cache() + unstable_cache + revalidateTag
+- New lib/data-cache.ts: CACHE_TAGS (15 tags), unstableCache(), revalidate()
+- React.cache() in server-page-data.ts (3 functions)
+- revalidateTag in 7 mutation endpoints (turnos, pacientes, recetas)
+- Build: 0 TS errors
+
+### Item 13: Web Vitals analytics endpoint
+- API endpoint POST /api/web-vitals + migration 0041_web_vitals.sql + schema
+- Frontend already existed (components/web-vitals.tsx → POST /api/web-vitals)
+- Build: 0 TS errors
+
+### Item 11: Migration 15 Client Pages → SC wrapper + client islands
+All 15 dashboard pages migrated. Each page: Server Component (auth, data fetch) + Client Component island (interactivity). Pattern used: server-page-data.ts / direct DB queries / API fetch for SC data, useState(initialData) for client hydration.
+
+Pages migrated: Telemedicina, Notificaciones, Derivaciones, Consentimientos, Ayuda, Onboarding, Blacklist, Admin Auditoria, Admin Tenants, Admin Sucursales, Admin Sistema, Conversaciones, Reportes, Atencion (dnd-kit Kanban), Configuracion (1525 lines).
+
+Build: ✓ Compiled successfully, 0 TS errors.
+
+---
+
 ## 21/06 — Portal Paciente Fase 2 COMPLETA ✅
 ### Items completados (6 commits, push a origin/main):
 - **.ics WhatsApp** (4afb138): `lib/ics.ts` genera archivo calendario, endpoint `/api/portal/turnos/[id]/ics`, adjunto MediaUrl en confirmación WhatsApp
