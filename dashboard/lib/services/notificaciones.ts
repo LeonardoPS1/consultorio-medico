@@ -3,6 +3,15 @@ import { notificaciones } from '@/drizzle/schema';
 import { eq, and, sql, count, desc } from 'drizzle-orm';
 import { notFound } from '@/lib/api-handler';
 
+/** Prioridad por tipo: urgencia=0 (más alta), sistema=4 (más baja) */
+export const PRIORIDAD_POR_TIPO: Record<string, number> = {
+  urgencia: 0,
+  receta: 1,
+  turno: 2,
+  mensaje: 3,
+  sistema: 4,
+};
+
 export interface CreateNotificacionInput {
   usuarioId: string;
   titulo: string;
@@ -19,6 +28,15 @@ export interface ListNotificacionesOptions {
   tipo?: string;
   soloNoLeidas?: boolean;
   includeDeleted?: boolean;
+}
+
+/** Conteo por tipo de notificaciones no leídas */
+export interface ConteoPorTipo {
+  turno: number;
+  mensaje: number;
+  receta: number;
+  urgencia: number;
+  sistema: number;
 }
 
 export const notificacionesService = {
@@ -49,6 +67,7 @@ export const notificacionesService = {
         titulo: notificaciones.titulo,
         descripcion: notificaciones.descripcion,
         tipo: notificaciones.tipo,
+        prioridad: notificaciones.prioridad,
         leido: notificaciones.leido,
         href: notificaciones.href,
         metadata: notificaciones.metadata,
@@ -71,6 +90,7 @@ export const notificacionesService = {
         titulo: n.titulo,
         descripcion: n.descripcion,
         tipo: n.tipo,
+        prioridad: n.prioridad,
         leido: n.leido,
         href: n.href,
         metadata: n.metadata,
@@ -86,16 +106,20 @@ export const notificacionesService = {
   },
 
   /**
-   * Crear una nueva notificación y enviar push si está configurado
+   * Crear una notificación y enviar push si está configurado
    */
   async create(input: CreateNotificacionInput) {
+    const tipo = input.tipo || 'sistema';
+    const prioridad = PRIORIDAD_POR_TIPO[tipo] ?? 4;
+
     const [nueva] = await db
       .insert(notificaciones)
       .values({
         usuarioId: input.usuarioId,
         titulo: input.titulo,
         descripcion: input.descripcion || null,
-        tipo: input.tipo || 'sistema',
+        tipo,
+        prioridad,
         href: input.href || null,
         metadata: input.metadata ?? {},
         tenantId: input.tenantId ?? undefined,
@@ -214,5 +238,34 @@ export const notificacionesService = {
         ),
       );
     return Number(result.total);
+  },
+
+  /**
+   * Obtener conteo de no leídas agrupado por tipo
+   */
+  async getConteoPorTipo(usuarioId: string): Promise<ConteoPorTipo> {
+    const rows = await db
+      .select({
+        tipo: notificaciones.tipo,
+        total: count(),
+      })
+      .from(notificaciones)
+      .where(
+        and(
+          eq(notificaciones.usuarioId, usuarioId),
+          eq(notificaciones.leido, false),
+          sql`${notificaciones.deletedAt} IS NULL`,
+        ),
+      )
+      .groupBy(notificaciones.tipo);
+
+    const conteo: ConteoPorTipo = { turno: 0, mensaje: 0, receta: 0, urgencia: 0, sistema: 0 };
+    for (const row of rows) {
+      const tipo = row.tipo as keyof ConteoPorTipo;
+      if (tipo in conteo) {
+        conteo[tipo] = Number(row.total);
+      }
+    }
+    return conteo;
   },
 };

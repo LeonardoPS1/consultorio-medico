@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
 import {
   Bell,
   BellOff,
@@ -19,9 +20,12 @@ import {
   CheckCheck,
   Loader2,
   Smartphone,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { PushNotificationToggle } from '@/components/push-notification-toggle';
 import { formatRelative } from '@/lib/utils';
+import { useNotifications } from '@/lib/hooks/use-notifications';
 
 // ============================================================
 // Tipos
@@ -32,6 +36,7 @@ interface NotificacionData {
   titulo: string;
   descripcion: string | null;
   tipo: 'turno' | 'mensaje' | 'receta' | 'urgencia' | 'sistema';
+  prioridad: number;
   leido: boolean;
   href: string | null;
   createdAt: string;
@@ -59,13 +64,22 @@ const coloresNotificacion: Record<string, string> = {
   sistema: 'text-amber-500 bg-amber-100 dark:bg-amber-950/50',
 };
 
-const TIPOS = ['turno', 'mensaje', 'receta', 'urgencia', 'sistema'] as const;
+const TIPOS = ['urgencia', 'receta', 'turno', 'mensaje', 'sistema'] as const;
 const labelsTipo: Record<string, string> = {
+  urgencia: 'Urgencias',
+  receta: 'Recetas',
   turno: 'Turnos',
   mensaje: 'Mensajes',
-  receta: 'Recetas',
-  urgencia: 'Urgencias',
   sistema: 'Sistema',
+};
+
+/** Descripción para cada tipo de silencio */
+const descripcionesTipo: Record<string, string> = {
+  urgencia: 'Alertas críticas y emergencias',
+  receta: 'Recetas por autorizar y renovaciones',
+  turno: 'Confirmaciones, cancelaciones y recordatorios',
+  mensaje: 'Mensajes de pacientes y conversaciones',
+  sistema: 'Notificaciones generales del sistema',
 };
 
 // ============================================================
@@ -78,73 +92,34 @@ export function NotificacionesClient({
   initialNoLeidas,
 }: NotificacionesClientProps) {
   const router = useRouter();
-  const [notificaciones, setNotificaciones] = useState<NotificacionData[]>(initialNotificaciones);
-  const [noLeidas, setNoLeidas] = useState(initialNoLeidas);
-  const [total, setTotal] = useState(initialTotal);
-  const [loading, setLoading] = useState(false);
+  const {
+    notificaciones,
+    noLeidas,
+    conteoPorTipo,
+    silenciadas,
+    marcarLeida,
+    marcarNoLeida,
+    eliminar,
+    marcarTodasLeidas,
+    silenciarCategoria,
+    refetch,
+  } = useNotifications();
+
   const [filtroTipo, setFiltroTipo] = useState<string | null>(null);
   const [soloNoLeidas, setSoloNoLeidas] = useState(false);
 
-  const cargar = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ limit: '100' });
-      if (filtroTipo) params.set('tipo', filtroTipo);
-      if (soloNoLeidas) params.set('soloNoLeidas', 'true');
+  // Filtrar локально (los datos ya vienen del hook)
+  const notificacionesFiltradas = notificaciones.filter((n) => {
+    if (filtroTipo && n.tipo !== filtroTipo) return false;
+    if (soloNoLeidas && n.leido) return false;
+    return true;
+  });
 
-      const res = await fetch(`/api/notificaciones?${params}`);
-      if (!res.ok) return;
-      const json = await res.json();
-      setNotificaciones(json.data || []);
-      setTotal(json.total || 0);
-      setNoLeidas(json.noLeidas || 0);
-    } catch {
-      console.error('Error al cargar notificaciones');
-    } finally {
-      setLoading(false);
-    }
-  }, [filtroTipo, soloNoLeidas]);
+  const total = notificaciones.length;
 
-  useEffect(() => {
-    cargar();
-  }, [cargar]);
-
-  // Acciones
-  const marcarLeida = async (id: string) => {
-    await fetch(`/api/notificaciones/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'read' }),
-    });
-    setNotificaciones((prev) => prev.map((n) => (n.id === id ? { ...n, leido: true } : n)));
-    setNoLeidas((prev) => Math.max(0, prev - 1));
-  };
-
-  const marcarNoLeida = async (id: string) => {
-    await fetch(`/api/notificaciones/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'unread' }),
-    });
-    setNotificaciones((prev) => prev.map((n) => (n.id === id ? { ...n, leido: false } : n)));
-    setNoLeidas((prev) => prev + 1);
-  };
-
-  const eliminar = async (id: string) => {
-    await fetch(`/api/notificaciones/${id}`, { method: 'DELETE' });
-    setNotificaciones((prev) => prev.filter((n) => n.id !== id));
-    setTotal((prev) => prev - 1);
-    setNoLeidas((prev) => prev - (notificaciones.find((n) => n.id === id)?.leido ? 0 : 1));
-  };
-
-  const marcarTodasLeidas = async () => {
-    await fetch('/api/notificaciones', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'leidas' }),
-    });
-    setNotificaciones((prev) => prev.map((n) => ({ ...n, leido: true })));
-    setNoLeidas(0);
+  const handleSilenciar = (tipo: string, silenciado: boolean) => {
+    const nuevasSilenciadas = { ...silenciadas, [tipo]: silenciado };
+    silenciarCategoria(nuevasSilenciadas);
   };
 
   return (
@@ -155,7 +130,7 @@ export function NotificacionesClient({
         icon={<Bell className="w-5 h-5" />}
         action={
           noLeidas > 0 ? (
-            <Button variant="outline" size="sm" onClick={marcarTodasLeidas}>
+            <Button variant="outline" size="sm" onClick={() => marcarTodasLeidas()}>
               <CheckCheck className="h-4 w-4 mr-1.5" />
               Marcar todas leídas
             </Button>
@@ -163,7 +138,7 @@ export function NotificacionesClient({
         }
       />
 
-      {/* ─── Filtros ─────────────────────────────────────── */}
+      {/* ─── Filtros con conteo por tipo ────────────────────── */}
       <div className="flex flex-wrap items-center gap-2">
         <Badge
           variant={!filtroTipo && !soloNoLeidas ? 'default' : 'outline'}
@@ -186,19 +161,72 @@ export function NotificacionesClient({
           <Bell className="h-3 w-3 mr-1" />
           No leídas ({noLeidas})
         </Badge>
-        {TIPOS.map((tipo) => (
-          <Badge
-            key={tipo}
-            variant={filtroTipo === tipo ? 'default' : 'outline'}
-            className="cursor-pointer capitalize"
-            onClick={() => {
-              setFiltroTipo(tipo);
-              setSoloNoLeidas(false);
-            }}
-          >
-            {labelsTipo[tipo] || tipo}
-          </Badge>
-        ))}
+        {TIPOS.map((tipo) => {
+          const count = conteoPorTipo[tipo] ?? 0;
+          const TipoIcon = iconosNotificacion[tipo];
+          return (
+            <Badge
+              key={tipo}
+              variant={filtroTipo === tipo ? 'default' : 'outline'}
+              className="cursor-pointer capitalize"
+              onClick={() => {
+                setFiltroTipo(tipo);
+                setSoloNoLeidas(false);
+              }}
+            >
+              <TipoIcon className="h-3 w-3 mr-1" />
+              {labelsTipo[tipo] || tipo}
+              {count > 0 && (
+                <span className="ml-1 text-[10px] font-bold opacity-70">({count})</span>
+              )}
+            </Badge>
+          );
+        })}
+      </div>
+
+      {/* ─── Silenciar categorías ─────────────────────────── */}
+      <div className="rounded-xl border bg-card/50 divide-y">
+        <div className="flex items-center gap-2 px-4 py-3">
+          <Volume2 className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Silenciar categorías</span>
+          <span className="text-xs text-muted-foreground ml-1">
+            — Las categorías silenciadas no muestran badge en el header
+          </span>
+        </div>
+        {TIPOS.map((tipo) => {
+          const TipoIcon = iconosNotificacion[tipo];
+          const isSilenciada = silenciadas[tipo] ?? false;
+          return (
+            <div
+              key={tipo}
+              className="flex items-center justify-between px-4 py-2.5"
+            >
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={`h-7 w-7 rounded-lg ${coloresNotificacion[tipo]} flex items-center justify-center`}
+                >
+                  <TipoIcon className="h-3.5 w-3.5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{labelsTipo[tipo]}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {descripcionesTipo[tipo]}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {isSilenciada && (
+                  <VolumeX className="h-3.5 w-3.5 text-muted-foreground/50" />
+                )}
+                <Switch
+                  checked={isSilenciada}
+                  onCheckedChange={(checked) => handleSilenciar(tipo, checked)}
+                  aria-label={`Silenciar notificaciones de ${labelsTipo[tipo]}`}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* ─── Push Notification Toggle ────────────────────── */}
@@ -212,12 +240,7 @@ export function NotificacionesClient({
 
       {/* ─── Lista ───────────────────────────────────────── */}
       <div className="rounded-xl border bg-card">
-        {loading ? (
-          <div className="flex items-center justify-center py-16 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin mr-2" />
-            Cargando notificaciones...
-          </div>
-        ) : notificaciones.length === 0 ? (
+        {notificacionesFiltradas.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <BellOff className="h-10 w-10 mb-3 opacity-30" />
             <p className="text-sm font-medium">No hay notificaciones</p>
@@ -228,10 +251,10 @@ export function NotificacionesClient({
             </p>
           </div>
         ) : (
-          <ScrollArea className="max-h-[calc(100vh-280px)]">
-            {notificaciones.map((notif, idx) => {
+          <ScrollArea className="max-h-[calc(100vh-420px)]">
+            {notificacionesFiltradas.map((notif, idx) => {
               const Icon = iconosNotificacion[notif.tipo] || Bell;
-              const isLast = idx === notificaciones.length - 1;
+              const isLast = idx === notificacionesFiltradas.length - 1;
               return (
                 <div
                   key={notif.id}
@@ -250,9 +273,18 @@ export function NotificacionesClient({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className={`text-sm ${!notif.leido ? 'font-semibold' : ''}`}>
-                          {notif.titulo}
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p className={`text-sm ${!notif.leido ? 'font-semibold' : ''}`}>
+                            {notif.titulo}
+                          </p>
+                          <span
+                            className={`shrink-0 inline-flex items-center rounded px-1 py-px text-[9px] font-semibold uppercase tracking-wide ${
+                              coloresNotificacion[notif.tipo] || ''
+                            }`}
+                          >
+                            {notif.tipo}
+                          </span>
+                        </div>
                         {notif.descripcion && (
                           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                             {notif.descripcion}

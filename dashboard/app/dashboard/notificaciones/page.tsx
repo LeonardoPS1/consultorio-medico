@@ -16,6 +16,7 @@ interface NotificacionItem {
   titulo: string;
   descripcion: string | null;
   tipo: 'turno' | 'mensaje' | 'receta' | 'urgencia' | 'sistema';
+  prioridad: number;
   leido: boolean;
   href: string | null;
   createdAt: string;
@@ -48,6 +49,7 @@ async function getNotificaciones(): Promise<{
           titulo: n.titulo,
           descripcion: n.descripcion,
           tipo: n.tipo as NotificacionItem['tipo'],
+          prioridad: n.prioridad,
           leido: n.leido,
           href: n.href,
           createdAt,

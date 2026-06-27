@@ -908,6 +908,8 @@ export const notificaciones = pgTable(
     titulo: varchar('titulo', { length: 255 }).notNull(),
     descripcion: text('descripcion'),
     tipo: varchar('tipo', { length: 20 }).notNull().default('sistema'), // turno | mensaje | receta | urgencia | sistema
+    /** Prioridad calculada: urgencia=0, receta=1, turno=2, mensaje=3, sistema=4 */
+    prioridad: integer('prioridad').notNull().default(4),
     leido: boolean('leido').notNull().default(false),
     href: varchar('href', { length: 500 }),
     pacienteId: uuid('paciente_id'), // portal patient (nullable)
@@ -922,6 +924,7 @@ export const notificaciones = pgTable(
     idxNotificacionesLeido: index('idx_notificaciones_leido').on(table.usuarioId, table.leido),
     idxNotificacionesCreatedAt: index('idx_notificaciones_created_at').on(table.createdAt),
     idxNotificacionesPaciente: index('idx_notificaciones_paciente').on(table.pacienteId),
+    idxNotificacionesPrioridad: index('idx_notificaciones_prioridad').on(table.usuarioId, table.prioridad),
   }),
 );
 
@@ -967,6 +970,8 @@ export const preferenciasNotificaciones = pgTable('preferencias_notificaciones',
   alertasAusentismo: boolean('alertas_ausentismo').notNull().default(true),
   nuevosPacientes: boolean('nuevos_pacientes').notNull().default(false),
   whatsappPersonal: varchar('whatsapp_personal', { length: 20 }).default(''),
+  /** Categorías silenciadas por el usuario. Keys: turno|mensaje|receta|urgencia|sistema */
+  silenciarPorTipo: jsonb('silenciar_por_tipo').default({ turno: false, mensaje: false, receta: false, urgencia: false, sistema: false }),
   tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),

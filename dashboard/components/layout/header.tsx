@@ -27,6 +27,7 @@ import { getInitials, formatRelative } from '@/lib/utils';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import { useSucursal } from '@/lib/sucursal-context';
 import { useNotifications } from '@/lib/hooks/use-notifications';
+import type { ConteoPorTipo } from '@/lib/hooks/use-notifications';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +47,7 @@ interface NotificacionData {
   titulo: string;
   descripcion: string | null;
   tipo: 'turno' | 'mensaje' | 'receta' | 'urgencia' | 'sistema';
+  prioridad: number;
   leido: boolean;
   href: string | null;
   createdAt: string;
@@ -53,7 +55,7 @@ interface NotificacionData {
 }
 
 // ============================================================
-// Iconos por tipo
+// Iconos y colores por tipo
 // ============================================================
 
 const iconosNotificacion: Record<string, React.ElementType> = {
@@ -72,6 +74,27 @@ const coloresNotificacion: Record<string, string> = {
   sistema: 'text-amber-500 bg-amber-100 dark:bg-amber-950/50',
 };
 
+/** Colores para los mini-badges del header (más compactos) */
+const coloresBadge: Record<string, string> = {
+  urgencia: 'bg-red-500',
+  receta: 'bg-purple-500',
+  turno: 'bg-blue-500',
+  mensaje: 'bg-green-500',
+  sistema: 'bg-amber-500',
+};
+
+/** Labels cortos para los badges */
+const labelsCortos: Record<string, string> = {
+  urgencia: '!',
+  receta: 'R',
+  turno: 'T',
+  mensaje: 'M',
+  sistema: 'S',
+};
+
+/** Orden de prioridad para mostrar badges en el stack */
+const ordenBadges = ['urgencia', 'receta', 'turno', 'mensaje', 'sistema'] as const;
+
 // ============================================================
 // Componente Header
 // ============================================================
@@ -84,6 +107,8 @@ export function Header() {
   const {
     notificaciones,
     noLeidas,
+    noLeidasVisibles,
+    conteoPorTipoVisible,
     isLoading: loadingNotif,
     marcarLeida,
     marcarNoLeida,
@@ -250,7 +275,7 @@ export function Header() {
         {/* Novedades / Actualización */}
         <UpdateBadge />
 
-        {/* Notificaciones */}
+        {/* Notificaciones — Stack de badges por tipo */}
         <DropdownMenu open={notifOpen} onOpenChange={setNotifOpen}>
           <DropdownMenuTrigger asChild>
             <Button
@@ -261,9 +286,28 @@ export function Header() {
               aria-label="Notificaciones"
             >
               <Bell className="h-[18px] w-[18px]" />
-              {noLeidas > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white px-0.5">
-                  {noLeidas > 99 ? '99+' : noLeidas}
+              {noLeidasVisibles > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex items-center gap-[1px]">
+                  {/* Badge numérico total cuando hay muchas */}
+                  {noLeidasVisibles > 9 ? (
+                    <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white px-0.5">
+                      {noLeidasVisibles > 99 ? '99+' : noLeidasVisibles}
+                    </span>
+                  ) : (
+                    /* Stack de mini-badges por tipo (hasta 3) */
+                    ordenBadges
+                      .filter((tipo) => conteoPorTipoVisible[tipo] > 0)
+                      .slice(0, 3)
+                      .map((tipo) => (
+                        <span
+                          key={tipo}
+                          className={`flex h-[14px] min-w-[14px] items-center justify-center rounded-full ${coloresBadge[tipo]} text-[8px] font-bold text-white leading-none px-[2px]`}
+                          title={`${tipo}: ${conteoPorTipoVisible[tipo]} sin leer`}
+                        >
+                          {labelsCortos[tipo]}
+                        </span>
+                      ))
+                  )}
                 </span>
               )}
             </Button>
@@ -274,16 +318,37 @@ export function Header() {
             sideOffset={8}
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-3 py-2.5 border-b">
-              <span className="text-sm font-semibold">Notificaciones</span>
-              {noLeidas > 0 && (
-                <button
-                  onClick={() => marcarTodasLeidas()}
-                  className="text-xs text-primary hover:underline font-medium"
-                >
-                  Leer todas
-                </button>
+            {/* Header con badges por tipo */}
+            <div className="px-3 py-2.5 border-b space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold">Notificaciones</span>
+                {noLeidas > 0 && (
+                  <button
+                    onClick={() => marcarTodasLeidas()}
+                    className="text-xs text-primary hover:underline font-medium"
+                  >
+                    Leer todas
+                  </button>
+                )}
+              </div>
+              {/* Badges por tipo (resumen rápido) */}
+              {Object.values(conteoPorTipoVisible).some((v) => v > 0) && (
+                <div className="flex items-center gap-1.5">
+                  {ordenBadges.map((tipo) => {
+                    const count = conteoPorTipoVisible[tipo];
+                    if (count === 0) return null;
+                    const TipoIcon = iconosNotificacion[tipo];
+                    return (
+                      <span
+                        key={tipo}
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${coloresNotificacion[tipo]}`}
+                      >
+                        <TipoIcon className="h-2.5 w-2.5" />
+                        {count}
+                      </span>
+                    );
+                  })}
+                </div>
               )}
             </div>
 
@@ -318,11 +383,21 @@ export function Header() {
 
                       {/* Contenido */}
                       <div className="flex-1 min-w-0">
-                        <p
-                          className={`text-[13px] leading-tight ${!notif.leido ? 'font-semibold' : ''} truncate`}
-                        >
-                          {notif.titulo}
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p
+                            className={`text-[13px] leading-tight ${!notif.leido ? 'font-semibold' : ''} truncate`}
+                          >
+                            {notif.titulo}
+                          </p>
+                          {/* Badge de tipo compacto */}
+                          <span
+                            className={`shrink-0 inline-flex items-center rounded px-1 py-px text-[9px] font-semibold uppercase tracking-wide ${
+                              coloresNotificacion[notif.tipo] || ''
+                            }`}
+                          >
+                            {notif.tipo}
+                          </span>
+                        </div>
                         <p className="text-[11px] text-muted-foreground/60 mt-0.5">
                           {formatRelative(notif.createdAt)}
                         </p>
