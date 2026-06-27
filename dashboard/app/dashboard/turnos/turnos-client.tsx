@@ -6,7 +6,7 @@ import { useSucursal } from '@/lib/sucursal-context';
 import { Calendar, Plus, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { PageAnimation } from '@/components/dashboard/page-animation';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
 import { toast } from '@/components/ui/use-toast';
 import {

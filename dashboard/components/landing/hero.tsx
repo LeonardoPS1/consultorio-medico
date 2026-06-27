@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Bot, Play, MessageCircle, ShieldCheck, Lock, Server } from 'lucide-react';
 import { RegistroExpressModal } from '@/components/landing/registro-modal';

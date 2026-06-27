@@ -14,7 +14,7 @@ import {
   type DefaultLegendContentProps,
 } from 'recharts';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import type { Periodo } from '@/app/dashboard/reportes/types';
 
 export type ComparativaData = {

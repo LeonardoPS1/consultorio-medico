@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { DoctorCard } from './doctor-card';
 import { SlotPicker } from './slot-picker';
 import { PortalCard } from '@/components/portal/portal-card';

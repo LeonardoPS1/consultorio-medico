@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, MessageCircle, ArrowRight, Loader2 } from 'lucide-react';
 

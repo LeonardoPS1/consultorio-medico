@@ -1,4 +1,4 @@
-import type { Easing } from 'framer-motion';
+import type { Easing } from 'motion/react';
 
 const easeOut: Easing = [0.16, 1, 0.3, 1];
 

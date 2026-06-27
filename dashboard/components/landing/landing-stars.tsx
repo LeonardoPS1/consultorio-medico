@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Star } from 'lucide-react';
 
 export function LandingStars({ delay = 0 }: { delay?: number }) {

@@ -21,7 +21,7 @@ import {
 import { getInitials, formatRelative, truncate, formatPhone } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
 import { NuevaConversacionModal } from '@/components/modals/nueva-conversacion-modal';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { PageHeader } from '@/components/page-header';
 
 interface Conversacion {

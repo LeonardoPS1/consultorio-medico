@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { canAccess } from '@/lib/features';
 import { useSession } from 'next-auth/react';
 import { PageHeader } from '@/components/page-header';
