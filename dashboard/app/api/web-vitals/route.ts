@@ -45,13 +45,13 @@ export const GET = apiHandler(async (request: NextRequest) => {
   }
 
   if (view === 'by-url') {
-    const rows = await db
+    const rawRows = await db
       .select({
         url: webVitalsMetrics.url,
         metricName: webVitalsMetrics.name,
-        avgValue: avg(sql<number>`${webVitalsMetrics.value}::numeric`),
-        minValue: min(sql<number>`${webVitalsMetrics.value}::numeric`),
-        maxValue: max(sql<number>`${webVitalsMetrics.value}::numeric`),
+        avgValue: avg(sql<string>`${webVitalsMetrics.value}::numeric`),
+        minValue: min(sql<string>`${webVitalsMetrics.value}::numeric`),
+        maxValue: max(sql<string>`${webVitalsMetrics.value}::numeric`),
         count: count(),
       })
       .from(webVitalsMetrics)
@@ -59,22 +59,38 @@ export const GET = apiHandler(async (request: NextRequest) => {
       .groupBy(webVitalsMetrics.url, webVitalsMetrics.name)
       .orderBy(webVitalsMetrics.url, webVitalsMetrics.name);
 
+    const rows = rawRows.map((r) => ({
+      ...r,
+      avgValue: Number(r.avgValue),
+      minValue: Number(r.minValue),
+      maxValue: Number(r.maxValue),
+      count: Number(r.count),
+    }));
+
     return success({ data: rows, period });
   }
 
   // Default: stats por métrica
-  const stats = await db
+  const rawStats = await db
     .select({
       name: webVitalsMetrics.name,
-      avgValue: avg(sql<number>`${webVitalsMetrics.value}::numeric`),
-      minValue: min(sql<number>`${webVitalsMetrics.value}::numeric`),
-      maxValue: max(sql<number>`${webVitalsMetrics.value}::numeric`),
+      avgValue: avg(sql<string>`${webVitalsMetrics.value}::numeric`),
+      minValue: min(sql<string>`${webVitalsMetrics.value}::numeric`),
+      maxValue: max(sql<string>`${webVitalsMetrics.value}::numeric`),
       count: count(),
     })
     .from(webVitalsMetrics)
     .where(where)
     .groupBy(webVitalsMetrics.name)
     .orderBy(webVitalsMetrics.name);
+
+  const stats = rawStats.map((s) => ({
+    name: s.name,
+    avgValue: Number(s.avgValue),
+    minValue: Number(s.minValue),
+    maxValue: Number(s.maxValue),
+    count: Number(s.count),
+  }));
 
   // Rating distribution
   const ratingDist = await db
@@ -96,7 +112,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
 
   return success({
     stats,
-    ratingDistribution: ratingDist,
+    ratingDistribution: ratingDist.map((r) => ({ ...r, count: Number(r.count) })),
     total: Number(totalRow?.total || 0),
     period,
   });

@@ -123,9 +123,11 @@ export function WebVitalsClient() {
     fetchData();
   }, [fetchData]);
 
-  const formatValue = (name: string, value: number) => {
-    if (name === 'CLS') return value.toFixed(3);
-    return Math.round(value).toLocaleString('es-CL');
+  const formatValue = (name: string, value: number | string) => {
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    if (isNaN(num)) return '—';
+    if (name === 'CLS') return num.toFixed(3);
+    return Math.round(num).toLocaleString('es-CL');
   };
 
   const getBarColor = (name: string) => {
