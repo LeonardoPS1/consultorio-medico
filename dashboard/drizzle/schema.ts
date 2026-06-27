@@ -764,6 +764,23 @@ export interface ConfigIa {
   prompt: string;
   maxTokens: number;
   temperatura: number;
+  /** Asistente IA flotante — habilitado por defecto */
+  asistenteHabilitado?: boolean;
+  /** Modo por defecto: silencioso (solo on-demand), sugerente (pills), activo (toasts) */
+  modoDefault?: 'silencioso' | 'sugerente' | 'activo';
+  /** Categorías de sugerencias habilitadas */
+  sugerenciasHabilitadas?: {
+    conversaciones?: boolean;
+    pacientes?: boolean;
+    turnos?: boolean;
+    recetas?: boolean;
+  };
+  /** System prompt específico del asistente flotante */
+  promptAsistente?: string;
+  /** Max tokens para respuestas del asistente flotante (default 400) */
+  maxTokensAsistente?: number;
+  /** Temperatura para el asistente flotante (default 0.3) */
+  temperaturaAsistente?: number;
 }
 
 export const tenants = pgTable('tenants', {
@@ -782,6 +799,18 @@ export const tenants = pgTable('tenants', {
       'Sos el asistente virtual del consultorio médico. Respondés mensajes de WhatsApp de forma amable y profesional en español neutro chileno. Si detectás una urgencia, priorizala y notificá al médico.',
     maxTokens: 300,
     temperatura: 0.3,
+    asistenteHabilitado: true,
+    modoDefault: 'silencioso',
+    sugerenciasHabilitadas: {
+      conversaciones: true,
+      pacientes: true,
+      turnos: true,
+      recetas: true,
+    },
+    promptAsistente:
+      'Sos el asistente IA del consultorio médico. Ayudás al médico con información rápida, sugerencias de respuestas para pacientes, resúmenes de historiales y recordatorios de turnos. Respondés en español neutro chileno, de forma concisa y profesional. Si no sabés algo, decilo honestamente. Nunca inventes datos médicos.',
+    maxTokensAsistente: 400,
+    temperaturaAsistente: 0.3,
   } satisfies ConfigIa),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),

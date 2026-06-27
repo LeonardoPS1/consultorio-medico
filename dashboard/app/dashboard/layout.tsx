@@ -3,7 +3,9 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { CommandPalette } from '@/components/layout/command-palette';
 import { PatientPanel } from '@/components/layout/patient-panel';
+import { AsistenteFlotante } from '@/components/layout/asistente-flotante';
 import { PatientPanelProvider } from '@/lib/hooks/use-patient-panel';
+import { AsistenteProvider } from '@/lib/hooks/use-asistente-ia';
 import { GatedContent } from '@/components/gated-content';
 import { ClientThemeProvider } from '@/components/client-theme-provider';
 import { auth } from '@/lib/auth';
@@ -20,6 +22,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <ClientThemeProvider>
       <PatientPanelProvider>
+        <AsistenteProvider>
         <div className="flex h-screen overflow-hidden bg-background">
           <Sidebar />
           <div className="flex flex-1 flex-col overflow-hidden">
@@ -42,6 +45,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </footer>
           </div>
         </div>
+        <AsistenteFlotante />
+        </AsistenteProvider>
       </PatientPanelProvider>
     </ClientThemeProvider>
   );
