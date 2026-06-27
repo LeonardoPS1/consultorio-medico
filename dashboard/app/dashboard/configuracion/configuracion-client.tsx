@@ -174,8 +174,8 @@ function ConfigContent() {
     <div className="space-y-6 animate-in">
       <div>
         <PageHeader
-          title="Configuraci├│n"
-          description="Gestion├í las integraciones y preferencias del sistema"
+          title="Configuración"
+          description="Gestioná las integraciones y preferencias del sistema"
         />
       </div>
 
@@ -196,7 +196,7 @@ function ConfigContent() {
           </TabsTrigger>
           <TabsTrigger value="suscripcion" className="px-2 sm:px-3 shrink-0">
             <CreditCard className="h-4 w-4 sm:mr-1" />
-            <span className="hidden sm:inline">Suscripci├│n</span>
+            <span className="hidden sm:inline">Suscripción</span>
           </TabsTrigger>
           {canAccess(userPlan, 'horarios') && (
             <TabsTrigger value="horarios" className="px-2 sm:px-3 shrink-0">
@@ -220,23 +220,23 @@ function ConfigContent() {
           )}
         </TabsList>
 
-        {/* ======== PERFIL / ORGANIZACI├ôN ======== */}
+        {/* ======== PERFIL / ORGANIZACIÓN ======== */}
         <TabsContent value="perfil" className="mt-4 space-y-4">
           <PerfilOrganizacion />
           <ChangePasswordForm />
           <Setup2FA />
 
-          {/* Asistente de configuraci├│n IA */}
+          {/* Asistente de configuración IA */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <Bot className="h-5 w-5 text-primary" />
-                  Asistente de Configuraci├│n IA
+                  Asistente de Configuración IA
                 </CardTitle>
                 <CardDescription>
-                  Gu├¡a paso a paso para conectar WhatsApp, agregar m├®dicos, configurar horarios y
-                  m├ís
+                  Guía paso a paso para conectar WhatsApp, agregar médicos, configurar horarios y
+                  mís
                 </CardDescription>
               </div>
               <Button asChild>
@@ -249,7 +249,7 @@ function ConfigContent() {
           </Card>
         </TabsContent>
 
-        {/* ======== SUSCRIPCI├ôN ======== */}
+        {/* ======== SUSCRIPCIóN ======== */}
         <TabsContent value="suscripcion" className="mt-4">
           <SuscripcionTab />
         </TabsContent>
@@ -259,8 +259,8 @@ function ConfigContent() {
           <TabsContent value="horarios" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Horarios de Atenci├│n</CardTitle>
-                <CardDescription>Configur├í la disponibilidad del consultorio</CardDescription>
+                <CardTitle>Horarios de Atención</CardTitle>
+                <CardDescription>Configurí la disponibilidad del consultorio</CardDescription>
               </CardHeader>
               <CardContent>
                 {loading.horarios ? (
@@ -332,11 +332,11 @@ function ConfigContent() {
                                     }}
                                     className="accent-primary"
                                   />
-                                  <span className="text-xs font-medium">Ma├▒ana y Tarde</span>
+                                  <span className="text-xs font-medium">Mañana y Tarde</span>
                                 </label>
                               </div>
 
-                              {/* Bloque ├║nico (corrido) */}
+                              {/* Bloque único (corrido) */}
                               {dia.tipo === 'corrido' && (
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs text-muted-foreground">de</span>
@@ -369,7 +369,7 @@ function ConfigContent() {
                                 <div className="flex flex-col gap-1.5">
                                   <div className="flex items-center gap-2">
                                     <span className="text-xs text-muted-foreground w-14">
-                                      Ma├▒ana
+                                      Mañana
                                     </span>
                                     <span className="text-xs text-muted-foreground">de</span>
                                     <Input
@@ -440,7 +440,7 @@ function ConfigContent() {
                             if (res.ok) toast({ title: 'Horarios guardados' });
                             else toast({ title: 'Error al guardar', variant: 'destructive' });
                           } catch {
-                            toast({ title: 'Error de conexi├│n', variant: 'destructive' });
+                            toast({ title: 'Error de conexión', variant: 'destructive' });
                           }
                         }}
                       >
@@ -494,7 +494,7 @@ function ConfigContent() {
                     <Bot className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
                     <p className="text-sm font-medium text-muted-foreground">Sin plantillas</p>
                     <p className="text-xs text-muted-foreground/70 mt-1">
-                      Cre├í tu primera plantilla de mensaje
+                      Creí tu primera plantilla de mensaje
                     </p>
                   </div>
                 </CardContent>
@@ -550,7 +550,7 @@ function ConfigContent() {
                                   size="icon"
                                   className="h-8 w-8 text-destructive"
                                   onClick={async () => {
-                                    if (confirm('┬┐Eliminar plantilla?')) {
+                                    if (confirm('¿Eliminar plantilla?')) {
                                       await fetch('/api/plantillas', {
                                         method: 'DELETE',
                                         headers: { 'Content-Type': 'application/json' },
@@ -624,7 +624,7 @@ function ConfigContent() {
             <Card>
               <CardHeader>
                 <CardTitle>Notificaciones</CardTitle>
-                <CardDescription>Configur├í c├│mo y cu├índo recibir alertas</CardDescription>
+                <CardDescription>Configurí cómo y cuíndo recibir alertas</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {loading.notificaciones ? (
@@ -637,7 +637,7 @@ function ConfigContent() {
                   <>
                     <SwitchRow
                       label="Urgencias por WhatsApp"
-                      description="Recibir notificaci├│n al WhatsApp personal cuando se detecte una urgencia"
+                      description="Recibir notificación al WhatsApp personal cuando se detecte una urgencia"
                       checked={notificaciones.urgenciasWhatsapp}
                       onCheckedChange={(v) =>
                         setNotificaciones({ ...notificaciones, urgenciasWhatsapp: v })
@@ -645,7 +645,7 @@ function ConfigContent() {
                     />
                     <SwitchRow
                       label="Resumen diario por email"
-                      description="Cada ma├▒ana con los turnos del d├¡a, nuevos pacientes y pendientes"
+                      description="Cada mañana con los turnos del día, nuevos pacientes y pendientes"
                       checked={notificaciones.resumenDiarioEmail}
                       onCheckedChange={(v) =>
                         setNotificaciones({ ...notificaciones, resumenDiarioEmail: v })
@@ -653,7 +653,7 @@ function ConfigContent() {
                     />
                     <SwitchRow
                       label="Alertas de ausentismo"
-                      description="Cuando un paciente no confirma el turno despu├®s del recordatorio"
+                      description="Cuando un paciente no confirma el turno después del recordatorio"
                       checked={notificaciones.alertasAusentismo}
                       onCheckedChange={(v) =>
                         setNotificaciones({ ...notificaciones, alertasAusentismo: v })
@@ -661,7 +661,7 @@ function ConfigContent() {
                     />
                     <SwitchRow
                       label="Nuevos pacientes"
-                      description="Notificar cuando un nuevo paciente se registra v├¡a WhatsApp"
+                      description="Notificar cuando un nuevo paciente se registra vía WhatsApp"
                       checked={notificaciones.nuevosPacientes}
                       onCheckedChange={(v) =>
                         setNotificaciones({ ...notificaciones, nuevosPacientes: v })
@@ -677,7 +677,7 @@ function ConfigContent() {
                         className="mt-1"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        N├║mero donde recibir├ís las alertas de urgencia
+                        Número donde recibirís las alertas de urgencia
                       </p>
                     </div>
                     <Button
@@ -691,7 +691,7 @@ function ConfigContent() {
                           if (res.ok) toast({ title: 'Preferencias guardadas' });
                           else toast({ title: 'Error al guardar', variant: 'destructive' });
                         } catch {
-                          toast({ title: 'Error de conexi├│n', variant: 'destructive' });
+                          toast({ title: 'Error de conexión', variant: 'destructive' });
                         }
                       }}
                     >
@@ -781,7 +781,7 @@ function ConfigContent() {
             {/* Modal Invitar */}
             <InviteModal open={showInviteModal} onOpenChange={setShowInviteModal} />
 
-            {/* Secci├│n M├®dicos */}
+            {/* Sección Médicos */}
             <div className="mt-4">
               <MedicosSection plan={userPlan} />
             </div>
@@ -871,7 +871,7 @@ function PlantillaModal({
             />
           </div>
           <div className="space-y-2">
-            <Label>Categor├¡a</Label>
+            <Label>Categoría</Label>
             <select
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={categoria}
@@ -888,7 +888,7 @@ function PlantillaModal({
             <Textarea
               value={contenido}
               onChange={(e) => setContenido(e.target.value)}
-              placeholder="Escrib├¡ el mensaje usando {{variables}}"
+              placeholder="Escribí el mensaje usando {{variables}}"
               rows={5}
               required
             />
@@ -925,26 +925,26 @@ function PlantillaModal({
 
 const SAMPLE_DATA: Record<string, Record<string, string>> = {
   recordatorios: {
-    nombre: 'Mar├¡a',
+    nombre: 'María',
     fecha_hora: 'lunes 25/05 a las 10:30',
-    medico_nombre: 'Dr. Garc├¡a',
+    medico_nombre: 'Dr. García',
   },
   turnos: {
-    paciente_nombre: 'Mar├¡a',
+    paciente_nombre: 'María',
     fecha_hora: '25/05/2026 10:30',
-    medico_nombre: 'Dr. Garc├¡a',
+    medico_nombre: 'Dr. García',
     motivo: 'control general',
   },
   recetas: {
-    paciente_nombre: 'Mar├¡a',
+    paciente_nombre: 'María',
     medicamento: 'Amoxicilina 500mg',
     dosis: '1 comprimido cada 8hs',
-    frecuencia: '7 d├¡as',
+    frecuencia: '7 días',
   },
   alertas: {
-    paciente_nombre: 'Mar├¡a',
-    motivo: 'Presi├│n arterial elevada',
-    medico_nombre: 'Dr. Garc├¡a',
+    paciente_nombre: 'María',
+    motivo: 'Presión arterial elevada',
+    medico_nombre: 'Dr. García',
   },
 };
 
@@ -960,7 +960,7 @@ function PreviewPlantillaModal({
 
   useEffect(() => {
     if (!plantilla) return;
-    // Pre-fill con datos de muestra seg├║n categor├¡a
+    // Pre-fill con datos de muestra según categoría
     const sample = SAMPLE_DATA[plantilla.categoria] || {};
     const initial: Record<string, string> = {};
     for (const v of plantilla.variables) {
@@ -985,7 +985,7 @@ function PreviewPlantillaModal({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Vista previa: {plantilla.nombre}</DialogTitle>
-          <DialogDescription>Complet├í las variables para ver el mensaje final</DialogDescription>
+          <DialogDescription>Completí las variables para ver el mensaje final</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {/* Variables editables */}
@@ -1044,23 +1044,23 @@ function PreviewPlantillaModal({
 // ============================================================
 
 // ============================================================
-// Componente Perfil de la Organizaci├│n
+// Componente Perfil de la Organización
 // ============================================================
 
 function PerfilOrganizacion() {
   const [data, setData] = useState({
-    nombre: 'Consultorio M├®dico',
+    nombre: 'Consultorio Médico',
     eslogan: 'Tu salud, nuestra prioridad',
-    descripcion: 'Centro m├®dico especializado en atenci├│n cl├¡nica general.',
+    descripcion: 'Centro médico especializado en atención clínica general.',
     logoUrl: '',
     avatarUrl: '',
     fondoUrl: '',
-    firmaNombre: 'Dr. Garc├¡a',
+    firmaNombre: 'Dr. García',
     colorPrimario: '#2563eb',
     colorSecundario: '#7c3aed',
     direccion: 'Av. Providencia 1234',
     ciudad: 'Santiago',
-    provincia: 'Regi├│n Metropolitana',
+    provincia: 'Región Metropolitana',
     telefono: '+56 9 5555 0000',
     telefonoSecundario: '',
     whatsapp: '+56955550000',
@@ -1090,7 +1090,7 @@ function PerfilOrganizacion() {
           setPreviewColor(res.data.colorPrimario || '#2563eb');
         }
       })
-      .catch(() => console.warn('[Config] Error al cargar organizaci├│n'));
+      .catch(() => console.warn('[Config] Error al cargar organización'));
   }, []);
 
   const handleSave = async () => {
@@ -1115,17 +1115,17 @@ function PerfilOrganizacion() {
       });
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
-        setMensaje('Ô£à Configuraci├│n guardada correctamente');
+        setMensaje('ó Configuración guardada correctamente');
         setPreviewColor(data.colorPrimario);
         // Notificar a sidebar y header para que se actualicen
         window.dispatchEvent(new CustomEvent('organization-updated'));
         setTimeout(() => setMensaje(''), 3000);
       } else {
-        setMensaje(`ÔØî ${json.error || 'Error al guardar'}`);
+        setMensaje(`ó ${json.error || 'Error al guardar'}`);
       }
     } catch (err) {
       setMensaje(
-        `ÔØî Error de conexi├│n: ${err instanceof Error ? err.message : 'Error desconocido'}`,
+        `ó Error de conexión: ${err instanceof Error ? err.message : 'Error desconocido'}`,
       );
     } finally {
       setGuardando(false);
@@ -1138,7 +1138,7 @@ function PerfilOrganizacion() {
 
   return (
     <div className="space-y-4">
-      {/* Banner del perfil - fondo + avatar ├║nico */}
+      {/* Banner del perfil - fondo + avatar único */}
       <Card className="overflow-hidden">
         <div
           className="h-28 relative bg-cover bg-center transition-all"
@@ -1150,7 +1150,7 @@ function PerfilOrganizacion() {
                 }
           }
         >
-          {/* Bot├│n para cambiar fondo */}
+          {/* Botón para cambiar fondo */}
           <ImageUpload
             value={data.fondoUrl}
             onChange={(url) => updateField('fondoUrl', url)}
@@ -1177,7 +1177,7 @@ function PerfilOrganizacion() {
           />
         </div>
         <CardContent className="relative -mt-10 flex items-end gap-4 pb-4">
-          {/* AVATAR ├║nico */}
+          {/* AVATAR único */}
           <ImageUpload
             value={data.avatarUrl}
             onChange={(url) => updateField('avatarUrl', url)}
@@ -1188,12 +1188,12 @@ function PerfilOrganizacion() {
             className="shrink-0"
             fallback={
               <span className="text-xl font-bold" style={{ color: previewColor }}>
-                {data.firmaNombre ? data.firmaNombre.charAt(0).toUpperCase() : '­ƒæñ'}
+                {data.firmaNombre ? data.firmaNombre.charAt(0).toUpperCase() : 'ñ'}
               </span>
             }
           />
           <div className="pb-1 flex-1">
-            <h3 className="text-lg font-bold">{data.firmaNombre || 'Dr. Garc├¡a'}</h3>
+            <h3 className="text-lg font-bold">{data.firmaNombre || 'Dr. García'}</h3>
             <p className="text-sm text-muted-foreground">{data.nombre || 'Mi Consultorio'}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{data.email}</p>
           </div>
@@ -1205,15 +1205,15 @@ function PerfilOrganizacion() {
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Datos b├ísicos */}
+        {/* Datos bísicos */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Datos del Consultorio</CardTitle>
-            <CardDescription>Informaci├│n principal que se muestra en la interfaz</CardDescription>
+            <CardDescription>Información principal que se muestra en la interfaz</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Field
-              label="Nombre del consultorio / m├®dico"
+              label="Nombre del consultorio / médico"
               value={data.nombre}
               onChange={(v) => updateField('nombre', v)}
             />
@@ -1221,7 +1221,7 @@ function PerfilOrganizacion() {
               label="Nombre del profesional (firma)"
               value={data.firmaNombre}
               onChange={(v) => updateField('firmaNombre', v)}
-              placeholder="Ej: Dr. Juan Garc├¡a"
+              placeholder="Ej: Dr. Juan García"
             />
             <Field
               label="Eslogan"
@@ -1229,7 +1229,7 @@ function PerfilOrganizacion() {
               onChange={(v) => updateField('eslogan', v)}
             />
             <div className="space-y-1">
-              <Label>Descripci├│n</Label>
+              <Label>Descripción</Label>
               <Textarea
                 value={data.descripcion}
                 onChange={(e) => updateField('descripcion', e.target.value)}
@@ -1242,7 +1242,7 @@ function PerfilOrganizacion() {
         {/* Colores */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Personalizaci├│n Visual</CardTitle>
+            <CardTitle className="text-base">Personalización Visual</CardTitle>
             <CardDescription>Colores principales de la interfaz</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -1281,15 +1281,15 @@ function PerfilOrganizacion() {
           </CardContent>
         </Card>
 
-        {/* Direcci├│n */}
+        {/* Dirección */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Direcci├│n y Contacto</CardTitle>
-            <CardDescription>Datos de ubicaci├│n del consultorio</CardDescription>
+            <CardTitle className="text-base">Dirección y Contacto</CardTitle>
+            <CardDescription>Datos de ubicación del consultorio</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Field
-              label="Direcci├│n"
+              label="Dirección"
               value={data.direccion}
               onChange={(v) => updateField('direccion', v)}
             />
@@ -1300,7 +1300,7 @@ function PerfilOrganizacion() {
                 onChange={(v) => updateField('ciudad', v)}
               />
               <Field
-                label="Regi├│n"
+                label="Región"
                 value={data.provincia}
                 onChange={(v) => updateField('provincia', v)}
               />
@@ -1308,20 +1308,20 @@ function PerfilOrganizacion() {
           </CardContent>
         </Card>
 
-        {/* Tel├®fonos */}
+        {/* Teléfonos */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Tel├®fonos y Email</CardTitle>
-            <CardDescription>Canales de comunicaci├│n</CardDescription>
+            <CardTitle className="text-base">Teléfonos y Email</CardTitle>
+            <CardDescription>Canales de comunicación</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Field
-              label="Tel├®fono principal"
+              label="Teléfono principal"
               value={data.telefono}
               onChange={(v) => updateField('telefono', v)}
             />
             <Field
-              label="Tel├®fono secundario"
+              label="Teléfono secundario"
               value={data.telefonoSecundario}
               onChange={(v) => updateField('telefonoSecundario', v)}
             />
@@ -1354,7 +1354,7 @@ function PerfilOrganizacion() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Redes Sociales</CardTitle>
-            <CardDescription>Vincul├í las redes del consultorio</CardDescription>
+            <CardDescription>Vinculá las redes del consultorio</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 md:grid-cols-3">
@@ -1480,7 +1480,7 @@ function InviteModal({
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>Invitar miembro al equipo</DialogTitle>
-          <DialogDescription>Se enviar├í un email de invitaci├│n</DialogDescription>
+          <DialogDescription>Se enviarí un email de invitación</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
@@ -1499,7 +1499,7 @@ function InviteModal({
               value={rol}
               onChange={(e) => setRol(e.target.value)}
             >
-              <option value="medico">M├®dico</option>
+              <option value="medico">Médico</option>
               <option value="secretaria">Secretaria</option>
               <option value="recepcionista">Recepcionista</option>
               <option value="admin">Administrador</option>
@@ -1515,7 +1515,7 @@ function InviteModal({
               }}
               disabled={!email}
             >
-              Enviar invitaci├│n
+              Enviar invitación
             </Button>
           </DialogFooter>
         </div>
