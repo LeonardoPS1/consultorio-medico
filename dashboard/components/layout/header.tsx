@@ -22,6 +22,7 @@ import {
   EyeOff,
   Eye,
   Search,
+  Users,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getInitials, formatRelative } from '@/lib/utils';
@@ -29,6 +30,7 @@ import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import { useSucursal } from '@/lib/sucursal-context';
 import { useNotifications } from '@/lib/hooks/use-notifications';
 import type { ConteoPorTipo } from '@/lib/hooks/use-notifications';
+import { usePatientPanel } from '@/lib/hooks/use-patient-panel';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -116,6 +118,7 @@ export function Header() {
     eliminar: eliminarNotificacion,
     marcarTodasLeidas,
   } = useNotifications();
+  const { open: openPatientPanel, data: patientPanelData } = usePatientPanel();
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -127,6 +130,25 @@ export function Header() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // ─── Ctrl+Shift+P shortcut para Patient Panel ──
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+        e.preventDefault();
+        openPatientPanel();
+      }
+    };
+    // Custom event from other components
+    const customHandler = () => openPatientPanel();
+
+    window.addEventListener('keydown', handler);
+    window.addEventListener('open-patient-panel', customHandler);
+    return () => {
+      window.removeEventListener('keydown', handler);
+      window.removeEventListener('open-patient-panel', customHandler);
+    };
+  }, [openPatientPanel]);
 
   // ─── Cargar datos de organización ─────────────────────────
   const cargarOrg = useCallback(() => {
@@ -257,6 +279,31 @@ export function Header() {
           <span className="text-xs">Buscar</span>
           <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
             <span className="text-xs">⌘</span>K
+          </kbd>
+        </Button>
+
+        {/* Patient Panel trigger */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10 sm:hidden"
+          onClick={() => openPatientPanel()}
+          title="Pacientes (Ctrl+Shift+P)"
+          aria-label="Abrir panel de pacientes"
+        >
+          <Users className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 gap-2 rounded-lg border border-border/60 bg-muted/40 px-3 text-muted-foreground hover:text-foreground hover:bg-accent hidden sm:flex"
+          onClick={() => openPatientPanel()}
+          title="Pacientes (Ctrl+Shift+P)"
+        >
+          <Users className="h-3.5 w-3.5" />
+          <span className="text-xs">Pacientes</span>
+          <kbd className="ml-1 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-muted px-1 font-mono text-[10px] font-medium text-muted-foreground">
+            ⇧⌘P
           </kbd>
         </Button>
         {/* Toggle tema con dropdown (Light / Dark / System) */}

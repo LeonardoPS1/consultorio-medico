@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import Fuse from 'fuse.js';
+import Fuse, { type IFuseOptions } from 'fuse.js';
 import type { PatientSummaryLite } from '@/lib/types/patient-panel';
 
 /** Cache staleness: 5 minutes */
@@ -11,7 +11,7 @@ const CACHE_STALE_MS = 5 * 60 * 1000;
 const PRELOAD_LIMIT = 500;
 
 /** Fuse.js config: weighted keys for smart search */
-const FUSE_OPTIONS: Fuse.IFuseOptions<PatientSummaryLite> = {
+const FUSE_OPTIONS: IFuseOptions<PatientSummaryLite> = {
   keys: [
     { name: 'nombre', weight: 0.3 },
     { name: 'apellido', weight: 0.3 },
