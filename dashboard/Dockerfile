@@ -58,19 +58,17 @@ ENV TZ=America/Santiago
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# ⚠️ A partir de Next.js 14.2.21+, el standalone output es plano
-# (server.js en la raíz, NO dentro de dashboard/)
-# Por eso CMD apunta a server.js sin el prefijo dashboard/
+# En monorepo pnpm con dashboard como subdirectorio, el standalone output está en
+# /app/dashboard/.next/standalone (no en /app/.next/standalone)
 
-# Copiar standalone output de Next.js (plano: server.js, .next, node_modules en raíz)
-# Ahora YA incluye node_modules poblado desde el builder
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# Copiar standalone output de Next.js (server.js, .next, node_modules)
+COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
 
-# Copiar static assets (junto a server.js, no bajo dashboard/)
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Copiar static assets
+COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./.next/static
 
-# Copiar assets públicos (en raíz, no bajo dashboard/)
-COPY --from=builder --chown=nodejs:nodejs /app/public ./public
+# Copiar assets públicos
+COPY --from=builder --chown=nodejs:nodejs /app/dashboard/public ./public
 
 # Crear directorio para cache de Next.js con permisos correctos
 RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
