@@ -430,6 +430,21 @@ export function Sidebar() {
                   {!collapsed && <span className="flex-1 truncate">n8n</span>}
                 </Link>
                 <Link
+                  href="/dashboard/admin/rendimiento"
+                  onClick={closeMobile}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
+                    pathname === '/dashboard/admin/rendimiento'
+                      ? 'nav-active-indicator bg-sidebar-accent text-white'
+                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
+                  )}
+                  aria-current={pathname === '/dashboard/admin/rendimiento' ? 'page' : undefined}
+                  title={collapsed ? 'Rendimiento' : undefined}
+                >
+                  <BarChart3 className="h-5 w-5 shrink-0" />
+                  {!collapsed && <span className="flex-1 truncate">Rendimiento</span>}
+                </Link>
+                <Link
                   href="/dashboard/webhooks"
                   onClick={closeMobile}
                   className={cn(
