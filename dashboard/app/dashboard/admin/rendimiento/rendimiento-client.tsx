@@ -1,19 +1,25 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend, PieChart, Pie, Cell,
+  ResponsiveContainer, Legend, LineChart, Line, ReferenceLine,
+  PieChart, Pie, Cell,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Activity, Loader2, AlertCircle, BarChart3, PieChart as PieChartIcon,
-  Clock, Gauge, Smartphone,
+  Clock, Gauge, Smartphone, TrendingUp, TrendingDown, Minus,
+  Download, RefreshCw, Thermometer, Table as TableIcon,
 } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
+
+// ─── Types ─────────────────────────────────────────────────
 
 type Period = '24h' | '7d' | '30d' | 'all';
 
@@ -33,11 +39,15 @@ const METRIC_LABELS: Record<string, string> = {
 };
 
 const METRIC_UNITS: Record<string, string> = {
-  LCP: 'ms',
-  INP: 'ms',
-  CLS: '',
-  FCP: 'ms',
-  TTFB: 'ms',
+  LCP: 'ms', INP: 'ms', CLS: '', FCP: 'ms', TTFB: 'ms',
+};
+
+const METRIC_THRESHOLDS: Record<string, { good: number; poor: number }> = {
+  LCP: { good: 2500, poor: 4000 },
+  INP: { good: 200, poor: 500 },
+  CLS: { good: 0.1, poor: 0.25 },
+  FCP: { good: 1800, poor: 3000 },
+  TTFB: { good: 800, poor: 1800 },
 };
 
 const RATING_COLORS: Record<string, string> = {
@@ -46,72 +56,165 @@ const RATING_COLORS: Record<string, string> = {
   poor: '#ef4444',
 };
 
+const METRIC_COLORS: Record<string, string> = {
+  LCP: '#6366f1', INP: '#8b5cf6', CLS: '#a855f7',
+  FCP: '#3b82f6', TTFB: '#06b6d4',
+};
+
+const DEVICE_COLORS: Record<string, string> = {
+  desktop: '#6366f1', mobile: '#22c55e', tablet: '#eab308', unknown: '#6b7280',
+};
+
+// ─── Helpers ───────────────────────────────────────────────
+
+function formatValue(name: string, value: number | string | null | undefined): string {
+  if (value === null || value === undefined) return '—';
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return '—';
+  if (name === 'CLS') return num.toFixed(3);
+  return Math.round(num).toLocaleString('es-CL');
+}
+
+function getBarColor(name: string) {
+  return METRIC_COLORS[name] || '#6b7280';
+}
+
+function getThresholdLabel(name: string, value: number): string {
+  const t = METRIC_THRESHOLDS[name];
+  if (!t) return '';
+  if (value <= t.good) return 'Bueno';
+  if (value <= t.poor) return 'Regular';
+  return 'Malo';
+}
+
+function getThresholdColor(name: string, value: number): string {
+  const t = METRIC_THRESHOLDS[name];
+  if (!t) return '#6b7280';
+  if (value <= t.good) return '#22c55e';
+  if (value <= t.poor) return '#eab308';
+  return '#ef4444';
+}
+
+function getHeatColor(value: number, name: string): string {
+  const t = METRIC_THRESHOLDS[name];
+  if (!t) return '#f0f0f0';
+  // Normalize: 0 = good threshold, 1 = poor threshold, >1 = beyond poor
+  const ratio = t.good > 0 ? value / t.good : 0;
+  if (ratio <= 1) return `rgba(34, 197, 94, ${0.15 + ratio * 0.4})`;    // green
+  if (ratio <= t.poor / t.good) return `rgba(234, 179, 8, ${0.2 + (ratio - 1) * 0.3})`; // yellow
+  return `rgba(239, 68, 68, ${Math.min(0.3 + (ratio - t.poor / t.good) * 0.3, 0.8)})`;  // red
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleString('es-CL');
+}
+
+function formatBucket(bucket: string, bucketType: string) {
+  const d = new Date(bucket);
+  if (bucketType === 'hour') return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
+}
+
+// ─── Interfaces ────────────────────────────────────────────
+
 interface MetricStat {
-  name: string;
-  avgValue: number;
-  minValue: number;
-  maxValue: number;
-  count: number;
+  name: string; avgValue: number; minValue: number; maxValue: number; count: number;
 }
+interface RatingDist { name: string; rating: string; count: number; }
+interface RecentEntry { id: string; name: string; value: string; rating: string; url: string | null; createdAt: string; userAgent: string | null; }
+interface ByUrlRow { url: string | null; metricName: string; avgValue: number; minValue: number; maxValue: number; count: number; }
+interface TimelinePoint { bucket: string; name: string; avgValue: number; count: number; }
+interface PercentileRow { name: string; p50: number; p75: number; p95: number; p99: number; count: number; }
+interface ComparisonRow { name: string; currentAvg: number; currentCount: number; prevAvg: number | null; prevCount: number; deltaPercent: number | null; improved: boolean | null; }
+interface DeviceRow { name: string; device: string; avgValue: number; count: number; }
+interface HeatmapRow { hour: number; name: string; avgValue: number; count: number; }
 
-interface RatingDist {
-  name: string;
-  rating: string;
-  count: number;
-}
-
-interface RecentEntry {
-  id: string;
-  name: string;
-  value: string;
-  rating: string;
-  url: string | null;
-  createdAt: string;
-}
-
-interface ByUrlRow {
-  url: string | null;
-  metricName: string;
-  avgValue: number;
-  minValue: number;
-  maxValue: number;
-  count: number;
-}
+// ─── Main Component ────────────────────────────────────────
 
 export function WebVitalsClient() {
   const [period, setPeriod] = useState<Period>('24h');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Stats
   const [stats, setStats] = useState<MetricStat[]>([]);
   const [ratingDist, setRatingDist] = useState<RatingDist[]>([]);
   const [total, setTotal] = useState(0);
+
+  // Timeline
+  const [timeline, setTimeline] = useState<TimelinePoint[]>([]);
+  const [bucketType, setBucketType] = useState('hour');
+
+  // Percentiles
+  const [percentiles, setPercentiles] = useState<PercentileRow[]>([]);
+
+  // Comparison
+  const [comparison, setComparison] = useState<ComparisonRow[]>([]);
+
+  // Device
+  const [deviceData, setDeviceData] = useState<DeviceRow[]>([]);
+
+  // Heatmap
+  const [heatmap, setHeatmap] = useState<HeatmapRow[]>([]);
+
+  // Recent + by-URL
   const [recent, setRecent] = useState<RecentEntry[]>([]);
   const [byUrl, setByUrl] = useState<ByUrlRow[]>([]);
-  const [view, setView] = useState<'stats' | 'recent' | 'by-url'>('stats');
 
+  // ─── Auto-refresh ──────────────────────────────────────
+  useEffect(() => {
+    if (autoRefresh) {
+      intervalRef.current = setInterval(() => {
+        fetchData();
+      }, 30000);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [autoRefresh, period]);
+
+  // ─── Fetch all data ────────────────────────────────────
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [statsRes, recentRes, urlRes] = await Promise.all([
+      const [
+        statsRes, recentRes, urlRes,
+        timelineRes, percRes, compRes, deviceRes, heatRes,
+      ] = await Promise.all([
         fetch(`/api/web-vitals?period=${period}&view=stats`),
         fetch(`/api/web-vitals?period=${period}&view=recent`),
         fetch(`/api/web-vitals?period=${period}&view=by-url`),
+        fetch(`/api/web-vitals?period=${period}&view=timeline`),
+        fetch(`/api/web-vitals?period=${period}&view=percentiles`),
+        fetch(`/api/web-vitals?period=${period}&view=comparison`),
+        fetch(`/api/web-vitals?period=${period}&view=device`),
+        fetch(`/api/web-vitals?period=${period}&view=heatmap`),
       ]);
 
       if (!statsRes.ok || !recentRes.ok || !urlRes.ok) {
         throw new Error('Error al cargar datos');
       }
 
-      const [statsJson, recentJson, urlJson] = await Promise.all([
-        statsRes.json(), recentRes.json(), urlRes.json(),
-      ]);
+      const [statsJson, recentJson, urlJson, timelineJson, percJson, compJson, deviceJson, heatJson] =
+        await Promise.all([
+          statsRes.json(), recentRes.json(), urlRes.json(),
+          timelineRes.json(), percRes.json(), compRes.json(), deviceRes.json(), heatRes.json(),
+        ]);
 
       setStats(statsJson.data?.stats || []);
       setRatingDist(statsJson.data?.ratingDistribution || []);
       setTotal(statsJson.data?.total || 0);
       setRecent(recentJson.data?.data || []);
       setByUrl(urlJson.data?.data || []);
+      setTimeline(timelineJson.data?.data || []);
+      setBucketType(timelineJson.data?.bucket || 'hour');
+      setPercentiles(percJson.data?.data || []);
+      setComparison(compJson.data?.data || []);
+      setDeviceData(deviceJson.data?.data || []);
+      setHeatmap(heatJson.data?.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
@@ -123,96 +226,102 @@ export function WebVitalsClient() {
     fetchData();
   }, [fetchData]);
 
-  const formatValue = (name: string, value: number | string) => {
-    const num = typeof value === 'string' ? parseFloat(value) : value;
-    if (isNaN(num)) return '—';
-    if (name === 'CLS') return num.toFixed(3);
-    return Math.round(num).toLocaleString('es-CL');
+  // ─── Export CSV ────────────────────────────────────────
+  const exportCSV = () => {
+    const rows: string[] = ['Métrica,Promedio,Min,Max,Muestras'];
+    for (const s of stats) {
+      rows.push(`${s.name},${s.avgValue},${s.minValue},${s.maxValue},${s.count}`);
+    }
+    rows.push('');
+    rows.push('URL,Métrica,Promedio,Min,Max,Muestras');
+    for (const r of byUrl) {
+      rows.push(`${r.url || ''},${r.metricName},${r.avgValue},${r.minValue},${r.maxValue},${r.count}`);
+    }
+    const csv = rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `web-vitals-${period}.csv`;
+    link.click();
   };
 
-  const getBarColor = (name: string) => {
-    const colors: Record<string, string> = {
-      LCP: '#6366f1',
-      INP: '#8b5cf6',
-      CLS: '#a855f7',
-      FCP: '#3b82f6',
-      TTFB: '#06b6d4',
-    };
-    return colors[name] || '#6b7280';
-  };
-
+  // ─── Derived data ──────────────────────────────────────
   const pieData = stats
-    .map((s) => ({
-      name: s.name,
-      value: s.avgValue,
-      fill: getBarColor(s.name),
-    }))
+    .map((s) => ({ name: s.name, value: s.avgValue, fill: getBarColor(s.name) }))
     .filter((d) => d.value > 0);
+
+  // Timeline: transform to { bucket, LCP, INP, CLS, FCP, TTFB } per bucket
+  const timelineBuckets = Array.from(new Set(timeline.map((t) => t.bucket))).sort();
+  const timelineChartData = timelineBuckets.map((bucket) => {
+    const point: Record<string, any> = { bucket };
+    for (const metric of ['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as const) {
+      const entry = timeline.find((t) => t.bucket === bucket && t.name === metric);
+      point[metric] = entry ? entry.avgValue : null;
+    }
+    return point;
+  });
+
+  // Heatmap unique hours and metrics
+  const heatHours = Array.from(new Set(heatmap.map((h) => h.hour))).sort((a, b) => a - b);
+  const heatMetrics = ['LCP', 'INP', 'CLS', 'FCP', 'TTFB'];
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <PageHeader
           title="Rendimiento Web"
           description="Core Web Vitals y métricas de rendimiento"
           icon={<Activity className="h-6 w-6" />}
         />
-        <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
-          {PERIODS.map((p) => (
-            <Button
-              key={p.value}
-              variant={period === p.value ? 'default' : 'ghost'}
-              size="sm"
-              className="text-xs h-7"
-              onClick={() => setPeriod(p.value)}
-            >
-              {p.label}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Auto-refresh toggle */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mr-2">
+            <Switch
+              id="auto-refresh"
+              checked={autoRefresh}
+              onCheckedChange={setAutoRefresh}
+              className="scale-75"
+            />
+            <Label htmlFor="auto-refresh" className="text-xs cursor-pointer">
+              Auto {autoRefresh ? '30s' : 'off'}
+            </Label>
+          </div>
+
+          {/* Export CSV */}
+          {!loading && stats.length > 0 && (
+            <Button variant="outline" size="sm" className="text-xs h-7" onClick={exportCSV}>
+              <Download className="h-3 w-3 mr-1" />
+              CSV
             </Button>
-          ))}
+          )}
+
+          {/* Period */}
+          <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+            {PERIODS.map((p) => (
+              <Button
+                key={p.value}
+                variant={period === p.value ? 'default' : 'ghost'}
+                size="sm"
+                className="text-xs h-7"
+                onClick={() => setPeriod(p.value)}
+              >
+                {p.label}
+              </Button>
+            ))}
+          </div>
+
+          {/* Refresh button */}
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={fetchData} disabled={loading}>
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
         </div>
       </div>
 
-      {/* Total metrics card */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Métricas capturadas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">
-              {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : total.toLocaleString('es-CL')}
-            </p>
-          </CardContent>
-        </Card>
-        {stats.map((s) => (
-          <Card key={s.name}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Gauge className="h-4 w-4" />
-                {s.name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold" style={{ color: getBarColor(s.name) }}>
-                {formatValue(s.name, s.avgValue)}
-                <span className="text-sm font-normal text-muted-foreground ml-1">
-                  {METRIC_UNITS[s.name]}
-                </span>
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                min {formatValue(s.name, s.minValue)} · máx {formatValue(s.name, s.maxValue)} · {s.count} muestras
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
+      {/* Error */}
       {error && (
         <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
-          <AlertCircle className="h-4 w-4" />
+          <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -223,31 +332,181 @@ export function WebVitalsClient() {
         </div>
       ) : (
         <>
-          {/* Charts section */}
-          <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
-            <TabsList>
-              <TabsTrigger value="stats" className="gap-2">
+          {/* ═══════════════════════════════════════════════════
+              STATS CARDS
+             ═══════════════════════════════════════════════════ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+            {/* Total metrics */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                  <Activity className="h-3 w-3" />
+                  Total métricas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">{total.toLocaleString('es-CL')}</p>
+              </CardContent>
+            </Card>
+
+            {/* Per-metric stats */}
+            {stats.map((s) => {
+              const compliancePct = ratingDist
+                .filter((r) => r.name === s.name && r.rating === 'good')
+                .reduce((acc, r) => acc + r.count, 0);
+              const totalForMetric = ratingDist
+                .filter((r) => r.name === s.name)
+                .reduce((acc, r) => acc + r.count, 0);
+              const goodPct = totalForMetric > 0 ? Math.round((compliancePct / totalForMetric) * 100) : 0;
+
+              return (
+                <Card key={s.name} className="relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-16 h-16 opacity-5">
+                    <Gauge className="w-full h-full" style={{ color: getBarColor(s.name) }} />
+                  </div>
+                  <CardHeader className="pb-1">
+                    <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: getBarColor(s.name) }} />
+                      {s.name}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xl font-bold" style={{ color: getBarColor(s.name) }}>
+                      {formatValue(s.name, s.avgValue)}
+                      <span className="text-xs font-normal text-muted-foreground ml-1">
+                        {METRIC_UNITS[s.name]}
+                      </span>
+                    </p>
+                    <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                      <span className={`font-medium ${getThresholdColor(s.name, s.avgValue)}`}>
+                        {getThresholdLabel(s.name, s.avgValue)}
+                      </span>
+                      <span>·</span>
+                      <span>{goodPct}% bueno</span>
+                    </div>
+                    <div className="flex gap-2 mt-1 text-[10px] text-muted-foreground">
+                      <span>min {formatValue(s.name, s.minValue)}</span>
+                      <span>máx {formatValue(s.name, s.maxValue)}</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{s.count} muestras</p>
+
+                    {/* Minibar de compliance */}
+                    <div className="flex h-1.5 rounded-full overflow-hidden bg-muted mt-2">
+                      {['good', 'needs-improvement', 'poor'].map((rating) => {
+                        const cnt = ratingDist
+                          .filter((r) => r.name === s.name && r.rating === rating)
+                          .reduce((acc, r) => acc + r.count, 0);
+                        const pct = totalForMetric > 0 ? (cnt / totalForMetric) * 100 : 0;
+                        return pct > 0 ? (
+                          <div
+                            key={rating}
+                            style={{
+                              width: `${pct}%`,
+                              backgroundColor: RATING_COLORS[rating],
+                            }}
+                          />
+                        ) : null;
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* ═══════════════════════════════════════════════════
+              TABS
+             ═══════════════════════════════════════════════════ */}
+          <Tabs defaultValue="resumen">
+            <TabsList className="flex-wrap">
+              <TabsTrigger value="resumen" className="gap-2">
                 <BarChart3 className="h-4 w-4" />
-                Promedios
+                Resumen
               </TabsTrigger>
-              <TabsTrigger value="recent" className="gap-2">
+              <TabsTrigger value="comparativa" className="gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Comparativa
+              </TabsTrigger>
+              <TabsTrigger value="recientes" className="gap-2">
                 <Clock className="h-4 w-4" />
                 Recientes
               </TabsTrigger>
-              <TabsTrigger value="by-url" className="gap-2">
+              <TabsTrigger value="urls" className="gap-2">
                 <Smartphone className="h-4 w-4" />
                 Por URL
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="stats" className="mt-4 space-y-4">
+            {/* ── TAB: RESUMEN ───────────────────────────── */}
+            <TabsContent value="resumen" className="mt-4 space-y-4">
+              {/* Timeline + Bar chart */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Bar chart: promedios por métrica */}
+                {/* Timeline chart */}
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                      Tendencia {bucketType === 'hour' ? 'por hora' : 'por día'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {timelineChartData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={timelineChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis
+                            dataKey="bucket"
+                            tickFormatter={(v) => formatBucket(v, bucketType)}
+                            className="text-[10px]"
+                            interval="preserveStartEnd"
+                          />
+                          <YAxis className="text-[10px]" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'hsl(var(--popover))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px',
+                              fontSize: '12px',
+                            }}
+                            labelFormatter={(v) => formatBucket(v, bucketType)}
+                            formatter={(value: number, name: string) => [
+                              `${formatValue(name, value)} ${METRIC_UNITS[name] || ''}`,
+                              METRIC_LABELS[name] || name,
+                            ]}
+                          />
+                          <Legend
+                            formatter={(value: string) => (
+                              <span className="text-xs">{value}</span>
+                            )}
+                          />
+                          {(['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as const).map((metric) => (
+                            <Line
+                              key={metric}
+                              type="monotone"
+                              dataKey={metric}
+                              name={metric}
+                              stroke={METRIC_COLORS[metric]}
+                              strokeWidth={2}
+                              dot={false}
+                              connectNulls
+                            />
+                          ))}
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-sm text-muted-foreground py-12 text-center">
+                        Sin datos suficientes para tendencia
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Bar chart: promedios */}
+                <Card>
+                  <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4 text-primary" />
-                      Valores promedio por métrica
+                      Promedio general por métrica
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -262,7 +521,7 @@ export function WebVitalsClient() {
                             border: '1px solid hsl(var(--border))',
                             borderRadius: '8px',
                           }}
-                          formatter={(value: number, name: string) => [formatValue('', value), '']}
+                          formatter={(value: number, name: string) => [formatValue('', value), 'Promedio']}
                           labelFormatter={(label: string) => METRIC_LABELS[label] || label}
                         />
                         <Bar dataKey="value" radius={[4, 4, 0, 0]}>
@@ -270,53 +529,144 @@ export function WebVitalsClient() {
                             <Cell key={idx} fill={entry.fill} />
                           ))}
                         </Bar>
+                        {/* Threshold reference lines */}
+                        {pieData.map((entry) => {
+                          const t = METRIC_THRESHOLDS[entry.name];
+                          if (!t) return null;
+                          return (
+                            <ReferenceLine
+                              key={`good-${entry.name}`}
+                              y={t.good}
+                              stroke="#22c55e"
+                              strokeDasharray="4 4"
+                              strokeWidth={1}
+                            />
+                          );
+                        })}
                       </BarChart>
                     </ResponsiveContainer>
+                    <p className="text-[10px] text-muted-foreground mt-1 text-center">
+                      Líneas punteadas verdes = umbral &quot;bueno&quot; de cada métrica
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Percentiles + Rating distribution */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Percentiles */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <TableIcon className="h-4 w-4 text-primary" />
+                      Percentiles
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-border">
+                            <th className="text-left font-medium text-muted-foreground px-3 py-2">Métrica</th>
+                            <th className="text-right font-medium text-muted-foreground px-3 py-2">P50</th>
+                            <th className="text-right font-medium text-muted-foreground px-3 py-2">P75</th>
+                            <th className="text-right font-medium text-muted-foreground px-3 py-2">P95</th>
+                            <th className="text-right font-medium text-muted-foreground px-3 py-2">P99</th>
+                            <th className="text-right font-medium text-muted-foreground px-3 py-2">Muestras</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {percentiles.map((p) => (
+                            <tr key={p.name} className="border-b border-border/50 hover:bg-muted/30">
+                              <td className="px-3 py-2 font-medium">{p.name}</td>
+                              <td className="px-3 py-2 text-right font-mono tabular-nums"
+                                style={{ color: getThresholdColor(p.name, p.p50) }}>
+                                {formatValue(p.name, p.p50)}
+                              </td>
+                              <td className="px-3 py-2 text-right font-mono tabular-nums"
+                                style={{ color: getThresholdColor(p.name, p.p75) }}>
+                                {formatValue(p.name, p.p75)}
+                              </td>
+                              <td className="px-3 py-2 text-right font-mono tabular-nums text-destructive font-medium">
+                                {formatValue(p.name, p.p95)}
+                              </td>
+                              <td className="px-3 py-2 text-right font-mono tabular-nums text-destructive font-bold">
+                                {formatValue(p.name, p.p99)}
+                              </td>
+                              <td className="px-3 py-2 text-right text-muted-foreground">{p.count}</td>
+                            </tr>
+                          ))}
+                          {percentiles.length === 0 && (
+                            <tr>
+                              <td colSpan={6} className="text-center py-8 text-muted-foreground">
+                                Sin datos
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </CardContent>
                 </Card>
 
                 {/* Rating distribution */}
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <PieChartIcon className="h-4 w-4 text-primary" />
                       Distribución de ratings
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {stats.map((s) => {
                         const ratings = ratingDist.filter((r) => r.name === s.name);
                         const totalForMetric = ratings.reduce((acc, r) => acc + r.count, 0);
+                        const goodPct = totalForMetric > 0
+                          ? Math.round((ratings.find((r) => r.rating === 'good')?.count || 0) / totalForMetric * 100)
+                          : 0;
                         return (
                           <div key={s.name}>
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-sm font-medium">{s.name}</span>
+                              <span className="text-sm font-medium flex items-center gap-2">
+                                {s.name}
+                                <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
+                                  goodPct >= 80 ? 'text-green-700 bg-green-100' :
+                                  goodPct >= 50 ? 'text-yellow-700 bg-yellow-100' :
+                                  'text-red-700 bg-red-100'
+                                }`}>
+                                  {goodPct}%
+                                </span>
+                              </span>
                               <span className="text-xs text-muted-foreground">{totalForMetric} muestras</span>
                             </div>
-                            <div className="flex h-2 rounded-full overflow-hidden bg-muted">
-                              {ratings.map((r) => (
-                                <div
-                                  key={r.rating}
-                                  className="transition-all"
-                                  style={{
-                                    width: `${(r.count / totalForMetric) * 100}%`,
-                                    backgroundColor: RATING_COLORS[r.rating] || '#6b7280',
-                                  }}
-                                  title={`${r.rating}: ${r.count} (${Math.round((r.count / totalForMetric) * 100)}%)`}
-                                />
-                              ))}
+                            <div className="flex h-2.5 rounded-full overflow-hidden bg-muted">
+                              {['good', 'needs-improvement', 'poor'].map((rating) => {
+                                const cnt = ratings.find((r) => r.rating === rating)?.count || 0;
+                                const pct = totalForMetric > 0 ? (cnt / totalForMetric) * 100 : 0;
+                                return pct > 0 ? (
+                                  <div
+                                    key={rating}
+                                    style={{
+                                      width: `${pct}%`,
+                                      backgroundColor: RATING_COLORS[rating],
+                                      transition: 'width 0.3s ease',
+                                    }}
+                                    title={`${rating}: ${cnt} (${Math.round(pct)}%)`}
+                                  />
+                                ) : null;
+                              })}
                             </div>
                             <div className="flex gap-3 mt-1 text-[10px] text-muted-foreground">
-                              {ratings.map((r) => (
-                                <span key={r.rating} className="flex items-center gap-1">
-                                  <span
-                                    className="h-2 w-2 rounded-full"
-                                    style={{ backgroundColor: RATING_COLORS[r.rating] }}
-                                  />
-                                  {r.rating === 'good' ? 'Bueno' : r.rating === 'needs-improvement' ? 'Regular' : 'Malo'}: {r.count}
-                                </span>
-                              ))}
+                              {(['good', 'needs-improvement', 'poor'] as const).map((rating) => {
+                                const cnt = ratings.find((r) => r.rating === rating)?.count || 0;
+                                return cnt > 0 ? (
+                                  <span key={rating} className="flex items-center gap-1">
+                                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: RATING_COLORS[rating] }} />
+                                    {rating === 'good' ? 'Bueno' : rating === 'needs-improvement' ? 'Regular' : 'Malo'}: {cnt}
+                                  </span>
+                                ) : null;
+                              })}
                             </div>
                           </div>
                         );
@@ -330,9 +680,230 @@ export function WebVitalsClient() {
               </div>
             </TabsContent>
 
-            <TabsContent value="recent" className="mt-4">
+            {/* ── TAB: COMPARATIVA ────────────────────────── */}
+            <TabsContent value="comparativa" className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Comparison vs previous period */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      {period === '24h' ? (
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                      ) : (
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                      )}
+                      Comparación vs período anterior
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-border">
+                            <th className="text-left font-medium text-muted-foreground px-3 py-2">Métrica</th>
+                            <th className="text-right font-medium text-muted-foreground px-3 py-2">Actual</th>
+                            <th className="text-right font-medium text-muted-foreground px-3 py-2">Anterior</th>
+                            <th className="text-right font-medium text-muted-foreground px-3 py-2">Variación</th>
+                            <th className="text-right font-medium text-muted-foreground px-3 py-2">Muestras</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {comparison.map((c) => (
+                            <tr key={c.name} className="border-b border-border/50 hover:bg-muted/30">
+                              <td className="px-3 py-2 font-medium">{c.name}</td>
+                              <td className="px-3 py-2 text-right font-mono tabular-nums">
+                                {formatValue(c.name, c.currentAvg)}
+                                <span className="text-muted-foreground ml-1">{METRIC_UNITS[c.name]}</span>
+                              </td>
+                              <td className="px-3 py-2 text-right font-mono tabular-nums text-muted-foreground">
+                                {c.prevAvg !== null ? formatValue(c.name, c.prevAvg) : '—'}
+                              </td>
+                              <td className="px-3 py-2 text-right">
+                                {c.deltaPercent !== null ? (
+                                  <span className={`inline-flex items-center gap-1 font-medium ${
+                                    c.improved ? 'text-green-600' : 'text-red-600'
+                                  }`}>
+                                    {c.improved
+                                      ? <TrendingDown className="h-3 w-3" />
+                                      : <TrendingUp className="h-3 w-3" />
+                                    }
+                                    {Math.abs(c.deltaPercent)}%
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">
+                                    <Minus className="h-3 w-3 inline" />
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 text-right text-muted-foreground">
+                                {c.currentCount}
+                              </td>
+                            </tr>
+                          ))}
+                          {comparison.length === 0 && (
+                            <tr>
+                              <td colSpan={5} className="text-center py-8 text-muted-foreground">
+                                Sin datos suficientes para comparar
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground px-3 py-2 border-t border-border">
+                      {period === '24h' ? 'Comparando con las 24 horas anteriores'
+                        : period === '7d' ? 'Comparando con la semana anterior'
+                        : 'Comparando con el mes anterior'}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Device breakdown */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Smartphone className="h-4 w-4 text-primary" />
+                      Rendimiento por dispositivo
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {deviceData.length > 0 ? (
+                      <div className="space-y-3">
+                        {deviceData.map((d, idx) => {
+                          const totalForDevice = deviceData
+                            .filter((x) => x.name === d.name)
+                            .reduce((acc, x) => acc + x.count, 0);
+                          return (
+                            <div key={`${d.name}-${d.device}-${idx}`}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-medium flex items-center gap-1.5">
+                                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: DEVICE_COLORS[d.device] }} />
+                                  {d.name} — {d.device}
+                                </span>
+                                <span className="text-xs font-mono font-bold" style={{ color: getThresholdColor(d.name, d.avgValue) }}>
+                                  {formatValue(d.name, d.avgValue)}
+                                  <span className="text-muted-foreground font-normal ml-0.5">{METRIC_UNITS[d.name]}</span>
+                                </span>
+                              </div>
+                              <div className="flex h-1.5 rounded-full overflow-hidden bg-muted">
+                                {['desktop', 'mobile', 'tablet', 'unknown'].map((dev) => {
+                                  const deviceEntry = deviceData.find((x) => x.name === d.name && x.device === dev);
+                                  if (!deviceEntry) return null;
+                                  const pct = totalForDevice > 0 ? (deviceEntry.count / totalForDevice) * 100 : 0;
+                                  return (
+                                    <div
+                                      key={dev}
+                                      style={{
+                                        width: `${pct}%`,
+                                        backgroundColor: DEVICE_COLORS[dev],
+                                        minWidth: pct > 0 ? '4px' : 0,
+                                      }}
+                                      title={`${dev}: ${deviceEntry.count} muestras`}
+                                    />
+                                  );
+                                })}
+                              </div>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">{d.count} muestras</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground py-8 text-center">
+                        Sin datos de dispositivo
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Heatmap por hora */}
               <Card>
-                <CardHeader>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Thermometer className="h-4 w-4 text-primary" />
+                    Mapa de calor por hora del día
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {heatmap.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr>
+                            <th className="text-left font-medium text-muted-foreground px-2 py-1">Métrica</th>
+                            {Array.from({ length: 24 }, (_, h) => (
+                              <th key={h} className="text-center font-medium text-muted-foreground px-1 py-1 w-8">
+                                {h}h
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {heatMetrics.map((metric) => {
+                            const maxForMetric = Math.max(
+                              ...heatmap.filter((h) => h.name === metric).map((h) => h.avgValue),
+                              0.001,
+                            );
+                            return (
+                              <tr key={metric}>
+                                <td className="font-medium px-2 py-1.5 text-xs whitespace-nowrap">
+                                  {metric}
+                                </td>
+                                {Array.from({ length: 24 }, (_, hour) => {
+                                  const cell = heatmap.find((h) => h.hour === hour && h.name === metric);
+                                  return (
+                                    <td
+                                      key={hour}
+                                      className="text-center px-1 py-1.5 relative group"
+                                    >
+                                      {cell ? (
+                                        <div
+                                          className="rounded-md px-1 py-1 text-[10px] font-mono tabular-nums cursor-default transition-colors"
+                                          style={{
+                                            backgroundColor: getHeatColor(cell.avgValue, metric),
+                                            color: cell.avgValue > METRIC_THRESHOLDS[metric]?.poor ? 'white' : undefined,
+                                          }}
+                                          title={`${metric} ${hour}:00 — ${formatValue(metric, cell.avgValue)} ${METRIC_UNITS[metric]} (${cell.count} muestras)`}
+                                        >
+                                          {formatValue(metric, cell.avgValue)}
+                                        </div>
+                                      ) : (
+                                        <span className="text-muted-foreground/20">·</span>
+                                      )}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                      <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <span className="h-2 w-2 rounded" style={{ backgroundColor: 'rgba(34, 197, 94, 0.4)' }} /> Bueno
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="h-2 w-2 rounded" style={{ backgroundColor: 'rgba(234, 179, 8, 0.5)' }} /> Regular
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="h-2 w-2 rounded" style={{ backgroundColor: 'rgba(239, 68, 68, 0.6)' }} /> Malo
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-8 text-center">
+                      Sin datos para mapa de calor
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* ── TAB: RECIENTES ─────────────────────────── */}
+            <TabsContent value="recientes" className="mt-4">
+              <Card>
+                <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Clock className="h-4 w-4 text-primary" />
                     Últimas 100 métricas registradas
@@ -348,17 +919,18 @@ export function WebVitalsClient() {
                           <th className="text-right font-medium text-muted-foreground px-4 py-2">Valor</th>
                           <th className="text-center font-medium text-muted-foreground px-4 py-2">Rating</th>
                           <th className="text-left font-medium text-muted-foreground px-4 py-2">URL</th>
+                          <th className="text-left font-medium text-muted-foreground px-4 py-2">Dispositivo</th>
                         </tr>
                       </thead>
                       <tbody>
                         {recent.map((r) => (
                           <tr key={r.id} className="border-b border-border/50 hover:bg-muted/30">
                             <td className="px-4 py-2 text-xs text-muted-foreground whitespace-nowrap">
-                              {new Date(r.createdAt).toLocaleString('es-CL')}
+                              {formatDate(r.createdAt)}
                             </td>
                             <td className="px-4 py-2 font-medium text-xs">{r.name}</td>
                             <td className="px-4 py-2 text-right text-xs font-mono tabular-nums">
-                              {formatValue(r.name, Number(r.value))}
+                              {formatValue(r.name, r.value)}
                               <span className="text-muted-foreground ml-1">{METRIC_UNITS[r.name]}</span>
                             </td>
                             <td className="px-4 py-2 text-center">
@@ -372,11 +944,15 @@ export function WebVitalsClient() {
                             <td className="px-4 py-2 text-xs text-muted-foreground max-w-[200px] truncate">
                               {r.url || '—'}
                             </td>
+                            <td className="px-4 py-2 text-xs text-muted-foreground">
+                              {r.userAgent ? (r.userAgent.toLowerCase().includes('mobile') ? 'Móvil' :
+                                r.userAgent.toLowerCase().includes('tablet') ? 'Tablet' : 'Escritorio') : '—'}
+                            </td>
                           </tr>
                         ))}
                         {recent.length === 0 && (
                           <tr>
-                            <td colSpan={5} className="text-center py-8 text-muted-foreground">
+                            <td colSpan={6} className="text-center py-8 text-muted-foreground">
                               Sin métricas registradas en este período
                             </td>
                           </tr>
@@ -388,9 +964,10 @@ export function WebVitalsClient() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="by-url" className="mt-4">
+            {/* ── TAB: POR URL ───────────────────────────── */}
+            <TabsContent value="urls" className="mt-4">
               <Card>
-                <CardHeader>
+                <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Smartphone className="h-4 w-4 text-primary" />
                     Promedios por URL
@@ -416,7 +993,8 @@ export function WebVitalsClient() {
                               {r.url || '—'}
                             </td>
                             <td className="px-4 py-2 text-xs font-medium">{r.metricName}</td>
-                            <td className="px-4 py-2 text-right text-xs font-mono tabular-nums">
+                            <td className="px-4 py-2 text-right text-xs font-mono tabular-nums"
+                              style={{ color: getThresholdColor(r.metricName, r.avgValue) }}>
                               {formatValue(r.metricName, r.avgValue)}
                             </td>
                             <td className="px-4 py-2 text-right text-xs font-mono tabular-nums text-muted-foreground">
