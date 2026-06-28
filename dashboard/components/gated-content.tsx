@@ -28,6 +28,7 @@ const ROUTE_FEATURE_MAP: Record<string, FeatureId> = {
   '/dashboard/webhooks': 'webhooks-log',
   '/dashboard/blacklist': 'blacklist',
   '/dashboard/consentimientos': 'consentimiento-informado',
+  '/dashboard/notificaciones': 'notificaciones',
   '/dashboard/videollamada': 'telemedicina',
   '/videollamada': 'telemedicina',
 };

@@ -25,13 +25,7 @@ const CATEGORIAS = [
 ] as const;
 
 export function AsistenteSettings({ modo, onModoChange, onClose }: Props) {
-  const { toggleCategoria } = useAsistenteIA();
-
-  // Leer silenciadas del context
-  const { sugerencias } = useAsistenteIA();
-
-  // Determinar qué categorías están activas según las sugerencias disponibles
-  const categoriasActivas = new Set(sugerencias.map((s) => s.categoria));
+  const { toggleCategoria, silenciadas } = useAsistenteIA();
 
   return (
     <div className="px-4 py-3 space-y-3 text-sm">
@@ -68,7 +62,7 @@ export function AsistenteSettings({ modo, onModoChange, onClose }: Props) {
           <div className="space-y-2">
             {CATEGORIAS.map((cat) => {
               const Icon = cat.icon;
-              const activa = categoriasActivas.has(cat.id);
+              const activa = !silenciadas[cat.id]; // true = no silenciada → activa
               return (
                 <button
                   key={cat.id}

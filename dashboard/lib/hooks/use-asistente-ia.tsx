@@ -74,6 +74,8 @@ interface AsistenteActions {
   setModo: (modo: ModoAsistente) => void;
   /** Silenciar/activar una categoría de sugerencias */
   toggleCategoria: (categoria: string) => void;
+  /** Categorías silenciadas (true = silenciada, no genera sugerencias) */
+  silenciadas: Record<string, boolean>;
   /** Limpiar el chat */
   limpiarChat: () => void;
   /** Actualizar datos contextuales */
@@ -293,6 +295,7 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
     enviarSugerencia,
     setModo,
     toggleCategoria,
+    silenciadas: userSettings.silenciadas,
     limpiarChat,
     setDatosContexto,
   };

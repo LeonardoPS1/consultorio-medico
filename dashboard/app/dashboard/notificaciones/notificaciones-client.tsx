@@ -103,6 +103,8 @@ export function NotificacionesClient({
     marcarTodasLeidas,
     silenciarCategoria,
     refetch,
+    isError,
+    error,
   } = useNotifications();
 
   const [filtroTipo, setFiltroTipo] = useState<string | null>(null);
@@ -137,6 +139,22 @@ export function NotificacionesClient({
           ) : undefined
         }
       />
+
+      {/* ─── Error banner ─────────────────────────────────── */}
+      {isError && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+          <p className="font-medium text-destructive">Error al cargar notificaciones</p>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            {error instanceof Error ? error.message : 'No se pudieron cargar las notificaciones. Intentá de nuevo más tarde.'}
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="mt-2 text-xs font-medium text-destructive hover:underline"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
 
       {/* ─── Filtros con conteo por tipo ────────────────────── */}
       <div className="flex flex-wrap items-center gap-2">
