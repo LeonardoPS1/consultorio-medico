@@ -7,9 +7,10 @@
 
 'use client';
 
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { MODOS_ASISTENTE, type ModoAsistente } from '@/lib/ia/asistente-prompts';
 import { useAsistenteIA } from '@/lib/hooks/use-asistente-ia';
-import { MessageSquare, Users, Calendar, Pill, Volume2, VolumeX } from 'lucide-react';
+import { MessageSquare, Users, Calendar, Pill, Volume2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Props {
   modo: ModoAsistente;
@@ -26,6 +27,30 @@ const CATEGORIAS = [
 
 export function AsistenteSettings({ modo, onModoChange, onClose }: Props) {
   const { toggleCategoria, silenciadas } = useAsistenteIA();
+  const categoriasScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateArrowState = useCallback(() => {
+    const el = categoriasScrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }, []);
+
+  const scrollCategorias = useCallback((direction: 'left' | 'right') => {
+    const el = categoriasScrollRef.current;
+    if (!el) return;
+    el.scrollBy({
+      left: direction === 'left' ? -200 : 200,
+      behavior: 'smooth',
+    });
+    setTimeout(updateArrowState, 100);
+  }, [updateArrowState]);
+
+  useEffect(() => {
+    requestAnimationFrame(updateArrowState);
+  }, [updateArrowState]);
 
   return (
     <div className="px-4 py-3 space-y-3 text-sm">
@@ -70,60 +95,90 @@ export function AsistenteSettings({ modo, onModoChange, onClose }: Props) {
               <Volume2 className="h-3 w-3 inline mr-1 -mt-0.5" />
               Sugerencias activas
             </p>
-            <div className="space-y-1">
-              {CATEGORIAS.map((cat) => {
-                const Icon = cat.icon;
-                const activa = !silenciadas[cat.id]; // true = no silenciada
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => toggleCategoria(cat.id)}
-                    className={`flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-all ${
-                      activa
-                        ? 'border-primary/15 bg-primary/5'
-                        : 'border-border/60 bg-background text-muted-foreground/60'
-                    }`}
-                  >
-                    {/* Icono */}
-                    <div
-                      className={`flex h-7 w-7 items-center justify-center rounded-lg ${
-                        activa
-                          ? 'bg-primary/10 text-primary'
-                          : 'bg-muted text-muted-foreground/50'
-                      }`}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                    </div>
+            <div className="relative">
+              {/* Flecha izquierda */}
+              {canScrollLeft && (
+                <button
+                  onClick={() => scrollCategorias('left')}
+                  className="absolute -left-1 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-accent transition-colors"
+                  aria-label="Anteriores categorías"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              )}
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
+              {/* Contenedor scrolleable */}
+              <div
+                ref={categoriasScrollRef}
+                onScroll={updateArrowState}
+                className="flex gap-2 overflow-x-auto scrollbar-none scroll-smooth pb-1"
+              >
+                {CATEGORIAS.map((cat) => {
+                  const Icon = cat.icon;
+                  const activa = !silenciadas[cat.id]; // true = no silenciada
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => toggleCategoria(cat.id)}
+                      className={`group flex shrink-0 flex-col gap-1.5 rounded-xl border px-3 py-2.5 text-left transition-all ${
+                        activa
+                          ? 'border-primary/15 bg-primary/5'
+                          : 'border-border/60 bg-background text-muted-foreground/60'
+                      }`}
+                      style={{ minWidth: '160px', maxWidth: '180px' }}
+                    >
+                      {/* Icono + Toggle row */}
+                      <div className="flex items-center justify-between">
+                        <div
+                          className={`flex h-7 w-7 items-center justify-center rounded-lg ${
+                            activa
+                              ? 'bg-primary/10 text-primary'
+                              : 'bg-muted text-muted-foreground/50'
+                          }`}
+                        >
+                          <Icon className="h-3.5 w-3.5" />
+                        </div>
+
+                        {/* Toggle switch */}
+                        <div
+                          className={`relative h-5 w-8 shrink-0 rounded-full transition-colors ${
+                            activa ? 'bg-primary' : 'bg-muted-foreground/20'
+                          }`}
+                        >
+                          <div
+                            className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                              activa ? 'translate-x-3' : 'translate-x-0'
+                            }`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Label */}
                       <p
-                        className={`text-xs font-medium ${
+                        className={`text-xs font-medium leading-tight ${
                           activa ? 'text-foreground' : 'text-muted-foreground/70'
                         }`}
                       >
                         {cat.label}
                       </p>
-                      <p className="text-[10px] text-muted-foreground/50 truncate">
+                      <p className="text-[10px] text-muted-foreground/50 leading-tight line-clamp-2">
                         {cat.descripcion}
                       </p>
-                    </div>
+                    </button>
+                  );
+                })}
+              </div>
 
-                    {/* Toggle switch */}
-                    <div
-                      className={`relative h-5 w-8 shrink-0 rounded-full transition-colors ${
-                        activa ? 'bg-primary' : 'bg-muted-foreground/20'
-                      }`}
-                    >
-                      <div
-                        className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                          activa ? 'translate-x-3' : 'translate-x-0'
-                        }`}
-                      />
-                    </div>
-                  </button>
-                );
-              })}
+              {/* Flecha derecha */}
+              {canScrollRight && (
+                <button
+                  onClick={() => scrollCategorias('right')}
+                  className="absolute -right-1 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-accent transition-colors"
+                  aria-label="Siguientes categorías"
+                >
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              )}
             </div>
           </div>
         </>

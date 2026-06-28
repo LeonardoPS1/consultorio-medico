@@ -84,12 +84,16 @@ export async function ollamaHealthCheck(url: string, timeout = 4000): Promise<bo
 // ─── Resolver URLs a probar ───────────────────────────────────
 
 function resolveUrls(configuredUrl: string): string[] {
-  // Si está configurada explícitamente, usarla DIRECTAMENTE (sin fallback)
-  if (configuredUrl !== 'http://localhost:11434') {
-    return [configuredUrl];
+  // Siempre probar la URL configurada PRIMERO, luego fallbacks
+  // Esto soluciona cuando OLLAMA_BASE_URL apunta a una IP no alcanzable
+  // desde el contenedor del dashboard (ej: 172.18.0.1 vs 172.17.0.1)
+  const urls = [configuredUrl];
+  for (const fallback of FALLBACK_URLS) {
+    if (fallback !== configuredUrl && !urls.includes(fallback)) {
+      urls.push(fallback);
+    }
   }
-  // No configurada → probar fallback + localhost
-  return FALLBACK_URLS;
+  return urls;
 }
 
 // ─── Función principal ─────────────────────────────────────────
