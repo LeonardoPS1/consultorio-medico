@@ -4,9 +4,10 @@
  * Layout optimizado:
  * - Header compacto con badge de modo + settings + cerrar
  * - Settings inline colapsable (no interfiere con altura)
- * - Tarjetas de sugerencias (grid, visibles, clickeables)
- * - Área de chat con burbujas limpias
+ * - Chat ScrollArea ocupa TODO el espacio disponible
+ * - Sugerencias como pills horizontales sobre el input
  * - Input fijo al fondo
+ * - Auto-scroll inteligente: solo si el usuario está cerca del final
  */
 
 'use client';
@@ -31,6 +32,7 @@ const SUGERENCIA_ICONOS: Record<string, string> = {
   pacientes: '👤',
   turnos: '📅',
   recetas: '💊',
+  general: '✨',
   default: '✨',
 };
 
@@ -59,7 +61,25 @@ export function AsistentePanel() {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // Actualiza visibilidad de flechas según scroll
+  const modoInfo = MODOS_ASISTENTE.find((m) => m.id === modo);
+
+  // ─── Auto-scroll inteligente ───────────────────────────────
+  // Solo hace scroll al fondo si el usuario está a menos de 100px
+  // del final del scroll. Si está leyendo mensajes viejos, no interrumpe.
+  const scrollAlFondoSiCerca = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distanceFromBottom < 100) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, []);
+
+  useEffect(() => {
+    scrollAlFondoSiCerca();
+  }, [mensajes, cargando, scrollAlFondoSiCerca]);
+
+  // ─── Sugerencias carrusel ─────────────────────────────────
   const updateArrowState = useCallback(() => {
     const el = sugerenciasScrollRef.current;
     if (!el) return;
@@ -70,36 +90,18 @@ export function AsistentePanel() {
   const scrollSugerencias = useCallback((direction: 'left' | 'right') => {
     const el = sugerenciasScrollRef.current;
     if (!el) return;
-    const scrollAmount = 220; // ancho aprox de una tarjeta
     el.scrollBy({
-      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      left: direction === 'left' ? -200 : 200,
       behavior: 'smooth',
     });
-    // Pequeño delay para que el DOM actualice el scroll position
     setTimeout(updateArrowState, 100);
   }, [updateArrowState]);
 
-  const modoInfo = MODOS_ASISTENTE.find((m) => m.id === modo);
-
-  // Auto-scroll al último mensaje (solo si el usuario está cerca del fondo)
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    if (distanceFromBottom < 100) {
-      el.scrollTop = el.scrollHeight;
-    }
-  }, [mensajes, cargando]);
-
-  // Recalcular flechas cuando cambian sugerencias
-  useEffect(() => {
-    // Esperar a que el DOM renderice las tarjetas
-    requestAnimationFrame(() => {
-      updateArrowState();
-    });
+    requestAnimationFrame(updateArrowState);
   }, [sugerencias, updateArrowState]);
 
-  // Focus input cuando se abre el panel
+  // ─── Focus cuando se abre el panel ────────────────────────
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 100);
@@ -134,6 +136,8 @@ export function AsistentePanel() {
       <User className="h-3.5 w-3.5" />
     </div>
   );
+
+  const mostrarSugerencias = sugerencias.length > 0 && !showSettings;
 
   return (
     <motion.div
@@ -213,77 +217,9 @@ export function AsistentePanel() {
       </AnimatePresence>
 
       {/* ============================================================ */}
-      {/* CONTENT: suggestions + chat alternan según estado */}
+      {/* CHAT (ocupa todo el espacio disponible) */}
       {/* ============================================================ */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {/* ─── SUGERENCIAS (carrusel horizontal con flechas) ── */}
-        <AnimatePresence>
-          {sugerencias.length > 0 && !showSettings && (
-            <motion.div
-              key="sugerencias"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden border-b"
-            >
-              <div className="px-3 py-2.5">
-                <p className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider mb-2">
-                  Sugerencias
-                </p>
-                <div className="relative">
-                  {/* Flecha izquierda */}
-                  {canScrollLeft && (
-                    <button
-                      onClick={() => scrollSugerencias('left')}
-                      className="absolute -left-1 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-accent transition-colors"
-                      aria-label="Anterior sugerencia"
-                    >
-                      <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                  )}
-
-                  {/* Contenedor scrolleable */}
-                  <div
-                    ref={sugerenciasScrollRef}
-                    onScroll={updateArrowState}
-                    className="flex gap-2 overflow-x-auto scrollbar-none scroll-smooth pb-1"
-                  >
-                    {sugerencias.map((sug) => (
-                      <button
-                        key={sug.id}
-                        onClick={() => enviarSugerencia(sug)}
-                        disabled={cargando}
-                        className="group flex shrink-0 items-start gap-2 rounded-xl border bg-card/50 px-3 py-2.5 text-left text-xs transition-all hover:border-primary/30 hover:bg-accent/50 hover:shadow-sm disabled:opacity-40"
-                        style={{ minWidth: '180px', maxWidth: '220px' }}
-                      >
-                        <span className="mt-0.5 shrink-0 text-sm leading-none">
-                          {SUGERENCIA_ICONOS[sug.id] || SUGERENCIA_ICONOS.default}
-                        </span>
-                        <span className="leading-snug text-muted-foreground group-hover:text-foreground">
-                          {sug.texto}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Flecha derecha */}
-                  {canScrollRight && (
-                    <button
-                      onClick={() => scrollSugerencias('right')}
-                      className="absolute -right-1 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-accent transition-colors"
-                      aria-label="Siguiente sugerencia"
-                    >
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ─── CHAT (scroll area) ─────────────────────────── */}
         <ScrollArea className="flex-1 px-4 py-3" ref={scrollRef}>
           <div className="space-y-3">
             {/* Empty state */}
@@ -353,18 +289,9 @@ export function AsistentePanel() {
                 <div className="rounded-2xl rounded-tl-sm bg-muted/80 px-4 py-3 shadow-sm">
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1">
-                      <span
-                        className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 animate-bounce"
-                        style={{ animationDelay: '0ms' }}
-                      />
-                      <span
-                        className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 animate-bounce"
-                        style={{ animationDelay: '150ms' }}
-                      />
-                      <span
-                        className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 animate-bounce"
-                        style={{ animationDelay: '300ms' }}
-                      />
+                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                     <span className="text-xs text-muted-foreground/60">Pensando...</span>
                   </div>
@@ -388,6 +315,67 @@ export function AsistentePanel() {
             )}
           </div>
         </ScrollArea>
+
+        {/* ─── SUGERENCIAS (pills horizontales sobre el input) ── */}
+        <AnimatePresence>
+          {mostrarSugerencias && (
+            <motion.div
+              key="sugerencias-pills"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="overflow-hidden border-t border-border/40"
+            >
+              <div className="relative px-3 py-2">
+                {/* Flecha izquierda */}
+                {canScrollLeft && (
+                  <button
+                    onClick={() => scrollSugerencias('left')}
+                    className="absolute left-1 top-1/2 z-10 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-accent transition-colors"
+                    aria-label="Anteriores sugerencias"
+                  >
+                    <ChevronLeft className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                )}
+
+                {/* Contenedor scrolleable */}
+                <div
+                  ref={sugerenciasScrollRef}
+                  onScroll={updateArrowState}
+                  className="flex gap-1.5 overflow-x-auto scrollbar-none scroll-smooth"
+                >
+                  {sugerencias.map((sug) => (
+                    <button
+                      key={sug.id}
+                      onClick={() => enviarSugerencia(sug)}
+                      disabled={cargando}
+                      className="group flex shrink-0 items-center gap-1.5 rounded-full border bg-muted/30 px-2.5 py-1 text-[11px] whitespace-nowrap transition-all hover:border-primary/30 hover:bg-accent/50 hover:text-foreground disabled:opacity-40"
+                    >
+                      <span className="text-xs leading-none">
+                        {SUGERENCIA_ICONOS[sug.categoria] || SUGERENCIA_ICONOS.default}
+                      </span>
+                      <span className="text-muted-foreground group-hover:text-foreground">
+                        {sug.texto}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Flecha derecha */}
+                {canScrollRight && (
+                  <button
+                    onClick={() => scrollSugerencias('right')}
+                    className="absolute right-1 top-1/2 z-10 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-accent transition-colors"
+                    aria-label="Siguientes sugerencias"
+                  >
+                    <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* ============================================================ */}

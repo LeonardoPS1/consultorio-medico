@@ -18,7 +18,6 @@ import {
   useState,
   useCallback,
   useEffect,
-  useRef,
   type ReactNode,
 } from 'react';
 import { useSession } from 'next-auth/react';
@@ -141,7 +140,6 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
   const [disponible, setDisponible] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [datosContexto, setDatosContexto] = useState<Record<string, unknown>>({});
-  const mensajesEndRef = useRef<HTMLDivElement | null>(null);
 
   // ─── Sugerencias contextuales ────────────────────────────
   const {
@@ -222,19 +220,6 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('toggle-asistente-ia', customHandler);
     };
   }, []);
-
-  // ─── Auto-scroll (solo si el usuario está cerca del fondo) ──
-  useEffect(() => {
-    const el = mensajesEndRef.current;
-    if (!el) return;
-    const parent = el.parentElement;
-    if (!parent) return;
-    // Solo hacer scroll si el usuario está a menos de 100px del fondo
-    const distanceFromBottom = parent.scrollHeight - parent.scrollTop - parent.clientHeight;
-    if (distanceFromBottom < 100) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [mensajes]);
 
   // ─── Actions ────────────────────────────────────────────
   const toggle = useCallback(() => setOpen((prev) => !prev), []);

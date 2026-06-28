@@ -4,11 +4,16 @@
  *
  * Esto evita que el modelo invente turnos, pacientes o recetas.
  * Se llama desde POST /api/ia/chat.
+ *
+ * Flujo de resolución de médico:
+ * 1. Busca médico vinculado al usuario autenticado (medicos.usuarioId)
+ * 2. Si no encuentra, busca el primer médico activo del tenant (no vinculado)
+ * 3. Como último recurso, hace consultas a nivel tenant sin filtrar por médico
  */
 
 import { db } from '@/lib/db';
 import { turnos, pacientes, recetas, medicos } from '@/drizzle/schema';
-import { eq, and, gte, lte, count, isNull } from 'drizzle-orm';
+import { eq, and, gte, lte, count, isNull, or } from 'drizzle-orm';
 
 /**
  * Consulta datos reales del consultorio y los devuelve como texto
@@ -16,7 +21,7 @@ import { eq, and, gte, lte, count, isNull } from 'drizzle-orm';
  *
  * @param usuarioId - ID del usuario autenticado (session.user.id)
  * @param _ruta - Ruta actual del dashboard (reservado para contexto futuro)
- * @returns Texto con datos reales o null si no se pudo consultar
+ * @returns Texto con datos reales, o null si no se pudo consultar nada
  */
 export async function buildContextoDB(
   usuarioId: string,
@@ -29,19 +34,45 @@ export async function buildContextoDB(
       .toISOString()
       .split('T')[0];
 
-    // 1. Buscar el médico asociado al usuario autenticado
-    const [medico] = await db
+    // ─── 1. Resolver médico ───────────────────────────────
+    // 1a. Buscar médico vinculado al usuario
+    let medico = await db
       .select({ id: medicos.id, nombre: medicos.nombre })
       .from(medicos)
       .where(and(eq(medicos.usuarioId, usuarioId), isNull(medicos.deletedAt)))
-      .limit(1);
+      .limit(1)
+      .then((r) => r[0] ?? null);
 
-    if (!medico) return null;
+    // 1b. Si no hay médico vinculado, buscar el primer médico activo
+    if (!medico) {
+      medico = await db
+        .select({ id: medicos.id, nombre: medicos.nombre })
+        .from(medicos)
+        .where(isNull(medicos.deletedAt))
+        .limit(1)
+        .then((r) => r[0] ?? null);
+    }
+
+    // 1c. Condición base: si hay médico, filtrar por él
+    //     Si no hay ningún médico, consultar sin filtro (tenant-level)
+    const medicoId = medico?.id;
+    const filtroMedico = medicoId ? eq(turnos.medicoId, medicoId) : undefined;
+    const filtroMedicoRecetas = medicoId ? eq(recetas.medicoId, medicoId) : undefined;
 
     const partes: string[] = [];
-    partes.push(`👨‍⚕️ Médico: ${medico.nombre}`);
+
+    if (medico?.nombre) {
+      partes.push(`👨‍⚕️ Médico: ${medico.nombre}`);
+    }
 
     // ─── 2. Turnos próximos (hoy + próximos 7 días) ────────
+    const turnosWhere = and(
+      filtroMedico,
+      gte(turnos.fechaHora, new Date(today + 'T00:00:00.000Z')),
+      lte(turnos.fechaHora, new Date(nextWeek + 'T23:59:59.999Z')),
+      isNull(turnos.deletedAt),
+    );
+
     const turnosProximos = await db
       .select({
         id: turnos.id,
@@ -50,18 +81,10 @@ export async function buildContextoDB(
         motivo: turnos.motivo,
         pacienteNombre: pacientes.nombre,
         pacienteApellido: pacientes.apellido,
-        pacienteTelefono: pacientes.telefono,
       })
       .from(turnos)
       .innerJoin(pacientes, eq(turnos.pacienteId, pacientes.id))
-      .where(
-        and(
-          eq(turnos.medicoId, medico.id),
-          gte(turnos.fechaHora, new Date(today + 'T00:00:00.000Z')),
-          lte(turnos.fechaHora, new Date(nextWeek + 'T23:59:59.999Z')),
-          isNull(turnos.deletedAt),
-        ),
-      )
+      .where(turnosWhere)
       .orderBy(turnos.fechaHora)
       .limit(20);
 
@@ -80,11 +103,8 @@ export async function buildContextoDB(
         const paciente = [t.pacienteNombre, t.pacienteApellido]
           .filter(Boolean)
           .join(' ');
-        const telefono = t.pacienteTelefono
-          ? ` (${t.pacienteTelefono})`
-          : '';
         partes.push(
-          `  • ${fecha} ${hora} | ${paciente}${telefono} | ${t.estado || 'pendiente'}${t.motivo ? ` | "${t.motivo}"` : ''}`,
+          `  • ${fecha} ${hora} | ${paciente} | ${t.estado || 'pendiente'}${t.motivo ? ` | "${t.motivo}"` : ''}`,
         );
       }
     } else {
@@ -92,49 +112,35 @@ export async function buildContextoDB(
     }
 
     // ─── 3. Turnos de HOY (resumen) ─────────────────────────
+    const hoyWhere = and(
+      filtroMedico,
+      gte(turnos.fechaHora, new Date(today + 'T00:00:00.000Z')),
+      lte(turnos.fechaHora, new Date(today + 'T23:59:59.999Z')),
+      isNull(turnos.deletedAt),
+    );
+
     const [countHoy] = await db
       .select({ total: count() })
       .from(turnos)
-      .where(
-        and(
-          eq(turnos.medicoId, medico.id),
-          gte(turnos.fechaHora, new Date(today + 'T00:00:00.000Z')),
-          lte(turnos.fechaHora, new Date(today + 'T23:59:59.999Z')),
-          isNull(turnos.deletedAt),
-        ),
-      );
+      .where(hoyWhere);
 
     const [countHoyConfirmados] = await db
       .select({ total: count() })
       .from(turnos)
-      .where(
-        and(
-          eq(turnos.medicoId, medico.id),
-          gte(turnos.fechaHora, new Date(today + 'T00:00:00.000Z')),
-          lte(turnos.fechaHora, new Date(today + 'T23:59:59.999Z')),
-          eq(turnos.estado, 'confirmado'),
-          isNull(turnos.deletedAt),
-        ),
-      );
+      .where(and(hoyWhere, eq(turnos.estado, 'confirmado')));
 
     partes.push(
       `📊 Turnos hoy (${today}): ${countHoy?.total ?? 0} total, ${countHoyConfirmados?.total ?? 0} confirmados.`,
     );
 
-    // ─── 4. Pacientes nuevos hoy ────────────────────────────
+    // ─── 4. Pacientes ─────────────────────────────────────
     const [pacientesNuevosHoy] = await db
       .select({ total: count() })
       .from(pacientes)
       .where(
         and(
-          gte(
-            pacientes.createdAt,
-            new Date(today + 'T00:00:00.000Z'),
-          ),
-          lte(
-            pacientes.createdAt,
-            new Date(today + 'T23:59:59.999Z'),
-          ),
+          gte(pacientes.createdAt, new Date(today + 'T00:00:00.000Z')),
+          lte(pacientes.createdAt, new Date(today + 'T23:59:59.999Z')),
           isNull(pacientes.deletedAt),
         ),
       );
@@ -144,8 +150,20 @@ export async function buildContextoDB(
       .from(pacientes)
       .where(isNull(pacientes.deletedAt));
 
+    // Contar pacientes con turnos próximos (pacientes activos)
+    const [pacientesConTurnos] = await db
+      .select({ total: count() })
+      .from(turnos)
+      .where(
+        and(
+          gte(turnos.fechaHora, new Date(today + 'T00:00:00.000Z')),
+          lte(turnos.fechaHora, new Date(nextWeek + 'T23:59:59.999Z')),
+          isNull(turnos.deletedAt),
+        ),
+      );
+
     partes.push(
-      `👥 Pacientes: ${totalPacientes?.total ?? 0} activos (${pacientesNuevosHoy?.total ?? 0} nuevos hoy).`,
+      `👥 Pacientes: ${totalPacientes?.total ?? 0} registrados, ${pacientesNuevosHoy?.total ?? 0} nuevos hoy, ~${pacientesConTurnos?.total ?? 0} turnos en los próximos 7 días.`,
     );
 
     // ─── 5. Recetas activas ─────────────────────────────────
@@ -159,21 +177,28 @@ export async function buildContextoDB(
       .from(recetas)
       .where(
         and(
-          eq(recetas.medicoId, medico.id),
-          eq(recetas.estado, 'activa'),
+          filtroMedicoRecetas,
+          or(eq(recetas.estado, 'activa'), eq(recetas.estado, 'pendiente')),
         ),
       )
       .limit(10);
 
     if (recetasActivas.length > 0) {
-      partes.push(`💊 Recetas activas (${recetasActivas.length}):`);
+      partes.push(`💊 Recetas activas/pendientes (${recetasActivas.length}):`);
       for (const r of recetasActivas) {
         const vencimiento = r.fechaFin
           ? ` (vence ${new Date(r.fechaFin).toLocaleDateString('es-CL')})`
           : '';
-        partes.push(`  • ${r.medicamento}${vencimiento}`);
+        partes.push(`  • ${r.medicamento} [${r.estado}]${vencimiento}`);
       }
+    } else {
+      partes.push(`💊 No hay recetas activas o pendientes.`);
     }
+
+    // ─── 6. Agregar fecha/hora actual ──────────────────────
+    partes.push(
+      `\n📌 Fecha y hora actual del sistema: ${now.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} ${now.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}.`,
+    );
 
     return partes.join('\n');
   } catch (error) {
