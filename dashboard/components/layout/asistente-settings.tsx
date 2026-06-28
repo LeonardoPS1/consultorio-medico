@@ -48,8 +48,24 @@ export function AsistenteSettings({ modo, onModoChange, onClose }: Props) {
     setTimeout(updateArrowState, 100);
   }, [updateArrowState]);
 
+  // Detectar overflow y actualizar flechas después del layout
   useEffect(() => {
+    const el = categoriasScrollRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(() => updateArrowState());
+    observer.observe(el);
+
+    // Múltiples intentos para capturar layout inicial
     requestAnimationFrame(updateArrowState);
+    const timer = setTimeout(updateArrowState, 150);
+    const timer2 = setTimeout(updateArrowState, 500);
+
+    return () => {
+      observer.disconnect();
+      clearTimeout(timer);
+      clearTimeout(timer2);
+    };
   }, [updateArrowState]);
 
   return (
