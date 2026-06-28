@@ -194,11 +194,15 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
         setError(data.data?.error || 'Asistente IA no disponible');
       }
       setCargando(false);
+      // Refrescar sugerencias después de cada mensaje
+      queryClient.invalidateQueries({ queryKey: ['ia-sugerencias'] });
     },
     onError: (err) => {
       setDisponible(false);
       setError(err instanceof Error ? err.message : 'Error desconocido');
       setCargando(false);
+      // Refrescar sugerencias incluso si falló el chat
+      queryClient.invalidateQueries({ queryKey: ['ia-sugerencias'] });
     },
   });
 

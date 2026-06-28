@@ -78,10 +78,15 @@ export const POST = apiHandler(async (request: NextRequest) => {
   // Consultar datos reales del consultorio para que la IA no invente
   const datosDB = await buildContextoDB(usuarioId, body.ruta);
 
-  // Combinar: el system prompt de contexto + los datos reales
-  const fullSystemPrompt = datosDB
-    ? `${systemPrompt}\n\n📋 DATOS ACTUALES DEL CONSULTORIO (usá estos datos reales, no inventes):\n${datosDB}`
-    : systemPrompt;
+  // Construir el bloque de datos reales
+  const bloqueDatos = datosDB
+    ? `📋 DATOS REALES DEL CONSULTORIO (estos datos son REALES, consultados de la base de datos. USALOS para responder, NO inventes nada):\n${datosDB}`
+    : '📋 DATOS DEL CONSULTORIO: No se pudieron consultar datos en este momento. Respondé basándote en tu conocimiento general, pero aclará que los datos podrían no estar actualizados.';
+
+  const instruccionesDB =
+    '\n\n⚠️ INSTRUCCIÓN IMPORTANTE: Los datos del consultorio YA están incluidos arriba en el bloque "DATOS REALES DEL CONSULTORIO". NO digas que no podés acceder a la base de datos porque YA TENÉS los datos. Usalos directamente para responder. Si no hay datos específicos, decí "No tengo información sobre eso en este momento" en vez de inventar.';
+
+  const fullSystemPrompt = `${systemPrompt}\n\n${bloqueDatos}${instruccionesDB}`;
 
   // ─── Construir messages para Ollama ───────────────────────
   const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [

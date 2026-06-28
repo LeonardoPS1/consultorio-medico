@@ -220,7 +220,7 @@ export function AsistentePanel() {
       {/* CHAT (ocupa todo el espacio disponible) */}
       {/* ============================================================ */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <ScrollArea className="flex-1 px-4 py-3" ref={scrollRef}>
+        <ScrollArea className="flex-1 px-4 py-3" viewportRef={scrollRef}>
           <div className="space-y-3">
             {/* Empty state */}
             {mensajes.length === 0 && !cargando && (
