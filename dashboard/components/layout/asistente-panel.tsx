@@ -11,10 +11,10 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   X, Send, Loader2, Sparkles, Trash2, AlertCircle, Bot, User,
-  Settings2,
+  Settings2, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -55,6 +55,29 @@ export function AsistentePanel() {
   const [showSettings, setShowSettings] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const sugerenciasScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Actualiza visibilidad de flechas según scroll
+  const updateArrowState = useCallback(() => {
+    const el = sugerenciasScrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }, []);
+
+  const scrollSugerencias = useCallback((direction: 'left' | 'right') => {
+    const el = sugerenciasScrollRef.current;
+    if (!el) return;
+    const scrollAmount = 220; // ancho aprox de una tarjeta
+    el.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+    // Pequeño delay para que el DOM actualice el scroll position
+    setTimeout(updateArrowState, 100);
+  }, [updateArrowState]);
 
   const modoInfo = MODOS_ASISTENTE.find((m) => m.id === modo);
 
@@ -64,6 +87,14 @@ export function AsistentePanel() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [mensajes, cargando]);
+
+  // Recalcular flechas cuando cambian sugerencias
+  useEffect(() => {
+    // Esperar a que el DOM renderice las tarjetas
+    requestAnimationFrame(() => {
+      updateArrowState();
+    });
+  }, [sugerencias, updateArrowState]);
 
   // Focus input cuando se abre el panel
   useEffect(() => {
@@ -182,7 +213,7 @@ export function AsistentePanel() {
       {/* CONTENT: suggestions + chat alternan según estado */}
       {/* ============================================================ */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {/* ─── SUGERENCIAS (tarjetas en grid) ─────────────── */}
+        {/* ─── SUGERENCIAS (carrusel horizontal con flechas) ── */}
         <AnimatePresence>
           {sugerencias.length > 0 && !showSettings && (
             <motion.div
@@ -197,22 +228,52 @@ export function AsistentePanel() {
                 <p className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider mb-2">
                   Sugerencias
                 </p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {sugerencias.map((sug) => (
+                <div className="relative">
+                  {/* Flecha izquierda */}
+                  {canScrollLeft && (
                     <button
-                      key={sug.id}
-                      onClick={() => enviarSugerencia(sug)}
-                      disabled={cargando}
-                      className="group flex items-start gap-2 rounded-xl border bg-card/50 px-3 py-2.5 text-left text-xs transition-all hover:border-primary/30 hover:bg-accent/50 hover:shadow-sm disabled:opacity-40"
+                      onClick={() => scrollSugerencias('left')}
+                      className="absolute -left-1 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-accent transition-colors"
+                      aria-label="Anterior sugerencia"
                     >
-                      <span className="mt-0.5 shrink-0 text-sm leading-none">
-                        {SUGERENCIA_ICONOS[sug.id] || SUGERENCIA_ICONOS.default}
-                      </span>
-                      <span className="leading-snug text-muted-foreground group-hover:text-foreground">
-                        {sug.texto}
-                      </span>
+                      <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
                     </button>
-                  ))}
+                  )}
+
+                  {/* Contenedor scrolleable */}
+                  <div
+                    ref={sugerenciasScrollRef}
+                    onScroll={updateArrowState}
+                    className="flex gap-2 overflow-x-auto scrollbar-none scroll-smooth pb-1"
+                  >
+                    {sugerencias.map((sug) => (
+                      <button
+                        key={sug.id}
+                        onClick={() => enviarSugerencia(sug)}
+                        disabled={cargando}
+                        className="group flex shrink-0 items-start gap-2 rounded-xl border bg-card/50 px-3 py-2.5 text-left text-xs transition-all hover:border-primary/30 hover:bg-accent/50 hover:shadow-sm disabled:opacity-40"
+                        style={{ minWidth: '180px', maxWidth: '220px' }}
+                      >
+                        <span className="mt-0.5 shrink-0 text-sm leading-none">
+                          {SUGERENCIA_ICONOS[sug.id] || SUGERENCIA_ICONOS.default}
+                        </span>
+                        <span className="leading-snug text-muted-foreground group-hover:text-foreground">
+                          {sug.texto}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Flecha derecha */}
+                  {canScrollRight && (
+                    <button
+                      onClick={() => scrollSugerencias('right')}
+                      className="absolute -right-1 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-accent transition-colors"
+                      aria-label="Siguiente sugerencia"
+                    >
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>
