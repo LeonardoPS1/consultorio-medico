@@ -18,7 +18,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   X, Send, Loader2, Sparkles, Trash2, AlertCircle, Bot, User,
-  ChevronDown,
+  ChevronDown, Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -238,10 +238,7 @@ function PanelContent({
             title="Configuración"
             aria-label="Configuración del asistente"
           >
-            <svg className={`h-3.5 w-3.5 transition-transform duration-200 ${showSettings ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-            </svg>
+            <Settings className={`h-3.5 w-3.5 transition-transform duration-200 ${showSettings ? 'rotate-90' : ''}`} />
           </button>
           <button
             onClick={cerrar}

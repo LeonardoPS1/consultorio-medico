@@ -77,7 +77,7 @@ export async function ollamaChat(options: OllamaChatOptions): Promise<OllamaChat
 
   safeLog(`[Ollama] ${urls.length} URLs, modelo: ${model}, config: ${configured || '(no config)'}`);
 
-  const globalTimeout = 60_000;
+  const globalTimeout = 120_000;
   const globalController = new AbortController();
   const globalTimer = setTimeout(() => globalController.abort(), globalTimeout);
 
@@ -89,8 +89,8 @@ export async function ollamaChat(options: OllamaChatOptions): Promise<OllamaChat
       // Health check 3s para ver si la URL responde
       const alive = await healthCheck(configured, globalController.signal);
       if (alive) {
-        // POST con timeout generoso (25s para cold start del modelo)
-        const result = await tryUrl(configured, model, options, 25_000, globalController.signal);
+        // POST con timeout generoso (45s para cold start del modelo gemma3)
+        const result = await tryUrl(configured, model, options, 45_000, globalController.signal);
         if (result) return result;
         lastError = `POST falló pese a health check OK en ${configured}`;
       } else {
@@ -98,10 +98,10 @@ export async function ollamaChat(options: OllamaChatOptions): Promise<OllamaChat
         safeWarn(`[Ollama] Health check falló en ${configured}, probando fallbacks...`);
       }
 
-      // Fallbacks en paralelo
+      // Fallbacks en paralelo (30s cada uno para dar margen a cold start)
       const fallbacks = urls.slice(1);
       if (fallbacks.length > 0) {
-        const result = await tryUrlsInParallel(fallbacks, model, options, 10_000, globalController);
+        const result = await tryUrlsInParallel(fallbacks, model, options, 30_000, globalController);
         if (result) return result;
       }
       lastError = 'Todas las URLs fallaron';
