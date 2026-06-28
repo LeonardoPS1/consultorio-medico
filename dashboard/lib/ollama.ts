@@ -23,17 +23,24 @@ function getConfig(): OllamaConfig {
   return {
     baseUrl,
     model,
-    healthCheckTimeout: 4000,
-    requestTimeout: 15000,
-    globalTimeout: 45000,
+    healthCheckTimeout: 8000,
+    requestTimeout: 30000,
+    globalTimeout: 60000,
   };
 }
 
 /**
  * URLs de fallback cuando OLLAMA_BASE_URL no está configurada.
- * Orden: Docker gateway (producción Dokploy) → service name → localhost.
+ * Orden: Docker networks (producción Dokploy) → service name → localhost.
  */
-const FALLBACK_URLS = ['http://172.18.0.1:11434', 'http://ollama:11434', 'http://localhost:11434'];
+const FALLBACK_URLS = [
+  'http://172.18.0.1:11434',
+  'http://172.17.0.1:11434',
+  'http://172.19.0.1:11434',
+  'http://host.docker.internal:11434',
+  'http://ollama:11434',
+  'http://localhost:11434',
+];
 
 // ─── Tipos ─────────────────────────────────────────────────────
 
@@ -180,9 +187,10 @@ export async function ollamaChat(options: OllamaChatOptions): Promise<OllamaChat
     }
 
     // Todas las URLs fallaron
+    const envInfo = `OLLAMA_BASE_URL=${process.env.OLLAMA_BASE_URL || '(no configurada)'}, OLLAMA_MODEL=${process.env.OLLAMA_MODEL || '(no configurado)'}`;
     const msg = !attemptedAny
-      ? `Ninguna URL de Ollama respondió al health check. Último: ${lastError}`
-      : `Todas las URLs de Ollama fallaron. Último error: ${lastError}`;
+      ? `Ninguna URL de Ollama respondió al health check. ${envInfo}. Último: ${lastError}`
+      : `Todas las URLs de Ollama fallaron. ${envInfo}. Último error: ${lastError}`;
     safeWarn(`[Ollama] ${msg}`);
     return { content: '', success: false, error: msg, sourceUrl: urls[0] };
   } catch (e) {

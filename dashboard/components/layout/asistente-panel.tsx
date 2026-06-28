@@ -150,8 +150,8 @@ export function AsistentePanel() {
       </AnimatePresence>
 
       {/* Chat area */}
-      <ScrollArea className="flex-1 px-4 py-3" ref={scrollRef}>
-        <div className="space-y-3 min-h-[200px]">
+      <ScrollArea className="flex-1 px-4 py-3 max-h-[400px]" ref={scrollRef}>
+        <div className="space-y-3">
           {/* Empty state */}
           {mensajes.length === 0 && !cargando && (
             <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -234,26 +234,29 @@ export function AsistentePanel() {
         </div>
       </ScrollArea>
 
-      {/* Sugerencias pills */}
+      {/* Sugerencias pills — scrollable horizontal */}
       <AnimatePresence>
         {sugerencias.length > 0 && !showSettings && (
           <motion.div
-            className="px-4 pb-2 flex flex-wrap gap-1.5"
+            className="px-4 pb-2 overflow-x-auto scrollbar-thin"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
           >
-            {sugerencias.slice(0, 3).map((sug) => (
-              <button
-                key={sug.id}
-                onClick={() => enviarSugerencia(sug)}
-                className="inline-flex items-center gap-1 rounded-full border bg-background px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
-                disabled={cargando}
-              >
-                {sug.icono && <span>{sug.icono}</span>}
-                {sug.texto}
-              </button>
-            ))}
+            <div className="flex gap-1.5 w-max">
+              {sugerencias.map((sug) => (
+                <button
+                  key={sug.id}
+                  onClick={() => enviarSugerencia(sug)}
+                  className="inline-flex items-center gap-1 rounded-full border bg-background px-2.5 py-1 text-xs text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
+                  disabled={cargando}
+                  title={sug.prompt}
+                >
+                  {sug.icono && <span>{sug.icono}</span>}
+                  {sug.texto}
+                </button>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

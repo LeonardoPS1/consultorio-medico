@@ -1,5 +1,13 @@
 # 📜 Log Global de Sesiones
 
+## 28/06 — Fixes: notificaciones error + toggles sugerencias + FAB position ✅
+- **NotificacionesClient**: error banner visible + retry button cuando API falla
+- **GatedContent**: agregada ruta /dashboard/notificaciones con feature 'notificaciones'
+- **AsistenteSettings**: toggles ahora reflejan !silenciadas[cat.id] (no existencia sugerencias)
+- **AsistenteProvider**: expone silenciadas en context value
+- **AsistenteFAB**: fixed bottom-6 right-6 z-50 (estaba sin posición fija)
+- Build ✓ 0 TS errors. Commit 069ed4c, push a origin/main ✅
+
 ## 27/06 — Item 11 + 12 + 13 COMPLETOS ✅
 
 ### Item 12: React.cache() + unstable_cache + revalidateTag
