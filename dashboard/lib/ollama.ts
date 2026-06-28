@@ -4,11 +4,12 @@
  * Estrategia:
  * 1. Con OLLAMA_BASE_URL configurada:
  *    - Health check rápido (GET /api/tags, 3s timeout) para verificar conectividad
- *    - Si responde: POST con timeout generoso (25s) para permitir cold start del modelo
- *    - Si falla: prueba fallbacks en paralelo
- * 2. Sin config: Promise.race entre todas las URLs
+ *    - Si responde: POST con timeout generoso (45s) para permitir cold start del modelo
+ *    - Si falla: prueba fallbacks en paralelo (race-to-success)
+ * 2. Sin config: race-to-success entre todas las URLs (30s c/u)
  * 3. keep_alive permanente (-1m) para mantener el modelo en RAM entre requests
- * 4. Timeout global 60s
+ * 4. Timeout global 120s
+ * 5. maxDuration en /api/ia/chat = 120s (debe ser >= global timeout)
  */
 
 import { safeLog, safeWarn, safeError } from './logger';
@@ -82,6 +83,7 @@ export async function ollamaChat(options: OllamaChatOptions): Promise<OllamaChat
   const globalTimer = setTimeout(() => globalController.abort(), globalTimeout);
 
   let lastError = '';
+  let diagnositco = ''; // Info extra para debug
 
   try {
     if (configured) {
@@ -93,28 +95,42 @@ export async function ollamaChat(options: OllamaChatOptions): Promise<OllamaChat
         const result = await tryUrl(configured, model, options, 45_000, globalController.signal);
         if (result) return result;
         lastError = `POST falló pese a health check OK en ${configured}`;
+        diagnositco = 'Health check OK, pero POST /v1/chat/completions falló. Posible timeout o error 500 del modelo.';
       } else {
         lastError = `Health check falló en ${configured}`;
+        diagnositco = `GET ${configured}/api/tags no responde. Ollama puede estar caído o la URL no es alcanzable desde el container.`;
         safeWarn(`[Ollama] Health check falló en ${configured}, probando fallbacks...`);
       }
 
       // Fallbacks en paralelo (30s cada uno para dar margen a cold start)
       const fallbacks = urls.slice(1);
-      if (fallbacks.length > 0) {
-        const result = await tryUrlsInParallel(fallbacks, model, options, 30_000, globalController);
+      if (fallbacks.length > 0 && !globalController.signal.aborted) {
+        safeLog(`[Ollama] Intentando ${fallbacks.length} fallbacks en paralelo...`);
+        const fallbackController = new AbortController();
+        const fallbackTimer = setTimeout(() => fallbackController.abort(), 90_000);
+        // Link al global: si el global se aborta, también abortamos fallbacks
+        const onGlobalAbort = () => fallbackController.abort();
+        if (globalController.signal.aborted) {
+          fallbackController.abort();
+        } else {
+          globalController.signal.addEventListener('abort', onGlobalAbort);
+        }
+        const result = await tryUrlsInParallel(fallbacks, model, options, 30_000, fallbackController);
+        clearTimeout(fallbackTimer);
+        globalController.signal.removeEventListener('abort', onGlobalAbort);
         if (result) return result;
       }
       lastError = 'Todas las URLs fallaron';
     } else {
       // ─── Sin config: Promise.race ───────────────────────────
-      const result = await tryUrlsInParallel(urls, model, options, 10_000, globalController);
+      const result = await tryUrlsInParallel(urls, model, options, 30_000, globalController);
       if (result) return result;
       lastError = 'Todas las URLs fallaron';
     }
 
     const env = `OLLAMA_BASE_URL=${configured || '(no config)'}, OLLAMA_MODEL=${model}`;
     const msg = `Ollama no disponible. ${env}. Último error: ${lastError}`;
-    safeWarn(`[Ollama] ${msg}`);
+    safeWarn(`[Ollama] ${msg}. ${diagnositco}`);
     return { content: '', success: false, error: msg, sourceUrl: urls[0] };
   } catch (e) {
     const err = e instanceof Error ? e.message : String(e);
@@ -132,19 +148,42 @@ async function tryUrlsInParallel(
   model: string,
   options: OllamaChatOptions,
   timeoutMs: number,
-  globalController: AbortController,
+  controller: AbortController,
 ): Promise<OllamaChatResult | null> {
-  const attempts = urls.map((baseUrl) =>
-    tryUrl(baseUrl, model, options, timeoutMs, globalController.signal),
-  );
+  // Primera que TENGA ÉXITO gana. Si todas fallan, devuelve null.
+  return new Promise((resolve) => {
+    let settled = 0;
+    const total = urls.length;
+    let resolved = false;
 
-  // Promise.race para obtener la más rápida
-  const result = await Promise.race(attempts);
-  if (result) return result;
+    // Cancelador propio para abortar las pendientes cuando una gana
+    const cancelPendientes = new AbortController();
+    const onCancel = () => cancelPendientes.abort();
+    if (controller.signal.aborted) {
+      cancelPendientes.abort();
+    } else {
+      controller.signal.addEventListener('abort', onCancel);
+    }
 
-  // Si todas fallaron, esperar que terminen
-  await Promise.allSettled(attempts);
-  return null;
+    const combinedSignal = AbortSignal.any([controller.signal, cancelPendientes.signal]);
+
+    for (const baseUrl of urls) {
+      tryUrl(baseUrl, model, options, timeoutMs, combinedSignal).then((result) => {
+        if (resolved) return;
+        settled++;
+
+        if (result) {
+          resolved = true;
+          cancelPendientes.abort(); // Cancelar las demás
+          controller.signal.removeEventListener('abort', onCancel);
+          resolve(result);
+        } else if (settled === total) {
+          controller.signal.removeEventListener('abort', onCancel);
+          resolve(null);
+        }
+      });
+    }
+  });
 }
 
 async function tryUrl(
@@ -152,12 +191,13 @@ async function tryUrl(
   model: string,
   options: OllamaChatOptions,
   timeoutMs: number,
-  globalSignal: AbortSignal,
+  signal: AbortSignal,
 ): Promise<OllamaChatResult | null> {
+  const t0 = Date.now();
   try {
     const requestController = new AbortController();
     const requestTimer = setTimeout(() => requestController.abort(), timeoutMs);
-    const combined = AbortSignal.any([globalSignal, requestController.signal]);
+    const combined = AbortSignal.any([signal, requestController.signal]);
 
     const res = await fetch(`${baseUrl}/v1/chat/completions`, {
       method: 'POST',
@@ -173,10 +213,11 @@ async function tryUrl(
     });
 
     clearTimeout(requestTimer);
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
 
     if (!res.ok) {
       const body = await res.text().catch(() => 'sin body');
-      safeWarn(`[Ollama] ${baseUrl} → HTTP ${res.status}: ${body.slice(0, 100)}`);
+      safeWarn(`[Ollama] ${baseUrl} → HTTP ${res.status} en ${elapsed}s: ${body.slice(0, 200)}`);
       return null;
     }
 
@@ -184,15 +225,16 @@ async function tryUrl(
     const content = data?.choices?.[0]?.message?.content?.trim();
 
     if (content) {
-      safeLog(`[Ollama] OK desde ${baseUrl} (${content.length} chars)`);
+      safeLog(`[Ollama] OK desde ${baseUrl} en ${elapsed}s (${content.length} chars)`);
       return { content, success: true, sourceUrl: baseUrl };
     }
 
-    safeWarn(`[Ollama] ${baseUrl} → respuesta vacía`);
+    safeWarn(`[Ollama] ${baseUrl} → respuesta vacía en ${elapsed}s`);
     return null;
   } catch (err) {
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
     const msg = err instanceof Error ? err.message : String(err);
-    safeWarn(`[Ollama] ${baseUrl} → ${msg}`);
+    safeWarn(`[Ollama] ${baseUrl} → ${msg} en ${elapsed}s (timeout=${timeoutMs / 1000}s)`);
     return null;
   }
 }

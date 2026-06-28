@@ -17,7 +17,7 @@ import { apiHandler, success, fail } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 30; // Vercel/Node timeout
+export const maxDuration = 120; // Ollama cold start puede tardar 25s+
 
 import { parseBody } from '@/lib/validations';
 import { ollamaChat } from '@/lib/ollama';
