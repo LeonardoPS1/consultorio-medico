@@ -2,7 +2,7 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 26/06/2026
+**Última actualización:** 28/06/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
@@ -568,6 +568,10 @@ consultorio-medico/
 | ~~Google Calendar sync~~ | `turnosService.create/update/delete()` con GCal sync | 28/05 |
 | ~~ARCO - Derecho de Supresión~~ | `privacidadService` con baja, cascada de datos, anonimización, WF-09 retención 90 días | 28/05 |
 | **Portal Paciente** | Magic link WhatsApp + JWT 24h + Booking Wizard 4 pasos + gestión turnos/recetas/historial | 26/06 |
+| **Asistente IA Flotante** | FAB + panel contextual con 3 modos (silencioso/sugerente/activo), 9 contextos de página | 27/06 |
+| **Command Palette Cmd+K** | 17 nav + 9 admin + 6 quick actions, búsqueda paralela, debounce 250ms | 27/06 |
+| **Historial Lateral pacientes** | Sheet con fuse.js, scoring dots, resumen rápido + acciones | 27/06 |
+| **Notificaciones Mejoradas** | Prioridad por tipo, silenciar categorías, stack badges, filtros | 27/06 |
 
 ### 🟡 Prioridad Media
 

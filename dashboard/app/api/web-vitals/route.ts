@@ -5,6 +5,8 @@ import { apiHandler, success, fail } from '@/lib/api-handler';
 import { auth } from '@/lib/auth';
 import { and, gte, desc, sql, count, avg, min, max, lte, lt, like, not, isNull, or } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 // ─── Helpers ─────────────────────────────────────────────────
 
 function getPeriodRange(period: string, now: Date = new Date()): { since: Date | undefined; until: Date | undefined } {

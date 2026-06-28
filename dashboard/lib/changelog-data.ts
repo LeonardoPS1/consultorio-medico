@@ -12,6 +12,29 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.14.0',
+    date: '28/06/2026',
+    title: 'Asistente IA, Historial Lateral, Command Palette y Notificaciones Mejoradas',
+    items: [
+      'Asistente IA Flotante: FAB con Sparkles + panel de chat contextual en cualquier página del dashboard',
+      '3 modos de asistente: Silencioso, Sugerente (cards de sugerencias) y Activo (chat libre con IA)',
+      'Sugerencias contextuales inteligentes según la página actual (9 contextos distintos)',
+      'Atajo Ctrl+Shift+I para abrir/cerrar el asistente rápidamente',
+      'Historial Lateral de pacientes: Sheet con búsqueda fuzzy (fuse.js) de pacientes',
+      'Resumen rápido del paciente: datos, alergias, turnos próximos, recetas activas, última nota SOAP',
+      'Scoring dots visuales en búsqueda y resumen (riesgo de inasistencia)',
+      'Acciones rápidas: ver ficha completa + WhatsApp directo desde el panel',
+      'Atajo Ctrl+Shift+P para abrir el historial lateral',
+      'Command Palette estilo Cmd+K con 17 navegación + 9 admin + 6 acciones rápidas',
+      'Búsqueda paralela en 4 APIs (pacientes, turnos, recetas, mensajes) con debounce 250ms',
+      'Feature gating + role gating en cada comando (admin vs no-admin)',
+      'Notificaciones mejoradas: prioridad por tipo (urgencia > receta > turno > mensaje > sistema)',
+      'Silenciar categorías: ocultar badges de tipos específicos de notificaciones',
+      'Stack de mini-badges en el header con límite visible de 3 tipos + contador numérico',
+      'Filtros por tipo con conteo en la página de notificaciones',
+    ],
+  },
+  {
     version: '1.13.0',
     date: '27/06/2026',
     title: 'Rendimiento, Portal Analytics y Nuevos Precios',

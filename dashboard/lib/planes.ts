@@ -83,7 +83,9 @@ export const PLANES: Record<PlanId, PlanInfo> = {
     popular: true,
     features: [
       'Todo lo de Starter +',
-      'Asistente IA (triaje + respuestas automáticas)',
+      'Asistente IA (triaje + respuestas automáticas + asistente flotante contextual)',
+      'Command Palette (navegación rápida Cmd+K con búsqueda inteligente)',
+      'Historial Lateral de pacientes con búsqueda fuzzy y resumen rápido',
       'Derivaciones entre especialistas con seguimiento completo',
       'Alertas inteligentes (cumpleaños, ausentismo recurrente, pacientes críticos)',
       'Reportes avanzados + Exportación Excel/PDF',

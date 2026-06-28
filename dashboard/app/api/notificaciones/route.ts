@@ -7,6 +7,8 @@ import { apiHandler, success, created, ok, fail } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
 import { createNotificacionSchema } from '@/lib/validations';
 
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_SILENCIAR = { turno: false, mensaje: false, receta: false, urgencia: false, sistema: false };
 
 // ─── GET /api/notificaciones ────────────────────────────────
@@ -19,7 +21,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
 
   // Si hay ?preferencias=true, devolver solo preferencias (backward compat)
-  if (searchParams.get('preferencias') === 'true' || (!searchParams.toString() && !searchParams.get('conteoPorTipo'))) {
+  if (searchParams.get('preferencias') === 'true') {
     let prefs = await db
       .select()
       .from(preferenciasNotificaciones)
@@ -108,14 +110,29 @@ export const PUT = apiHandler(async (request: NextRequest) => {
       .update(preferenciasNotificaciones)
       .set(updateData)
       .where(eq(preferenciasNotificaciones.usuarioId, userId));
+
+    // Retornar preferencias actualizadas para que el refetch tenga datos correctos
+    const updated = await db
+      .select()
+      .from(preferenciasNotificaciones)
+      .where(eq(preferenciasNotificaciones.usuarioId, userId))
+      .limit(1);
+
+    return ok({ ok: true, data: updated[0] ?? null });
   } else {
     await db.insert(preferenciasNotificaciones).values({
       usuarioId: userId,
       ...(updateData as Record<string, unknown>),
     });
-  }
 
-  return ok({ ok: true });
+    const inserted = await db
+      .select()
+      .from(preferenciasNotificaciones)
+      .where(eq(preferenciasNotificaciones.usuarioId, userId))
+      .limit(1);
+
+    return ok({ ok: true, data: inserted[0] ?? null });
+  }
 });
 
 // ─── POST /api/notificaciones ───────────────────────────────

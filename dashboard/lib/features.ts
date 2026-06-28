@@ -58,7 +58,10 @@ export type FeatureId =
   | 'web-vitals'
   | 'portal-analytics'
   | 'data-cache'
-  | 'carga-masiva';
+  | 'carga-masiva'
+  | 'command-palette'
+  | 'patient-panel'
+  | 'ia-asistente-flotante';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -110,6 +113,9 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'data-cache': 'premium',
   'multi-sucursal': 'enterprise',
   'carga-masiva': 'enterprise',
+  'command-palette': 'professional',
+  'patient-panel': 'professional',
+  'ia-asistente-flotante': 'professional',
 };
 
 // ============================================================
