@@ -223,9 +223,17 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // ─── Auto-scroll ────────────────────────────────────────
+  // ─── Auto-scroll (solo si el usuario está cerca del fondo) ──
   useEffect(() => {
-    mensajesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = mensajesEndRef.current;
+    if (!el) return;
+    const parent = el.parentElement;
+    if (!parent) return;
+    // Solo hacer scroll si el usuario está a menos de 100px del fondo
+    const distanceFromBottom = parent.scrollHeight - parent.scrollTop - parent.clientHeight;
+    if (distanceFromBottom < 100) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [mensajes]);
 
   // ─── Actions ────────────────────────────────────────────

@@ -81,10 +81,13 @@ export function AsistentePanel() {
 
   const modoInfo = MODOS_ASISTENTE.find((m) => m.id === modo);
 
-  // Auto-scroll al último mensaje
+  // Auto-scroll al último mensaje (solo si el usuario está cerca del fondo)
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const el = scrollRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distanceFromBottom < 100) {
+      el.scrollTop = el.scrollHeight;
     }
   }, [mensajes, cargando]);
 
