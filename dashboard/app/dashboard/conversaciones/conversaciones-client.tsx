@@ -192,7 +192,7 @@ export function ConversacionesClient({ initialConversaciones }: Props) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
         {/* Lista de conversaciones */}
-        <Card className="lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto">
+        <Card className="max-h-[40vh] lg:max-h-[calc(100vh-12rem)] overflow-y-auto">
           <CardContent className="p-0">
             <div className="p-3 border-b space-y-2">
               <div className="relative">

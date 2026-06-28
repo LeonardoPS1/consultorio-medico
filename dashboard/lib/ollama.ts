@@ -1,13 +1,14 @@
 /**
- * Cliente Ollama optimizado para velocidad.
+ * Cliente Ollama robusto.
  *
  * Estrategia:
- * 1. Si OLLAMA_BASE_URL está configurada, prueba SOLO esa URL primero
- *    con timeout agresivo (10s). Si falla, prueba fallbacks.
- * 2. Sin config, prueba todas las URLs posibles en paralelo (Promise.race)
- *    para obtener la respuesta más rápida.
- * 3. keep_alive permanente (-1m) para mantener el modelo en RAM.
- * 4. Timeout global reducido a 45s (vs 120s anterior).
+ * 1. Con OLLAMA_BASE_URL configurada:
+ *    - Health check rápido (GET /api/tags, 3s timeout) para verificar conectividad
+ *    - Si responde: POST con timeout generoso (25s) para permitir cold start del modelo
+ *    - Si falla: prueba fallbacks en paralelo
+ * 2. Sin config: Promise.race entre todas las URLs
+ * 3. keep_alive permanente (-1m) para mantener el modelo en RAM entre requests
+ * 4. Timeout global 60s
  */
 
 import { safeLog, safeWarn, safeError } from './logger';
@@ -43,7 +44,7 @@ function getUrls(): string[] {
   const configured = process.env.OLLAMA_BASE_URL;
   if (!configured) return ALL_URLS;
 
-  // Configurada primero, luego fallbacks distintas
+  // Configurada primera, luego fallbacks sin duplicar
   const urls = [configured];
   for (const fb of ALL_URLS) {
     if (fb !== configured && !urls.includes(fb)) urls.push(fb);
@@ -51,40 +52,64 @@ function getUrls(): string[] {
   return urls;
 }
 
+// ─── Health check rápido (GET /api/tags) ─────────────────────
+
+async function healthCheck(baseUrl: string, signal: AbortSignal): Promise<boolean> {
+  try {
+    const hcController = new AbortController();
+    const hcTimer = setTimeout(() => hcController.abort(), 3000);
+    const combined = AbortSignal.any([signal, hcController.signal]);
+
+    const res = await fetch(`${baseUrl}/api/tags`, { signal: combined });
+    clearTimeout(hcTimer);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 // ─── Función principal ────────────────────────────────────────
 
-/**
- * Llama a Ollama para generar una respuesta.
- *
- * Con OLLAMA_BASE_URL configurada: prueba secuencial (config → fallbacks)
- * Sin config: Promise.race entre TODAS las URLs (más rápido en desarrollo)
- */
 export async function ollamaChat(options: OllamaChatOptions): Promise<OllamaChatResult> {
   const model = process.env.OLLAMA_MODEL || 'gemma3';
   const configured = process.env.OLLAMA_BASE_URL;
   const urls = getUrls();
 
-  safeLog(`[Ollama] ${urls.length} URLs, modelo: ${model}, config: ${configured || '(no)'}`);
+  safeLog(`[Ollama] ${urls.length} URLs, modelo: ${model}, config: ${configured || '(no config)'}`);
 
-  const timeoutPorUrl = configured ? 10_000 : 8_000;
-  const globalTimeout = 45_000;
-
+  const globalTimeout = 60_000;
   const globalController = new AbortController();
   const globalTimer = setTimeout(() => globalController.abort(), globalTimeout);
 
   let lastError = '';
 
   try {
-    // ─── Con URL configurada: secuencial (configurada primero) ──
     if (configured) {
-      const result = await tryUrlsSequentially(urls, model, options, timeoutPorUrl, globalController);
-      if (result) return result;
+      // ─── Con config: health check rápido → POST generoso ──
+      // Health check 3s para ver si la URL responde
+      const alive = await healthCheck(configured, globalController.signal);
+      if (alive) {
+        // POST con timeout generoso (25s para cold start del modelo)
+        const result = await tryUrl(configured, model, options, 25_000, globalController.signal);
+        if (result) return result;
+        lastError = `POST falló pese a health check OK en ${configured}`;
+      } else {
+        lastError = `Health check falló en ${configured}`;
+        safeWarn(`[Ollama] Health check falló en ${configured}, probando fallbacks...`);
+      }
+
+      // Fallbacks en paralelo
+      const fallbacks = urls.slice(1);
+      if (fallbacks.length > 0) {
+        const result = await tryUrlsInParallel(fallbacks, model, options, 10_000, globalController);
+        if (result) return result;
+      }
       lastError = 'Todas las URLs fallaron';
     } else {
-      // ─── Sin config: Promise.race para máxima velocidad ───────
-      const result = await tryUrlsInParallel(urls, model, options, timeoutPorUrl, globalController);
+      // ─── Sin config: Promise.race ───────────────────────────
+      const result = await tryUrlsInParallel(urls, model, options, 10_000, globalController);
       if (result) return result;
-      lastError = 'Todas las URLs fallaron en paralelo';
+      lastError = 'Todas las URLs fallaron';
     }
 
     const env = `OLLAMA_BASE_URL=${configured || '(no config)'}, OLLAMA_MODEL=${model}`;
@@ -100,25 +125,7 @@ export async function ollamaChat(options: OllamaChatOptions): Promise<OllamaChat
   }
 }
 
-// ─── Helper: intentar URLs secuencialmente ────────────────────
-
-async function tryUrlsSequentially(
-  urls: string[],
-  model: string,
-  options: OllamaChatOptions,
-  timeoutMs: number,
-  globalController: AbortController,
-): Promise<OllamaChatResult | null> {
-  for (const baseUrl of urls) {
-    if (globalController.signal.aborted) break;
-
-    const result = await tryUrl(baseUrl, model, options, timeoutMs, globalController.signal);
-    if (result) return result;
-  }
-  return null;
-}
-
-// ─── Helper: Promise.race entre todas las URLs ────────────────
+// ─── Helpers ──────────────────────────────────────────────────
 
 async function tryUrlsInParallel(
   urls: string[],
@@ -131,15 +138,14 @@ async function tryUrlsInParallel(
     tryUrl(baseUrl, model, options, timeoutMs, globalController.signal),
   );
 
+  // Promise.race para obtener la más rápida
   const result = await Promise.race(attempts);
   if (result) return result;
 
-  // Si todas fallaron, esperar a que terminen todas
+  // Si todas fallaron, esperar que terminen
   await Promise.allSettled(attempts);
   return null;
 }
-
-// ─── Helper: intentar una URL ─────────────────────────────────
 
 async function tryUrl(
   baseUrl: string,
@@ -197,12 +203,16 @@ export async function listModels(): Promise<string[]> {
   const urls = getUrls();
   const results = await Promise.allSettled(
     urls.map(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/tags`, {
-        signal: AbortSignal.timeout(5000),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.models?.map((m: { name: string }) => m.name) || [];
+      try {
+        const res = await fetch(`${baseUrl}/api/tags`, {
+          signal: AbortSignal.timeout(5000),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data.models?.map((m: { name: string }) => m.name) || [];
+        }
+      } catch {
+        // ignore
       }
       return [];
     }),
