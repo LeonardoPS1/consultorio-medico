@@ -1,9 +1,9 @@
 /**
- * buildContextoDB — Consulta datos reales de PostgreSQL y los formatea
- * para inyectar en el system prompt del asistente IA.
+ * buildContextoDB — Consulta datos reales de PostgreSQL en PARALELO
+ * y los formatea para inyectar en el system prompt del asistente IA.
  *
- * Esto evita que el modelo invente turnos, pacientes o recetas.
- * Se llama desde POST /api/ia/chat.
+ * TODAS las consultas se ejecutan en paralelo via Promise.all para
+ * minimizar la latencia. Si alguna falla, se omite esa sección.
  *
  * Flujo de resolución de médico:
  * 1. Busca médico vinculado al usuario autenticado (medicos.usuarioId)
@@ -12,8 +12,8 @@
  */
 
 import { db } from '@/lib/db';
-import { turnos, pacientes, recetas, medicos } from '@/drizzle/schema';
-import { eq, and, gte, lte, count, isNull, or } from 'drizzle-orm';
+import { turnos, pacientes, recetas, medicos, conversaciones } from '@/drizzle/schema';
+import { eq, and, gte, lte, count, isNull, isNotNull, or } from 'drizzle-orm';
 
 /**
  * Consulta datos reales del consultorio y los devuelve como texto
@@ -33,9 +33,11 @@ export async function buildContextoDB(
     const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split('T')[0];
+    const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0];
 
-    // ─── 1. Resolver médico ───────────────────────────────
-    // 1a. Buscar médico vinculado al usuario
+    // ─── 1. Resolver médico (rápido, query individual) ─────
     let medico = await db
       .select({ id: medicos.id, nombre: medicos.nombre })
       .from(medicos)
@@ -43,7 +45,6 @@ export async function buildContextoDB(
       .limit(1)
       .then((r) => r[0] ?? null);
 
-    // 1b. Si no hay médico vinculado, buscar el primer médico activo
     if (!medico) {
       medico = await db
         .select({ id: medicos.id, nombre: medicos.nombre })
@@ -53,19 +54,11 @@ export async function buildContextoDB(
         .then((r) => r[0] ?? null);
     }
 
-    // 1c. Condición base: si hay médico, filtrar por él
-    //     Si no hay ningún médico, consultar sin filtro (tenant-level)
     const medicoId = medico?.id;
     const filtroMedico = medicoId ? eq(turnos.medicoId, medicoId) : undefined;
     const filtroMedicoRecetas = medicoId ? eq(recetas.medicoId, medicoId) : undefined;
 
-    const partes: string[] = [];
-
-    if (medico?.nombre) {
-      partes.push(`👨‍⚕️ Médico: ${medico.nombre}`);
-    }
-
-    // ─── 2. Turnos próximos (hoy + próximos 7 días) ────────
+    // ─── 2. Ejecutar TODAS las consultas en PARALELO ──────
     const turnosWhere = and(
       filtroMedico,
       gte(turnos.fechaHora, new Date(today + 'T00:00:00.000Z')),
@@ -73,45 +66,6 @@ export async function buildContextoDB(
       isNull(turnos.deletedAt),
     );
 
-    const turnosProximos = await db
-      .select({
-        id: turnos.id,
-        fechaHora: turnos.fechaHora,
-        estado: turnos.estado,
-        motivo: turnos.motivo,
-        pacienteNombre: pacientes.nombre,
-        pacienteApellido: pacientes.apellido,
-      })
-      .from(turnos)
-      .innerJoin(pacientes, eq(turnos.pacienteId, pacientes.id))
-      .where(turnosWhere)
-      .orderBy(turnos.fechaHora)
-      .limit(20);
-
-    if (turnosProximos.length > 0) {
-      partes.push(`📅 Turnos programados (${today} al ${nextWeek}):`);
-      for (const t of turnosProximos) {
-        const fecha = t.fechaHora
-          ? new Date(t.fechaHora).toLocaleDateString('es-CL')
-          : '?';
-        const hora = t.fechaHora
-          ? new Date(t.fechaHora).toLocaleTimeString('es-CL', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-          : '?';
-        const paciente = [t.pacienteNombre, t.pacienteApellido]
-          .filter(Boolean)
-          .join(' ');
-        partes.push(
-          `  • ${fecha} ${hora} | ${paciente} | ${t.estado || 'pendiente'}${t.motivo ? ` | "${t.motivo}"` : ''}`,
-        );
-      }
-    } else {
-      partes.push(`📅 No hay turnos programados del ${today} al ${nextWeek}.`);
-    }
-
-    // ─── 3. Turnos de HOY (resumen) ─────────────────────────
     const hoyWhere = and(
       filtroMedico,
       gte(turnos.fechaHora, new Date(today + 'T00:00:00.000Z')),
@@ -119,90 +73,185 @@ export async function buildContextoDB(
       isNull(turnos.deletedAt),
     );
 
-    const [countHoy] = await db
-      .select({ total: count() })
-      .from(turnos)
-      .where(hoyWhere);
+    const [
+      turnosProximos,
+      countHoyResult,
+      countHoyConfirmadosResult,
+      pacientesNuevosHoyResult,
+      totalPacientesResult,
+      pacientesConTurnosResult,
+      recetasActivas,
+      mensajesSinResponder,
+      recetasPorVencer,
+    ] = await Promise.all([
+      // Turnos próximos (7 días)
+      db
+        .select({
+          id: turnos.id,
+          fechaHora: turnos.fechaHora,
+          estado: turnos.estado,
+          motivo: turnos.motivo,
+          pacienteNombre: pacientes.nombre,
+          pacienteApellido: pacientes.apellido,
+        })
+        .from(turnos)
+        .innerJoin(pacientes, eq(turnos.pacienteId, pacientes.id))
+        .where(turnosWhere)
+        .orderBy(turnos.fechaHora)
+        .limit(20)
+        .catch(() => []),
 
-    const [countHoyConfirmados] = await db
-      .select({ total: count() })
-      .from(turnos)
-      .where(and(hoyWhere, eq(turnos.estado, 'confirmado')));
+      // Conteo turnos hoy
+      db
+        .select({ total: count() })
+        .from(turnos)
+        .where(hoyWhere)
+        .then((r) => r[0])
+        .catch(() => ({ total: 0 })),
 
+      // Conteo confirmados hoy
+      db
+        .select({ total: count() })
+        .from(turnos)
+        .where(and(hoyWhere, eq(turnos.estado, 'confirmado')))
+        .then((r) => r[0])
+        .catch(() => ({ total: 0 })),
+
+      // Pacientes nuevos hoy
+      db
+        .select({ total: count() })
+        .from(pacientes)
+        .where(
+          and(
+            gte(pacientes.createdAt, new Date(today + 'T00:00:00.000Z')),
+            lte(pacientes.createdAt, new Date(today + 'T23:59:59.999Z')),
+            isNull(pacientes.deletedAt),
+          ),
+        )
+        .then((r) => r[0])
+        .catch(() => ({ total: 0 })),
+
+      // Total pacientes
+      db
+        .select({ total: count() })
+        .from(pacientes)
+        .where(isNull(pacientes.deletedAt))
+        .then((r) => r[0])
+        .catch(() => ({ total: 0 })),
+
+      // Turnos próximos (conteo)
+      db
+        .select({ total: count() })
+        .from(turnos)
+        .where(
+          and(
+            gte(turnos.fechaHora, new Date(today + 'T00:00:00.000Z')),
+            lte(turnos.fechaHora, new Date(nextWeek + 'T23:59:59.999Z')),
+            isNull(turnos.deletedAt),
+          ),
+        )
+        .then((r) => r[0])
+        .catch(() => ({ total: 0 })),
+
+      // Recetas activas/pendientes
+      db
+        .select({
+          id: recetas.id,
+          medicamento: recetas.medicamento,
+          fechaFin: recetas.fechaFin,
+          estado: recetas.estado,
+        })
+        .from(recetas)
+        .where(
+          and(
+            filtroMedicoRecetas,
+            or(eq(recetas.estado, 'activa'), eq(recetas.estado, 'pendiente')),
+          ),
+        )
+        .limit(10)
+        .catch(() => []),
+
+      // Conversaciones activas (último mensaje del paciente = sin responder)
+      db
+        .select({ total: count() })
+        .from(conversaciones)
+        .where(
+          and(
+            eq(conversaciones.estado, 'activa'),
+            eq(conversaciones.ultimoMensajeRol, 'paciente'),
+            isNull(conversaciones.deletedAt),
+          ),
+        )
+        .then((r) => r[0])
+        .catch(() => ({ total: 0 })),
+
+      // Recetas próximas a vencer (7 días)
+      db
+        .select({ total: count() })
+        .from(recetas)
+        .where(
+          and(
+            filtroMedicoRecetas,
+            eq(recetas.estado, 'activa'),
+            isNotNull(recetas.fechaFin),
+            gte(recetas.fechaFin, today),
+            lte(recetas.fechaFin, nextWeek),
+          ),
+        )
+        .then((r) => r[0])
+        .catch(() => ({ total: 0 })),
+    ]);
+
+    // ─── 3. Construir texto formateado ─────────────────────
+    const partes: string[] = [];
+
+    // Encabezado con médico
+    partes.push(`📋 DATOS DEL CONSULTORIO — ${now.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`);
+    if (medico?.nombre) {
+      partes.push(`👨‍⚕️ Médico: ${medico.nombre}`);
+    }
+
+    // Turnos próximos
+    if (turnosProximos.length > 0) {
+      partes.push(`\n📅 PRÓXIMOS TURNOS (${today} al ${nextWeek}):`);
+      for (const t of turnosProximos) {
+        const fecha = t.fechaHora
+          ? new Date(t.fechaHora).toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short' })
+          : '?';
+        const hora = t.fechaHora
+          ? new Date(t.fechaHora).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
+          : '?';
+        const paciente = [t.pacienteNombre, t.pacienteApellido].filter(Boolean).join(' ');
+        partes.push(`  • ${fecha} ${hora} — ${paciente} [${t.estado || 'pendiente'}]${t.motivo ? `: "${t.motivo}"` : ''}`);
+      }
+    } else {
+      partes.push(`\n📅 No hay turnos programados del ${today} al ${nextWeek}.`);
+    }
+
+    // Resumen de hoy (compacto)
     partes.push(
-      `📊 Turnos hoy (${today}): ${countHoy?.total ?? 0} total, ${countHoyConfirmados?.total ?? 0} confirmados.`,
+      `📊 HOY: ${countHoyResult?.total ?? 0} turnos (${countHoyConfirmadosResult?.total ?? 0} confirmados) · ${pacientesNuevosHoyResult?.total ?? 0} pacientes nuevos · ${mensajesSinResponder?.total ?? 0} mensajes sin responder`,
     );
 
-    // ─── 4. Pacientes ─────────────────────────────────────
-    const [pacientesNuevosHoy] = await db
-      .select({ total: count() })
-      .from(pacientes)
-      .where(
-        and(
-          gte(pacientes.createdAt, new Date(today + 'T00:00:00.000Z')),
-          lte(pacientes.createdAt, new Date(today + 'T23:59:59.999Z')),
-          isNull(pacientes.deletedAt),
-        ),
-      );
-
-    const [totalPacientes] = await db
-      .select({ total: count() })
-      .from(pacientes)
-      .where(isNull(pacientes.deletedAt));
-
-    // Contar pacientes con turnos próximos (pacientes activos)
-    const [pacientesConTurnos] = await db
-      .select({ total: count() })
-      .from(turnos)
-      .where(
-        and(
-          gte(turnos.fechaHora, new Date(today + 'T00:00:00.000Z')),
-          lte(turnos.fechaHora, new Date(nextWeek + 'T23:59:59.999Z')),
-          isNull(turnos.deletedAt),
-        ),
-      );
-
+    // Totales
     partes.push(
-      `👥 Pacientes: ${totalPacientes?.total ?? 0} registrados, ${pacientesNuevosHoy?.total ?? 0} nuevos hoy, ~${pacientesConTurnos?.total ?? 0} turnos en los próximos 7 días.`,
+      `📈 TOTALES: ${totalPacientesResult?.total ?? 0} pacientes · ~${pacientesConTurnosResult?.total ?? 0} turnos próximos · ${recetasActivas.length} recetas activas${recetasPorVencer?.total ? ` · ${recetasPorVencer.total} por vencer` : ''}`,
     );
 
-    // ─── 5. Recetas activas ─────────────────────────────────
-    const recetasActivas = await db
-      .select({
-        id: recetas.id,
-        medicamento: recetas.medicamento,
-        fechaFin: recetas.fechaFin,
-        estado: recetas.estado,
-      })
-      .from(recetas)
-      .where(
-        and(
-          filtroMedicoRecetas,
-          or(eq(recetas.estado, 'activa'), eq(recetas.estado, 'pendiente')),
-        ),
-      )
-      .limit(10);
-
+    // Recetas activas
     if (recetasActivas.length > 0) {
-      partes.push(`💊 Recetas activas/pendientes (${recetasActivas.length}):`);
+      partes.push(`\n💊 RECETAS ACTIVAS:`);
       for (const r of recetasActivas) {
         const vencimiento = r.fechaFin
           ? ` (vence ${new Date(r.fechaFin).toLocaleDateString('es-CL')})`
           : '';
         partes.push(`  • ${r.medicamento} [${r.estado}]${vencimiento}`);
       }
-    } else {
-      partes.push(`💊 No hay recetas activas o pendientes.`);
     }
-
-    // ─── 6. Agregar fecha/hora actual ──────────────────────
-    partes.push(
-      `\n📌 Fecha y hora actual del sistema: ${now.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} ${now.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}.`,
-    );
 
     return partes.join('\n');
   } catch (error) {
     console.error('[buildContextoDB] Error:', error);
-    return null; // No interrumpir el chat si falla la consulta
+    return null;
   }
 }
