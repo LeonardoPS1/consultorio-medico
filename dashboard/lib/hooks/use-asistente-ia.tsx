@@ -16,6 +16,7 @@ import {
   createContext,
   useContext,
   useState,
+  useRef,
   useCallback,
   useEffect,
   type ReactNode,
@@ -124,6 +125,12 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
     }
   });
 
+  // Ref para evitar stale closures en mutations
+  const userSettingsRef = useRef(userSettings);
+  useEffect(() => {
+    userSettingsRef.current = userSettings;
+  }, [userSettings]);
+
   // Persistir settings
   useEffect(() => {
     try {
@@ -170,6 +177,7 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mensaje,
+          modo: userSettingsRef.current.modo,
           ruta: pathname,
           datosContexto,
           historial: mensajes.slice(-10).map((m) => ({

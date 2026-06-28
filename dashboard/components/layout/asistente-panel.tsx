@@ -421,38 +421,39 @@ function PanelContent({
           </div>
         </div>
 
-        {/* ─── Sugerencias Pills ────────────────────────── */}
-        <AnimatePresence>
-          {mostrarSugerencias && (
-            <motion.div
-              key="sugerencias"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="overflow-hidden border-t border-border/30 shrink-0"
-            >
-              <div className="flex gap-1.5 px-3 py-2 overflow-x-auto scrollbar-none">
-                {sugerencias.map((sug) => (
-                  <button
-                    key={sug.id}
-                    onClick={() => enviarSugerencia(sug)}
-                    disabled={cargando}
-                    className="group flex shrink-0 items-center gap-1.5 rounded-full border border-border/40 bg-muted/30 px-3 py-1.5 text-[11px] whitespace-nowrap transition-all hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-foreground disabled:opacity-40 active:scale-95"
-                  >
-                    <span className="text-xs leading-none">
-                      {SUGERENCIA_ICONOS[sug.categoria] || SUGERENCIA_ICONOS.default}
-                    </span>
-                    <span className="text-muted-foreground group-hover:text-foreground transition-colors">
-                      {sug.texto}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      {/* ─── Sugerencias Pills ────────────────────────── */}
+      <AnimatePresence>
+        {mostrarSugerencias && (
+          <motion.div
+            key="sugerencias"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className="shrink-0"
+          >
+            <div className="flex gap-1.5 px-3 py-2 overflow-x-auto scrollbar-none border-t border-border/30">
+              {sugerencias.map((sug) => (
+                <button
+                  key={sug.id}
+                  onClick={() => enviarSugerencia(sug)}
+                  disabled={cargando}
+                  className="group flex shrink-0 items-center gap-1.5 rounded-full border border-border/40 bg-muted/30 px-3 py-1.5 text-[11px] whitespace-nowrap transition-all hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-foreground disabled:opacity-40 active:scale-95"
+                >
+                  <span className="text-xs leading-none">
+                    {SUGERENCIA_ICONOS[sug.categoria] || SUGERENCIA_ICONOS.default}
+                  </span>
+                  <span className="text-muted-foreground group-hover:text-foreground transition-colors">
+                    {sug.texto}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ════════════════════════════════════════════════════ */}
       {/* INPUT AREA — glassy bottom bar */}

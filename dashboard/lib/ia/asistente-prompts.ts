@@ -248,6 +248,18 @@ export function getSugerencias(
 // Constantes exportadas
 // ============================================================
 
+export function buildModoPrompt(modo: ModoAsistente): string {
+  const prompts: Record<ModoAsistente, string> = {
+    silencioso:
+      '📌 Modo SILENCIOSO: Respondé solo cuando te pregunten directamente. Sé breve (máximo 1-2 párrafos). No ofrezcas ayuda adicional ni sugerencias no solicitadas.',
+    sugerente:
+      '📌 Modo SUGERENTE: Respondé de forma clara y concisa con los datos disponibles. Ofrecé información útil de forma natural.',
+    activo:
+      '📌 Modo ACTIVO: Respondé de forma completa y ofrecete proactivamente a ayudar. Después de responder, preguntá si el médico necesita revisar algo más (turnos, pacientes, recetas) o analizar algo en detalle.',
+  };
+  return prompts[modo];
+}
+
 export const MODOS_ASISTENTE: { id: ModoAsistente; label: string; descripcion: string; icono: string }[] = [
   {
     id: 'silencioso',

@@ -21,7 +21,7 @@ export const maxDuration = 120; // Ollama cold start puede tardar 25s+
 
 import { parseBody } from '@/lib/validations';
 import { ollamaChat } from '@/lib/ollama';
-import { buildSystemPrompt } from '@/lib/ia/asistente-prompts';
+import { buildSystemPrompt, buildModoPrompt } from '@/lib/ia/asistente-prompts';
 import { buildContextoDB } from '@/lib/ia/asistente-context';
 import { db } from '@/lib/db';
 import { tenants } from '@/drizzle/schema';
@@ -59,6 +59,7 @@ const chatSchema = z.object({
   mensaje: z.string().min(1).max(2000),
   ruta: z.string().min(1),
   datosContexto: z.record(z.unknown()).optional(),
+  modo: z.enum(['silencioso', 'sugerente', 'activo']).optional().default('sugerente'),
   historial: z
     .array(
       z.object({
@@ -98,27 +99,33 @@ export const POST = apiHandler(async (request: NextRequest) => {
   // ─── Prompt compacto y DIRECTIVO ─────────────────────────
   // Formato: instrucciones + datos + contexto
   const bloqueDatos = datosDB
-    ? `DATOS REALES DEL CONSULTORIO (usá estos datos para responder, NO inventes nada):\n${datosDB}`
+    ? `DATOS DE REFERENCIA DEL CONSULTORIO (usá esta información para responder, reformulando en lenguaje natural):\n${datosDB}`
     : 'NOTA: No se pudieron consultar datos actualizados. Respondé con conocimiento general.';
 
   // Prompt ultra directivo para respuestas rápidas y factuales
   const INSTRUCCIONES_ADICIONALES = [
     '',
-    '--- INSTRUCCIONES IMPORTANTES ---',
-    '1. YA TENÉS los datos del consultorio arriba. NO digas que no podés acceder a la base de datos.',
-    '2. Respondé en español chileno, directo y sin rodeos.',
-    '3. SIEMPRE usá los datos reales que te proporcioné. No inventes información.',
-    '4. Si te preguntan por algo que no está en los datos, decí "No tengo información sobre eso" y sugerí revisar el dashboard.',
-    '5. Respuestas BREVES (máximo 3-4 párrafos). Al grano.',
-    '6. Cuando muestres turnos, incluí paciente, fecha y estado.',
+    '--- INSTRUCCIONES ---',
+    '1. Ya tenés los datos del consultorio disponibles arriba. Respondé con esa información.',
+    '2. HABLÁ NATURAL: Reformulá todo en lenguaje natural, como un asistente conversando con el médico. No repitas los datos textualmente.',
+    '   ✅ "Hoy tenés 3 turnos, 2 confirmados."',
+    '   ❌ "HOY: 3 turnos (2 confirmados)" — NO repitas el formato crudo.',
+    '   ✅ "No hay recetas activas para este paciente."',
+    '   ❌ "Recetas activas: 0." — NO repitas datos literales.',
+    '3. Si te preguntan por algo y no hay datos, decí suavemente que no hay información disponible. Sin excusas técnicas.',
+    '4. Sé conciso pero natural. Lenguaje chileno, profesional y cálido.',
+    '5. No inventes nada. Solo usá los datos provistos.',
     '',
   ].join('\n');
+
+  const modoPrompt = buildModoPrompt(body.modo);
 
   const fullSystemPrompt = [
     systemPrompt,
     '',
     bloqueDatos,
     INSTRUCCIONES_ADICIONALES,
+    modoPrompt,
   ].join('\n');
 
   // ─── Construir messages para Ollama ───────────────────────
