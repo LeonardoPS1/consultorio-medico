@@ -12,6 +12,26 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.15.0',
+    date: '29/06/2026',
+    title: 'Portal Analytics, Repositorio, Novedades y Tooltips',
+    items: [
+      'Portal Analytics: panel de Web Vitals con KPIs en tiempo real (LCP, INP, CLS, FCP, TTFB) y compliance score',
+      'Gráficos interactivos: timeline horario/diario, heatmap 24h, bar chart de promedios, tabla por URL',
+      'Filtros por sección (dashboard, portal, landing) y por dispositivo (mobile/desktop)',
+      'Rendimiento Web: panel completo con percentiles, rating distribution, heatmap y tabla de URLs recientes',
+      'Rating por color: thresholds de Google (good/needs-improvement/poor) aplicados en tiempo real',
+      'Tooltips con nombre completo de métrica al hacer hover en gráficos, tabla y KPIs',
+      'Fix "Invalid Date" en tooltips y leyendas de Recharts con guards en formatDate y formatBucket',
+      'Página dedicada de Novedades en /dashboard/novedades con historial completo de versiones',
+      'Link al repositorio de GitHub en el footer y sidebar para código fuente y contribuciones',
+      'Sección Acerca de con versión, repo, changelog y enlaces útiles',
+      'Ayuda expandida con nuevas secciones: Asistente IA Flotante, Command Palette, Portal Analytics',
+      'Fix Ollama DEFINITIVO: maxDuration 120s, race-to-success, cold start 25s+ manejado correctamente',
+      'Optimización de paquetes: framer-motion → motion standalone (4,621KB → 659KB)',
+    ],
+  },
+  {
     version: '1.14.0',
     date: '28/06/2026',
     title: 'Asistente IA, Historial Lateral, Command Palette y Notificaciones Mejoradas',

@@ -1158,6 +1158,138 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
     ],
   },
+  {
+    id: 'asistente-ia-flotante',
+    titulo: 'Asistente IA Flotante',
+    descripcion: 'Chat contextual con IA en cualquier página del dashboard',
+    icono: 'Sparkles',
+    pasos: [
+      {
+        titulo: 'Abrir y usar el asistente',
+        descripcion:
+          'El asistente flota sobre todas las páginas del dashboard. Hacé clic en el ícono de chispa (✨) abajo a la derecha o presioná Ctrl+Shift+I.',
+        tips: [
+          'Disponible en plan Professional o superior',
+          'Se adapta al contexto de la página actual automáticamente',
+          'Sugiere acciones relevantes según lo que estás viendo',
+          'Usa IA local (Gemma3) para respuestas rápidas y privadas',
+        ],
+      },
+      {
+        titulo: 'Modos del asistente',
+        descripcion: 'Configurá el comportamiento del asistente según tu preferencia.',
+        tips: [
+          'Silencioso: solo responde cuando le preguntás, sin sugerencias automáticas',
+          'Sugerente: muestra cards con sugerencias contextuales sin interrumpir',
+          'Activo: chat libre con la IA, responde completo y se ofrece a revisar más datos',
+          'Podés cambiar el modo desde el panel de configuración del asistente',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿El asistente usa mis datos para entrenar?',
+        respuesta:
+          'No. Todo corre en tu propia infraestructura con Ollama (IA local). Tus datos nunca salen del servidor.',
+      },
+      {
+        pregunta: '¿Puedo desactivar el asistente?',
+        respuesta:
+          'Sí, podés cerrarlo con la X o configurarlo en modo Silencioso desde el panel de ajustes.',
+      },
+    ],
+  },
+  {
+    id: 'command-palette',
+    titulo: 'Command Palette (Cmd+K)',
+    descripcion: 'Navegación rápida y búsqueda inteligente desde el teclado',
+    icono: 'Command',
+    pasos: [
+      {
+        titulo: 'Abrir la paleta',
+        descripcion:
+          'Presioná Cmd+K (Mac) o Ctrl+K (Windows/Linux) en cualquier página del dashboard.',
+        tips: [
+          'Disponible en plan Professional o superior',
+          'También podés abrirla desde el header, al lado del botón de novedades',
+          'La paleta aparece sobre la página actual sin interrumpir tu flujo',
+        ],
+      },
+      {
+        titulo: 'Buscar y ejecutar comandos',
+        descripcion: 'Escribí para buscar entre más de 30 comandos disponibles.',
+        tips: [
+          'Navegación: buscá "turnos", "pacientes", "reportes" para ir directamente',
+          'Admin: buscá "rendimiento", "auditoría", "webhooks" si tenés permisos',
+          'Acciones: buscá "nuevo turno", "nuevo paciente", "exportar" para crear rápido',
+          'Los comandos admin tienen un ícono de escudo para identificarlos',
+          'Usá las flechas del teclado para navegar y Enter para ejecutar',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Qué comandos están disponibles?',
+        respuesta:
+          'Hay 17 comandos de navegación (todas las páginas del dashboard), 9 comandos de admin (si tenés permisos) y 6 acciones rápidas (crear turno, paciente, exportar, etc.).',
+      },
+      {
+        pregunta: '¿Puedo personalizar los comandos?',
+        respuesta:
+          'No todavía, pero estamos trabajando en una versión con accesos directos configurables.',
+      },
+    ],
+  },
+  {
+    id: 'historial-lateral',
+    titulo: 'Historial Lateral de Pacientes',
+    descripcion: 'Acceso rápido a la ficha del paciente sin cambiar de página',
+    icono: 'PanelRight',
+    pasos: [
+      {
+        titulo: 'Abrir el panel lateral',
+        descripcion:
+          'Presioná Ctrl+Shift+P o hacé clic en el botón de paciente en el header del dashboard.',
+        tips: [
+          'Disponible en plan Professional o superior',
+          'El panel se abre desde la derecha sin recargar la página',
+          'Aparece sobre la página actual, no la reemplaza',
+        ],
+      },
+      {
+        titulo: 'Buscar pacientes',
+        descripcion:
+          'Usá el buscador con autocompletado inteligente para encontrar pacientes rápidamente.',
+        tips: [
+          'Búsqueda fuzzy: no necesitás escribir exacto, funciona con aproximaciones',
+          'Muestra score de inasistencia con puntos de colores (verde/amarillo/rojo)',
+          'Acciones rápidas: abrí la ficha completa o enviá WhatsApp directamente',
+        ],
+      },
+      {
+        titulo: 'Resumen del paciente',
+        descripcion: 'El panel muestra un resumen completo sin abrir la ficha completa.',
+        tips: [
+          'Datos personales, alergias y contacto de emergencia',
+          'Turnos próximos y recetas activas',
+          'Última nota SOAP registrada',
+          'Desde acá podés crear un nuevo turno o ver el historial completo',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Puedo tener varios pacientes abiertos a la vez?',
+        respuesta:
+          'No, el panel muestra un paciente por vez. Al buscar otro, se reemplaza la vista actual.',
+      },
+      {
+        pregunta: '¿El panel funciona en mobile?',
+        respuesta:
+          'Sí, se adapta al ancho de la pantalla. En mobile ocupa todo el ancho disponible como un modal.',
+      },
+    ],
+  },
 ];
 
 export function getSeccionAyuda(id: string): AyudaSeccion | undefined {

@@ -32,6 +32,8 @@ import {
   BookOpen,
   ListChecks,
   Bell,
+  Newspaper,
+  Info,
   ArrowRightLeft,
   Ban,
   FileSignature,
@@ -91,7 +93,9 @@ const navItems: NavItem[] = [
   },
   { title: 'Notificaciones', href: '/dashboard/notificaciones', icon: Bell },
   { title: 'Ajustes', href: '/dashboard/configuracion', icon: Sliders },
+  { title: 'Novedades', href: '/dashboard/novedades', icon: Newspaper },
   { title: 'Ayuda', href: '/dashboard/ayuda', icon: BookOpen },
+  { title: 'Acerca de', href: '/dashboard/acerca', icon: Info },
 ];
 
 export function Sidebar() {

@@ -39,8 +39,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <span>
                 © {new Date().getFullYear()} {process.env.NEXT_PUBLIC_TENANT_NAME || 'AiCoreMed'}
               </span>
-              <span className="hidden sm:inline">
-                v{process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'}
+              <span className="flex items-center gap-3">
+                <a
+                  href={process.env.NEXT_PUBLIC_REPO_URL || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden sm:inline hover:text-foreground transition-colors"
+                  title="Código fuente en GitHub"
+                >
+                  GitHub
+                </a>
+                <span className="hidden sm:inline">
+                  v{process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'}
+                </span>
               </span>
             </footer>
           </div>

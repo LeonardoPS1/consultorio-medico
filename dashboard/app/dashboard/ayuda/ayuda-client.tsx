@@ -21,6 +21,11 @@ import {
   ChevronRight,
   Lightbulb,
   BookOpen,
+  Sparkles,
+  Command,
+  PanelRight,
+  Upload,
+  Gauge,
 } from 'lucide-react';
 import type { AyudaSeccion } from '@/lib/ayuda-content';
 import Link from 'next/link';
@@ -43,6 +48,11 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Settings,
   CreditCard,
   ExternalLink: ExternalLinkIcon,
+  Sparkles,
+  Command,
+  PanelRight,
+  Upload,
+  Gauge,
 };
 
 export function AyudaClient({ sections, iconMap: _iconMap }: AyudaClientProps) {
