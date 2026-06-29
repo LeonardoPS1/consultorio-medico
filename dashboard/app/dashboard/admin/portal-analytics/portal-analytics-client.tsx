@@ -89,7 +89,7 @@ function formatDate(iso: string) {
 }
 
 function formatBucket(bucket: string, bucketType: string) {
-  const d = new Date(bucket);
+  const d = new Date(bucket.replace(' ', 'T') + 'Z');
   if (bucketType === 'hour') return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
   return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
 }
@@ -441,13 +441,13 @@ export function PortalAnalyticsClient() {
                 <CardContent>
                   {timelineChartData.length > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={timelineChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                      <LineChart data={timelineChartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                         <XAxis
                           dataKey="bucket"
                           tickFormatter={(v) => formatBucket(v, bucketType)}
                           className="text-[10px]"
-                          interval="preserveStartEnd"
+                          interval={timelineChartData.length > 10 ? Math.floor(timelineChartData.length / 7) : 0}
                         />
                         <YAxis className="text-[10px]" />
                         <Tooltip
