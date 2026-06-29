@@ -395,7 +395,7 @@ export function WebVitalsClient() {
                   <CardHeader className="pb-1">
                     <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                       <div className="h-2 w-2 rounded-full" style={{ backgroundColor: getBarColor(s.name) }} />
-                      {s.name}
+                      <span title={METRIC_LABELS[s.name] || s.name}>{s.name}</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -504,7 +504,7 @@ export function WebVitalsClient() {
                           />
                           <Legend
                             formatter={(value: string) => (
-                              <span className="text-xs">{value}</span>
+                              <span className="text-xs" title={METRIC_LABELS[value] || value}>{value}</span>
                             )}
                           />
                           {(['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as const).map((metric) => (
@@ -541,7 +541,7 @@ export function WebVitalsClient() {
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={pieData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis dataKey="name" className="text-xs" />
+                        <XAxis dataKey="name" className="text-xs" tickFormatter={(v) => v} />
                         <YAxis className="text-xs" />
                         <Tooltip
                           contentStyle={{
@@ -606,7 +606,7 @@ export function WebVitalsClient() {
                         <tbody>
                           {percentiles.map((p) => (
                             <tr key={p.name} className="border-b border-border/50 hover:bg-muted/30">
-                              <td className="px-3 py-2 font-medium">{p.name}</td>
+                              <td className="px-3 py-2 font-medium" title={METRIC_LABELS[p.name] || p.name}>{p.name}</td>
                               <td className="px-3 py-2 text-right font-mono tabular-nums"
                                 style={{ color: getThresholdColor(p.name, p.p50) }}>
                                 {formatValue(p.name, p.p50)}
@@ -657,7 +657,7 @@ export function WebVitalsClient() {
                           <div key={s.name}>
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-sm font-medium flex items-center gap-2">
-                                {s.name}
+                                <span title={METRIC_LABELS[s.name] || s.name}>{s.name}</span>
                                 <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
                                   goodPct >= 80 ? 'text-green-700 bg-green-100' :
                                   goodPct >= 50 ? 'text-yellow-700 bg-yellow-100' :
@@ -738,7 +738,7 @@ export function WebVitalsClient() {
                         <tbody>
                           {comparison.map((c) => (
                             <tr key={c.name} className="border-b border-border/50 hover:bg-muted/30">
-                              <td className="px-3 py-2 font-medium">{c.name}</td>
+                              <td className="px-3 py-2 font-medium" title={METRIC_LABELS[c.name] || c.name}>{c.name}</td>
                               <td className="px-3 py-2 text-right font-mono tabular-nums">
                                 {formatValue(c.name, c.currentAvg)}
                                 <span className="text-muted-foreground ml-1">{METRIC_UNITS[c.name]}</span>
@@ -806,7 +806,7 @@ export function WebVitalsClient() {
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-xs font-medium flex items-center gap-1.5">
                                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: DEVICE_COLORS[d.device] }} />
-                                  {d.name} — {d.device}
+                                  <span title={METRIC_LABELS[d.name] || d.name}>{d.name}</span> — {d.device}
                                 </span>
                                 <span className="text-xs font-mono font-bold" style={{ color: getThresholdColor(d.name, d.avgValue) }}>
                                   {formatValue(d.name, d.avgValue)}
@@ -875,7 +875,7 @@ export function WebVitalsClient() {
                             );
                             return (
                               <tr key={metric}>
-                                <td className="font-medium px-2 py-1.5 text-xs whitespace-nowrap">
+                                <td className="font-medium px-2 py-1.5 text-xs whitespace-nowrap" title={METRIC_LABELS[metric] || metric}>
                                   {metric}
                                 </td>
                                 {Array.from({ length: 24 }, (_, hour) => {
@@ -892,7 +892,7 @@ export function WebVitalsClient() {
                                             backgroundColor: getHeatColor(cell.avgValue, metric),
                                             color: cell.avgValue > METRIC_THRESHOLDS[metric]?.poor ? 'white' : undefined,
                                           }}
-                                          title={`${metric} ${hour}:00 — ${formatValue(metric, cell.avgValue)} ${METRIC_UNITS[metric]} (${cell.count} muestras)`}
+                                          title={`${METRIC_LABELS[metric] || metric} ${hour}:00 — ${formatValue(metric, cell.avgValue)} ${METRIC_UNITS[metric]} (${cell.count} muestras)`}
                                         >
                                           {formatValue(metric, cell.avgValue)}
                                         </div>
@@ -956,7 +956,7 @@ export function WebVitalsClient() {
                             <td className="px-4 py-2 text-xs text-muted-foreground whitespace-nowrap">
                               {formatDate(r.createdAt)}
                             </td>
-                            <td className="px-4 py-2 font-medium text-xs">{r.name}</td>
+                            <td className="px-4 py-2 font-medium text-xs" title={METRIC_LABELS[r.name] || r.name}>{r.name}</td>
                             <td className="px-4 py-2 text-right text-xs font-mono tabular-nums">
                               {formatValue(r.name, r.value)}
                               <span className="text-muted-foreground ml-1">{METRIC_UNITS[r.name]}</span>
@@ -1020,7 +1020,7 @@ export function WebVitalsClient() {
                             <td className="px-4 py-2 text-xs max-w-[200px] truncate font-mono">
                               {r.url || '—'}
                             </td>
-                            <td className="px-4 py-2 text-xs font-medium">{r.metricName}</td>
+                            <td className="px-4 py-2 text-xs font-medium" title={METRIC_LABELS[r.metricName] || r.metricName}>{r.metricName}</td>
                             <td className="px-4 py-2 text-right text-xs font-mono tabular-nums"
                               style={{ color: getThresholdColor(r.metricName, r.avgValue) }}>
                               {formatValue(r.metricName, r.avgValue)}

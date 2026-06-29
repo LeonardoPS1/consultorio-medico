@@ -27,7 +27,11 @@ const PERIODS: { value: Period; label: string }[] = [
 ];
 
 const METRIC_LABELS: Record<string, string> = {
-  LCP: 'LCP', INP: 'INP', CLS: 'CLS', FCP: 'FCP', TTFB: 'TTFB',
+  LCP: 'Largest Contentful Paint',
+  INP: 'Interaction to Next Paint',
+  CLS: 'Cumulative Layout Shift',
+  FCP: 'First Contentful Paint',
+  TTFB: 'Time to First Byte',
 };
 
 const METRIC_UNITS: Record<string, string> = {
@@ -279,7 +283,7 @@ export function PortalAnalyticsClient() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                       <Gauge className="h-3 w-3" style={{ color: METRIC_COLORS.LCP }} />
-                      LCP promedio
+                      <span title="Largest Contentful Paint">LCP</span> promedio
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -301,7 +305,7 @@ export function PortalAnalyticsClient() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                       <Gauge className="h-3 w-3" style={{ color: METRIC_COLORS.INP }} />
-                      INP promedio
+                      <span title="Interaction to Next Paint">INP</span> promedio
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -369,9 +373,9 @@ export function PortalAnalyticsClient() {
                     <thead>
                       <tr className="border-b border-border">
                         <th className="text-left font-medium text-muted-foreground px-4 py-2">Sección</th>
-                        <th className="text-right font-medium text-muted-foreground px-4 py-2">LCP</th>
-                        <th className="text-right font-medium text-muted-foreground px-4 py-2">INP</th>
-                        <th className="text-right font-medium text-muted-foreground px-4 py-2">CLS</th>
+                        <th className="text-right font-medium text-muted-foreground px-4 py-2" title="Largest Contentful Paint">LCP</th>
+                        <th className="text-right font-medium text-muted-foreground px-4 py-2" title="Interaction to Next Paint">INP</th>
+                        <th className="text-right font-medium text-muted-foreground px-4 py-2" title="Cumulative Layout Shift">CLS</th>
                         <th className="text-right font-medium text-muted-foreground px-4 py-2">Muestras</th>
                       </tr>
                     </thead>
@@ -463,7 +467,7 @@ export function PortalAnalyticsClient() {
                             METRIC_LABELS[name] || name,
                           ]}
                         />
-                        <Legend formatter={(value: string) => <span className="text-xs">{value}</span>} />
+                        <Legend formatter={(value: string) => <span className="text-xs" title={METRIC_LABELS[value] || value}>{value}</span>} />
                         {(['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as const).map((metric) => (
                           <Line
                             key={metric}
@@ -499,14 +503,14 @@ export function PortalAnalyticsClient() {
                 <CardContent>
                   {deviceData.filter((d) => d.name === 'LCP').length > 0 ? (
                     <div className="space-y-4">
-                      {['LCP', 'INP', 'CLS', 'FCP', 'TTFB'].map((metric) => {
+                      {(['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as const).map((metric) => {
                         const entries = deviceData.filter((d) => d.name === metric);
                         if (entries.length === 0) return null;
                         const totalForMetric = entries.reduce((a, d) => a + d.count, 0);
                         return (
                           <div key={metric}>
                             <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-sm font-medium">{metric}</span>
+                              <span className="text-sm font-medium" title={METRIC_LABELS[metric] || metric}>{metric}</span>
                               <span className="text-xs text-muted-foreground">{totalForMetric} muestras</span>
                             </div>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -566,7 +570,7 @@ export function PortalAnalyticsClient() {
                         <tbody>
                           {comparison.map((c) => (
                             <tr key={c.name} className="border-b border-border/50 hover:bg-muted/30">
-                              <td className="px-4 py-2 font-medium text-sm">{c.name}</td>
+                              <td className="px-4 py-2 font-medium text-sm" title={METRIC_LABELS[c.name] || c.name}>{c.name}</td>
                               <td className="px-4 py-2 text-right font-mono tabular-nums">
                                 {formatValue(c.name, c.currentAvg)}
                                 <span className="text-muted-foreground ml-1">{METRIC_UNITS[c.name]}</span>
@@ -619,7 +623,7 @@ export function PortalAnalyticsClient() {
                     return (
                       <div key={s.name}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium">{s.name}</span>
+                          <span className="text-sm font-medium" title={METRIC_LABELS[s.name] || s.name}>{s.name}</span>
                           <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
                             goodPct >= 80 ? 'text-green-700 bg-green-100' :
                             goodPct >= 50 ? 'text-yellow-700 bg-yellow-100' :
