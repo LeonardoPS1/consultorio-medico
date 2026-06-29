@@ -1,131 +1,149 @@
 /**
- * Acerca de — Información del proyecto y repositorio
+ * Acerca de — Información general del sistema
  *
- * Server Component: muestra datos estáticos del proyecto.
+ * Server Component: muestra datos estáticos de la aplicación.
  */
 
-import { Info, Github, ExternalLink, PackageOpen, Heart } from 'lucide-react';
+import { Heart, Mail, Globe, HelpCircle, PackageOpen } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'AiCoreMed';
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0';
-const REPO_URL = process.env.NEXT_PUBLIC_REPO_URL || '#';
 const TENANT_NAME = process.env.NEXT_PUBLIC_TENANT_NAME || 'Consultorio';
+
+const features = [
+  {
+    title: 'Gestión de turnos',
+    description: 'Agendá, reprogramá y cancelá turnos con vista Kanban y calendario integrado.',
+  },
+  {
+    title: 'Atención al paciente',
+    description: 'Fichas clínicas completas con notas SOAP, recetas digitales y certificados.',
+  },
+  {
+    title: 'WhatsApp inteligente',
+    description: 'Tus pacientes se comunican por WhatsApp con un asistente IA que entiende y responde.',
+  },
+  {
+    title: 'Reportes y analytics',
+    description: 'Visualizá ingresos, turnos, pacientes y recetas con datos en tiempo real.',
+  },
+  {
+    title: 'Recordatorios automáticos',
+    description: 'Mensajes automaticos 24h y 1h antes de cada turno para reducir inasistencias.',
+  },
+  {
+    title: 'Portal del paciente',
+    description: 'Tus pacientes pueden gestionar sus turnos y recetas desde su celular.',
+  },
+];
 
 export default async function AcercaPage() {
   return (
-    <div className="space-y-8 max-w-3xl mx-auto">
+    <div className="space-y-10 max-w-3xl mx-auto pb-12">
       <PageHeader
         title="Acerca de"
-        description={`Información del proyecto ${APP_NAME}`}
-        icon={<Info className="size-6" />}
+        description={`Información de ${APP_NAME}`}
+        icon={<PackageOpen className="size-6" />}
       />
 
-      {/* Versión y repo */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="border rounded-lg p-5 bg-card space-y-2">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Versión
-          </h3>
-          <p className="text-2xl font-bold">v{APP_VERSION}</p>
-          <p className="text-sm text-muted-foreground">
-            {TENANT_NAME} &mdash; {APP_NAME}
-          </p>
+      {/* Hero — Logo + Nombre + Versión */}
+      <div className="flex flex-col items-center text-center py-8 space-y-4">
+        <div className="relative size-24 sm:size-28">
+          <Image
+            src="/aicoremed_dark_1200.svg"
+            alt={`${APP_NAME} logo`}
+            fill
+            className="object-contain dark:invert"
+            priority
+          />
         </div>
-
-        <div className="border rounded-lg p-5 bg-card space-y-2">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Repositorio
-          </h3>
-          <a
-            href={REPO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-primary hover:underline"
-          >
-            <Github className="size-5" />
-            GitHub
-            <ExternalLink className="size-3" />
-          </a>
-          <p className="text-sm text-muted-foreground">
-            Código fuente, issues y contribuciones
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">{APP_NAME}</h2>
+          <p className="text-muted-foreground text-sm">
+            Versión <span className="font-mono font-medium">{APP_VERSION}</span>
           </p>
+          <p className="text-muted-foreground text-xs mt-1">{TENANT_NAME}</p>
         </div>
       </div>
 
-      {/* Links útiles */}
-      <div className="border rounded-lg p-5 bg-card">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-          Enlaces útiles
-        </h3>
-        <div className="space-y-3">
+      {/* Descripción */}
+      <div className="border rounded-lg p-6 bg-card text-center">
+        <p className="text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
+          {APP_NAME} es un sistema integral de gestión para consultorios médicos,
+          desarrollado por{' '}
           <a
-            href="/dashboard/novedades"
-            className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors"
-          >
-            <PackageOpen className="size-5 text-primary" />
-            <div>
-              <p className="font-medium text-sm">Novedades</p>
-              <p className="text-xs text-muted-foreground">
-                Historial completo de versiones
-              </p>
-            </div>
-          </a>
-          <a
-            href={REPO_URL + '/issues'}
+            href="https://aicorebots.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors"
+            className="font-medium text-primary hover:underline"
           >
-            <Github className="size-5 text-primary" />
-            <div>
-              <p className="font-medium text-sm">Reportar un problema</p>
-              <p className="text-xs text-muted-foreground">
-                Abrí un issue en GitHub
-              </p>
-            </div>
-            <ExternalLink className="size-3 ml-auto text-muted-foreground" />
+            Aicore
           </a>
-          <a
-            href={REPO_URL + '/releases'}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors"
-          >
-            <PackageOpen className="size-5 text-primary" />
-            <div>
-              <p className="font-medium text-sm">Releases en GitHub</p>
-              <p className="text-xs text-muted-foreground">
-                Cambios técnicos detallados por versión
-              </p>
-            </div>
-            <ExternalLink className="size-3 ml-auto text-muted-foreground" />
-          </a>
-        </div>
+          . Combina automatización inteligente, inteligencia artificial local y
+          comunicación por WhatsApp para simplificar la administración diaria de tu
+          consultorio.
+        </p>
       </div>
 
-      {/* Tech stack */}
-      <div className="border rounded-lg p-5 bg-card">
+      {/* Funcionalidades principales */}
+      <div>
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-          Stack tecnológico
+          Funcionalidades principales
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {[
-            { label: 'Frontend', value: 'Next.js + Tailwind + shadcn/ui' },
-            { label: 'Base de datos', value: 'PostgreSQL + Drizzle ORM' },
-            { label: 'Autenticación', value: 'NextAuth + JWT + 2FA' },
-            { label: 'IA Local', value: 'Ollama + Gemma3' },
-            { label: 'Automatización', value: 'n8n self-hosted' },
-            { label: 'WhatsApp', value: 'Twilio API' },
-            { label: 'Infraestructura', value: 'Docker + Dokploy' },
-            { label: 'Pagos', value: 'MercadoPago (CLP)' },
-            { label: 'Hecho por', value: 'Aicore — aicorebots.com' },
-          ].map((item) => (
-            <div key={item.label} className="p-3 rounded-lg bg-muted/50">
-              <p className="text-xs text-muted-foreground">{item.label}</p>
-              <p className="text-sm font-medium mt-0.5">{item.value}</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {features.map((f) => (
+            <div
+              key={f.title}
+              className="border rounded-lg p-4 bg-card space-y-1"
+            >
+              <p className="font-medium text-sm">{f.title}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {f.description}
+              </p>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Contacto y enlaces */}
+      <div className="border rounded-lg p-6 bg-card space-y-4">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+          Contacto y recursos
+        </h3>
+        <div className="space-y-2">
+          <a
+            href="https://aicorebots.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors text-sm"
+          >
+            <Globe className="size-5 text-primary shrink-0" />
+            <span>aicorebots.com</span>
+          </a>
+          <a
+            href="mailto:hola@aicorebots.com"
+            className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors text-sm"
+          >
+            <Mail className="size-5 text-primary shrink-0" />
+            <span>hola@aicorebots.com</span>
+          </a>
+          <Link
+            href="/dashboard/novedades"
+            className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors text-sm"
+          >
+            <PackageOpen className="size-5 text-primary shrink-0" />
+            <span>Novedades y actualizaciones</span>
+          </Link>
+          <Link
+            href="/dashboard/ayuda"
+            className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors text-sm"
+          >
+            <HelpCircle className="size-5 text-primary shrink-0" />
+            <span>Centro de ayuda</span>
+          </Link>
         </div>
       </div>
 
