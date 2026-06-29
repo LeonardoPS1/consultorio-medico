@@ -89,11 +89,16 @@ function getThresholdColor(name: string, value: number): string {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('es-CL');
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleString('es-CL');
 }
 
 function formatBucket(bucket: string, bucketType: string) {
-  const d = new Date(bucket.replace(' ', 'T') + 'Z');
+  if (!bucket) return '—';
+  const d = new Date(bucket.includes('T') ? bucket : bucket.replace(' ', 'T') + 'Z');
+  if (isNaN(d.getTime())) return bucket;
   if (bucketType === 'hour') return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
   return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
 }
