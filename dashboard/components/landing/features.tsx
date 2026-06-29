@@ -5,13 +5,13 @@ import {
   Syringe,
   BarChart3,
   Bot,
-  Smartphone,
-  Shield,
   Users,
   ChevronRight,
   Video,
   TrendingUp,
-  Gauge,
+  Bell,
+  ExternalLink,
+  GitBranch,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -71,19 +71,19 @@ const defaultFeatures: FeatureItem[] = [
     desc: 'Predicción automática de riesgo de inasistencia con badge visual (verde/amarillo/rojo). Bloqueo automático a lista negra para pacientes con alto score.',
   },
   {
-    icon: Shield,
-    title: 'Seguridad y Auditoría',
-    desc: 'Autenticación 2FA, rate limiting, registro de accesos, contraseñas seguras y backup encriptado automático. Cumplimiento de normativas de salud.',
+    icon: ExternalLink,
+    title: 'Portal del Paciente',
+    desc: 'Tus pacientes gestionan turnos, recetas y certificados desde su celular. Magic link por WhatsApp, sin descargas, sin claves que recordar.',
   },
   {
-    icon: Gauge,
-    title: 'Rendimiento Web Vitals',
-    desc: 'Monitoreo en tiempo real de LCP, INP, CLS. Analytics del portal del paciente y rendimiento por sección. Optimización continua para mejor experiencia.',
+    icon: GitBranch,
+    title: 'Derivaciones + Lista de Espera',
+    desc: 'Derivá pacientes entre especialistas con CIE-10. La waitlist inteligente reasigna turnos cancelados automáticamente con ofertas por WhatsApp.',
   },
   {
-    icon: Smartphone,
-    title: 'App Instalable (PWA)',
-    desc: 'Instala AiCoreMed como app en tu teléfono o escritorio. Notificaciones push, funcionamiento offline parcial y acceso rápido desde cualquier lugar.',
+    icon: Bell,
+    title: 'Alertas Inteligentes',
+    desc: 'Notificaciones automáticas de stock bajo, pacientes críticos, cumpleaños y ausentismo recurrente. Priorizá lo importante sin revisar todo manualmente.',
   },
 ];
 

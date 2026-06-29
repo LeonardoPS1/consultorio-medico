@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { motion, useMotionValue, useSpring } from 'motion/react';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, Bot, Play, MessageCircle, ShieldCheck, Lock, Server } from 'lucide-react';
+import { ChevronRight, Bot, Play, MessageCircle, ShieldCheck, Lock, Server, Smartphone } from 'lucide-react';
 import { RegistroExpressModal } from '@/components/landing/registro-modal';
 
 const fadeUp = {
@@ -34,11 +34,11 @@ export interface HeroProps {
 }
 
 export function Hero({
-  badgeText = 'IA local · Sin costos de API · Datos 100% privados',
-  titleNormal = 'Gestiona tu consultorio',
-  titleHighlight = 'con IA',
-  subtitle = 'Turnos, WhatsApp, recetas, reportes y un asistente con IA local.\n              Todo en un solo panel. Sin mensualidades por IA, sin configuraciones complejas.',
-  subtitleBold = 'Ahorra hasta 10 horas por semana.',
+  badgeText = 'Sin llamadas · Sin papeles · Sin ausentismo',
+  titleNormal = 'Tu consultorio abierto 24/7',
+  titleHighlight = 'sin tener que estar ahí',
+  subtitle = 'WhatsApp con IA, gestión clínica, portal del paciente y automatizaciones.\n              Todo en un solo panel. IA 100% local, tus datos nunca salen de tu servidor.',
+  subtitleBold = 'Ahorrá hasta 10 horas por semana en gestión.',
   stats = [
     { value: '85%', label: 'menos ausentismo' },
     { value: '10h+', label: 'ahorradas/semana' },
@@ -224,7 +224,7 @@ export function Hero({
               <div>
                 <p className="text-sm font-semibold leading-tight">Asistente IA</p>
                 <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                  Mistral · Local · Sin costos
+                  Portal del paciente activo
                 </p>
               </div>
             </motion.div>

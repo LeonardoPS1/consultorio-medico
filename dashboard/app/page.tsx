@@ -3,6 +3,8 @@ import dynamic from 'next/dynamic';
 // SEO — Homepage
 import { Navbar } from '@/components/landing/navbar';
 import { Hero } from '@/components/landing/hero';
+import { HowItWorks } from '@/components/landing/how-it-works';
+import { Testimonials } from '@/components/landing/testimonials';
 import { WhatsAppFloat } from '@/components/landing/whatsapp-float';
 import { CookieConsentBanner } from '@/components/landing/cookie-consent';
 
@@ -58,6 +60,9 @@ export default function LandingPage() {
         <main>
           <Hero />
           <div className="content-visibility-auto">
+            <HowItWorks />
+          </div>
+          <div className="content-visibility-auto">
             <Features />
           </div>
           <div className="content-visibility-auto">
@@ -65,6 +70,9 @@ export default function LandingPage() {
           </div>
           <div className="content-visibility-auto">
             <Gallery />
+          </div>
+          <div className="content-visibility-auto">
+            <Testimonials />
           </div>
           <div className="content-visibility-auto">
             <PainPoints />

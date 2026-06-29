@@ -13,14 +13,14 @@ export interface TestimonialsProps {
 
 const defaultTestimonials: TestimonialItem[] = [
   {
-    text: 'Desde que implementamos AiCoreMed, nuestras citas se llenan un 30% más rápido y redujimos los ausentes en un 20%. La IA de WhatsApp responde automáticamente mientras nosotros atendemos pacientes.',
+    text: 'Desde que implementamos AiCoreMed, los pacientes agendan sus turnos por WhatsApp sin intervención del personal. Recuperamos horas de administración que ahora dedicamos a atender mejor.',
     author: 'Dra. María González',
-    role: 'Clínica Dental Salud, Chile',
+    role: 'Clínica Dental Salud, Santiago, Chile',
   },
   {
     text: 'El asistente con IA local nos permite tener respuestas inteligentes 24/7 sin depender de APIs externas. Ahorramos al menos 2 horas por día en gestión administrativa.',
     author: 'Dr. Roberto Martínez',
-    role: 'Cardiólogo, Buenos Aires',
+    role: 'Cardiólogo, Viña del Mar, Chile',
   },
   {
     text: 'La automatización de recordatorios y la gestión de turnos transformó nuestro centro médico. Pasamos de perder el 25% de los turnos a tener menos del 5% de ausentismo.',
@@ -28,9 +28,9 @@ const defaultTestimonials: TestimonialItem[] = [
     role: 'Santiago, Chile',
   },
   {
-    text: 'El agente de voz con IA nos permite confirmar citas sin intervención humana. Los pacientes ni siquiera notan que están hablando con un asistente virtual.',
-    author: 'Clínica Cardiológica del Pacífico',
-    role: 'Viña del Mar, Chile',
+    text: 'Los certificados médicos con QR los enviamos al instante por WhatsApp. Los pacientes los reciben en su teléfono y pueden verificarlos desde cualquier dispositivo. Un antes y un después.',
+    author: 'Clínica Médica del Pacífico',
+    role: 'Valparaíso, Chile',
   },
 ];
 
