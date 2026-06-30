@@ -639,6 +639,57 @@ export function WebVitalsClient() {
                         </tbody>
                       </table>
                     </div>
+
+                    {/* Stacked bar chart: P50→P99 spread */}
+                    {percentiles.length > 0 && (
+                      <div className="border-t border-border px-3 pt-3 pb-4">
+                        <p className="text-xs text-muted-foreground mb-2 font-medium">
+                          Dispersión percentilar (P50 → P99)
+                        </p>
+                        <ResponsiveContainer width="100%" height={220}>
+                          <BarChart
+                            data={percentiles.map((p) => ({
+                              name: p.name,
+                              good: Number(p.p50) || 0,
+                              fair: (Number(p.p75) || 0) - (Number(p.p50) || 0),
+                              poor: (Number(p.p95) || 0) - (Number(p.p75) || 0),
+                              bad: (Number(p.p99) || 0) - (Number(p.p95) || 0),
+                            }))}
+                            layout="vertical"
+                            barSize={18}
+                            margin={{ top: 6, right: 8, left: 40, bottom: 4 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
+                            <XAxis type="number" tick={{ fontSize: 10 }} />
+                            <YAxis
+                              type="category"
+                              dataKey="name"
+                              tick={{ fontSize: 11 }}
+                              width={32}
+                            />
+                            <Tooltip
+                              formatter={(value: number, name: string) => {
+                                const labels: Record<string, string> = {
+                                  good: 'P50',
+                                  fair: 'P50→P75',
+                                  poor: 'P75→P95',
+                                  bad: 'P95→P99',
+                                };
+                                return [value.toFixed(1), labels[name] || name];
+                              }}
+                              contentStyle={{ fontSize: 11 }}
+                            />
+                            <Bar dataKey="good" stackId="a" fill="#22c55e" name="good" />
+                            <Bar dataKey="fair" stackId="a" fill="#eab308" name="fair" />
+                            <Bar dataKey="poor" stackId="a" fill="#f97316" name="poor" />
+                            <Bar dataKey="bad" stackId="a" fill="#ef4444" name="bad" />
+                            <Legend
+                              wrapperStyle={{ fontSize: 10, paddingTop: 4 }}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 

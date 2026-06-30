@@ -12,6 +12,7 @@ import {
   Bell,
   ExternalLink,
   GitBranch,
+  Stethoscope,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -85,11 +86,16 @@ const defaultFeatures: FeatureItem[] = [
     title: 'Alertas Inteligentes',
     desc: 'Notificaciones automáticas de stock bajo, pacientes críticos, cumpleaños y ausentismo recurrente. Priorizá lo importante sin revisar todo manualmente.',
   },
+  {
+    icon: Stethoscope,
+    title: 'Notas SOAP + CIE-10',
+    desc: 'Evolución clínica estructurada con Subjetivo, Objetivo, Assessment y Plan. Buscador de ~900 códigos CIE-10 integrado en cada nota.',
+  },
 ];
 
 export function Features({
   title = 'Todo lo que necesitas en un solo lugar',
-  subtitle = 'Desde la gestión de turnos hasta reportes avanzados, pasando por WhatsApp con IA local. Todo integrado, sin depender de servicios externos.',
+  subtitle = 'Más de 76 funcionalidades integradas: gestión de turnos, WhatsApp con IA, portal del paciente, recetas digitales, telemedicina y mucho más.',
   features: customFeatures,
 }: FeaturesProps = {}) {
   const items = customFeatures ?? defaultFeatures;
