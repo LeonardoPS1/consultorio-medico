@@ -58,7 +58,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: 'Panel Principal', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'Asistente IA', href: '/dashboard/onboarding', icon: Rocket, feature: 'onboarding' },
+  { title: 'Configuración Inicial', href: '/dashboard/onboarding', icon: Rocket, feature: 'onboarding' },
   { title: 'Atención', href: '/dashboard/atencion', icon: Activity, feature: 'atencion' },
   { title: 'Telemedicina', href: '/dashboard/telemedicina', icon: Video, feature: 'telemedicina' },
   { title: 'Turnos', href: '/dashboard/turnos', icon: Calendar, feature: 'turnos' },
@@ -310,7 +310,7 @@ export function Sidebar() {
                             {item.badge}
                           </span>
                         )}
-                        {item.title === 'Asistente IA' && onboardingPending && (
+                        {item.title === 'Configuración Inicial' && onboardingPending && (
                           <span className="flex h-5 items-center rounded-full bg-amber-500/15 text-amber-500 dark:text-amber-400 text-[9px] font-semibold px-1.5 uppercase tracking-wider shrink-0 ml-1">
                             Continuar
                           </span>

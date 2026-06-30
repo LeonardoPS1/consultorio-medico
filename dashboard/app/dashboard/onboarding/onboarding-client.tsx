@@ -355,7 +355,7 @@ function AiTipCard({
                   <span className="text-[10px] text-amber-500/60 dark:text-amber-400/50">
                     {tipState.status === 'error'
                       ? 'Error de conexión con IA'
-                      : 'Asistente IA no disponible'}
+                      : 'Consejo IA no disponible'}
                   </span>
                   <button
                     onClick={(e) => {

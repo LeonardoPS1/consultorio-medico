@@ -68,7 +68,14 @@ export function PushNotificationToggle() {
         return;
       }
 
-      // 4. Suscribir al PushManager
+      // 4. Verificar que el SW tiene control antes de suscribir
+      if (!navigator.serviceWorker.controller) {
+        setErrorMessage('El Service Worker aún no está activo. Recargá la página.');
+        setStatus('error');
+        return;
+      }
+
+      // 5. Suscribir al PushManager
       let subscription: PushSubscription;
       try {
         subscription = await registration.pushManager.subscribe({
@@ -76,6 +83,13 @@ export function PushNotificationToggle() {
           applicationServerKey: urlBase64ToUint8Array(publicKey) as unknown as BufferSource,
         });
       } catch (err: any) {
+        console.error('[Push] Error en pushManager.subscribe:', {
+          name: err?.name,
+          message: err?.message,
+          browser: navigator.userAgent,
+          vapidConfigured: !!publicKey,
+        });
+
         if (
           err?.name === 'InvalidCharacterError' ||
           err?.message?.includes('applicationServerKey')
@@ -84,6 +98,17 @@ export function PushNotificationToggle() {
         } else if (err?.name === 'NotAllowedError') {
           setStatus('denied');
           return;
+        } else if (err?.name === 'AbortError' || err?.message?.includes('AbortError')) {
+          setErrorMessage('La solicitud de suscripción fue cancelada. Intentá de nuevo.');
+        } else if (
+          err?.message?.includes('Registration failed') ||
+          err?.message?.includes('push service error')
+        ) {
+          setErrorMessage(
+            'El navegador no pudo conectar con el servicio de notificaciones. ' +
+              'Verificá tu conexión a Internet y que las notificaciones del navegador no estén bloqueadas. ' +
+              'Si el problema persiste, probá recargar la página.',
+          );
         } else {
           setErrorMessage(`Error al suscribir: ${err?.message || 'desconocido'}`);
         }

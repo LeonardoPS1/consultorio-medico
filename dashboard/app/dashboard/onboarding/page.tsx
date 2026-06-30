@@ -76,11 +76,11 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
             </svg>
           </div>
           <div className="space-y-1">
-            <h1 className="text-xl font-semibold tracking-tight">Asistente IA</h1>
+            <h1 className="text-xl font-semibold tracking-tight">Configuración Inicial</h1>
             <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
               {isForceRestart
                 ? 'Repasá cada paso y marcalo como completado cuando lo configures.'
-                : 'Guía paso a paso para dejar tu consultorio listo. Cada paso tiene una guía IA personalizada.'}
+                : 'Completá estos pasos para dejar tu consultorio operativo. Cada paso incluye recomendaciones con IA.'}
             </p>
           </div>
         </div>

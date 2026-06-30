@@ -115,32 +115,21 @@ export const GET = apiHandler(async (request: NextRequest) => {
 
   // ── percentiles ── P50, P75, P95, P99
   if (view === 'percentiles') {
-    const percConds: any[] = [];
-    if (since) percConds.push(sql`created_at >= ${since}`);
-    if (section && section !== 'all') {
-      if (section === 'dashboard') percConds.push(sql`url LIKE '/dashboard/%'`);
-      else if (section === 'portal') percConds.push(sql`url LIKE '/portal/%'`);
-      else if (section === 'landing') percConds.push(sql`(url IS NULL OR (url NOT LIKE '/dashboard/%' AND url NOT LIKE '/portal/%'))`);
-    }
-    const percWhere = percConds.length > 0
-      ? sql`WHERE ${sql.join(percConds, sql` AND `)}`
-      : sql``;
+    const raw = await db
+      .select({
+        name: webVitalsMetrics.name,
+        p50: sql<number>`percentile_cont(0.50) WITHIN GROUP (ORDER BY ${webVitalsMetrics.value}::numeric)`,
+        p75: sql<number>`percentile_cont(0.75) WITHIN GROUP (ORDER BY ${webVitalsMetrics.value}::numeric)`,
+        p95: sql<number>`percentile_cont(0.95) WITHIN GROUP (ORDER BY ${webVitalsMetrics.value}::numeric)`,
+        p99: sql<number>`percentile_cont(0.99) WITHIN GROUP (ORDER BY ${webVitalsMetrics.value}::numeric)`,
+        count: sql<number>`COUNT(*)::int`,
+      })
+      .from(webVitalsMetrics)
+      .where(where ?? sql`TRUE`)
+      .groupBy(webVitalsMetrics.name)
+      .orderBy(webVitalsMetrics.name);
 
-    const raw = await db.execute(sql`
-      SELECT
-        name,
-        percentile_cont(0.50) WITHIN GROUP (ORDER BY value::numeric) AS p50,
-        percentile_cont(0.75) WITHIN GROUP (ORDER BY value::numeric) AS p75,
-        percentile_cont(0.95) WITHIN GROUP (ORDER BY value::numeric) AS p95,
-        percentile_cont(0.99) WITHIN GROUP (ORDER BY value::numeric) AS p99,
-        COUNT(*)::int AS count
-      FROM web_vitals_metrics
-      ${percWhere}
-      GROUP BY name
-      ORDER BY name
-    `);
-
-    const data = ((raw as any).rows || []).map((r: any) => ({
+    const data = raw.map((r) => ({
       name: r.name,
       p50: Number(r.p50),
       p75: Number(r.p75),
