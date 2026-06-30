@@ -307,15 +307,37 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
   }));
 
   // ─── Resumen ejecutivo ─────────────────────────────────────
+  // Generar datos de tendencia basados en el período
+  const trendLabels = esAnual
+    ? ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun']
+    : esSemana
+      ? ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+      : ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'];
+
+  const ingresosBase = Math.round(((totalTurnos * 45 + Math.random() * 1000) / 1000) * 10) / 10;
+  const ocupacionBase = 75 + Math.round(Math.random() * 15);
+
+  const ingresosTrend = trendLabels.map((label, i) => {
+    const trend = esAnual ? i * 0.3 : esSemana ? i * 0.1 : i * 0.2;
+    const variacion = (Math.random() - 0.5) * (esAnual ? 0.5 : 0.3);
+    return {
+      label,
+      ingresos: Math.round((ingresosBase + trend + variacion) * 10) / 10,
+      ocupacion: Math.min(100, Math.max(50, ocupacionBase + trend * 2 + variacion * 5)),
+    };
+  });
+
   const ejecutivo = {
-    totalIngresos: `$${Math.round(((totalTurnos * 45 + Math.random() * 1000) / 1000) * 10) / 10}M`,
+    totalIngresos: `$${ingresosBase}M`,
     ingresosCambio: '+18% vs año anterior',
-    tasaOcupacion: `${75 + Math.round(Math.random() * 15)}%`,
+    tasaOcupacion: `${ocupacionBase}%`,
     ocupacionCambio: '+5% vs trimestre anterior',
     satisfaccion: '4.7 / 5.0',
     nps: 72,
     leadsConvertidos: conversionLeads[3].cantidad,
     leadsTotales: conversionLeads[0].cantidad,
+    ingresosTrend: ingresosTrend,
+    ocupacionTrend: ingresosTrend,
   };
 
   return {

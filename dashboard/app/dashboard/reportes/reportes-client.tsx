@@ -62,6 +62,10 @@ const ConversionFunnel = dynamic(() => import('@/components/reportes/conversion-
   ssr: false,
   loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
 });
+const EjecutivoTrendChart = dynamic(() => import('@/components/charts/ejecutivo-trend-chart'), {
+  ssr: false,
+  loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
+});
 
 const iconNames: IconMap = {
   calendar: Calendar,
@@ -456,6 +460,38 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
                 </div>
               </CardContent>
             </Card>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Tendencia de Ingresos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <EjecutivoTrendChart
+                    data={data.ejecutivo.ingresosTrend || []}
+                    metric="ingresos"
+                    title="Ingresos por período (M)"
+                    yLabel="Ingresos (M)"
+                    color="hsl(142, 76%, 36%)"
+                  />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Tendencia de Ocupación</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <EjecutivoTrendChart
+                    data={data.ejecutivo.ocupacionTrend || []}
+                    metric="ocupacion"
+                    title="Tasa de ocupación por período (%)"
+                    yLabel="Ocupación (%)"
+                    color="hsl(221.2, 83.2%, 53.3%)"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+
             {data.conversionLeads && (
               <Card>
                 <CardHeader><CardTitle className="text-lg">Embudo de Conversión</CardTitle></CardHeader>

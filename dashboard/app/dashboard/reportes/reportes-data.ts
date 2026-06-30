@@ -68,6 +68,12 @@ export interface ComparativaAnual {
   anterior: number;
 }
 
+export interface EjecutivoTrend {
+  label: string;
+  ingresos: number;
+  ocupacion: number;
+}
+
 export interface EjecutivoResumen {
   totalIngresos: string;
   ingresosCambio: string;
@@ -77,6 +83,8 @@ export interface EjecutivoResumen {
   nps: number;
   leadsConvertidos: number;
   leadsTotales: number;
+  ingresosTrend: EjecutivoTrend[];
+  ocupacionTrend: EjecutivoTrend[];
 }
 
 export interface ReportesData {
