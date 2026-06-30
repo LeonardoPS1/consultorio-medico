@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { RefreshCw, X, ExternalLink } from 'lucide-react';
 import { useUpdate } from '@/lib/update-context';
-import { CHANGELOG } from '@/lib/changelog-data';
+import { CHANGELOG, type ChangelogEntry } from '@/lib/changelog-data';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 /**
  * Badge de actualización + Modal de novedades.
  * Se muestra en el header cuando hay una nueva versión disponible.
+ * Los datos se cargan desde la API con fallback a changelog estático.
  */
 export function UpdateBadge() {
   const {
@@ -37,7 +38,6 @@ export function UpdateBadge() {
   }, [markChangelogSeen, setChangelogOpen]);
 
   if (!updateReady) {
-    // Mostrar botón Novedades con dot si hay sin leer
     return (
       <>
         <Button
@@ -115,8 +115,37 @@ export function UpdateBadge() {
 }
 
 // ============================================================
-// Modal de Novedades (Changelog)
+// Modal de Novedades (Changelog) — datos desde API con fallback
 // ============================================================
+
+const EMPTY_ENTRY: ChangelogEntry = {
+  version: '—',
+  date: '',
+  title: 'No hay novedades registradas',
+  items: [],
+};
+
+interface ApiNovedad {
+  id: string;
+  version: string;
+  titulo: string;
+  items: string[];
+  fecha: string;
+  tipo: string;
+}
+
+function apiToChangelog(n: ApiNovedad): ChangelogEntry {
+  const d = new Date(n.fecha);
+  const dia = String(d.getDate()).padStart(2, '0');
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const anio = d.getFullYear();
+  return {
+    version: n.version,
+    date: `${dia}/${mes}/${anio}`,
+    title: n.titulo,
+    items: n.items,
+  };
+}
 
 function ChangelogModal({
   open,
@@ -126,6 +155,35 @@ function ChangelogModal({
   onOpenChange: (open: boolean) => void;
 }) {
   const { handleUpdate, updateReady, appVersion } = useUpdate();
+  const [entries, setEntries] = useState<ChangelogEntry[]>(CHANGELOG);
+  const [loading, setLoading] = useState(false);
+
+  // Cargar datos dinámicos desde la API cuando se abre el modal
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setLoading(true);
+
+    fetch('/api/novedades')
+      .then((res) => res.ok ? res.json() : null)
+      .then((json) => {
+        if (cancelled) return;
+        const apiData: ApiNovedad[] = json?.data;
+        if (apiData && apiData.length > 0) {
+          setEntries(apiData.map(apiToChangelog));
+        }
+      })
+      .catch(() => {
+        // Fallback: mantener CHANGELOG estático
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [open]);
+
+  const displayEntries = entries.length > 0 ? entries : [EMPTY_ENTRY];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -133,6 +191,9 @@ function ChangelogModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Novedades
+            {loading && (
+              <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            )}
             <Badge variant="outline" className="text-[10px] font-mono ml-1">
               v{appVersion}
             </Badge>
@@ -142,7 +203,7 @@ function ChangelogModal({
 
         <ScrollArea className="max-h-[55vh] pr-4">
           <div className="space-y-6">
-            {CHANGELOG.map((entry) => (
+            {displayEntries.map((entry) => (
               <div key={entry.version} className="relative pl-6 border-l-2 border-border">
                 {/* Versión y fecha */}
                 <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full border-2 border-border bg-background">
@@ -152,7 +213,7 @@ function ChangelogModal({
                 <div className="mb-2">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-semibold">{entry.title}</h3>
-                    {entry.version === CHANGELOG[0].version && (
+                    {entry.version === displayEntries[0].version && displayEntries.length > 1 && (
                       <Badge className="text-[9px] h-4 px-1.5">Última</Badge>
                     )}
                   </div>
@@ -161,14 +222,16 @@ function ChangelogModal({
                   </p>
                 </div>
 
-                <ul className="space-y-1.5">
-                  {entry.items.map((item, i) => (
-                    <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                      <span className="text-primary mt-0.5 shrink-0">•</span>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
+                {entry.items.length > 0 && (
+                  <ul className="space-y-1.5">
+                    {entry.items.map((item, i) => (
+                      <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                        <span className="text-primary mt-0.5 shrink-0">•</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             ))}
           </div>

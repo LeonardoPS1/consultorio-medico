@@ -218,6 +218,27 @@
       "when": 1783219200000,
       "tag": "0041_web_vitals",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1783545600000,
+      "tag": "0042_notification_improvements",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1783632000000,
+      "tag": "0043_asistente_ia_config",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1784428800000,
+      "tag": "0044_novedades",
+      "breakpoints": true
     }
   ]
 }

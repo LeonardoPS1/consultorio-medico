@@ -1535,3 +1535,27 @@ export const webVitalsMetrics = pgTable(
 
 export type WebVitalsMetric = InferSelectModel<typeof webVitalsMetrics>;
 export type NewWebVitalsMetric = InferInsertModel<typeof webVitalsMetrics>;
+
+// ============================================================
+// NOVEDADES / CHANGELOG
+// ============================================================
+export const novedades = pgTable(
+  'novedades',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    version: varchar('version', { length: 20 }).notNull(),
+    titulo: varchar('titulo', { length: 255 }).notNull(),
+    items: jsonb('items').notNull().default('[]'),
+    fecha: timestamp('fecha', { withTimezone: true }).notNull().defaultNow(),
+    tipo: varchar('tipo', { length: 20 }).notNull().default('feature'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    idxNovedadesFecha: index('idx_novedades_fecha').on(table.fecha),
+    idxNovedadesVersion: index('idx_novedades_version').on(table.version),
+  }),
+);
+
+export type Novedad = InferSelectModel<typeof novedades>;
+export type NewNovedad = InferInsertModel<typeof novedades>;

@@ -8,7 +8,7 @@
  */
 
 import { useState } from 'react';
-import { CHANGELOG, type ChangelogEntry } from '@/lib/changelog-data';
+import type { ChangelogEntry } from '@/lib/changelog-data';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
