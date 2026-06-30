@@ -4,6 +4,7 @@ import { eq, desc } from 'drizzle-orm';
 import { notFound } from '@/lib/api-handler';
 import { sql } from 'drizzle-orm';
 import { execSync } from 'child_process';
+import { CHANGELOG } from '@/lib/changelog-data';
 
 // ─── CRUD ─────────────────────────────────────────────────
 
@@ -62,6 +63,30 @@ export async function eliminarNovedad(id: string): Promise<void> {
   if (!entry) {
     notFound('Novedad no encontrada');
   }
+}
+
+// ─── Importar CHANGELOG estático ────────────────────────────
+
+/** Importa el CHANGELOG estático a la DB si la tabla está vacía */
+export async function importarChangelogEstatico(): Promise<number> {
+  const [existentes] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(novedades);
+
+  if (existentes.count > 0) return 0;
+
+  let count = 0;
+  for (const entry of CHANGELOG) {
+    const [dia, mes, anio] = entry.date.split('/');
+    await crearNovedad({
+      version: entry.version,
+      titulo: entry.title,
+      items: entry.items,
+      fecha: new Date(Number(anio), Number(mes) - 1, Number(dia)),
+    });
+    count++;
+  }
+  return count;
 }
 
 // ─── Auto-generación desde git log ─────────────────────────

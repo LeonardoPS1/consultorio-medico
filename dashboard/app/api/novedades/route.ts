@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { apiHandler, success, created, fail } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
-import { listarNovedades, crearNovedad, type CreateNovedadInput } from '@/lib/services/novedades';
+import { listarNovedades, crearNovedad, importarChangelogEstatico, type CreateNovedadInput } from '@/lib/services/novedades';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +13,20 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const limitParam = searchParams.get('limit');
   const limit = limitParam ? parseInt(limitParam, 10) : undefined;
 
-  const entries = await listarNovedades(limit);
+  let entries = await listarNovedades(limit);
+
+  // Auto-importar el CHANGELOG estático a la DB si está vacía
+  if (entries.length === 0) {
+    try {
+      const importadas = await importarChangelogEstatico();
+      if (importadas > 0) {
+        entries = await listarNovedades(limit);
+      }
+    } catch (err) {
+      console.error('[API Novedades] Error al importar CHANGELOG:', err);
+    }
+  }
+
   return success(entries);
 });
 

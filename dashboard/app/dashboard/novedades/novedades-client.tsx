@@ -12,7 +12,7 @@ import type { ChangelogEntry } from '@/lib/changelog-data';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
-import { Search, ExternalLink, Github, PackageOpen } from 'lucide-react';
+import { Search, PackageOpen } from 'lucide-react';
 
 interface NovedadesClientProps {
   changelog: ChangelogEntry[];
@@ -37,18 +37,6 @@ export function NovedadesClient({ changelog }: NovedadesClientProps) {
         title="Novedades"
         description={`Historial completo de versiones y cambios de ${process.env.NEXT_PUBLIC_APP_NAME || 'AiCoreMed'}`}
         icon={<PackageOpen className="size-6" />}
-        action={
-          <a
-            href={process.env.NEXT_PUBLIC_REPO_URL || '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Github className="size-4" />
-            Ver en GitHub
-            <ExternalLink className="size-3" />
-          </a>
-        }
       />
 
       {/* Search */}
