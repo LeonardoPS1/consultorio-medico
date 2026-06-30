@@ -115,46 +115,43 @@ self.addEventListener('activate', (event) => {
 // ─── ESTRATEGIAS DE CACHE ───────────────────────────────────
 
 async function cacheFirst(request) {
+  const cached = await caches.match(request).catch(() => null);
+  if (cached) return cached;
   try {
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    const response = await fetch(request);
+    const response = await fetch(request, { signal: AbortSignal.timeout(8000) });
     if (response.ok) {
       const cache = await caches.open(STATIC_CACHE);
       await cache.put(request, response.clone());
     }
     return response;
   } catch {
-    return new Response('', { status: 408 });
+    return new Response('', { status: 503 });
   }
 }
 
 async function networkFirst(request) {
   try {
     const response = await fetch(request);
-    // Solo cachear GET (idempotente). POST/PUT/DELETE mutan datos,
-    // y su body se consume al hacer fetch, causando error en cache.put.
     if (response.ok && request.method === 'GET') {
       const cache = await caches.open(API_CACHE);
-      const cacheKey = request.clone(); // Clonar para no reusar body consumido
+      const cacheKey = request.clone();
       await cache.put(cacheKey, response.clone());
     }
     return response;
   } catch {
-    // Solo devolver cache para GET, no para POST/PUT/DELETE
     if (request.method === 'GET') {
       try {
         const cached = await caches.match(request);
         if (cached) return cached;
       } catch {
-        // Si falla cache.match, seguir
+        // ignorar
       }
       if (request.mode === 'navigate') {
         try {
           const offline = await caches.match('/offline.html');
           if (offline) return offline;
         } catch {
-          // Si falla, seguir
+          // ignorar
         }
       }
     }
@@ -163,25 +160,29 @@ async function networkFirst(request) {
 }
 
 async function staleWhileRevalidate(request) {
+  let cache;
   try {
-    const cache = await caches.open(STATIC_CACHE);
+    cache = await caches.open(STATIC_CACHE);
     const cached = await cache.match(request);
     if (cached) {
-      // Revalidar en background sin bloquear
-      fetch(request)
+      fetch(request, { signal: AbortSignal.timeout(8000) })
         .then((response) => {
           if (response.ok) cache.put(request, response.clone());
         })
         .catch(() => {});
       return cached;
     }
-    const response = await fetch(request);
-    if (response.ok) {
+  } catch {
+    // cache abierto, seguir sin él
+  }
+  try {
+    const response = await fetch(request, { signal: AbortSignal.timeout(8000) });
+    if (response.ok && cache) {
       await cache.put(request, response.clone());
     }
     return response;
   } catch {
-    return new Response('', { status: 408 });
+    return new Response('', { status: 503 });
   }
 }
 

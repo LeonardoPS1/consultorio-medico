@@ -99,7 +99,9 @@ export function PushNotificationToggle() {
           setStatus('denied');
           return;
         } else if (err?.name === 'AbortError' || err?.message?.includes('AbortError')) {
-          setErrorMessage('La solicitud de suscripción fue cancelada. Intentá de nuevo.');
+          setErrorMessage(
+            'La solicitud fue cancelada. Probá reiniciar el navegador o desactivar extensiones (adblockers/privacy) e intentá de nuevo.',
+          );
         } else if (
           err?.message?.includes('Registration failed') ||
           err?.message?.includes('push service error')
@@ -245,21 +247,29 @@ export function PushNotificationToggle() {
 
   if (status === 'denied') {
     return (
-      <div className="flex items-center gap-2 text-sm text-amber-600">
-        <BellOff className="w-4 h-4 shrink-0" />
-        <span className="text-xs">
-          Bloqueadas.{' '}
-          <button
-            onClick={() => {
-              Notification.requestPermission().then((perm) => {
-                if (perm === 'granted') subscribe();
-              });
-            }}
-            className="underline hover:text-amber-700"
-          >
-            Permitir
-          </button>
-        </span>
+      <div className="flex flex-col gap-1 text-sm text-amber-600">
+        <div className="flex items-center gap-2">
+          <BellOff className="w-4 h-4 shrink-0" />
+          <span className="text-xs font-medium">Notificaciones bloqueadas</span>
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-tight ml-6">
+          Para activarlas, hacé clic en el ícono{' '}
+          <code className="text-[10px] bg-muted px-1 rounded">🔒</code> de la barra de direcciones{' '}
+          <span className="hidden sm:inline">→</span>
+          <br className="sm:hidden" />
+          {' → '}Configuración del sitio → Notificaciones → Permitir.
+        </p>
+        <button
+          onClick={() => {
+            Notification.requestPermission().then((perm) => {
+              if (perm === 'granted') subscribe();
+              else checkSubscription();
+            });
+          }}
+          className="ml-6 text-[11px] font-medium text-amber-600 hover:text-amber-700 underline w-fit"
+        >
+          Verificar de nuevo
+        </button>
       </div>
     );
   }
