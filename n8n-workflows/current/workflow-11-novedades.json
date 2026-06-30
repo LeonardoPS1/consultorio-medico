@@ -1,0 +1,137 @@
+{
+  "name": "WF-11: Novedades desde Commits",
+  "nodes": [
+    {
+      "id": "webhook-github",
+      "name": "Webhook: GitHub Push",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "novedades-generar",
+      "parameters": {
+        "path": "novedades-generar",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {
+          "responseHeaders": {
+            "entries": {
+              "values": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "http-dashboard",
+      "name": "POST /api/novedades/generar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300],
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_URL || 'https://med.aicorebots.com' }}/api/novedades/generar",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-internal-key",
+              "value": "={{ $env.NOVEDADES_INTERNAL_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "if-resultados",
+      "name": "¿Se generaron entradas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.mensaje }}",
+              "operation": "contains",
+              "value2": "generaron"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "log-success",
+      "name": "✅ Novedades generadas",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [850, 200],
+      "parameters": {}
+    },
+    {
+      "id": "log-skip",
+      "name": "⏭️ Sin commits nuevos",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [850, 400],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Webhook: GitHub Push": {
+      "main": [
+        [
+          {
+            "node": "POST /api/novedades/generar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /api/novedades/generar": {
+      "main": [
+        [
+          {
+            "node": "¿Se generaron entradas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Se generaron entradas?": {
+      "main": [
+        [
+          {
+            "node": "✅ Novedades generadas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "⏭️ Sin commits nuevos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

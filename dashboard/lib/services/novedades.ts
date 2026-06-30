@@ -173,11 +173,17 @@ export async function generarDesdeGitLog(desdeTag?: string): Promise<Novedad[]> 
   if (items.length === 0) return [];
 
   // Generar versión auto-incremental
+  // feat → minor (ej: 1.15.0 → 1.16.0) | solo fix/improvement → patch (ej: 1.15.0 → 1.15.1)
+  const tieneFeatures = commits.some((c) => c.type === 'feature');
   const ultima = await obtenerUltimaNovedad();
   let nuevaVersion = '1.16.0';
   if (ultima) {
-    const parts = ultima.version.split('.').map(Number);
-    nuevaVersion = `${parts[0]}.${parts[1]}.${(parts[2] ?? 0) + 1}`;
+    const [major, minor, patch] = ultima.version.split('.').map(Number);
+    if (tieneFeatures) {
+      nuevaVersion = `${major}.${(minor ?? 0) + 1}.0`;
+    } else {
+      nuevaVersion = `${major}.${minor ?? 0}.${(patch ?? 0) + 1}`;
+    }
   }
 
   const titulo = generarTitulo(commits);
