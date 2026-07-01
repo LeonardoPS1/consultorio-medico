@@ -65,7 +65,13 @@ scripts/_diag_*.py
 scripts/_exec*.py
 scripts/_fix_n8n*.py
 scripts/_diagnose_n8n.py
+scripts/check_env.py
+scripts/check_phones.py
+scripts/vps_pgbouncer_setup.py
 scripts/deploy-vps.py
+
+# Ideas / features ya implementados
+docs/ideas/
 
 # Scripts de diagnóstico LiveKit (contienen API keys)
 livekit-server/test_*.py

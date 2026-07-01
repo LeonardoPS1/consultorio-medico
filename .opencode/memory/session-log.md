@@ -1,5 +1,51 @@
 # 📜 Log Global de Sesiones
 
+## 30/06 — Fix botón Permitir + SW timeouts + AbortError diagnóstico (e1b3b12)
+- **Push toggle**: Reemplazado botón "Permitir" que no funcionaba (cuando permiso = denied, requestPermission() no muestra diálogo). Ahora muestra instrucciones para desbloquear desde configuración del navegador (candado → settings del sitio → notificaciones → permitir)
+- **SW cacheFirst/staleWhileRevalidate**: Cambiado status 408 → 503. Agregados timeouts de 8s a fetch para evitar hangs
+- **AbortError**: Mensaje más descriptivo sugiriendo desactivar extensiones o reiniciar navegador
+- Build: 0 TS errors ✅. Commit e1b3b12, push a main ✅
+
+
+
+## 29/06 — Novedades, Repo, Acerca de y Ayuda expandida ✅ (f307ed9)
+- **Changelog**: v1.15.0 agregado con Portal Analytics, Repositorio, Novedades y Tooltips
+- **Repositorio**: NEXT_PUBLIC_REPO_URL en next.config.js apuntando a github.com/LeonardoPS1/consultorio-medico
+- **Footer**: link a GitHub + versión actual (v1.15.0) en el footer del dashboard
+- **Novedades**: página /dashboard/novedades con timeline completo, buscador y enlace a GitHub
+- **Acerca de**: página /dashboard/acerca con versión, repo, stack tecnológico y enlaces útiles
+- **Sidebar**: agregados enlaces a Novedades y Acerca de antes de Ayuda
+- **Ayuda**: 3 nuevas secciones (Asistente IA Flotante, Command Palette, Historial Lateral)
+- **Iconos**: Sparkles, Command, PanelRight, Upload, Gauge agregados a ayuda-client ICON_MAP
+- 9 files, +462/-3. Build: 0 TS errors. Commit f307ed9
+
+## 30/06 — Novedades dinámicas desde DB + API + auto-generación ✅ (96bf1d6)
+- **Tabla novedades**: schema Drizzle + migración 0044 + journal actualizado
+- **Service `lib/services/novedades.ts`**: CRUD + auto-generación desde `git log` (parsea conventional commits)
+- **API `/api/novedades`**: GET (listar con ?limit), POST (crear, admin)
+- **API `/api/novedades/generar`**: POST (admin) analiza commits y genera entrada automática
+- **Página Novedades**: carga desde API con fallback a datos estáticos
+- **UpdateBadge modal**: carga datos dinámicos al abrirse, spinner de carga, fallback
+- Build: 0 TS errors ✅. Commit 96bf1d6, push a main ✅
+
+## 30/06 — Fix onboarding rename + web-vitals 500 + errores push ✅ (8a64c72)
+- **Onboarding**: Renombrado "Asistente IA" → "Configuración Inicial" (sidebar, page title, fallback text)
+- **Web-vitals 500 (percentiles)**: Causa raíz = `db.execute()` raw SQL no devuelve `.rows` con postgres.js. Fix: convertido a Drizzle query builder con sql fragments para `percentile_cont`
+- **Push notifications**: Agregado SW controller check pre-subscribe, mejor logging diagnóstico, errores específicos para "Registration failed" y "AbortError"
+- Build: 0 TS errors ✅. Commit 8a64c72, push a main ✅
+
+## 28/06 — Sugerencias sin solapamiento + Modos con efecto real + Lenguaje natural ✅ (6d8c556)
+- **Sugerencias layout fix**: movidas fuera del overflow del chat a posición fija entre scroll e input
+- **Animación simplificada**: height → opacity/y, eliminado layout shifts
+- **Modos con efecto real**: cada modo ahora modifica el system prompt:
+  - silencioso: solo responde cuando preguntan, sin ayuda extra
+  - sugerente: responde conciso con datos disponibles
+  - activo: responde completo + se ofrece a revisar más
+- **Lenguaje natural**: instrucciones mejoradas para que la IA reformule datos en vez de repetirlos textualmente
+- `buildModoPrompt(modo)` en `asistente-prompts.ts` — nueva función exportada
+- `modo` en schema zod de `/api/ia/chat` + pasado desde hook via `userSettingsRef` (anti stale closures)
+- 4 files modificados, +68/-40. Build: 0 TS errors Commit 6d8c556, push a main ✅
+
 ## 28/06 — Fixes: notificaciones error + toggles sugerencias + FAB position ✅
 - **NotificacionesClient**: error banner visible + retry button cuando API falla
 - **GatedContent**: agregada ruta /dashboard/notificaciones con feature 'notificaciones'
