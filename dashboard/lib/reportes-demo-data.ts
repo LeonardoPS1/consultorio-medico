@@ -277,12 +277,14 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
   });
 
   // ─── Embudo de conversión leads → pacientes ───────────────
+  // Escala según período: base mensual = 240
+  const baseLeads = esAnual ? 2880 : esSemana ? 60 : 240;
   const conversionLeads = [
-    { etapa: 'Contacto inicial', cantidad: 240, porcentaje: 100 },
-    { etapa: 'Respondió WhatsApp', cantidad: 192, porcentaje: 80 },
-    { etapa: 'Solicitó turno', cantidad: 144, porcentaje: 60 },
-    { etapa: 'Asistió a consulta', cantidad: 108, porcentaje: 45 },
-    { etapa: 'Paciente recurrente', cantidad: 72, porcentaje: 30 },
+    { etapa: 'Contacto inicial', cantidad: baseLeads, porcentaje: 100 },
+    { etapa: 'Respondió WhatsApp', cantidad: Math.round(baseLeads * 0.8), porcentaje: 80 },
+    { etapa: 'Solicitó turno', cantidad: Math.round(baseLeads * 0.6), porcentaje: 60 },
+    { etapa: 'Asistió a consulta', cantidad: Math.round(baseLeads * 0.45), porcentaje: 45 },
+    { etapa: 'Paciente recurrente', cantidad: Math.round(baseLeads * 0.3), porcentaje: 30 },
   ];
 
   // ─── Comparativa anual (Y/Y, 12 meses) ────────────────────
