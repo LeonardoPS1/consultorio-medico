@@ -570,27 +570,61 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
   {
     id: 'reportes',
     titulo: 'Reportes y Estadísticas',
-    descripcion: 'Visualizá el rendimiento del consultorio con gráficos y métricas',
+    descripcion: 'Visualizá el rendimiento del consultorio con gráficos, métricas y análisis ejecutivo',
     icono: 'BarChart3',
     pasos: [
       {
         titulo: 'Panel de reportes',
-        descripcion: 'Accede a estadísticas generales del consultorio.',
+        descripcion: 'Accede a estadísticas generales del consultorio con 6 pestañas de análisis.',
         tips: [
-          'La pestaña General muestra KPIs principales',
-          'Turnos: distribución por estado y evolución temporal',
-          'Pacientes: nuevos registros y totales por período',
-          'WhatsApp: volumen de mensajes y tasa de respuesta',
+          'General: KPIs principales (turnos, asistencia, nuevos pacientes, conversaciones)',
+          'Turnos: distribución por estado con gráfico de barras apiladas + predicción de demanda',
+          'Pacientes: nuevos registros y totales con gráfico de evolución',
+          'WhatsApp: volumen de mensajes enviados/recibidos + calidad de respuesta',
+          'Comparativa: comparación vs período anterior con tabla de KPIs y gráficos',
+          'Ejecutivo: resumen con ingresos, ocupación, satisfacción, NPS + charts de tendencia',
         ],
         enlace: { href: '/dashboard/reportes', label: 'Ir a Reportes' },
+      },
+      {
+        titulo: 'Selector de período',
+        descripcion: 'Todos los reportes se adaptan al período seleccionado.',
+        tips: [
+          'Semana: datos diarios (lun-sáb) con 6 puntos en gráficos',
+          'Mes: datos semanales (4 semanas) con visión mensual completa',
+          'Año: datos mensuales (ene-jun) con tendencia anual',
+          'Al cambiar el período, todos los tab se actualizan automáticamente',
+        ],
+      },
+      {
+        titulo: 'Tab ejecutivo',
+        descripcion: 'Análisis de alto nivel con indicadores clave y tendencias.',
+        tips: [
+          'KPIs principales: ingresos totales, tasa de ocupación, satisfacción (4.7/5) y NPS',
+          'Chart de Ingresos: tendencia por período con valores en millones',
+          'Chart de Ocupación: evolución de la tasa de ocupación en el tiempo',
+          'Embudo de Conversión: visualización leads → pacientes recurrentes',
+          'Los charts se actualizan dinámicamente al cambiar el período',
+        ],
+      },
+      {
+        titulo: 'Embudo de conversión',
+        descripcion: 'Visualizá cuántos pacientes avanzan en cada etapa del proceso.',
+        tips: [
+          '5 etapas: Contacto inicial → Respondió WhatsApp → Solicitó turno → Asistió → Recurrente',
+          'Los valores escalan según el período seleccionado',
+          'Cada etapa muestra cantidad y porcentaje de conversión',
+          'El ancho de la barra representa visualmente la retención',
+        ],
       },
       {
         titulo: 'Exportar reportes',
         descripcion: 'Descargá reportes en Excel o PDF (plan Professional+).',
         tips: [
-          'Usa Exportar Excel para análisis detallado',
-          'Usa Exportar PDF para compartir con el equipo',
-          'Los datos incluyen el período seleccionado',
+          'Usa Exportar Excel para análisis detallado en planillas',
+          'Usa Exportar PDF para compartir con el equipo o imprimir',
+          'Los datos incluyen el período seleccionado y todas las métricas',
+          'El badge "⚡ Datos demo" indica que los datos son de ejemplo',
         ],
       },
     ],
@@ -668,44 +702,50 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
           'Los cambios se aplican inmediatamente, sin recargar',
           'Desactivar un feature lo oculta del sidebar',
           'Los módulos principales no se pueden desactivar si hay datos asociados',
+          'Algunos features requieren planes específicos (Starter, Professional, Premium, Enterprise)',
         ],
         enlace: { href: '/dashboard/admin/sistema', label: 'Ir a Sistema' },
       },
       {
         titulo: 'Asistente IA',
-        descripcion: 'Configurá el comportamiento del asistente virtual.',
+        descripcion: 'Configurá el comportamiento del asistente virtual del consultorio.',
         tips: [
-          'El prompt del sistema define la personalidad del asistente',
-          'Temperatura baja (0.3) = respuestas más predecibles',
-          'Máx. tokens controla la longitud de las respuestas',
+          'El prompt del sistema define la personalidad y tono del asistente',
+          'Temperatura baja (0.1-0.3) = respuestas más predecibles y consistentes',
+          'Temperatura alta (0.7-1.0) = respuestas más creativas y variadas',
+          'Máx. tokens controla la longitud máxima de las respuestas',
+          'Modelo: seleccioná el modelo de IA a usar (gemma3, mistral, etc.)',
+          'Modo del asistente: silencioso, sugerente o activo (por defecto)',
         ],
       },
       {
         titulo: 'Credenciales',
-        descripcion: 'Gestioná las credenciales de servicios externos.',
+        descripcion: 'Gestioná las credenciales de servicios externos del consultorio.',
         tips: [
           'Usa el botón "Probar conexión" para verificar cada servicio',
-          'Las credenciales se almacenan encriptadas (AES-256)',
+          'Las credenciales se almacenan encriptadas (AES-256) en la base de datos',
           'La sincronización con n8n se hace automáticamente',
+          'Credenciales disponibles: Twilio, LiveKit, Google Calendar, Resend (email)',
         ],
       },
       {
         titulo: 'API Pública',
-        descripcion: 'Creá API keys para integraciones externas.',
+        descripcion: 'Creá y gestioná API keys para integraciones externas.',
         tips: [
-          'Cada key tiene scopes específicos (lectura/escritura)',
-          'Puedes revocar keys en cualquier momento',
-          'Usa la API para conectar sistemas externos',
+          'Cada key tiene scopes específicos (lectura y/o escritura)',
+          'Podés revocar keys en cualquier momento desde el panel',
+          'Usa la API para conectar sistemas externos o automatizaciones',
+          'Cada key muestra fecha de creación y último uso',
         ],
       },
       {
-        titulo: '2FA / Seguridad',
-        descripcion: 'Activá autenticación de dos factores para proteger tu cuenta.',
+        titulo: 'Autenticación 2FA',
+        descripcion: 'Activá autenticación de dos factores para proteger tu cuenta de administrador.',
         tips: [
           'Disponible en plan Professional o superior',
-          'Usá Google Authenticator o cualquier app TOTP',
+          'Usá Google Authenticator, Authy o cualquier app compatible con TOTP',
           'Cada usuario puede activar 2FA desde su perfil',
-          'Si perdés el acceso, contactá al administrador',
+          'Si perdés el acceso al código 2FA, contactá al administrador del sistema',
         ],
       },
       {
@@ -713,39 +753,41 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         descripcion: 'Registro completo de actividad de usuarios en el sistema.',
         tips: [
           'Disponible en plan Premium o superior',
-          'Registra inicios de sesión, cambios y accesos',
-          'Incluye IP, fecha, tipo de acción y usuario',
+          'Registra inicios de sesión, cambios de configuración y accesos a datos',
+          'Incluye IP, fecha, tipo de acción y usuario responsable',
           'Los registros se conservan por 90 días',
+          'Se puede exportar para cumplimiento normativo',
         ],
         enlace: { href: '/dashboard/admin/auditoria', label: 'Ir a Auditoría' },
       },
       {
-        titulo: 'Backups y Webhooks',
-        descripcion: 'Gestión de respaldos de base de datos y logs de webhooks.',
+        titulo: 'Backups',
+        descripcion: 'Gestión de respaldos de base de datos automáticos y manuales.',
         tips: [
           'Disponible en plan Premium o superior',
-          'Los backups se almacenan en el servidor',
-          'Podés descargar o eliminar backups manualmente',
-          'Los logs de webhooks muestran actividad de Twilio y n8n',
+          'Backup automático diario a las 3:00 AM vía n8n',
+          'Podés generar backups manuales desde el panel',
+          'Los backups incluyen toda la base de datos del consultorio',
+          'Podés descargar o eliminar backups antiguos',
         ],
         enlace: { href: '/dashboard/admin/backups', label: 'Ir a Backups' },
       },
     ],
     preguntas: [
       {
-        pregunta: '¿Quién puede acceder a Sistema?',
+        pregunta: '¿Quién puede acceder a las secciones de Admin?',
         respuesta:
-          'Solo usuarios con rol de administrador. Los médicos y staff no ven esta sección.',
+          'Solo usuarios con rol de administrador. Los médicos y staff no ven las secciones de admin en el sidebar ni pueden acceder a estas rutas.',
       },
       {
         pregunta: '¿Los feature toggles afectan a todos los usuarios?',
         respuesta:
-          'Sí, los cambios se aplican a todo el consultorio (todos los médicos y pacientes).',
+          'Sí, los cambios se aplican a todo el consultorio (todos los médicos y pacientes). No hay configuración por usuario.',
       },
       {
-        pregunta: '¿Los backups son automáticos?',
+        pregunta: '¿Los backups incluyen los archivos del sistema?',
         respuesta:
-          'Sí, n8n ejecuta un backup diario a las 3:00 AM. También podés generar backups manuales desde Sistema.',
+          'Los backups automáticos respaldan la base de datos PostgreSQL. Los archivos de configuración y workflows de n8n tienen su propio sistema de respaldo.',
       },
     ],
   },
@@ -1161,7 +1203,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
   {
     id: 'asistente-ia-flotante',
     titulo: 'Asistente IA Flotante',
-    descripcion: 'Chat contextual con IA en cualquier página del dashboard',
+    descripcion: 'Chat contextual con IA local en cualquier página del dashboard',
     icono: 'Sparkles',
     pasos: [
       {
@@ -1172,17 +1214,55 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
           'Disponible en plan Professional o superior',
           'Se adapta al contexto de la página actual automáticamente',
           'Sugiere acciones relevantes según lo que estás viendo',
-          'Usa IA local (Gemma3) para respuestas rápidas y privadas',
+          'Usa IA local (Gemma3 via Ollama) para respuestas rápidas y privadas',
+          'Tus datos nunca salen del servidor — todo corre en tu VPS',
         ],
       },
       {
         titulo: 'Modos del asistente',
-        descripcion: 'Configurá el comportamiento del asistente según tu preferencia.',
+        descripcion: 'Configurá el comportamiento del asistente desde el panel de ajustes (engranaje).',
         tips: [
           'Silencioso: solo responde cuando le preguntás, sin sugerencias automáticas',
-          'Sugerente: muestra cards con sugerencias contextuales sin interrumpir',
+          'Sugerente: muestra 3 cards con sugerencias contextuales sin interrumpir',
           'Activo: chat libre con la IA, responde completo y se ofrece a revisar más datos',
-          'Podés cambiar el modo desde el panel de configuración del asistente',
+          'Podés cambiar el modo en cualquier momento desde el panel de configuración',
+        ],
+      },
+      {
+        titulo: 'Sugerencias contextuales',
+        descripcion: 'El asistente analiza la página activa y sugiere acciones relevantes.',
+        tips: [
+          'En pacientes: sugiere "Buscar paciente por RUT" o "Ver scoring de inasistencia"',
+          'En turnos: sugiere "Crear nuevo turno" o "Ver turnos del día"',
+          'El carrusel de sugerencias se desplaza con las flechas laterales',
+          'Cada sugerencia ejecuta una acción directa al hacer clic',
+        ],
+      },
+      {
+        titulo: 'Historial de conversaciones',
+        descripcion:
+          'Todas las conversaciones con el asistente se guardan automáticamente.',
+        tips: [
+          'Cada sesión se guarda con fecha y hora',
+          'Podés volver a consultar conversaciones anteriores',
+          'Usá el botón de historial (reloj) para ver sessiones previas',
+          'Las conversaciones se almacenan localmente en tu navegador',
+        ],
+      },
+      {
+        titulo: 'Contextos del asistente',
+        descripcion:
+          'El asistente tiene acceso a 9 contextos del sistema para responder con información precisa.',
+        tips: [
+          'Dashboard general: métricas y resumen del día',
+          'Turnos: datos de agenda y disponibilidad',
+          'Pacientes: fichas y scoring',
+          'Recetas: prescripciones activas',
+          'Conversaciones: mensajes recientes de WhatsApp',
+          'Reportes: métricas de rendimiento',
+          'Atención: estado del Kanban diario',
+          'Lista de espera: pacientes en espera',
+          'Alertas: notificaciones activas',
         ],
       },
     ],
@@ -1190,12 +1270,22 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       {
         pregunta: '¿El asistente usa mis datos para entrenar?',
         respuesta:
-          'No. Todo corre en tu propia infraestructura con Ollama (IA local). Tus datos nunca salen del servidor.',
+          'No. Todo corre en tu propia infraestructura con Ollama (IA local). Tus datos nunca salen del servidor. Es privacidad total.',
       },
       {
         pregunta: '¿Puedo desactivar el asistente?',
         respuesta:
-          'Sí, podés cerrarlo con la X o configurarlo en modo Silencioso desde el panel de ajustes.',
+          'Sí, podés cerrarlo con la X o configurarlo en modo Silencioso desde el panel de ajustes. También podés desactivarlo completamente desde Sistema → Feature Toggles.',
+      },
+      {
+        pregunta: '¿Por qué a veces tarda en responder?',
+        respuesta:
+          'La primera respuesta después de un período de inactividad puede tardar hasta 25 segundos porque el modelo IA debe cargarse en memoria (cold start). Las respuestas siguientes son inmediatas.',
+      },
+      {
+        pregunta: '¿Qué modelo de IA usa?',
+        respuesta:
+          'Usa Gemma3 (3.3GB) corriendo localmente en tu servidor via Ollama. Es un modelo de Google optimizado para respuestas rápidas y precisas en español.',
       },
     ],
   },
@@ -1241,52 +1331,477 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     ],
   },
   {
-    id: 'historial-lateral',
-    titulo: 'Historial Lateral de Pacientes',
-    descripcion: 'Acceso rápido a la ficha del paciente sin cambiar de página',
-    icono: 'PanelRight',
+    id: 'panel-principal',
+    titulo: 'Panel Principal',
+    descripcion: 'Vista general del consultorio con métricas en tiempo real y acceso rápido',
+    icono: 'LayoutDashboard',
     pasos: [
       {
-        titulo: 'Abrir el panel lateral',
-        descripcion:
-          'Presioná Ctrl+Shift+P o hacé clic en el botón de paciente en el header del dashboard.',
+        titulo: 'Tarjetas de métricas',
+        descripcion: 'El panel principal muestra 4 tarjetas con los KPIs más importantes del día.',
         tips: [
-          'Disponible en plan Professional o superior',
-          'El panel se abre desde la derecha sin recargar la página',
-          'Aparece sobre la página actual, no la reemplaza',
+          'Turnos hoy: cantidad total de turnos agendados para el día actual',
+          'Pacientes nuevos: pacientes registrados en las últimas 24 horas',
+          'Atenciones: turnos completados vs pendientes con indicador de progreso',
+          'Alertas: notificaciones activas que requieren atención (con badge numérico)',
+        ],
+        enlace: { href: '/dashboard', label: 'Ir al Panel Principal' },
+      },
+      {
+        titulo: 'Calendario de turnos',
+        descripcion: 'Vista semanal del calendario con todos los turnos agendados.',
+        tips: [
+          'Cada turno muestra hora, paciente, médico y estado (color)',
+          'Turnos virtuales tienen ícono de video',
+          'Hacé clic en un turno para ver detalle o modificarlo',
+          'Podés navegar entre semanas con las flechas del calendario',
         ],
       },
       {
-        titulo: 'Buscar pacientes',
-        descripcion:
-          'Usá el buscador con autocompletado inteligente para encontrar pacientes rápidamente.',
+        titulo: 'Gráfico de actividad semanal',
+        descripcion: 'Evolución de turnos completados vs cancelados en los últimos 7 días.',
         tips: [
-          'Búsqueda fuzzy: no necesitás escribir exacto, funciona con aproximaciones',
-          'Muestra score de inasistencia con puntos de colores (verde/amarillo/rojo)',
-          'Acciones rápidas: abrí la ficha completa o enviá WhatsApp directamente',
+          'Barras verdes: turnos completados por día',
+          'Barras amarillas: cancelaciones por día',
+          'El gráfico se actualiza automáticamente cada vez que ingresás',
+          'Pasá el mouse sobre cada barra para ver el detalle exacto',
         ],
       },
       {
-        titulo: 'Resumen del paciente',
-        descripcion: 'El panel muestra un resumen completo sin abrir la ficha completa.',
+        titulo: 'Notificaciones activas',
+        descripcion: 'Alertas y recordatorios visibles directamente desde el panel.',
         tips: [
-          'Datos personales, alergias y contacto de emergencia',
-          'Turnos próximos y recetas activas',
-          'Última nota SOAP registrada',
-          'Desde acá podés crear un nuevo turno o ver el historial completo',
+          'Las notificaciones se muestran con diferentes niveles de prioridad',
+          'Urgente (rojo): requiere acción inmediata',
+          'Importante (amarillo): requiere atención pronto',
+          'Informativo (azul): solo para conocimiento',
+          'Hacé clic en una notificación para ir directamente a la acción',
         ],
       },
     ],
     preguntas: [
       {
-        pregunta: '¿Puedo tener varios pacientes abiertos a la vez?',
+        pregunta: '¿Los datos del panel se actualizan solos?',
         respuesta:
-          'No, el panel muestra un paciente por vez. Al buscar otro, se reemplaza la vista actual.',
+          'Sí, los datos se actualizan automáticamente cada vez que cargás la página. También podés usar el botón de recargar para forzar una actualización.',
+      },
+    ],
+  },
+  {
+    id: 'onboarding',
+    titulo: 'Configuración Inicial (Onboarding)',
+    descripcion: 'Asistente paso a paso para configurar tu consultorio por primera vez',
+    icono: 'Rocket',
+    pasos: [
+      {
+        titulo: 'Iniciar el onboarding',
+        descripcion: 'Al ingresar por primera vez, el sistema te guía con un asistente de configuración.',
+        tips: [
+          'Completá los pasos en orden para una configuración óptima',
+          'Podés saltar pasos y completarlos después desde Ajustes',
+          'El progreso se guarda automáticamente al avanzar',
+          'Siempre podés volver al onboarding desde el sidebar',
+        ],
+        enlace: { href: '/dashboard/onboarding', label: 'Ir a Onboarding' },
       },
       {
-        pregunta: '¿El panel funciona en mobile?',
+        titulo: 'Pasos del onboarding',
+        descripcion: 'El asistente cubre toda la configuración fundamental del consultorio.',
+        tips: [
+          'WhatsApp: conectá tu número de Twilio para habilitar comunicación con pacientes',
+          'Equipo médico: registrá los profesionales del consultorio',
+          'Horarios: definí días y horarios de atención',
+          'Especialidades: configurá las especialidades médicas disponibles',
+          'Servicios: definí los servicios que ofrece el consultorio',
+          'Temas: personalizá la apariencia del dashboard (color, logo)',
+          '¡Listo! Resumen final de la configuración completa',
+        ],
+      },
+      {
+        titulo: 'Saltar el onboarding',
+        descripcion: 'Si ya conocés el sistema, podés omitir el asistente.',
+        tips: [
+          'Usá el botón "Saltar" en la parte inferior',
+          'Los pasos incompletos se pueden configurar después desde Ajustes',
+          'Podés volver a ejecutar el onboarding en cualquier momento',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Puedo volver a hacer el onboarding después?',
         respuesta:
-          'Sí, se adapta al ancho de la pantalla. En mobile ocupa todo el ancho disponible como un modal.',
+          'Sí, siempre podés acceder desde el sidebar en "Configuración Inicial" o desde Ajustes.',
+      },
+      {
+        pregunta: '¿Qué pasa si cierro el onboarding a la mitad?',
+        respuesta:
+          'El progreso se guarda. Cuando vuelvas a entrar, podés continuar desde donde lo dejaste.',
+      },
+    ],
+  },
+  {
+    id: 'notificaciones',
+    titulo: 'Notificaciones',
+    descripcion: 'Centro de notificaciones con alertas inteligentes y prioridades',
+    icono: 'Bell',
+    pasos: [
+      {
+        titulo: 'Acceder a notificaciones',
+        descripcion: 'Hacé clic en la campana (🔔) en el header o andá a la página de Notificaciones.',
+        tips: [
+          'El badge en la campana muestra la cantidad de notificaciones no leídas',
+          'Las notificaciones se organizan por fecha y prioridad',
+          'Podés marcar como leídas individualmente o todas juntas',
+          'Las notificaciones persistentes se quedan hasta que las resuelvas',
+        ],
+        enlace: { href: '/dashboard/notificaciones', label: 'Ir a Notificaciones' },
+      },
+      {
+        titulo: 'Tipos de notificaciones',
+        descripcion: 'El sistema genera notificaciones automáticas para eventos importantes.',
+        tips: [
+          'Urgencias: mensajes de pacientes con palabras clave de emergencia',
+          'Recordatorios: turnos próximos y tareas pendientes',
+          'Alertas: cumpleaños, ausentismo recurrente, pacientes críticos',
+          'Sistema: actualizaciones, errores de conexión, cambios de configuración',
+        ],
+      },
+      {
+        titulo: 'Niveles de prioridad',
+        descripcion: 'Cada notificación tiene un nivel que determina su urgencia.',
+        tips: [
+          'Crítica (borde rojo): requiere atención inmediata',
+          'Alta (naranja): importante, resolver pronto',
+          'Normal (azul): informativa, sin urgencia',
+          'Baja (gris): solo para registro, puede ignorarse',
+        ],
+      },
+      {
+        titulo: 'Silenciar notificaciones',
+        descripcion: 'Podés silenciar temporalmente las notificaciones no críticas.',
+        tips: [
+          'Usá el toggle "Silenciar" para pausar notificaciones no urgentes',
+          'Las notificaciones críticas siempre se muestran, incluso en silencio',
+          'El badge de la campana se oculta al silenciar',
+          'Podés reactivar las notificaciones en cualquier momento',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Las notificaciones se borran solas?',
+        respuesta:
+          'Las notificaciones leídas se archivan después de 7 días. Las no leídas se mantienen hasta que las marques como leídas o resueltas.',
+      },
+      {
+        pregunta: '¿Puedo recibir notificaciones en mi celular?',
+        respuesta:
+          'Por ahora las notificaciones solo están disponibles dentro del dashboard. Si tenés la PWA instalada, podés recibir notificaciones push en tu dispositivo.',
+      },
+    ],
+  },
+  {
+    id: 'novedades',
+    titulo: 'Novedades y Actualizaciones',
+    descripcion: 'Historial de cambios y nuevas funcionalidades del sistema',
+    icono: 'Newspaper',
+    pasos: [
+      {
+        titulo: 'Ver novedades',
+        descripcion: 'La página de Novedades muestra un timeline con todos los cambios del sistema.',
+        tips: [
+          'Cada entrada muestra versión, fecha, tipo y descripción del cambio',
+          'Los cambios se agrupan en: nuevas funcionalidades, mejoras y correcciones',
+          'Las novedades se generan automáticamente desde los commits de GitHub',
+          'Podés hacer clic en "Ver más" para expandir la descripción completa',
+        ],
+        enlace: { href: '/dashboard/novedades', label: 'Ir a Novedades' },
+      },
+      {
+        titulo: 'Generar novedades',
+        descripcion: 'Las novedades se actualizan automáticamente desde el repositorio.',
+        tips: [
+          'Al hacer push a main en GitHub, un workflow de n8n dispara la actualización',
+          'El sistema analiza los commits y los clasifica por tipo (feat, fix, improvement)',
+          'Las entradas se guardan en la base de datos para consulta histórica',
+          'También podés generar manualmente desde la API interna',
+        ],
+      },
+      {
+        titulo: 'Versionado semántico',
+        descripcion: 'El sistema usa versionado semántico para tracking de cambios.',
+        tips: [
+          'Major (1.x.x): cambios grandes que pueden afectar funcionalidades existentes',
+          'Minor (x.1.x): nuevas funcionalidades (se incrementa con commits feat)',
+          'Patch (x.x.1): correcciones y mejoras menores',
+          'La versión actual se muestra en la página Acerca de',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Puedo ver novedades de versiones anteriores?',
+        respuesta:
+          'Sí, la página de Novedades muestra el historial completo con scroll infinito. También podés filtrar por tipo de cambio.',
+      },
+      {
+        pregunta: '¿Las novedades se generan solas o las escribo yo?',
+        respuesta:
+          'Se generan automáticamente analizando los mensajes de commit del repositorio. Si querés detalles más específicos, podés editar la entrada desde la base de datos.',
+      },
+    ],
+  },
+  {
+    id: 'configuracion-ajustes',
+    titulo: 'Configuración (Ajustes)',
+    descripcion: 'Centro de configuración del consultorio con pestañas organizadas',
+    icono: 'Sliders',
+    pasos: [
+      {
+        titulo: 'Pestañas de configuración',
+        descripcion: 'Todas las opciones de configuración están organizadas en pestañas.',
+        tips: [
+          'Perfil: datos del consultorio, logo, información de contacto',
+          'Horarios: días y horarios de atención por médico',
+          'Notificaciones: configuración de alertas y recordatorios',
+          'Plantillas: mensajes personalizados para WhatsApp',
+          'Equipo: gestión de médicos y staff del consultorio',
+          'Suscripción: plan actual, facturación y cambios de plan',
+          'Temas: personalización visual (modo oscuro, color acento)',
+        ],
+        enlace: { href: '/dashboard/configuracion', label: 'Ir a Configuración' },
+      },
+      {
+        titulo: 'Perfil del consultorio',
+        descripcion: 'Configurá los datos básicos de tu consultorio.',
+        tips: [
+          'Nombre: el nombre visible en el dashboard y comunicaciones',
+          'Logo: imagen que aparece en el header y portal del paciente',
+          'Dirección: ubicación física del consultorio',
+          'Teléfono: número de contacto principal',
+          'RUT empresarial: para facturación chilena',
+        ],
+      },
+      {
+        titulo: 'Personalización (Temas)',
+        descripcion: 'Adaptá la apariencia del dashboard a tu preferencia.',
+        tips: [
+          'Modo claro/oscuro: cambiá entre tema claro y oscuro',
+          'Color acento: seleccioná el color principal del dashboard (azul, verde, morado, etc.)',
+          'La configuración se guarda en tu navegador y se sincroniza entre dispositivos',
+          'El tema se aplica inmediatamente sin recargar la página',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Los cambios en Ajustes afectan a todos los usuarios?',
+        respuesta:
+          'Depende. El perfil, horarios y equipo afectan a todo el consultorio. El tema y notificaciones son por usuario.',
+      },
+      {
+        pregunta: '¿Puedo tener horarios diferentes para cada médico?',
+        respuesta:
+          'Sí. Cada médico puede tener su propio set de horarios. Si no se configuran horarios específicos, se usan los horarios generales del consultorio.',
+      },
+    ],
+  },
+  {
+    id: 'webhooks',
+    titulo: 'Webhooks',
+    descripcion: 'Recepción y monitoreo de eventos entrantes (Twilio, n8n, GitHub)',
+    icono: 'Webhook',
+    pasos: [
+      {
+        titulo: 'Ver logs de webhooks',
+        descripcion: 'La página de Webhooks muestra un registro de todas las solicitudes entrantes.',
+        tips: [
+          'Cada entrada muestra método, ruta, estado HTTP y timestamp',
+          'Los errores se destacan en rojo para identificación rápida',
+          'Podés filtrar por estado (éxito/error) o por ruta',
+          'Los logs ayudan a diagnosticar problemas de integración',
+        ],
+        enlace: { href: '/dashboard/webhooks', label: 'Ir a Webhooks' },
+      },
+      {
+        titulo: 'Endpoints principales',
+        descripcion: 'El sistema expone varios webhooks para integraciones externas.',
+        tips: [
+          'POST /api/webhook/twilio: entrada de mensajes WhatsApp',
+          'POST /api/webhook/twilio/status: actualizaciones de estado de mensajes',
+          'POST /webhook/novedades-generar: dispara actualización de novedades (n8n)',
+          'Cada webhook tiene su propio registro de actividad',
+        ],
+      },
+      {
+        titulo: 'Diagnóstico de errores',
+        descripcion: 'Usá los logs de webhooks para identificar y resolver problemas.',
+        tips: [
+          'Errores 4xx: problema con la solicitud (payload inválido, faltan headers)',
+          'Errores 5xx: error interno del servidor',
+          'Timeouts: la respuesta tardó más de 30 segundos',
+          'Si un webhook falla repetidamente, revisá la configuración del servicio externo',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Cuánto tiempo se conservan los logs?',
+        respuesta:
+          'Los logs de webhooks se conservan por 30 días. Después se eliminan automáticamente.',
+      },
+      {
+        pregunta: '¿Puedo reprocesar un webhook fallido?',
+        respuesta:
+          'No directamente desde la interfaz. Si necesitás reprocesar un webhook, podés simular la solicitud desde la consola de Twilio o n8n.',
+      },
+    ],
+  },
+  {
+    id: 'admin-n8n',
+    titulo: 'Automatización n8n',
+    descripcion: 'Workflows automatizados para tareas recurrentes del consultorio',
+    icono: 'Network',
+    pasos: [
+      {
+        titulo: 'Workflows activos',
+        descripcion: 'n8n ejecuta workflows automáticos en segundo plano para diversas tareas.',
+        tips: [
+          'Recordatorios de turnos: envío automático 24h antes del turno',
+          'Resumen diario: reporte matutino con turnos y alertas del día',
+          'Backup diario: respaldo automático de BD a las 3:00 AM',
+          'Novedades: actualización automática desde commits de GitHub',
+          'Correo inteligente: gestión de correos del consultorio',
+        ],
+        enlace: { href: '/dashboard/admin/n8n', label: 'Ir a n8n' },
+      },
+      {
+        titulo: 'Estado del servicio',
+        descripcion: 'El panel de n8n muestra el estado actual de la automatización.',
+        tips: [
+          'Indicador verde: n8n funcionando correctamente',
+          'Indicador rojo: servicio caído o error de conexión',
+          'Podés ver la última ejecución de cada workflow',
+          'Los errores de ejecución se muestran con detalle',
+        ],
+      },
+      {
+        titulo: 'Workflows disponibles (vía n8n)',
+        descripcion: 'Workflows configurados en n8n para automatización del consultorio:',
+        tips: [
+          'WF-02 Gestión de Turnos: procesa solicitudes de turno vía WhatsApp',
+          'WF-03 Recordatorios: envía recordatorios automáticos 24h antes',
+          'WF-04 Correo Inteligente: gestión IMAP/SMTP',
+          'WF-05 Resumen Diario: reporte diario al médico',
+          'WF-06 Recetas: gestión de recetas y renovaciones',
+          'WF-08 Google Calendar Sync: sincronización con Google Calendar',
+          'WF-09 Anonimizar: anonimización de datos para testing',
+          'WF-10 Expiracion Waitlist: gestión de vencimiento de lista de espera',
+          'WF-11 Novedades: actualización automática de novedades desde GitHub',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Puedo crear mis propios workflows?',
+        respuesta:
+          'Sí, si tenés conocimientos técnicos podés acceder a n8n desde n8n.aicorebots.com y crear tus propias automatizaciones. Los workflows personalizados están disponibles en plan Enterprise.',
+      },
+      {
+        pregunta: '¿Los workflows afectan el rendimiento del dashboard?',
+        respuesta:
+          'No, n8n corre como un servicio independiente en el servidor. No afecta el rendimiento del dashboard ni la atención a pacientes.',
+      },
+    ],
+  },
+  {
+    id: 'admin-tenants-sucursales',
+    titulo: 'Tenants y Sucursales (Admin)',
+    descripcion: 'Administración multi-tenant y multi-sucursal para redes médicas',
+    icono: 'Building2',
+    pasos: [
+      {
+        titulo: 'Tenants (redes médicas)',
+        descripcion: 'Gestioná múltiples consultorios desde un solo panel de administración.',
+        tips: [
+          'Disponible en plan Enterprise',
+          'Cada tenant es un consultorio independiente con su propia configuración',
+          'Los datos de cada tenant están aislados (base de datos separada)',
+          'Podés crear, suspender o eliminar tenants desde este panel',
+        ],
+        enlace: { href: '/dashboard/admin/tenants', label: 'Ir a Tenants' },
+      },
+      {
+        titulo: 'Sucursales',
+        descripcion: 'Administrá múltiples sucursales de un mismo consultorio.',
+        tips: [
+          'Disponible en plan Enterprise',
+          'Cada sucursal tiene sus propios médicos, horarios y turnos',
+          'Los pacientes pueden atenderse en cualquier sucursal',
+          'Las métricas se pueden ver por sucursal o consolidadas',
+        ],
+        enlace: { href: '/dashboard/admin/sucursales', label: 'Ir a Sucursales' },
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Los pacientes pueden ver todas las sucursales?',
+        respuesta:
+          'Depende de la configuración. Pueden ver solo la sucursal donde se atienden o todas las sucursales del consultorio.',
+      },
+      {
+        pregunta: '¿Cada tenant tiene su propia base de datos?',
+        respuesta:
+          'Sí, cada tenant tiene datos completamente aislados en su propio esquema de base de datos para garantizar privacidad y seguridad.',
+      },
+    ],
+  },
+  {
+    id: 'acerca-de',
+    titulo: 'Acerca de',
+    descripcion: 'Información del sistema, versión, créditos y documentación técnica',
+    icono: 'Info',
+    pasos: [
+      {
+        titulo: 'Versión del sistema',
+        descripcion: 'La página Acerca de muestra la versión actual del dashboard.',
+        tips: [
+          'La versión sigue el formato semántico (ej: v1.16.0)',
+          'Incluye fecha de último despliegue',
+          'Muestra el número de funcionalidades activas actualmente',
+          'Podés ver el hash del commit actual para referencia técnica',
+        ],
+        enlace: { href: '/dashboard/acerca', label: 'Ir a Acerca de' },
+      },
+      {
+        titulo: 'Stack tecnológico',
+        descripcion: 'Tecnologías utilizadas en el sistema.',
+        tips: [
+          'Frontend: Next.js 14 + Tailwind CSS + shadcn/ui',
+          'Base de datos: PostgreSQL 16 con Drizzle ORM',
+          'IA Local: Ollama + Gemma3 (todo corre en tu servidor)',
+          'Automatización: n8n self-hosted',
+          'Comunicaciones: Twilio (WhatsApp, SMS, voz)',
+          'Videoconsultas: LiveKit self-hosted',
+        ],
+      },
+      {
+        titulo: 'Landing page',
+        descripcion: 'Información sobre la página de aterrizaje pública.',
+        tips: [
+          'La landing muestra features, planes y precios del sistema',
+          'Total de funcionalidades: 76+ distribuidas en 5 planes',
+          'Incluye sección de FAQ, comparativa de planes y contacto',
+          'Accesible desde med.aicorebots.com',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Cada cuánto se actualiza la versión?',
+        respuesta:
+          'Las actualizaciones se despliegan automáticamente cuando hay cambios en la rama main del repositorio. El versionado semántico se actualiza según el tipo de cambios.',
       },
     ],
   },
