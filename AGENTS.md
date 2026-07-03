@@ -572,6 +572,8 @@ consultorio-medico/
 | **Command Palette Cmd+K** | 17 nav + 9 admin + 6 quick actions, búsqueda paralela, debounce 250ms | 27/06 |
 | **Historial Lateral pacientes** | Sheet con fuse.js, scoring dots, resumen rápido + acciones | 27/06 |
 | **Notificaciones Mejoradas** | Prioridad por tipo, silenciar categorías, stack badges, filtros | 27/06 |
+| **Editar pacientes en lista** | Modal de edición directa desde la lista de pacientes (no solo desde ficha). Implementado en commit `41f8923` | 03/07 |
+| **Buscador CIE-10 offline** | Búsqueda fuzzy con fuse.js + debounce 200ms. Códigos hardcodeados en bundle JS. Commit `41f8923` + `?` | 03/07 |
 
 ### 🟡 Prioridad Media
 
@@ -579,8 +581,6 @@ consultorio-medico/
 |---------|-------------|--------------|
 | **WF-04 Correo Inteligente completo** | Configurar IMAP/SMTP real en n8n. Ya tiene el workflow completo (10 nodos), falta activar las credenciales | Credenciales IMAP/SMTP |
 | **Tests de integración** | Suite de tests automatizados para flujo completo: webhook → DB → n8n → Twilio | Playwright/Jest |
-| **Editar pacientes en lista** | Agregar modal de edición desde la lista de pacientes (no solo desde ficha) | — |
-| **Buscador CIE-10 offline** | Cachear códigos CIE-10 en el cliente para búsqueda sin conexión | — |
 
 ### 🟢 Prioridad Baja
 

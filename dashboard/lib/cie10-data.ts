@@ -2117,6 +2117,28 @@ export const CIE10_DATA: Cie10Entry[] = [
   },
 ];
 
+// ─── Fuse.js index para búsqueda fuzzy ──────────────────────
+
+import Fuse from 'fuse.js';
+
+let fuseIndex: Fuse<Cie10Entry> | null = null;
+
+function getFuse(): Fuse<Cie10Entry> {
+  if (!fuseIndex) {
+    fuseIndex = new Fuse(CIE10_DATA, {
+      keys: [
+        { name: 'codigo', weight: 2 },
+        { name: 'descripcion', weight: 1 },
+        { name: 'categoria', weight: 0.5 },
+      ],
+      threshold: 0.4,
+      distance: 100,
+      minMatchCharLength: 1,
+    });
+  }
+  return fuseIndex;
+}
+
 // ─── Helper: buscar códigos ─────────────────────────────────
 
 export function buscarCie10(termino: string): Cie10Entry[] {
@@ -2125,4 +2147,13 @@ export function buscarCie10(termino: string): Cie10Entry[] {
   return CIE10_DATA.filter(
     (e) => e.codigo.toLowerCase().startsWith(q) || e.descripcion.toLowerCase().includes(q),
   ).slice(0, 20);
+}
+
+export function buscarCie10Fuzzy(termino: string): Cie10Entry[] {
+  const q = termino.trim();
+  if (!q) return [];
+  return getFuse()
+    .search(q)
+    .slice(0, 20)
+    .map((r) => r.item);
 }

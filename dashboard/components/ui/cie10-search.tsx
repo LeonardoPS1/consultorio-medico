@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { buscarCie10, type Cie10Entry } from '@/lib/cie10-data';
+import { buscarCie10Fuzzy, type Cie10Entry } from '@/lib/cie10-data';
 
 interface Props {
   value: string;
@@ -27,20 +27,31 @@ export function Cie10Search({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     setQuery(value);
   }, [value]);
 
   useEffect(() => {
-    if (query.length >= 1) {
-      const r = buscarCie10(query);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (query.length < 1) {
+      setResults([]);
+      setOpen(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(() => {
+      const r = buscarCie10Fuzzy(query);
       setResults(r);
       setOpen(r.length > 0);
       setHighlightedIdx(-1);
-    } else {
-      setResults([]);
-      setOpen(false);
-    }
+    }, 200);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [query]);
 
   useEffect(() => {

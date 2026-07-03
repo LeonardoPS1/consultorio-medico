@@ -91,3 +91,6 @@ docs/update.pdf
 
 # Graphify output (generated artifacts)
 graphify-out/
+
+# OpenCode AI agent config (contiene tokens/skills)
+.opencode/
