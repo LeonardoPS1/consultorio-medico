@@ -55,6 +55,7 @@ export type FeatureId =
   | 'telemedicina'
   | 'onboarding'
   | 'scoring-pacientes'
+  | 'historial'
   | 'web-vitals'
   | 'portal-analytics'
   | 'data-cache'
@@ -79,6 +80,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   notificaciones: 'starter',
   'notas-soap': 'starter',
   encuestas: 'starter',
+  historial: 'starter',
   'scoring-pacientes': 'starter',
   pwa: 'free',
   onboarding: 'free',

@@ -425,6 +425,26 @@ consultorio-medico/
 
 ---
 
+### WF-11: Novedades desde Commits
+
+| Propiedad | Valor |
+|-----------|-------|
+| **Archivo** | `n8n-workflows/current/workflow-11-novedades.json` |
+| **Trigger** | Webhook (GitHub Push) → `POST /webhook/novedades-generar` |
+| **Estado** | ⏸️ **INACTIVO** (pendiente conectar webhook GitHub) |
+| **Nodos** | 5 (webhook, httpRequest, IF, noOp×2) |
+
+**Flujo:**
+1. Webhook recibe push de GitHub
+2. POST a `https://med.aicorebots.com/api/novedades/generar` con `x-internal-key`
+3. IF verifica si se generaron entradas (mensaje contiene "generaron")
+4. `Novedades generadas` → OK (noOp)
+5. `Sin commits nuevos` → skip (noOp)
+
+**⚠️ Pendiente:** Configurar webhook de GitHub para enviar pushes a `https://med.aicorebots.com/webhook/novedades-generar`.
+
+---
+
 ### Matriz Resumen de Agentes
 
 | # | Nombre | Trigger | Ollama | Twilio | PG | GCal | IMAP | Webhook |
@@ -439,6 +459,7 @@ consultorio-medico/
 | **WF-08** | Google Calendar Sync | Webhook | ❌ | ❌ | ✅ | ✅ | ❌ | `/google-calendar-sync` |
 | **WF-09** | Anonimización Post-Retención | Cron | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
 | **WF-10** | Expiración Waitlist | Cron | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **WF-11** | Novedades desde Commits | Webhook | ❌ | ❌ | ❌ | ❌ | ❌ | `/novedades-generar` |
 
 ---
 

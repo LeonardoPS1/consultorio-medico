@@ -206,8 +206,7 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
       })
       .from(historialMedico)
       .where(eq(historialMedico.pacienteId, id))
-      .orderBy(desc(historialMedico.createdAt))
-      .limit(20);
+      .orderBy(desc(historialMedico.createdAt));
 
     // ─── Notas SOAP count ─────────────────────────
     let notasSoapCount = { count: 0 };

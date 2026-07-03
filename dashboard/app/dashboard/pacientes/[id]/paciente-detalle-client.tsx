@@ -1374,9 +1374,18 @@ export function PacienteDetalleClient({
                       onChange={(e) => setHistorialForm((f) => ({ ...f, tipo: e.target.value }))}
                     >
                       <option value="consulta">Consulta</option>
+                      <option value="control">Control</option>
                       <option value="diagnostico">Diagnóstico</option>
-                      <option value="procedimiento">Procedimiento</option>
                       <option value="estudio">Estudio</option>
+                      <option value="resultado">Resultado</option>
+                      <option value="receta">Receta</option>
+                      <option value="procedimiento">Procedimiento</option>
+                      <option value="internacion">Internación</option>
+                      <option value="cirugia">Cirugía</option>
+                      <option value="alergia">Alergia</option>
+                      <option value="vacuna">Vacuna</option>
+                      <option value="observacion">Observación</option>
+                      <option value="certificado">Certificado</option>
                       <option value="nota">Nota de evolución</option>
                       <option value="otro">Otro</option>
                     </select>
@@ -2023,9 +2032,18 @@ export function PacienteDetalleClient({
                     }
                   >
                     <option value="consulta">Consulta</option>
+                    <option value="control">Control</option>
                     <option value="diagnostico">Diagnóstico</option>
-                    <option value="procedimiento">Procedimiento</option>
                     <option value="estudio">Estudio</option>
+                    <option value="resultado">Resultado</option>
+                    <option value="receta">Receta</option>
+                    <option value="procedimiento">Procedimiento</option>
+                    <option value="internacion">Internación</option>
+                    <option value="cirugia">Cirugía</option>
+                    <option value="alergia">Alergia</option>
+                    <option value="vacuna">Vacuna</option>
+                    <option value="observacion">Observación</option>
+                    <option value="certificado">Certificado</option>
                     <option value="nota">Nota de evolución</option>
                     <option value="otro">Otro</option>
                   </select>

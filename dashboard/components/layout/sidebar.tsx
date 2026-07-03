@@ -69,6 +69,7 @@ const navItems: NavItem[] = [
     icon: MessageSquare,
     feature: 'conversaciones',
   },
+  { title: 'Historial', href: '/dashboard/historial', icon: FileText, feature: 'historial' },
   { title: 'Recetas', href: '/dashboard/recetas', icon: Syringe, feature: 'recetas' },
   { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3, feature: 'reportes' },
   { title: 'Encuestas', href: '/dashboard/encuestas', icon: Star, feature: 'encuestas' },
