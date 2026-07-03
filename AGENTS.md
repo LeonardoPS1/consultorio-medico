@@ -574,6 +574,11 @@ consultorio-medico/
 | **Notificaciones Mejoradas** | Prioridad por tipo, silenciar categorías, stack badges, filtros | 27/06 |
 | **Editar pacientes en lista** | Modal de edición directa desde la lista de pacientes (no solo desde ficha). Implementado en commit `41f8923` | 03/07 |
 | **Buscador CIE-10 offline** | Búsqueda fuzzy con fuse.js + debounce 200ms. Códigos hardcodeados en bundle JS. Commit `41f8923` + `?` | 03/07 |
+| **Panel monitoreo n8n** | Admin page con workflows, ejecuciones, logs, errores desde dashboard. Service `n8n-monitor.ts`, 5 APIs | 03/07 |
+| **Encuestas post-consulta con IA** | Análisis de sentimiento con Ollama Gemma3. `lib/encuestas.ts` + `analyzeSentiment()`, charts evolución | 03/07 |
+| **Dashboard analytics** | Reportes con 4 tabs (ingresos, turnos, pacientes, recetas), 6 charts Recharts, predicción demanda | 03/07 |
+| **Alertas inteligentes** | 4 detectores: cumpleaños, ausentismo recurrente, pacientes críticos, score alto. `alertas-inteligentes.ts` | 03/07 |
+| **Sistema de derivaciones** | Tabla DB `derivaciones`, CRUD completo, UI en sidebar, feature gated | 03/07 |
 
 ### 🟡 Prioridad Media
 
@@ -586,18 +591,13 @@ consultorio-medico/
 
 | Feature | Descripción |
 |---------|-------------|
-| Panel de monitoreo n8n en dashboard | Ver ejecuciones, errores y logs desde el dashboard |
 | WhatsApp Business API (producción) | Migrar de sandbox a producción con número dedicado |
 | Soporte multimedia en WhatsApp | Imágenes, PDFs, audio en conversaciones |
-| Encuestas post-consulta avanzadas | Análisis de satisfacción con ML |
-| Dashboard de analytics | Estadísticas avanzadas con charts |
-| Sistema de alertas inteligentes | Stock bajo, pacientes críticos, cumpleaños |
-| Sistema de derivaciones | Derivar pacientes entre especialistas |
 
 ### 💡 Ideas a Futuro
 - Chat en vivo en dashboard (WebSocket)
-- Recordatorios vía email
-- Historial clínico digital expandido
+- Recordatorios vía email (SMTP configurable, falta servicio automático de recordatorios)
+- Historial clínico digital expandido (integrado en ficha paciente, sin página independiente)
 
 ---
 
