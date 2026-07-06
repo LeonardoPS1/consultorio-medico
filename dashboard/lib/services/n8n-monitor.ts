@@ -28,26 +28,18 @@ interface N8nHealth {
   alive: boolean;
 }
 
-async function n8nFetch<T>(path: string): Promise<T | null> {
-  try {
-    const url = `${N8N_BASE_URL}${path}`;
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (N8N_API_KEY) {
-      headers['X-N8N-API-KEY'] = N8N_API_KEY;
-    }
-    const res = await fetch(url, { headers, next: { revalidate: 30 } });
-    if (!res.ok) {
-      safeWarn(`[n8n-monitor] ${res.status} on ${path}`);
-      return null;
-    }
-    return res.json() as Promise<T>;
-  } catch (err) {
-    safeError(
-      `[n8n-monitor] Error fetching ${path}:`,
-      err instanceof Error ? { message: err.message } : err,
-    );
-    return null;
+async function n8nFetch<T>(path: string): Promise<T> {
+  const url = `${N8N_BASE_URL}${path}`;
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (N8N_API_KEY) {
+    headers['X-N8N-API-KEY'] = N8N_API_KEY;
   }
+  const res = await fetch(url, { headers, cache: 'no-store' });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`n8n responded with ${res.status} on ${path}: ${body.slice(0, 200)}`);
+  }
+  return res.json() as Promise<T>;
 }
 
 export async function fetchWorkflows(): Promise<N8nWorkflow[]> {
@@ -62,7 +54,7 @@ export async function fetchExecutions(limit = 50, workflowId?: string): Promise<
   return data?.data ?? [];
 }
 
-export async function fetchHealth(): Promise<N8nHealth | null> {
+export async function fetchHealth(): Promise<N8nHealth> {
   return n8nFetch<N8nHealth>('/healthz');
 }
 
@@ -143,10 +135,23 @@ export async function getWorkflowErrors(params: {
 }
 
 export async function getN8nStats() {
-  const health = await fetchHealth();
-  const n8nReachable = health?.alive ?? false;
+  let n8nReachable = false;
+  try {
+    const health = await fetchHealth();
+    n8nReachable = health?.alive ?? false;
+  } catch {
+    safeWarn('[n8n-monitor] Health check failed — n8n is down');
+  }
 
-  const workflows = n8nReachable ? await fetchWorkflows() : [];
+  let workflows: N8nWorkflow[] = [];
+  if (n8nReachable) {
+    try {
+      workflows = await fetchWorkflows();
+    } catch (err) {
+      safeWarn('[n8n-monitor] Workflows fetch failed',
+        err instanceof Error ? { message: err.message } : err);
+    }
+  }
   const activeCount = workflows.filter((w) => w.active).length;
   const inactiveWorkflows = workflows
     .filter((w) => !w.active)

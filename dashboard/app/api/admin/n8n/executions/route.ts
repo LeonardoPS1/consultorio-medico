@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { fetchExecutions } from '@/lib/services/n8n-monitor';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user || session.user.role !== 'admin') {
@@ -12,6 +14,11 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get('limit') || '50', 10);
   const workflowId = searchParams.get('workflowId') || undefined;
 
-  const executions = await fetchExecutions(limit, workflowId);
-  return NextResponse.json({ data: executions });
+  try {
+    const executions = await fetchExecutions(limit, workflowId);
+    return NextResponse.json({ data: executions });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Error al conectar con n8n';
+    return NextResponse.json({ error: message, data: [] }, { status: 503 });
+  }
 }

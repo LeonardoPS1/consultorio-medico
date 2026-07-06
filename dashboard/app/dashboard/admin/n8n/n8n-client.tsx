@@ -108,11 +108,13 @@ export default function N8nClient({ initialStats }: Props) {
   const [errorOffset, setErrorOffset] = useState(0);
   const [errorTotal, setErrorTotal] = useState(0);
 
-  // Loading
+  // Loading & Errors
   const [loadingWorkflows, setLoadingWorkflows] = useState(false);
   const [loadingExecutions, setLoadingExecutions] = useState(false);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [loadingErrors, setLoadingErrors] = useState(false);
+  const [errorWorkflows, setErrorWorkflows] = useState<string | null>(null);
+  const [errorExecutions, setErrorExecutions] = useState<string | null>(null);
 
   const limit = 50;
 
@@ -120,11 +122,18 @@ export default function N8nClient({ initialStats }: Props) {
 
   const fetchWorkflows = useCallback(async () => {
     setLoadingWorkflows(true);
+    setErrorWorkflows(null);
     try {
       const res = await fetch('/api/admin/n8n/workflows');
       const json = await res.json();
-      setWorkflows(json.data || []);
+      if (!res.ok) {
+        setErrorWorkflows(json.error || 'Error al cargar workflows');
+        setWorkflows([]);
+      } else {
+        setWorkflows(json.data || []);
+      }
     } catch {
+      setErrorWorkflows('Error de conexión con el servidor');
       setWorkflows([]);
     } finally {
       setLoadingWorkflows(false);
@@ -133,11 +142,18 @@ export default function N8nClient({ initialStats }: Props) {
 
   const fetchExecutions = useCallback(async () => {
     setLoadingExecutions(true);
+    setErrorExecutions(null);
     try {
       const res = await fetch('/api/admin/n8n/executions?limit=50');
       const json = await res.json();
-      setExecutions(json.data || []);
+      if (!res.ok) {
+        setErrorExecutions(json.error || 'Error al cargar ejecuciones');
+        setExecutions([]);
+      } else {
+        setExecutions(json.data || []);
+      }
     } catch {
+      setErrorExecutions('Error de conexión con el servidor');
       setExecutions([]);
     } finally {
       setLoadingExecutions(false);
@@ -299,8 +315,17 @@ export default function N8nClient({ initialStats }: Props) {
               ) : workflows.length === 0 ? (
                 <div className="text-center py-16 text-muted-foreground">
                   <Network className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                  <p>No se pudieron cargar los workflows</p>
-                  <p className="text-xs mt-1">¿n8n está corriendo?</p>
+                  {errorWorkflows ? (
+                    <>
+                      <p className="text-red-500 font-medium">Error al cargar workflows</p>
+                      <p className="text-xs mt-1 max-w-md mx-auto text-balance">{errorWorkflows}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p>No hay workflows</p>
+                      <p className="text-xs mt-1">Crea workflows en n8n para verlos aquí</p>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -414,7 +439,17 @@ export default function N8nClient({ initialStats }: Props) {
               ) : executions.length === 0 ? (
                 <div className="text-center py-16 text-muted-foreground">
                   <Activity className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                  <p>No hay ejecuciones recientes</p>
+                  {errorExecutions ? (
+                    <>
+                      <p className="text-red-500 font-medium">Error al cargar ejecuciones</p>
+                      <p className="text-xs mt-1 max-w-md mx-auto text-balance">{errorExecutions}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p>No hay ejecuciones recientes</p>
+                      <p className="text-xs mt-1">Las ejecuciones aparecen aquí cuando los workflows se ejecuten</p>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
