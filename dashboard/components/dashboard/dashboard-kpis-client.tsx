@@ -180,9 +180,9 @@ export function DashboardKpisClient({ initialKpis }: DashboardKpisClientProps) {
         const bg = getKpiBg(kpi.type);
         return (
           <motion.div key={kpi.title} variants={kpiCardVariants}>
-            <Card className="hover-card overflow-hidden relative">
+            <Card className="hover-card overflow-hidden relative glass-kpi">
               <div
-                className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-[0.03] dark:opacity-[0.08]`}
+                className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-[0.04] dark:opacity-[0.1]`}
               />
               <CardHeader className="flex flex-row items-center justify-between pb-1 md:pb-2 space-y-0 px-2.5 sm:px-3 md:px-6 pt-2.5 sm:pt-3 md:pt-6 relative">
                 <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground truncate pr-1">

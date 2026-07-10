@@ -25,8 +25,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <PatientPanelProvider>
         <AsistenteProvider>
         <div className="flex h-screen overflow-hidden bg-background">
+          <div className="ambient-bg" />
           <Sidebar />
-          <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex flex-1 flex-col overflow-hidden relative z-[1]">
             <Header />
             <CommandPalette />
             <PatientPanel />
