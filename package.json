@@ -26,8 +26,5 @@
   },
   "dependencies": {
     "pdfkit": "^0.18.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": ["@swc/core", "core-js-pure"]
   }
 }

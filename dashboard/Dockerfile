@@ -11,7 +11,7 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 
 # Corepack para pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
 # Copiar solo los archivos de dependencias para cachear capa
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -34,7 +34,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-RUN corepack enable && corepack prepare pnpm@latest --activate && pnpm build
+RUN corepack enable && corepack prepare pnpm@9 --activate && pnpm build
 
 # ─── Fix standalone deps: instalar deps de producción en el standalone ──────
 # Next.js standalone output con pnpm genera package.json pero node_modules vacío.
