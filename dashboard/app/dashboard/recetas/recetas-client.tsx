@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { PageAnimation } from '@/components/dashboard/page-animation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { playDelete } from '@/lib/sound';
 import {
   Plus,
   Syringe,
@@ -511,6 +512,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         return;
       }
       setRecetas((prev) => prev.filter((r) => r.id !== deleteRecetaId));
+      playDelete();
       toast({ title: 'Receta eliminada', description: 'La receta se movió al historial' });
       setDeleteRecetaId(null);
     } catch {

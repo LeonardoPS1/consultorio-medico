@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { playDelete } from '@/lib/sound';
 import {
   Bot,
   Globe,
@@ -294,6 +295,7 @@ export default function CredencialesTab() {
         method: 'DELETE',
       });
       if (res.ok) {
+        playDelete();
         const valoresVacios: CredencialesState = {};
         for (const campo of servicios.find((sv) => sv.servicio === servicio)?.campos || []) {
           valoresVacios[campo.clave] = '';

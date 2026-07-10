@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { playDelete } from '@/lib/sound';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -403,6 +404,7 @@ export function PacienteDetalleClient({
       });
       if (!res.ok) throw new Error();
       setNotasSoapList((prev) => prev.filter((n) => n.id !== deleteSoapId));
+      playDelete();
       toast({ title: 'Nota SOAP eliminada' });
       setDeleteSoapId(null);
     } catch {
@@ -539,6 +541,7 @@ export function PacienteDetalleClient({
         throw new Error(err.message || 'Error al confirmar la baja');
       }
       setBajaConfirmada(true);
+      playDelete();
       setBajaConfirmOpen(false);
       toast({
         title: 'Baja confirmada',
@@ -719,6 +722,7 @@ export function PacienteDetalleClient({
       );
       if (!res.ok) throw new Error();
       setHistorialList((prev) => prev.filter((h) => h.id !== deleteHistorialId));
+      playDelete();
       toast({ title: 'Entrada eliminada' });
       setDeleteHistorialId(null);
     } catch {

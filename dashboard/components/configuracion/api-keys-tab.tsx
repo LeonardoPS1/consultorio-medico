@@ -35,6 +35,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { API_SCOPES } from '@/lib/public-api-types';
+import { playCopy, playDelete } from '@/lib/sound';
 
 interface ApiKeyItem {
   id: string;
@@ -95,6 +96,7 @@ export default function ApiKeysTab() {
   const copyText = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      playCopy();
       toast({ title: 'Copiado al portapapeles' });
     } catch {
       toast({ title: 'No se pudo copiar', variant: 'destructive' });
@@ -107,6 +109,7 @@ export default function ApiKeysTab() {
     try {
       await fetch(`/api/api-keys?id=${id}`, { method: 'DELETE' });
       setKeys((prev) => prev.filter((k) => k.id !== id));
+      playDelete();
       toast({ title: 'API key revocada y eliminada' });
     } catch {
       toast({ title: 'Error al revocar', variant: 'destructive' });

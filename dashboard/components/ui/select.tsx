@@ -5,8 +5,17 @@ import * as SelectPrimitive from '@radix-ui/react-select';
 import { Check, ChevronDown, ChevronUp } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { playSelect } from '@/lib/sound';
 
-const Select = SelectPrimitive.Root;
+const Select = ({ onOpenChange, ...props }: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>) => (
+  <SelectPrimitive.Root
+    onOpenChange={(open) => {
+      if (open) playSelect();
+      onOpenChange?.(open);
+    }}
+    {...props}
+  />
+);
 
 const SelectGroup = SelectPrimitive.Group;
 

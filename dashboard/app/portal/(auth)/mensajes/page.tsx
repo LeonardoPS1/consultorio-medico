@@ -10,6 +10,7 @@ import { Send, MessageSquare, Bot } from 'lucide-react';
 import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
+import { playSend, playReceive } from '@/lib/sound';
 
 interface Mensaje {
   id: string;
@@ -58,7 +59,12 @@ export default function PortalChatPage() {
       try {
         const r = await fetch(`/api/portal/chat/${convId}/mensajes`);
         const res = await r.json();
-        if (res.data) setMensajes(res.data);
+        if (res.data) {
+          setMensajes((prev) => {
+            if (prev.length > 0 && res.data.length > prev.length) playReceive();
+            return res.data;
+          });
+        }
       } catch {
         // ignore polling errors
       }
@@ -77,6 +83,7 @@ export default function PortalChatPage() {
   async function sendMessage() {
     if (!input.trim() || !convId || sending) return;
     setSending(true);
+    playSend();
     const content = input.trim();
     setInput('');
 

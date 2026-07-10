@@ -16,6 +16,7 @@ import {
   type DragCancelEvent,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import { playClick, playComplete, playDelete, playWarning } from '@/lib/sound';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -557,6 +558,7 @@ export function AtencionClient({ initialTurnos }: { initialTurnos: Turno[] }) {
       const paciente = turnos.find((t) => t.id === id)?.paciente;
       if (ok) {
         toast({ title: 'En atención', description: `${paciente} está siendo atendido` });
+        playClick();
       } else {
         toast({
           title: 'Error',
@@ -576,6 +578,7 @@ export function AtencionClient({ initialTurnos }: { initialTurnos: Turno[] }) {
       const paciente = turnos.find((t) => t.id === id)?.paciente;
       if (ok) {
         toast({ title: 'Atendido', description: `${paciente} fue atendido correctamente` });
+        playComplete();
       } else {
         toast({
           title: 'Error',
@@ -600,6 +603,7 @@ export function AtencionClient({ initialTurnos }: { initialTurnos: Turno[] }) {
       const paciente = turnos.find((t) => t.id === id)?.paciente;
       if (ok) {
         toast({ title: 'Cancelado', description: `Turno de ${paciente} cancelado` });
+        playDelete();
       } else {
         toast({
           title: 'Error',
@@ -619,6 +623,7 @@ export function AtencionClient({ initialTurnos }: { initialTurnos: Turno[] }) {
       const paciente = turnos.find((t) => t.id === id)?.paciente;
       if (ok) {
         toast({ title: 'No asistió', description: `Turno de ${paciente} marcado como no asistió` });
+        playWarning();
       } else {
         toast({
           title: 'Error',

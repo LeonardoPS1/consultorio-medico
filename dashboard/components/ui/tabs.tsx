@@ -3,8 +3,22 @@
 import * as React from 'react';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { cn } from '@/lib/utils';
+import { playTab } from '@/lib/sound';
 
-const Tabs = TabsPrimitive.Root;
+const Tabs = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root>
+>(({ onValueChange, ...props }, ref) => (
+  <TabsPrimitive.Root
+    ref={ref}
+    onValueChange={(value) => {
+      playTab();
+      onValueChange?.(value);
+    }}
+    {...props}
+  />
+));
+Tabs.displayName = 'Tabs';
 
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,

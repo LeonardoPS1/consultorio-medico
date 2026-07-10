@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalBadge } from '@/components/portal/portal-badge';
+import { playDelete } from '@/lib/sound';
 
 interface Turno {
   id: string;
@@ -81,6 +82,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
       const data = await res.json();
       if (res.ok) {
         setCancelados((prev) => new Set(prev).add(turnoId));
+        playDelete();
         if (data.reembolso) {
           if (data.reembolso.procesado) {
             setSuccessMsg(

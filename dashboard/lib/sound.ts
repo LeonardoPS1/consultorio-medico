@@ -120,3 +120,103 @@ export function playNavigate(): void {
 export function playNotification(): void {
   tone(1200, 0.08, 'sine', 0.07);
 }
+
+// ─── New sounds: more variety with different waveforms and patterns ───────────
+
+export function playHover(): void {
+  tone(900, 0.015, 'sine', 0.02);
+}
+
+export function playTab(): void {
+  tone(700, 0.025, 'triangle', 0.05, { freqEnd: 850 });
+}
+
+export function playSelect(): void {
+  tone(500, 0.04, 'triangle', 0.05, { freqEnd: 650 });
+}
+
+export function playWarning(): void {
+  const ctx = getAudioContext();
+  if (!ctx || !isSoundEnabled()) return;
+  const now = ctx.currentTime;
+  [
+    { freq: 440, start: 0, dur: 0.08, type: 'square' as OscillatorType, vol: 0.04 },
+    { freq: 440, start: 0.1, dur: 0.08, type: 'square' as OscillatorType, vol: 0.04 },
+  ].forEach(({ freq, start, dur, type, vol }) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now + start);
+    gain.gain.setValueAtTime(vol, now + start);
+    gain.gain.linearRampToValueAtTime(0, now + start + dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now + start);
+    osc.stop(now + start + dur);
+  });
+}
+
+export function playSend(): void {
+  const ctx = getAudioContext();
+  if (!ctx || !isSoundEnabled()) return;
+  const now = ctx.currentTime;
+  [440, 587, 784].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now + i * 0.04);
+    gain.gain.setValueAtTime(0.06, now + i * 0.04);
+    gain.gain.linearRampToValueAtTime(0, now + i * 0.04 + 0.08);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now + i * 0.04);
+    osc.stop(now + i * 0.04 + 0.08);
+  });
+}
+
+export function playReceive(): void {
+  const ctx = getAudioContext();
+  if (!ctx || !isSoundEnabled()) return;
+  const now = ctx.currentTime;
+  [
+    { freq: 784, start: 0, dur: 0.06 },
+    { freq: 587, start: 0.06, dur: 0.1 },
+  ].forEach(({ freq, start, dur }) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now + start);
+    gain.gain.setValueAtTime(0.06, now + start);
+    gain.gain.linearRampToValueAtTime(0, now + start + dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now + start);
+    osc.stop(now + start + dur);
+  });
+}
+
+export function playComplete(): void {
+  const ctx = getAudioContext();
+  if (!ctx || !isSoundEnabled()) return;
+  const now = ctx.currentTime;
+  [523, 659, 784, 1047].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now + i * 0.05);
+    gain.gain.setValueAtTime(0.06, now + i * 0.05);
+    gain.gain.linearRampToValueAtTime(0, now + i * 0.05 + 0.12);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now + i * 0.05);
+    osc.stop(now + i * 0.05 + 0.12);
+  });
+}
+
+export function playDelete(): void {
+  tone(400, 0.08, 'sawtooth', 0.04, { freqEnd: 200 });
+}
+
+export function playCopy(): void {
+  tone(600, 0.03, 'triangle', 0.05, { freqEnd: 800 });
+}

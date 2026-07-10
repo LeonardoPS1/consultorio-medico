@@ -8,6 +8,7 @@ import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { PageAnimation } from '@/components/dashboard/page-animation';
 import { motion } from 'motion/react';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
+import { playDelete } from '@/lib/sound';
 import { toast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -559,6 +560,7 @@ export function TurnosClient({
     );
     setShowCancelDialog(null);
     toast({ title: 'Turno cancelado', description: 'El turno fue cancelado correctamente' });
+    playDelete();
 
     try {
       await fetch(`/api/turnos/${id}`, {

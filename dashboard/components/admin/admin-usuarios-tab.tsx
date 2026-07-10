@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { playDelete } from '@/lib/sound';
 import {
   Dialog,
   DialogContent,
@@ -511,7 +512,8 @@ export default function AdminUsuariosTab() {
         onOpenChange={(open) => {
           if (!open) {
             setEditingUser(null);
-            setShowDeleteConfirm(false);
+      setShowDeleteConfirm(false);
+      playDelete();
           }
         }}
       >

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { Shield, Smartphone, Copy, Check, Download } from 'lucide-react';
+import { playCopy } from '@/lib/sound';
 
 export default function Setup2FA() {
   const [step, setStep] = useState<'idle' | 'qr' | 'verify' | 'done'>('idle');
@@ -102,6 +103,7 @@ export default function Setup2FA() {
 
   const copyBackupCodes = () => {
     navigator.clipboard.writeText(backupCodes.join('\n'));
+    playCopy();
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     toast({ title: '✅ Códigos copiados', description: 'Guardalos en un lugar seguro' });

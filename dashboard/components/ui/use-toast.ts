@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import type { ToastActionElement, ToastProps } from '@/components/ui/toast';
-import { playSuccess, playError, playClick } from '@/lib/sound';
+import { playSuccess, playError, playClick, playWarning } from '@/lib/sound';
 
 const TOAST_LIMIT = 5;
 const TOAST_REMOVE_DELAY = 5000;
@@ -161,6 +161,8 @@ function toast({ ...props }: Toast) {
     playError();
   } else if (props.variant === 'success') {
     playSuccess();
+  } else if (props.variant === 'warning') {
+    playWarning();
   } else {
     playClick();
   }

@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { playDelete } from '@/lib/sound';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -184,6 +185,7 @@ export function BlacklistClient({ initialData, initialTotal, initialStats }: Pro
       const res = await fetch(`/api/blacklist/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Error al eliminar');
       toast({ title: 'Eliminado', description: 'Entrada eliminada correctamente' });
+      playDelete();
       fetchData();
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });

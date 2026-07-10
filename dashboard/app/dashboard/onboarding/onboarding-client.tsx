@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { playComplete } from '@/lib/sound';
 import {
   CheckCircle2,
   Loader2,
@@ -168,6 +169,7 @@ function useOnboarding(
 
     // 1. Optimistic UI
     setCompleted((prev) => (prev.includes(stepId) ? prev : [...prev, stepId]));
+    playComplete();
 
     // 2. Persistir en servidor (fire-and-forget con toast de error)
     try {

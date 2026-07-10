@@ -39,6 +39,7 @@ import type {
   SlotDisponible,
   TurnoCreadoPortal,
 } from '@/lib/services/portal-booking';
+import { playComplete } from '@/lib/sound';
 
 type Step = 'medico' | 'slot' | 'confirmar' | 'pago' | 'completado';
 
@@ -248,6 +249,7 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
       if (!res.ok) throw new Error(data.error || 'Error al agendar');
 
       setUltimoTurno(data.turno);
+      playComplete();
       toast({
         title: rescheduleTurnoId ? 'Turno reagendado' : 'Turno agendado',
         description: 'Recibirás la confirmación por WhatsApp.',
@@ -298,6 +300,7 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
         const data = await res.json();
         if (data.turnoPagado) {
           setPagoCompletado(true);
+          playComplete();
           stopPolling();
           toast({ title: 'Pago confirmado', description: 'El pago fue procesado correctamente.' });
         }

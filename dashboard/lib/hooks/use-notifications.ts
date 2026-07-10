@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
-import { playNotification } from '@/lib/sound';
+import { playNotification, playClick, playDelete, playComplete } from '@/lib/sound';
 
 // ============================================================
 // Tipos
@@ -124,6 +124,7 @@ export function useNotifications() {
       if (!res.ok) throw new Error('Error al marcar leída');
     },
     onMutate: async (id) => {
+      playClick();
       await queryClient.cancelQueries({ queryKey: ['notificaciones'] });
       const previous = queryClient.getQueryData<NotificacionesResponse>(['notificaciones']);
       if (previous) {
@@ -184,6 +185,7 @@ export function useNotifications() {
       if (!res.ok) throw new Error('Error al eliminar');
     },
     onMutate: async (id) => {
+      playDelete();
       await queryClient.cancelQueries({ queryKey: ['notificaciones'] });
       const previous = queryClient.getQueryData<NotificacionesResponse>(['notificaciones']);
       if (previous) {
@@ -217,6 +219,7 @@ export function useNotifications() {
       if (!res.ok) throw new Error('Error al marcar todas leídas');
     },
     onMutate: async () => {
+      playComplete();
       await queryClient.cancelQueries({ queryKey: ['notificaciones'] });
       const previous = queryClient.getQueryData<NotificacionesResponse>(['notificaciones']);
       if (previous) {
