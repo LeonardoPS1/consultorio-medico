@@ -136,5 +136,8 @@
       "prettier --write",
       "vitest run --related --reporter=verbose"
     ]
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@swc/core", "core-js-pure"]
   }
 }
