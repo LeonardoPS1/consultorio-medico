@@ -293,6 +293,7 @@ export function MedicosSection({ plan }: Props) {
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label="Editar médico"
                       className="h-8 w-8"
                       onClick={() => openEdit(m)}
                     >
@@ -303,6 +304,7 @@ export function MedicosSection({ plan }: Props) {
                       size="icon"
                       className="h-8 w-8 text-amber-600 hoverable:hover:text-amber-700"
                       title="Gestionar bloqueos"
+                      aria-label="Gestionar bloqueos"
                       onClick={() => setBloqueosMedicoId(m.id)}
                     >
                       <CalendarX className="h-3.5 w-3.5" />

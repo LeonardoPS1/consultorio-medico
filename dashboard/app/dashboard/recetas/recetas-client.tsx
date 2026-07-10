@@ -712,6 +712,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
                 variant="outline"
                 size="icon"
                 title="Exportar Excel"
+                aria-label="Exportar Excel"
                 onClick={() => window.open('/api/recetas/exportar?formato=excel', '_blank')}
               >
                 <FileSpreadsheet className="h-4 w-4" />
@@ -720,6 +721,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
                 variant="outline"
                 size="icon"
                 title="Exportar PDF"
+                aria-label="Exportar PDF"
                 onClick={() => window.open('/api/recetas/exportar?formato=pdf', '_blank')}
               >
                 <FileDown className="h-4 w-4" />

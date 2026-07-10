@@ -199,6 +199,7 @@ function BackupsContent() {
                       className="h-8 w-8"
                       onClick={() => handleDownload(backup)}
                       title="Descargar SQL desencriptado"
+                      aria-label="Descargar backup"
                     >
                       <Download className="h-4 w-4" />
                     </Button>
@@ -208,6 +209,7 @@ function BackupsContent() {
                       className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
                       onClick={() => handleDelete(backup)}
                       title="Eliminar backup"
+                      aria-label="Eliminar backup"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

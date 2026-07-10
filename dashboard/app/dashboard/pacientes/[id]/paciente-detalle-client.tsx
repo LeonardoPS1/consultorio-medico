@@ -981,6 +981,7 @@ export function PacienteDetalleClient({
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label="Editar alergias"
                       className="h-5 w-5"
                       onClick={() => {
                         setAlergiasEdit(paciente.alergias || '');
@@ -1003,6 +1004,7 @@ export function PacienteDetalleClient({
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label="Cancelar edición de alergias"
                       className="h-7 w-7 shrink-0"
                       onClick={() => setEditandoAlergias(false)}
                     >
@@ -1011,6 +1013,7 @@ export function PacienteDetalleClient({
                     <Button
                       variant="default"
                       size="icon"
+                      aria-label="Guardar alergias"
                       className="h-7 w-7 shrink-0"
                       onClick={handleSaveAlergias}
                     >
@@ -1033,6 +1036,7 @@ export function PacienteDetalleClient({
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label="Editar medicación crónica"
                       className="h-5 w-5"
                       onClick={() => {
                         setMedicacionEdit(paciente.medicacionCronica || '');
@@ -1055,6 +1059,7 @@ export function PacienteDetalleClient({
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label="Cancelar edición de medicación"
                       className="h-7 w-7 shrink-0"
                       onClick={() => setEditandoMedicacion(false)}
                     >
@@ -1063,6 +1068,7 @@ export function PacienteDetalleClient({
                     <Button
                       variant="default"
                       size="icon"
+                      aria-label="Guardar medicación"
                       className="h-7 w-7 shrink-0"
                       onClick={handleSaveMedicacion}
                     >
@@ -1498,6 +1504,7 @@ export function PacienteDetalleClient({
                             className="h-6 w-6"
                             onClick={() => setEditHistorialDialog(h)}
                             title="Editar"
+                            aria-label="Editar"
                           >
                             <Edit3 className="h-3 w-3" />
                           </Button>
@@ -1507,6 +1514,7 @@ export function PacienteDetalleClient({
                             className="h-6 w-6 text-destructive"
                             onClick={() => setDeleteHistorialId(h.id)}
                             title="Eliminar"
+                            aria-label="Eliminar"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -1735,6 +1743,7 @@ export function PacienteDetalleClient({
                           className="h-6 w-6"
                           onClick={() => setEditSoapDialog(n)}
                           title="Editar"
+                          aria-label="Editar"
                         >
                           <Edit3 className="h-3 w-3" />
                         </Button>
@@ -1744,6 +1753,7 @@ export function PacienteDetalleClient({
                           className="h-6 w-6 text-destructive"
                           onClick={() => setDeleteSoapId(n.id)}
                           title="Eliminar"
+                          aria-label="Eliminar"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>

@@ -530,6 +530,7 @@ function ConfigContent() {
                                   size="icon"
                                   className="h-8 w-8"
                                   title="Vista previa"
+                                  aria-label="Vista previa"
                                   onClick={() => setPreviewPlantilla(plantilla)}
                                 >
                                   <Eye className="h-4 w-4" />
@@ -537,6 +538,7 @@ function ConfigContent() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  aria-label="Editar plantilla"
                                   className="h-8 w-8"
                                   onClick={() => {
                                     setEditingPlantilla(plantilla);
@@ -548,6 +550,7 @@ function ConfigContent() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  aria-label="Eliminar plantilla"
                                   className="h-8 w-8 text-destructive"
                                   onClick={async () => {
                                     if (confirm('¿Eliminar plantilla?')) {
@@ -766,6 +769,7 @@ function ConfigContent() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            aria-label="Eliminar miembro"
                             className="h-8 w-8 text-destructive shrink-0"
                           >
                             <Trash2 className="h-4 w-4" />

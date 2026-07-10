@@ -487,12 +487,14 @@ export function BloqueosDialog({
                         className="h-7 w-7"
                         onClick={() => startEdit(b)}
                         title="Editar bloqueo"
+                        aria-label="Editar bloqueo"
                       >
                         <Pencil className="h-3 w-3" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Eliminar bloqueo"
                         className="h-7 w-7 text-destructive"
                         onClick={() => handleDelete(b.id)}
                       >

@@ -688,6 +688,7 @@ export function OnboardingClient(props: OnboardingClientProps) {
                         saltarPaso(step.id);
                       }}
                       title="Omitir este paso por ahora (sigue pendiente)"
+                      aria-label="Omitir este paso"
                     >
                       <SkipForward className="h-4 w-4" />
                     </Button>

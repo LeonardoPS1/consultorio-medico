@@ -204,6 +204,7 @@ export default function ApiKeysTab() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label="Revocar API key"
                       className="h-8 w-8 text-destructive"
                       onClick={() => revokeKey(key.id)}
                       disabled={!key.activa}
@@ -254,6 +255,7 @@ export default function ApiKeysTab() {
                 <Button
                   variant="outline"
                   size="icon"
+                  aria-label="Mostrar u ocultar API key"
                   className="h-10 w-10 shrink-0"
                   onClick={() => {
                     if (createdKey) {
@@ -276,6 +278,7 @@ export default function ApiKeysTab() {
                 <Button
                   variant="outline"
                   size="icon"
+                  aria-label="Copiar API key"
                   className="h-10 w-10 shrink-0"
                   onClick={() => copyText(createdKey?.fullKey || '')}
                 >
