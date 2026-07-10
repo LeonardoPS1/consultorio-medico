@@ -11,7 +11,7 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 
 # Cache buster
-ARG CACHEBUST=6
+ARG CACHEBUST=7
 RUN echo "Cache bust: $CACHEBUST"
 
 # Corepack para pnpm
@@ -19,6 +19,7 @@ RUN corepack enable && corepack prepare pnpm@9 --activate
 
 # Copiar solo los archivos de dependencias para cachear capa
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY dashboard/package.json ./dashboard/
 RUN pnpm install --frozen-lockfile
 
 # ─── Stage 2: Build ──────────────────────────────────────────────────────────
@@ -27,12 +28,16 @@ WORKDIR /app
 
 # Cache buster: cambiar este valor para forzar rebuild completo
 # Debe declararse en CADA stage donde se necesita invalidar cache
-ARG CACHEBUST=6
+ARG CACHEBUST=7
 RUN echo "Cache bust: $CACHEBUST"
 
 # Copiar dependencias desde stage anterior
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/dashboard/node_modules ./dashboard/node_modules
 COPY . .
+
+# Variables de build
+WORKDIR /app
 
 # Variables de build
 ENV NEXT_TELEMETRY_DISABLED=1
