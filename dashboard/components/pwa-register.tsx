@@ -35,6 +35,7 @@ export function PWARegister() {
             </div>
             <button
               onClick={dismissUpdate}
+              aria-label="Cerrar"
               className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
             >
               <X className="w-3.5 h-3.5 text-gray-400" />

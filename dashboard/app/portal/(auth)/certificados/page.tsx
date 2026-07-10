@@ -6,8 +6,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Download, ExternalLink, Loader2 } from 'lucide-react';
+import { FileText, Download, ExternalLink } from 'lucide-react';
 import { PortalCard } from '@/components/portal/portal-card';
+import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
 interface Certificado {
   id: string;
@@ -38,11 +39,7 @@ export default function PortalCertificadosPage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'hsl(var(--portal-primary))' }} />
-      </div>
-    );
+    return <PortalSkeleton />;
   }
 
   if (certificados.length === 0) {

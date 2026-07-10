@@ -6,9 +6,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare, Loader2, Bot } from 'lucide-react';
+import { Send, MessageSquare, Bot } from 'lucide-react';
 import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
+import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
 interface Mensaje {
   id: string;
@@ -122,14 +123,7 @@ export default function PortalChatPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2
-          className="h-8 w-8 animate-spin"
-          style={{ color: 'hsl(var(--portal-primary))' }}
-        />
-      </div>
-    );
+    return <PortalSkeleton />;
   }
 
   return (

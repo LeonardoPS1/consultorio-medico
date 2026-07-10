@@ -13,11 +13,11 @@ import {
   Syringe,
   Clock,
   TrendingUp,
-  Loader2,
   Activity,
   Eye,
 } from 'lucide-react';
 import { PortalCard } from '@/components/portal/portal-card';
+import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
 interface ReportesData {
   totalVisitas: number;
@@ -169,14 +169,7 @@ export default function PortalReportesPage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2
-          className="h-8 w-8 animate-spin"
-          style={{ color: 'hsl(var(--portal-primary))' }}
-        />
-      </div>
-    );
+    return <PortalSkeleton />;
   }
 
   if (!data) {

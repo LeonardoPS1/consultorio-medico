@@ -154,13 +154,13 @@ export function CalendarView({
             {/* Navegación del mes */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={() => navigateMonth(-1)}>
+                <Button variant="outline" size="icon" aria-label="Mes anterior" onClick={() => navigateMonth(-1)}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <h3 className="text-lg font-semibold min-w-[200px] text-center">
                   {MESES[month]} {year}
                 </h3>
-                <Button variant="outline" size="icon" onClick={() => navigateMonth(1)}>
+                <Button variant="outline" size="icon" aria-label="Mes siguiente" onClick={() => navigateMonth(1)}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="sm" onClick={goToToday} className="ml-2">
@@ -241,7 +241,7 @@ export function CalendarView({
             {/* Navegación del día */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={() => navigateDay(-1)}>
+                <Button variant="outline" size="icon" aria-label="Día anterior" onClick={() => navigateDay(-1)}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <h3 className="text-lg font-semibold min-w-[200px] text-center">
@@ -251,7 +251,7 @@ export function CalendarView({
                     month: 'long',
                   })}
                 </h3>
-                <Button variant="outline" size="icon" onClick={() => navigateDay(1)}>
+                <Button variant="outline" size="icon" aria-label="Día siguiente" onClick={() => navigateDay(1)}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="sm" onClick={goToToday} className="ml-2">

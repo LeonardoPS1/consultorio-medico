@@ -104,6 +104,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Semana anterior"
             onClick={goBack}
             disabled={weekDays[0] <= today}
             className="h-8 w-8"
@@ -113,7 +114,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
           <span className="text-sm font-semibold">
             {MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}
           </span>
-          <Button variant="ghost" size="icon" onClick={goForward} className="h-8 w-8">
+          <Button variant="ghost" size="icon" aria-label="Semana siguiente" onClick={goForward} className="h-8 w-8">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

@@ -6,10 +6,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { FileText, PenSquare, CheckCircle2, Loader2, Eye } from 'lucide-react';
+import { FileText, PenSquare, CheckCircle2, Eye } from 'lucide-react';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalBadge } from '@/components/portal/portal-badge';
 import { PortalButton } from '@/components/portal/portal-button';
+import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
 interface Consentimiento {
   id: string;
@@ -67,11 +68,7 @@ export default function PortalConsentimientosPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'hsl(var(--portal-primary))' }} />
-      </div>
-    );
+    return <PortalSkeleton />;
   }
 
   return (

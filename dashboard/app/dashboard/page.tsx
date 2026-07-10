@@ -163,7 +163,7 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="space-y-4 sm:space-y-6 animate-in">
+    <div className="space-y-4 sm:space-y-6">
       {/*
        * DashboardClient maneja:
        * - Header con fecha + botón Actualizar

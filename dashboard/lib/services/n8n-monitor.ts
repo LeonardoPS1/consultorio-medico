@@ -37,7 +37,20 @@ async function n8nFetch<T>(path: string): Promise<T> {
   const res = await fetch(url, { headers, cache: 'no-store' });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`n8n responded with ${res.status} on ${path}: ${body.slice(0, 200)}`);
+    const snippet = body.slice(0, 200);
+
+    // Detectar bloqueo de Cloudflare
+    const isCloudflare =
+      snippet.includes('Just a moment') ||
+      snippet.includes('cloudflare') ||
+      snippet.includes('cf-browser-verification');
+
+    const hint = isCloudflare
+      ? ' — N8N_BASE_URL está apuntando a la URL pública (con Cloudflare). Usá la URL interna (http://172.18.0.1:5678)'
+      : '';
+
+    safeWarn(`[n8n-monitor] ${res.status} on ${path}${hint}`);
+    throw new Error(`n8n respondió con ${res.status} en ${path}${hint}: ${snippet}`);
   }
   return res.json() as Promise<T>;
 }

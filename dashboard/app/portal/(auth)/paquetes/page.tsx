@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { Package, ArrowRight, CreditCard } from 'lucide-react';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalButton } from '@/components/portal/portal-button';
+import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
 interface Paquete {
   id: string;
@@ -66,17 +67,7 @@ export default function PaquetesPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div
-          className="h-8 w-8 rounded-full animate-spin"
-          style={{
-            border: '2px solid hsl(var(--portal-primary))',
-            borderTopColor: 'transparent',
-          }}
-        />
-      </div>
-    );
+    return <PortalSkeleton />;
   }
 
   const suscripcionActiva = suscripciones.find((s) => s.activa);

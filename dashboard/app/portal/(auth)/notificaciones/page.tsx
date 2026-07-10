@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 import {
   Bell,
   CheckCheck,
@@ -113,14 +114,7 @@ export default function PortalNotificacionesPage() {
   const noLeidas = notificaciones.filter((n) => !n.leido).length;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <RefreshCw
-          className="h-6 w-6 animate-spin"
-          style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}
-        />
-      </div>
-    );
+    return <PortalSkeleton />;
   }
 
   return (

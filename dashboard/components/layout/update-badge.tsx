@@ -44,6 +44,7 @@ export function UpdateBadge() {
           variant="ghost"
           size="icon"
           className="h-9 w-9 relative"
+          aria-label="Ver novedades"
           title="Novedades"
           onClick={handleOpenChangelog}
         >
@@ -71,6 +72,7 @@ export function UpdateBadge() {
         variant="ghost"
         size="icon"
         className="h-9 w-9 relative"
+        aria-label="Actualizar a nueva versión"
         title="Nueva versión disponible"
         onClick={handleOpenChangelog}
         onMouseEnter={() => setShowTooltip(true)}

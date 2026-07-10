@@ -7,6 +7,7 @@ import { AsistenteFlotante } from '@/components/layout/asistente-flotante';
 import { PatientPanelProvider } from '@/lib/hooks/use-patient-panel';
 import { AsistenteProvider } from '@/lib/hooks/use-asistente-ia';
 import { GatedContent } from '@/components/gated-content';
+import { PageTransition } from '@/components/dashboard/page-transition';
 import { ClientThemeProvider } from '@/components/client-theme-provider';
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -29,9 +30,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <Header />
             <CommandPalette />
             <PatientPanel />
-            <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 page-enter">
+            <main id="main-content" className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
               <Suspense fallback={<MainSkeleton />}>
-                <GatedContent>{children}</GatedContent>
+                <PageTransition>
+                  <GatedContent>{children}</GatedContent>
+                </PageTransition>
               </Suspense>
             </main>
             {/* Footer compacto */}

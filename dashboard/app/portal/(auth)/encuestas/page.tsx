@@ -10,13 +10,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Star,
   MessageSquareText,
-  Loader2,
   ClipboardCheck,
   Send,
   User as UserIcon,
 } from 'lucide-react';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalButton } from '@/components/portal/portal-button';
+import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
 interface Encuesta {
   id: string;
@@ -387,14 +387,7 @@ export default function PortalEncuestasPage() {
   }, [refreshKey]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2
-          className="h-8 w-8 animate-spin"
-          style={{ color: 'hsl(var(--portal-primary))' }}
-        />
-      </div>
-    );
+    return <PortalSkeleton />;
   }
 
   return (

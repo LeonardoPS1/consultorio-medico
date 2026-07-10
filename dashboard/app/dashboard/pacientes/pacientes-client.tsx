@@ -371,6 +371,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
             <Button
               variant="outline"
               size="icon"
+              aria-label="Exportar Excel"
               title="Exportar Excel"
               onClick={() => window.open('/api/pacientes/exportar?formato=excel', '_blank')}
             >
@@ -379,6 +380,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
             <Button
               variant="outline"
               size="icon"
+              aria-label="Exportar PDF"
               title="Exportar PDF"
               onClick={() => window.open('/api/pacientes/exportar?formato=pdf', '_blank')}
             >
@@ -542,6 +544,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Editar paciente"
                         title="Editar paciente"
                         disabled={loadingEdit}
                         onClick={() => handleOpenEdit(paciente.id)}
@@ -560,17 +563,17 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
                           />
                         </svg>
                       </Button>
-                      <Button variant="ghost" size="icon" title="Recetas" asChild>
+                      <Button variant="ghost" size="icon" aria-label="Recetas" title="Recetas" asChild>
                         <Link href={`/dashboard/pacientes/${paciente.id}`}>
                           <Syringe className="h-4 w-4" />
                         </Link>
                       </Button>
-                      <Button variant="ghost" size="icon" title="Enviar WhatsApp" asChild>
+                      <Button variant="ghost" size="icon" aria-label="Enviar WhatsApp" title="Enviar WhatsApp" asChild>
                         <Link href={`/dashboard/conversaciones`}>
                           <MessageSquare className="h-4 w-4" />
                         </Link>
                       </Button>
-                      <Button variant="ghost" size="icon" title="Ver ficha completa" asChild>
+                      <Button variant="ghost" size="icon" aria-label="Ver ficha completa" title="Ver ficha completa" asChild>
                         <Link href={`/dashboard/pacientes/${paciente.id}`}>
                           <ExternalLink className="h-4 w-4" />
                         </Link>

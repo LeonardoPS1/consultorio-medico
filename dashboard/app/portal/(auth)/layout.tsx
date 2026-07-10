@@ -82,7 +82,7 @@ export default function PortalAuthLayout({ children }: { children: React.ReactNo
       </header>
 
       {/* Main content */}
-      <main className="max-w-2xl mx-auto px-4 py-5 pb-28">
+      <main id="main-content" className="max-w-2xl mx-auto px-4 py-5 pb-28">
         <PortalContent>{children}</PortalContent>
       </main>
 
