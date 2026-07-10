@@ -94,3 +94,6 @@ graphify-out/
 
 # OpenCode AI agent config (contiene tokens/skills)
 .opencode/
+
+# Storybook build output
+storybook-static/
