@@ -74,6 +74,10 @@
   --portal-accent: 262 55% 58%;
   --portal-accent-soft: 262 25% 14%;
 
+  --portal-destructive: 0 75% 60%;
+  --portal-success: 142 55% 48%;
+  --portal-warning: 38 85% 55%;
+
   --portal-glass-bg: hsl(225 10% 9% / 0.8);
   --portal-glass-border: hsl(225 10% 18% / 0.5);
   --portal-glass-shadow: 0 1px 2px hsl(0 0% 0% / 0.2);

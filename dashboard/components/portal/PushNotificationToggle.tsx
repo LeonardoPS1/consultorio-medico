@@ -152,23 +152,23 @@ export function PushNotificationToggle() {
   if (loading) {
     return (
       <div className="flex items-center gap-3">
-        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-        <span className="text-sm text-gray-500">Cargando...</span>
+        <Loader2 className="h-5 w-5 animate-spin text-portal-muted-fg" />
+        <span className="text-sm text-portal-muted-fg">Cargando...</span>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
+    <div className="flex items-center justify-between p-4 bg-portal-bg-alt rounded-xl border border-portal-border-light">
       <div className="flex items-center gap-3">
         {subscribed ? (
-          <Bell className="h-6 w-6 text-blue-500" />
+          <Bell className="h-6 w-6 text-portal-primary" />
         ) : (
-          <BellOff className="h-6 w-6 text-gray-400" />
+          <BellOff className="h-6 w-6 text-portal-muted-fg" />
         )}
         <div>
-          <p className="font-medium text-gray-900">Notificaciones Push</p>
-          <p className="text-xs text-gray-500">
+          <p className="font-medium text-portal-fg">Notificaciones Push</p>
+          <p className="text-xs text-portal-muted-fg">
             {subscribed
               ? 'Recibirás avisos de turnos, recetas y novedades'
               : 'Activá para recibir avisos en tu dispositivo'}
@@ -179,10 +179,10 @@ export function PushNotificationToggle() {
       <button
         onClick={subscribed ? desuscribir : suscribir}
         disabled={toggling || permission === 'denied'}
-        className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+        className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
           subscribed
-            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            : 'bg-blue-600 text-white hover:bg-blue-700'
+            ? 'bg-portal-muted text-portal-fg hover:bg-portal-muted-fg/20'
+            : 'bg-gradient-to-r from-portal-primary to-portal-accent text-white hover:opacity-90'
         } disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         {toggling ? (

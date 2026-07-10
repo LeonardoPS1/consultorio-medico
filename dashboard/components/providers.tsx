@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { FeatureFlagsProvider, UserFeatureOverridesProvider } from '@/lib/feature-flags-context';
 import { SucursalProvider } from '@/lib/sucursal-context';
 import { UpdateProvider } from '@/lib/update-context';
+import { SmartTooltipProvider } from '@/components/ui/smart-tooltip';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -27,8 +28,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <UserFeatureOverridesProvider>
             <SucursalProvider>
               <UpdateProvider>
+              <SmartTooltipProvider>
                 {children}
-              </UpdateProvider>
+              </SmartTooltipProvider>
+            </UpdateProvider>
             </SucursalProvider>
           </UserFeatureOverridesProvider>
         </FeatureFlagsProvider>

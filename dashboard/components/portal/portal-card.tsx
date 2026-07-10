@@ -25,7 +25,7 @@ const PADDINGS: Record<Padding, string> = {
   none: '',
   sm: 'p-3',
   md: 'p-4',
-  lg: 'p-6',
+  lg: 'p-5',
 };
 
 export function PortalCard({

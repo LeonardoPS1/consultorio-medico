@@ -4,6 +4,7 @@
 
 'use client';
 
+import { cn } from '@/lib/utils';
 import { type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
 
@@ -14,31 +15,14 @@ interface PortalButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost';
 }
 
-const BASE: React.CSSProperties = {
-  borderRadius: '0.75rem',
-  fontWeight: 600,
-  fontSize: '0.875rem',
-  transition: 'all 200ms cubic-bezier(0.16, 1, 0.3, 1)',
-  cursor: 'pointer',
-  border: 'none',
-  outline: 'none',
-};
+const BASE =
+  'rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer border-none outline-none px-5 py-2.5 h-11';
 
-const VARIANTS: Record<string, React.CSSProperties> = {
-  primary: {
-    background: 'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
-    color: '#fff',
-    boxShadow: '0 4px 12px hsl(var(--portal-primary) / 0.25)',
-  },
-  secondary: {
-    background: 'hsl(var(--portal-muted))',
-    color: 'hsl(var(--portal-foreground))',
-    border: '1px solid hsl(var(--portal-border-light))',
-  },
-  ghost: {
-    background: 'transparent',
-    color: 'hsl(var(--portal-muted-foreground) / 0.6)',
-  },
+const VARIANTS: Record<string, string> = {
+  primary:
+    'bg-gradient-to-r from-portal-primary to-portal-accent text-white shadow-[0_4px_12px_hsl(var(--portal-primary)/0.25)] hover:shadow-[0_6px_20px_hsl(var(--portal-primary)/0.35)]',
+  secondary: 'bg-portal-muted text-portal-fg border border-portal-border-light',
+  ghost: 'bg-transparent text-portal-muted-fg/60',
 };
 
 export function PortalButton({
@@ -48,36 +32,23 @@ export function PortalButton({
   variant = 'primary',
   disabled,
   style,
-  onMouseEnter,
-  onMouseLeave,
+  className,
   ...rest
 }: PortalButtonProps) {
   return (
     <button
       {...rest}
       disabled={disabled || loading}
-      className="active:scale-[0.97]"
+      className={cn(
+        'active:scale-[0.97]',
+        BASE,
+        VARIANTS[variant],
+        (disabled || loading) && 'opacity-50 cursor-not-allowed',
+        className,
+      )}
       style={{
-        ...BASE,
-        ...VARIANTS[variant],
         width: fullWidth ? '100%' : undefined,
-        padding: '0.625rem 1.25rem',
-        height: '2.75rem',
-        opacity: disabled || loading ? 0.5 : 1,
-        cursor: disabled || loading ? 'not-allowed' : 'pointer',
         ...style,
-      }}
-      onMouseEnter={(e) => {
-        if (variant === 'primary' && !disabled) {
-          e.currentTarget.style.boxShadow = '0 6px 20px hsl(var(--portal-primary) / 0.35)';
-        }
-        onMouseEnter?.(e);
-      }}
-      onMouseLeave={(e) => {
-        if (variant === 'primary') {
-          e.currentTarget.style.boxShadow = '0 4px 12px hsl(var(--portal-primary) / 0.25)';
-        }
-        onMouseLeave?.(e);
       }}
     >
       {loading ? (
