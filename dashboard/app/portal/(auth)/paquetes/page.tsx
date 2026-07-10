@@ -75,8 +75,8 @@ export default function PaquetesPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <div>
-        <h1 className="text-2xl font-bold" style={{ color: 'hsl(var(--portal-foreground))' }}>Paquetes de Turnos</h1>
-        <p className="mt-1" style={{ color: 'hsl(var(--portal-muted-foreground))' }}>Ahorrá comprando turnos por adelantado</p>
+        <h1 className="text-2xl font-bold text-portal-fg">Paquetes de Turnos</h1>
+        <p className="mt-1 text-portal-muted-fg">Ahorrá comprando turnos por adelantado</p>
       </div>
 
       {suscripcionActiva && (
@@ -87,10 +87,10 @@ export default function PaquetesPage() {
           }}
         >
           <div className="flex items-center gap-3">
-            <Package className="h-6 w-6" style={{ color: 'hsl(var(--portal-primary))' }} />
+            <Package className="h-6 w-6 text-portal-primary" />
             <div>
-              <p className="font-semibold" style={{ color: 'hsl(var(--portal-foreground))' }}>{suscripcionActiva.nombre}</p>
-              <p className="text-sm" style={{ color: 'hsl(var(--portal-primary))' }}>
+              <p className="font-semibold text-portal-fg">{suscripcionActiva.nombre}</p>
+              <p className="text-sm text-portal-primary">
                 {suscripcionActiva.turnosRestantes} de {suscripcionActiva.turnosTotales} turnos disponibles
               </p>
             </div>
@@ -109,8 +109,8 @@ export default function PaquetesPage() {
       )}
 
       {paquetes.length === 0 ? (
-        <div className="text-center py-12" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
-          <Package className="h-12 w-12 mx-auto mb-3" style={{ color: 'hsl(var(--portal-muted-foreground))' }} />
+        <div className="text-center py-12 text-portal-muted-fg/70">
+          <Package className="h-12 w-12 mx-auto mb-3 text-portal-muted-fg" />
           <p>No hay paquetes disponibles</p>
         </div>
       ) : (
@@ -118,19 +118,19 @@ export default function PaquetesPage() {
           {paquetes.map((p) => (
             <PortalCard key={p.id} hover padding="lg" className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold" style={{ color: 'hsl(var(--portal-foreground))' }}>{p.nombre}</h3>
+                <h3 className="font-semibold text-portal-fg">{p.nombre}</h3>
                 {p.descripcion && (
-                  <p className="text-sm mt-1" style={{ color: 'hsl(var(--portal-muted-foreground))' }}>{p.descripcion}</p>
+                  <p className="text-sm mt-1 text-portal-muted-fg">{p.descripcion}</p>
                 )}
-                <p className="text-sm mt-1" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
+                <p className="text-sm mt-1 text-portal-muted-fg/70">
                   {p.cantidadTurnos} turno{p.cantidadTurnos !== 1 ? 's' : ''}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xl font-bold" style={{ color: 'hsl(var(--portal-foreground))' }}>
+                <p className="text-xl font-bold text-portal-fg">
                   ${p.precio.toLocaleString('es-CL')}
                 </p>
-                <p className="text-xs" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
+                <p className="text-xs text-portal-muted-fg/70">
                   ${Math.round(p.precio / p.cantidadTurnos).toLocaleString('es-CL')} c/u
                 </p>
                 <PortalButton
@@ -164,8 +164,7 @@ export default function PaquetesPage() {
       <div className="flex justify-center">
         <a
           href="/portal/turnos"
-          className="inline-flex items-center gap-1 text-sm"
-          style={{ color: 'hsl(var(--portal-primary))' }}
+          className="inline-flex items-center gap-1 text-sm text-portal-primary"
         >
           Ver mis turnos <ArrowRight className="h-3.5 w-3.5" />
         </a>

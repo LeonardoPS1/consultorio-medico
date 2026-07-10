@@ -73,8 +73,8 @@ export default function PortalConsentimientosPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-1" style={{ color: 'hsl(var(--portal-foreground))' }}>Consentimientos</h1>
-      <p className="text-sm mb-6" style={{ color: 'hsl(var(--portal-muted-foreground))' }}>
+      <h1 className="text-2xl font-bold mb-1 text-portal-fg">Consentimientos</h1>
+      <p className="text-sm mb-6 text-portal-muted-fg">
         Documentos que requieren o han recibido tu firma digital
       </p>
 
@@ -100,9 +100,9 @@ export default function PortalConsentimientosPage() {
       )}
 
       {consentimientos.length === 0 ? (
-        <div className="text-center py-16" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
-          <div className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3" style={{ background: 'hsl(var(--portal-muted))' }}>
-            <FileText className="h-6 w-6" style={{ color: 'hsl(var(--portal-muted-foreground))' }} />
+        <div className="text-center py-16 text-portal-muted-fg/70">
+          <div className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 bg-portal-muted">
+            <FileText className="h-6 w-6 text-portal-muted-fg" />
           </div>
           <p>No tienes consentimientos pendientes</p>
           <p className="text-sm mt-2">
@@ -123,11 +123,11 @@ export default function PortalConsentimientosPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       {firmado ? (
-                        <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: 'hsl(var(--portal-primary))' }} />
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-portal-primary" />
                       ) : (
-                        <FileText className="h-4 w-4 shrink-0" style={{ color: 'hsl(var(--portal-primary))' }} />
+                        <FileText className="h-4 w-4 shrink-0 text-portal-primary" />
                       )}
-                      <h3 className="font-medium truncate" style={{ color: 'hsl(var(--portal-foreground))' }}>{c.titulo}</h3>
+                      <h3 className="font-medium truncate text-portal-fg">{c.titulo}</h3>
                       {firmado && (
                         <PortalBadge variant="primary">
                           Firmado
@@ -141,12 +141,12 @@ export default function PortalConsentimientosPage() {
                     </div>
 
                     {c.descripcion && (
-                      <p className="text-sm mb-1 line-clamp-2" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.8)' }}>
+                      <p className="text-sm mb-1 line-clamp-2 text-portal-muted-fg/80">
                         {c.descripcion}
                       </p>
                     )}
 
-                    <div className="text-xs space-x-2" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
+                    <div className="text-xs space-x-2 text-portal-muted-fg/70">
                       <span>{formatDate(c.createdAt)}</span>
                       {c.medicoNombre && <span>· Dr/a. {c.medicoNombre}</span>}
                       {firmado && c.fechaFirma && (
@@ -170,11 +170,7 @@ export default function PortalConsentimientosPage() {
                       <a
                         href={c.documentoPdf}
                         target="_blank"
-                        className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-hsl(var(--portal-muted) / 0.9) hover:text-hsl(var(--portal-foreground))"
-                        style={{
-                          color: 'hsl(var(--portal-muted-foreground))',
-                          background: 'hsl(var(--portal-muted))',
-                        }}
+                        className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-xl transition-colors duration-200 text-portal-muted-fg bg-portal-muted hover:bg-hsl(var(--portal-muted) / 0.9) hover:text-hsl(var(--portal-foreground))"
                       >
                         <Eye className="h-3.5 w-3.5" />
                         Ver

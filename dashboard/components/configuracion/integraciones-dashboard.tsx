@@ -247,8 +247,8 @@ export default function IntegracionesDashboard({ isAdmin }: IntegracionesDashboa
                     </div>
                     <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all ${
-                          porcentaje === 100
+className={`h-full rounded-full transition-[width] ${
+                           porcentaje === 100
                             ? 'bg-emerald-500'
                             : porcentaje > 50
                               ? 'bg-amber-500'

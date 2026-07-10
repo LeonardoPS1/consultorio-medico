@@ -39,8 +39,7 @@ export default function PortalHistorialClient({
   return (
     <div>
       <h1
-        className="text-2xl font-bold mb-6"
-        style={{ color: 'hsl(var(--portal-foreground))' }}
+        className="text-2xl font-bold mb-6 text-portal-fg"
       >
         Historial Médico
       </h1>
@@ -72,37 +71,20 @@ export default function PortalHistorialClient({
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div
-                    className="font-semibold"
-                    style={{ color: 'hsl(var(--portal-foreground))' }}
-                  >
+                  <div className="font-semibold text-portal-fg">
                     {h.titulo}
                   </div>
-                  <div
-                    className="text-sm mb-2"
-                    style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-                  >
+                  <div className="text-sm mb-2 text-portal-muted-fg">
                     {formatDate(h.createdAt)} · Dr/a. {h.medicoNombre}
                   </div>
                   {h.descripcion && (
-                    <p
-                      className="text-sm mb-2"
-                      style={{
-                        color: 'hsl(var(--portal-muted-foreground) / 0.8)',
-                      }}
-                    >
+                    <p className="text-sm mb-2 text-portal-muted-fg/80">
                       {h.descripcion}
                     </p>
                   )}
                   {h.diagnosticoDescripcion && (
                     <PortalBadge variant="muted" className="rounded-lg px-3 py-1.5 text-sm font-normal">
-                      <span
-                        className="text-xs"
-                        style={{
-                          color:
-                            'hsl(var(--portal-muted-foreground) / 0.6)',
-                        }}
-                      >
+                      <span className="text-xs text-portal-muted-fg/60">
                         Diagnóstico:{' '}
                       </span>
                       {h.diagnosticoCodigo && (
@@ -120,18 +102,10 @@ export default function PortalHistorialClient({
         </div>
       ) : (
         <div className="text-center py-12">
-          <div
-            className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3"
-            style={{ background: 'hsl(var(--portal-muted))' }}
-          >
-            <ClipboardList
-              className="h-6 w-6"
-              style={{
-                color: 'hsl(var(--portal-muted-foreground) / 0.5)',
-              }}
-            />
-          </div>
-          <p style={{ color: 'hsl(var(--portal-muted-foreground))' }}>
+            <div className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 bg-portal-muted">
+              <ClipboardList className="h-6 w-6 text-portal-muted-fg/50" />
+            </div>
+            <p className="text-portal-muted-fg">
             No tienes historial médico registrado
           </p>
         </div>

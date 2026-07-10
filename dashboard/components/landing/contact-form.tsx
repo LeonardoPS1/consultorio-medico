@@ -163,7 +163,7 @@ export function ContactForm() {
                         value={form.name}
                         onChange={(e) => update('name', e.target.value)}
                         placeholder="Dr. / Dra. / Administrador"
-                        className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-all"
+                        className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-[border-color,box-shadow]"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -176,7 +176,7 @@ export function ContactForm() {
                         value={form.email}
                         onChange={(e) => update('email', e.target.value)}
                         placeholder="ejemplo@consultorio.com"
-                        className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-all"
+                        className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-[border-color,box-shadow]"
                       />
                     </div>
                   </motion.div>
@@ -198,7 +198,7 @@ export function ContactForm() {
                         required
                         value={form.specialty}
                         onChange={(e) => update('specialty', e.target.value)}
-                        className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-all"
+                        className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-[border-color,box-shadow]"
                       >
                         <option value="" disabled>
                           Selecciona una opción
@@ -218,7 +218,7 @@ export function ContactForm() {
                         required
                         value={form.size}
                         onChange={(e) => update('size', e.target.value)}
-                        className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-all"
+                        className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-[border-color,box-shadow]"
                       >
                         <option value="" disabled>
                           Selecciona cantidad
@@ -250,7 +250,7 @@ export function ContactForm() {
                         value={form.phone}
                         onChange={(e) => update('phone', e.target.value)}
                         placeholder="+56 9 1234 5678"
-                        className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-all"
+                        className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:ring-2 focus:ring-primary/30 outline-none transition-[border-color,box-shadow]"
                       />
                     </div>
                     <div className="space-y-2">
@@ -268,11 +268,11 @@ export function ContactForm() {
                             key={opt.value}
                             type="button"
                             onClick={() => toggleInterest(opt.value)}
-                            className={`px-3 py-2 rounded-lg text-xs font-medium border transition-all duration-200 ${
-                              form.interests.includes(opt.value)
-                                ? 'bg-primary/10 border-primary/30 text-primary'
-                                : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/30'
-                            }`}
+className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors duration-200 ${
+                               form.interests.includes(opt.value)
+                                 ? 'bg-primary/10 border-primary/30 text-primary'
+                                 : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/30'
+                             }`}
                           >
                             {opt.label}
                           </button>

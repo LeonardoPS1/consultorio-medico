@@ -1,111 +1,21 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useSession, signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Logo } from '@/components/layout/logo';
-import {
-  LayoutDashboard,
-  Calendar,
-  Users,
-  MessageSquare,
-  FileText,
-  BarChart3,
-  Settings,
-  Sliders,
-  ChevronLeft,
-  ChevronRight,
-  Syringe,
-  LogOut,
-  Activity,
-  Building2,
-  Store,
-  Webhook,
-  ScrollText,
-  HardDrive,
-  Network,
-  X,
-  Star,
-  Rocket,
-  BookOpen,
-  ListChecks,
-  Bell,
-  Newspaper,
-  Info,
-  ArrowRightLeft,
-  Ban,
-  FileSignature,
-  LockKeyhole,
-  Video,
-  Smartphone,
-} from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
-import { useSession, signOut } from 'next-auth/react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { SidebarNav } from '@/components/layout/sidebar-nav';
+import { ChevronLeft, ChevronRight, LogOut, X } from 'lucide-react';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
-import { canAccess, getFeatureRequiredPlan, type FeatureId } from '@/lib/features';
-import { useFeatureFlags } from '@/lib/feature-flags-context';
-import { N8nStatusIndicator } from '@/components/layout/n8n-status-indicator';
-interface NavItem {
-  title: string;
-  href: string;
-  icon: React.ElementType;
-  feature?: FeatureId; // feature requerida (si no tiene, se muestra bloqueado)
-  badge?: string;
-}
-
-const navItems: NavItem[] = [
-  { title: 'Panel Principal', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'Configuración Inicial', href: '/dashboard/onboarding', icon: Rocket, feature: 'onboarding' },
-  { title: 'Atención', href: '/dashboard/atencion', icon: Activity, feature: 'atencion' },
-  { title: 'Telemedicina', href: '/dashboard/telemedicina', icon: Video, feature: 'telemedicina' },
-  { title: 'Turnos', href: '/dashboard/turnos', icon: Calendar, feature: 'turnos' },
-  { title: 'Pacientes', href: '/dashboard/pacientes', icon: Users, feature: 'pacientes' },
-  {
-    title: 'Conversaciones',
-    href: '/dashboard/conversaciones',
-    icon: MessageSquare,
-    feature: 'conversaciones',
-  },
-  { title: 'Historial', href: '/dashboard/historial', icon: FileText, feature: 'historial' },
-  { title: 'Recetas', href: '/dashboard/recetas', icon: Syringe, feature: 'recetas' },
-  { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3, feature: 'reportes' },
-  { title: 'Encuestas', href: '/dashboard/encuestas', icon: Star, feature: 'encuestas' },
-  {
-    title: 'Lista de Espera',
-    href: '/dashboard/lista-espera',
-    icon: ListChecks,
-    feature: 'lista-espera',
-  },
-  {
-    title: 'Derivaciones',
-    href: '/dashboard/derivaciones',
-    icon: ArrowRightLeft,
-    feature: 'derivaciones',
-  },
-  { title: 'Lista Negra', href: '/dashboard/blacklist', icon: Ban, feature: 'blacklist' },
-  {
-    title: 'Consentimientos',
-    href: '/dashboard/consentimientos',
-    icon: FileSignature,
-    feature: 'consentimiento-informado',
-  },
-  { title: 'Notificaciones', href: '/dashboard/notificaciones', icon: Bell },
-  { title: 'Ajustes', href: '/dashboard/configuracion', icon: Sliders },
-  { title: 'Novedades', href: '/dashboard/novedades', icon: Newspaper },
-  { title: 'Ayuda', href: '/dashboard/ayuda', icon: BookOpen },
-  { title: 'Acerca de', href: '/dashboard/acerca', icon: Info },
-];
 
 export function Sidebar() {
-  const pathname = usePathname() ?? '';
   const { data: session, status } = useSession();
-  const { isFeatureEnabled } = useFeatureFlags();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
+  const [onboardingPending, setOnboardingPending] = useState(false);
 
   const cargarOrg = useCallback(() => {
     fetch('/api/organization')
@@ -122,14 +32,12 @@ export function Sidebar() {
     return () => window.removeEventListener('organization-updated', cargarOrg);
   }, [cargarOrg]);
 
-  // Toggle mobile sidebar via custom event from Header
   useEffect(() => {
     const handler = () => setMobileOpen((prev) => !prev);
     window.addEventListener('toggle-mobile-sidebar', handler);
     return () => window.removeEventListener('toggle-mobile-sidebar', handler);
   }, []);
 
-  // Close on Escape
   useEffect(() => {
     if (!mobileOpen) return;
     const handleEsc = (e: KeyboardEvent) => {
@@ -138,10 +46,6 @@ export function Sidebar() {
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [mobileOpen]);
-
-  // ── Badge de progreso onboarding ──────────────────────────
-  // Lee del servidor vía API — única fuente de verdad.
-  const [onboardingPending, setOnboardingPending] = useState(false);
 
   useEffect(() => {
     const checkProgress = async () => {
@@ -156,14 +60,12 @@ export function Sidebar() {
           }
         }
       } catch {
-        // API no disponible — no mostrar badge
         setOnboardingPending(false);
       }
     };
     checkProgress();
   }, []);
 
-  // Prevent body scroll on mobile when sidebar is open
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = 'hidden';
@@ -179,7 +81,6 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Backdrop — mobile only */}
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
@@ -189,19 +90,14 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          // Base
           'flex flex-col border-r bg-sidebar text-sidebar-foreground',
-          // Mobile: fixed drawer overlay con slide — más ancho para mejor usabilidad
           'fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-out w-[85vw] max-w-[320px]',
-          'lg:relative lg:z-auto lg:transition-all lg:duration-300 lg:w-auto',
-          // Mobile: slide in/out
+          'lg:relative lg:z-auto lg:transition-[width] lg:duration-300 lg:w-auto',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
           'lg:translate-x-0',
-          // Desktop: collapse toggle
           collapsed ? 'lg:w-16' : 'w-64',
         )}
       >
-        {/* Logo */}
         <div className="flex h-32 lg:h-[172px] items-center justify-center px-2 border-b border-sidebar-muted relative">
           {!collapsed && (
             <div className="flex flex-col items-center">
@@ -219,7 +115,6 @@ export function Sidebar() {
             </div>
           )}
 
-          {/* Close button — mobile only */}
           <Button
             variant="ghost"
             size="icon"
@@ -231,267 +126,16 @@ export function Sidebar() {
           </Button>
         </div>
 
-        {/* Navegación */}
         <ScrollArea className="flex-1 py-4">
-          <nav className="space-y-1 px-2" aria-label="Navegación principal">
-            {status === 'loading' ? (
-              <>
-                {/* Skeletons mientras carga la sesión — evita que los links apunten a config */}
-                {navItems.map((item) => (
-                  <div key={item.href} className="flex items-center gap-3 rounded-lg px-3 py-3">
-                    <Skeleton className="h-5 w-5 shrink-0 rounded-md" />
-                    {!collapsed && <Skeleton className="h-4 flex-1 max-w-[120px]" />}
-                  </div>
-                ))}
-              </>
-            ) : (
-              navItems.map((item) => {
-                const userPlan = session?.user?.plan ?? 'free';
-                const hasAccess =
-                  !item.feature ||
-                  (canAccess(userPlan, item.feature) && isFeatureEnabled(item.feature));
-                const isActive =
-                  item.href === '/dashboard'
-                    ? pathname === '/dashboard'
-                    : pathname === item.href || pathname.startsWith(item.href + '/');
-                const Icon = item.icon;
-
-                if (!hasAccess) {
-                  const requiredPlan = getFeatureRequiredPlan(item.feature!);
-                  return (
-                    <Link
-                      key={item.href}
-                      href="/dashboard/configuracion?tab=suscripcion"
-                      onClick={closeMobile}
-                      className={cn(
-                        'nav-item-hover flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors',
-                        'text-sidebar-foreground/40 hoverable:hover:bg-sidebar-accent/50 hoverable:hover:text-sidebar-foreground/60',
-                      )}
-                      title={collapsed ? `${item.title} (Plan ${requiredPlan})` : undefined}
-                    >
-                      <div className="relative shrink-0">
-                        <Icon className="h-5 w-5" />
-                        <LockKeyhole className="h-2.5 w-2.5 absolute -top-1 -right-1 text-muted-foreground/60" />
-                      </div>
-                      {!collapsed && (
-                        <>
-                          <span className="flex-1 truncate text-sidebar-foreground/40">
-                            {item.title}
-                          </span>
-                          <span className="text-[9px] font-semibold uppercase tracking-wider text-amber-500 dark:text-amber-400 shrink-0">
-                            {requiredPlan}
-                          </span>
-                        </>
-                      )}
-                    </Link>
-                  );
-                }
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={closeMobile}
-                    className={cn(
-                      isActive
-                        ? 'nav-active-indicator bg-sidebar-accent text-white'
-                        : 'text-sidebar-foreground/70 nav-item-hover',
-                      'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                      !isActive && 'hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
-                    )}
-                    aria-current={isActive ? 'page' : undefined}
-                    title={collapsed ? item.title : undefined}
-                  >
-                    <Icon className="h-5 w-5 shrink-0" />
-                    {!collapsed && (
-                      <>
-                        <span className="flex-1 truncate">{item.title}</span>
-                        {item.badge && (
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
-                            {item.badge}
-                          </span>
-                        )}
-                        {item.title === 'Configuración Inicial' && onboardingPending && (
-                          <span className="flex h-5 items-center rounded-full bg-amber-500/15 text-amber-500 dark:text-amber-400 text-[9px] font-semibold px-1.5 uppercase tracking-wider shrink-0 ml-1">
-                            Continuar
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </Link>
-                );
-              })
-            )}
-            {/* Admin section */}
-            {status !== 'loading' && session?.user?.role === 'admin' && (
-              <div className="mt-2 pt-2 border-t border-sidebar-muted">
-                {!collapsed && (
-                  <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-                    Admin
-                  </p>
-                )}
-                <Link
-                  href="/dashboard/admin/sistema"
-                  onClick={closeMobile}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                    pathname === '/dashboard/admin/sistema' ||
-                      pathname.startsWith('/dashboard/admin/sistema/')
-                      ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
-                  )}
-                  aria-current={
-                    pathname === '/dashboard/admin/sistema' ||
-                    pathname.startsWith('/dashboard/admin/sistema/')
-                      ? 'page'
-                      : undefined
-                  }
-                  title={collapsed ? 'Sistema' : undefined}
-                >
-                  <Settings className="h-5 w-5 shrink-0" />
-                  {!collapsed && <span className="flex-1 truncate">Sistema</span>}
-                </Link>
-                <Link
-                  href="/dashboard/admin/tenants"
-                  onClick={closeMobile}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                    pathname === '/dashboard/admin/tenants'
-                      ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
-                  )}
-                  aria-current={pathname === '/dashboard/admin/tenants' ? 'page' : undefined}
-                  title={collapsed ? 'Tenants' : undefined}
-                >
-                  <Building2 className="h-5 w-5 shrink-0" />
-                  {!collapsed && <span className="flex-1 truncate">Tenants</span>}
-                </Link>
-                <Link
-                  href="/dashboard/admin/sucursales"
-                  onClick={closeMobile}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                    pathname === '/dashboard/admin/sucursales'
-                      ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
-                  )}
-                  aria-current={pathname === '/dashboard/admin/sucursales' ? 'page' : undefined}
-                  title={collapsed ? 'Sucursales' : undefined}
-                >
-                  <Store className="h-5 w-5 shrink-0" />
-                  {!collapsed && <span className="flex-1 truncate">Sucursales</span>}
-                </Link>
-                <Link
-                  href="/dashboard/admin/auditoria"
-                  onClick={closeMobile}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                    pathname === '/dashboard/admin/auditoria'
-                      ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
-                  )}
-                  aria-current={pathname === '/dashboard/admin/auditoria' ? 'page' : undefined}
-                  title={collapsed ? 'Auditoría' : undefined}
-                >
-                  <ScrollText className="h-5 w-5 shrink-0" />
-                  {!collapsed && <span className="flex-1 truncate">Auditoría</span>}
-                </Link>
-                <Link
-                  href="/dashboard/admin/backups"
-                  onClick={closeMobile}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                    pathname === '/dashboard/admin/backups'
-                      ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
-                  )}
-                  aria-current={pathname === '/dashboard/admin/backups' ? 'page' : undefined}
-                  title={collapsed ? 'Backups' : undefined}
-                >
-                  <HardDrive className="h-5 w-5 shrink-0" />
-                  {!collapsed && <span className="flex-1 truncate">Backups</span>}
-                </Link>
-                <Link
-                  href="/dashboard/admin/n8n"
-                  onClick={closeMobile}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                    pathname === '/dashboard/admin/n8n' ||
-                      pathname.startsWith('/dashboard/admin/n8n/')
-                      ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
-                  )}
-                  aria-current={
-                    pathname === '/dashboard/admin/n8n' ||
-                    pathname.startsWith('/dashboard/admin/n8n/')
-                      ? 'page'
-                      : undefined
-                  }
-                  title={collapsed ? 'n8n' : undefined}
-                >
-                  <span className="relative inline-flex shrink-0">
-                    <Network className="h-5 w-5" />
-                    <N8nStatusIndicator />
-                  </span>
-                  {!collapsed && <span className="flex-1 truncate">n8n</span>}
-                </Link>
-                <Link
-                  href="/dashboard/admin/rendimiento"
-                  onClick={closeMobile}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                    pathname === '/dashboard/admin/rendimiento'
-                      ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
-                  )}
-                  aria-current={pathname === '/dashboard/admin/rendimiento' ? 'page' : undefined}
-                  title={collapsed ? 'Rendimiento' : undefined}
-                >
-                  <BarChart3 className="h-5 w-5 shrink-0" />
-                  {!collapsed && <span className="flex-1 truncate">Rendimiento</span>}
-                </Link>
-                <Link
-                  href="/dashboard/admin/portal-analytics"
-                  onClick={closeMobile}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                    pathname === '/dashboard/admin/portal-analytics'
-                      ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
-                  )}
-                  aria-current={pathname === '/dashboard/admin/portal-analytics' ? 'page' : undefined}
-                  title={collapsed ? 'Portal' : undefined}
-                >
-                  <Smartphone className="h-5 w-5 shrink-0" />
-                  {!collapsed && <span className="flex-1 truncate">Portal Analytics</span>}
-                </Link>
-                <Link
-                  href="/dashboard/webhooks"
-                  onClick={closeMobile}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-                    pathname === '/dashboard/webhooks' ||
-                      pathname.startsWith('/dashboard/webhooks/')
-                      ? 'nav-active-indicator bg-sidebar-accent text-white'
-                      : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
-                  )}
-                  aria-current={
-                    pathname === '/dashboard/webhooks' ||
-                    pathname.startsWith('/dashboard/webhooks/')
-                      ? 'page'
-                      : undefined
-                  }
-                  title={collapsed ? 'Webhooks' : undefined}
-                >
-                  <Webhook className="h-5 w-5 shrink-0" />
-                  {!collapsed && <span className="flex-1 truncate">Webhooks</span>}
-                </Link>
-              </div>
-            )}
-          </nav>
+          <SidebarNav
+            collapsed={collapsed}
+            closeMobile={closeMobile}
+            status={status}
+            session={session}
+            onboardingPending={onboardingPending}
+          />
         </ScrollArea>
 
-        {/* Cerrar sesión */}
         <div className="border-t border-sidebar-muted p-2">
           <Button
             variant="ghost"
@@ -515,7 +159,6 @@ export function Sidebar() {
           </Button>
         </div>
 
-        {/* Botón colapsar — desktop only */}
         <Button
           variant="ghost"
           size="icon"

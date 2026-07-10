@@ -23,7 +23,7 @@ export function PortalThemeToggle() {
       className="relative h-8 w-8 rounded-xl flex items-center justify-center
         text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300
         hover:bg-gray-100 dark:hover:bg-gray-800
-        transition-all duration-200 active:scale-90"
+        transition-transform duration-200 active:scale-90"
       aria-label={isDark ? 'Activar modo claro' : 'Activar modo oscuro'}
     >
       <AnimatePresence mode="wait">

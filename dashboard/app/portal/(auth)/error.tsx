@@ -43,14 +43,14 @@ export default function PortalError({
       <div className="flex items-center gap-3">
         <button
           onClick={reset}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.97] text-white text-sm font-medium rounded-xl transition-all duration-150 shadow-sm"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.97] text-white text-sm font-medium rounded-xl transition-[background,transform] duration-150 shadow-sm"
         >
           <RefreshCw className="h-4 w-4" />
           Intentar de nuevo
         </button>
         <Link
           href="/portal/dashboard"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 active:scale-[0.97] transition-all duration-150"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 active:scale-[0.97] transition-[background,transform] duration-150"
         >
           <Home className="h-4 w-4" />
           Ir al inicio

@@ -211,7 +211,7 @@ export function AyudaClient({ sections, iconMap: _iconMap }: AyudaClientProps) {
                   onClick={() => setSeccionActiva(seccion.id)}
                   className="text-left group"
                 >
-                  <Card className="h-full transition-all duration-200 hover:border-primary/30 hover:shadow-sm cursor-pointer">
+                  <Card className="h-full transition-[border-color,box-shadow] duration-200 hover:border-primary/30 hover:shadow-sm cursor-pointer">
                     <CardHeader>
                       <div className="flex items-start gap-3">
                         <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-primary/10 text-primary shrink-0 group-hover:bg-primary/20 transition-colors">

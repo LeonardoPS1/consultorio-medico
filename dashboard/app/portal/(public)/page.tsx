@@ -440,7 +440,7 @@ export default function PortalLogin() {
                           value={telefono}
                           onChange={(e) => setTelefono(e.target.value)}
                           placeholder="+56 9 1234 5678"
-                          className="w-full pl-10 pr-4 py-3 rounded-xl text-base outline-none transition-all"
+                          className="w-full pl-10 pr-4 py-3 rounded-xl text-base outline-none transition-[border-color,box-shadow]"
                           style={{
                             border:
                               '1px solid hsl(var(--portal-border))',

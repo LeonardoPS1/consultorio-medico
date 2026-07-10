@@ -106,7 +106,7 @@ export function ImageUpload({
       {/* Imagen / fallback */}
       <label
         className={cn(
-          'relative flex items-center justify-center border-2 border-dashed cursor-pointer transition-all overflow-hidden group',
+          'relative flex items-center justify-center border-2 border-dashed cursor-pointer transition-[border-color,background] overflow-hidden group',
           sizeClasses[size],
           shapeClasses[shape],
           isDragging

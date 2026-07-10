@@ -112,8 +112,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
   return (
     <div>
       <h1
-        className="text-2xl font-bold mb-6"
-        style={{ color: 'hsl(var(--portal-foreground))' }}
+        className="text-2xl font-bold mb-6 text-portal-fg"
       >
         Mis Turnos
       </h1>
@@ -147,8 +146,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
       {pendientes.length > 0 && (
         <div className="mb-6">
           <h2
-            className="text-xs font-semibold uppercase tracking-wider mb-3"
-            style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+            className="text-xs font-semibold uppercase tracking-wider mb-3 text-portal-muted-fg"
           >
             Próximos
           </h2>
@@ -162,40 +160,21 @@ export default function PortalTurnosClient({ turnos }: Props) {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <div
-                      className="flex items-center gap-2 mb-1"
-                      style={{ color: 'hsl(var(--portal-foreground))' }}
-                    >
-                      <Calendar
-                        className="h-4 w-4 shrink-0"
-                        style={{ color: 'hsl(var(--portal-primary))' }}
-                      />
+                    <div className="flex items-center gap-2 mb-1 text-portal-fg">
+                      <Calendar className="h-4 w-4 shrink-0 text-portal-primary" />
                       <span className="font-medium truncate">
                         {formatDate(t.fechaHora)} · {t.hora}
                       </span>
                     </div>
-                    <div
-                      className="text-sm mb-2"
-                      style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-                    >
+                    <div className="text-sm mb-2 text-portal-muted-fg">
                       Dr/a. {t.medicoNombre} · {t.medicoEspecialidad}
                     </div>
                     {t.motivo && (
-                      <div
-                        className="text-sm mb-1"
-                        style={{
-                          color: 'hsl(var(--portal-muted-foreground) / 0.8)',
-                        }}
-                      >
+                      <div className="text-sm mb-1 text-portal-muted-fg/80">
                         {t.motivo}
                       </div>
                     )}
-                    <div
-                      className="flex items-center gap-3 text-xs"
-                      style={{
-                        color: 'hsl(var(--portal-muted-foreground) / 0.6)',
-                      }}
-                    >
+                    <div className="flex items-center gap-3 text-xs text-portal-muted-fg/60">
                       <span className="flex items-center gap-1">
                         {TIPO_ICONS[t.tipoConsulta] || null}
                         {t.tipoConsulta}
@@ -215,11 +194,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                           href={t.linkVideollamada}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
-                          style={{
-                            color: 'hsl(var(--portal-primary))',
-                            background: 'hsl(var(--portal-primary) / 0.08)',
-                          }}
+                          className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors text-portal-primary bg-portal-primary/8"
                           onMouseEnter={(e) => {
                             e.currentTarget.style.background =
                               'hsl(var(--portal-primary) / 0.12)';
@@ -240,10 +215,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                         <button
                           onClick={() => reagendarTurno(t.id)}
                           disabled={loadingId === t.id}
-                          className="transition-colors p-1 disabled:opacity-50"
-                          style={{
-                            color: 'hsl(var(--portal-primary))',
-                          }}
+                          className="transition-colors p-1 disabled:opacity-50 text-portal-primary"
                           title="Reagendar turno"
                         >
                           <RefreshCw className="h-5 w-5" />
@@ -251,10 +223,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                         <button
                           onClick={() => cancelarTurno(t.id)}
                           disabled={loadingId === t.id}
-                          className="transition-colors p-1 disabled:opacity-50"
-                          style={{
-                            color: 'hsl(var(--portal-destructive))',
-                          }}
+                          className="transition-colors p-1 disabled:opacity-50 text-portal-destructive"
                           title="Cancelar turno"
                         >
                           {loadingId === t.id ? (
@@ -284,8 +253,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
       {pasados.length > 0 && (
         <div>
           <h2
-            className="text-xs font-semibold uppercase tracking-wider mb-3"
-            style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+            className="text-xs font-semibold uppercase tracking-wider mb-3 text-portal-muted-fg"
           >
             Historial
           </h2>
@@ -300,16 +268,12 @@ export default function PortalTurnosClient({ turnos }: Props) {
                 <div className="flex justify-between items-start gap-2">
                   <div className="min-w-0">
                     <div
-                      className="text-sm font-medium truncate"
-                      style={{ color: 'hsl(var(--portal-foreground))' }}
+                      className="text-sm font-medium truncate text-portal-fg"
                     >
                       {formatDate(t.fechaHora)} · {t.hora}
                     </div>
                     <div
-                      className="text-xs"
-                      style={{
-                        color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-                      }}
+                      className="text-xs text-portal-muted-fg/70"
                     >
                       Dr/a. {t.medicoNombre} · {t.tipoConsulta}
                     </div>
@@ -319,10 +283,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                       <a
                         href={`/api/portal/recibos/${t.id}`}
                         target="_blank"
-                        className="text-xs font-medium flex items-center gap-1 transition-colors"
-                        style={{
-                          color: 'hsl(var(--portal-primary))',
-                        }}
+                        className="text-xs font-medium flex items-center gap-1 transition-colors text-portal-primary"
                         title="Ver recibo"
                       >
                         <Receipt className="h-3.5 w-3.5" />
@@ -352,28 +313,14 @@ export default function PortalTurnosClient({ turnos }: Props) {
         <PortalCard padding="lg" className="text-center">
           <div className="py-8">
             <div
-              className="h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'hsl(var(--portal-muted))' }}
+              className="h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-portal-muted"
             >
-              <Calendar
-                className="h-8 w-8"
-                style={{
-                  color: 'hsl(var(--portal-muted-foreground) / 0.4)',
-                }}
-              />
+              <Calendar className="h-8 w-8 text-portal-muted-fg/40" />
             </div>
-            <p
-              className="font-medium"
-              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-            >
+            <p className="font-medium text-portal-muted-fg">
               No tienes turnos registrados
             </p>
-            <p
-              className="text-xs mt-1"
-              style={{
-                color: 'hsl(var(--portal-muted-foreground) / 0.6)',
-              }}
-            >
+            <p className="text-xs mt-1 text-portal-muted-fg/60">
               Agendá tu primer turno desde la sección Agendar
             </p>
           </div>

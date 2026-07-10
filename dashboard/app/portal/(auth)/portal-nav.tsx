@@ -247,7 +247,7 @@ export default function PortalNav() {
                   {/* Icon */}
                   <div className="relative z-[1] flex flex-col items-center">
                     <item.icon
-                      className="h-[18px] w-[18px] transition-all duration-200"
+className="h-[18px] w-[18px] transition-[color,transform] duration-200"
                       style={{
                         filter: active
                           ? 'drop-shadow(0 1px 2px hsl(var(--portal-primary) / 0.3))'
@@ -259,7 +259,7 @@ export default function PortalNav() {
 
                   {/* Label */}
                   <span
-                    className="relative z-[1] text-[10px] font-medium leading-tight whitespace-nowrap transition-all duration-150"
+                    className="relative z-[1] text-[10px] font-medium leading-tight whitespace-nowrap transition-[color] duration-150"
                     style={{
                       color: active
                         ? 'hsl(var(--portal-primary))'
@@ -313,7 +313,7 @@ export default function PortalNav() {
               )}
               <div className="relative z-[1] flex flex-col items-center">
                 <Bell
-                  className="h-[18px] w-[18px] transition-all duration-200"
+                  className="h-[18px] w-[18px] transition-[color,transform] duration-200"
                   style={{
                     transform:
                       pathname === '/portal/notificaciones'

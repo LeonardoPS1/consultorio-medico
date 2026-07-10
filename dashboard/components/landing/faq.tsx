@@ -77,9 +77,9 @@ export function FAQ({ items }: FAQProps = {}) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.04, duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
-              className={`rounded-xl border bg-card overflow-hidden transition-all duration-300 card-glow-hover ${
-                openIndex === i ? 'shadow-sm border-primary/20' : ''
-              }`}
+className={`rounded-xl border bg-card overflow-hidden transition-[border-color,box-shadow] duration-300 card-glow-hover ${
+                 openIndex === i ? 'shadow-sm border-primary/20' : ''
+               }`}
             >
               <button
                 onClick={() => toggle(i)}

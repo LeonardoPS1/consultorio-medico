@@ -147,8 +147,7 @@ export default function PortalPerfilClient({
   return (
     <div>
       <h1
-        className="text-2xl font-bold mb-6"
-        style={{ color: 'hsl(var(--portal-foreground))' }}
+        className="text-2xl font-bold mb-6 text-portal-fg"
       >
         Mi Perfil
       </h1>
@@ -156,49 +155,32 @@ export default function PortalPerfilClient({
       {/* ── Datos fijos ── */}
       <PortalCard padding="md" className="mb-6">
         <h2
-          className="text-xs font-semibold uppercase tracking-wider mb-3"
-          style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+          className="text-xs font-semibold uppercase tracking-wider mb-3 text-portal-muted-fg"
         >
           Datos personales
         </h2>
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <User
-              className="h-5 w-5 shrink-0"
-              style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
-            />
-            <div>
-              <div
-                className="font-medium"
-                style={{ color: 'hsl(var(--portal-foreground))' }}
-              >
-                {paciente.nombre} {paciente.apellido}
+              <User className="h-5 w-5 shrink-0 text-portal-muted-fg/50" />
+              <div>
+                <div className="font-medium text-portal-fg">
+                  {paciente.nombre} {paciente.apellido}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Phone
-              className="h-5 w-5 shrink-0"
-              style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
-            />
-            <div>
-              <div
-                style={{ color: 'hsl(var(--portal-foreground) / 0.9)' }}
-              >
-                {paciente.telefono}
+            <div className="flex items-center gap-3">
+              <Phone className="h-5 w-5 shrink-0 text-portal-muted-fg/50" />
+              <div>
+                <div className="text-portal-fg/90">
+                  {paciente.telefono}
+                </div>
               </div>
             </div>
-          </div>
           {paciente.rut && (
             <div className="flex items-center gap-3">
-              <Shield
-                className="h-5 w-5 shrink-0"
-                style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
-              />
+              <Shield className="h-5 w-5 shrink-0 text-portal-muted-fg/50" />
               <div>
-                <div
-                  style={{ color: 'hsl(var(--portal-foreground) / 0.9)' }}
-                >
+                <div className="text-portal-fg/90">
                   RUT: {paciente.rut}
                 </div>
               </div>
@@ -206,14 +188,9 @@ export default function PortalPerfilClient({
           )}
           {paciente.region && paciente.comuna && (
             <div className="flex items-center gap-3">
-              <MapPin
-                className="h-5 w-5 shrink-0"
-                style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
-              />
+              <MapPin className="h-5 w-5 shrink-0 text-portal-muted-fg/50" />
               <div>
-                <div
-                  style={{ color: 'hsl(var(--portal-foreground) / 0.9)' }}
-                >
+                <div className="text-portal-fg/90">
                   {paciente.comuna}, {paciente.region}
                 </div>
               </div>
@@ -221,15 +198,9 @@ export default function PortalPerfilClient({
           )}
           {paciente.sistemaSalud && (
             <div className="flex items-center gap-3">
-              <Heart
-                className="h-5 w-5 shrink-0"
-                style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
-              />
+              <Heart className="h-5 w-5 shrink-0 text-portal-muted-fg/50" />
               <div>
-                <div
-                  className="capitalize"
-                  style={{ color: 'hsl(var(--portal-foreground) / 0.9)' }}
-                >
+                <div className="capitalize text-portal-fg/90">
                   {paciente.sistemaSalud}
                 </div>
               </div>
@@ -237,14 +208,9 @@ export default function PortalPerfilClient({
           )}
           {paciente.obraSocial && (
             <div className="flex items-center gap-3">
-              <Shield
-                className="h-5 w-5 shrink-0"
-                style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
-              />
+              <Shield className="h-5 w-5 shrink-0 text-portal-muted-fg/50" />
               <div>
-                <div
-                  style={{ color: 'hsl(var(--portal-foreground) / 0.9)' }}
-                >
+                <div className="text-portal-fg/90">
                   {paciente.obraSocial}
                 </div>
               </div>
@@ -256,33 +222,18 @@ export default function PortalPerfilClient({
       {/* ── Datos editables ── */}
       <PortalCard padding="md">
         <form onSubmit={handleSave}>
-          <h2
-            className="text-xs font-semibold uppercase tracking-wider mb-3"
-            style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-          >
+          <h2 className="text-xs font-semibold uppercase tracking-wider mb-3 text-portal-muted-fg">
             Configuración y contacto
           </h2>
 
           {error && (
-            <div
-              className="text-sm px-3 py-2 rounded-lg mb-3"
-              style={{
-                color: 'hsl(var(--portal-destructive))',
-                background: 'hsl(var(--portal-destructive) / 0.1)',
-              }}
-            >
+            <div className="text-sm px-3 py-2 rounded-lg mb-3 text-portal-destructive bg-portal-destructive/10">
               {error}
             </div>
           )}
 
           {saved && (
-            <div
-              className="text-sm px-3 py-2 rounded-lg mb-3"
-              style={{
-                color: 'hsl(var(--portal-primary))',
-                background: 'hsl(var(--portal-primary) / 0.1)',
-              }}
-            >
+            <div className="text-sm px-3 py-2 rounded-lg mb-3 text-portal-primary bg-portal-primary/10">
               Cambios guardados correctamente
             </div>
           )}
@@ -291,8 +242,7 @@ export default function PortalPerfilClient({
             {/* Email */}
             <div>
               <label
-                className="block text-sm font-medium mb-1"
-                style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+                className="block text-sm font-medium mb-1 text-portal-fg/80"
               >
                 Email
               </label>
@@ -320,8 +270,7 @@ export default function PortalPerfilClient({
             {/* Sistema de salud */}
             <div>
               <label
-                className="block text-sm font-medium mb-1"
-                style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+                className="block text-sm font-medium mb-1 text-portal-fg/80"
               >
                 Sistema de Salud
               </label>
@@ -355,12 +304,9 @@ export default function PortalPerfilClient({
 
             {sistemaSalud === 'isapre' && (
               <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
-                >
-                  Isapre
-                </label>
+                  <label className="block text-sm font-medium mb-1 text-portal-fg/80">
+                    Isapre
+                  </label>
                 <select
                   value={isapreNombre}
                   onChange={(e) => setIsapreNombre(e.target.value)}
@@ -393,8 +339,7 @@ export default function PortalPerfilClient({
             {/* Región */}
             <div>
               <label
-                className="block text-sm font-medium mb-1"
-                style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+                className="block text-sm font-medium mb-1 text-portal-fg/80"
               >
                 Región
               </label>
@@ -433,8 +378,7 @@ export default function PortalPerfilClient({
             {/* Comuna */}
             <div>
               <label
-                className="block text-sm font-medium mb-1"
-                style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
+                className="block text-sm font-medium mb-1 text-portal-fg/80"
               >
                 Comuna
               </label>
@@ -475,18 +419,10 @@ export default function PortalPerfilClient({
             {/* Consentimientos */}
             <div className="flex items-center justify-between">
               <div>
-                <div
-                  className="text-sm font-medium"
-                  style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
-                >
+                <div className="text-sm font-medium text-portal-fg/80">
                   Notificaciones por WhatsApp
                 </div>
-                <div
-                  className="text-xs"
-                  style={{
-                    color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-                  }}
-                >
+                <div className="text-xs text-portal-muted-fg/70">
                   Recordatorios y avisos de turnos
                 </div>
               </div>
@@ -505,18 +441,10 @@ export default function PortalPerfilClient({
 
             <div className="flex items-center justify-between">
               <div>
-                <div
-                  className="text-sm font-medium"
-                  style={{ color: 'hsl(var(--portal-foreground) / 0.8)' }}
-                >
+                <div className="text-sm font-medium text-portal-fg/80">
                   Notificaciones por Email
                 </div>
-                <div
-                  className="text-xs"
-                  style={{
-                    color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-                  }}
-                >
+                <div className="text-xs text-portal-muted-fg/70">
                   Resúmenes y novedades
                 </div>
               </div>
@@ -534,12 +462,7 @@ export default function PortalPerfilClient({
             </div>
 
             {/* Push Notifications */}
-            <div
-              className="pt-2"
-              style={{
-                borderTop: '1px solid hsl(var(--portal-border-light))',
-              }}
-            >
+            <div className="pt-2 border-t border-portal-border-light">
               <PushNotificationToggle />
             </div>
 

@@ -154,8 +154,8 @@ export function PreJoinLobby({ identity, role, onJoin }: PreJoinLobbyProps) {
           <button
             onClick={toggleMic}
             disabled={micError}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all border ${
-              micEnabled
+className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-colors border ${
+               micEnabled
                 ? 'bg-white/10 border-white/15 text-white hover:bg-white/20'
                 : 'bg-red-500/20 border-red-500/30 text-red-300 hover:bg-red-500/30'
             } disabled:opacity-40 disabled:cursor-not-allowed`}
@@ -170,8 +170,8 @@ export function PreJoinLobby({ identity, role, onJoin }: PreJoinLobbyProps) {
           <button
             onClick={toggleCam}
             disabled={camError}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all border ${
-              camEnabled && !camError
+className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-colors border ${
+               camEnabled && !camError
                 ? 'bg-white/10 border-white/15 text-white hover:bg-white/20'
                 : 'bg-red-500/20 border-red-500/30 text-red-300 hover:bg-red-500/30'
             } disabled:opacity-40 disabled:cursor-not-allowed`}
@@ -191,7 +191,7 @@ export function PreJoinLobby({ identity, role, onJoin }: PreJoinLobbyProps) {
         {/* ─── Join Button ────────────────────────────── */}
         <button
           onClick={onJoin}
-          className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold text-base transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/25"
+          className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold text-base transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/25"
         >
           Unirse a la videollamada
         </button>

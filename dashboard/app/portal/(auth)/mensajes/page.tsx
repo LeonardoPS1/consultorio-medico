@@ -136,18 +136,15 @@ export default function PortalChatPage() {
       {/* Header */}
       <div style={{ ...headerStyle, padding: '0.75rem 1rem' }}>
         <h1
-          className="text-lg font-semibold flex items-center gap-2"
-          style={{ color: 'hsl(var(--portal-foreground))' }}
+          className="text-lg font-semibold flex items-center gap-2 text-portal-fg"
         >
-          <MessageSquare
-            className="h-5 w-5"
-            style={{ color: 'hsl(var(--portal-primary))' }}
+            <MessageSquare
+            className="h-5 w-5 text-portal-primary"
           />
           Mensajes
         </h1>
         <p
-          className="text-xs mt-0.5"
-          style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+          className="text-xs mt-0.5 text-portal-muted-fg"
         >
           Consultá con el equipo médico por este canal
         </p>
@@ -155,20 +152,18 @@ export default function PortalChatPage() {
 
       {/* Messages area */}
       <div
-        className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
-        style={{ background: 'hsl(var(--portal-muted) / 0.3)' }}
+        className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-portal-muted/30"
       >
         {error && (
           <div
-            className="text-center text-sm py-8"
-            style={{ color: 'hsl(var(--portal-destructive))' }}
+            className="text-center text-sm py-8 text-portal-destructive"
           >
             {error}
           </div>
         )}
 
         {mensajes.length === 0 && !error && (
-          <PortalCard className="text-center py-12" padding="lg" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
+          <PortalCard className="text-center py-12 text-portal-muted-fg/70" padding="lg">
             <Bot
               className="h-12 w-12 mx-auto mb-3"
               style={{ opacity: 0.5 }}
@@ -257,11 +252,7 @@ export default function PortalChatPage() {
             placeholder="Escribí tu mensaje..."
             maxLength={1000}
             disabled={sending || !!error}
-            className="flex-1 px-4 py-2.5 rounded-full text-sm border-0 outline-none disabled:opacity-50"
-            style={{
-              background: 'hsl(var(--portal-muted))',
-              color: 'hsl(var(--portal-foreground))',
-            }}
+            className="flex-1 px-4 py-2.5 rounded-full text-sm border-0 outline-none disabled:opacity-50 bg-portal-muted text-portal-fg"
             onFocus={(e) => {
               e.currentTarget.style.boxShadow =
                 '0 0 0 2px hsl(var(--portal-primary) / 0.2)';

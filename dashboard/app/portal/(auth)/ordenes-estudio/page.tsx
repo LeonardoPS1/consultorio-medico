@@ -38,10 +38,10 @@ function formatDate(date: string): string {
 function getTipoIcon(tipo: string) {
   switch (tipo) {
     case 'imagen':
-      return <Image className="h-4 w-4" style={{ color: 'hsl(var(--portal-primary))' }} />;
+      return <Image className="h-4 w-4 text-portal-primary" />;
     case 'laboratorio':
     default:
-      return <FlaskConical className="h-4 w-4" style={{ color: 'hsl(var(--portal-primary))' }} />;
+      return <FlaskConical className="h-4 w-4 text-portal-primary" />;
   }
 }
 
@@ -66,7 +66,7 @@ function getEstadoBadge(estado: string) {
         </PortalBadge>
       );
     default:
-      return <span className="text-xs" style={{ color: 'hsl(var(--portal-muted-foreground))' }}>{estado}</span>;
+      return <span className="text-xs text-portal-muted-fg">{estado}</span>;
   }
 }
 
@@ -96,9 +96,9 @@ export default function PortalOrdenesEstudioPage() {
   if (ordenes.length === 0) {
     return (
       <div>
-        <h1 className="text-2xl font-bold mb-6" style={{ color: 'hsl(var(--portal-foreground))' }}>Órdenes de Estudio</h1>
-        <div className="text-center py-16" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
-          <div className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3" style={{ background: 'hsl(var(--portal-muted))' }}>
+        <h1 className="text-2xl font-bold mb-6 text-portal-fg">Órdenes de Estudio</h1>
+        <div className="text-center py-16 text-portal-muted-fg/70">
+          <div className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 bg-portal-muted">
             <FlaskConical className="h-6 w-6" />
           </div>
           <p>No tienes órdenes de estudio</p>
@@ -110,8 +110,8 @@ export default function PortalOrdenesEstudioPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-1" style={{ color: 'hsl(var(--portal-foreground))' }}>Órdenes de Estudio</h1>
-      <p className="text-sm mb-6" style={{ color: 'hsl(var(--portal-muted-foreground))' }}>
+      <h1 className="text-2xl font-bold mb-1 text-portal-fg">Órdenes de Estudio</h1>
+      <p className="text-sm mb-6 text-portal-muted-fg">
         Exámenes de laboratorio, imagen y otros solicitados
       </p>
 
@@ -120,29 +120,28 @@ export default function PortalOrdenesEstudioPage() {
           <PortalCard key={o.id} hover className="flex items-start gap-3">
             <div className="flex items-start gap-3">
               <div
-                className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'hsl(var(--portal-muted))' }}
+                className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-portal-muted"
               >
                 {getTipoIcon(o.tipo)}
               </div>
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-3 mb-1">
-                  <h3 className="font-medium truncate" style={{ color: 'hsl(var(--portal-foreground))' }}>{o.titulo}</h3>
+                  <h3 className="font-medium truncate text-portal-fg">{o.titulo}</h3>
                   {getEstadoBadge(o.estado)}
                 </div>
 
                 {o.descripcion && (
-                  <p className="text-sm mb-1 line-clamp-2" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.8)' }}>
+                  <p className="text-sm mb-1 line-clamp-2 text-portal-muted-fg/80">
                     {o.descripcion}
                   </p>
                 )}
 
-                <div className="text-xs space-x-2" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
+                <div className="text-xs space-x-2 text-portal-muted-fg/70">
                   <span>{formatDate(o.createdAt)}</span>
                   {o.medicoNombre && <span>· Dr/a. {o.medicoNombre}</span>}
-                  {o.tipo === 'laboratorio' && <span style={{ color: 'hsl(var(--portal-primary))' }}>Laboratorio</span>}
-                  {o.tipo === 'imagen' && <span style={{ color: 'hsl(var(--portal-accent))' }}>Imagen</span>}
+                  {o.tipo === 'laboratorio' && <span className="text-portal-primary">Laboratorio</span>}
+                  {o.tipo === 'imagen' && <span className="text-portal-accent">Imagen</span>}
                 </div>
 
                 {o.estado === 'completada' && o.resultadoUrl && (
@@ -163,13 +162,7 @@ export default function PortalOrdenesEstudioPage() {
                 )}
 
                 {o.observaciones && (
-                  <p
-                    className="mt-2 text-sm rounded-xl p-2"
-                    style={{
-                      color: 'hsl(var(--portal-muted-foreground))',
-                      background: 'hsl(var(--portal-muted))',
-                    }}
-                  >
+                  <p className="mt-2 text-sm rounded-xl p-2 text-portal-muted-fg bg-portal-muted">
                     <strong>Observaciones: </strong>
                     {o.observaciones}
                   </p>

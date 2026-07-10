@@ -53,7 +53,7 @@ function CtrlButton({
   ...props
 }: CtrlBtnProps) {
   const base =
-    'flex items-center justify-center gap-1.5 w-11 h-11 sm:w-12 sm:h-12 rounded-xl text-white transition-all duration-200 border';
+    'flex items-center justify-center gap-1.5 w-11 h-11 sm:w-12 sm:h-12 rounded-xl text-white transition-[background,border-color,transform] duration-200 border';
   const stateClass = danger
     ? 'bg-red-500/60 border-red-500/40 hover:bg-red-500/80 hover:scale-105'
     : active

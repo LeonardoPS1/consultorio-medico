@@ -133,11 +133,11 @@ export function Specialties() {
             <button
               key={s.id}
               onClick={() => setActive(s.id)}
-              className={`relative px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 btn-press ${
-                active === s.id
-                  ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-105'
-                  : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted hover:scale-105'
-              }`}
+className={`relative px-5 py-2.5 rounded-full text-sm font-medium transition-colors duration-200 btn-press ${
+                 active === s.id
+                   ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-105'
+                   : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted hover:scale-105'
+               }`}
             >
               <motion.span
                 className="inline-block mr-1.5"
@@ -186,7 +186,7 @@ export function Specialties() {
             </div>
 
             {/* Case use card */}
-            <div className="relative rounded-xl border bg-card/60 backdrop-blur-sm overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300">
+            <div className="relative rounded-xl border bg-card/60 backdrop-blur-sm overflow-hidden hover:shadow-lg hover:border-primary/20 transition-[border-color,box-shadow] duration-300">
               <div className="bg-muted/50 px-5 py-3 border-b flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <motion.span

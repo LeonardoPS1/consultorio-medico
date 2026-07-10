@@ -77,7 +77,7 @@ export default function ComparativaMensual({ data, periodo }: Props) {
             variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
           >
-            <Card className="relative overflow-hidden transition-all hoverable:hover:shadow-card-hover">
+            <Card className="relative overflow-hidden transition-shadow hoverable:hover:shadow-card-hover">
               <div
                 className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${kpi.up ? 'from-emerald-400 to-emerald-600' : 'from-red-400 to-red-600'}`}
               />

@@ -41,11 +41,11 @@ export function AsistenteSettings({ modo, onModoChange }: Props) {
               <button
                 key={m.id}
                 onClick={() => onModoChange(m.id)}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium transition-all ${
-                  activo
-                    ? 'border-indigo-500/30 bg-indigo-500/5 text-indigo-600 shadow-sm dark:text-indigo-400'
-                    : 'border-border/60 bg-background text-muted-foreground/60 hover:border-muted-foreground/20 hover:text-foreground'
-                }`}
+className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors ${
+                   activo
+                     ? 'border-indigo-500/30 bg-indigo-500/5 text-indigo-600 shadow-sm dark:text-indigo-400'
+                     : 'border-border/60 bg-background text-muted-foreground/60 hover:border-muted-foreground/20 hover:text-foreground'
+                 }`}
               >
                 <span>{m.icono}</span>
                 <span>{m.label}</span>
@@ -74,11 +74,11 @@ export function AsistenteSettings({ modo, onModoChange }: Props) {
                   <button
                     key={cat.id}
                     onClick={() => toggleCategoria(cat.id)}
-                    className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-all ${
-                      activa
-                        ? 'border-indigo-500/15 bg-indigo-500/5'
-                        : 'border-border/40 bg-background text-muted-foreground/50'
-                    }`}
+className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-[background,border-color] ${
+                       activa
+                         ? 'border-indigo-500/15 bg-indigo-500/5'
+                         : 'border-border/40 bg-background text-muted-foreground/50'
+                     }`}
                   >
                     <div
                       className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${

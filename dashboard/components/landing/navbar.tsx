@@ -33,9 +33,9 @@ export function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-background/85 backdrop-blur-xl border-b shadow-sm' : 'bg-transparent'
-      }`}
+className={`fixed top-0 left-0 right-0 z-50 transition-[background,box-shadow] duration-300 ${
+         scrolled ? 'bg-background/85 backdrop-blur-xl border-b shadow-sm' : 'bg-transparent'
+       }`}
     >
       {/* Scroll progress indicator */}
       <motion.div
@@ -56,7 +56,7 @@ export function Navbar() {
             <button
               key={item.href}
               onClick={() => scrollTo(item.href.slice(1))}
-              className="relative px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
+              className="relative px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200"
             >
               {item.label}
             </button>
@@ -64,7 +64,7 @@ export function Navbar() {
           <div className="w-px h-5 bg-border mx-2" />
           <Link
             href="/login"
-            className="px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
+            className="px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200"
           >
             Iniciar sesión
           </Link>

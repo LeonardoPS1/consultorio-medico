@@ -184,9 +184,9 @@ function DistribucionSection({ distribucion }: { distribucion: Record<number, nu
                 <span className="text-sm font-medium w-20 shrink-0">{labels[puntaje]}</span>
                 <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      puntaje >= 4 ? 'bg-emerald-500' : puntaje >= 3 ? 'bg-amber-400' : 'bg-red-400'
-                    }`}
+className={`h-full rounded-full transition-[width] duration-500 ${
+                       puntaje >= 4 ? 'bg-emerald-500' : puntaje >= 3 ? 'bg-amber-400' : 'bg-red-400'
+                     }`}
                     style={{ width: `${porcentaje}%` }}
                   />
                 </div>
@@ -267,7 +267,7 @@ function SentimientoSection({
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ${item.color}`}
+                      className={`h-full rounded-full transition-[width] duration-500 ${item.color}`}
                       style={{ width: `${porcentaje}%` }}
                     />
                   </div>

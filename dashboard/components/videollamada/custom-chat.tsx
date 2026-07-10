@@ -135,13 +135,13 @@ export function CustomChat({ onClose }: CustomChatProps) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Escribí un mensaje..."
-          className="flex-1 bg-white/10 text-white text-sm rounded-xl px-3 py-2 placeholder:text-white/30 outline-none focus:ring-1 focus:ring-blue-400/50 transition-all"
+          className="flex-1 bg-white/10 text-white text-sm rounded-xl px-3 py-2 placeholder:text-white/30 outline-none focus:ring-1 focus:ring-blue-400/50 transition-[border-color,box-shadow]"
           disabled={isSending}
         />
         <button
           type="submit"
           disabled={!input.trim() || isSending}
-          className="shrink-0 p-2 rounded-xl bg-blue-500/60 text-white hover:bg-blue-500/80 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          className="shrink-0 p-2 rounded-xl bg-blue-500/60 text-white hover:bg-blue-500/80 disabled:opacity-40 disabled:cursor-not-allowed transition-[background,opacity]"
           title="Enviar"
           aria-label="Enviar mensaje"
         >

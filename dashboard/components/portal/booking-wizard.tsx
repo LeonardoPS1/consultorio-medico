@@ -100,7 +100,7 @@ function StepIndicator({ currentStep, showPago }: { currentStep: Step; showPago:
               {i > 0 && (
                 <div
                   className={cn(
-                    'h-px w-6 sm:w-8 transition-all duration-400',
+                    'h-px w-6 sm:w-8 transition-[background] duration-400',
                     isActive
                       ? 'bg-primary'
                       : 'bg-border',
@@ -113,7 +113,7 @@ function StepIndicator({ currentStep, showPago }: { currentStep: Step; showPago:
               <div className="flex flex-col items-center gap-1">
                 <div
                   className={cn(
-                    'flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium transition-all duration-300',
+                    'flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium transition-[background,color,box-shadow] duration-300',
                   )}
                   style={{
                     background: isCurrent
@@ -136,7 +136,7 @@ function StepIndicator({ currentStep, showPago }: { currentStep: Step; showPago:
                 </div>
                 <span
                   className={cn(
-                    'hidden sm:block text-[11px] font-medium transition-all duration-300',
+                    'hidden sm:block text-[11px] font-medium transition-colors duration-300',
                   )}
                   style={{
                     color: isActive

@@ -75,26 +75,18 @@ function MiniBarChart({
             key={d.mes}
             className="flex-1 flex flex-col items-center gap-1"
           >
-            <span
-              className="text-[10px] font-medium"
-              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-            >
+            <span className="text-[10px] font-medium text-portal-muted-fg">
               {d.value}
             </span>
             <div
-              className="w-full rounded-t-md transition-all duration-500"
+              className="w-full rounded-t-md transition-[height] duration-500"
               style={{
                 height: `${Math.max(pct, 4)}%`,
                 background:
                   'linear-gradient(180deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
               }}
             />
-            <span
-              className="text-[8px] rotate-[-45deg] origin-left whitespace-nowrap"
-              style={{
-                color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-              }}
-            >
+            <span className="text-[8px] rotate-[-45deg] origin-left whitespace-nowrap text-portal-muted-fg/70">
               {formatShortMonth(d.mes)}
             </span>
           </div>
@@ -134,10 +126,7 @@ function StatCard({
     >
       <PortalCard style={{ background: bg }}>
         <div className="flex items-center justify-between mb-2">
-          <span
-            className="text-xs font-medium"
-            style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-          >
+          <span className="text-xs font-medium text-portal-muted-fg">
             {label}
           </span>
           <Icon className={`h-4 w-4 ${iconColor}`} />
@@ -174,13 +163,10 @@ export default function PortalReportesPage() {
 
   if (!data) {
     return (
-      <PortalCard className="text-center" padding="lg" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
-        <TrendingUp
-          className="h-12 w-12 mx-auto mb-3"
-          style={{
+      <PortalCard className="text-center text-portal-muted-fg/70" padding="lg">
+        <TrendingUp className="h-12 w-12 mx-auto mb-3" style={{
             color: 'hsl(var(--portal-muted-foreground) / 0.3)',
-          }}
-        />
+          }} />
         <p>No se pudieron cargar las estadísticas</p>
       </PortalCard>
     );
@@ -194,16 +180,10 @@ export default function PortalReportesPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
-        <h1
-          className="text-2xl font-bold"
-          style={{ color: 'hsl(var(--portal-foreground))' }}
-        >
+        <h1 className="text-2xl font-bold text-portal-fg">
           Mis Estadísticas
         </h1>
-        <p
-          className="text-sm mt-1"
-          style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-        >
+        <p className="text-sm mt-1 text-portal-muted-fg">
           Resumen de tu actividad en el consultorio
         </p>
       </motion.div>
@@ -257,31 +237,16 @@ export default function PortalReportesPage() {
         >
           <PortalCard>
             <div className="flex items-center gap-2 mb-2">
-              <Clock
-                className="h-4 w-4"
-                style={{ color: 'hsl(var(--portal-primary))' }}
-              />
-              <h3
-                className="font-semibold text-sm"
-                style={{ color: 'hsl(var(--portal-foreground))' }}
-              >
+              <Clock className="h-4 w-4 text-portal-primary" />
+              <h3 className="font-semibold text-sm text-portal-fg">
                 Última visita
               </h3>
             </div>
-            <p
-              className="text-sm"
-              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-            >
+            <p className="text-sm text-portal-muted-fg">
               {formatDateCL(data.ultimaVisita.fecha)}
             </p>
             {data.ultimaVisita.medico && (
-              <p
-                className="text-xs mt-0.5"
-                style={{
-                  color:
-                    'hsl(var(--portal-muted-foreground) / 0.7)',
-                }}
-              >
+              <p className="text-xs mt-0.5 text-portal-muted-fg/70">
                 Dr/a. {data.ultimaVisita.medico}
               </p>
             )}
@@ -301,17 +266,8 @@ export default function PortalReportesPage() {
           }}
         >
           <PortalCard>
-            <h3
-              className="font-semibold text-sm mb-3 flex items-center gap-2"
-              style={{ color: 'hsl(var(--portal-foreground))' }}
-            >
-              <Eye
-                className="h-4 w-4"
-                style={{
-                  color:
-                    'hsl(var(--portal-muted-foreground) / 0.5)',
-                }}
-              />
+            <h3 className="font-semibold text-sm mb-3 flex items-center gap-2 text-portal-fg">
+              <Eye className="h-4 w-4 text-portal-muted-fg/50" />
               Tipo de consultas
             </h3>
             <div className="space-y-2">
@@ -320,23 +276,13 @@ export default function PortalReportesPage() {
                   key={tipo.tipo}
                   className="flex items-center justify-between"
                 >
-                  <span
-                    className="text-sm"
-                    style={{
-                      color: 'hsl(var(--portal-muted-foreground))',
-                    }}
-                  >
+                  <span className="text-sm text-portal-muted-fg">
                     {tipoLabels[tipo.tipo] || tipo.tipo}
                   </span>
                   <div className="flex items-center gap-2">
-                    <div
-                      className="w-24 h-2 rounded-full overflow-hidden"
-                      style={{
-                        background: 'hsl(var(--portal-muted))',
-                      }}
-                    >
+                    <div className="w-24 h-2 rounded-full overflow-hidden bg-portal-muted">
                       <div
-                        className="h-full rounded-full transition-all duration-500"
+                        className="h-full rounded-full transition-[width] duration-500"
                         style={{
                           width: `${
                             data.totalVisitas > 0
@@ -350,13 +296,7 @@ export default function PortalReportesPage() {
                         }}
                       />
                     </div>
-                    <span
-                      className="text-sm font-medium w-6 text-right"
-                      style={{
-                        color:
-                          'hsl(var(--portal-foreground) / 0.8)',
-                      }}
-                    >
+                    <span className="text-sm font-medium w-6 text-right text-portal-fg/80">
                       {tipo.value}
                     </span>
                   </div>
@@ -379,17 +319,8 @@ export default function PortalReportesPage() {
           }}
         >
           <PortalCard>
-            <h3
-              className="font-semibold text-sm mb-3 flex items-center gap-2"
-              style={{ color: 'hsl(var(--portal-foreground))' }}
-            >
-              <TrendingUp
-                className="h-4 w-4"
-                style={{
-                  color:
-                    'hsl(var(--portal-muted-foreground) / 0.5)',
-                }}
-              />
+            <h3 className="font-semibold text-sm mb-3 flex items-center gap-2 text-portal-fg">
+              <TrendingUp className="h-4 w-4 text-portal-muted-fg/50" />
               Visitas por mes
             </h3>
             <MiniBarChart data={data.visitasPorMes} />
@@ -404,7 +335,7 @@ export default function PortalReportesPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <PortalCard className="text-center" padding="lg" style={{ color: 'hsl(var(--portal-muted-foreground) / 0.7)' }}>
+      <PortalCard className="text-center text-portal-muted-fg/70" padding="lg">
               <TrendingUp
                 className="h-12 w-12 mx-auto mb-3"
                 style={{
@@ -412,12 +343,7 @@ export default function PortalReportesPage() {
                     'hsl(var(--portal-muted-foreground) / 0.3)',
                 }}
               />
-              <p
-                className="font-medium"
-                style={{
-                  color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-                }}
-              >
+              <p className="font-medium text-portal-muted-fg/70">
                 Sin actividad aún
               </p>
               <p className="text-sm mt-1">

@@ -1141,7 +1141,7 @@ function PerfilOrganizacion() {
       {/* Banner del perfil - fondo + avatar único */}
       <Card className="overflow-hidden">
         <div
-          className="h-28 relative bg-cover bg-center transition-all"
+          className="h-28 relative bg-cover bg-center transition-[opacity]"
           style={
             data.fondoUrl
               ? { backgroundImage: `url(${data.fondoUrl})` }

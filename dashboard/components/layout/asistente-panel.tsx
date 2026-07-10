@@ -324,7 +324,7 @@ function PanelContent({
                       key={item.text}
                       onClick={() => quickPrompt(item.action)}
                       disabled={cargando}
-                      className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/30 px-3.5 py-2.5 text-xs text-left text-muted-foreground transition-all hover:bg-accent/50 hover:border-indigo-500/20 hover:text-foreground disabled:opacity-40 active:scale-[0.98]"
+                      className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/30 px-3.5 py-2.5 text-xs text-left text-muted-foreground transition-[background,border-color,color,transform] hover:bg-accent/50 hover:border-indigo-500/20 hover:text-foreground disabled:opacity-40 active:scale-[0.98]"
                     >
                       <span className="shrink-0">{item.text.split(' ')[0]}</span>
                       <span>{item.text}</span>
@@ -440,7 +440,7 @@ function PanelContent({
                   key={sug.id}
                   onClick={() => enviarSugerencia(sug)}
                   disabled={cargando}
-                  className="group flex shrink-0 items-center gap-1.5 rounded-full border border-border/40 bg-muted/30 px-3 py-1.5 text-[11px] whitespace-nowrap transition-all hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-foreground disabled:opacity-40 active:scale-95"
+                  className="group flex shrink-0 items-center gap-1.5 rounded-full border border-border/40 bg-muted/30 px-3 py-1.5 text-[11px] whitespace-nowrap transition-[background,border-color,color,transform] hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-foreground disabled:opacity-40 active:scale-95"
                 >
                   <span className="text-xs leading-none">
                     {SUGERENCIA_ICONOS[sug.categoria] || SUGERENCIA_ICONOS.default}
@@ -468,7 +468,7 @@ function PanelContent({
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Escribí tu mensaje..."
-                className="min-h-[44px] max-h-[120px] resize-none pr-10 text-sm rounded-xl bg-muted/40 border-border/50 focus-visible:bg-background/90 focus-visible:border-indigo-500/30 placeholder:text-muted-foreground/40 transition-all"
+                className="min-h-[44px] max-h-[120px] resize-none pr-10 text-sm rounded-xl bg-muted/40 border-border/50 focus-visible:bg-background/90 focus-visible:border-indigo-500/30 placeholder:text-muted-foreground/40 transition-[background,border-color]"
                 rows={1}
                 disabled={cargando}
                 aria-label="Mensaje para el asistente IA"
@@ -490,7 +490,7 @@ function PanelContent({
               <Button
                 type="submit"
                 size="icon"
-                className="h-[44px] w-[44px] shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-sm transition-all active:scale-95"
+                className="h-[44px] w-[44px] shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-sm transition-transform active:scale-95"
                 disabled={!input.trim() || cargando}
                 aria-label="Enviar mensaje"
               >

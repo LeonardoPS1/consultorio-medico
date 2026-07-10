@@ -30,28 +30,16 @@ interface Notificacion {
 
 const TIPO_ICONS: Record<string, React.ReactNode> = {
   turno: (
-    <Calendar
-      className="h-4 w-4"
-      style={{ color: 'hsl(var(--portal-primary))' }}
-    />
+    <Calendar className="h-4 w-4 text-portal-primary" />
   ),
   mensaje: (
-    <MessageSquare
-      className="h-4 w-4"
-      style={{ color: 'hsl(var(--portal-accent))' }}
-    />
+    <MessageSquare className="h-4 w-4 text-portal-accent" />
   ),
   receta: (
-    <FileText
-      className="h-4 w-4"
-      style={{ color: 'hsl(38 92% 50%)' }}
-    />
+    <FileText className="h-4 w-4" style={{ color: 'hsl(38 92% 50%)' }} />
   ),
   sistema: (
-    <Bell
-      className="h-4 w-4"
-      style={{ color: 'hsl(var(--portal-primary))' }}
-    />
+    <Bell className="h-4 w-4 text-portal-primary" />
   ),
 };
 
@@ -121,17 +109,11 @@ export default function PortalNotificacionesPage() {
     <div className="pb-24">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1
-            className="text-xl font-bold"
-            style={{ color: 'hsl(var(--portal-foreground))' }}
-          >
+          <h1 className="text-xl font-bold text-portal-fg">
             Notificaciones
           </h1>
           {noLeidas > 0 && (
-            <p
-              className="text-sm"
-              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-            >
+            <p className="text-sm text-portal-muted-fg">
               {noLeidas} sin leer
             </p>
           )}
@@ -139,8 +121,7 @@ export default function PortalNotificacionesPage() {
         {noLeidas > 0 && (
           <button
             onClick={marcarTodasLeidas}
-            className="text-xs font-medium flex items-center gap-1 transition-colors"
-            style={{ color: 'hsl(var(--portal-primary))' }}
+            className="text-xs font-medium flex items-center gap-1 transition-colors text-portal-primary"
           >
             <CheckCheck className="h-3.5 w-3.5" />
             Marcar todas leídas
@@ -164,22 +145,11 @@ export default function PortalNotificacionesPage() {
       {notificaciones.length === 0 ? (
         <PortalCard className="text-center py-12" padding="lg">
           <div
-            className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3"
-            style={{ background: 'hsl(var(--portal-muted))' }}
+            className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 bg-portal-muted"
           >
-            <Bell
-              className="h-6 w-6"
-              style={{
-                color: 'hsl(var(--portal-muted-foreground) / 0.5)',
-              }}
-            />
+            <Bell className="h-6 w-6 text-portal-muted-fg/50" />
           </div>
-          <p
-            className="text-sm"
-            style={{
-              color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-            }}
-          >
+          <p className="text-sm text-portal-muted-fg/70">
             No tienes notificaciones
           </p>
         </PortalCard>
@@ -214,33 +184,16 @@ export default function PortalNotificacionesPage() {
                     {n.titulo}
                   </p>
                   {n.descripcion && (
-                    <p
-                      className="text-xs mt-0.5 line-clamp-2"
-                      style={{
-                        color:
-                          'hsl(var(--portal-muted-foreground) / 0.7)',
-                      }}
-                    >
+                    <p className="text-xs mt-0.5 line-clamp-2 text-portal-muted-fg/70">
                       {n.descripcion}
                     </p>
                   )}
-                  <p
-                    className="text-[10px] mt-1"
-                    style={{
-                      color:
-                        'hsl(var(--portal-muted-foreground) / 0.5)',
-                    }}
-                  >
+                  <p className="text-[10px] mt-1 text-portal-muted-fg/50">
                     {formatDate(n.createdAt)}
                   </p>
                 </div>
                 {!n.leido && (
-                  <span
-                    className="w-2 h-2 rounded-full mt-2 shrink-0"
-                    style={{
-                      background: 'hsl(var(--portal-primary))',
-                    }}
-                  />
+                  <span className="w-2 h-2 rounded-full mt-2 shrink-0 bg-portal-primary" />
                 )}
               </PortalCard>
             );

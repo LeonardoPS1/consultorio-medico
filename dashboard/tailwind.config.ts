@@ -65,6 +65,23 @@ const config: Config = {
           muted: 'hsl(var(--sidebar-muted))',
           accent: 'hsl(var(--sidebar-accent))',
         },
+        // Portal del Paciente — colores
+        portal: {
+          bg: 'hsl(var(--portal-bg))',
+          'bg-alt': 'hsl(var(--portal-bg-alt))',
+          fg: 'hsl(var(--portal-foreground))',
+          'muted-fg': 'hsl(var(--portal-muted-foreground))',
+          muted: 'hsl(var(--portal-muted))',
+          border: 'hsl(var(--portal-border))',
+          'border-light': 'hsl(var(--portal-border-light))',
+          primary: 'hsl(var(--portal-primary))',
+          'primary-soft': 'hsl(var(--portal-primary-soft))',
+          accent: 'hsl(var(--portal-accent))',
+          'accent-soft': 'hsl(var(--portal-accent-soft))',
+          destructive: 'hsl(var(--portal-destructive))',
+          success: 'hsl(var(--portal-success))',
+          warning: 'hsl(var(--portal-warning))',
+        },
         // Estados para turnos
         turno: {
           pendiente: '#F59E0B',

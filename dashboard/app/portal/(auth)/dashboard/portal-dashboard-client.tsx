@@ -244,28 +244,14 @@ function QuickSurveyCard({
     >
       <PortalCard padding="md">
         <div className="flex items-center gap-2 mb-3">
-          <div
-            className="h-8 w-8 rounded-lg flex items-center justify-center"
-            style={{
-              background: 'hsl(var(--portal-primary) / 0.1)',
-            }}
-          >
-            <Star
-              className="h-4 w-4"
-              style={{ color: 'hsl(var(--portal-primary))' }}
-            />
+          <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-portal-primary/10">
+            <Star className="h-4 w-4 text-portal-primary" />
           </div>
           <div>
-            <h3
-              className="font-semibold text-sm"
-              style={{ color: 'hsl(var(--portal-foreground))' }}
-            >
+            <h3 className="font-semibold text-sm text-portal-fg">
               Calificá tu atención
             </h3>
-            <p
-              className="text-xs"
-              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-            >
+            <p className="text-xs text-portal-muted-fg">
               {turnoActual.medicoNombre
                 ? `Tu visita con ${turnoActual.medicoNombre} del ${formatCLShort(turnoActual.fechaHora)}`
                 : `Tu visita del ${formatCLShort(turnoActual.fechaHora)}`}
@@ -284,8 +270,8 @@ function QuickSurveyCard({
                   setComentario('');
                   setSubmitted(false);
                 }}
-                className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
-                  (selectedTurno || turnosSinEncuesta[0].id) === t.id
+className={`text-[11px] px-2.5 py-1 rounded-lg border transition-colors ${
+                   (selectedTurno || turnosSinEncuesta[0].id) === t.id
                     ? 'bg-primary/10 dark:bg-primary/20 border-primary/30 text-primary'
                     : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'
                 }`}
@@ -307,9 +293,9 @@ function QuickSurveyCard({
             <button
               key={n}
               onClick={() => setPuntaje(n)}
-              className={`transition-all duration-150 active:scale-75 ${
-                n <= puntaje ? 'scale-110' : 'opacity-50 hover:opacity-80'
-              }`}
+className={`transition-[transform,opacity] duration-150 active:scale-75 ${
+                 n <= puntaje ? 'scale-110' : 'opacity-50 hover:opacity-80'
+               }`}
               aria-label={`Puntuar ${n} de 5`}
             >
               <Star
@@ -346,7 +332,7 @@ function QuickSurveyCard({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 mb-3 focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary transition-all">
+              <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 mb-3 focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary transition-[box-shadow,border-color]">
                 <MessageSquareText className="h-4 w-4 text-gray-400 dark:text-gray-500 shrink-0" />
                 <input
                   type="text"
@@ -424,16 +410,10 @@ export default function PortalDashboardClient({
             <User className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1
-              className="text-lg font-bold"
-              style={{ color: 'hsl(var(--portal-foreground))' }}
-            >
+            <h1 className="text-lg font-bold text-portal-fg">
               Hola, {paciente.nombre}
             </h1>
-            <p
-              className="text-xs"
-              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-            >
+            <p className="text-xs text-portal-muted-fg">
               <Phone className="inline h-3 w-3 mr-1 align-middle" />
               {formatCLPhone(paciente.telefono)}
             </p>
@@ -480,7 +460,7 @@ export default function PortalDashboardClient({
         ].map((stat, i) => (
           <div
             key={stat.label}
-            className="group transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+            className="group transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
             style={{
               animationName: 'portalFadeIn',
               animationDuration: '0.3s',

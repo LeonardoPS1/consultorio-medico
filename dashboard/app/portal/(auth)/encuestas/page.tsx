@@ -150,28 +150,14 @@ function PendingSurveyForm({
     >
       <PortalCard>
         <div className="flex items-center gap-2 mb-3">
-          <div
-            className="h-8 w-8 rounded-lg flex items-center justify-center"
-            style={{
-              background: 'hsl(var(--portal-primary) / 0.1)',
-            }}
-          >
-            <ClipboardCheck
-              className="h-4 w-4"
-              style={{ color: 'hsl(var(--portal-primary))' }}
-            />
+          <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-portal-primary/10">
+            <ClipboardCheck className="h-4 w-4 text-portal-primary" />
           </div>
           <div>
-            <h2
-              className="font-semibold text-sm"
-              style={{ color: 'hsl(var(--portal-foreground))' }}
-            >
+            <h2 className="font-semibold text-sm text-portal-fg">
               Calificá tu atención
             </h2>
-            <p
-              className="text-xs"
-              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-            >
+            <p className="text-xs text-portal-muted-fg">
               {turnos.length} turno
               {turnos.length !== 1 ? 's' : ''} sin calificar
             </p>
@@ -188,7 +174,7 @@ function PendingSurveyForm({
                   setPuntaje(0);
                   setComentario('');
                 }}
-                className="text-[11px] px-2.5 py-1 rounded-lg border transition-all"
+                className="text-[11px] px-2.5 py-1 rounded-lg border transition-colors"
                 style={
                   t.id === selectedId
                     ? {
@@ -213,20 +199,8 @@ function PendingSurveyForm({
           </div>
         )}
 
-        <div
-          className="flex items-center gap-2 mb-3 text-sm rounded-xl px-3 py-2"
-          style={{
-            background: 'hsl(var(--portal-muted) / 0.3)',
-            color: 'hsl(var(--portal-muted-foreground))',
-            border: '1px solid hsl(var(--portal-border-light))',
-          }}
-        >
-          <UserIcon
-            className="h-4 w-4 shrink-0"
-            style={{
-              color: 'hsl(var(--portal-muted-foreground) / 0.5)',
-            }}
-          />
+        <div className="flex items-center gap-2 mb-3 text-sm rounded-xl px-3 py-2 bg-portal-muted/30 text-portal-muted-fg border border-portal-border-light">
+          <UserIcon className="h-4 w-4 shrink-0 text-portal-muted-fg/50" />
           {selected.medicoNombre && (
             <span>Dr/a. {selected.medicoNombre} · </span>
           )}
@@ -238,9 +212,9 @@ function PendingSurveyForm({
             <button
               key={n}
               onClick={() => setPuntaje(n)}
-              className={`transition-all duration-150 active:scale-75 ${
-                n <= puntaje ? 'scale-110' : 'opacity-50 hover:opacity-80'
-              }`}
+className={`transition-transform duration-150 active:scale-75 ${
+                 n <= puntaje ? 'scale-110' : 'opacity-50 hover:opacity-80'
+               }`}
               aria-label={`Puntuar ${n} de 5`}
             >
               <Star
@@ -290,41 +264,20 @@ function PendingSurveyForm({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div
-                className="flex items-center gap-2 rounded-xl px-3 py-2 mb-3 transition-all"
-                style={{
-                  background: 'hsl(var(--portal-muted) / 0.3)',
-                  border:
-                    '1px solid hsl(var(--portal-border-light))',
-                }}
-              >
-                <MessageSquareText
-                  className="h-4 w-4 shrink-0"
-                  style={{
-                    color:
-                      'hsl(var(--portal-muted-foreground) / 0.5)',
-                  }}
-                />
-                <input
-                  type="text"
-                  value={comentario}
-                  onChange={(e) => setComentario(e.target.value)}
-                  placeholder="Contanos cómo fue tu experiencia (opcional)"
-                  className="flex-1 text-sm bg-transparent border-none outline-none"
-                  style={{
-                    color: 'hsl(var(--portal-foreground) / 0.9)',
-                  }}
+          <div className="flex items-center gap-2 rounded-xl px-3 py-2 mb-3 transition-[background,box-shadow] bg-portal-muted/30 border border-portal-border-light">
+            <MessageSquareText className="h-4 w-4 shrink-0 text-portal-muted-fg/50" />
+            <input
+              type="text"
+              value={comentario}
+              onChange={(e) => setComentario(e.target.value)}
+              placeholder="Contanos cómo fue tu experiencia (opcional)"
+              className="flex-1 text-sm bg-transparent border-none outline-none text-portal-fg/90"
                   maxLength={500}
                 />
               </div>
 
               {error && (
-                <p
-                  className="text-xs mb-2"
-                  style={{
-                    color: 'hsl(var(--portal-destructive))',
-                  }}
-                >
+                <p className="text-xs mb-2 text-portal-destructive">
                   {error}
                 </p>
               )}
@@ -398,16 +351,10 @@ export default function PortalEncuestasPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
-        <h1
-          className="text-2xl font-bold"
-          style={{ color: 'hsl(var(--portal-foreground))' }}
-        >
+        <h1 className="text-2xl font-bold text-portal-fg">
           Mis Encuestas
         </h1>
-        <p
-          className="text-sm mt-1"
-          style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-        >
+        <p className="text-sm mt-1 text-portal-muted-fg">
           Calificá tu atención y ayudanos a mejorar
         </p>
       </motion.div>
@@ -424,22 +371,11 @@ export default function PortalEncuestasPage() {
       {/* Separador */}
       {pendientes.length > 0 && encuestas.length > 0 && (
         <div className="flex items-center gap-3">
-          <div
-            className="flex-1 h-px"
-            style={{ background: 'hsl(var(--portal-border-light))' }}
-          />
-          <span
-            className="text-xs font-medium uppercase tracking-wider"
-            style={{
-              color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-            }}
-          >
+          <div className="flex-1 h-px bg-portal-border-light" />
+          <span className="text-xs font-medium uppercase tracking-wider text-portal-muted-fg/70">
             Historial
           </span>
-          <div
-            className="flex-1 h-px"
-            style={{ background: 'hsl(var(--portal-border-light))' }}
-          />
+          <div className="flex-1 h-px bg-portal-border-light" />
         </div>
       )}
 
@@ -447,10 +383,7 @@ export default function PortalEncuestasPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-16"
-          style={{
-            color: 'hsl(var(--portal-muted-foreground) / 0.7)',
-          }}
+          className="text-center py-16 text-portal-muted-fg/70"
         >
           <ClipboardCheck
             className="h-12 w-12 mx-auto mb-3"
@@ -458,10 +391,7 @@ export default function PortalEncuestasPage() {
               color: 'hsl(var(--portal-muted-foreground) / 0.3)',
             }}
           />
-          <p
-            className="font-medium"
-            style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-          >
+          <p className="font-medium text-portal-muted-fg">
             No tienes encuestas registradas
           </p>
           <p className="text-sm mt-2">
@@ -488,34 +418,17 @@ export default function PortalEncuestasPage() {
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex items-center gap-2">
                       <StarRating puntaje={puntaje} />
-                      <span
-                        className="text-sm font-medium"
-                        style={{
-                          color:
-                            'hsl(var(--portal-foreground) / 0.8)',
-                        }}
-                      >
+                      <span className="text-sm font-medium text-portal-fg/80">
                         {puntaje}/5
                       </span>
                     </div>
-                    <span
-                      className="text-xs shrink-0"
-                      style={{
-                        color:
-                          'hsl(var(--portal-muted-foreground) / 0.7)',
-                      }}
-                    >
+                    <span className="text-xs shrink-0 text-portal-muted-fg/70">
                       {formatDate(e.createdAt)}
                     </span>
                   </div>
 
                   {e.medicoNombre && (
-                    <p
-                      className="text-sm mb-1 flex items-center gap-1"
-                      style={{
-                        color: 'hsl(var(--portal-muted-foreground))',
-                      }}
-                    >
+                    <p className="text-sm mb-1 flex items-center gap-1 text-portal-muted-fg">
                       <UserIcon className="h-3.5 w-3.5" />
                       Dr/a. {e.medicoNombre}
                     </p>
@@ -523,23 +436,10 @@ export default function PortalEncuestasPage() {
 
                   {e.descripcion &&
                     e.descripcion !== 'Sin comentarios' && (
-                      <div
-                        className="flex items-start gap-1.5 mt-2 text-sm rounded-xl p-3"
-                        style={{
-                          background: 'hsl(var(--portal-muted))',
-                          color:
-                            'hsl(var(--portal-muted-foreground))',
-                        }}
-                      >
-                        <MessageSquareText
-                          className="h-4 w-4 mt-0.5 shrink-0"
-                          style={{
-                            color:
-                              'hsl(var(--portal-muted-foreground) / 0.7)',
-                          }}
-                        />
-                        <p>{e.descripcion}</p>
-                      </div>
+                    <div className="flex items-start gap-1.5 mt-2 text-sm rounded-xl p-3 bg-portal-muted text-portal-muted-fg">
+                      <MessageSquareText className="h-4 w-4 mt-0.5 shrink-0 text-portal-muted-fg/70" />
+                      <p>{e.descripcion}</p>
+                    </div>
                     )}
                 </PortalCard>
               </motion.div>

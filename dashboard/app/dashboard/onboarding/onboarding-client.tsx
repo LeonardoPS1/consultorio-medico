@@ -416,7 +416,7 @@ function StepDots({
             <div
               className={`
               flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium
-              transition-all duration-300
+              transition-[border-color,box-shadow,background] duration-300
               ${
                 done
                   ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-200'
@@ -505,7 +505,7 @@ export function OnboardingClient(props: OnboardingClientProps) {
 
         <div className="h-2.5 bg-muted rounded-full overflow-hidden mb-3">
           <div
-            className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-700 ease-out"
+            className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-[width] duration-700 ease-out"
             style={{ width: `${localProgress}%` }}
           />
         </div>
@@ -559,7 +559,7 @@ export function OnboardingClient(props: OnboardingClientProps) {
           return (
             <Card
               key={step.id}
-              className={`transition-all duration-300 overflow-hidden ${
+              className={`transition-[max-height,opacity] duration-300 overflow-hidden ${
                 done
                   ? 'border-emerald-200/70 dark:border-emerald-800/40 bg-emerald-50/40 dark:bg-emerald-950/8'
                   : active
@@ -584,7 +584,7 @@ export function OnboardingClient(props: OnboardingClientProps) {
                   <div className="flex items-center gap-3">
                     <div
                       className={`
-                      flex items-center justify-center h-10 w-10 rounded-xl shrink-0 transition-all duration-300
+                      flex items-center justify-center h-10 w-10 rounded-xl shrink-0 transition-[background,color,box-shadow] duration-300
                       ${
                         done
                           ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 shadow-sm shadow-emerald-200/50'
@@ -629,7 +629,7 @@ export function OnboardingClient(props: OnboardingClientProps) {
 
                     <div
                       className={`
-                      flex items-center justify-center h-7 w-7 rounded-full text-xs font-mono transition-all duration-300
+                      flex items-center justify-center h-7 w-7 rounded-full text-xs font-mono transition-colors duration-300
                       ${
                         done
                           ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
@@ -669,7 +669,7 @@ export function OnboardingClient(props: OnboardingClientProps) {
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
-                      className="flex-1 gap-2 border-emerald-200/70 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 dark:border-emerald-800/50 dark:text-emerald-400 dark:hover:bg-emerald-950/30 dark:hover:border-emerald-700 transition-all"
+                      className="flex-1 gap-2 border-emerald-200/70 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 dark:border-emerald-800/50 dark:text-emerald-400 dark:hover:bg-emerald-950/30 dark:hover:border-emerald-700 transition-[border-color,background,color]"
                       onClick={(e) => {
                         e.stopPropagation();
                         marcarCompletado(step.id);

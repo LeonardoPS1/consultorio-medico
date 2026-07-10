@@ -98,7 +98,7 @@ export function AsistenteFAB() {
       </AnimatePresence>
 
       {/* ─── Tooltip (desktop) ─────────────────────────────── */}
-      <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 hidden items-center gap-1.5 rounded-lg border border-border/50 bg-popover/90 backdrop-blur-sm px-2.5 py-1.5 text-xs font-medium text-popover-foreground shadow-sm opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0 sm:flex">
+      <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 hidden items-center gap-1.5 rounded-lg border border-border/50 bg-popover/90 backdrop-blur-sm px-2.5 py-1.5 text-xs font-medium text-popover-foreground shadow-sm opacity-0 transition-[opacity,transform] group-hover:opacity-100 group-hover:translate-x-0 sm:flex">
         <Sparkles className="h-3 w-3 text-indigo-500" />
         Asistente IA
         <kbd className="ml-0.5 rounded border border-border/50 bg-muted/50 px-1 font-mono text-[9px] text-muted-foreground">

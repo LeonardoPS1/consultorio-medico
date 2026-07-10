@@ -49,11 +49,11 @@ export function Gallery() {
             <button
               key={s.id}
               onClick={() => setActive(s.id)}
-              className={`px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 btn-press ${
-                active === s.id
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-              }`}
+className={`px-3.5 py-2 rounded-lg text-xs font-medium transition-colors duration-200 btn-press ${
+                 active === s.id
+                   ? 'bg-primary text-primary-foreground shadow-sm'
+                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+               }`}
             >
               {s.label}
             </button>

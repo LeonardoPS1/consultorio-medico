@@ -26,7 +26,7 @@ export function PortalLogoutButton() {
       className="relative h-8 w-8 rounded-xl flex items-center justify-center
         text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400
         hover:bg-red-50 dark:hover:bg-red-950/30
-        transition-all duration-200 active:scale-90 disabled:opacity-50"
+        transition-transform duration-200 active:scale-90 disabled:opacity-50"
       aria-label="Cerrar sesión"
       title="Cerrar sesión"
     >
