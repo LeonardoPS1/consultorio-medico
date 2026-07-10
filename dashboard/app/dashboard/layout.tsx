@@ -9,6 +9,10 @@ import { AsistenteProvider } from '@/lib/hooks/use-asistente-ia';
 import { GatedContent } from '@/components/gated-content';
 import { PageTransition } from '@/components/dashboard/page-transition';
 import { ClientThemeProvider } from '@/components/client-theme-provider';
+import { LayoutConfigProvider } from '@/lib/layout-config';
+import { DashboardLayoutClient } from '@/components/dashboard/dashboard-layout-client';
+import { MainContent } from '@/components/dashboard/main-content';
+import { SidebarProvider } from '@/components/layout/sidebar-context';
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,8 +26,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <ClientThemeProvider>
+      <SidebarProvider>
+      <LayoutConfigProvider>
       <PatientPanelProvider>
         <AsistenteProvider>
+        <DashboardLayoutClient>
         <div className="flex h-screen overflow-hidden bg-background">
           <div className="ambient-bg" />
           <Sidebar />
@@ -31,38 +38,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <Header />
             <CommandPalette />
             <PatientPanel />
-            <main id="main-content" className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
+            <MainContent>
               <Suspense fallback={<MainSkeleton />}>
                 <PageTransition>
                   <GatedContent>{children}</GatedContent>
                 </PageTransition>
               </Suspense>
-            </main>
-            {/* Footer compacto */}
-            <footer className="flex items-center justify-between border-t px-3 sm:px-4 lg:px-6 py-2.5 sm:py-2 text-[11px] text-muted-foreground/60">
-              <span>
-                © {new Date().getFullYear()} {process.env.NEXT_PUBLIC_TENANT_NAME || 'AiCoreMed'}
-              </span>
-              <span className="flex items-center gap-3">
-                <a
-                  href={process.env.NEXT_PUBLIC_REPO_URL || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hidden sm:inline hover:text-foreground transition-colors"
-                  title="Código fuente en GitHub"
-                >
-                  GitHub
-                </a>
-                <span className="hidden sm:inline">
-                  v{process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'}
-                </span>
-              </span>
-            </footer>
+            </MainContent>
           </div>
         </div>
         <AsistenteFlotante />
+        </DashboardLayoutClient>
         </AsistenteProvider>
       </PatientPanelProvider>
+      </LayoutConfigProvider>
+      </SidebarProvider>
     </ClientThemeProvider>
   );
 }

@@ -22,6 +22,7 @@ import { getInitials, formatRelative } from '@/lib/utils';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import { useSucursal } from '@/lib/sucursal-context';
 import { usePatientPanel } from '@/lib/hooks/use-patient-panel';
+import { useLayoutConfig } from '@/lib/layout-config';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +42,7 @@ export function Header() {
   const router = useRouter();
   const { sucursalId: activeSucursalId, sucursales, setSucursalId, hasMultiple } = useSucursal();
   const { open: openPatientPanel } = usePatientPanel();
+  const { config } = useLayoutConfig();
   const [mounted, setMounted] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
@@ -98,9 +100,24 @@ export function Header() {
       ? (nameParts[0].charAt(0) + nameParts[1].charAt(0)).toUpperCase()
       : nameParts[0].charAt(0).toUpperCase();
 
+  const isMinimal = config.headerMode === 'minimal';
+
   return (
     <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border/60 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 px-3 sm:px-4 lg:px-6">
       <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 min-w-0">
+        {isMinimal ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 shrink-0"
+            onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
+            title="Menú"
+            aria-label="Abrir menú"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        ) : (
+          <>
         {/* Hamburger — mobile only */}
         <Button
           variant="ghost"
@@ -172,7 +189,6 @@ export function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-      </div>
 
       <div className="flex items-center gap-1 sm:gap-2">
         {/* Command Palette trigger */}
@@ -306,6 +322,9 @@ export function Header() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
+          </>
+        )}
       </div>
     </header>
   );

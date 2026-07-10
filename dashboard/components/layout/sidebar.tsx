@@ -9,10 +9,11 @@ import { Logo } from '@/components/layout/logo';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { ChevronLeft, ChevronRight, LogOut, X } from 'lucide-react';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
+import { useSidebar } from '@/components/layout/sidebar-context';
 
 export function Sidebar() {
   const { data: session, status } = useSession();
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, setCollapsed } = useSidebar();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
   const [onboardingPending, setOnboardingPending] = useState(false);
