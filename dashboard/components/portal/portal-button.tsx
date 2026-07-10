@@ -7,6 +7,7 @@
 import { cn } from '@/lib/utils';
 import { type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
+import { playClick } from '@/lib/sound';
 
 interface PortalButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -33,11 +34,16 @@ export function PortalButton({
   disabled,
   style,
   className,
+  onClick,
   ...rest
 }: PortalButtonProps) {
   return (
     <button
       {...rest}
+      onClick={(e) => {
+        playClick();
+        onClick?.(e);
+      }}
       disabled={disabled || loading}
       className={cn(
         'active:scale-[0.97]',

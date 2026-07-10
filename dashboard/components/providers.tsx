@@ -7,6 +7,7 @@ import { FeatureFlagsProvider, UserFeatureOverridesProvider } from '@/lib/featur
 import { SucursalProvider } from '@/lib/sucursal-context';
 import { UpdateProvider } from '@/lib/update-context';
 import { SmartTooltipProvider } from '@/components/ui/smart-tooltip';
+import { SoundProvider } from '@/components/sound-provider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -29,7 +30,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <SucursalProvider>
               <UpdateProvider>
               <SmartTooltipProvider>
+              <SoundProvider>
                 {children}
+              </SoundProvider>
               </SmartTooltipProvider>
             </UpdateProvider>
             </SucursalProvider>

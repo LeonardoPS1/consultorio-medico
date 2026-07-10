@@ -1,4 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { playNotification } from '@/lib/sound';
 
 // ============================================================
 // Tipos
@@ -300,6 +302,15 @@ export function useNotifications() {
   };
 
   const noLeidasVisibles = Object.values(conteoPorTipoVisible).reduce((a, b) => a + b, 0);
+
+  // Sound effect on new notifications
+  const prevNoLeidas = useRef(noLeidas);
+  useEffect(() => {
+    if (noLeidas > prevNoLeidas.current && prevNoLeidas.current > 0) {
+      playNotification();
+    }
+    prevNoLeidas.current = noLeidas;
+  }, [noLeidas]);
 
   return {
     // Datos

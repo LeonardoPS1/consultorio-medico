@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { canAccess } from '@/lib/features';
 import { MedicosSection } from '@/components/config/medicos-section';
+import { useSound } from '@/components/sound-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -117,6 +118,7 @@ function ConfigContent() {
   const [previewPlantilla, setPreviewPlantilla] = useState<PlantillaWhatsApp | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [activeTab, setActiveTab] = useState(tabFromUrl);
+  const { enabled: soundEnabled, toggle: toggleSound } = useSound();
   const [horarios, setHorarios] = useState<HorarioData[]>([]);
   const [notificaciones, setNotificaciones] = useState<NotifData | null>(null);
   const [miembrosEquipo, setMiembrosEquipo] = useState<MiembroEquipo[]>([]);
@@ -669,6 +671,12 @@ function ConfigContent() {
                       onCheckedChange={(v) =>
                         setNotificaciones({ ...notificaciones, nuevosPacientes: v })
                       }
+                    />
+                    <SwitchRow
+                      label="Efectos de sonido"
+                      description="Reproducir sonidos al hacer clic, recibir notificaciones y navegar"
+                      checked={soundEnabled}
+                      onCheckedChange={toggleSound}
                     />
                     <div className="pt-3">
                       <Label>WhatsApp personal para urgencias</Label>

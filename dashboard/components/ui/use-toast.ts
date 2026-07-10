@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import type { ToastActionElement, ToastProps } from '@/components/ui/toast';
+import { playSuccess, playError, playClick } from '@/lib/sound';
 
 const TOAST_LIMIT = 5;
 const TOAST_REMOVE_DELAY = 5000;
@@ -154,6 +155,15 @@ function toast({ ...props }: Toast) {
       },
     },
   });
+
+  // Sound feedback basado en variant del toast
+  if (props.variant === 'destructive') {
+    playError();
+  } else if (props.variant === 'success') {
+    playSuccess();
+  } else {
+    playClick();
+  }
 
   return {
     id: id,

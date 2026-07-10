@@ -4,11 +4,23 @@ import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { playModalOpen, playModalClose } from '@/lib/sound';
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogPortal = DialogPrimitive.Portal;
 const DialogClose = DialogPrimitive.Close;
+
+const DialogWithSound = ({ onOpenChange, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) => (
+  <DialogPrimitive.Root
+    onOpenChange={(open) => {
+      if (open) playModalOpen();
+      else playModalClose();
+      onOpenChange?.(open);
+    }}
+    {...props}
+  />
+);
 
 const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
@@ -87,7 +99,7 @@ const DialogDescription = React.forwardRef<
 DialogDescription.displayName = DialogPrimitive.Description.displayName;
 
 export {
-  Dialog,
+  DialogWithSound as Dialog,
   DialogPortal,
   DialogOverlay,
   DialogClose,

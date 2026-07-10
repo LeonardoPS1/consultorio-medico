@@ -2,6 +2,8 @@
 
 import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useRef } from 'react';
+import { playNavigate } from '@/lib/sound';
 
 const pageVariants = {
   initial: { opacity: 0, y: 6 },
@@ -19,6 +21,14 @@ const pageVariants = {
 
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const prevPathname = useRef(pathname);
+
+  useEffect(() => {
+    if (prevPathname.current !== pathname) {
+      playNavigate();
+      prevPathname.current = pathname;
+    }
+  }, [pathname]);
 
   return (
     <AnimatePresence mode="popLayout">

@@ -5,11 +5,23 @@ import * as SheetPrimitive from '@radix-ui/react-dialog';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { playModalOpen, playModalClose } from '@/lib/sound';
 
-const Sheet = SheetPrimitive.Root;
+const SheetPrimitiveRoot = SheetPrimitive.Root;
 const SheetTrigger = SheetPrimitive.Trigger;
 const SheetClose = SheetPrimitive.Close;
 const SheetPortal = SheetPrimitive.Portal;
+
+const SheetRoot = ({ onOpenChange, ...props }: React.ComponentPropsWithoutRef<typeof SheetPrimitive.Root>) => (
+  <SheetPrimitiveRoot
+    onOpenChange={(open) => {
+      if (open) playModalOpen();
+      else playModalClose();
+      onOpenChange?.(open);
+    }}
+    {...props}
+  />
+);
 const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
@@ -107,7 +119,7 @@ const SheetDescription = React.forwardRef<
 SheetDescription.displayName = SheetPrimitive.Description.displayName;
 
 export {
-  Sheet,
+  SheetRoot as Sheet,
   SheetPortal,
   SheetOverlay,
   SheetTrigger,
