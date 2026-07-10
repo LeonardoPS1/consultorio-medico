@@ -49,7 +49,7 @@ RUN corepack enable && corepack prepare pnpm@9 --activate && pnpm build
 # Next.js standalone output con pnpm genera package.json pero node_modules vacío.
 # Usamos npm ci --production --ignore-scripts dentro del standalone para poblarlo.
 WORKDIR /app/dashboard/.next/standalone
-RUN npm ci --production --ignore-scripts --prefer-offline 2>/dev/null || npm install --production --ignore-scripts
+RUN npm install --production --ignore-scripts --legacy-peer-deps
 WORKDIR /app
 
 # No necesitamos tar: Docker COPY --from=builder sigue symlinks automáticamente.
