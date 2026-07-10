@@ -2,7 +2,7 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 28/06/2026
+**Última actualización:** 10/07/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
@@ -61,7 +61,7 @@
   - `projects/consultorio-medico.md` — Contexto del proyecto
   - `session-log.md` — Historial de sesiones
   - `audit-consultorio-medico.md` — Auditoría técnica detallada
-- **Skills cargadas**: 11 skills disponibles (ver sección Skills).
+- **Skills cargadas**: 17 skills disponibles (ver sección Skills).
 - **Antes de `compress`**: Siempre ejecutar `/handoff` + actualizar memorias.
 - **Al iniciar sesión**: Cargar contexto del proyecto + session-log + audit block.
 
@@ -79,6 +79,12 @@
 | **design-taste-frontend** | Perfil de diseño frontend |
 | **emil-design-eng** | UI polish, animaciones, detalles invisibles |
 | **impeccable** | Auditoría de código, enforce de estándares |
+| **web-design-guidelines** | Revisión de UI contra Web Interface Guidelines (Vercel) |
+| **ui-ux-pro-max** | UI/UX patterns, 58 reglas de diseño, best practices |
+| **huashu-design** | Sistema de diseño visual, tokens, animaciones, glassmorphism |
+| **frontend-patterns** | Patrones React/Next.js, state, performance |
+| **graphify** | Knowledge graph del codebase, queries, path/explain |
+| **n8n-cli** | Interactuar con n8n CLI, workflows, credenciales |
 
 ---
 
@@ -600,6 +606,17 @@ consultorio-medico/
 | **Dashboard analytics** | Reportes con 4 tabs (ingresos, turnos, pacientes, recetas), 6 charts Recharts, predicción demanda | 03/07 |
 | **Alertas inteligentes** | 4 detectores: cumpleaños, ausentismo recurrente, pacientes críticos, score alto. `alertas-inteligentes.ts` | 03/07 |
 | **Sistema de derivaciones** | Tabla DB `derivaciones`, CRUD completo, UI en sidebar, feature gated | 03/07 |
+| **Historial expandido** | Página standalone con search cross-pacientes, filtro tipo, paginación, iconos por tipo, sidebar entry. 15 tipos de historial. Commit `6dabbbe` | 03/07 |
+| **Fix Ollama puerto 11434** | Agregado `ports: ["11434:11434"]` al compose de Ollama vía Dokploy API. Redeploy completado. | 10/07 |
+| **Mejoras UI low-effort (5 items)** | Skip-to-content link, page transitions framer-motion, 8 portal spinners→skeletons, 22+ aria-labels, custom easing en toasts. Commit `fa5b4ab` | 10/07 |
+| **Mejoras UI medium-effort (4 items)** | Portal inline styles→Tailwind (156), split sidebar (531→150+250), split header (592→340+268), transition-all→específicas (31+ files). Commit `01f0455` | 10/07 |
+| **28 aria-labels adicionales** | Icon buttons en paciente-detalle, configuracion, api-keys, backups, medicos, bloqueos, onboarding, lista-espera. Commit `bed9c23` | 10/07 |
+| **Tooltips con delay inteligente** | `@radix-ui/react-tooltip`, `tooltip.tsx`, `smart-tooltip.tsx` con SmartTooltipProvider (delay=500ms, skip=300ms), integrado en providers. Commit `ac58e8f` | 10/07 |
+| **Portal design system unify** | PortalButton/Badge/Card refactored de inline styles a Tailwind. ~29 inline style declarations removed. Commit `ac58e8f` | 10/07 |
+| **Dark mode portal polish** | 3 semantic colors (destructive/success/warning) con dark overrides. PushNotificationToggle refactored a portal tokens. Commit `ac58e8f` | 10/07 |
+| **Glassmorphism layer** | CSS variables + utility classes (glass-sm/md/lg), ambient orbs, aplicado a Card/Dialog/Sheet/KPIs. Commit `25394cf` | 10/07 |
+| **Layout variations system** | LayoutConfigProvider (default/wide/centered/minimal), SidebarContext, DashboardLayoutClient, MainContent, PageLayout. Commit `e04f970` | 10/07 |
+| **Storybook con Vite 5** | 5 stories (Button 12, Card 3, Badge 5, Skeleton 4, Tooltip 2), @alias resolve, globals.css. Commit `a77b82d` | 10/07 |
 
 ### 🟡 Prioridad Media
 
@@ -704,6 +721,12 @@ Ubicadas en `.opencode/skills/`. Se cargan con `skill` tool.
 | **design-taste-frontend** | `.opencode/skills/taste-skill/SKILL.md` | Perfil de diseño frontend |
 | **emil-design-eng** | `.opencode/skills/emil-design-eng/SKILL.md` | UI polish, animaciones, detalles |
 | **impeccable** | `.opencode/skills/impeccable/SKILL.md` | Auditoría de código, enforce estándares |
+| **web-design-guidelines** | `.opencode/skills/web-design-guidelines/SKILL.md` | Revisión de UI contra Web Interface Guidelines (Vercel) |
+| **ui-ux-pro-max** | `.opencode/skills/ui-ux-pro-max/SKILL.md` | UI/UX patterns, 58 reglas de diseño, best practices |
+| **huashu-design** | `.opencode/skills/huashu-design/SKILL.md` | Sistema de diseño visual, tokens, animaciones, glassmorphism |
+| **frontend-patterns** | `.opencode/skills/frontend-patterns/SKILL.md` | Patrones React/Next.js, state, performance |
+| **graphify** | `.opencode/skills/graphify/SKILL.md` | Knowledge graph del codebase, queries, path/explain |
+| **n8n-cli** | `.opencode/skills/n8n-cli/SKILL.md` | Interactuar con n8n CLI, workflows, credenciales |
 
 ### Plugins OpenCode Instalados (12)
 - `opencode-agent-memory` — Memoria persistente entre sesiones
@@ -736,6 +759,10 @@ cd dashboard && npx drizzle-kit generate  # Generar migración
 # n8n
 node scripts/deploy-workflows.js --activate  # Deploy workflows a n8n
 node scripts/deploy-workflows.js --dry-run   # Simular deploy
+
+# Storybook
+cd dashboard && npx storybook dev -p 6006    # Iniciar Storybook local
+cd dashboard && npx storybook build          # Build estático para deploy
 
 # Git
 git add . && git commit -m "tipo(scope): mensaje" && git push
