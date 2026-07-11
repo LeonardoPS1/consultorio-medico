@@ -437,7 +437,7 @@ consultorio-medico/
 |-----------|-------|
 | **Archivo** | `n8n-workflows/current/workflow-11-novedades.json` |
 | **Trigger** | Webhook (GitHub Push) → `POST /webhook/novedades-generar` |
-| **Estado** | ⏸️ **INACTIVO** (pendiente conectar webhook GitHub) |
+| **Estado** | ✅ **ACTIVO** |
 | **Nodos** | 5 (webhook, httpRequest, IF, noOp×2) |
 
 **Flujo:**

@@ -14,12 +14,25 @@ const tenantName = process.env.NEXT_PUBLIC_TENANT_NAME || 'AiCoreMed';
 const themeColor = process.env.NEXT_PUBLIC_TENANT_PRIMARY || '#2563eb';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://med.aicorebots.com'),
   title: {
     default: `${tenantName} | Dashboard`,
     template: `%s | ${tenantName}`,
   },
   description: 'Sistema de gestión para consultorios médicos con IA',
   manifest: '/manifest.webmanifest',
+  openGraph: {
+    type: 'website',
+    locale: 'es_CL',
+    siteName: tenantName,
+    title: `${tenantName} | Dashboard`,
+    description: 'Sistema de gestión para consultorios médicos con IA',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${tenantName} | Dashboard`,
+    description: 'Sistema de gestión para consultorios médicos con IA',
+  },
   icons: {
     icon: [
       { url: '/icons/icon-192x192.svg', type: 'image/svg+xml' },

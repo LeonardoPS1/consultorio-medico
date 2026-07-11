@@ -10,7 +10,7 @@ import { apiHandler, created } from '@/lib/api-handler';
 import { parseBody } from '@/lib/validations';
 import { createTurnoSchema } from '@/lib/validations';
 import { turnosService } from '@/lib/services/turnos';
-import { auth } from '@/lib/auth';
+import { requireAuth } from '@/lib/api-auth';
 import { db } from '@/lib/db';
 import { pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
@@ -18,7 +18,7 @@ import { buildGCalPayload } from '@/lib/google-calendar-sync';
 import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
 
 export const GET = apiHandler(async (request: NextRequest) => {
-  const session = await auth();
+  const session = await requireAuth();
   const sessionMedicoId = session?.user?.medicoId;
   const sessionRol = session?.user?.role;
 

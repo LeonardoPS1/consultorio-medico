@@ -31,6 +31,16 @@ import {
   Sparkles,
 } from 'lucide-react';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -116,6 +126,7 @@ function ConfigContent() {
   const [showPlantillaModal, setShowPlantillaModal] = useState(false);
   const [editingPlantilla, setEditingPlantilla] = useState<PlantillaWhatsApp | null>(null);
   const [previewPlantilla, setPreviewPlantilla] = useState<PlantillaWhatsApp | null>(null);
+  const [deletingPlantilla, setDeletingPlantilla] = useState<PlantillaWhatsApp | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [activeTab, setActiveTab] = useState(tabFromUrl);
   const { enabled: soundEnabled, toggle: toggleSound } = useSound();
@@ -554,19 +565,7 @@ function ConfigContent() {
                                   size="icon"
                                   aria-label="Eliminar plantilla"
                                   className="h-8 w-8 text-destructive"
-                                  onClick={async () => {
-                                    if (confirm('¿Eliminar plantilla?')) {
-                                      await fetch('/api/plantillas', {
-                                        method: 'DELETE',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ id: plantilla.id }),
-                                      });
-                                      setPlantillas((prev) =>
-                                        prev.filter((p) => p.id !== plantilla.id),
-                                      );
-                                      toast({ title: 'Plantilla eliminada' });
-                                    }
-                                  }}
+                                  onClick={() => setDeletingPlantilla(plantilla)}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -620,6 +619,41 @@ function ConfigContent() {
               plantilla={previewPlantilla}
               onClose={() => setPreviewPlantilla(null)}
             />
+
+            {/* Confirmar eliminar plantilla */}
+            <AlertDialog
+              open={!!deletingPlantilla}
+              onOpenChange={(open) => { if (!open) setDeletingPlantilla(null); }}
+            >
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Eliminar plantilla?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta acción no se puede deshacer. Se eliminará la plantilla "{deletingPlantilla?.nombre}".
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={async () => {
+                      if (!deletingPlantilla) return;
+                      await fetch('/api/plantillas', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: deletingPlantilla.id }),
+                      });
+                      setPlantillas((prev) =>
+                        prev.filter((p) => p.id !== deletingPlantilla.id),
+                      );
+                      toast({ title: 'Plantilla eliminada' });
+                      setDeletingPlantilla(null);
+                    }}
+                  >
+                    Eliminar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </TabsContent>
         )}
 

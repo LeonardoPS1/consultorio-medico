@@ -114,33 +114,30 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    timeoutRef.current = setTimeout(() => {
-      const isapreValue = sistemaSalud === 'isapre' ? isapreNombre : undefined;
-      onSubmit?.({
-        nombre,
-        apellido,
-        telefono: formatTelefonoChile(telefono),
-        email,
-        dni: dni.trim() || null,
-        obraSocial: isapreValue || sistemaSalud || 'Particular',
-        sistemaSalud,
-        isapreNombre: isapreValue,
-        regionId: regionId || undefined,
-        comunaId: comunaId || undefined,
-      });
-      setLoading(false);
-      onOpenChange(false);
-      setNombre('');
-      setApellido('');
-      setTelefono('');
-      setEmail('');
-      setDni('');
-      setSistemaSalud('particular');
-      setIsapreNombre('');
-      setRegionId('');
-      setComunaId('');
-    }, 300);
+    const isapreValue = sistemaSalud === 'isapre' ? isapreNombre : undefined;
+    onSubmit?.({
+      nombre,
+      apellido,
+      telefono: formatTelefonoChile(telefono),
+      email,
+      dni: dni.trim() || null,
+      obraSocial: isapreValue || sistemaSalud || 'Particular',
+      sistemaSalud,
+      isapreNombre: isapreValue,
+      regionId: regionId || undefined,
+      comunaId: comunaId || undefined,
+    });
+    setLoading(false);
+    onOpenChange(false);
+    setNombre('');
+    setApellido('');
+    setTelefono('');
+    setEmail('');
+    setDni('');
+    setSistemaSalud('particular');
+    setIsapreNombre('');
+    setRegionId('');
+    setComunaId('');
   };
 
   return (
