@@ -168,8 +168,7 @@ export default function PortalLogin() {
   if (step === 'sent') {
     return (
       <div
-        className="min-h-screen flex items-center justify-center p-4"
-        style={{ background: 'hsl(var(--portal-bg))' }}
+        className="min-h-screen flex items-center justify-center p-4 portal-layout"
       >
         <motion.div
           key="sent"
@@ -183,27 +182,23 @@ export default function PortalLogin() {
               variants={springPop}
               initial="initial"
               animate="animate"
-              className="inline-flex items-center justify-center h-20 w-20 rounded-full mb-6"
-              style={{ background: 'hsl(var(--portal-primary) / 0.1)' }}
+              className="inline-flex items-center justify-center h-20 w-20 rounded-full mb-6 bg-portal-primary/10"
             >
               <CheckCircle
-                className="h-10 w-10"
-                style={{ color: 'hsl(var(--portal-primary))' }}
+                className="h-10 w-10 text-portal-primary"
               />
             </motion.div>
 
             <h1
-              className="text-2xl font-bold mb-2"
-              style={{ color: 'hsl(var(--portal-foreground))' }}
+              className="text-2xl font-bold mb-2 text-portal-fg"
             >
               Enlace enviado
             </h1>
             <p
-              className="mb-6 leading-relaxed"
-              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+              className="mb-6 leading-relaxed text-portal-muted-fg"
             >
               Te enviamos un enlace de acceso por WhatsApp al número{' '}
-              <strong style={{ color: 'hsl(var(--portal-foreground))' }}>
+              <strong className="text-portal-fg">
                 {telefono}
               </strong>
               .
@@ -211,14 +206,12 @@ export default function PortalLogin() {
 
             <PortalCard padding="md" className="mb-6 text-left">
               <p
-                className="text-sm font-medium mb-1"
-                style={{ color: 'hsl(var(--portal-foreground))' }}
+                className="text-sm font-medium mb-1 text-portal-fg"
               >
                 ¿No te llega el mensaje?
               </p>
               <p
-                className="text-xs"
-                style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+                className="text-xs text-portal-muted-fg"
               >
                 Verifica que el número ingresado sea el mismo que registraste en
                 el consultorio. Si el problema persiste, contáctanos por WhatsApp.
@@ -226,8 +219,7 @@ export default function PortalLogin() {
               </PortalCard>
 
             <p
-              className="text-sm mb-6"
-              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+              className="text-sm mb-6 text-portal-muted-fg"
             >
               El enlace expira en <strong>10 minutos</strong> y solo funciona una
               vez.
@@ -252,21 +244,17 @@ export default function PortalLogin() {
   return (
     <div
       className="min-h-screen flex flex-col relative overflow-hidden portal-layout"
-      style={{ background: 'hsl(var(--portal-bg))' }}
     >
       {/* Ambient gradient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl"
-          style={{ background: 'hsl(var(--portal-primary) / 0.06)' }}
+          className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl bg-portal-primary/6"
         />
         <div
-          className="absolute -bottom-40 -left-40 w-[30rem] h-[30rem] rounded-full blur-3xl"
-          style={{ background: 'hsl(var(--portal-accent) / 0.05)' }}
+          className="absolute -bottom-40 -left-40 w-[30rem] h-[30rem] rounded-full blur-3xl bg-portal-accent/5"
         />
         <div
-          className="absolute top-1/3 left-1/4 w-80 h-80 rounded-full blur-3xl"
-          style={{ background: 'hsl(var(--portal-primary) / 0.03)' }}
+          className="absolute top-1/3 left-1/4 w-80 h-80 rounded-full blur-3xl bg-portal-primary/3"
         />
       </div>
 
@@ -288,25 +276,17 @@ export default function PortalLogin() {
                     variants={springPop}
                     initial="initial"
                     animate="animate"
-                    className="inline-flex items-center justify-center h-16 w-16 rounded-2xl mb-5 shadow-lg"
-                    style={{
-                      background:
-                        'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
-                      boxShadow:
-                        '0 4px 20px hsl(var(--portal-primary) / 0.2), 0 1px 4px hsl(var(--portal-primary) / 0.1)',
-                    }}
+                    className="inline-flex items-center justify-center h-16 w-16 rounded-2xl mb-5 bg-portal-gradient-strong shadow-lg"
                   >
                     <HeartPulse className="h-8 w-8 text-white" />
                   </motion.div>
                   <h1
-                    className="text-3xl font-bold mb-1 tracking-tight"
-                    style={{ color: 'hsl(var(--portal-foreground))' }}
+                    className="text-3xl font-bold mb-1 tracking-tight text-portal-fg"
                   >
                     Portal Salud
                   </h1>
                   <p
-                    className="text-sm font-medium tracking-wide"
-                    style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+                    className="text-sm font-medium tracking-wide text-portal-muted-fg"
                   >
                     Tu salud, siempre contigo
                   </p>
@@ -323,34 +303,20 @@ export default function PortalLogin() {
                     >
                       <PortalCard className="flex items-start gap-3" padding="md">
                         <div
-                          className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                          style={{
-                            background:
-                              'hsl(var(--portal-primary) / 0.1)',
-                          }}
+                          className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-portal-primary/10"
                         >
                           <b.icon
-                            className="h-5 w-5"
-                            style={{
-                              color: 'hsl(var(--portal-primary))',
-                            }}
+                            className="h-5 w-5 text-portal-primary"
                           />
                         </div>
                         <div>
                           <p
-                            className="font-medium text-sm"
-                            style={{
-                              color: 'hsl(var(--portal-foreground))',
-                            }}
+                            className="font-medium text-sm text-portal-fg"
                           >
                             {b.titulo}
                           </p>
                           <p
-                            className="text-xs"
-                            style={{
-                              color:
-                                'hsl(var(--portal-muted-foreground))',
-                            }}
+                            className="text-xs text-portal-muted-fg"
                           >
                             {b.desc}
                           </p>
@@ -360,7 +326,7 @@ export default function PortalLogin() {
                   ))}
                 </div>
 
-                <PortalButton variant="primary" fullWidth onClick={() => setStep('form')} style={{ height: '3rem', fontSize: '1rem' }}>
+                <PortalButton variant="primary" fullWidth onClick={() => setStep('form')} className="!h-12 !text-base">
                   <span className="flex items-center justify-center gap-2">
                     Ingresar al Portal
                     <ArrowRight className="h-5 w-5" />
@@ -368,10 +334,7 @@ export default function PortalLogin() {
                 </PortalButton>
 
                 <p
-                  className="mt-4 text-xs"
-                  style={{
-                    color: 'hsl(var(--portal-muted-foreground) / 0.6)',
-                  }}
+                  className="mt-4 text-xs text-portal-muted-fg/60"
                 >
                   Acceso seguro mediante enlace por WhatsApp
                 </p>
@@ -387,16 +350,12 @@ export default function PortalLogin() {
               >
                 <PortalCard padding="lg" className="text-left">
                   <h2
-                    className="text-xl font-bold mb-1"
-                    style={{ color: 'hsl(var(--portal-foreground))' }}
+                    className="text-xl font-bold mb-1 text-portal-fg"
                   >
                     Ingresa al Portal
                   </h2>
                   <p
-                    className="text-sm mb-6"
-                    style={{
-                      color: 'hsl(var(--portal-muted-foreground))',
-                    }}
+                    className="text-sm mb-6 text-portal-muted-fg"
                   >
                     Recibe un enlace mágico por WhatsApp
                   </p>
@@ -406,12 +365,7 @@ export default function PortalLogin() {
                       <motion.div
                         initial={{ opacity: 0, maxHeight: 0 }}
                         animate={{ opacity: 1, maxHeight: 200 }}
-                        className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm overflow-hidden"
-                        style={{
-                          color: 'hsl(var(--portal-destructive))',
-                          background:
-                            'hsl(var(--portal-destructive) / 0.1)',
-                        }}
+                        className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm overflow-hidden text-portal-destructive bg-portal-destructive/10"
                       >
                         <AlertCircle className="h-4 w-4 shrink-0" />
                         {error}
@@ -420,46 +374,20 @@ export default function PortalLogin() {
 
                     <div>
                       <label
-                        className="block text-sm font-medium mb-1.5"
-                        style={{
-                          color: 'hsl(var(--portal-foreground))',
-                        }}
+                        className="block text-sm font-medium mb-1.5 text-portal-fg"
                       >
                         Número de teléfono
                       </label>
                       <div className="relative">
                         <Phone
-                          className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4"
-                          style={{
-                            color:
-                              'hsl(var(--portal-muted-foreground) / 0.5)',
-                          }}
+                          className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-portal-muted-fg/50"
                         />
                         <input
                           type="tel"
                           value={telefono}
                           onChange={(e) => setTelefono(e.target.value)}
                           placeholder="+56 9 1234 5678"
-                          className="w-full pl-10 pr-4 py-3 rounded-xl text-base outline-none transition-[border-color,box-shadow]"
-                          style={{
-                            border:
-                              '1px solid hsl(var(--portal-border))',
-                            background:
-                              'hsl(var(--portal-muted) / 0.4)',
-                            color:
-                              'hsl(var(--portal-foreground))',
-                          }}
-                          onFocus={(e) => {
-                            e.currentTarget.style.borderColor =
-                              'hsl(var(--portal-primary) / 0.5)';
-                            e.currentTarget.style.boxShadow =
-                              '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
-                          }}
-                          onBlur={(e) => {
-                            e.currentTarget.style.borderColor =
-                              'hsl(var(--portal-border))';
-                            e.currentTarget.style.boxShadow = 'none';
-                          }}
+                          className="w-full pl-10 pr-4 py-3 rounded-xl text-base outline-none transition-[border-color,box-shadow] border border-portal-border bg-portal-muted/40 text-portal-fg focus:border-portal-primary/50 focus:shadow-[0_0_0_3px_hsl(var(--portal-primary)/0.1)]"
                           autoFocus
                           disabled={loading}
                         />
@@ -474,7 +402,7 @@ export default function PortalLogin() {
                     </PortalButton>
                   </form>
 
-                  <PortalButton variant="ghost" fullWidth onClick={() => setStep('landing')} style={{ marginTop: '1rem' }}>
+                  <PortalButton variant="ghost" fullWidth onClick={() => setStep('landing')} className="!mt-4">
                     ← Volver
                   </PortalButton>
                   </PortalCard>
@@ -494,16 +422,10 @@ export default function PortalLogin() {
                 className="mt-6"
               >
                 <div
-                  className="pt-5"
-                  style={{
-                    borderTop: '1px solid hsl(var(--portal-border-light))',
-                  }}
+                  className="pt-5 border-t border-portal-border-light"
                 >
                   <p
-                    className="text-xs text-center mb-3"
-                    style={{
-                      color: 'hsl(var(--portal-muted-foreground) / 0.5)',
-                    }}
+                    className="text-xs text-center mb-3 text-portal-muted-fg/50"
                   >
                     Modo desarrollo — acceso directo sin autenticación
                   </p>
@@ -524,8 +446,7 @@ export default function PortalLogin() {
           {!statusChecked && (
             <div className="mt-8 flex justify-center">
               <Loader2
-                className="h-5 w-5 animate-spin"
-                style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+                className="h-5 w-5 animate-spin text-portal-muted-fg"
               />
             </div>
           )}
@@ -535,8 +456,7 @@ export default function PortalLogin() {
       {/* Footer */}
       <div className="px-6 py-4 text-center relative z-10">
         <p
-          className="text-xs"
-          style={{ color: 'hsl(var(--portal-muted-foreground) / 0.5)' }}
+          className="text-xs text-portal-muted-fg/50"
         >
           Solo se muestran datos asociados a tu número registrado.
         </p>

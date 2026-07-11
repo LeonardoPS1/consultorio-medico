@@ -63,25 +63,25 @@ export default function PortalRecetasClient({ recetas }: Props) {
 
               <div className="grid grid-cols-2 gap-2 text-sm mb-3 text-portal-muted-fg">
                 <div>
-                  <span style={{ opacity: 0.6 }}>Dosis:</span>{' '}
+                  <span className="opacity-60">Dosis:</span>{' '}
                   <span className="font-medium text-portal-fg">
                     {r.dosis}
                   </span>
                 </div>
                 <div>
-                  <span style={{ opacity: 0.6 }}>Frecuencia:</span>{' '}
+                  <span className="opacity-60">Frecuencia:</span>{' '}
                   <span className="font-medium text-portal-fg">
                     {r.frecuencia}
                   </span>
                 </div>
                 <div>
-                  <span style={{ opacity: 0.6 }}>Duración:</span>{' '}
+                  <span className="opacity-60">Duración:</span>{' '}
                   <span className="font-medium text-portal-fg">
                     {r.duracion}
                   </span>
                 </div>
                 <div>
-                  <span style={{ opacity: 0.6 }}>Inicio:</span>{' '}
+                  <span className="opacity-60">Inicio:</span>{' '}
                   <span className="font-medium text-portal-fg">
                     {formatDate(r.fechaInicio)}
                   </span>

@@ -80,20 +80,11 @@ export default function PortalConsentimientosPage() {
 
       {msg && (
         <div
-          className="mb-4 p-3 rounded-lg text-sm"
-          style={
+          className={`mb-4 p-3 rounded-lg text-sm ${
             msg.type === 'success'
-              ? {
-                  background: 'hsl(var(--portal-primary) / 0.08)',
-                  color: 'hsl(var(--portal-primary))',
-                  border: '1px solid hsl(var(--portal-primary) / 0.25)',
-                }
-              : {
-                  background: 'hsl(var(--portal-destructive) / 0.08)',
-                  color: 'hsl(var(--portal-destructive))',
-                  border: '1px solid hsl(var(--portal-destructive) / 0.15)',
-                }
-          }
+              ? 'bg-portal-primary/10 text-portal-primary border border-portal-primary/25'
+              : 'bg-portal-destructive/10 text-portal-destructive border border-portal-destructive/15'
+          }`}
         >
           {msg.text}
         </div>
@@ -117,7 +108,7 @@ export default function PortalConsentimientosPage() {
               <PortalCard
                 key={c.id}
                 hover
-                style={firmado ? { border: '1px solid hsl(var(--portal-primary) / 0.3)' } : undefined}
+                className={firmado ? 'border-portal-primary/30' : ''}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">

@@ -120,11 +120,11 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
         </div>
 
         {/* Day names */}
-        <div className="grid grid-cols-7 gap-1 mb-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-1">
           {DAY_NAMES.map((name) => (
             <div
               key={name}
-              className="text-center text-[11px] font-medium text-muted-foreground py-1"
+              className="text-center text-[10px] sm:text-[11px] font-medium text-muted-foreground py-1"
             >
               {name}
             </div>
@@ -132,7 +132,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
         </div>
 
         {/* Days grid */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
           {weekDays.map((d) => {
             const dateStr = formatDate(d);
             const isToday = dateStr === formatDate(today);
@@ -144,7 +144,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
                 disabled={!canBook}
                 onClick={() => canBook && setSelectedDate(dateStr)}
                 className={cn(
-                  'relative rounded-lg text-center py-2 text-sm font-medium transition-all duration-150',
+                  'relative rounded-lg text-center py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all duration-150',
                   'active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                   isSelected && 'bg-primary text-primary-foreground shadow-sm',
                   !isSelected && canBook && 'hover:bg-accent hover:text-accent-foreground',
@@ -154,7 +154,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
               >
                 {d.getDate()}
                 {isToday && !isSelected && (
-                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary/60" />
+                  <span className="absolute bottom-0.5 sm:bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary/60" />
                 )}
               </button>
             );

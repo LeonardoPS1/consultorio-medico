@@ -120,27 +120,13 @@ export default function PortalTurnosClient({ turnos }: Props) {
       </h1>
 
       {error && (
-        <div
-          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm mb-4"
-          style={{
-            color: 'hsl(var(--portal-destructive))',
-            background: 'hsl(var(--portal-destructive) / 0.08)',
-            border: '1px solid hsl(var(--portal-destructive) / 0.15)',
-          }}
-        >
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm mb-4 text-portal-destructive bg-portal-destructive/10 border border-portal-destructive/15">
           <AlertCircle className="h-4 w-4 shrink-0" /> {error}
         </div>
       )}
 
       {successMsg && (
-        <div
-          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm mb-4"
-          style={{
-            color: 'hsl(var(--portal-primary))',
-            background: 'hsl(var(--portal-primary) / 0.08)',
-            border: '1px solid hsl(var(--portal-primary) / 0.15)',
-          }}
-        >
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm mb-4 text-portal-primary bg-portal-primary/10 border border-portal-primary/15">
           <span>{successMsg}</span>
         </div>
       )}
@@ -158,7 +144,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                 key={t.id}
                 padding="md"
                 hover
-                style={{ opacity: cancelados.has(t.id) ? 0.5 : 1 }}
+                className={cancelados.has(t.id) ? 'opacity-50' : ''}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
@@ -196,15 +182,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                           href={t.linkVideollamada}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors text-portal-primary bg-portal-primary/8"
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background =
-                              'hsl(var(--portal-primary) / 0.12)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background =
-                              'hsl(var(--portal-primary) / 0.08)';
-                          }}
+                          className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors text-portal-primary bg-portal-primary/8 hover:bg-portal-primary/12"
                         >
                           <Video className="h-3.5 w-3.5" />
                           Ingresar
@@ -265,7 +243,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                 key={t.id}
                 padding="sm"
                 hover
-                style={{ opacity: 0.8 }}
+                className="opacity-80"
               >
                 <div className="flex justify-between items-start gap-2">
                   <div className="min-w-0">

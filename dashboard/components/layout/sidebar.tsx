@@ -96,7 +96,7 @@ export function Sidebar() {
           'lg:relative lg:z-auto lg:transition-[width] lg:duration-300 lg:w-auto',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
           'lg:translate-x-0',
-          collapsed ? 'lg:w-16' : 'w-64',
+          collapsed ? 'lg:w-16' : 'lg:w-64',
         )}
       >
         <div className="flex h-32 lg:h-[172px] items-center justify-center px-2 border-b border-sidebar-muted relative">

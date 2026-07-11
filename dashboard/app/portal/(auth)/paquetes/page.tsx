@@ -80,12 +80,7 @@ export default function PaquetesPage() {
       </div>
 
       {suscripcionActiva && (
-        <PortalCard
-          style={{
-            background: 'hsl(var(--portal-primary) / 0.06)',
-            border: '1px solid hsl(var(--portal-primary) / 0.2)',
-          }}
-        >
+        <PortalCard className="bg-portal-primary/6 border border-portal-primary/20">
           <div className="flex items-center gap-3">
             <Package className="h-6 w-6 text-portal-primary" />
             <div>
@@ -95,7 +90,7 @@ export default function PaquetesPage() {
               </p>
             </div>
           </div>
-          <div className="mt-3 rounded-full h-2 overflow-hidden" style={{ background: 'hsl(var(--portal-primary) / 0.12)' }}>
+          <div className="mt-3 rounded-full h-2 overflow-hidden bg-portal-primary/12">
             <div
               className="h-full rounded-full"
               style={{
@@ -145,16 +140,9 @@ export default function PaquetesPage() {
         </div>
       )}
 
-      <PortalCard
-        className="text-sm"
-        style={{
-          background: 'hsl(var(--portal-primary) / 0.06)',
-          border: '1px solid hsl(var(--portal-primary) / 0.12)',
-          color: 'hsl(var(--portal-primary))',
-        }}
-      >
+      <PortalCard className="text-sm bg-portal-primary/6 border border-portal-primary/12 text-portal-primary">
         <p className="font-medium mb-1">💡 ¿Cómo funciona?</p>
-        <ul className="space-y-1" style={{ color: 'hsl(var(--portal-primary) / 0.8)' }}>
+        <ul className="space-y-1 text-portal-primary/80">
           <li>• Comprás un paquete y los turnos se acreditan automáticamente</li>
           <li>• Al agendar, podés usar un turno de tu paquete sin pagar extra</li>
           <li>• Los turnos del paquete no vencen (salvo que se indique lo contrario)</li>

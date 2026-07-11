@@ -18,14 +18,8 @@ export default function PortalVerify() {
   return (
     <Suspense
       fallback={
-        <div
-      className="portal-layout min-h-screen flex items-center justify-center p-4"
-      style={{ background: 'hsl(var(--portal-bg))' }}
-        >
-          <Loader2
-            className="h-10 w-10 animate-spin"
-            style={{ color: 'hsl(var(--portal-primary))' }}
-          />
+        <div className="portal-layout min-h-screen flex items-center justify-center p-4">
+          <Loader2 className="h-10 w-10 animate-spin text-portal-primary" />
         </div>
       }
     >
@@ -82,60 +76,29 @@ function PortalVerifyContent() {
   }, [searchParams, router]);
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4 portal-layout"
-      style={{ background: 'hsl(var(--portal-bg))' }}
-    >
+    <div className="min-h-screen flex items-center justify-center p-4 portal-layout">
       <PortalCard padding="lg" className="max-w-sm w-full text-center">
         {verifying ? (
           <>
-            <div
-              className="inline-flex items-center justify-center h-20 w-20 rounded-full mb-6"
-              style={{
-                background: 'hsl(var(--portal-primary) / 0.1)',
-              }}
-            >
-              <ShieldCheck
-                className="h-10 w-10 animate-pulse"
-                style={{ color: 'hsl(var(--portal-primary))' }}
-              />
+            <div className="inline-flex items-center justify-center h-20 w-20 rounded-full mb-6 bg-portal-primary/10">
+              <ShieldCheck className="h-10 w-10 animate-pulse text-portal-primary" />
             </div>
-            <p
-              className="text-base font-medium"
-              style={{ color: 'hsl(var(--portal-foreground))' }}
-            >
+            <p className="text-base font-medium text-portal-fg">
               Verificando acceso...
             </p>
             <div className="mt-6 flex justify-center">
-              <Loader2
-                className="h-6 w-6 animate-spin"
-                style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-              />
+              <Loader2 className="h-6 w-6 animate-spin text-portal-muted-fg" />
             </div>
           </>
         ) : (
           <>
-            <div
-              className="inline-flex items-center justify-center h-20 w-20 rounded-full mb-6"
-              style={{
-                background: 'hsl(var(--portal-destructive) / 0.1)',
-              }}
-            >
-              <AlertCircle
-                className="h-10 w-10"
-                style={{ color: 'hsl(var(--portal-destructive))' }}
-              />
+            <div className="inline-flex items-center justify-center h-20 w-20 rounded-full mb-6 bg-portal-destructive/10">
+              <AlertCircle className="h-10 w-10 text-portal-destructive" />
             </div>
-            <h1
-              className="text-xl font-bold mb-2"
-              style={{ color: 'hsl(var(--portal-foreground))' }}
-            >
+            <h1 className="text-xl font-bold mb-2 text-portal-fg">
               Enlace inválido
             </h1>
-            <p
-              className="text-sm mb-6"
-              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-            >
+            <p className="text-sm mb-6 text-portal-muted-fg">
               {error}
             </p>
             <PortalButton variant="primary" fullWidth onClick={() => router.push('/portal')}>

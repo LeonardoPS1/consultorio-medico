@@ -72,17 +72,11 @@ function StarRating({
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
-          className={`${h} w-4`}
-          style={{
-            fill:
-              star <= puntaje
-                ? 'hsl(38 92% 50%)'
-                : 'hsl(var(--portal-muted-foreground) / 0.15)',
-            color:
-              star <= puntaje
-                ? 'hsl(38 92% 50%)'
-                : 'hsl(var(--portal-muted-foreground) / 0.15)',
-          }}
+          className={`${h} w-4 ${
+            star <= puntaje
+              ? 'text-portal-warning fill-portal-warning'
+              : 'text-portal-muted-fg/15 fill-portal-muted-fg/15'
+          }`}
         />
       ))}
     </div>
@@ -174,24 +168,11 @@ function PendingSurveyForm({
                   setPuntaje(0);
                   setComentario('');
                 }}
-                className="text-[11px] px-2.5 py-1 rounded-lg border transition-colors"
-                style={
+                className={`text-[11px] px-2.5 py-1 rounded-lg border transition-colors ${
                   t.id === selectedId
-                    ? {
-                        background:
-                          'hsl(var(--portal-primary) / 0.1)',
-                        borderColor:
-                          'hsl(var(--portal-primary) / 0.2)',
-                        color: 'hsl(var(--portal-primary))',
-                      }
-                    : {
-                        background: 'var(--portal-bg-alt)',
-                        borderColor:
-                          'hsl(var(--portal-border-light))',
-                        color:
-                          'hsl(var(--portal-muted-foreground))',
-                      }
-                }
+                    ? 'bg-portal-primary/10 border-portal-primary/20 text-portal-primary'
+                    : 'bg-portal-bg-alt border-portal-border-light text-portal-muted-fg'
+                }`}
               >
                 {formatShort(t.fechaHora)}
               </button>
@@ -218,31 +199,16 @@ className={`transition-transform duration-150 active:scale-75 ${
               aria-label={`Puntuar ${n} de 5`}
             >
               <Star
-                className="h-8 w-8 transition-colors duration-150"
-                style={{
-                  fill:
-                    n <= puntaje
-                      ? 'hsl(38 92% 50%)'
-                      : 'hsl(var(--portal-muted-foreground) / 0.15)',
-                  color:
-                    n <= puntaje
-                      ? 'hsl(38 92% 50%)'
-                      : 'hsl(var(--portal-muted-foreground) / 0.15)',
-                  filter:
-                    n <= puntaje
-                      ? 'drop-shadow(0 1px 2px hsl(38 92% 50% / 0.3))'
-                      : 'none',
-                }}
+                className={`h-8 w-8 transition-[color,fill,filter] duration-150 ${
+                  n <= puntaje
+                    ? 'text-portal-warning fill-portal-warning drop-shadow-[0_1px_2px_hsl(38_92%_50%/0.3)]'
+                    : 'text-portal-muted-fg/15 fill-portal-muted-fg/15'
+                }`}
               />
             </button>
           ))}
           {puntaje > 0 && (
-            <span
-              className="ml-1 text-sm font-medium"
-              style={{
-                color: 'hsl(var(--portal-foreground) / 0.7)',
-              }}
-            >
+            <span className="ml-1 text-sm font-medium text-portal-fg/70">
               {[
                 '',
                 'Muy malo',
@@ -385,12 +351,7 @@ export default function PortalEncuestasPage() {
           animate={{ opacity: 1 }}
           className="text-center py-16 text-portal-muted-fg/70"
         >
-          <ClipboardCheck
-            className="h-12 w-12 mx-auto mb-3"
-            style={{
-              color: 'hsl(var(--portal-muted-foreground) / 0.3)',
-            }}
-          />
+          <ClipboardCheck className="h-12 w-12 mx-auto mb-3 text-portal-muted-fg/30" />
           <p className="font-medium text-portal-muted-fg">
             No tienes encuestas registradas
           </p>

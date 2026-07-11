@@ -141,7 +141,7 @@ export default function PortalChatPage() {
       }}
     >
       {/* Header */}
-      <div style={{ ...headerStyle, padding: '0.75rem 1rem' }}>
+      <div className="bg-portal-bg-alt border-b border-portal-border-light px-4 py-3">
         <h1
           className="text-lg font-semibold flex items-center gap-2 text-portal-fg"
         >
@@ -171,10 +171,7 @@ export default function PortalChatPage() {
 
         {mensajes.length === 0 && !error && (
           <PortalCard className="text-center py-12 text-portal-muted-fg/70" padding="lg">
-            <Bot
-              className="h-12 w-12 mx-auto mb-3"
-              style={{ opacity: 0.5 }}
-            />
+            <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
             <p className="text-sm">No hay mensajes todavía</p>
             <p className="text-xs mt-1">
               Escribinos tu consulta y te responderemos a la brevedad
@@ -226,12 +223,7 @@ export default function PortalChatPage() {
               <div className="whitespace-pre-wrap break-words">
                 {msg.contenido}
               </div>
-              <div
-                className="text-[10px] mt-1"
-                style={{
-                  opacity: msg.rol === 'paciente' ? 0.7 : 0.7,
-                }}
-              >
+              <div className="text-[10px] mt-1 opacity-70">
                 {formatTime(msg.createdAt)}
                 {msg.id.startsWith('temp-') && (
                   <span className="ml-1 italic">enviando...</span>
@@ -244,7 +236,7 @@ export default function PortalChatPage() {
       </div>
 
       {/* Input bar */}
-      <div style={{ ...inputBarStyle, padding: '0.75rem 1rem' }}>
+      <div className="bg-portal-bg-alt border-t border-portal-border-light px-4 py-3">
         <div className="flex items-center gap-2">
           <input
             type="text"

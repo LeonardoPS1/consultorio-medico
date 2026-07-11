@@ -118,77 +118,80 @@ export function Header() {
           </Button>
         ) : (
           <>
-        {/* Hamburger — mobile only */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="lg:hidden h-10 w-10 shrink-0"
-          onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
-          title="Menú"
-          aria-label="Abrir menú"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+            {/* Hamburger — mobile only */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden h-10 w-10 shrink-0"
+              onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
+              title="Menú"
+              aria-label="Abrir menú"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
 
-        <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-2 ring-border shrink-0">
-          {avatarUrl ? (
-            <AvatarImage src={avatarUrl} alt={orgFirma || 'Avatar'} />
-          ) : (
-            <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-              {orgFirma.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          )}
-        </Avatar>
-        <div className="min-w-0">
-          <h1 className="text-sm sm:text-base font-semibold text-foreground truncate">
-            {orgFirma || 'Dr.'}
-          </h1>
-          <p className="text-[11px] lg:text-xs text-muted-foreground truncate hidden sm:block">
-            {orgNombre} ·{' '}
-            {new Date().toLocaleDateString('es-CL', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-            })}
-          </p>
-        </div>
-        {/* Selector de sucursal */}
-        {hasMultiple && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 sm:h-9 gap-1 text-xs text-muted-foreground hover:text-foreground ml-1 shrink-0"
-              >
-                <Store className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline max-w-[100px] truncate">
-                  {sucursales.find((s) => s.id === activeSucursalId)?.nombre || 'Sucursal'}
-                </span>
-                <ChevronDown className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuLabel className="text-xs text-muted-foreground">
-                Cambiar sucursal
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {sucursales.map((s) => (
-                <DropdownMenuItem
-                  key={s.id}
-                  onClick={() => setSucursalId(s.id)}
-                  className={s.id === activeSucursalId ? 'bg-accent font-medium' : ''}
-                >
-                  <Store className="h-3.5 w-3.5 mr-2" />
-                  {s.nombre}
-                  {s.id === activeSucursalId && (
-                    <span className="ml-auto text-[10px] text-primary">Activa</span>
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-2 ring-border shrink-0">
+              {avatarUrl ? (
+                <AvatarImage src={avatarUrl} alt={orgFirma || 'Avatar'} />
+              ) : (
+                <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                  {orgFirma.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base font-semibold text-foreground truncate">
+                {orgFirma || 'Dr.'}
+              </h1>
+              <p className="text-[11px] lg:text-xs text-muted-foreground truncate hidden sm:block">
+                {orgNombre} ·{' '}
+                {new Date().toLocaleDateString('es-CL', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                })}
+              </p>
+            </div>
+            {/* Selector de sucursal */}
+            {hasMultiple && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 sm:h-9 gap-1 text-xs text-muted-foreground hover:text-foreground ml-1 shrink-0"
+                  >
+                    <Store className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline max-w-[100px] truncate">
+                      {sucursales.find((s) => s.id === activeSucursalId)?.nombre || 'Sucursal'}
+                    </span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    Cambiar sucursal
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {sucursales.map((s) => (
+                    <DropdownMenuItem
+                      key={s.id}
+                      onClick={() => setSucursalId(s.id)}
+                      className={s.id === activeSucursalId ? 'bg-accent font-medium' : ''}
+                    >
+                      <Store className="h-3.5 w-3.5 mr-2" />
+                      {s.nombre}
+                      {s.id === activeSucursalId && (
+                        <span className="ml-auto text-[10px] text-primary">Activa</span>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </>
         )}
+      </div>
 
       <div className="flex items-center gap-1 sm:gap-2">
         {/* Command Palette trigger */}
@@ -322,9 +325,6 @@ export function Header() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
-          </>
-        )}
       </div>
     </header>
   );

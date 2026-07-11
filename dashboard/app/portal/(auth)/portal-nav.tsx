@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'motion/react';
+import { cn } from '@/lib/utils';
 import {
   Calendar,
   FileText,
@@ -167,18 +168,11 @@ export default function PortalNav() {
         {canScrollLeft && (
           <button
             onClick={() => scrollNav('left')}
-            className="absolute left-0 top-0 bottom-0 z-10 w-10 flex items-center justify-center transition-opacity duration-200 hover:opacity-100"
-            style={{ opacity: 0.7 }}
+            className="absolute left-0 top-0 bottom-0 z-10 w-10 flex items-center justify-center opacity-70 transition-opacity duration-200 hover:opacity-100"
             aria-label="Navegar a la izquierda"
           >
-            <div
-              className="flex items-center justify-center w-6 h-6 rounded-full"
-              style={{ background: 'hsl(var(--portal-muted) / 0.8)' }}
-            >
-              <ChevronLeft
-                className="h-4 w-4"
-                style={{ color: 'hsl(var(--portal-muted-foreground) / 0.6)' }}
-              />
+            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-portal-muted/80">
+              <ChevronLeft className="h-4 w-4 text-portal-muted-fg/60" />
             </div>
           </button>
         )}
@@ -187,18 +181,11 @@ export default function PortalNav() {
         {canScrollRight && (
           <button
             onClick={() => scrollNav('right')}
-            className="absolute right-0 top-0 bottom-0 z-10 w-10 flex items-center justify-center transition-opacity duration-200 hover:opacity-100"
-            style={{ opacity: 0.7 }}
+            className="absolute right-0 top-0 bottom-0 z-10 w-10 flex items-center justify-center opacity-70 transition-opacity duration-200 hover:opacity-100"
             aria-label="Navegar a la derecha"
           >
-            <div
-              className="flex items-center justify-center w-6 h-6 rounded-full"
-              style={{ background: 'hsl(var(--portal-muted) / 0.8)' }}
-            >
-              <ChevronRight
-                className="h-4 w-4"
-                style={{ color: 'hsl(var(--portal-muted-foreground) / 0.6)' }}
-              />
+            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-portal-muted/80">
+              <ChevronRight className="h-4 w-4 text-portal-muted-fg/60" />
             </div>
           </button>
         )}
@@ -222,12 +209,10 @@ export default function PortalNav() {
                 <Link
                   href={item.href}
                   data-active={active ? 'true' : undefined}
-                  className="portal-nav-item relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors duration-150"
-                  style={{
-                    color: active
-                      ? 'hsl(var(--portal-primary))'
-                      : 'hsl(var(--portal-muted-foreground) / 0.6)',
-                  }}
+                  className={cn(
+                    'portal-nav-item relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors duration-150',
+                    active ? 'text-portal-primary' : 'text-portal-muted-fg/60',
+                  )}
                   aria-current={active ? 'page' : undefined}
                 >
                   {/* Active pill background */}
@@ -259,13 +244,10 @@ className="h-[18px] w-[18px] transition-[color,transform] duration-200"
 
                   {/* Label */}
                   <span
-                    className="relative z-[1] text-[10px] font-medium leading-tight whitespace-nowrap transition-[color] duration-150"
-                    style={{
-                      color: active
-                        ? 'hsl(var(--portal-primary))'
-                        : 'hsl(var(--portal-muted-foreground) / 0.6)',
-                      fontWeight: active ? 600 : 500,
-                    }}
+                    className={cn(
+                      'relative z-[1] text-[10px] font-medium leading-tight whitespace-nowrap transition-[color] duration-150',
+                      active ? 'text-portal-primary font-semibold' : 'text-portal-muted-fg/60 font-medium',
+                    )}
                   >
                     {item.label}
                   </span>
@@ -275,10 +257,7 @@ className="h-[18px] w-[18px] transition-[color,transform] duration-200"
           })}
 
           {/* ── Divider ── */}
-          <div
-            className="shrink-0 w-px mx-1 self-center h-8"
-            style={{ background: 'hsl(var(--portal-border-light))' }}
-          />
+          <div className="shrink-0 w-px mx-1 self-center h-8 bg-portal-border-light" />
 
           {/* ── Notificaciones ── */}
           <motion.div
@@ -290,13 +269,10 @@ className="h-[18px] w-[18px] transition-[color,transform] duration-200"
           >
             <Link
               href="/portal/notificaciones"
-              className="portal-nav-item relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors duration-150"
-              style={{
-                color:
-                  pathname === '/portal/notificaciones'
-                    ? 'hsl(var(--portal-primary))'
-                    : 'hsl(var(--portal-muted-foreground) / 0.6)',
-              }}
+              className={cn(
+                'portal-nav-item relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors duration-150',
+                pathname === '/portal/notificaciones' ? 'text-portal-primary' : 'text-portal-muted-fg/60',
+              )}
               aria-current={pathname === '/portal/notificaciones' ? 'page' : undefined}
             >
               {pathname === '/portal/notificaciones' && mounted && (
@@ -323,24 +299,17 @@ className="h-[18px] w-[18px] transition-[color,transform] duration-200"
                 />
                 {unreadCount > 0 && (
                   <span
-                    className="absolute -top-1.5 -right-1.5 text-[9px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 shadow-sm"
-                    style={{
-                      background: 'hsl(var(--portal-destructive))',
-                      color: '#fff',
-                    }}
+                  className="absolute -top-1.5 -right-1.5 text-[9px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 shadow-sm bg-portal-destructive text-white"
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </div>
               <span
-                className="relative z-[1] text-[10px] font-medium leading-tight whitespace-nowrap"
-                style={{
-                  color:
-                    pathname === '/portal/notificaciones'
-                      ? 'hsl(var(--portal-primary))'
-                      : 'hsl(var(--portal-muted-foreground) / 0.6)',
-                }}
+                className={cn(
+                  'relative z-[1] text-[10px] font-medium leading-tight whitespace-nowrap',
+                  pathname === '/portal/notificaciones' ? 'text-portal-primary font-semibold' : 'text-portal-muted-fg/60 font-medium',
+                )}
               >
                 Alertas
               </span>
@@ -357,10 +326,7 @@ className="h-[18px] w-[18px] transition-[color,transform] duration-200"
           >
             <button
               onClick={handleLogout}
-              className="portal-nav-item flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors duration-150"
-              style={{
-                color: 'hsl(var(--portal-muted-foreground) / 0.4)',
-              }}
+              className="portal-nav-item flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors duration-150 text-portal-muted-fg/40"
               aria-label="Cerrar sesión"
             >
               <LogOut className="h-[18px] w-[18px]" />

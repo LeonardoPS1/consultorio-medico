@@ -182,7 +182,7 @@ export function DayTimeline({ medicos, turnos, fecha, onTurnoClick, onSlotClick 
           {medicos.map((medico) => (
             <div
               key={medico.id}
-              className="flex-1 min-w-[140px] border-l px-2 py-2 text-center"
+              className="flex-1 min-w-[100px] sm:min-w-[140px] border-l px-2 py-2 text-center"
             >
               <div className="flex items-center justify-center gap-1.5">
                 <span
@@ -223,7 +223,7 @@ export function DayTimeline({ medicos, turnos, fecha, onTurnoClick, onSlotClick 
           </div>
 
           {/* Grid lines + médico columns */}
-          <div className="flex flex-1 min-w-0 relative flex-1">
+          <div className="flex flex-1 min-w-0 overflow-x-auto">
             {/* Horizontal hour lines */}
             {Array.from({ length: totalHours + 1 }, (_, i) => (
               <div
@@ -252,7 +252,7 @@ export function DayTimeline({ medicos, turnos, fecha, onTurnoClick, onSlotClick 
               return (
                 <div
                   key={medico.id}
-                  className="flex-1 min-w-[140px] border-l relative"
+                  className="flex-1 min-w-[100px] sm:min-w-[140px] border-l relative"
                   style={{
                     backgroundColor: hasBloqueos
                       ? `${medico.colorEvento}08`

@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
+import { cn } from '@/lib/utils';
 import {
   Bell,
   CheckCheck,
@@ -36,7 +37,7 @@ const TIPO_ICONS: Record<string, React.ReactNode> = {
     <MessageSquare className="h-4 w-4 text-portal-accent" />
   ),
   receta: (
-    <FileText className="h-4 w-4" style={{ color: 'hsl(38 92% 50%)' }} />
+    <FileText className="h-4 w-4 text-portal-warning" />
   ),
   sistema: (
     <Bell className="h-4 w-4 text-portal-primary" />
@@ -130,14 +131,7 @@ export default function PortalNotificacionesPage() {
       </div>
 
       {error && (
-        <div
-          className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm mb-4"
-          style={{
-            color: 'hsl(var(--portal-destructive))',
-            background: 'hsl(var(--portal-destructive) / 0.08)',
-            border: '1px solid hsl(var(--portal-destructive) / 0.15)',
-          }}
-        >
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm mb-4 text-portal-destructive bg-portal-destructive/10 border border-portal-destructive/15">
           <AlertCircle className="h-4 w-4" /> {error}
         </div>
       )}
@@ -163,9 +157,8 @@ export default function PortalNotificacionesPage() {
                 key={n.id}
                 hover
                 padding="sm"
-                className="w-full flex items-start gap-3"
-                style={{ background: n.leido ? 'var(--portal-bg-alt)' : 'hsl(var(--portal-primary) / 0.05)' }}
-                onClick={() => {
+              className={cn('w-full flex items-start gap-3', n.leido ? 'bg-portal-bg-alt' : 'bg-portal-primary/5')}
+              onClick={() => {
                   if (!n.leido) marcarLeida(n.id);
                   if (n.href) window.location.href = n.href;
                 }}
@@ -173,13 +166,10 @@ export default function PortalNotificacionesPage() {
                 <div className="mt-0.5 shrink-0">{Icon}</div>
                 <div className="flex-1 min-w-0">
                   <p
-                    className="text-sm"
-                    style={{
-                      color: n.leido
-                        ? 'hsl(var(--portal-muted-foreground) / 0.8)'
-                        : 'hsl(var(--portal-foreground))',
-                      fontWeight: n.leido ? 400 : 600,
-                    }}
+                    className={cn(
+                      'text-sm',
+                      n.leido ? 'text-portal-muted-fg/80 font-normal' : 'text-portal-fg font-semibold',
+                    )}
                   >
                     {n.titulo}
                   </p>

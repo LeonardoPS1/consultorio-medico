@@ -157,7 +157,7 @@ export function CalendarView({
                 <Button variant="outline" size="icon" aria-label="Mes anterior" onClick={() => navigateMonth(-1)}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <h3 className="text-lg font-semibold min-w-[200px] text-center">
+                <h3 className="text-sm sm:text-lg font-semibold min-w-[120px] sm:min-w-[200px] text-center">
                   {MESES[month]} {year}
                 </h3>
                 <Button variant="outline" size="icon" aria-label="Mes siguiente" onClick={() => navigateMonth(1)}>
@@ -244,7 +244,7 @@ export function CalendarView({
                 <Button variant="outline" size="icon" aria-label="Día anterior" onClick={() => navigateDay(-1)}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <h3 className="text-lg font-semibold min-w-[200px] text-center">
+                <h3 className="text-sm sm:text-lg font-semibold min-w-[120px] sm:min-w-[200px] text-center">
                   {selectedDate.toLocaleDateString('es-CL', {
                     weekday: 'long',
                     day: 'numeric',

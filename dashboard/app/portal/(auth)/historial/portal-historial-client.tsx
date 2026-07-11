@@ -50,17 +50,9 @@ export default function PortalHistorialClient({
             <PortalCard key={h.id} hover padding="md">
               <div className="flex items-start gap-3 mb-2">
                 <div
-                  className="mt-1 shrink-0"
-                  style={
-                    h.tipo === 'consulta'
-                      ? { color: 'hsl(var(--portal-primary))' }
-                      : h.tipo === 'encuesta'
-                        ? { color: 'hsl(var(--portal-accent))' }
-                        : {
-                            color:
-                              'hsl(var(--portal-muted-foreground))',
-                          }
-                  }
+                  className={`mt-1 shrink-0 ${
+                    h.tipo === 'consulta' ? 'text-portal-primary' : h.tipo === 'encuesta' ? 'text-portal-accent' : 'text-portal-muted-fg'
+                  }`}
                 >
                   {h.tipo === 'consulta' ? (
                     <Stethoscope className="h-5 w-5" />

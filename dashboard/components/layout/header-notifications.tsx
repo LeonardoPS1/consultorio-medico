@@ -203,18 +203,18 @@ export function NotificationsDropdown() {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5">
+                  <div className="flex items-center gap-0.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity mt-0.5">
                     {notif.leido ? (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           marcarNoLeida(notif.id);
                         }}
-                        className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
+                        className="h-9 w-9 sm:h-6 sm:w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
                         title="Marcar como no leída"
                         aria-label="Marcar como no leída"
                       >
-                        <EyeOff className="h-3 w-3 text-muted-foreground/60" />
+                        <EyeOff className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-muted-foreground/60" />
                       </button>
                     ) : (
                       <button
@@ -222,11 +222,11 @@ export function NotificationsDropdown() {
                           e.stopPropagation();
                           marcarLeida(notif.id);
                         }}
-                        className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
+                        className="h-9 w-9 sm:h-6 sm:w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
                         title="Marcar como leída"
                         aria-label="Marcar como leída"
                       >
-                        <Eye className="h-3 w-3 text-muted-foreground/60" />
+                        <Eye className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-muted-foreground/60" />
                       </button>
                     )}
                     <button
@@ -234,7 +234,7 @@ export function NotificationsDropdown() {
                         e.stopPropagation();
                         eliminarNotificacion(notif.id);
                       }}
-                      className="h-6 w-6 flex items-center justify-center rounded hover:bg-destructive/10 transition-colors"
+                      className="h-9 w-9 sm:h-6 sm:w-6 flex items-center justify-center rounded hover:bg-destructive/10 transition-colors"
                       title="Eliminar"
                       aria-label="Eliminar notificación"
                     >

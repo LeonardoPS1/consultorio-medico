@@ -44,12 +44,7 @@ export default function PortalAuthLayout({ children }: { children: React.ReactNo
             className="flex items-center gap-2.5 group"
           >
             {/* Logo icon with subtle gradient */}
-            <div
-              className="h-7 w-7 rounded-lg flex items-center justify-center shadow-sm transition-transform duration-200 group-hover:scale-105"
-              style={{
-                background: 'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
-              }}
-            >
+            <div className="h-7 w-7 rounded-lg flex items-center justify-center shadow-sm transition-transform duration-200 group-hover:scale-105 bg-portal-gradient-strong">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -61,15 +56,12 @@ export default function PortalAuthLayout({ children }: { children: React.ReactNo
               </svg>
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="text-sm font-semibold tracking-tight" style={{ color: 'hsl(var(--portal-foreground))' }}>
-                Portal <span style={{ color: 'hsl(var(--portal-primary))' }}>Salud</span>
+              <span className="text-sm font-semibold tracking-tight text-portal-fg">
+                Portal <span className="text-portal-primary">Salud</span>
               </span>
-              <span
-                className="text-[10px] font-medium tracking-wide"
-                style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-              >
-                AicoreMed
-              </span>
+            <span className="text-[10px] font-medium tracking-wide text-portal-muted-fg">
+              AicoreMed
+            </span>
             </div>
           </Link>
 
@@ -82,7 +74,7 @@ export default function PortalAuthLayout({ children }: { children: React.ReactNo
       </header>
 
       {/* Main content */}
-      <main id="main-content" className="max-w-2xl mx-auto px-4 py-5 pb-28">
+      <main id="main-content" className="max-w-2xl mx-auto px-4 py-5 pb-28 min-h-[calc(100vh-3.5rem)]">
         <PortalContent>{children}</PortalContent>
       </main>
 

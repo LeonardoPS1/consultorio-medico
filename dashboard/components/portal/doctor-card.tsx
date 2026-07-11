@@ -67,27 +67,17 @@ export function DoctorCard({ medico, selected, onSelect }: DoctorCardProps) {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <CardTitle
-              className="text-base truncate"
-              style={{ color: 'hsl(var(--portal-foreground))' }}
-            >
+            <CardTitle className="text-base truncate text-portal-fg">
               {medico.nombre}
             </CardTitle>
-            <p
-              className="text-sm"
-              style={{ color: 'hsl(var(--portal-muted-foreground))' }}
-            >
+            <p className="text-sm text-portal-muted-fg">
               {medico.especialidad}
             </p>
           </div>
           {medico.matricula && (
             <Badge
               variant="outline"
-              className="text-xs shrink-0"
-              style={{
-                borderColor: 'hsl(var(--portal-border))',
-                color: 'hsl(var(--portal-muted-foreground))',
-              }}
+              className="text-xs shrink-0 border-portal-border text-portal-muted-fg"
             >
               Mat. {medico.matricula}
             </Badge>

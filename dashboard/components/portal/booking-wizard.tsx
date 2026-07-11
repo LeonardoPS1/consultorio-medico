@@ -106,44 +106,24 @@ function StepIndicator({ currentStep, showPago }: { currentStep: Step; showPago:
                       ? 'bg-primary'
                       : 'bg-border',
                   )}
-                  style={{
-                    transition: 'background 0.3s var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1))',
-                  }}
                 />
               )}
               <div className="flex flex-col items-center gap-1">
                 <div
                   className={cn(
-                    'flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium transition-[background,color,box-shadow] duration-300',
+                    'flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium transition-all duration-300',
+                    isCurrent && 'bg-portal-gradient-strong text-white shadow-[0_0_0_3px_hsl(var(--portal-primary)/0.15)] shadow-[0_1px_3px_hsl(var(--portal-primary)/0.2)]',
+                    !isCurrent && isActive && 'bg-portal-primary/15 text-portal-primary',
+                    !isCurrent && !isActive && 'bg-portal-muted text-portal-muted-fg',
                   )}
-                  style={{
-                    background: isCurrent
-                      ? 'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))'
-                      : isActive
-                        ? 'hsl(var(--portal-primary) / 0.15)'
-                        : 'hsl(var(--portal-muted))',
-                    color: isCurrent
-                      ? '#fff'
-                      : isActive
-                        ? 'hsl(var(--portal-primary))'
-                        : 'hsl(var(--portal-muted-foreground))',
-                    boxShadow: isCurrent
-                      ? '0 0 0 3px hsl(var(--portal-primary) / 0.15), 0 1px 3px hsl(var(--portal-primary) / 0.2)'
-                      : 'none',
-                    transition: 'all 0.3s cubic-bezier(0.23, 1, 0.32, 1)',
-                  }}
                 >
                   {isActive && !isCurrent ? <Check className="h-3.5 w-3.5" /> : i + 1}
                 </div>
                 <span
                   className={cn(
                     'hidden sm:block text-[11px] font-medium transition-colors duration-300',
+                    isActive ? 'text-portal-fg' : 'text-portal-muted-fg',
                   )}
-                  style={{
-                    color: isActive
-                      ? 'hsl(var(--portal-foreground))'
-                      : 'hsl(var(--portal-muted-foreground))',
-                  }}
                 >
                   {STEP_LABELS[s]}
                 </span>
@@ -453,12 +433,12 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
       <PortalCard padding="none">
         <CardHeader>
           <CardTitle
-            style={{ color: 'hsl(var(--portal-foreground))' }}
+            className="text-portal-fg"
           >
             Confirmar turno
           </CardTitle>
           <CardDescription
-            style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+            className="text-portal-muted-fg"
           >
             Revisá los detalles antes de confirmar
           </CardDescription>
@@ -549,17 +529,15 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
       <PortalCard padding="none">
         <CardHeader>
           <CardTitle
-            className="flex items-center gap-2"
-            style={{ color: 'hsl(var(--portal-foreground))' }}
+            className="flex items-center gap-2 text-portal-fg"
           >
             <CreditCard
-              className="h-5 w-5"
-              style={{ color: 'hsl(var(--portal-primary))' }}
+              className="h-5 w-5 text-portal-primary"
             />
             Pago pendiente
           </CardTitle>
           <CardDescription
-            style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+            className="text-portal-muted-fg"
           >
             Completá el pago para confirmar tu turno. Podés pagar ahora o hacerlo después desde el
             portal.
@@ -633,14 +611,10 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
         variants={springPop}
         initial="initial"
         animate="animate"
-        className="rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6"
-        style={{
-          background: 'hsl(var(--portal-primary) / 0.1)',
-        }}
+        className="rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 bg-portal-primary/10"
       >
         <Check
-          className="h-10 w-10"
-          style={{ color: 'hsl(var(--portal-primary))' }}
+          className="h-10 w-10 text-portal-primary"
         />
       </motion.div>
       <motion.div
@@ -649,14 +623,12 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
         transition={{ delay: 0.15, duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
       >
         <h2
-          className="text-xl font-semibold mb-2"
-          style={{ color: 'hsl(var(--portal-foreground))' }}
+          className="text-xl font-semibold mb-2 text-portal-fg"
         >
           Turno agendado con éxito
         </h2>
         <p
-          className="mb-8"
-          style={{ color: 'hsl(var(--portal-muted-foreground))' }}
+          className="mb-8 text-portal-muted-fg"
         >
           Te enviamos los detalles por WhatsApp. Recordá que podés cancelar con hasta 24h de
           anticipación.

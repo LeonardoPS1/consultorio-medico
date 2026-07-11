@@ -5,6 +5,9 @@
 
 /* ─── Base: CSS Custom Properties ───────────────────────── */
 .portal-layout {
+  container-type: inline-size;
+  container-name: portal;
+
   /* Palette — teal + violet + cálido para el paciente */
   --portal-bg: 40 18% 96%;
   --portal-bg-alt: 0 0% 100%;
@@ -250,6 +253,10 @@
 /* ─── Responsive Touch Optimizations ─────────────────────── */
 @container portal (max-width: 640px) {
   .portal-card { border-radius: calc(var(--radius) + 0.125rem); }
+  .portal-nav-item { min-width: 48px; padding-left: 0.5rem; padding-right: 0.5rem; }
+}
+@container portal (max-width: 380px) {
+  .portal-nav-item { min-width: 42px; }
 }
 
 /* ─── Reduced motion for portal ──────────────────────────── */
