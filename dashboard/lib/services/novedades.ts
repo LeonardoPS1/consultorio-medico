@@ -89,6 +89,67 @@ export async function importarChangelogEstatico(): Promise<number> {
   return count;
 }
 
+// ─── Auto-generación desde mensajes de commits (producción) ─
+
+function parseCommitMessage(message: string): {
+  type: GitCommit['type'];
+  text: string;
+} {
+  const cleaned = message
+    .replace(/^feat(\(.*\))?:\s*/i, '')
+    .replace(/^fix(\(.*\))?:\s*/i, '')
+    .replace(/^perf(\(.*\))?:\s*/i, '')
+    .replace(/^refactor(\(.*\))?:\s*/i, '')
+    .replace(/^chore(\(.*\))?:\s*/i, '')
+    .replace(/^test(\(.*\))?:\s*/i, '')
+    .replace(/^docs(\(.*\))?:\s*/i, '')
+    .trim();
+
+  const type = parseCommitType(message);
+
+  return {
+    type,
+    text: cleaned.charAt(0).toUpperCase() + cleaned.slice(1),
+  };
+}
+
+/** Genera entradas de novedades desde un array de mensajes de commits */
+export async function generarDesdeCommits(commitMessages: string[]): Promise<Novedad[]> {
+  const items: string[] = [];
+  let tieneFeatures = false;
+
+  for (const msg of commitMessages) {
+    const { type, text } = parseCommitMessage(msg);
+    if (type !== 'other' && text) {
+      items.push(text);
+      if (type === 'feature') tieneFeatures = true;
+    }
+  }
+
+  if (items.length === 0) return [];
+
+  const ultima = await obtenerUltimaNovedad();
+  let nuevaVersion = '1.16.0';
+  if (ultima) {
+    const [major, minor, patch] = ultima.version.split('.').map(Number);
+    if (tieneFeatures) {
+      nuevaVersion = `${major}.${(minor ?? 0) + 1}.0`;
+    } else {
+      nuevaVersion = `${major}.${minor ?? 0}.${(patch ?? 0) + 1}`;
+    }
+  }
+
+  const entry = await crearNovedad({
+    version: nuevaVersion,
+    titulo: tieneFeatures ? 'Nuevas funcionalidades' : 'Correcciones y mejoras',
+    items,
+    tipo: 'feature',
+    fecha: new Date(),
+  });
+
+  return [entry];
+}
+
 // ─── Auto-generación desde git log ─────────────────────────
 
 interface GitCommit {
