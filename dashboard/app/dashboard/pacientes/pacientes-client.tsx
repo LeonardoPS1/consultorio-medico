@@ -540,7 +540,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
                       ))}
                     </div>
 
-                    <div className="flex gap-1" onClick={(e) => e.preventDefault()}>
+                    <div className="hidden sm:flex gap-1" onClick={(e) => e.preventDefault()}>
                       <Button
                         variant="ghost"
                         size="icon"
