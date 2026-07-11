@@ -513,13 +513,7 @@ export async function getPacientesForExport(params: {
 }) {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { pacientesService } = require('./pacientes');
-  const result = await pacientesService.list({
-    limit: 10000,
-    offset: 0,
-    search: params.search,
-    medicoId: params.medicoId,
-    sucursalId: params.sucursalId,
-  });
+  const result = await pacientesService.list(params.search, 10000, 0, params.sucursalId, params.medicoId);
 
   return result.data.map((p: any) => ({
     Nombre: `${p.nombre} ${p.apellido}`,

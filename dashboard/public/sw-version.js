@@ -1,2 +1,2 @@
 // Auto-generado — no modificar manualmente
-var SW_VERSION = 'vb5ca1219';
+var SW_VERSION = 'vb0ae6c1f';
