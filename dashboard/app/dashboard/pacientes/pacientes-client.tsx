@@ -460,7 +460,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
               {pacientesList.map((paciente) => (
                 <div
                   key={paciente.id}
-                  className={`flex items-center gap-4 p-4 transition-colors ${
+                  className={`flex items-start sm:items-center gap-3 p-4 transition-colors ${
                     selectedIds.has(paciente.id) ? 'bg-primary/5' : ''
                   }`}
                 >
@@ -473,7 +473,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
                   </div>
                   <Link
                     href={`/dashboard/pacientes/${paciente.id}`}
-                    className="flex items-center gap-4 flex-1 min-w-0 no-underline hoverable:hover:opacity-80"
+                    className="flex flex-wrap items-start sm:items-center gap-x-3 gap-y-2 flex-1 min-w-0 no-underline hoverable:hover:opacity-80"
                   >
                     <Avatar className="h-10 w-10">
                       <AvatarFallback className="bg-primary/10 text-primary text-sm">
@@ -497,15 +497,15 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
                           />
                         )}
                       </p>
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground mt-0.5">
-                        <span className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {formatPhone(paciente.telefono)}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-3 text-sm text-muted-foreground mt-0.5">
+                        <span className="flex items-center gap-1 min-w-0">
+                          <Phone className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{formatPhone(paciente.telefono)}</span>
                         </span>
                         {paciente.email && (
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {paciente.email}
+                          <span className="flex items-center gap-1 min-w-0">
+                            <Mail className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{paciente.email}</span>
                           </span>
                         )}
                       </div>
@@ -540,7 +540,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
                       ))}
                     </div>
 
-                    <div className="hidden sm:flex gap-1" onClick={(e) => e.preventDefault()}>
+                    <div className="flex gap-1 w-full sm:w-auto shrink-0 items-center" onClick={(e) => e.preventDefault()}>
                       <Button
                         variant="ghost"
                         size="icon"
