@@ -28,15 +28,15 @@ export function AsistenteFAB() {
   return (
     <motion.button
       onClick={toggle}
-      className="group fixed bottom-5 right-5 z-30 flex h-13 w-13 items-center justify-center rounded-full shadow-lg shadow-indigo-500/20 transition-shadow hover:shadow-xl hover:shadow-indigo-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 active:scale-95"
+      className="group fixed bottom-5 right-5 z-30 flex h-13 w-13 items-center justify-center rounded-full shadow-lg shadow-[var(--fab-glow)] transition-shadow hover:shadow-xl hover:shadow-[var(--fab-glow)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fab-glow)] focus-visible:ring-offset-2 active:scale-95"
       style={{
-        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
+        background: 'var(--fab-gradient)',
         height: '52px',
         width: '52px',
       }}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.92 }}
-      title={`Asistente IA — ${modoInfo?.label || 'Silencioso'} (Ctrl+Shift+I)`}
+      title={`Asistente IA — ${modoInfo?.label || 'Silencioso'} (⌘I)`}
       aria-label="Abrir asistente IA"
       aria-expanded={open}
     >
@@ -44,7 +44,7 @@ export function AsistenteFAB() {
       <motion.span
         className="absolute inset-0 rounded-full"
         style={{
-          background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+          background: 'var(--fab-gradient)',
           filter: 'blur(10px)',
           opacity: 0.25,
         }}
@@ -58,7 +58,7 @@ export function AsistenteFAB() {
           <motion.span
             className="absolute inset-0 rounded-full"
             style={{
-              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+              background: 'var(--fab-gradient)',
               opacity: 0.5,
             }}
             initial={{ scale: 1, opacity: 0.5 }}
@@ -99,7 +99,7 @@ export function AsistenteFAB() {
 
       {/* ─── Tooltip (desktop) ─────────────────────────────── */}
       <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 hidden items-center gap-1.5 rounded-lg border border-border/50 bg-popover/90 backdrop-blur-sm px-2.5 py-1.5 text-xs font-medium text-popover-foreground shadow-sm opacity-0 transition-[opacity,transform] group-hover:opacity-100 group-hover:translate-x-0 sm:flex">
-        <Sparkles className="h-3 w-3 text-indigo-500" />
+        <Sparkles className="h-3 w-3 text-primary" />
         Asistente IA
         <kbd className="ml-0.5 rounded border border-border/50 bg-muted/50 px-1 font-mono text-[9px] text-muted-foreground">
           ⌘I

@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { RefreshCw, X, ExternalLink } from 'lucide-react';
+import { RefreshCw, ExternalLink } from 'lucide-react';
 import { useUpdate } from '@/lib/update-context';
 import { CHANGELOG, type ChangelogEntry } from '@/lib/changelog-data';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Dialog,
   DialogContent,
@@ -30,8 +31,6 @@ export function UpdateBadge() {
     hasUnseenChangelog,
     markChangelogSeen,
   } = useUpdate();
-  const [showTooltip, setShowTooltip] = useState(false);
-
   const handleOpenChangelog = useCallback(() => {
     markChangelogSeen();
     setChangelogOpen(true);
@@ -68,26 +67,24 @@ export function UpdateBadge() {
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-9 w-9 relative"
-        aria-label="Actualizar a nueva versión"
-        title="Nueva versión disponible"
-        onClick={handleOpenChangelog}
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-      >
-        <RefreshCw className="h-4 w-4 text-primary animate-pulse-soft" />
-        <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/40" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-        </span>
-      </Button>
-
-      {/* Tooltip flotante */}
-      {showTooltip && (
-        <div className="absolute top-full mt-1 right-0 z-50 bg-popover border rounded-lg shadow-lg p-3 max-w-[220px] text-xs animate-in fade-in slide-in-from-top-1">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 relative"
+            aria-label="Actualizar a nueva versión"
+            title="Nueva versión disponible"
+            onClick={handleOpenChangelog}
+          >
+            <RefreshCw className="h-4 w-4 text-primary animate-pulse-soft" />
+            <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/40" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+            </span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" align="end" className="p-3 max-w-[220px]">
           <p className="font-medium text-foreground mb-1">Nueva versión disponible</p>
           <p className="text-muted-foreground mb-2">
             Mirá las novedades y actualizá cuando quieras.
@@ -102,8 +99,8 @@ export function UpdateBadge() {
             <RefreshCw className="w-3 h-3" />
             Actualizar ahora
           </button>
-        </div>
-      )}
+        </TooltipContent>
+      </Tooltip>
 
       <ChangelogModal
         open={changelogOpen}

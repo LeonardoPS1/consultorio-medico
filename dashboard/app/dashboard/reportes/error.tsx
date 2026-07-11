@@ -8,7 +8,7 @@ export default function ReportesError({
   reset: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center p-12">
+    <div className="flex flex-col items-center justify-center p-12" role="alert">
       <div className="mx-auto max-w-sm text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
           <svg

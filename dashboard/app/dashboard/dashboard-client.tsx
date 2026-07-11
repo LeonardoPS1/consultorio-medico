@@ -73,9 +73,9 @@ export function DashboardClient({ dateStr }: DashboardClientProps) {
       {/* ─── Header ────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight gradient-text">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight gradient-text">
             Panel Principal
-          </h2>
+          </h1>
           <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2 mt-1">
             <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
             <span className="truncate line-clamp-1">

@@ -60,7 +60,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
       <div className="rounded-xl bg-gradient-to-br from-primary/5 via-primary/[0.02] to-background border p-6 shadow-sm">
         <div className="flex items-start gap-4">
           <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-primary/10 text-primary shrink-0 shadow-sm">
-            <svg
+            <svg aria-hidden="true" focusable="false"
               className="h-6 w-6"
               xmlns="http://www.w3.org/2000/svg"
               width="24"
