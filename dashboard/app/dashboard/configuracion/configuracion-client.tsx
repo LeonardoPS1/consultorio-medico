@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { canAccess } from '@/lib/features';
 import { MedicosSection } from '@/components/config/medicos-section';
@@ -130,7 +130,16 @@ function ConfigContent() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [activeTab, setActiveTab] = useState(tabFromUrl);
   const { enabled: soundEnabled, toggle: toggleSound } = useSound();
+  const router = useRouter();
   const [horarios, setHorarios] = useState<HorarioData[]>([]);
+
+  // Handler para cambiar tab y actualizar URL
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('tab', value);
+    router.replace(`/dashboard/configuracion?${params.toString()}`, { scroll: false });
+  };
   const [notificaciones, setNotificaciones] = useState<NotifData | null>(null);
   const [miembrosEquipo, setMiembrosEquipo] = useState<MiembroEquipo[]>([]);
   const [loading, setLoading] = useState({
@@ -192,7 +201,7 @@ function ConfigContent() {
         />
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="overflow-x-auto flex-nowrap w-full gap-1">
           <TabsTrigger value="perfil" className="px-2 sm:px-3 shrink-0">
             <svg

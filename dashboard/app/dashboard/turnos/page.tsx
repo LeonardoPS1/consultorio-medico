@@ -10,13 +10,13 @@ export const dynamic = 'force-dynamic';
 // ─── Helpers ──────────────────────────────────────────────
 
 const COLORES_ESTADO: Record<string, string> = {
-  pendiente: '#F59E0B',
-  confirmada: '#10B981',
-  en_atencion: '#3B82F6',
-  atendido: '#6B7280',
-  cancelada: '#EF4444',
-  no_asistio: '#8B5CF6',
-  completada: '#10B981',
+  pendiente: 'hsl(var(--turno-pendiente))',
+  confirmada: 'hsl(var(--turno-confirmada))',
+  en_atencion: 'hsl(var(--turno-en-atencion))',
+  atendido: 'hsl(var(--turno-atendido))',
+  cancelada: 'hsl(var(--turno-cancelada))',
+  no_asistio: 'hsl(var(--turno-no-asistio))',
+  completada: 'hsl(var(--turno-completada))',
 };
 
 const LABELS_ESTADO: Record<string, string> = {

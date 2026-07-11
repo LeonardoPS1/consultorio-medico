@@ -51,6 +51,15 @@
     --chart-4: 271 72% 56%;
     --chart-5: 0 72% 55%;
 
+    /* Turno status colors — semantic tokens for UI states */
+    --turno-pendiente: 38 92% 50%;
+    --turno-confirmada: 158 71% 40%;
+    --turno-en-atencion: 221 83% 53%;
+    --turno-atendido: 215 14% 39%;
+    --turno-cancelada: 0 88% 59%;
+    --turno-no-asistio: 265 76% 64%;
+    --turno-completada: 158 71% 40%;
+
     /* Card shadows — ultra-subtle default, soft on hover */
     --shadow-card: 0 1px 2px rgba(0,0,0,0.04);
     --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);

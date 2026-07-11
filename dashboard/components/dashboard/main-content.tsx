@@ -2,6 +2,7 @@
 
 import { useLayoutConfig } from '@/lib/layout-config';
 import { cn } from '@/lib/utils';
+import { Breadcrumbs } from '@/components/layout/breadcrumbs';
 
 export function MainContent({ children }: { children: React.ReactNode }) {
   const { config } = useLayoutConfig();
@@ -18,6 +19,7 @@ export function MainContent({ children }: { children: React.ReactNode }) {
         )}
       >
         <div className={cn(isCentered && 'max-w-2xl mx-auto p-3 sm:p-4 lg:p-6')}>
+          <Breadcrumbs />
           {children}
         </div>
       </main>
