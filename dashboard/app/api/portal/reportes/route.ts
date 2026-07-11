@@ -15,7 +15,7 @@
 import { NextResponse } from 'next/server';
 import { getPortalSession } from '@/lib/portal-auth';
 import { db } from '@/lib/db';
-import { turnos, recetas, medicos } from '@/drizzle/schema';
+import { turnos, recetas, medicos, recetaEstadoEnum } from '@/drizzle/schema';
 import { eq, and, desc, sql, count } from 'drizzle-orm';
 
 export async function GET() {
@@ -110,7 +110,7 @@ export async function GET() {
   const [recetasData] = await db
     .select({ value: count() })
     .from(recetas)
-    .where(and(eq(recetas.pacienteId, pacienteId), eq(recetas.estado, 'activa')));
+    .where(and(eq(recetas.pacienteId, pacienteId), eq(recetas.estado, recetaEstadoEnum.enumValues[1]))); // 'emitida'
 
   const recetasActivas = Number(recetasData?.value || 0);
 

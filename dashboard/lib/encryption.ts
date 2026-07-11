@@ -1,7 +1,7 @@
 /**
  * Utilidad de encriptación para credenciales.
  *
- * Usa AES-256-GCM con la clave AUTH_SECRET del entorno.
+ * Usa AES-256-GCM con la clave ENCRYPTION_KEY del entorno.
  * - encrypt(text) → texto encriptado en formato base64:iv:tag
  * - decrypt(text) → texto original
  */
@@ -11,21 +11,21 @@ import crypto from 'crypto';
 const ALGORITHM = 'aes-256-gcm';
 
 /**
- * Obtiene la clave de encriptación desde AUTH_SECRET.
- * En producción, AUTH_SECRET es OBLIGATORIO. Sin él, las credenciales
+ * Obtiene la clave de encriptación desde ENCRYPTION_KEY.
+ * En producción, ENCRYPTION_KEY es OBLIGATORIO. Sin él, las credenciales
  * almacenadas no pueden desencriptarse.
  * En desarrollo, si no está configurado, usa un fallback local.
  */
 function getEncryptionKey(): Buffer {
-  const secret = process.env.AUTH_SECRET;
+  const secret = process.env.ENCRYPTION_KEY;
   if (!secret) {
     if (process.env.NODE_ENV === 'production') {
       throw new Error(
-        'AUTH_SECRET es obligatorio en producción. ' +
-          'Configuralo en las variables de entorno del dashboard.',
+        'ENCRYPTION_KEY es obligatorio en producción. ' +
+          'Configuralo en las variables de entorno del dashboard (clave de 32+ chars).',
       );
     }
-    // En desarrollo sin AUTH_SECRET, usa hash de hostname + cwd como fallback
+    // En desarrollo sin ENCRYPTION_KEY, usa hash de hostname + cwd como fallback
     // NO es seguro pero evita un string hardcodeado predecible
     const devFallback = process.env.HOSTNAME + process.cwd();
     return crypto.createHash('sha256').update(devFallback).digest();

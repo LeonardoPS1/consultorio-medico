@@ -12,7 +12,7 @@
  */
 
 import { db } from '@/lib/db';
-import { turnos, pacientes, recetas, medicos, conversaciones } from '@/drizzle/schema';
+import { turnos, pacientes, recetas, medicos, conversaciones, turnoEstadoEnum, recetaEstadoEnum } from '@/drizzle/schema';
 import { eq, and, gte, lte, count, isNull, isNotNull, or } from 'drizzle-orm';
 
 /**
@@ -113,7 +113,7 @@ export async function buildContextoDB(
       db
         .select({ total: count() })
         .from(turnos)
-        .where(and(hoyWhere, eq(turnos.estado, 'confirmado')))
+        .where(and(hoyWhere, eq(turnos.estado, turnoEstadoEnum.enumValues[1]))) // 'confirmada'
         .then((r) => r[0])
         .catch(() => ({ total: 0 })),
 
@@ -165,7 +165,7 @@ export async function buildContextoDB(
         .where(
           and(
             filtroMedicoRecetas,
-            or(eq(recetas.estado, 'activa'), eq(recetas.estado, 'pendiente')),
+            or(eq(recetas.estado, recetaEstadoEnum.enumValues[1]), eq(recetas.estado, recetaEstadoEnum.enumValues[0])), // 'emitida' or 'borrador'
           ),
         )
         .limit(10)
@@ -192,7 +192,7 @@ export async function buildContextoDB(
         .where(
           and(
             filtroMedicoRecetas,
-            eq(recetas.estado, 'activa'),
+            eq(recetas.estado, recetaEstadoEnum.enumValues[1]), // 'emitida'
             isNotNull(recetas.fechaFin),
             gte(recetas.fechaFin, today),
             lte(recetas.fechaFin, nextWeek),

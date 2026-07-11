@@ -2,22 +2,23 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { plantillasMensajes } from '@/drizzle/schema';
+import { plantillasMensajes, plantillaTipoEnum, plantillaEstadoEnum } from '@/drizzle/schema';
 import { eq, isNull } from 'drizzle-orm';
 
-const CATEGORIAS_VALIDAS = [
-  'recordatorios',
-  'notificaciones',
-  'whatsapp',
-  'email',
-  'sms',
-  'general',
+const NUEVAS_CATEGORIAS = [
+  'recordatorio',
+  'confirmacion',
+  'cancelacion',
+  'resultado',
+  'receta',
+  'certificado',
+  'otro',
 ] as const;
 
 const createPlantillaSchema = z.object({
   nombre: z.string().min(1).max(100),
   contenido: z.string().min(1).max(10000),
-  categoria: z.enum(CATEGORIAS_VALIDAS).default('recordatorios'),
+  tipo: z.enum(NUEVAS_CATEGORIAS).default('recordatorio'),
   variables: z.array(z.string()).optional().default([]),
 });
 
@@ -25,7 +26,7 @@ const updatePlantillaSchema = z.object({
   id: z.string().uuid(),
   nombre: z.string().min(1).max(100).optional(),
   contenido: z.string().min(1).max(10000).optional(),
-  categoria: z.enum(CATEGORIAS_VALIDAS).optional(),
+  tipo: z.enum(NUEVAS_CATEGORIAS).optional(),
   variables: z.array(z.string()).optional(),
 });
 
@@ -40,13 +41,14 @@ export async function GET() {
       .select()
       .from(plantillasMensajes)
       .where(isNull(plantillasMensajes.deletedAt))
-      .orderBy(plantillasMensajes.categoria, plantillasMensajes.nombre);
+      .orderBy(plantillasMensajes.tipo, plantillasMensajes.nombre);
 
     const formatted = plantillas.map((p) => ({
       id: p.id,
       nombre: p.nombre,
       contenido: p.contenido,
-      categoria: p.categoria,
+      tipo: p.tipo,
+      estado: p.estado,
       variables: p.variables || [],
     }));
 
@@ -67,14 +69,21 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = createPlantillaSchema.parse(body);
 
-    const [nueva] = await db.insert(plantillasMensajes).values(parsed).returning();
+const [nueva] = await db.insert(plantillasMensajes).values({
+      nombre: parsed.nombre,
+      contenido: parsed.contenido,
+      tipo: parsed.tipo,
+      variables: parsed.variables,
+      estado: plantillaEstadoEnum.enumValues[0],
+    }).returning();
 
     return NextResponse.json({
       data: {
         id: nueva.id,
         nombre: nueva.nombre,
         contenido: nueva.contenido,
-        categoria: nueva.categoria,
+        tipo: nueva.tipo,
+        estado: nueva.estado,
         variables: nueva.variables || [],
       },
     });
@@ -97,7 +106,7 @@ export async function PATCH(request: Request) {
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
     if (parsed.nombre !== undefined) updateData.nombre = parsed.nombre;
     if (parsed.contenido !== undefined) updateData.contenido = parsed.contenido;
-    if (parsed.categoria !== undefined) updateData.categoria = parsed.categoria;
+    if (parsed.tipo !== undefined) updateData.tipo = parsed.tipo;
     if (parsed.variables !== undefined) updateData.variables = parsed.variables;
     const id = parsed.id;
 

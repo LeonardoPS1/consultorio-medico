@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { safeWarn } from '@/lib/logger';
-import { recetas, pacientes, medicos } from '@/drizzle/schema';
+import { recetas, pacientes, medicos, recetaEstadoEnum } from '@/drizzle/schema';
 import { eq, and, sql, count, desc } from 'drizzle-orm';
 import { createHash, randomUUID } from 'crypto';
 
@@ -139,9 +139,9 @@ export async function listarRecetas(params: {
   const scope = medicoId ? eq(recetas.medicoId, medicoId) : undefined;
 
   const whereBase = (estadoFiltro?: string) =>
-    and(estadoFiltro ? eq(recetas.estado, estadoFiltro) : undefined, scope);
+    and(estadoFiltro ? eq(recetas.estado, sql`${estadoFiltro}::receta_estado`) : undefined, scope);
 
-  const whereList = and(estado ? eq(recetas.estado, estado) : undefined, scope);
+  const whereList = and(estado ? eq(recetas.estado, sql`${estado}::receta_estado`) : undefined, scope);
 
   const [activas, vencidas, historial, total] = await Promise.all([
     db.select({ count: count() }).from(recetas).where(whereBase('activa')),
@@ -263,7 +263,6 @@ export async function crearReceta(input: CreateRecetaInput) {
   const [nueva] = await db
     .insert(recetas)
     .values({
-      id,
       pacienteId: input.pacienteId,
       medicoId: input.medicoId,
       medicamento: input.medicamento.trim(),
@@ -275,7 +274,7 @@ export async function crearReceta(input: CreateRecetaInput) {
       indicaciones: input.indicaciones?.trim() || null,
       fechaInicio,
       fechaFin,
-      estado: 'activa',
+      estado: recetaEstadoEnum.enumValues[1], // 'emitida'
       hashVerificacion: hash,
     })
     .returning();
@@ -357,7 +356,7 @@ export async function getRecetasForExport(params: {
   const { estado, medicoId } = params;
 
   const scope = medicoId ? eq(recetas.medicoId, medicoId) : undefined;
-  const whereEstado = estado ? eq(recetas.estado, estado) : undefined;
+  const whereEstado = estado ? eq(recetas.estado, sql`${estado}::receta_estado`) : undefined;
 
   const rows = await db
     .select({

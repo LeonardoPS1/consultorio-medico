@@ -1,5 +1,6 @@
 import {
   pgTable,
+  pgEnum,
   uuid,
   varchar,
   text,
@@ -18,6 +19,29 @@ import {
 import { relations, sql, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 
 // ============================================================
+// ENUM TYPES (PostgreSQL enums for type safety)
+// ============================================================
+export const rolEnum = pgEnum('rol', ['admin', 'medico', 'secretaria', 'paciente']);
+export const turnoTipoEnum = pgEnum('turno_tipo', ['consulta', 'control', 'urgencia', 'telemedicina', 'procedimiento', 'otro']);
+export const turnoEstadoEnum = pgEnum('turno_estado', ['pendiente', 'confirmada', 'en_atencion', 'atendido', 'cancelada', 'no_asistio', 'completada']);
+export const recetaTipoEnum = pgEnum('receta_tipo', ['simple', 'crónica', 'estupefaciente', 'psicotropo', 'controlada']);
+export const recetaEstadoEnum = pgEnum('receta_estado', ['borrador', 'emitida', 'entregada', 'anulada', 'expirada', 'renovada', 'historial']);
+export const plantillaTipoEnum = pgEnum('plantilla_tipo', ['recordatorio', 'confirmacion', 'cancelacion', 'resultado', 'receta', 'certificado', 'otro']);
+export const plantillaEstadoEnum = pgEnum('plantilla_estado', ['activa', 'inactiva', 'borrador']);
+export const notificacionTipoEnum = pgEnum('notificacion_tipo', ['turno', 'mensaje', 'receta', 'urgencia', 'sistema']);
+export const historialTipoEnum = pgEnum('historial_tipo', ['consulta', 'urgencia', 'receta', 'certificado', 'orden_estudio', 'derivacion', 'evolucion', 'anamnesis', 'examen_fisico', 'diagnostico', 'tratamiento', 'encuesta', 'otro']);
+export const tareaEstadoEnum = pgEnum('tarea_estado', ['pendiente', 'en_progreso', 'completada', 'cancelada']);
+export const tareaPrioridadEnum = pgEnum('tarea_prioridad', ['baja', 'normal', 'alta', 'urgente']);
+export const ordenEstudioTipoEnum = pgEnum('orden_estudio_tipo', ['laboratorio', 'imagen', 'otros']);
+export const ordenEstudioEstadoEnum = pgEnum('orden_estudio_estado', ['pendiente', 'completada', 'cancelada']);
+export const consentimientoTipoEnum = pgEnum('consentimiento_tipo', ['tratamiento', 'cirugia', 'anestesia', 'datos', 'fotografia', 'investigacion', 'otro']);
+export const consentimientoEstadoEnum = pgEnum('consentimiento_estado', ['pendiente', 'firmado', 'rechazado', 'revocado']);
+export const novedadTipoEnum = pgEnum('novedad_tipo', ['feature', 'fix', 'security', 'docs', 'refactor', 'chore']);
+export const usuarioPlanEnum = pgEnum('usuario_plan', ['free', 'starter', 'professional', 'business', 'enterprise']);
+export const horarioTipoEnum = pgEnum('horario_tipo', ['corrido', 'partido']);
+export const tenenciaEnum = pgEnum('tenencia', ['propia', 'alquilada', 'comodato']);
+
+// ============================================================
 // USUARIOS
 // ============================================================
 export const usuarios = pgTable('usuarios', {
@@ -25,7 +49,7 @@ export const usuarios = pgTable('usuarios', {
   email: varchar('email', { length: 255 }).unique().notNull(),
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
   nombre: varchar('nombre', { length: 255 }).notNull(),
-  rol: varchar('rol', { length: 20 }).notNull().default('medico'),
+  rol: rolEnum('rol').notNull().default('medico'),
   activo: boolean('activo').notNull().default(true),
   ultimoAcceso: timestamp('ultimo_acceso', { withTimezone: true }),
   secreto2fa: varchar('secreto_2fa', { length: 255 }),
@@ -173,8 +197,8 @@ export const turnos = pgTable(
     fechaHora: timestamp('fecha_hora', { withTimezone: true }).notNull(),
     duracionMinutos: integer('duracion_minutos').notNull().default(30),
     motivo: text('motivo'),
-    estado: varchar('estado', { length: 20 }).notNull().default('pendiente'),
-    tipoConsulta: varchar('tipo_consulta', { length: 20 }).notNull().default('presencial'),
+    estado: turnoEstadoEnum('estado').notNull().default('pendiente'),
+    tipoConsulta: turnoTipoEnum('tipo_consulta').notNull().default('consulta'),
     linkVideollamada: text('link_videollamada'),
     notasPaciente: text('notas_paciente'),
     notasMedico: text('notas_medico'),
@@ -349,9 +373,9 @@ export const tareasPendientes = pgTable('tareas_pendientes', {
     .references(() => pacientes.id),
   medicoId: uuid('medico_id').references(() => medicos.id),
   tipo: varchar('tipo', { length: 30 }).notNull(),
-  descripcion: text('descripcion').notNull(),
-  estado: varchar('estado', { length: 20 }).notNull().default('pendiente'),
-  prioridad: varchar('prioridad', { length: 10 }).notNull().default('normal'),
+descripcion: text('descripcion').notNull(),
+    estado: tareaEstadoEnum('estado').notNull().default('pendiente'),
+    prioridad: tareaPrioridadEnum('prioridad').notNull().default('normal'),
   asignadoA: uuid('asignado_a').references(() => usuarios.id),
   fechaLimite: timestamp('fecha_limite', { withTimezone: true }),
   completadaAt: timestamp('completada_at', { withTimezone: true }),
@@ -371,7 +395,7 @@ export const historialMedico = pgTable(
       .references(() => pacientes.id),
     medicoId: uuid('medico_id').references(() => medicos.id),
     turnoId: uuid('turno_id').references(() => turnos.id),
-    tipo: varchar('tipo', { length: 30 }).notNull(),
+    tipo: historialTipoEnum('tipo').notNull(),
     titulo: varchar('titulo', { length: 255 }).notNull(),
     descripcion: text('descripcion'),
     diagnosticoCodigo: varchar('diagnostico_codigo', { length: 10 }),
@@ -436,7 +460,8 @@ export const recetas = pgTable(
       .notNull()
       .references(() => medicos.id),
     turnoId: uuid('turno_id').references(() => turnos.id),
-    estado: varchar('estado', { length: 20 }).notNull().default('activa'),
+    estado: recetaEstadoEnum('estado').notNull().default('emitida'),
+    tipo: recetaTipoEnum('tipo').notNull().default('simple'),
     medicamento: varchar('medicamento', { length: 255 }).notNull(),
     presentacion: varchar('presentacion', { length: 255 }),
     dosis: varchar('dosis', { length: 255 }).notNull(),
@@ -902,20 +927,27 @@ export const sucursalesRelations = relations(sucursales, ({ one, many }) => ({
 // ============================================================
 // HORARIOS DE ATENCIÓN
 // ============================================================
-export const horariosAtencion = pgTable('horarios_atencion', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  dia: varchar('dia', { length: 20 }).notNull().unique(),
-  activo: boolean('activo').notNull().default(true),
-  sucursalId: uuid('sucursal_id').references(() => sucursales.id),
-  tipo: varchar('tipo', { length: 10 }).notNull().default('corrido'),
-  inicio: varchar('inicio', { length: 5 }).notNull().default('09:00'),
-  fin: varchar('fin', { length: 5 }).notNull().default('18:00'),
-  inicio2: varchar('inicio2', { length: 5 }),
-  fin2: varchar('fin2', { length: 5 }),
-  tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+export const horariosAtencion = pgTable(
+  'horarios_atencion',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    dia: varchar('dia', { length: 20 }).notNull(),
+    activo: boolean('activo').notNull().default(true),
+    sucursalId: uuid('sucursal_id').references(() => sucursales.id),
+    tipo: varchar('tipo', { length: 10 }).notNull().default('corrido'),
+    inicio: varchar('inicio', { length: 5 }).notNull().default('09:00'),
+    fin: varchar('fin', { length: 5 }).notNull().default('18:00'),
+    inicio2: varchar('inicio2', { length: 5 }),
+    fin2: varchar('fin2', { length: 5 }),
+    tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    // Un día por sucursal (permite mismo día en distintas sucursales)
+    uniqueDiaSucursal: uniqueIndex('uq_horarios_dia_sucursal').on(table.dia, table.sucursalId),
+  }),
+);
 
 export type HorarioAtencion = InferSelectModel<typeof horariosAtencion>;
 
@@ -936,7 +968,7 @@ export const notificaciones = pgTable(
     usuarioId: uuid('usuario_id').notNull(),
     titulo: varchar('titulo', { length: 255 }).notNull(),
     descripcion: text('descripcion'),
-    tipo: varchar('tipo', { length: 20 }).notNull().default('sistema'), // turno | mensaje | receta | urgencia | sistema
+    tipo: notificacionTipoEnum('tipo').notNull().default('sistema'),
     /** Prioridad calculada: urgencia=0, receta=1, turno=2, mensaje=3, sistema=4 */
     prioridad: integer('prioridad').notNull().default(4),
     leido: boolean('leido').notNull().default(false),
@@ -1016,11 +1048,11 @@ export const plantillasMensajes = pgTable('plantillas_mensajes', {
   id: uuid('id').defaultRandom().primaryKey(),
   nombre: varchar('nombre', { length: 255 }).notNull(),
   contenido: text('contenido').notNull(),
-  categoria: varchar('categoria', { length: 50 }).notNull().default('recordatorios'),
+  tipo: plantillaTipoEnum('tipo').notNull().default('recordatorio'),
+  estado: plantillaEstadoEnum('estado').notNull().default('activa'),
   variables: text('variables')
     .array()
     .default(sql`'{}'`),
-  activa: boolean('activa').notNull().default(true),
   tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -1250,7 +1282,8 @@ export const consentimientos = pgTable(
     pacienteId: uuid('paciente_id')
       .notNull()
       .references(() => pacientes.id),
-    tipo: varchar('tipo', { length: 50 }).notNull().default('general'),
+    tipo: consentimientoTipoEnum('tipo').notNull().default('tratamiento'),
+    estado: consentimientoEstadoEnum('estado').notNull().default('pendiente'),
     titulo: varchar('titulo', { length: 255 }).notNull(),
     descripcion: text('descripcion'),
     fechaFirma: timestamp('fecha_firma', { withTimezone: true }),
@@ -1489,8 +1522,8 @@ export const ordenesEstudio = pgTable(
     turnoId: uuid('turno_id').references(() => turnos.id),
     titulo: varchar('titulo', { length: 255 }).notNull(),
     descripcion: text('descripcion'),
-    tipo: varchar('tipo', { length: 50 }).notNull().default('laboratorio'), // laboratorio, imagen, otros
-    estado: varchar('estado', { length: 30 }).notNull().default('pendiente'), // pendiente, completada, cancelada
+    tipo: ordenEstudioTipoEnum('tipo').notNull().default('laboratorio'),
+    estado: ordenEstudioEstadoEnum('estado').notNull().default('pendiente'),
     resultadoUrl: text('resultado_url'),
     observaciones: text('observaciones'),
     tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),

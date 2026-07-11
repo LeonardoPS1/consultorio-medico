@@ -5,7 +5,7 @@
  */
 
 import { db } from '@/lib/db';
-import { consentimientos, pacientes, medicos } from '@/drizzle/schema';
+import { consentimientos, pacientes, medicos, consentimientoTipoEnum } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, like, or } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import { notFound } from '@/lib/api-handler';
@@ -35,7 +35,7 @@ export const consentimientosService = {
 
     const condList: (SQL | undefined)[] = [];
     if (!includeDeleted) condList.push(sql`${consentimientos.deletedAt} IS NULL`);
-    if (tipo) condList.push(eq(consentimientos.tipo, tipo));
+    if (tipo) condList.push(eq(consentimientos.tipo, sql`${tipo}::consentimiento_tipo`));
     if (pacienteId) condList.push(eq(consentimientos.pacienteId, pacienteId));
     if (medicoId) condList.push(eq(consentimientos.medicoId, medicoId));
     if (search)
@@ -134,7 +134,7 @@ export const consentimientosService = {
       .insert(consentimientos)
       .values({
         pacienteId: input.pacienteId,
-        tipo: input.tipo || 'general',
+        tipo: (input.tipo || consentimientoTipoEnum.enumValues[0]) as 'tratamiento' | 'cirugia' | 'anestesia' | 'datos' | 'fotografia' | 'investigacion' | 'otro',
         titulo: input.titulo,
         descripcion: input.descripcion || null,
         fechaFirma: input.fechaFirma ? new Date(input.fechaFirma) : null,

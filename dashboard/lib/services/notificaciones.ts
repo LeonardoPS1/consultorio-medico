@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { notificaciones } from '@/drizzle/schema';
+import { notificaciones, notificacionTipoEnum } from '@/drizzle/schema';
 import { eq, and, sql, count, desc } from 'drizzle-orm';
 import { notFound } from '@/lib/api-handler';
 
@@ -49,7 +49,7 @@ export const notificacionesService = {
     const whereConditions = and(
       eq(notificaciones.usuarioId, usuarioId),
       includeDeleted ? undefined : sql`${notificaciones.deletedAt} IS NULL`,
-      tipo ? eq(notificaciones.tipo, tipo) : undefined,
+      tipo ? eq(notificaciones.tipo, sql`${tipo}::notificacion_tipo`) : undefined,
       soloNoLeidas ? eq(notificaciones.leido, false) : undefined,
     );
 

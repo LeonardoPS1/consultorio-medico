@@ -15,6 +15,31 @@
 const N8N_BASE_URL = process.env.N8N_BASE_URL || 'http://172.18.0.1:5678';
 const N8N_API_KEY = process.env.N8N_API_KEY || '';
 
+// Retry configuration
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 1000;
+const MAX_DELAY_MS = 10000;
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Valida la configuración de n8n al iniciar la aplicación.
+ * Lanza error si N8N_API_KEY falta en producción (fail-fast).
+ */
+export function validateN8nConfig(): void {
+  if (process.env.NODE_ENV === 'production' && !N8N_API_KEY) {
+    throw new Error(
+      'N8N_API_KEY no configurada. Esta variable es obligatoria en producción. ' +
+        'Configúrala en las variables de entorno del dashboard.',
+    );
+  }
+  if (!N8N_API_KEY) {
+    console.warn('[n8n-sync] ADVERTENCIA: N8N_API_KEY no configurada. La sincronización con n8n fallará.');
+  }
+}
+
 /**
  * Tipos de credenciales n8n con su estructura de datos.
  * Cada entrada define qué campos espera n8n para ese tipo.
@@ -210,7 +235,7 @@ function buildN8nData(
 
 /**
  * Sincroniza una credencial (o grupo de credenciales del mismo servicio)
- * con n8n.
+ * con n8n. Incluye retry logic con exponential backoff.
  *
  * @param servicio - Nombre del servicio (twilio, ollama, etc.)
  * @param credenciales - Mapa de clave→valor de todas las credenciales del servicio
@@ -238,48 +263,62 @@ export async function syncToN8n(
 
   const credentialName = `Consultorio - ${mapping.n8nType}`;
 
-  try {
-    if (n8nCredentialId) {
-      // ACTUALIZAR credential existente
-      const res = await fetch(`${N8N_BASE_URL}/api/v1/credentials/${n8nCredentialId}`, {
-        method: 'PATCH',
+  const doRequest = async (attempt: number): Promise<{ success: boolean; n8nId?: string; error?: string }> => {
+    try {
+      const isUpdate = !!n8nCredentialId;
+      const method = isUpdate ? 'PATCH' : 'POST';
+      const url = isUpdate
+        ? `${N8N_BASE_URL}/api/v1/credentials/${n8nCredentialId}`
+        : `${N8N_BASE_URL}/api/v1/credentials`;
+      const body = JSON.stringify({
+        name: credentialName,
+        type: mapping.n8nType,
+        data,
+      });
+
+      const res = await fetch(url, {
+        method,
         headers: getHeaders(),
-        body: JSON.stringify({
-          name: credentialName,
-          type: mapping.n8nType,
-          data,
-        }),
+        body,
       });
 
       if (!res.ok) {
         const errBody = await res.text();
-        return { success: false, error: `n8n PATCH error ${res.status}: ${errBody}` };
+        const status = res.status;
+
+        // No reintentar errores 4xx (client errors) excepto 429 (rate limit)
+        if (status >= 400 && status < 500 && status !== 429) {
+          return { success: false, error: `n8n ${method} error ${status}: ${errBody}` };
+        }
+
+        // Retry on 5xx or 429
+        if (attempt < MAX_RETRIES) {
+          const delay = Math.min(BASE_DELAY_MS * Math.pow(2, attempt), MAX_DELAY_MS);
+          await sleep(delay);
+          return doRequest(attempt + 1);
+        }
+
+        return { success: false, error: `n8n ${method} error ${status} after ${MAX_RETRIES} retries: ${errBody}` };
       }
 
-      return { success: true, n8nId: n8nCredentialId };
-    } else {
-      // CREAR nueva credential en n8n
-      const res = await fetch(`${N8N_BASE_URL}/api/v1/credentials`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({
-          name: credentialName,
-          type: mapping.n8nType,
-          data,
-        }),
-      });
-
-      if (!res.ok) {
-        const errBody = await res.text();
-        return { success: false, error: `n8n POST error ${res.status}: ${errBody}` };
+      if (isUpdate) {
+        return { success: true, n8nId: n8nCredentialId };
       }
 
       const result = await res.json();
       return { success: true, n8nId: result.id };
+    } catch (err) {
+      // Network errors - retry
+      if (attempt < MAX_RETRIES) {
+        const delay = Math.min(BASE_DELAY_MS * Math.pow(2, attempt), MAX_DELAY_MS);
+        await sleep(delay);
+        return doRequest(attempt + 1);
+      }
+      return { success: false, error: `Error de conexión con n8n after ${MAX_RETRIES} retries: ${(err as Error).message}` };
     }
-  } catch (err) {
-    return { success: false, error: `Error de conexión con n8n: ${(err as Error).message}` };
-  }
+  };
+
+  return doRequest(1);
 }
 
 /**

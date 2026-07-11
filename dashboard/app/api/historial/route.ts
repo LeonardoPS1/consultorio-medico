@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { historialMedico, pacientes } from '@/drizzle/schema';
+import { historialMedico, pacientes, historialTipoEnum } from '@/drizzle/schema';
 import { eq, desc, and, sql } from 'drizzle-orm';
 import { apiHandler, success } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
@@ -29,7 +29,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
   }
 
   if (tipo) {
-    conditions.push(eq(historialMedico.tipo, tipo));
+    conditions.push(eq(historialMedico.tipo, sql`${tipo}::historial_tipo`));
   }
 
   if (from) {

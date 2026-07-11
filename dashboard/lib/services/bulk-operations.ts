@@ -7,6 +7,8 @@ import { safeLog, safeWarn, safeError } from '@/lib/logger';
 import { pacientes, turnos } from '@/drizzle/schema';
 import { eq, and, inArray, isNull, sql } from 'drizzle-orm';
 
+export type TurnoEstado = 'pendiente' | 'confirmada' | 'en_atencion' | 'atendido' | 'cancelada' | 'no_asistio' | 'completada';
+
 // ─── Bulk WhatsApp ─────────────────────────────────────────
 
 interface BulkWhatsAppResult {
@@ -120,7 +122,7 @@ export async function bulkWhatsApp(
 
 export async function bulkUpdateTurnoStatus(
   turnoIds: string[],
-  nuevoEstado: string,
+  nuevoEstado: TurnoEstado,
 ): Promise<{ actualizados: number; total: number }> {
   if (turnoIds.length === 0) return { actualizados: 0, total: 0 };
 

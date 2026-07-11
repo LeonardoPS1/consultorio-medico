@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDemoReportes } from '@/lib/reportes-demo-data';
 import { safeWarn } from '@/lib/logger';
+import { turnoEstadoEnum } from '@/drizzle/schema';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
         and(
           gte(turnos.fechaHora, startDate),
           lt(turnos.fechaHora, todayStart),
-          eq(turnos.estado, 'completado'),
+          eq(turnos.estado, turnoEstadoEnum.enumValues[6]), // 'completada'
           sql`${turnos.deletedAt} IS NULL`,
         ),
       );
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
         and(
           gte(turnos.fechaHora, startDate),
           lt(turnos.fechaHora, todayStart),
-          eq(turnos.estado, 'cancelado'),
+          eq(turnos.estado, turnoEstadoEnum.enumValues[4]), // 'cancelada'
           sql`${turnos.deletedAt} IS NULL`,
         ),
       );

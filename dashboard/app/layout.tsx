@@ -7,6 +7,10 @@ import { PWARegister } from '@/components/pwa-register';
 import { TenantTheme } from '@/components/tenant-theme';
 import { ScrollToTopButton } from '@/components/ui/scroll-to-top';
 import { WebVitals } from '@/components/web-vitals';
+import { validateN8nConfig } from '@/lib/n8n-sync';
+
+// Fail-fast validation of n8n config at startup
+validateN8nConfig();
 
 const inter = Inter({ subsets: ['latin'] });
 

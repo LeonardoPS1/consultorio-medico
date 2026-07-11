@@ -3,7 +3,7 @@
  */
 
 import { db } from '@/lib/db';
-import { ordenesEstudio, medicos, pacientes } from '@/drizzle/schema';
+import { ordenesEstudio, medicos, pacientes, ordenEstudioEstadoEnum, ordenEstudioTipoEnum } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, like, or } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import { notFound } from '@/lib/api-handler';
@@ -34,8 +34,8 @@ export const ordenesEstudioService = {
     if (!includeDeleted) condList.push(sql`${ordenesEstudio.deletedAt} IS NULL`);
     if (pacienteId) condList.push(eq(ordenesEstudio.pacienteId, pacienteId));
     if (medicoId) condList.push(eq(ordenesEstudio.medicoId, medicoId));
-    if (estado) condList.push(eq(ordenesEstudio.estado, estado));
-    if (tipo) condList.push(eq(ordenesEstudio.tipo, tipo));
+    if (estado) condList.push(eq(ordenesEstudio.estado, sql`${estado}::orden_estudio_estado`));
+    if (tipo) condList.push(eq(ordenesEstudio.tipo, sql`${tipo}::orden_estudio_tipo`));
 
     const where = condList.length > 0 ? and(...condList) : undefined;
 

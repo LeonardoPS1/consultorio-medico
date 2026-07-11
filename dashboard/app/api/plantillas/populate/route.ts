@@ -2,8 +2,8 @@ import { NextRequest } from 'next/server';
 import { apiHandler, ok, fail, notFound } from '@/lib/api-handler';
 import { parseBody, populatePlantillasSchema } from '@/lib/validations';
 import { db } from '@/lib/db';
-import { plantillasMensajes } from '@/drizzle/schema';
-import { eq, and, isNull } from 'drizzle-orm';
+import { plantillasMensajes, plantillaTipoEnum, plantillaEstadoEnum } from '@/drizzle/schema';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 
 /**
  * POST /api/plantillas/populate
@@ -26,12 +26,12 @@ export const POST = apiHandler(async (request: NextRequest) => {
     fail('Se requiere categoria o plantillaId', 400);
   }
 
-  const fetchPlantilla = async () => {
+const fetchPlantilla = async () => {
     if (plantillaId) {
       const [p] = await db
         .select()
         .from(plantillasMensajes)
-        .where(and(eq(plantillasMensajes.id, plantillaId), isNull(plantillasMensajes.deletedAt)))
+        .where(eq(plantillasMensajes.id, plantillaId))
         .limit(1);
       return p;
     }
@@ -40,8 +40,8 @@ export const POST = apiHandler(async (request: NextRequest) => {
       .from(plantillasMensajes)
       .where(
         and(
-          eq(plantillasMensajes.categoria, categoria!),
-          eq(plantillasMensajes.activa, true),
+          eq(plantillasMensajes.tipo, sql`${categoria}::plantilla_tipo`),
+          eq(plantillasMensajes.estado, plantillaEstadoEnum.enumValues[0]),
           isNull(plantillasMensajes.deletedAt),
         ),
       )
@@ -73,7 +73,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     template: {
       id: plantilla.id,
       nombre: plantilla.nombre,
-      categoria: plantilla.categoria,
+      tipo: plantilla.tipo,
       variables: plantilla.variables,
     },
   });

@@ -2,14 +2,14 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { bulkUpdateTurnoStatus } from '@/lib/services/bulk-operations';
 import { safeWarn } from '@/lib/logger';
+import type { TurnoEstado } from '@/lib/services/bulk-operations';
 
-const ESTADOS_VALIDOS = [
+const ESTADOS_VALIDOS: TurnoEstado[] = [
   'pendiente',
   'confirmada',
   'en_atencion',
   'atendido',
   'cancelada',
-  'en_consulta',
   'completada',
   'no_asistio',
 ];
@@ -36,14 +36,14 @@ export async function PATCH(request: Request) {
     if (!estado || typeof estado !== 'string') {
       return NextResponse.json({ error: 'estado es requerido' }, { status: 400 });
     }
-    if (!ESTADOS_VALIDOS.includes(estado)) {
+    if (!ESTADOS_VALIDOS.includes(estado as TurnoEstado)) {
       return NextResponse.json(
         { error: `Estado inválido. Válidos: ${ESTADOS_VALIDOS.join(', ')}` },
         { status: 400 },
       );
     }
 
-    const result = await bulkUpdateTurnoStatus(turnoIds, estado);
+    const result = await bulkUpdateTurnoStatus(turnoIds, estado as TurnoEstado);
 
     return NextResponse.json({ data: result });
   } catch (err) {
