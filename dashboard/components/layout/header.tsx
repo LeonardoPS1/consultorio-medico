@@ -18,7 +18,6 @@ import {
   Users,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { getInitials, formatRelative } from '@/lib/utils';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import { useSucursal } from '@/lib/sucursal-context';
 import { usePatientPanel } from '@/lib/hooks/use-patient-panel';
@@ -94,11 +93,6 @@ export function Header() {
 
   const user = session?.user;
   const nombreCompleto = user?.name || 'Dr.';
-  const nameParts = nombreCompleto.trim().split(/\s+/);
-  const initials =
-    nameParts.length > 1
-      ? (nameParts[0].charAt(0) + nameParts[1].charAt(0)).toUpperCase()
-      : nameParts[0].charAt(0).toUpperCase();
 
   const isMinimal = config.headerMode === 'minimal';
 
@@ -130,28 +124,69 @@ export function Header() {
               <Menu className="h-5 w-5" />
             </Button>
 
-            <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-2 ring-border shrink-0">
-              {avatarUrl ? (
-                <AvatarImage src={avatarUrl} alt={orgFirma || 'Avatar'} />
-              ) : (
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                  {orgFirma.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <div className="min-w-0">
-              <h1 className="text-sm sm:text-base font-semibold text-foreground truncate">
-                {orgFirma || 'Dr.'}
-              </h1>
-              <p className="text-[11px] lg:text-xs text-muted-foreground truncate hidden sm:block">
-                {orgNombre} ·{' '}
-                {new Date().toLocaleDateString('es-CL', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                })}
-              </p>
-            </div>
+            {/* Perfil: Avatar + Nombre/Fecha con dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 lg:gap-3 p-0 h-auto hover:bg-transparent cursor-pointer">
+                  <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-2 ring-border shrink-0">
+                    {avatarUrl ? (
+                      <AvatarImage src={avatarUrl} alt={orgFirma || 'Avatar'} />
+                    ) : (
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                        {orgFirma.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="min-w-0 text-left cursor-pointer">
+                    <h1 className="text-sm sm:text-base font-semibold text-foreground truncate">
+                      {orgFirma || 'Dr.'}
+                    </h1>
+                    <p className="text-[11px] lg:text-xs text-muted-foreground truncate hidden sm:block">
+                      {orgNombre} ·{' '}
+                      {new Date().toLocaleDateString('es-CL', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                      })}
+                    </p>
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col">
+                    <span>{nombreCompleto}</span>
+                    <span className="text-xs text-muted-foreground font-normal">{user?.email}</span>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => router.push('/dashboard/configuracion')}>
+                  <svg
+                    className="h-4 w-4 mr-2"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                  </svg>
+                  Configuración
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={async () => {
+                    try {
+                      await signOut({ redirect: false });
+                    } catch {
+                      /* NextAuth v5 beta puede lanzar igual */
+                    }
+                    window.location.href = '/';
+                  }}
+                >
+                  Cerrar sesión
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {/* Selector de sucursal */}
             {hasMultiple && (
               <DropdownMenu>
@@ -271,60 +306,6 @@ export function Header() {
         {/* Notificaciones */}
         <NotificationsDropdown />
 
-        {/* Perfil */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" aria-label="Menú de perfil">
-              <Avatar className="h-8 w-8">
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt="Avatar"
-                    className="h-full w-full rounded-full object-cover"
-                  />
-                ) : (
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                    {initials}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
-              <div className="flex flex-col">
-                <span>{nombreCompleto}</span>
-                <span className="text-xs text-muted-foreground font-normal">{user?.email}</span>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => router.push('/dashboard/configuracion')}>
-              <svg
-                className="h-4 w-4 mr-2"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <circle cx="12" cy="12" r="3" />
-                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-              </svg>
-              Configuración
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={async () => {
-                try {
-                  await signOut({ redirect: false });
-                } catch {
-                  /* NextAuth v5 beta puede lanzar igual */
-                }
-                window.location.href = '/';
-              }}
-            >
-              Cerrar sesión
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </header>
   );
