@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { apiHandler, success, fail } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
 import { generarDesdeGitLog, generarDesdeCommits } from '@/lib/services/novedades';
@@ -60,14 +61,20 @@ export const POST = apiHandler(async (request: NextRequest) => {
   if (body) {
     const messages = extraerCommits(body);
     if (messages.length > 0) {
-      const entries = await generarDesdeCommits(messages);
-      if (entries.length === 0) {
-        return success({ mensaje: 'No se generaron entradas (solo commits sin clasificar)' });
+      try {
+        const entries = await generarDesdeCommits(messages);
+        if (entries.length === 0) {
+          return success({ mensaje: 'No se generaron entradas (solo commits sin clasificar)' });
+        }
+        return success({
+          mensaje: `Se generaron ${entries.length} entrada(s) de novedades`,
+          entries,
+        });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error('[generarDesdeCommits]', e);
+        return NextResponse.json({ error: `Error en generarDesdeCommits: ${msg}` }, { status: 500 });
       }
-      return success({
-        mensaje: `Se generaron ${entries.length} entrada(s) de novedades`,
-        entries,
-      });
     }
   }
 
