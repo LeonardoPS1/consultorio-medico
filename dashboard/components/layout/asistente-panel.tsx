@@ -122,7 +122,7 @@ export function AsistentePanel() {
     <>
       {/* ─── MOBILE: Bottom sheet (fullscreen) ─────────────── */}
       <motion.div
-        className="fixed inset-x-0 bottom-0 z-40 flex flex-col sm:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 flex flex-col sm:hidden bg-background"
         style={{ height: '90dvh' }}
         initial={{ y: '100%' }}
         animate={{ y: 0 }}

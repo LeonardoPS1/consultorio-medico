@@ -823,6 +823,48 @@ export function PacienteDetalleClient({
                     {tag}
                   </Badge>
                 ))}
+                {/* Acciones mobile — dentro del name row para evitar overlap */}
+                <div className="md:hidden ml-auto">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => setEditPacienteOpen(true)}>
+                        <Edit3 className="h-4 w-4 mr-2" /> Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push(`/dashboard/conversaciones`)}>
+                        <MessageSquare className="h-4 w-4 mr-2" /> Mensaje
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setShowNuevoTurno(true)}>
+                        <Calendar className="h-4 w-4 mr-2" /> Nuevo Turno
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setShowCertDialog(true)}>
+                        <ScrollText className="h-4 w-4 mr-2" /> Certificado
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleExportarDatos}>
+                        <Download className="h-4 w-4 mr-2" /> Exportar datos
+                      </DropdownMenuItem>
+                      {!bajaConfirmada && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() =>
+                              bajaSolicitada ? setBajaConfirmOpen(true) : setBajaDialogOpen(true)
+                            }
+                            disabled={bajaLoading}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {bajaSolicitada ? 'Confirmar baja' : 'Solicitar baja'}
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
               <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
                 <span className="flex items-center gap-1">
@@ -889,48 +931,6 @@ export function PacienteDetalleClient({
                   </Badge>
                 )}
               </div>
-            </div>
-            {/* Acciones — mobile: dropdown, desktop: inline */}
-            <div className="md:hidden">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => setEditPacienteOpen(true)}>
-                    <Edit3 className="h-4 w-4 mr-2" /> Editar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push(`/dashboard/conversaciones`)}>
-                    <MessageSquare className="h-4 w-4 mr-2" /> Mensaje
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowNuevoTurno(true)}>
-                    <Calendar className="h-4 w-4 mr-2" /> Nuevo Turno
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowCertDialog(true)}>
-                    <ScrollText className="h-4 w-4 mr-2" /> Certificado
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportarDatos}>
-                    <Download className="h-4 w-4 mr-2" /> Exportar datos
-                  </DropdownMenuItem>
-                  {!bajaConfirmada && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() =>
-                          bajaSolicitada ? setBajaConfirmOpen(true) : setBajaDialogOpen(true)
-                        }
-                        disabled={bajaLoading}
-                        className="text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        {bajaSolicitada ? 'Confirmar baja' : 'Solicitar baja'}
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
             {/* Desktop: inline buttons */}
             <div className="hidden md:flex gap-2 shrink-0">
