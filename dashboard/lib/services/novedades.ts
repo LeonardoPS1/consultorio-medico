@@ -45,8 +45,8 @@ export async function crearNovedad(input: CreateNovedadInput): Promise<Novedad> 
     .values({
       version: input.version,
       titulo: input.titulo,
-      items: sql`${JSON.stringify(input.items)}::jsonb`,
-      fecha: input.fecha ? sql`${input.fecha}::timestamptz` : sql`NOW()`,
+      items: input.items as unknown as typeof novedades.$inferInsert.items,
+      fecha: input.fecha ?? new Date(),
       tipo: input.tipo ?? 'feature',
     })
     .returning();
