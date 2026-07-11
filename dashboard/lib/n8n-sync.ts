@@ -27,8 +27,17 @@ async function sleep(ms: number): Promise<void> {
 /**
  * Valida la configuración de n8n al iniciar la aplicación.
  * Lanza error si N8N_API_KEY falta en producción (fail-fast).
+ * No falla durante el build de Next.js (solo en runtime).
  */
 export function validateN8nConfig(): void {
+  // Skip validation during Next.js build (static generation)
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    if (!N8N_API_KEY) {
+      console.warn('[n8n-sync] ADVERTENCIA: N8N_API_KEY no configurada durante build. La sincronización con n8n fallará en runtime.');
+    }
+    return;
+  }
+
   if (process.env.NODE_ENV === 'production' && !N8N_API_KEY) {
     throw new Error(
       'N8N_API_KEY no configurada. Esta variable es obligatoria en producción. ' +
