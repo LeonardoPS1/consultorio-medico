@@ -2,7 +2,7 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 10/07/2026
+**Última actualización:** 12/07/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
@@ -54,7 +54,7 @@
 - **Componentes UI**: shadcn/ui + Radix UI + Tailwind CSS. Animaciones con framer-motion.
 - **Zod**: Validación de schemas en todas las API routes.
 - **Server Actions**: Solo cuando es necesario. Preferir API Routes para operaciones complejas.
-- **Tests**: Vitest (unit) + Playwright (e2e). 175+ tests. `pnpm test` / `pnpm e2e`.
+- **Tests**: Vitest (unit) + Playwright (e2e). 247+ tests. `pnpm test` / `pnpm test:coverage` / `pnpm e2e`.
 
 ### Gestión de Sesiones (OpenCode)
 - **Memoria persistente** en `.opencode/memory/`:
@@ -121,7 +121,7 @@ PACIENTES
 Twilio WhatsApp / IMAP Email
   │
   ▼
-n8n (10 Workflows)
+n8n (11 Workflows)
   │  ├── WF-01: WhatsApp Inbound + Triaje IA
   │  ├── WF-02: Gestión de Turnos
   │  ├── WF-03: Recordatorios Automáticos
@@ -181,7 +181,7 @@ consultorio-medico/
 │   │   └── api/               # API Routes RESTful
 │   ├── components/            # UI, layout, calendar, charts, modals
 │   ├── lib/                   # auth, db, planes, features, servicios
-│   ├── drizzle/               # Schema Drizzle + migraciones
+│   ├── drizzle/               # Schema Drizzle (10 módulos por dominio + barrel) + migraciones
 │   └── public/                # Landing page + assets
 ├── n8n-workflows/             # 10 workflows JSON
 │   └── current/               # Activos (WF-01 a WF-10)
@@ -447,7 +447,7 @@ consultorio-medico/
 4. `Novedades generadas` → OK (noOp)
 5. `Sin commits nuevos` → skip (noOp)
 
-**⚠️ Pendiente:** Configurar webhook de GitHub para enviar pushes a `https://med.aicorebots.com/webhook/novedades-generar`.
+**✅ Completado:** Webhook de GitHub configurado y enviando pushes a `https://med.aicorebots.com/webhook/novedades-generar`.
 
 ---
 
@@ -518,7 +518,7 @@ consultorio-medico/
 | Host interno | `172.18.0.1:5432` |
 | Database | `consultorio_medico` |
 | App User | `dashboard_user` |
-| Tablas | 26+ (pacientes, turnos, recetas, conversaciones, mensajes, médicos, usuarios, etc.) |
+| Tablas | 48 (pacientes, turnos, recetas, conversaciones, mensajes, médicos, usuarios, etc.) |
 
 ### Google Calendar
 - Service Account (OAuth2)
@@ -565,6 +565,7 @@ consultorio-medico/
 15. **Firewall**: UFW, puertos 5432 y 11434 ALLOW solo desde redes Docker (172.17/18/19.0.0/16, 10.0.1.0/24), DENY externo. PG/Ollama bind a 0.0.0.0 (no 127.0.0.1) para que Swarm pueda alcanzarlos via docker_gwbridge (172.18.0.1)
 16. **Prompt sanitization**: Anti-jailbreak implementado
 17. **Auditoría 03/06**: 0 críticos / 0 altos / 0 medios / 0 bajos ✅
+18. **Auditoría 12/07**: 0 críticos / 0 altos / 0 medios / 0 bajos ✅ (Post-Fase 4 y Fase 5)
 
 ### Webhooks
 | Webhook | Endpoint | Validación |
@@ -617,6 +618,8 @@ consultorio-medico/
 | **Glassmorphism layer** | CSS variables + utility classes (glass-sm/md/lg), ambient orbs, aplicado a Card/Dialog/Sheet/KPIs. Commit `25394cf` | 10/07 |
 | **Layout variations system** | LayoutConfigProvider (default/wide/centered/minimal), SidebarContext, DashboardLayoutClient, MainContent, PageLayout. Commit `e04f970` | 10/07 |
 | **Storybook con Vite 5** | 5 stories (Button 12, Card 3, Badge 5, Skeleton 4, Tooltip 2), @alias resolve, globals.css. Commit `a77b82d` | 10/07 |
+| **Fase 4: Calidad de Código** | schema.ts split (1594→10 módulos), DRY KPIs (3 switch→config object), tipado any→Session/MedicoDia/TurnoDia, split config (1584→528) y turnos (1069→779), 38 tests nuevos, @vitest/coverage-v8. Commit `150922a` | 12/07 |
+| **Fase 5: Performance** | Self-fetch→DB directo, CSS code-split globals (450 líneas→landing.css), useOrganization hook, useReducedMotion en 3 componentes, cascading useEffect fix. Commit `73a14da` | 12/07 |
 
 ### 🟡 Prioridad Media
 
@@ -759,6 +762,10 @@ cd dashboard && npx drizzle-kit generate  # Generar migración
 # n8n
 node scripts/deploy-workflows.js --activate  # Deploy workflows a n8n
 node scripts/deploy-workflows.js --dry-run   # Simular deploy
+
+# Tests
+cd dashboard && npm run test              # Tests unitarios
+cd dashboard && npm run test:coverage     # Tests con cobertura
 
 # Storybook
 cd dashboard && npx storybook dev -p 6006    # Iniciar Storybook local
