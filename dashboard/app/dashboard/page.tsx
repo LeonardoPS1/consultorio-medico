@@ -1,4 +1,6 @@
 import { cookies } from 'next/headers';
+import { auth } from '@/lib/auth';
+import { getDashboardStats } from '@/lib/services/dashboard-stats';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -13,7 +15,6 @@ import Link from 'next/link';
 import { DashboardClient } from './dashboard-client';
 import { DashboardKpisClient } from '@/components/dashboard/dashboard-kpis-client';
 import { PWAInstallPrompt } from '@/components/pwa-install-prompt';
-import { getKpiConfig } from '@/lib/kpi-config';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -73,13 +74,13 @@ export const dynamic = 'force-dynamic';
 
 async function getDashboardData(sucursalId?: string): Promise<DashboardData | null> {
   try {
-    const params = new URLSearchParams();
-    if (sucursalId) params.set('sucursalId', sucursalId);
-    const res = await fetch(`http://localhost:3000/api/dashboard/stats?${params.toString()}`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) return null;
-    return res.json();
+    const session = await auth();
+    const isMedico = session?.user?.role === 'medico' && !!session?.user?.medicoId;
+    return getDashboardStats({
+      medicoId: session?.user?.medicoId ?? undefined,
+      isMedico,
+      sucursalId,
+    }) as Promise<DashboardData>;
   } catch {
     return null;
   }

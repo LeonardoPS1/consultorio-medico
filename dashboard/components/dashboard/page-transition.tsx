@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import { playNavigate } from '@/lib/sound';
 
@@ -22,6 +22,7 @@ const pageVariants = {
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const prevPathname = useRef(pathname);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (prevPathname.current !== pathname) {
@@ -29,6 +30,10 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       prevPathname.current = pathname;
     }
   }, [pathname]);
+
+  if (shouldReduceMotion) {
+    return <>{children}</>;
+  }
 
   return (
     <AnimatePresence mode="popLayout">

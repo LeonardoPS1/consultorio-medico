@@ -2,27 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { motion, useMotionValue, useSpring } from 'motion/react';
+import { motion, useMotionValue, useSpring, useReducedMotion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Bot, Play, MessageCircle, ShieldCheck, Lock, Server, Smartphone } from 'lucide-react';
 import { RegistroExpressModal } from '@/components/landing/registro-modal';
-
-const fadeUp = {
-  initial: { opacity: 0, y: 24 },
-  animate: { opacity: 1, y: 0 },
-};
-
-const stagger = {
-  animate: {
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-  },
-};
-
-const springTransition = {
-  type: 'spring' as const,
-  duration: 0.6,
-  bounce: 0.15,
-};
 
 export interface HeroProps {
   badgeText?: string;
@@ -46,18 +29,33 @@ export function Hero({
   ],
 }: HeroProps = {}) {
   const [registroOpen, setRegistroOpen] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
   const rotateX = useSpring(mouseX, { stiffness: 100, damping: 30 });
   const rotateY = useSpring(mouseY, { stiffness: 100, damping: 30 });
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    mouseX.set(y - 0.5);
-    mouseY.set(x - 0.5);
-  };
+  const handleMouseMove = shouldReduceMotion
+    ? undefined
+    : (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+        mouseX.set(y - 0.5);
+        mouseY.set(x - 0.5);
+      };
+
+  const fadeUpMotion = shouldReduceMotion
+    ? undefined
+    : { initial: { opacity: 0, y: 24 } as const, animate: { opacity: 1, y: 0 } as const };
+
+  const staggerMotion = shouldReduceMotion
+    ? undefined
+    : { animate: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } } as const };
+
+  const springTransition = shouldReduceMotion
+    ? { duration: 0 }
+    : { type: 'spring' as const, duration: 0.6, bounce: 0.15 };
 
   return (
     <section className="relative min-h-[85vh] md:min-h-[90vh] flex items-center overflow-hidden pt-16">
@@ -72,13 +70,13 @@ export function Hero({
         <motion.div
           initial="initial"
           animate="animate"
-          variants={stagger}
+          variants={staggerMotion}
           className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center"
         >
           {/* Text side */}
           <div className="max-w-xl">
             <motion.div
-              variants={fadeUp}
+              variants={fadeUpMotion}
               transition={springTransition}
               className="inline-flex items-center gap-2 rounded-full border bg-muted/60 backdrop-blur-sm px-4 py-1.5 text-xs font-medium text-muted-foreground mb-6"
             >
@@ -88,7 +86,7 @@ export function Hero({
             </motion.div>
 
             <motion.h1
-              variants={fadeUp}
+              variants={fadeUpMotion}
               transition={springTransition}
               className="text-[1.75rem] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
             >
@@ -99,7 +97,7 @@ export function Hero({
             </motion.h1>
 
             <motion.p
-              variants={fadeUp}
+              variants={fadeUpMotion}
               transition={springTransition}
               className="text-lg sm:text-xl text-muted-foreground leading-relaxed mb-8"
             >
@@ -107,7 +105,7 @@ export function Hero({
             </motion.p>
 
             <motion.div
-              variants={fadeUp}
+              variants={fadeUpMotion}
               transition={{ ...springTransition, delay: 0.2 }}
               className="flex flex-col sm:flex-row gap-3"
             >
@@ -135,7 +133,7 @@ export function Hero({
 
             {/* Trusted stats */}
             <motion.div
-              variants={fadeUp}
+              variants={fadeUpMotion}
               transition={{ ...springTransition, delay: 0.3 }}
               className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t"
             >
@@ -158,7 +156,7 @@ export function Hero({
 
           {/* Visual side */}
           <motion.div
-            variants={fadeUp}
+            variants={fadeUpMotion}
             transition={{ ...springTransition, delay: 0.15 }}
             className="relative hidden lg:block"
             onMouseMove={handleMouseMove}

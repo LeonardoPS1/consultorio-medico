@@ -1,0 +1,442 @@
+/* === Landing Page Styles === */
+
+/* Smooth scroll for the entire page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Float keyframe for floating badges */
+@keyframes softFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-soft-float {
+  animation: softFloat 4s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-soft-float-delayed {
+  animation: softFloat 4s ease-in-out 1s infinite;
+  will-change: transform;
+}
+
+/* Scroll reveal glass card */
+.glass-card-landing {
+  @apply bg-card/70 backdrop-blur-xl border border-border/40 shadow-sm;
+}
+
+/* Input focus style for landing forms */
+.landing-input:focus {
+  @apply ring-2 ring-primary/30 border-primary/50;
+}
+
+/* Gradient border effect for popular plan */
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.4), hsl(var(--primary) / 0.1));
+  z-index: -1;
+}
+
+/* Shimmer loading placeholder */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted-foreground) / 0.1) 50%, hsl(var(--muted)) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Button press effect (Emil Kowalski) */
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* Responsive improvements */
+@media (max-width: 767px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Reduce animation intensity on mobile for performance */
+@media (max-width: 767px) {
+  .animate-orb, .animate-orb-2, .animate-orb-3,
+  .animate-gentle-float, .animate-gentle-float-2,
+  .animate-gentle-float-3, .animate-gentle-float-4,
+  .animate-soft-float, .animate-soft-float-delayed,
+  .popular-ring-pulse, .gallery-img-hover:hover {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transform: none !important;
+  }
+
+  .hero-dashboard-hover:hover {
+    transform: none !important;
+  }
+
+  .shine-effect {
+    animation: none !important;
+  }
+
+  .feature-icon-morph {
+    transition: none !important;
+  }
+
+  .group:hover .feature-icon-morph {
+    transform: none !important;
+  }
+}
+
+/* Better mobile touch targets */
+@media (max-width: 767px) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  button.btn-inline, a.btn-inline {
+    min-height: unset;
+    min-width: unset;
+  }
+
+  input, select {
+    font-size: 16px !important;
+  }
+}
+
+/* Smooth responsive transitions for all landing sections */
+section[id] {
+  scroll-margin-top: 80px;
+}
+
+/* Prevent layout shift from scrollbar */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Footer link hover underline animation */
+.footer-link {
+  position: relative;
+  display: inline-block;
+}
+
+.footer-link::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: hsl(var(--foreground) / 0.3);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s var(--ease-out);
+}
+
+.footer-link:hover::after {
+  transform: scaleX(1);
+}
+
+.footer-link:hover {
+  color: hsl(var(--foreground));
+}
+
+/* Hide scrollbar (for horizontal swipe sections) */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Image loading placeholder for gallery */
+.gallery-img-loading {
+  @apply bg-muted shimmer;
+  min-height: 200px;
+}
+
+/* === ENHANCED LANDING ANIMATIONS === */
+
+/* Gentle floating for pricing cards */
+@keyframes gentleFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+.animate-gentle-float {
+  animation: gentleFloat 7s ease-in-out infinite;
+}
+
+.animate-gentle-float-2 {
+  animation: gentleFloat 7s ease-in-out 1s infinite;
+}
+
+.animate-gentle-float-3 {
+  animation: gentleFloat 7s ease-in-out 2s infinite;
+}
+
+.animate-gentle-float-4 {
+  animation: gentleFloat 7s ease-in-out 3s infinite;
+}
+
+/* Pulsing glow for WhatsApp button */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsl(142.1 76.2% 36.3% / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 12px hsl(142.1 76.2% 36.3% / 0);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-out infinite;
+}
+
+/* Shine sweep for CTAs */
+@keyframes shine {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+.shine-effect {
+  background: linear-gradient(
+    110deg,
+    hsl(var(--primary)) 25%,
+    hsl(var(--primary-foreground) / 0.9) 50%,
+    hsl(var(--primary)) 75%
+  );
+  background-size: 200% auto;
+  animation: shine 3s ease-in-out infinite;
+}
+
+@media (max-width: 767px) {
+  .shine-effect {
+    animation: none;
+  }
+}
+
+/* Card glow on hover */
+.card-glow-hover {
+  @apply transition-all duration-300;
+  transition-timing-function: var(--ease-out);
+}
+
+.card-glow-hover:hover {
+  border-color: hsl(var(--primary) / 0.3);
+  box-shadow: 0 0 24px hsl(var(--primary) / 0.08),
+              0 8px 24px hsl(var(--primary) / 0.04);
+}
+
+/* Strong hover lift (for pricing cards) */
+.card-lift-hover {
+  @apply transition-all duration-300;
+  transition-timing-function: var(--ease-out);
+}
+
+.card-lift-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 40px hsl(var(--primary) / 0.1),
+              0 4px 12px hsl(var(--foreground) / 0.06);
+}
+
+/* Popular plan glow ring */
+@keyframes ringPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.3),
+                0 8px 32px hsl(var(--primary) / 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.15),
+                0 8px 32px hsl(var(--primary) / 0.15);
+  }
+}
+
+.popular-ring-pulse {
+  animation: ringPulse 3s ease-in-out infinite;
+}
+
+/* Gradient border shine for popular plan */
+.popular-border-shine {
+  position: relative;
+  isolation: isolate;
+}
+
+.popular-border-shine::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary) / 0.6),
+    hsl(var(--primary) / 0.1) 40%,
+    hsl(var(--primary) / 0.4) 70%,
+    hsl(var(--primary) / 0.1)
+  );
+  z-index: -1;
+  animation: borderShine 4s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes borderShine {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Gallery image hover zoom + glow */
+.gallery-img-hover {
+  @apply transition-all duration-500;
+  transition-timing-function: var(--ease-out);
+}
+
+.gallery-img-hover:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 30px hsl(var(--primary) / 0.12),
+              0 0 60px hsl(var(--primary) / 0.06);
+}
+
+.gallery-img-container {
+  @apply transition-all duration-300;
+  transition-timing-function: var(--ease-out);
+}
+
+.gallery-img-container:hover {
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.15),
+              0 16px 48px hsl(var(--primary) / 0.08);
+}
+
+/* Feature card icon morph */
+.feature-icon-morph {
+  @apply transition-all duration-300;
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.group:hover .feature-icon-morph {
+  transform: scale(1.15) rotate(-3deg);
+  @apply shadow-lg;
+}
+
+/* Star entrance animation */
+@keyframes starPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.star-pop {
+  animation: starPop 0.3s var(--ease-out) forwards;
+}
+
+.star-pop:nth-child(1) { animation-delay: 0.0s; }
+.star-pop:nth-child(2) { animation-delay: 0.05s; }
+.star-pop:nth-child(3) { animation-delay: 0.1s; }
+.star-pop:nth-child(4) { animation-delay: 0.15s; }
+.star-pop:nth-child(5) { animation-delay: 0.2s; }
+
+/* Hero dashboard image hover */
+.hero-dashboard-hover {
+  transition: all 0.4s var(--ease-out);
+}
+
+.hero-dashboard-hover:hover {
+  transform: scale(1.02) perspective(1000px) rotateY(-2deg);
+  box-shadow: 0 20px 60px hsl(var(--primary) / 0.15);
+}
+
+/* Background orbs with slow drift */
+@keyframes orbDrift {
+  0% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.05); }
+  50% { transform: translate(-10px, 30px) scale(0.95); }
+  75% { transform: translate(-20px, -10px) scale(1.02); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.animate-orb {
+  animation: orbDrift 20s ease-in-out infinite;
+}
+
+.animate-orb-2 {
+  animation: orbDrift 25s ease-in-out 2s infinite reverse;
+}
+
+.animate-orb-3 {
+  animation: orbDrift 30s ease-in-out 5s infinite;
+}
+
+/* CTA button double glow */
+.cta-glow-hover {
+  @apply transition-all duration-200;
+  transition-timing-function: var(--ease-out);
+}
+
+.cta-glow-hover:hover {
+  box-shadow: 0 0 20px hsl(var(--primary) / 0.2),
+              0 0 40px hsl(var(--primary) / 0.1),
+              0 4px 12px hsl(var(--primary) / 0.15);
+  transform: translateY(-1px);
+}
+
+/* Testimonial card hover */
+.testimonial-hover {
+  @apply transition-all duration-300;
+  transition-timing-function: var(--ease-out);
+}
+
+.testimonial-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px hsl(var(--foreground) / 0.06);
+  border-color: hsl(var(--primary) / 0.2);
+}
+
+/* Smooth blur crossfade for gallery images */
+.gallery-crossfade-enter {
+  filter: blur(4px);
+  opacity: 0;
+  transform: scale(0.97);
+}
+
+.gallery-crossfade-active {
+  filter: blur(0);
+  opacity: 1;
+  transform: scale(1);
+  transition: all 0.35s var(--ease-out);
+}
+
+.gallery-crossfade-exit {
+  filter: blur(2px);
+  opacity: 0;
+  transform: scale(1.03);
+  transition: all 0.2s var(--ease-out);
+}

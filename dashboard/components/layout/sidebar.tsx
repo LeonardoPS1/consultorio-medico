@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -8,30 +8,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Logo } from '@/components/layout/logo';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { ChevronLeft, ChevronRight, LogOut, X } from 'lucide-react';
-import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import { useSidebar } from '@/components/layout/sidebar-context';
+import { useOrganization } from '@/lib/hooks/use-organization';
 
 export function Sidebar() {
   const { data: session, status } = useSession();
   const { collapsed, setCollapsed } = useSidebar();
+  const { orgNombre } = useOrganization();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
   const [onboardingPending, setOnboardingPending] = useState(false);
-
-  const cargarOrg = useCallback(() => {
-    fetch('/api/organization')
-      .then((r) => r.json())
-      .then((res) => {
-        setOrgNombre(resolveTenantName(res.data?.nombre));
-      })
-      .catch(() => console.warn('[Sidebar] Error al cargar organización'));
-  }, []);
-
-  useEffect(() => {
-    cargarOrg();
-    window.addEventListener('organization-updated', cargarOrg);
-    return () => window.removeEventListener('organization-updated', cargarOrg);
-  }, [cargarOrg]);
 
   useEffect(() => {
     const handler = () => setMobileOpen((prev) => !prev);

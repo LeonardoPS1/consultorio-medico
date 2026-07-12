@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
-// SEO — Homepage
 import { Navbar } from '@/components/landing/navbar';
 import { Hero } from '@/components/landing/hero';
 import { HowItWorks } from '@/components/landing/how-it-works';
@@ -8,7 +7,6 @@ import { Testimonials } from '@/components/landing/testimonials';
 import { WhatsAppFloat } from '@/components/landing/whatsapp-float';
 import { CookieConsentBanner } from '@/components/landing/cookie-consent';
 
-// Below-fold components: dynamic imports para deferir framer-motion (~35KB) del bundle inicial
 const Features = dynamic(() => import('@/components/landing/features').then((m) => m.Features));
 const Specialties = dynamic(() =>
   import('@/components/landing/specialties').then((m) => m.Specialties),

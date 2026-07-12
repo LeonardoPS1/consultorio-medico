@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import Image from 'next/image';
 
 const SCREENSHOTS = [
@@ -19,6 +19,7 @@ const IMG_HEIGHT = 900;
 
 export function Gallery() {
   const [active, setActive] = useState(SCREENSHOTS[0].id);
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <section className="relative overflow-hidden border-t bg-muted/20">
@@ -75,15 +76,27 @@ className={`px-3.5 py-2 rounded-lg text-xs font-medium transition-colors duratio
             <span className="w-3 h-3 rounded-full bg-green-400/80" />
           </div>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={active}
-              initial={{ filter: 'blur(4px)', opacity: 0, scale: 0.97 }}
-              animate={{ filter: 'blur(0px)', opacity: 1, scale: 1 }}
-              exit={{ filter: 'blur(2px)', opacity: 0, scale: 1.03 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="pt-8 gallery-img-hover"
-            >
+          {shouldReduceMotion ? (
+            <div className="pt-8">
+              <Image
+                src={SCREENSHOTS.find((s) => s.id === active)!.src}
+                alt={`Captura de ${SCREENSHOTS.find((s) => s.id === active)!.label}`}
+                width={IMG_WIDTH}
+                height={IMG_HEIGHT}
+                sizes="(max-width: 1024px) 100vw, 1024px"
+                className="w-full h-auto"
+              />
+            </div>
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={active}
+                initial={{ filter: 'blur(4px)', opacity: 0, scale: 0.97 }}
+                animate={{ filter: 'blur(0px)', opacity: 1, scale: 1 }}
+                exit={{ filter: 'blur(2px)', opacity: 0, scale: 1.03 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="pt-8 gallery-img-hover"
+              >
               <Image
                 src={SCREENSHOTS.find((s) => s.id === active)!.src}
                 alt={`Captura de ${SCREENSHOTS.find((s) => s.id === active)!.label}`}
@@ -94,7 +107,8 @@ className={`px-3.5 py-2 rounded-lg text-xs font-medium transition-colors duratio
                 className="w-full h-auto"
               />
             </motion.div>
-          </AnimatePresence>
+            </AnimatePresence>
+          )}
         </motion.div>
       </div>
     </section>

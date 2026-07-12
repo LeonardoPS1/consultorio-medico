@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -535,7 +535,15 @@ function PreviewPlantillaModal({
   onClose: () => void;
 }) {
   const [datosEdit, setDatosEdit] = useState<Record<string, string>>({});
-  const [preview, setPreview] = useState('');
+
+  const preview = useMemo(() => {
+    if (!plantilla) return '';
+    let result = plantilla.contenido;
+    for (const [key, value] of Object.entries(datosEdit)) {
+      result = result.replace(new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'gi'), value || '');
+    }
+    return result;
+  }, [plantilla, datosEdit]);
 
   useEffect(() => {
     if (!plantilla) return;
@@ -546,15 +554,6 @@ function PreviewPlantillaModal({
     }
     setDatosEdit(initial);
   }, [plantilla]);
-
-  useEffect(() => {
-    if (!plantilla) return;
-    let result = plantilla.contenido;
-    for (const [key, value] of Object.entries(datosEdit)) {
-      result = result.replace(new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'gi'), value || '');
-    }
-    setPreview(result);
-  }, [plantilla, datosEdit]);
 
   if (!plantilla) return null;
 

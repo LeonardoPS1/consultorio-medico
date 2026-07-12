@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -18,10 +18,10 @@ import {
   Users,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 import { useSucursal } from '@/lib/sucursal-context';
 import { usePatientPanel } from '@/lib/hooks/use-patient-panel';
 import { useLayoutConfig } from '@/lib/layout-config';
+import { useOrganization } from '@/lib/hooks/use-organization';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,10 +42,8 @@ export function Header() {
   const { sucursalId: activeSucursalId, sucursales, setSucursalId, hasMultiple } = useSucursal();
   const { open: openPatientPanel } = usePatientPanel();
   const { config } = useLayoutConfig();
+  const { avatarUrl, orgNombre, orgFirma } = useOrganization();
   const [mounted, setMounted] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState('');
-  const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);
-  const [orgFirma, setOrgFirma] = useState('Dr.');
 
   // Evitar hydration mismatch del theme toggle
   useEffect(() => {
@@ -70,26 +68,6 @@ export function Header() {
       window.removeEventListener('open-patient-panel', customHandler);
     };
   }, [openPatientPanel]);
-
-  // ─── Cargar datos de organización ─────────────────────────
-  const cargarOrg = useCallback(() => {
-    fetch('/api/organization')
-      .then((r) => r.json())
-      .then((res) => {
-        if (res.data) {
-          if (res.data.avatarUrl) setAvatarUrl(res.data.avatarUrl);
-          if (res.data.firmaNombre) setOrgFirma(res.data.firmaNombre);
-          setOrgNombre(resolveTenantName(res.data?.nombre));
-        }
-      })
-      .catch(() => console.warn('[Header] Error al cargar datos'));
-  }, []);
-
-  useEffect(() => {
-    cargarOrg();
-    window.addEventListener('organization-updated', cargarOrg);
-    return () => window.removeEventListener('organization-updated', cargarOrg);
-  }, [cargarOrg]);
 
   const user = session?.user;
   const nombreCompleto = user?.name || 'Dr.';
