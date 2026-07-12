@@ -3,21 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Calendar,
-  Users,
-  MessageSquare,
-  AlertTriangle,
   Clock,
   ArrowRight,
   Activity,
   Sparkles,
-  TrendingUp,
-  Smartphone,
   Video,
 } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardClient } from './dashboard-client';
 import { DashboardKpisClient } from '@/components/dashboard/dashboard-kpis-client';
 import { PWAInstallPrompt } from '@/components/pwa-install-prompt';
+import { getKpiConfig } from '@/lib/kpi-config';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -54,65 +50,6 @@ interface DashboardData {
   proximosTurnos: ProximoTurno[];
   actividadReciente: ActividadItem[];
   sistema: SistemaStatus;
-}
-
-// ─── Helpers ──────────────────────────────────────────────
-
-function getKpiIcon(type: string) {
-  switch (type) {
-    case 'calendar':
-      return Calendar;
-    case 'users':
-      return Users;
-    case 'messages':
-      return MessageSquare;
-    case 'alert':
-      return AlertTriangle;
-    case 'response':
-      return TrendingUp;
-    case 'today':
-      return Smartphone;
-    default:
-      return Activity;
-  }
-}
-
-function getKpiGradient(type: string) {
-  switch (type) {
-    case 'calendar':
-      return 'from-blue-500 to-blue-600';
-    case 'users':
-      return 'from-emerald-500 to-emerald-600';
-    case 'messages':
-      return 'from-amber-500 to-amber-600';
-    case 'alert':
-      return 'from-red-500 to-red-600';
-    case 'response':
-      return 'from-purple-500 to-purple-600';
-    case 'today':
-      return 'from-cyan-500 to-cyan-600';
-    default:
-      return 'from-gray-500 to-gray-600';
-  }
-}
-
-function getKpiBg(type: string) {
-  switch (type) {
-    case 'calendar':
-      return 'bg-blue-50 dark:bg-blue-950/30';
-    case 'users':
-      return 'bg-emerald-50 dark:bg-emerald-950/30';
-    case 'messages':
-      return 'bg-amber-50 dark:bg-amber-950/30';
-    case 'alert':
-      return 'bg-red-50 dark:bg-red-950/30';
-    case 'response':
-      return 'bg-purple-50 dark:bg-purple-950/30';
-    case 'today':
-      return 'bg-cyan-50 dark:bg-cyan-950/30';
-    default:
-      return 'bg-gray-50 dark:bg-gray-950/30';
-  }
 }
 
 function ActividadDot({ tipo }: { tipo: string }) {

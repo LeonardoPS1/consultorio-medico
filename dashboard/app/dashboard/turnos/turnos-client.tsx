@@ -1,29 +1,31 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
 import { useSucursal } from '@/lib/sucursal-context';
-import { Calendar, Plus, ChevronLeft, ChevronRight, List, Clock } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { PageAnimation } from '@/components/dashboard/page-animation';
 import { motion } from 'motion/react';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
 import { playDelete } from '@/lib/sound';
 import { toast } from '@/components/ui/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+
+// Existing extracted components
 import { TurnosFilters } from '@/components/turnos/turnos-filters';
 import { TurnosTable } from '@/components/turnos/turnos-table';
 import { TurnosCalendar } from '@/components/turnos/turnos-calendar';
 import { TurnoDetailModal, CancelTurnoDialog } from '@/components/turnos/turno-detail-modal';
-import { DayTimeline } from '@/components/turnos/day-timeline';
+
+// New extracted components
+import { TurnosHeader } from '@/components/turnos/turnos-header';
+import { TurnosDateNav } from '@/components/turnos/turnos-date-nav';
+import { TurnosDayView } from '@/components/turnos/turnos-day-view';
+import {
+  WaitlistReassignDialog,
+  WaitlistProposalDialog,
+} from '@/components/turnos/turnos-waitlist-dialogs';
+import { NuevoPacienteConfirmDialog } from '@/components/turnos/turnos-patient-confirm';
+import type { MedicoDia, TurnoDia } from '@/components/turnos/day-timeline';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -115,8 +117,8 @@ export function TurnosClient({
 
   // Day-view state
   const [dayViewData, setDayViewData] = useState<{
-    medicos: any[];
-    turnos: any[];
+    medicos: MedicoDia[];
+    turnos: TurnoDia[];
     fecha: string;
   } | null>(null);
   const [dayViewLoading, setDayViewLoading] = useState(false);
@@ -260,7 +262,6 @@ export function TurnosClient({
     [sucursalId],
   );
 
-  // Fetch day-view when switching to it or changing date
   useEffect(() => {
     if (view === 'dia') {
       fetchDayView(selectedDate);
@@ -554,7 +555,6 @@ export function TurnosClient({
   const handleConfirmCancel = async (id: string, motivo: string) => {
     const turno = turnos.find((t) => t.id === id);
 
-    // Optimistic update
     setTurnos((prev) =>
       prev.map((t) => (t.id === id ? { ...t, estado: 'cancelada' as const } : t)),
     );
@@ -573,7 +573,6 @@ export function TurnosClient({
         }),
       });
 
-      // Check for waitlist candidates
       if (turno?.medicoId) {
         setWaitlistReassignLoading(true);
         try {
@@ -616,6 +615,74 @@ export function TurnosClient({
     [calendarViewMode, fetchTurnos, fetchTurnosMes],
   );
 
+  const handleDayTurnoClick = useCallback(
+    (turno: TurnoDia) => {
+      const match = turnos.find((t) => t.id === turno.id);
+      if (match) {
+        setEditTurno(match);
+      } else {
+        const medico = dayViewData?.medicos.find((m: MedicoDia) => m.id === turno.medicoId);
+        setEditTurno({
+          id: turno.id,
+          hora: turno.hora,
+          paciente: turno.paciente,
+          tipo: turno.motivo || 'Consulta',
+          medico: medico?.nombre || '',
+          medicoId: turno.medicoId,
+          pacienteId: turno.pacienteId || '',
+          estado: turno.estado,
+          fecha: dayViewData?.fecha || '',
+        });
+      }
+    },
+    [turnos, dayViewData],
+  );
+
+  const handleAddToWaitlist = useCallback(async () => {
+    if (!waitlistProposal) return;
+    setWaitlistLoading(true);
+    try {
+      const res = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pacienteId: waitlistProposal.pacienteId,
+          medicoId: waitlistProposal.medicoId,
+          notas: `Sin disponibilidad: ${waitlistProposal.reason} (${waitlistProposal.fecha} ${waitlistProposal.hora})`,
+        }),
+      });
+      if (res.ok) {
+        toast({
+          title: 'Agregado a lista de espera',
+          description: `${waitlistProposal.pacienteNombre} recibirá una oferta cuando haya disponibilidad.`,
+        });
+      } else {
+        const err = await res.json().catch(() => ({ error: 'Error al agregar' }));
+        toast({
+          title: 'Error',
+          description: err.error || 'No se pudo agregar a la lista de espera',
+          variant: 'destructive',
+        });
+      }
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Error de red al procesar solicitud',
+        variant: 'destructive',
+      });
+    } finally {
+      setWaitlistLoading(false);
+      setWaitlistProposal(null);
+    }
+  }, [waitlistProposal]);
+
+  const handleConfirmNewPatient = useCallback(async () => {
+    if (nuevoPacienteConfirm) {
+      await nuevoPacienteConfirm.onConfirm();
+    }
+    setNuevoPacienteConfirm(null);
+  }, [nuevoPacienteConfirm]);
+
   // ─── Render ────────────────────────────────────────────
 
   return (
@@ -628,441 +695,154 @@ export function TurnosClient({
           visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
         }}
       >
-      {/* View toggle + new turno button */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-lg border p-1">
-            <Button
-              variant={view === 'lista' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setView('lista')}
-              aria-label="Vista de lista"
-            >
-              <List className="h-4 w-4 md:mr-1" />
-              <span className="hidden md:inline">Lista</span>
-            </Button>
-            <Button
-              variant={view === 'calendario' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setView('calendario')}
-              aria-label="Vista de calendario"
-            >
-              <Calendar className="h-4 w-4 md:mr-1" />
-              <span className="hidden md:inline">Calendario</span>
-            </Button>
-            <Button
-              variant={view === 'dia' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setView('dia')}
-              aria-label="Vista del día"
-            >
-              <Clock className="h-4 w-4 md:mr-1" />
-              <span className="hidden md:inline">Día</span>
-            </Button>
-          </div>
-        </div>
-        <Button onClick={() => setShowNewTurno(true)} size="sm" className="text-xs md:text-sm">
-          <Plus className="h-4 w-4 md:mr-2" />
-          <span className="hidden md:inline">Nuevo Turno</span>
-          <kbd className="hidden md:inline ml-2 text-[10px] opacity-50">Ctrl+N</kbd>
-        </Button>
-      </div>
-
-      {/* List View */}
-      {view === 'lista' && (
-        <>
-          {/* Date navigation */}
-          <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={() => navigateDate(-1)} aria-label="Fecha anterior">
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <h3 className="text-sm sm:text-lg font-semibold min-w-[120px] sm:min-w-[200px] text-center truncate">
-                <span className="hidden sm:inline">
-                  {selectedDate.toLocaleDateString('es-CL', {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}
-                </span>
-                <span className="sm:hidden">
-                  {selectedDate.toLocaleDateString('es-CL', {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short',
-                  })}
-                </span>
-              </h3>
-              <Button variant="outline" size="icon" onClick={() => navigateDate(1)} aria-label="Fecha siguiente">
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" className="ml-2" onClick={goToToday}>
-                Hoy
-              </Button>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <TurnosFilters
-            filtroMedico={filtroMedico}
-            filtroEstado={filtroEstado}
-            filtroTipo={filtroTipo}
-            searchText={searchText}
-            medicos={medicos}
-            tipos={tipos}
-            filtrosActivos={filtrosActivos}
-            loading={loading}
-            turnos={turnos}
-            turnosFiltrados={turnosFiltrados}
-            onFiltroMedicoChange={setFiltroMedico}
-            onFiltroEstadoChange={setFiltroEstado}
-            onFiltroTipoChange={setFiltroTipo}
-            onSearchTextChange={setSearchText}
-            onLimpiarFiltros={limpiarFiltros}
-            onToggleFilters={() => setShowFilters(!showFilters)}
-            showFilters={showFilters}
-          />
-
-          {/* Turnos list */}
-          <motion.div
-            variants={{
-              hidden: { opacity: 0, y: 12 },
-              visible: { opacity: 1, y: 0 },
-            }}
-          >
-          <TurnosTable
-            turnosFiltrados={turnosFiltrados}
-            loading={loading}
-            filtrosActivos={filtrosActivos}
-            savingStates={savingStates}
-            onActualizarEstado={actualizarEstado}
-            onEditTurno={setEditTurno}
-            onCancelTurno={setShowCancelDialog}
-            onLimpiarFiltros={limpiarFiltros}
-            onNewTurno={() => setShowNewTurno(true)}
-          />
-          </motion.div>
-        </>
-      )}
-
-      {/* Calendar View */}
-      {view === 'calendario' && (
-        <TurnosCalendar
-          turnos={turnosFiltrados}
-          viewMode={calendarViewMode}
-          onViewModeChange={setCalendarViewMode}
-          onDateChange={handleCalendarDateChange}
+        <TurnosHeader
+          view={view}
+          onViewChange={setView}
+          onNewTurno={() => setShowNewTurno(true)}
         />
-      )}
 
-      {/* Day View (Timeline) */}
-      {view === 'dia' && (
-        <div className="space-y-3">
-          {/* Date navigation for day view */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={() => navigateDate(-1)} aria-label="Fecha anterior">
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <h3 className="text-sm sm:text-lg font-semibold min-w-[120px] sm:min-w-[200px] text-center">
-                {selectedDate.toLocaleDateString('es-CL', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </h3>
-              <Button variant="outline" size="icon" onClick={() => navigateDate(1)} aria-label="Fecha siguiente">
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" className="ml-2" onClick={goToToday}>
-                Hoy
-              </Button>
-            </div>
-            {dayViewData && (
-              <span className="text-xs text-muted-foreground">
-                {dayViewData.turnos.length} turno{dayViewData.turnos.length !== 1 ? 's' : ''} · {dayViewData.medicos.length} médico{dayViewData.medicos.length !== 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-
-          {/* DayTimeline component */}
-          {dayViewLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-            </div>
-          ) : dayViewData ? (
-            <DayTimeline
-              medicos={dayViewData.medicos}
-              turnos={dayViewData.turnos}
-              fecha={dayViewData.fecha}
-              onTurnoClick={(turno) => {
-                // Find matching TurnoData for the detail modal
-                const match = turnos.find((t) => t.id === turno.id);
-                if (match) setEditTurno(match);
-                else {
-                  // Construct from day-view data
-                  const medico = dayViewData.medicos.find((m: any) => m.id === turno.medicoId);
-                  setEditTurno({
-                    id: turno.id,
-                    hora: turno.hora,
-                    paciente: turno.paciente,
-                    tipo: turno.motivo || 'Consulta',
-                    medico: medico?.nombre || '',
-                    medicoId: turno.medicoId,
-                    pacienteId: turno.pacienteId || '',
-                    estado: turno.estado,
-                    fecha: dayViewData.fecha,
-                  });
-                }
-              }}
-              onSlotClick={(medicoId, hora) => {
-                setShowNewTurno(true);
-              }}
+        {/* List View */}
+        {view === 'lista' && (
+          <>
+            <TurnosDateNav
+              selectedDate={selectedDate}
+              onNavigate={navigateDate}
+              onGoToToday={goToToday}
             />
-          ) : null}
-        </div>
-      )}
 
-      {/* State legend */}
-      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-        {['pendiente', 'confirmada', 'en_atencion', 'atendido', 'cancelada'].map((estado) => (
-          <span key={estado} className="flex items-center gap-1">
-            <span
-              className="h-2 w-2 rounded-full"
-              style={{ backgroundColor: getTurnoColor(estado) }}
+            <TurnosFilters
+              filtroMedico={filtroMedico}
+              filtroEstado={filtroEstado}
+              filtroTipo={filtroTipo}
+              searchText={searchText}
+              medicos={medicos}
+              tipos={tipos}
+              filtrosActivos={filtrosActivos}
+              loading={loading}
+              turnos={turnos}
+              turnosFiltrados={turnosFiltrados}
+              onFiltroMedicoChange={setFiltroMedico}
+              onFiltroEstadoChange={setFiltroEstado}
+              onFiltroTipoChange={setFiltroTipo}
+              onSearchTextChange={setSearchText}
+              onLimpiarFiltros={limpiarFiltros}
+              onToggleFilters={() => setShowFilters(!showFilters)}
+              showFilters={showFilters}
             />
-            {getTurnoLabel(estado)}
-          </span>
-        ))}
-        {filtrosActivos > 0 && (
-          <span className="ml-auto text-xs flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            {turnosFiltrados.length} de {turnos.length} turnos
-          </span>
+
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 12 },
+                visible: { opacity: 1, y: 0 },
+              }}
+            >
+              <TurnosTable
+                turnosFiltrados={turnosFiltrados}
+                loading={loading}
+                filtrosActivos={filtrosActivos}
+                savingStates={savingStates}
+                onActualizarEstado={actualizarEstado}
+                onEditTurno={setEditTurno}
+                onCancelTurno={setShowCancelDialog}
+                onLimpiarFiltros={limpiarFiltros}
+                onNewTurno={() => setShowNewTurno(true)}
+              />
+            </motion.div>
+          </>
         )}
-      </div>
 
-      {/* ─── Modals ─────────────────────── */}
+        {/* Calendar View */}
+        {view === 'calendario' && (
+          <TurnosCalendar
+            turnos={turnosFiltrados}
+            viewMode={calendarViewMode}
+            onViewModeChange={setCalendarViewMode}
+            onDateChange={handleCalendarDateChange}
+          />
+        )}
 
-      <NuevoTurnoModal
-        open={showNewTurno}
-        onOpenChange={setShowNewTurno}
-        onSubmit={handleNuevoTurno}
-      />
+        {/* Day View */}
+        {view === 'dia' && (
+          <TurnosDayView
+            selectedDate={selectedDate}
+            dayViewData={dayViewData}
+            dayViewLoading={dayViewLoading}
+            onDateNavigate={navigateDate}
+            onGoToToday={goToToday}
+            onTurnoClick={handleDayTurnoClick}
+            onSlotClick={() => setShowNewTurno(true)}
+          />
+        )}
 
-      <TurnoDetailModal
-        editTurno={editTurno}
-        onOpenChange={(open) => {
-          if (!open) setEditTurno(null);
-        }}
-        onSaveEdit={handleSaveEdit}
-      />
+        {/* State legend */}
+        <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+          {['pendiente', 'confirmada', 'en_atencion', 'atendido', 'cancelada'].map((estado) => (
+            <span key={estado} className="flex items-center gap-1">
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: getTurnoColor(estado) }}
+              />
+              {getTurnoLabel(estado)}
+            </span>
+          ))}
+          {filtrosActivos > 0 && (
+            <span className="ml-auto text-xs flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {turnosFiltrados.length} de {turnos.length} turnos
+            </span>
+          )}
+        </div>
 
-      <CancelTurnoDialog
-        showCancelDialog={showCancelDialog}
-        onOpenChange={(open) => {
-          if (!open) setShowCancelDialog(null);
-        }}
-        onConfirmCancel={handleConfirmCancel}
-      />
+        {/* ─── Modals ─────────────────────── */}
 
-      {/* Waitlist reassign dialog */}
-      <Dialog
-        open={!!showWaitlistReassign}
-        onOpenChange={(o) => {
-          if (!o) {
+        <NuevoTurnoModal
+          open={showNewTurno}
+          onOpenChange={setShowNewTurno}
+          onSubmit={handleNuevoTurno}
+        />
+
+        <TurnoDetailModal
+          editTurno={editTurno}
+          onOpenChange={(open) => {
+            if (!open) setEditTurno(null);
+          }}
+          onSaveEdit={handleSaveEdit}
+        />
+
+        <CancelTurnoDialog
+          showCancelDialog={showCancelDialog}
+          onOpenChange={(open) => {
+            if (!open) setShowCancelDialog(null);
+          }}
+          onConfirmCancel={handleConfirmCancel}
+        />
+
+        <WaitlistReassignDialog
+          open={!!showWaitlistReassign}
+          pacienteNombre={showWaitlistReassign?.pacienteNombre || ''}
+          waitlistCandidates={waitlistCandidates}
+          waitlistReassignLoading={waitlistReassignLoading}
+          onClose={() => {
             setShowWaitlistReassign(null);
             setWaitlistCandidates([]);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Hay pacientes en lista de espera</DialogTitle>
-            <DialogDescription>
-              El turno quedó libre. ¿Querés asignarlo a un paciente en lista de espera?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-3">
-            <p className="text-sm">
-              Paciente: <strong>{showWaitlistReassign?.pacienteNombre}</strong> quedó libre.
-            </p>
-            {waitlistReassignLoading ? (
-              <div className="flex items-center justify-center py-4">
-                <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                <span className="ml-2 text-sm text-muted-foreground">Buscando candidatos...</span>
-              </div>
-            ) : waitlistCandidates.length > 0 ? (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Candidatos en lista de espera:</p>
-                {waitlistCandidates.map((c) => (
-                  <div
-                    key={c.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={() => {
-                      setShowWaitlistReassign(null);
-                      setWaitlistCandidates([]);
-                    }}
-                  >
-                    <div>
-                      <p className="font-medium text-sm">
-                        {c.paciente?.nombre} {c.paciente?.apellido}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        En lista desde: {new Date(c.fechaInscripcion).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <Button size="sm" variant="outline">
-                      Asignar
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">
-                  No hay pacientes en lista de espera para este médico.
-                </p>
-              </div>
-            )}
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowWaitlistReassign(null);
-                setWaitlistCandidates([]);
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => {
-                setShowWaitlistReassign(null);
-                setWaitlistCandidates([]);
-              }}
-            >
-              Cerrar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          }}
+        />
 
-      {/* Waitlist proposal dialog */}
-      <Dialog
-        open={!!waitlistProposal}
-        onOpenChange={(o) => {
-          if (!o) setWaitlistProposal(null);
-        }}
-      >
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Sin disponibilidad</DialogTitle>
-            <DialogDescription>{waitlistProposal?.reason}</DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-2">
-            <p className="text-sm">
-              No se puede crear el turno para <strong>{waitlistProposal?.pacienteNombre}</strong>{' '}
-              con <strong>{waitlistProposal?.medicoNombre}</strong> el {waitlistProposal?.fecha} a
-              las {waitlistProposal?.hora}.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              ¿Querés agregar al paciente a la lista de espera? Cuando haya un turno disponible,
-              recibirá una oferta automática por WhatsApp.
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setWaitlistProposal(null)}>
-              Cancelar
-            </Button>
-            <Button
-              disabled={waitlistLoading}
-              onClick={async () => {
-                if (!waitlistProposal) return;
-                setWaitlistLoading(true);
-                try {
-                  const res = await fetch('/api/waitlist', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      pacienteId: waitlistProposal.pacienteId,
-                      medicoId: waitlistProposal.medicoId,
-                      notas: `Sin disponibilidad: ${waitlistProposal.reason} (${waitlistProposal.fecha} ${waitlistProposal.hora})`,
-                    }),
-                  });
-                  if (res.ok) {
-                    toast({
-                      title: 'Agregado a lista de espera',
-                      description: `${waitlistProposal.pacienteNombre} recibirá una oferta cuando haya disponibilidad.`,
-                    });
-                  } else {
-                    const err = await res.json().catch(() => ({ error: 'Error al agregar' }));
-                    toast({
-                      title: 'Error',
-                      description: err.error || 'No se pudo agregar a la lista de espera',
-                      variant: 'destructive',
-                    });
-                  }
-                } catch {
-                  toast({
-                    title: 'Error',
-                    description: 'Error de red al procesar solicitud',
-                    variant: 'destructive',
-                  });
-                } finally {
-                  setWaitlistLoading(false);
-                  setWaitlistProposal(null);
-                }
-              }}
-            >
-              {waitlistLoading ? 'Agregando...' : 'Sí, agregar a lista de espera'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <WaitlistProposalDialog
+          open={!!waitlistProposal}
+          proposal={waitlistProposal}
+          waitlistLoading={waitlistLoading}
+          onClose={() => setWaitlistProposal(null)}
+          onAddToWaitlist={handleAddToWaitlist}
+        />
 
-      {/* New patient confirm dialog */}
-      <Dialog
-        open={!!nuevoPacienteConfirm}
-        onOpenChange={(o) => {
-          if (!o) setNuevoPacienteConfirm(null);
-        }}
-      >
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Paciente no encontrado</DialogTitle>
-            <DialogDescription>No se encontró un paciente con ese nombre.</DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-2">
-            <p className="text-sm">
-              ¿Querés crear un nuevo paciente con los datos{' '}
-              <strong>
-                {nuevoPacienteConfirm?.nombre} {nuevoPacienteConfirm?.apellido}
-              </strong>
-              ?
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Se va a crear con teléfono placeholder (0000000000). Recordá completar sus datos
-              después desde la ficha del paciente.
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setNuevoPacienteConfirm(null)}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={async () => {
-                if (nuevoPacienteConfirm) await nuevoPacienteConfirm.onConfirm();
-                setNuevoPacienteConfirm(null);
-              }}
-            >
-              Sí, crear paciente
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <NuevoPacienteConfirmDialog
+          open={!!nuevoPacienteConfirm}
+          nombre={nuevoPacienteConfirm?.nombre || ''}
+          apellido={nuevoPacienteConfirm?.apellido || ''}
+          onClose={() => setNuevoPacienteConfirm(null)}
+          onConfirm={handleConfirmNewPatient}
+        />
       </motion.div>
     </PageAnimation>
   );

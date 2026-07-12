@@ -9,7 +9,12 @@ export default defineConfig({
     setupFiles: ['./lib/__tests__/setup.ts'],
     globals: true,
     include: ['**/*.test.{ts,tsx}'],
-    // coverage config not included — install @vitest/coverage-v8 to enable
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: ['lib/**', 'components/**'],
+      exclude: ['lib/__tests__/**', 'node_modules/**'],
+    },
   },
   resolve: {
     alias: {

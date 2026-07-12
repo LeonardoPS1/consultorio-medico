@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import type { Session } from 'next-auth';
 import {
   LayoutDashboard,
   Calendar,
@@ -244,7 +245,7 @@ interface SidebarNavProps {
   collapsed: boolean;
   closeMobile: () => void;
   status: 'loading' | 'authenticated' | 'unauthenticated';
-  session: any;
+  session: Session | null;
   onboardingPending: boolean;
 }
 

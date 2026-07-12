@@ -1,0 +1,21 @@
+import { pgEnum } from 'drizzle-orm/pg-core';
+
+export const rolEnum = pgEnum('rol', ['admin', 'medico', 'secretaria', 'paciente']);
+export const turnoTipoEnum = pgEnum('turno_tipo', ['consulta', 'control', 'urgencia', 'telemedicina', 'procedimiento', 'otro']);
+export const turnoEstadoEnum = pgEnum('turno_estado', ['pendiente', 'confirmada', 'en_atencion', 'atendido', 'cancelada', 'no_asistio', 'completada']);
+export const recetaTipoEnum = pgEnum('receta_tipo', ['simple', 'crónica', 'estupefaciente', 'psicotropo', 'controlada']);
+export const recetaEstadoEnum = pgEnum('receta_estado', ['borrador', 'emitida', 'entregada', 'anulada', 'expirada', 'renovada', 'historial']);
+export const plantillaTipoEnum = pgEnum('plantilla_tipo', ['recordatorio', 'confirmacion', 'cancelacion', 'resultado', 'receta', 'certificado', 'otro']);
+export const plantillaEstadoEnum = pgEnum('plantilla_estado', ['activa', 'inactiva', 'borrador']);
+export const notificacionTipoEnum = pgEnum('notificacion_tipo', ['turno', 'mensaje', 'receta', 'urgencia', 'sistema']);
+export const historialTipoEnum = pgEnum('historial_tipo', ['consulta', 'urgencia', 'receta', 'certificado', 'orden_estudio', 'derivacion', 'evolucion', 'anamnesis', 'examen_fisico', 'diagnostico', 'tratamiento', 'encuesta', 'otro']);
+export const tareaEstadoEnum = pgEnum('tarea_estado', ['pendiente', 'en_progreso', 'completada', 'cancelada']);
+export const tareaPrioridadEnum = pgEnum('tarea_prioridad', ['baja', 'normal', 'alta', 'urgente']);
+export const ordenEstudioTipoEnum = pgEnum('orden_estudio_tipo', ['laboratorio', 'imagen', 'otros']);
+export const ordenEstudioEstadoEnum = pgEnum('orden_estudio_estado', ['pendiente', 'completada', 'cancelada']);
+export const consentimientoTipoEnum = pgEnum('consentimiento_tipo', ['tratamiento', 'cirugia', 'anestesia', 'datos', 'fotografia', 'investigacion', 'otro']);
+export const consentimientoEstadoEnum = pgEnum('consentimiento_estado', ['pendiente', 'firmado', 'rechazado', 'revocado']);
+export const novedadTipoEnum = pgEnum('novedad_tipo', ['feature', 'fix', 'security', 'docs', 'refactor', 'chore']);
+export const usuarioPlanEnum = pgEnum('usuario_plan', ['free', 'starter', 'professional', 'business', 'enterprise']);
+export const horarioTipoEnum = pgEnum('horario_tipo', ['corrido', 'partido']);
+export const tenenciaEnum = pgEnum('tenencia', ['propia', 'alquilada', 'comodato']);

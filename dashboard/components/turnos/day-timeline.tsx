@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 // Tipos
 // ============================================================
 
-interface MedicoDia {
+export interface MedicoDia {
   id: string;
   nombre: string;
   especialidad: string;
@@ -30,7 +30,7 @@ interface MedicoDia {
   bloqueos: { titulo: string; tipo: string }[];
 }
 
-interface TurnoDia {
+export interface TurnoDia {
   id: string;
   hora: string;
   duracionMinutos: number;

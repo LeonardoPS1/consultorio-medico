@@ -4,16 +4,8 @@ import { useRef, useEffect } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { motion } from 'motion/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Calendar,
-  Users,
-  MessageSquare,
-  AlertTriangle,
-  TrendingUp,
-  Smartphone,
-  Activity,
-} from 'lucide-react';
 import { useSucursal } from '@/lib/sucursal-context';
+import { getKpiConfig } from '@/lib/kpi-config';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -27,65 +19,6 @@ interface DashboardKpi {
 
 interface DashboardKpisClientProps {
   initialKpis: DashboardKpi[];
-}
-
-// ─── Helpers ──────────────────────────────────────────────
-
-function getKpiIcon(type: string) {
-  switch (type) {
-    case 'calendar':
-      return Calendar;
-    case 'users':
-      return Users;
-    case 'messages':
-      return MessageSquare;
-    case 'alert':
-      return AlertTriangle;
-    case 'response':
-      return TrendingUp;
-    case 'today':
-      return Smartphone;
-    default:
-      return Activity;
-  }
-}
-
-function getKpiGradient(type: string) {
-  switch (type) {
-    case 'calendar':
-      return 'from-blue-500 to-blue-600';
-    case 'users':
-      return 'from-emerald-500 to-emerald-600';
-    case 'messages':
-      return 'from-amber-500 to-amber-600';
-    case 'alert':
-      return 'from-red-500 to-red-600';
-    case 'response':
-      return 'from-purple-500 to-purple-600';
-    case 'today':
-      return 'from-cyan-500 to-cyan-600';
-    default:
-      return 'from-gray-500 to-gray-600';
-  }
-}
-
-function getKpiBg(type: string) {
-  switch (type) {
-    case 'calendar':
-      return 'bg-blue-50 dark:bg-blue-950/30';
-    case 'users':
-      return 'bg-emerald-50 dark:bg-emerald-950/30';
-    case 'messages':
-      return 'bg-amber-50 dark:bg-amber-950/30';
-    case 'alert':
-      return 'bg-red-50 dark:bg-red-950/30';
-    case 'response':
-      return 'bg-purple-50 dark:bg-purple-950/30';
-    case 'today':
-      return 'bg-cyan-50 dark:bg-cyan-950/30';
-    default:
-      return 'bg-gray-50 dark:bg-gray-950/30';
-  }
 }
 
 // ─── CountUp Hook ──────────────────────────────────────────
@@ -103,7 +36,6 @@ function useCountUp(targetValue: string, duration = 400) {
     function animate(currentTime: number) {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // Ease-out: 1 - (1 - t)^2
       const eased = 1 - Math.pow(1 - progress, 2);
       const current = Math.round(eased * numValue);
       el.textContent = current + suffix;
@@ -175,9 +107,7 @@ export function DashboardKpisClient({ initialKpis }: DashboardKpisClientProps) {
       className={`grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 ${isLoading ? 'opacity-60 transition-opacity' : ''}`}
     >
       {kpis.map((kpi) => {
-        const Icon = getKpiIcon(kpi.type);
-        const gradient = getKpiGradient(kpi.type);
-        const bg = getKpiBg(kpi.type);
+        const { icon: Icon, gradient, bg } = getKpiConfig(kpi.type);
         return (
           <motion.div key={kpi.title} variants={kpiCardVariants}>
             <Card className="hover-card overflow-hidden relative glass-kpi">
