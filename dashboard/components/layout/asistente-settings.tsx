@@ -10,7 +10,7 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { MODOS_ASISTENTE, type ModoAsistente } from '@/lib/ia/asistente-prompts';
 import { useAsistenteIA } from '@/lib/hooks/use-asistente-ia';
-import { MessageSquare, Users, Calendar, Pill } from 'lucide-react';
+import { MessageSquare, Users, Calendar, Pill, Sparkles, Power, PowerOff } from 'lucide-react';
 
 interface Props {
   modo: ModoAsistente;
@@ -25,10 +25,39 @@ const CATEGORIAS = [
 ] as const;
 
 export function AsistenteSettings({ modo, onModoChange }: Props) {
-  const { toggleCategoria, silenciadas } = useAsistenteIA();
+  const { toggleCategoria, silenciadas, asistenteActivado, setAsistenteActivado } = useAsistenteIA();
 
   return (
     <div className="px-4 py-3 space-y-3 text-sm">
+      {/* ─── Activar/desactivar asistente ──────────────────── */}
+      <div>
+        <p className="text-[10px] font-medium text-muted-foreground/50 uppercase tracking-wider mb-2.5">
+          Estado del asistente
+        </p>
+        <button
+          onClick={() => setAsistenteActivado(!asistenteActivado)}
+          className={`flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-medium transition-colors ${
+            asistenteActivado
+              ? 'border-indigo-500/30 bg-indigo-500/5 text-indigo-600 dark:text-indigo-400'
+              : 'border-border/60 bg-background text-muted-foreground/50 hover:border-muted-foreground/20'
+          }`}
+        >
+          {asistenteActivado ? (
+            <>
+              <Power className="h-3.5 w-3.5" />
+              <span>Asistente activado</span>
+            </>
+          ) : (
+            <>
+              <PowerOff className="h-3.5 w-3.5" />
+              <span>Asistente desactivado</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      <hr className="border-border/30" />
+
       {/* ─── Modo selector ─────────────────────────────────── */}
       <div>
         <p className="text-[10px] font-medium text-muted-foreground/50 uppercase tracking-wider mb-2.5">

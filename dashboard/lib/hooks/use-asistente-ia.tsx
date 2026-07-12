@@ -34,6 +34,7 @@ import type { ModoAsistente, Sugerencia, MensajeChat } from '@/lib/ia/asistente-
 interface UserSettings {
   modo: ModoAsistente;
   silenciadas: Record<string, boolean>;
+  activado: boolean;
 }
 
 interface AsistenteState {
@@ -80,6 +81,10 @@ interface AsistenteActions {
   limpiarChat: () => void;
   /** Actualizar datos contextuales */
   setDatosContexto: (datos: Record<string, unknown>) => void;
+  /** Activar/desactivar el asistente IA */
+  setAsistenteActivado: (activado: boolean) => void;
+  /** Si el asistente está activado por el usuario */
+  asistenteActivado: boolean;
 }
 
 type AsistenteContextType = AsistenteState & AsistenteActions;
@@ -93,6 +98,7 @@ const STORAGE_KEY = 'aicoremed-asistente-settings';
 const DEFAULT_USER_SETTINGS: UserSettings = {
   modo: 'silencioso',
   silenciadas: {},
+  activado: true,
 };
 
 // ============================================================
@@ -110,10 +116,6 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const queryClient = useQueryClient();
 
-  // Feature gating
-  const plan = (session?.user as { plan?: string } | undefined)?.plan ?? 'free';
-  const habilitado = canAccess(plan, 'ia-assistant');
-
   // ─── Settings del usuario (localStorage) ────────────────
   const [userSettings, setUserSettings] = useState<UserSettings>(() => {
     if (typeof window === 'undefined') return DEFAULT_USER_SETTINGS;
@@ -124,6 +126,11 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
       return DEFAULT_USER_SETTINGS;
     }
   });
+
+  // Feature gating
+  const plan = (session?.user as { plan?: string } | undefined)?.plan ?? 'free';
+  const featureEnabled = canAccess(plan, 'ia-assistant');
+  const habilitado = featureEnabled && userSettings.activado;
 
   // Ref para evitar stale closures en mutations
   const userSettingsRef = useRef(userSettings);
@@ -281,6 +288,10 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
     setError(null);
   }, []);
 
+  const setAsistenteActivado = useCallback((activado: boolean) => {
+    setUserSettings((prev) => ({ ...prev, activado }));
+  }, []);
+
   // ─── Value ──────────────────────────────────────────────
   const value: AsistenteContextType = {
     open,
@@ -303,6 +314,8 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
     silenciadas: userSettings.silenciadas,
     limpiarChat,
     setDatosContexto,
+    setAsistenteActivado,
+    asistenteActivado: userSettings.activado,
   };
 
   return <AsistenteContext.Provider value={value}>{children}</AsistenteContext.Provider>;

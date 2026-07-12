@@ -283,7 +283,7 @@ function PanelContent({
       {/* ════════════════════════════════════════════════════ */}
       {/* CHAT AREA */}
       {/* ════════════════════════════════════════════════════ */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-background via-background to-muted/20">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-background via-background to-muted/20">
         <div
           ref={scrollRef}
           onScroll={checkNearBottom}
@@ -418,42 +418,42 @@ function PanelContent({
             )}
 
             <div ref={bottomRef} />
+
+            {/* ─── Sugerencias Pills (dentro del scroll, flotan sobre el chat) ─── */}
+            <AnimatePresence>
+              {mostrarSugerencias && (
+                <motion.div
+                  key="sugerencias"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
+                  className="sticky bottom-0 -mx-3 -mb-3 mt-auto px-3 pt-6 pb-3 bg-gradient-to-t from-background via-background/95 to-transparent"
+                >
+                  <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+                    {sugerencias.map((sug) => (
+                      <button
+                        key={sug.id}
+                        onClick={() => enviarSugerencia(sug)}
+                        disabled={cargando}
+                        className="group flex shrink-0 items-center gap-1.5 rounded-full border border-border/40 bg-muted/80 backdrop-blur-sm px-3 py-1.5 text-[11px] whitespace-nowrap transition-[background,border-color,color,transform] hover:border-indigo-500/30 hover:bg-indigo-500/10 hover:text-foreground disabled:opacity-40 active:scale-95 shadow-sm"
+                      >
+                        <span className="text-xs leading-none">
+                          {SUGERENCIA_ICONOS[sug.categoria] || SUGERENCIA_ICONOS.default}
+                        </span>
+                        <span className="text-muted-foreground group-hover:text-foreground transition-colors">
+                          {sug.texto}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
       </div>
-
-      {/* ─── Sugerencias Pills ────────────────────────── */}
-      <AnimatePresence>
-        {mostrarSugerencias && (
-          <motion.div
-            key="sugerencias"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="shrink-0"
-          >
-            <div className="flex gap-1.5 px-3 py-2 overflow-x-auto scrollbar-none border-t border-border/30">
-              {sugerencias.map((sug) => (
-                <button
-                  key={sug.id}
-                  onClick={() => enviarSugerencia(sug)}
-                  disabled={cargando}
-                  className="group flex shrink-0 items-center gap-1.5 rounded-full border border-border/40 bg-muted/30 px-3 py-1.5 text-[11px] whitespace-nowrap transition-[background,border-color,color,transform] hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-foreground disabled:opacity-40 active:scale-95"
-                >
-                  <span className="text-xs leading-none">
-                    {SUGERENCIA_ICONOS[sug.categoria] || SUGERENCIA_ICONOS.default}
-                  </span>
-                  <span className="text-muted-foreground group-hover:text-foreground transition-colors">
-                    {sug.texto}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ════════════════════════════════════════════════════ */}
       {/* INPUT AREA — glassy bottom bar */}

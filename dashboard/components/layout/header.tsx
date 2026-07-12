@@ -16,12 +16,17 @@ import {
   ChevronDown,
   Search,
   Users,
+  Sparkles,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useSucursal } from '@/lib/sucursal-context';
 import { usePatientPanel } from '@/lib/hooks/use-patient-panel';
 import { useLayoutConfig } from '@/lib/layout-config';
 import { useOrganization } from '@/lib/hooks/use-organization';
+import { useSound } from '@/components/sound-provider';
+import { useAsistenteIA } from '@/lib/hooks/use-asistente-ia';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +48,8 @@ export function Header() {
   const { open: openPatientPanel } = usePatientPanel();
   const { config } = useLayoutConfig();
   const { avatarUrl, orgNombre, orgFirma } = useOrganization();
+  const { enabled: soundEnabled, toggle: toggleSound } = useSound();
+  const { asistenteActivado, setAsistenteActivado, habilitado: asistenteHabilitado } = useAsistenteIA();
   const [mounted, setMounted] = useState(false);
 
   // Evitar hydration mismatch del theme toggle
@@ -250,6 +257,36 @@ export function Header() {
             ⇧⌘P
           </kbd>
         </Button>
+        {/* Toggle sonido */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10"
+          onClick={toggleSound}
+          title={soundEnabled ? 'Desactivar sonidos' : 'Activar sonidos'}
+          aria-label={soundEnabled ? 'Desactivar sonidos del dashboard' : 'Activar sonidos del dashboard'}
+        >
+          {soundEnabled ? (
+            <Volume2 className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <VolumeX className="h-4 w-4 text-muted-foreground/50" />
+          )}
+        </Button>
+
+        {/* Toggle asistente IA */}
+        {asistenteHabilitado && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-10 w-10 ${asistenteActivado ? '' : 'opacity-50'}`}
+            onClick={() => setAsistenteActivado(!asistenteActivado)}
+            title={asistenteActivado ? 'Desactivar asistente IA' : 'Activar asistente IA'}
+            aria-label={asistenteActivado ? 'Desactivar asistente IA' : 'Activar asistente IA'}
+          >
+            <Sparkles className={`h-4 w-4 ${asistenteActivado ? 'text-indigo-500' : 'text-muted-foreground/50'}`} />
+          </Button>
+        )}
+
         {/* Toggle tema con dropdown (Light / Dark / System) */}
         {mounted && (
           <DropdownMenu>
