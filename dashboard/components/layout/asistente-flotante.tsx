@@ -14,9 +14,9 @@ import { AsistenteFAB } from './asistente-fab';
 import { AsistentePanel } from './asistente-panel';
 
 export function AsistenteFlotante() {
-  const { open, cerrar, habilitado } = useAsistenteIA();
+  const { open, cerrar, habilitado, asistenteActivado } = useAsistenteIA();
 
-  if (!habilitado) return null;
+  if (!habilitado || !asistenteActivado) return null;
 
   return (
     <>

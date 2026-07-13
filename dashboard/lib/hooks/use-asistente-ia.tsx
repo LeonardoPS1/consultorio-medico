@@ -130,7 +130,7 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
   // Feature gating
   const plan = (session?.user as { plan?: string } | undefined)?.plan ?? 'free';
   const featureEnabled = canAccess(plan, 'ia-assistant');
-  const habilitado = featureEnabled && userSettings.activado;
+  const habilitado = featureEnabled;
 
   // Ref para evitar stale closures en mutations
   const userSettingsRef = useRef(userSettings);
