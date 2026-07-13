@@ -4,7 +4,7 @@ import { listarNovedades, importarChangelogEstatico } from '@/lib/services/noved
 import type { Novedad } from '@/drizzle/schema';
 import { NovedadesClient } from './novedades-client';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 function novedadToChangelog(n: Novedad): ChangelogEntry & { tipo: string } {
   const d = new Date(n.fecha);
