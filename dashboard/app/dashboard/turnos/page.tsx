@@ -32,9 +32,15 @@ const LABELS_ESTADO: Record<string, string> = {
 // ─── Page ──────────────────────────────────────────────────
 
 export default async function TurnosPage() {
-  const cookieStore = cookies();
-  const sucursalId = cookieStore.get('sucursal_activa')?.value;
-  const apiData = await getServerTurnos(sucursalId);
+  let apiData: Awaited<ReturnType<typeof getServerTurnos>>;
+  try {
+    const cookieStore = cookies();
+    const sucursalId = cookieStore.get('sucursal_activa')?.value;
+    apiData = await getServerTurnos(sucursalId);
+  } catch (e) {
+    console.error('[TurnosPage] Error al cargar turnos:', e);
+    apiData = null;
+  }
 
   const turnos = apiData?.data ?? [];
   const statsPorEstado = apiData?.statsPorEstado ?? {};

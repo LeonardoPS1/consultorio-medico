@@ -9,34 +9,39 @@ export default async function AtencionPage() {
   const session = await auth();
   if (!session) redirect('/login');
 
-  const hoy = new Date().toISOString().split('T')[0];
+  let merged: Turno[] = [];
+  try {
+    const hoy = new Date().toISOString().split('T')[0];
 
-  const [turnosHoy, turnosEnAtencion] = await Promise.all([
-    turnosService.list(hoy, undefined, undefined, undefined, undefined, 100, 0, undefined, undefined),
-    turnosService.list(undefined, 'en_atencion', undefined, undefined, undefined, 100, 0, undefined, undefined),
-  ]);
+    const [turnosHoy, turnosEnAtencion] = await Promise.all([
+      turnosService.list(hoy),
+      turnosService.list(undefined, 'en_atencion'),
+    ]);
 
-  const todosIds = new Set<string>();
-  const merged: Turno[] = [...(turnosHoy?.data || []), ...(turnosEnAtencion?.data || [])]
-    .filter((t) => {
-      if (todosIds.has(t.id)) return false;
-      todosIds.add(t.id);
-      return true;
-    })
-    .map((t) => ({
-      id: t.id,
-      hora: t.hora,
-      fecha: t.fecha,
-      paciente: t.paciente,
-      pacienteId: t.pacienteId ?? undefined,
-      tipo: t.tipo,
-      tipoConsulta: t.tipoConsulta ?? undefined,
-      medico: t.medico,
-      medicoId: t.medicoId ?? undefined,
-      estado: t.estado as TurnoEstado,
-      inicioAtencionAt: t.inicioAtencionAt,
-      linkVideollamada: t.linkVideollamada ?? undefined,
-    }));
+    const todosIds = new Set<string>();
+    merged = [...(turnosHoy?.data || []), ...(turnosEnAtencion?.data || [])]
+      .filter((t) => {
+        if (todosIds.has(t.id)) return false;
+        todosIds.add(t.id);
+        return true;
+      })
+      .map((t) => ({
+        id: t.id,
+        hora: t.hora,
+        fecha: t.fecha,
+        paciente: t.paciente,
+        pacienteId: t.pacienteId ?? undefined,
+        tipo: t.tipo,
+        tipoConsulta: t.tipoConsulta ?? undefined,
+        medico: t.medico,
+        medicoId: t.medicoId ?? undefined,
+        estado: t.estado as TurnoEstado,
+        inicioAtencionAt: t.inicioAtencionAt,
+        linkVideollamada: t.linkVideollamada ?? undefined,
+      }));
+  } catch (e) {
+    console.error('[AtencionPage] Error al cargar turnos:', e);
+  }
 
   return <AtencionClient initialTurnos={merged} />;
 }
