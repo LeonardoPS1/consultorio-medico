@@ -37,6 +37,8 @@ WORKDIR /app
 # Cache buster: cambiar este valor para forzar rebuild completo
 # Debe declararse en CADA stage donde se necesita invalidar cache
 ARG CACHEBUST=10
+ARG GIT_COMMIT=unknown
+ARG BUILD_TIME=unknown
 RUN echo "Cache bust: $CACHEBUST"
 
 # Copiar dependencias desde stage anterior
@@ -48,6 +50,8 @@ WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV NEXT_PUBLIC_GIT_COMMIT=$GIT_COMMIT
+ENV NEXT_PUBLIC_BUILD_TIME=$BUILD_TIME
 
 # Cache .next/cache y pnpm store entre builds
 RUN --mount=type=cache,target=/app/dashboard/.next/cache \
