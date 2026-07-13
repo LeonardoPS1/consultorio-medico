@@ -1,6 +1,8 @@
 /**
  * Genera public/sw-version.js con un hash único de build.
  * El service worker lo importa vía importScripts() para auto-versionado.
+ * También actualiza el marcador __SW_BUILD__ en sw.js para que el SW
+ * cambie su contenido en cada build y el navegador detecte la actualización.
  *
  * Uso: node scripts/generate-sw-version.mjs
  * Se ejecuta automáticamente en postbuild (package.json)
@@ -17,6 +19,7 @@ const ROOT = join(__dirname, '..');
 const swPath = join(ROOT, 'public', 'sw.js');
 let swContent = '';
 let hash = '';
+let version = '';
 
 if (existsSync(swPath)) {
   swContent = readFileSync(swPath, 'utf-8');
@@ -24,11 +27,21 @@ if (existsSync(swPath)) {
     .update(swContent + Date.now().toString())
     .digest('hex')
     .slice(0, 8);
+  version = `v${hash}`;
+
+  // Actualizar marcador __SW_BUILD__ en sw.js para que cambie byte content
+  const updatedSw = swContent.replace(
+    /(\/\/ __SW_BUILD__): \S+/,
+    `$1: ${version}`
+  );
+  if (updatedSw !== swContent) {
+    writeFileSync(swPath, updatedSw, 'utf-8');
+  }
 } else {
   hash = Date.now().toString(36);
+  version = `v${hash}`;
 }
 
-const version = `v${hash}`;
 const versionFile = join(ROOT, 'public', 'sw-version.js');
 const content = `// Auto-generado — no modificar manualmente\nvar SW_VERSION = '${version}';\n`;
 
