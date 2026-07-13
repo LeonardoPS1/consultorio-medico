@@ -67,16 +67,17 @@ export async function eliminarNovedad(id: string): Promise<void> {
 
 // ─── Importar CHANGELOG estático ────────────────────────────
 
-/** Importa el CHANGELOG estático a la DB si la tabla está vacía */
+/** Importa versiones del CHANGELOG estático que aún no están en la DB */
 export async function importarChangelogEstatico(): Promise<number> {
-  const [existentes] = await db
-    .select({ count: sql<number>`count(*)::int` })
+  const existentes = await db
+    .select({ version: novedades.version })
     .from(novedades);
 
-  if (existentes.count > 0) return 0;
+  const versionesExistentes = new Set(existentes.map((e) => e.version));
 
   let count = 0;
   for (const entry of CHANGELOG) {
+    if (versionesExistentes.has(entry.version)) continue;
     const [dia, mes, anio] = entry.date.split('/');
     await crearNovedad({
       version: entry.version,

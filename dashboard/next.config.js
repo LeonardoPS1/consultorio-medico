@@ -5,10 +5,6 @@ const withBundleAnalyzer = process.env.ANALYZE === 'true'
   : (config) => config;
 
 const nextConfig = withBundleAnalyzer({
-  // Skip ESLint durante el build (corremos lint por separado con pnpm run lint)
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   // Aumenta timeout de generación de páginas estáticas (default 60s)
   // Previene timeout en /_not-found durante build en VPS con recursos limitados
   staticPageGenerationTimeout: 180,
@@ -24,7 +20,7 @@ const nextConfig = withBundleAnalyzer({
     ],
   },
   images: {
-    domains: ['localhost'],
+    remotePatterns: [{ protocol: 'https', hostname: '**' }],
     formats: ['image/avif', 'image/webp'],
   },
   // Solo usar standalone output en Docker/Linux: pnpm symlinks causan EPERM en Windows
