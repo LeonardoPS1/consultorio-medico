@@ -12,6 +12,53 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.18.0',
+    date: '13/07/2026',
+    title: 'Actualización de estabilidad y UI',
+    items: [
+      'Novedades renovado: panel con auto-refresh, diseño mejorado, tipos de cambio visibles',
+      'Versiones corregidas: bump a v1.18.0 con todo el historial de cambios reflejado',
+      'Header badge de novedades corregido: icono coherente, dot preciso, auto-refresh al abrir modal',
+      'Página de novedades con datos directos de DB (sin self-fetch)',
+      'Timeline visual con badges por tipo (feature, fix, security, refactor)',
+      'Transiciones y animaciones en el modal y página de novedades',
+    ],
+  },
+  {
+    version: '1.17.0',
+    date: '12/07/2026',
+    title: 'Next.js 16, Calidad y Performance',
+    items: [
+      'Upgrade Next.js 14 → 16.2 + React 19 con migración de breaking changes',
+      'params async en 40+ API routes y generateMetadata, cookies() await',
+      'Docker optimizado con BuildKit cache mounts y .dockerignore reducido',
+      'Split schema.ts en 10 módulos por dominio (Fase 4 — Calidad de Código)',
+      'DRY KPIs con config object, tipado strict (Session, MedicoDia, TurnoDia)',
+      '38 tests nuevos con @vitest/coverage-v8',
+      'Self-fetch → DB directo en dashboard stats (Fase 5 — Performance)',
+      'CSS code-split: ~450 líneas movidas de globals.css a landing.css',
+      'useOrganization hook para desduplicar carga de org',
+      'Asistente IA toggle + sonido + fix sugerencias superpuestas',
+    ],
+  },
+  {
+    version: '1.16.0',
+    date: '10/07/2026',
+    title: 'UI Polish y Sistema de Diseño',
+    items: [
+      'Glassmorphism layer: CSS vars + utility classes en Card, Dialog, Sheet, KPIs',
+      'Layout variations: 4 modos (default, wide, centered, minimal)',
+      'Storybook con Vite 5: 5 stories core + portal stories',
+      'Tooltips inteligentes con delay adaptativo (Radix + SmartTooltip)',
+      '156 portal inline styles migrados a Tailwind',
+      'Sidebar y header refactor: split en componentes más pequeños',
+      '28 aria-labels adicionales en componentes del dashboard',
+      'Dark mode portal con 3 colores semánticos',
+      'Transiciones de página con framer-motion en dashboard',
+      'Skip-to-content link y 8 portal spinners → skeletons',
+    ],
+  },
+  {
     version: '1.15.0',
     date: '29/06/2026',
     title: 'Portal Analytics, Repositorio, Novedades y Tooltips',

@@ -1,10 +1,8 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
-import { setCookieWithConsent } from '@/components/landing/cookie-consent';
-
 // Cookie en vez de localStorage — persiste entre sesiones y se envía al servidor.
-const COOKIE_CHANGELOG_SEEN = 'pwa_last_changelog_version';
+const COOKIE_CHANGELOG_SEEN = 'nov_version_visto';
 
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -69,7 +67,7 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
   const [hasUnseenChangelog, setHasUnseenChangelog] = useState(false);
   const waitingSWRef = useRef<ServiceWorker | null>(null);
 
-  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '1.10.0';
+  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '1.18.0';
 
   // ─── Changelog tracking por versión ──────────────────────
   useEffect(() => {
@@ -80,7 +78,7 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
   }, [appVersion]);
 
   const markChangelogSeen = useCallback(() => {
-    setCookieWithConsent(COOKIE_CHANGELOG_SEEN, appVersion);
+    setCookie(COOKIE_CHANGELOG_SEEN, appVersion);
     setHasUnseenChangelog(false);
   }, [appVersion]);
 

@@ -32,7 +32,7 @@ const nextConfig = withBundleAnalyzer({
   // Variables de entorno que expone al cliente
   env: {
     NEXT_PUBLIC_APP_NAME: 'AiCoreMed',
-    NEXT_PUBLIC_APP_VERSION: '1.15.0',
+    NEXT_PUBLIC_APP_VERSION: '1.18.0',
     NEXT_PUBLIC_REPO_URL: 'https://github.com/LeonardoPS1/consultorio-medico',
     NEXT_PUBLIC_TENANT_NAME: process.env.NEXT_PUBLIC_TENANT_NAME || 'Consultorio',
     NEXT_PUBLIC_TENANT_PRIMARY: process.env.NEXT_PUBLIC_TENANT_PRIMARY || '#2563eb',
