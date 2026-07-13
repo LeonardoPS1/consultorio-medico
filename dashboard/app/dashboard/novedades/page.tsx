@@ -23,16 +23,9 @@ function novedadToChangelog(n: Novedad): ChangelogEntry & { tipo: string } {
 
 export default async function NovedadesPage() {
   try {
-    let entries = await listarNovedades();
+    await importarChangelogEstatico();
 
-    if (entries.length === 0) {
-      try {
-        await importarChangelogEstatico();
-        entries = await listarNovedades();
-      } catch {
-        // fallback
-      }
-    }
+    let entries = await listarNovedades();
 
     if (entries.length > 0) {
       const changelog = entries.map(novedadToChangelog);
