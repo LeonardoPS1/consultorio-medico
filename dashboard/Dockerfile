@@ -11,7 +11,7 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 
 # Cache buster
-ARG CACHEBUST=9
+ARG CACHEBUST=10
 RUN echo "Cache bust: $CACHEBUST"
 
 # Corepack para pnpm
@@ -36,7 +36,7 @@ WORKDIR /app
 
 # Cache buster: cambiar este valor para forzar rebuild completo
 # Debe declararse en CADA stage donde se necesita invalidar cache
-ARG CACHEBUST=8
+ARG CACHEBUST=10
 RUN echo "Cache bust: $CACHEBUST"
 
 # Copiar dependencias desde stage anterior
