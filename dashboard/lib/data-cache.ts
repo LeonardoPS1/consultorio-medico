@@ -85,6 +85,6 @@ export function unstableCache<T, Args extends Serializable[]>(
 export function revalidate(tag: CacheTag | CacheTag[]): void {
   const tags = Array.isArray(tag) ? tag : [tag];
   for (const t of tags) {
-    revalidateTag(t);
+    revalidateTag(t, { expire: 0 });
   }
 }

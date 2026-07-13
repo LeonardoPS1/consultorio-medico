@@ -11,7 +11,8 @@ import { eq, and } from 'drizzle-orm';
 import { generarHashCertificado, generarHTMLCertificado } from '@/lib/certificados';
 import QRCode from 'qrcode';
 
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -22,7 +23,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
     .from(historialMedico)
     .where(
       and(
-        eq(historialMedico.id, params.id),
+        eq(historialMedico.id, id),
         eq(historialMedico.pacienteId, session.pacienteId),
         eq(historialMedico.tipo, 'certificado'),
         eq(historialMedico.visibleParaPaciente, true),

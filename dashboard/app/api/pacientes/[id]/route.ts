@@ -44,12 +44,13 @@ async function verifyPacienteAccess(
   }
 }
 
-export const GET = apiHandler(async (_req: NextRequest, { params }) => {
+export const GET = apiHandler(async (_req: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
   const session = await auth();
   const sessionMedicoId = session?.user?.medicoId;
   const sessionRol = session?.user?.role;
 
-  await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+  await verifyPacienteAccess(id, sessionMedicoId, sessionRol);
 
   const [paciente] = await db
     .select({
@@ -75,33 +76,35 @@ export const GET = apiHandler(async (_req: NextRequest, { params }) => {
       createdAt: pacientes.createdAt,
     })
     .from(pacientes)
-    .where(and(eq(pacientes.id, params.id), sql`${pacientes.deletedAt} IS NULL`));
+    .where(and(eq(pacientes.id, id), sql`${pacientes.deletedAt} IS NULL`));
 
   if (!paciente) return success(null, 404);
   return success(paciente);
 });
 
-export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
+export const PATCH = apiHandler(async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
   const session = await auth();
   const sessionMedicoId = session?.user?.medicoId;
   const sessionRol = session?.user?.role;
 
-  await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+  await verifyPacienteAccess(id, sessionMedicoId, sessionRol);
 
   const body = await parseBody(request, updatePacienteSchema);
-  const updated = await pacientesService.update(params.id, body);
+  const updated = await pacientesService.update(id, body);
   revalidate([CACHE_TAGS.PACIENTES, CACHE_TAGS.DASHBOARD_STATS]);
   return success(updated);
 });
 
-export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
+export const DELETE = apiHandler(async (_req: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
   const session = await auth();
   const sessionMedicoId = session?.user?.medicoId;
   const sessionRol = session?.user?.role;
 
-  await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+  await verifyPacienteAccess(id, sessionMedicoId, sessionRol);
 
-  const result = await pacientesService.delete(params.id);
+  const result = await pacientesService.delete(id);
   revalidate([CACHE_TAGS.PACIENTES, CACHE_TAGS.DASHBOARD_STATS]);
   return success(result);
 });

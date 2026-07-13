@@ -34,7 +34,7 @@ const LABELS_ESTADO: Record<string, string> = {
 export default async function TurnosPage() {
   let apiData: Awaited<ReturnType<typeof getServerTurnos>>;
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const sucursalId = cookieStore.get('sucursal_activa')?.value;
     apiData = await getServerTurnos(sucursalId);
   } catch (e) {

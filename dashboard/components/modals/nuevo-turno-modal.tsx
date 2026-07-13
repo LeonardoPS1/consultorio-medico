@@ -62,7 +62,7 @@ export function NuevoTurnoModal({
   const [medicos, setMedicos] = useState<MedicoOption[]>([]);
   const [loadingMedicos, setLoadingMedicos] = useState(false);
   const [medicosError, setMedicosError] = useState<string | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // ─── Autocomplete paciente ──────────────────────────────
   const [pacienteSearch, setPacienteSearch] = useState(pacienteName || '');
@@ -72,7 +72,7 @@ export function NuevoTurnoModal({
   const [selectedPaciente, setSelectedPaciente] = useState<PacienteSuggestion | null>(null);
   const [highlightedIdx, setHighlightedIdx] = useState(-1);
   const [pacienteSearchError, setPacienteSearchError] = useState(false);
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 

@@ -34,7 +34,8 @@ import { verifyPacienteAccess } from '@/lib/api-auth';
  * - Historial de consentimientos
  * - Auditoría de accesos a sus datos
  */
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -43,9 +44,9 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 
     const sessionMedicoId = session.user?.medicoId;
     const sessionRol = session.user?.role;
-    await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+    await verifyPacienteAccess(id, sessionMedicoId, sessionRol);
 
-    const pacienteId = params.id;
+    const pacienteId = id;
 
     // ─── 1. Datos del paciente ────────────────────────
     const [paciente] = await db.select().from(pacientes).where(eq(pacientes.id, pacienteId));

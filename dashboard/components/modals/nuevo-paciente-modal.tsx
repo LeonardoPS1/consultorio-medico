@@ -92,7 +92,7 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
   const [comunaId, setComunaId] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Regiones/comunas
   const [regiones, setRegiones] = useState<Region[]>([]);

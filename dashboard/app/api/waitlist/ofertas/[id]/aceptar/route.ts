@@ -11,9 +11,10 @@ import {
  * POST /api/waitlist/ofertas/[id]/aceptar - Acepta una oferta de turno
  */
 export const POST = apiHandler(
-  async (_req: NextRequest, { params }: { params: { id: string } }) => {
+  async (_req: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
     await requireAuth();
-    const result = await waitlistService.aceptar(params.id);
+    const result = await waitlistService.aceptar(id);
 
     // Notificar al médico y al paciente (fire-and-forget)
     if (result.turno) {

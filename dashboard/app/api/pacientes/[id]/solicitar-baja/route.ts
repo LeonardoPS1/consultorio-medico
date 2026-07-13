@@ -13,16 +13,17 @@ import { apiHandler, success } from '@/lib/api-handler';
 import { requireAuth, verifyPacienteAccess } from '@/lib/api-auth';
 import { privacidadService } from '@/lib/services/privacidad';
 
-export const POST = apiHandler(async (request: NextRequest, { params }) => {
+export const POST = apiHandler(async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
   const session = await requireAuth();
   const sessionMedicoId = session.user?.medicoId;
   const sessionRol = session.user?.role;
-  await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+  await verifyPacienteAccess(id, sessionMedicoId, sessionRol);
 
   const ip =
     request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined;
   const userAgent = request.headers.get('user-agent') || undefined;
 
-  const result = await privacidadService.solicitarBaja(params.id, ip, userAgent);
+  const result = await privacidadService.solicitarBaja(id, ip, userAgent);
   return success(result);
 });

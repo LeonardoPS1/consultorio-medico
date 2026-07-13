@@ -11,7 +11,8 @@ import QRCode from 'qrcode';
  * GET /api/pacientes/[id]/certificados
  * Lista certificados del paciente (entradas de tipo 'certificado' en historial)
  */
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -20,7 +21,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 
     const sessionMedicoId = session.user?.medicoId;
     const sessionRol = session.user?.role;
-    await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+    await verifyPacienteAccess(id, sessionMedicoId, sessionRol);
 
     const { searchParams } = new URL(_request.url);
     const format = searchParams.get('format');
@@ -34,7 +35,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
         .where(
           and(
             eq(historialMedico.id, entryId),
-            eq(historialMedico.pacienteId, params.id),
+            eq(historialMedico.pacienteId, id),
             eq(historialMedico.tipo, 'certificado'),
           ),
         );
@@ -47,7 +48,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
       const [paciente] = await db
         .select({ nombre: pacientes.nombre, apellido: pacientes.apellido, dni: pacientes.dni })
         .from(pacientes)
-        .where(eq(pacientes.id, params.id));
+        .where(eq(pacientes.id, id));
 
       if (!paciente) {
         return NextResponse.json({ error: 'Paciente no encontrado' }, { status: 404 });
@@ -84,7 +85,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
       const html = generarHTMLCertificado(
         {
           id: entry.id,
-          pacienteId: params.id,
+          pacienteId: id,
           pacienteNombre: paciente.nombre,
           pacienteApellido: paciente.apellido,
           pacienteDni: paciente.dni,
@@ -106,7 +107,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
       .select()
       .from(historialMedico)
       .where(
-        and(eq(historialMedico.pacienteId, params.id), eq(historialMedico.tipo, 'certificado')),
+        and(eq(historialMedico.pacienteId, id), eq(historialMedico.tipo, 'certificado')),
       )
       .orderBy(desc(historialMedico.createdAt));
 
@@ -122,7 +123,8 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
  * POST /api/pacientes/[id]/certificados
  * Crea un nuevo certificado médico (como entrada en historial)
  */
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -170,7 +172,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     // Generar hash de verificación
     const hash = generarHashCertificado({
       id: entryId,
-      pacienteId: params.id,
+      pacienteId: id,
       diagnostico: diagnostico.trim(),
     });
 
@@ -180,7 +182,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       .insert(historialMedico)
       .values({
         id: entryId,
-        pacienteId: params.id,
+        pacienteId: id,
         medicoId,
         tipo: 'certificado',
         titulo,

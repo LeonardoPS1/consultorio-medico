@@ -24,19 +24,20 @@ function findBackupFile(id: string): string | null {
 // GET /api/admin/backups/[id] — Descargar backup
 // ============================================================
 
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   try {
     const session = await auth();
     if (!session?.user?.id || session?.user?.role !== 'admin') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const filepath = findBackupFile(params.id);
+    const filepath = findBackupFile(id);
     if (!filepath) {
       return NextResponse.json({ error: 'Backup no encontrado' }, { status: 404 });
     }
 
-    const filename = `${params.id}.sql.gz`;
+    const filename = `${id}.sql.gz`;
     const content = fs.readFileSync(filepath);
 
     return new NextResponse(content, {
@@ -56,14 +57,15 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 // DELETE /api/admin/backups/[id] — Eliminar backup
 // ============================================================
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   try {
     const session = await auth();
     if (!session?.user?.id || session?.user?.role !== 'admin') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const filepath = findBackupFile(params.id);
+    const filepath = findBackupFile(id);
     if (!filepath) {
       return NextResponse.json({ error: 'Backup no encontrado' }, { status: 404 });
     }

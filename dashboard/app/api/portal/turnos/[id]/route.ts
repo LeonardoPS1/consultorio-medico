@@ -12,11 +12,12 @@ import { turnos } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 
 export const PATCH = apiHandler(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
     const session = await getPortalSession();
     if (!session) fail('No autorizado', 401);
 
-    const turnoId = params.id;
+    const turnoId = id;
     const body = await parseBody(request, portalTurnoUpdateSchema);
 
     const nuevoEstado = body.estado || 'cancelada';

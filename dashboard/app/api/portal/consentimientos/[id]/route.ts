@@ -8,7 +8,8 @@ import { db } from '@/lib/db';
 import { consentimientos, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -35,7 +36,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     .leftJoin(medicos, eq(consentimientos.medicoId, medicos.id))
     .where(
       and(
-        eq(consentimientos.id, params.id),
+        eq(consentimientos.id, id),
         eq(consentimientos.pacienteId, session.pacienteId),
         sql`${consentimientos.deletedAt} IS NULL`,
       ),

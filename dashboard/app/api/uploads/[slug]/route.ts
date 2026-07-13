@@ -8,14 +8,15 @@ import { getUploadDir } from '@/lib/upload-dir';
 /**
  * Sirve archivos subidos (imágenes) desde .data/uploads/
  */
-export async function GET(_request: NextRequest, { params }: { params: { slug: string } }) {
+export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await paramsPromise;
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const filename = params.slug;
+    const filename = slug;
 
     // Validar que el nombre no intente salir del directorio (path traversal)
     if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {

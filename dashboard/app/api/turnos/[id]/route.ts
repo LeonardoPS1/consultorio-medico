@@ -12,7 +12,8 @@ import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
 /**
  * GET /api/turnos/[id] - Detalle individual de turno
  */
-export const GET = apiHandler(async (_req: NextRequest, { params }) => {
+export const GET = apiHandler(async (_req: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
   const session = await auth();
   const sessionMedicoId = session?.user?.medicoId;
   const sessionRol = session?.user?.role;
@@ -44,7 +45,7 @@ export const GET = apiHandler(async (_req: NextRequest, { params }) => {
     .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
     .where(
       and(
-        eq(turnos.id, params.id),
+        eq(turnos.id, id),
         sessionRol !== 'admin' && sessionMedicoId
           ? eq(turnos.medicoId, sessionMedicoId)
           : undefined,
@@ -60,7 +61,8 @@ export const GET = apiHandler(async (_req: NextRequest, { params }) => {
 /**
  * DELETE /api/turnos/[id] - Soft-delete de turno con sync GCal
  */
-export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
+export const DELETE = apiHandler(async (_req: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
   const session = await auth();
   const sessionMedicoId = session?.user?.medicoId;
   const sessionRol = session?.user?.role;
@@ -69,7 +71,7 @@ export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
   const [turno] = await db
     .select({ id: turnos.id, medicoId: turnos.medicoId })
     .from(turnos)
-    .where(eq(turnos.id, params.id))
+    .where(eq(turnos.id, id))
     .limit(1);
 
   if (!turno) notFound('Turno no encontrado');
@@ -77,12 +79,13 @@ export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
     fail('No autorizado');
   }
 
-  const result = await turnosService.delete(params.id);
+  const result = await turnosService.delete(id);
   revalidate([CACHE_TAGS.TURNOS, CACHE_TAGS.PACIENTES, CACHE_TAGS.DASHBOARD_STATS]);
   return success(result);
 });
 
-export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
+export const PATCH = apiHandler(async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
   const session = await auth();
   const sessionMedicoId = session?.user?.medicoId;
   const sessionRol = session?.user?.role;
@@ -91,7 +94,7 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
   const [turno] = await db
     .select({ id: turnos.id, medicoId: turnos.medicoId })
     .from(turnos)
-    .where(eq(turnos.id, params.id))
+    .where(eq(turnos.id, id))
     .limit(1);
 
   if (!turno) notFound('Turno no encontrado');
@@ -101,11 +104,11 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }) => {
 
   const body = await parseBody(request, updateTurnoSchema);
   // Si se quiere skip de la auto-asignación de lista de espera, pasarlo al servicio
-  const updated = await turnosService.update(params.id, body);
+  const updated = await turnosService.update(id, body);
 
   // Encuesta post-consulta
   if (body.estado === 'atendido') {
-    sendSurveyWhatsApp(params.id).catch(() => {});
+    sendSurveyWhatsApp(id).catch(() => {});
   }
 
   // El sync a Google Calendar ahora lo maneja turnosService.update()

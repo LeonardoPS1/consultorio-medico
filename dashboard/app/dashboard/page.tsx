@@ -89,7 +89,7 @@ async function getDashboardData(sucursalId?: string): Promise<DashboardData | nu
 // ─── Page ──────────────────────────────────────────────────
 
 export default async function DashboardPage() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sucursalId = cookieStore.get('sucursal_activa')?.value;
   const data = await getDashboardData(sucursalId);
 

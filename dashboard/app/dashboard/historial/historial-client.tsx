@@ -114,7 +114,7 @@ export function HistorialClient({ initialData, initialTotal, tipos }: Props) {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const limit = 30;
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const fetchData = useCallback(async (q: string, t: string, p: number) => {
     setLoading(true);

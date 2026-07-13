@@ -15,13 +15,12 @@ function getPortalSession(request: Request): { pacienteId: string } | null {
 }
 
 // ─── GET /api/portal/pagos/[turnoId] — Estado del pago ──────
-export async function GET(_request: Request, { params }: { params: { turnoId: string } }) {
+export async function GET(_request: Request, { params: paramsPromise }: { params: Promise<{ turnoId: string }> }) {
+  const { turnoId } = await paramsPromise;
   const session = getPortalSession(_request);
   if (!session?.pacienteId) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-
-  const { turnoId } = params;
 
   // Verificar que el turno existe y pertenece al paciente
   const [turno] = await db

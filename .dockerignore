@@ -1,7 +1,52 @@
+# Dependencias
 node_modules/
+.pnp
+.pnp.js
+
+# Build
 .next/
-.git/
-*.md
+out/
+dist/
+build/
+
+# Entorno
 .env
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker
+docker-compose.yml
+docker-compose.prod.yml
+
+# Project docs / scripts (no necesarios en build)
+docs/
+n8n-workflows/
+scripts/
+livekit-server/
+Makefile
+*.md
+
+# IA / OpenCode (contiene secrets como token Dokploy)
+.opencode/
+
+# TypeScript
+*.tsbuildinfo

@@ -269,7 +269,7 @@ export function TurnosClient({
   }, [view, selectedDate, fetchDayView]);
 
   // ─── Debounced search (lista view only) ────────────────────
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     if (view !== 'lista') return;

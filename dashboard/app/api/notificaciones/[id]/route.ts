@@ -27,18 +27,19 @@ function handleError(error: unknown, mensaje: string): never {
  */
 // ─── PATCH /api/notificaciones/[id] ─────────────────────────
 export const PATCH = apiHandler(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
     const session = await requireAuth();
     const userId = session.user.id as string;
     const { action } = await parseBody(request, updateNotificacionSchema);
 
     try {
       if (action === 'read') {
-        await notificacionesService.marcarLeida(params.id, userId);
+        await notificacionesService.marcarLeida(id, userId);
         return ok({ success: true });
       }
 
-      await notificacionesService.marcarNoLeida(params.id, userId);
+      await notificacionesService.marcarNoLeida(id, userId);
       return ok({ success: true });
     } catch (error: unknown) {
       handleError(error, 'Notificación no encontrada');
@@ -54,12 +55,13 @@ export const PATCH = apiHandler(
  */
 // ─── DELETE /api/notificaciones/[id] ────────────────────────
 export const DELETE = apiHandler(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
     const session = await requireAuth();
     const userId = session.user.id as string;
 
     try {
-      await notificacionesService.eliminar(params.id, userId);
+      await notificacionesService.eliminar(id, userId);
       return ok({ success: true });
     } catch (error: unknown) {
       handleError(error, 'Notificación no encontrada');

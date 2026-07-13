@@ -27,15 +27,16 @@ async function requireAuthForHistorial(request: NextRequest, params: { id: strin
  * GET /api/pacientes/[id]/historial
  * Lista entradas del historial médico (desde PostgreSQL)
  */
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
-  const { error } = await requireAuthForHistorial(_request, params);
+export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
+  const { error } = await requireAuthForHistorial(_request, { id });
   if (error) return error;
 
   try {
     const entries = await db
       .select()
       .from(historialMedico)
-      .where(eq(historialMedico.pacienteId, params.id))
+      .where(eq(historialMedico.pacienteId, id))
       .orderBy(desc(historialMedico.createdAt));
 
     return NextResponse.json(entries);
@@ -49,8 +50,9 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
  * POST /api/pacientes/[id]/historial
  * Crea una nueva entrada en el historial médico
  */
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  const { error } = await requireAuthForHistorial(request, params);
+export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
+  const { error } = await requireAuthForHistorial(request, { id });
   if (error) return error;
 
   try {
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const [entry] = await db
       .insert(historialMedico)
       .values({
-        pacienteId: params.id,
+        pacienteId: id,
         tipo: body.tipo,
         titulo: body.titulo,
         descripcion: body.descripcion || null,
@@ -84,8 +86,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
  * PATCH /api/pacientes/[id]/historial?entryId=xxx
  * Actualiza una entrada del historial médico
  */
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  const { error } = await requireAuthForHistorial(request, params);
+export async function PATCH(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
+  const { error } = await requireAuthForHistorial(request, { id });
   if (error) return error;
 
   try {
@@ -102,7 +105,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const [existing] = await db
       .select({ id: historialMedico.id })
       .from(historialMedico)
-      .where(and(eq(historialMedico.id, entryId), eq(historialMedico.pacienteId, params.id)));
+      .where(and(eq(historialMedico.id, entryId), eq(historialMedico.pacienteId, id)));
 
     if (!existing) {
       return NextResponse.json({ error: 'Entrada de historial no encontrada' }, { status: 404 });
@@ -142,8 +145,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
  * DELETE /api/pacientes/[id]/historial?entryId=xxx
  * Elimina una entrada del historial médico
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  const { error } = await requireAuthForHistorial(request, params);
+export async function DELETE(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
+  const { error } = await requireAuthForHistorial(request, { id });
   if (error) return error;
 
   try {
@@ -158,7 +162,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     const [existing] = await db
       .select({ id: historialMedico.id })
       .from(historialMedico)
-      .where(and(eq(historialMedico.id, entryId), eq(historialMedico.pacienteId, params.id)));
+      .where(and(eq(historialMedico.id, entryId), eq(historialMedico.pacienteId, id)));
 
     if (!existing) {
       return NextResponse.json({ error: 'Entrada de historial no encontrada' }, { status: 404 });

@@ -20,7 +20,8 @@ import { verifyPacienteAccess } from '@/lib/api-auth';
  * Devuelve la ficha completa del paciente: datos, turnos, recetas,
  * historial médico, y últimas conversaciones.
  */
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -29,9 +30,9 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 
     const sessionMedicoId = session.user?.medicoId;
     const sessionRol = session.user?.role;
-    await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+    await verifyPacienteAccess(id, sessionMedicoId, sessionRol);
 
-    const pacienteId = params.id;
+    const pacienteId = id;
 
     // ─── Datos del paciente ──────────────────────────
     // Incluimos también deletedAt para saber si ya está dado de baja

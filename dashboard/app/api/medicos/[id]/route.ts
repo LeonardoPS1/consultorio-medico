@@ -15,10 +15,11 @@ async function requireMedicoAccess(medicoId: string) {
   if (sessionMedicoId !== medicoId) fail('No autorizado', 403);
 }
 
-export const GET = apiHandler(async (_req: NextRequest, { params }: { params: { id: string } }) => {
+export const GET = apiHandler(async (_req: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
   await requireAuth();
 
-  const [medico] = await db.select().from(medicos).where(eq(medicos.id, params.id));
+  const [medico] = await db.select().from(medicos).where(eq(medicos.id, id));
   if (!medico) notFound('Medico no encontrado');
   return success(medico);
 });
@@ -28,8 +29,9 @@ const medicoPatchSchema = updateMedicoSchema.extend({
 });
 
 export const PATCH = apiHandler(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
-    await requireMedicoAccess(params.id);
+  async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
+    await requireMedicoAccess(id);
 
     const body = await parseBody(request, medicoPatchSchema);
 
@@ -48,7 +50,7 @@ export const PATCH = apiHandler(
     const [actualizado] = await db
       .update(medicos)
       .set(updateData)
-      .where(eq(medicos.id, params.id))
+      .where(eq(medicos.id, id))
       .returning();
     if (!actualizado) notFound('Medico no encontrado');
 
@@ -56,17 +58,18 @@ export const PATCH = apiHandler(
   },
 );
 
-export const DELETE = apiHandler(async (_req: NextRequest, { params }) => {
-  await requireMedicoAccess(params.id);
+export const DELETE = apiHandler(async (_req: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
+  await requireMedicoAccess(id);
 
   const [medico] = await db
     .select({ id: medicos.id })
     .from(medicos)
-    .where(and(eq(medicos.id, params.id), sql`${medicos.deletedAt} IS NULL`))
+    .where(and(eq(medicos.id, id), sql`${medicos.deletedAt} IS NULL`))
     .limit(1);
 
   if (!medico) notFound('Medico no encontrado');
 
-  await db.update(medicos).set({ deletedAt: new Date() }).where(eq(medicos.id, params.id));
+  await db.update(medicos).set({ deletedAt: new Date() }).where(eq(medicos.id, id));
   return success({ deleted: true });
 });

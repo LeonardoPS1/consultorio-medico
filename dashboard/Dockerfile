@@ -11,16 +11,24 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 
 # Cache buster
-ARG CACHEBUST=8
+ARG CACHEBUST=9
 RUN echo "Cache bust: $CACHEBUST"
 
 # Corepack para pnpm
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
+# Cache pnpm store entre builds (Docker BuildKit)
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    --mount=type=cache,target=/root/.npm \
+    mkdir -p /root/.local/share/pnpm/store
+
 # Copiar solo los archivos de dependencias para cachear capa
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY dashboard/package.json ./dashboard/
-RUN pnpm install --frozen-lockfile
+
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    --mount=type=cache,target=/root/.npm \
+    pnpm install --frozen-lockfile
 
 # ─── Stage 2: Build ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS builder
@@ -36,24 +44,15 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/dashboard/node_modules ./dashboard/node_modules
 COPY . .
 
-# Variables de build
 WORKDIR /app
 
-# Variables de build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-RUN corepack enable && corepack prepare pnpm@9 --activate && pnpm build
-
-# ─── Fix standalone deps: instalar deps de producción en el standalone ──────
-# Next.js standalone output con pnpm genera package.json pero node_modules vacío.
-# Usamos npm ci --production --ignore-scripts dentro del standalone para poblarlo.
-WORKDIR /app/dashboard/.next/standalone
-RUN npm install --production --ignore-scripts --legacy-peer-deps
-WORKDIR /app
-
-# No necesitamos tar: Docker COPY --from=builder sigue symlinks automáticamente.
-# El COPY del standalone más abajo ya trae node_modules/ del output.
+# Cache .next/cache y pnpm store entre builds
+RUN --mount=type=cache,target=/app/dashboard/.next/cache \
+    --mount=type=cache,target=/root/.local/share/pnpm/store \
+    corepack enable && corepack prepare pnpm@9 --activate && pnpm build
 
 # ─── Stage 3: Runner (producción) ────────────────────────────────────────────
 FROM node:22-alpine AS runner
@@ -69,10 +68,7 @@ ENV TZ=America/Santiago
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# En monorepo pnpm con dashboard como subdirectorio, el standalone output está en
-# /app/dashboard/.next/standalone (no en /app/.next/standalone)
-
-# Copiar standalone output de Next.js (server.js, .next, node_modules)
+# Copiar standalone output (server.js, .next, node_modules)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
 
 # Copiar static assets

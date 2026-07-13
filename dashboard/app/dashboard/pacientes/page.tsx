@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 // ─── Page ──────────────────────────────────────────────────
 
 export default async function PacientesPage() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sucursalId = cookieStore.get('sucursal_activa')?.value;
   const apiData = await getServerPacientes(sucursalId);
 

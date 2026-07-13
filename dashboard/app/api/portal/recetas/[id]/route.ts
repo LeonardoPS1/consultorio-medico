@@ -9,7 +9,8 @@ import { recetas, medicos, pacientes } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 import { escapeHtml } from '@/lib/html-utils';
 
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -35,7 +36,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
     .from(recetas)
     .leftJoin(medicos, eq(recetas.medicoId, medicos.id))
     .leftJoin(pacientes, eq(recetas.pacienteId, pacientes.id))
-    .where(and(eq(recetas.id, params.id), eq(recetas.pacienteId, session.pacienteId)))
+    .where(and(eq(recetas.id, id), eq(recetas.pacienteId, session.pacienteId)))
     .limit(1);
 
   if (!receta) {

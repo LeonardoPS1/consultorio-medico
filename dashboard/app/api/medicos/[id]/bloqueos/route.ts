@@ -9,9 +9,10 @@ import { eq, and, sql, desc } from 'drizzle-orm';
  * Lista todos los bloqueos de agenda de un médico (vacaciones, feriados, etc.)
  * Query params: desde, hasta (filtro por rango de fechas)
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   try {
-    const medicoId = params.id;
+    const medicoId = id;
     const { searchParams } = new URL(request.url);
     const desde = searchParams.get('desde');
     const hasta = searchParams.get('hasta');
@@ -50,9 +51,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
  * Crea un nuevo bloqueo de agenda para un médico.
  * Body: { titulo, fechaInicio, fechaFin, tipo?, motivo? }
  */
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   try {
-    const medicoId = params.id;
+    const medicoId = id;
     const body = await request.json();
     const { titulo, fechaInicio, fechaFin, tipo, motivo } = body;
 

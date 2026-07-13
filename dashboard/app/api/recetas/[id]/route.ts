@@ -9,12 +9,13 @@ import { parseBody, updateRecetaSchema } from '@/lib/validations';
 import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
 
 export const GET = apiHandler(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
     const session = await requireAuth();
     const sessionMedicoId = session?.user?.medicoId;
     const sessionRol = session?.user?.role;
 
-    const receta = await recetasService.obtener(params.id);
+    const receta = await recetasService.obtener(id);
 
     if (!receta) {
       notFound('Receta no encontrada');
@@ -29,7 +30,8 @@ export const GET = apiHandler(
 );
 
 export const PATCH = apiHandler(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
     const session = await requireAuth();
     const sessionMedicoId = session?.user?.medicoId;
     const sessionRol = session?.user?.role;
@@ -39,7 +41,7 @@ export const PATCH = apiHandler(
     const existente = await db
       .select({ id: recetas.id, medicoId: recetas.medicoId })
       .from(recetas)
-      .where(eq(recetas.id, params.id))
+      .where(eq(recetas.id, id))
       .limit(1);
 
     if (existente.length === 0) {
@@ -50,7 +52,7 @@ export const PATCH = apiHandler(
       fail('No autorizado', 403);
     }
 
-    const actualizada = await recetasService.actualizar(params.id, body);
+    const actualizada = await recetasService.actualizar(id, body);
 
     revalidate([CACHE_TAGS.RECETAS, CACHE_TAGS.PACIENTES, CACHE_TAGS.DASHBOARD_STATS]);
     return success(actualizada);
@@ -58,7 +60,8 @@ export const PATCH = apiHandler(
 );
 
 export const DELETE = apiHandler(
-  async (_request: NextRequest, { params }: { params: { id: string } }) => {
+  async (_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
     const session = await requireAuth();
     const sessionMedicoId = session?.user?.medicoId;
     const sessionRol = session?.user?.role;
@@ -66,7 +69,7 @@ export const DELETE = apiHandler(
     const existente = await db
       .select({ id: recetas.id, medicoId: recetas.medicoId })
       .from(recetas)
-      .where(eq(recetas.id, params.id))
+      .where(eq(recetas.id, id))
       .limit(1);
 
     if (existente.length === 0) {
@@ -77,7 +80,7 @@ export const DELETE = apiHandler(
       fail('No autorizado', 403);
     }
 
-    const actualizada = await recetasService.actualizar(params.id, {
+    const actualizada = await recetasService.actualizar(id, {
       estado: 'historial' as const,
     });
 

@@ -42,13 +42,14 @@ Te responderemos a la brevedad cuando retomemos la atención. ¡Gracias por tu p
 /**
  * GET: Devuelve los mensajes de la conversación (ordenados cronológicamente).
  */
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  const convId = params.id;
+  const convId = id;
 
   // Verificar que la conversación pertenezca al paciente
   const [conv] = await db
@@ -80,13 +81,14 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 /**
  * POST: Envía un mensaje del paciente en la conversación.
  */
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  const convId = params.id;
+  const convId = id;
 
   // Verificar que la conversación pertenezca al paciente
   const [conv] = await db

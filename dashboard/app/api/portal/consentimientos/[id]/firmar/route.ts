@@ -9,7 +9,8 @@ import { db } from '@/lib/db';
 import { consentimientos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -25,7 +26,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     .from(consentimientos)
     .where(
       and(
-        eq(consentimientos.id, params.id),
+        eq(consentimientos.id, id),
         eq(consentimientos.pacienteId, session.pacienteId),
         sql`${consentimientos.deletedAt} IS NULL`,
       ),
@@ -51,7 +52,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       ipFirma,
       updatedAt: new Date(),
     })
-    .where(eq(consentimientos.id, params.id));
+    .where(eq(consentimientos.id, id));
 
   return NextResponse.json({
     success: true,

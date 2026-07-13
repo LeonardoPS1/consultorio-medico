@@ -9,12 +9,13 @@ import { eq, and } from 'drizzle-orm';
  */
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string; bloqueoId: string } },
+  { params: paramsPromise }: { params: Promise<{ id: string; bloqueoId: string }> },
 ) {
+  const { id, bloqueoId } = await paramsPromise;
   try {
     const result = await db
       .delete(bloqueosAgenda)
-      .where(and(eq(bloqueosAgenda.id, params.bloqueoId), eq(bloqueosAgenda.medicoId, params.id)));
+      .where(and(eq(bloqueosAgenda.id, bloqueoId), eq(bloqueosAgenda.medicoId, id)));
 
     if (result.length === 0) {
       return NextResponse.json({ error: 'Bloqueo no encontrado' }, { status: 404 });
@@ -33,8 +34,9 @@ export async function DELETE(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; bloqueoId: string } },
+  { params: paramsPromise }: { params: Promise<{ id: string; bloqueoId: string }> },
 ) {
+  const { id, bloqueoId } = await paramsPromise;
   try {
     const body = await request.json();
     if (!body || Object.keys(body).length === 0) {
@@ -61,7 +63,7 @@ export async function PATCH(
     const [actualizado] = await db
       .update(bloqueosAgenda)
       .set(updateData)
-      .where(and(eq(bloqueosAgenda.id, params.bloqueoId), eq(bloqueosAgenda.medicoId, params.id)))
+      .where(and(eq(bloqueosAgenda.id, bloqueoId), eq(bloqueosAgenda.medicoId, id)))
       .returning();
 
     if (!actualizado) {

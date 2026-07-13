@@ -64,7 +64,7 @@ export function PacienteSearchCombobox({
   const [selectedName, setSelectedName] = useState('');
   const [highlightedIdx, setHighlightedIdx] = useState(-1);
 
-  const searchRef = useRef<ReturnType<typeof setTimeout>>();
+  const searchRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const isSelectedRef = useRef(false);

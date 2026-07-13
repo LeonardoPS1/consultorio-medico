@@ -7,9 +7,10 @@ import { waitlistService } from '@/lib/services/waitlist';
  * POST /api/waitlist/ofertas/[id]/rechazar - Rechaza una oferta de turno
  */
 export const POST = apiHandler(
-  async (_req: NextRequest, { params }: { params: { id: string } }) => {
+  async (_req: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
     await requireAuth();
-    const result = await waitlistService.rechazar(params.id);
+    const result = await waitlistService.rechazar(id);
     return success(result);
   },
 );

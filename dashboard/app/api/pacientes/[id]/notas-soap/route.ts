@@ -27,8 +27,9 @@ async function requireAuthForNotasSoap(request: NextRequest, params: { id: strin
  * GET /api/pacientes/[id]/notas-soap
  * Lista Notas SOAP del paciente (con nombre del médico)
  */
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
-  const { error } = await requireAuthForNotasSoap(_request, params);
+export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
+  const { error } = await requireAuthForNotasSoap(_request, { id });
   if (error) return error;
 
   try {
@@ -53,7 +54,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
       })
       .from(notasSoap)
       .leftJoin(medicos, eq(notasSoap.medicoId, medicos.id))
-      .where(eq(notasSoap.pacienteId, params.id))
+      .where(eq(notasSoap.pacienteId, id))
       .orderBy(desc(notasSoap.createdAt));
 
     return NextResponse.json(list);
@@ -67,7 +68,8 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
  * POST /api/pacientes/[id]/notas-soap
  * Crea una nueva Nota SOAP
  */
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -77,7 +79,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const sessionMedicoId = session.user?.medicoId;
     const sessionRol = session.user?.role;
     try {
-      await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+      await verifyPacienteAccess(id, sessionMedicoId, sessionRol);
     } catch {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
@@ -105,7 +107,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const [nota] = await db
       .insert(notasSoap)
       .values({
-        pacienteId: params.id,
+        pacienteId: id,
         medicoId: medicoFinal,
         turnoId: body.turnoId || null,
         subjetivo: body.subjetivo || null,
@@ -131,8 +133,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
  * PATCH /api/pacientes/[id]/notas-soap?entryId=xxx
  * Actualiza una Nota SOAP existente
  */
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  const { error } = await requireAuthForNotasSoap(request, params);
+export async function PATCH(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
+  const { error } = await requireAuthForNotasSoap(request, { id });
   if (error) return error;
 
   try {
@@ -149,7 +152,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const [existing] = await db
       .select({ id: notasSoap.id })
       .from(notasSoap)
-      .where(and(eq(notasSoap.id, entryId), eq(notasSoap.pacienteId, params.id)));
+      .where(and(eq(notasSoap.id, entryId), eq(notasSoap.pacienteId, id)));
 
     if (!existing) {
       return NextResponse.json({ error: 'Nota SOAP no encontrada' }, { status: 404 });
@@ -186,8 +189,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
  * DELETE /api/pacientes/[id]/notas-soap?entryId=xxx
  * Elimina una Nota SOAP
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  const { error } = await requireAuthForNotasSoap(request, params);
+export async function DELETE(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = await paramsPromise;
+  const { error } = await requireAuthForNotasSoap(request, { id });
   if (error) return error;
 
   try {
@@ -202,7 +206,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     const [existing] = await db
       .select({ id: notasSoap.id })
       .from(notasSoap)
-      .where(and(eq(notasSoap.id, entryId), eq(notasSoap.pacienteId, params.id)));
+      .where(and(eq(notasSoap.id, entryId), eq(notasSoap.pacienteId, id)));
 
     if (!existing) {
       return NextResponse.json({ error: 'Nota SOAP no encontrada' }, { status: 404 });

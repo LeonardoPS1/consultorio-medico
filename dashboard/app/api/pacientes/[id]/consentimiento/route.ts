@@ -27,11 +27,12 @@ const registrarConsentimientoSchema = z.object({
 /**
  * POST - Registrar un evento de consentimiento
  */
-export const POST = apiHandler(async (request: NextRequest, { params }) => {
+export const POST = apiHandler(async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
   const session = await requireAuth();
   const sessionMedicoId = session.user?.medicoId;
   const sessionRol = session.user?.role;
-  await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+  await verifyPacienteAccess(id, sessionMedicoId, sessionRol);
 
   const body = await parseBody(request, registrarConsentimientoSchema);
   const ip =
@@ -42,7 +43,7 @@ export const POST = apiHandler(async (request: NextRequest, { params }) => {
   const [paciente] = await db
     .select({ id: pacientes.id })
     .from(pacientes)
-    .where(and(eq(pacientes.id, params.id), sql`${pacientes.deletedAt} IS NULL`))
+    .where(and(eq(pacientes.id, id), sql`${pacientes.deletedAt} IS NULL`))
     .limit(1);
 
   if (!paciente) {
@@ -50,7 +51,7 @@ export const POST = apiHandler(async (request: NextRequest, { params }) => {
   }
 
   const result = await privacidadService.registrarConsentimiento({
-    pacienteId: params.id,
+    pacienteId: id,
     tipo: body.tipo,
     accion: body.accion,
     aceptado: body.aceptado,
@@ -63,12 +64,12 @@ export const POST = apiHandler(async (request: NextRequest, { params }) => {
     await db
       .update(pacientes)
       .set({ consentimientoWhatsapp: body.aceptado })
-      .where(eq(pacientes.id, params.id));
+      .where(eq(pacientes.id, id));
   } else if (body.tipo === 'email') {
     await db
       .update(pacientes)
       .set({ consentimientoEmail: body.aceptado })
-      .where(eq(pacientes.id, params.id));
+      .where(eq(pacientes.id, id));
   }
 
   return success(result);
@@ -77,12 +78,13 @@ export const POST = apiHandler(async (request: NextRequest, { params }) => {
 /**
  * GET - Obtener historial de consentimientos del paciente
  */
-export const GET = apiHandler(async (_request: NextRequest, { params }) => {
+export const GET = apiHandler(async (_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+  const { id } = await paramsPromise;
   const session = await requireAuth();
   const sessionMedicoId = session.user?.medicoId;
   const sessionRol = session.user?.role;
-  await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
+  await verifyPacienteAccess(id, sessionMedicoId, sessionRol);
 
-  const historial = await privacidadService.getHistorialConsentimiento(params.id);
+  const historial = await privacidadService.getHistorialConsentimiento(id);
   return success(historial);
 });
