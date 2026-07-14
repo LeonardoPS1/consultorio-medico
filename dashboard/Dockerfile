@@ -71,17 +71,18 @@ ENV TZ=America/Santiago
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copiar standalone output (server.js, .next, node_modules)
+# Copiar standalone output: en Next.js 16 con pnpm workspace,
+# server.js queda en dashboard/server.js (preserva el path del workspace).
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
 
-# Copiar static assets
-COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./.next/static
+# Copiar static assets (dentro del path dashboard/)
+COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./dashboard/.next/static
 
 # Copiar assets públicos
-COPY --from=builder --chown=nodejs:nodejs /app/dashboard/public ./public
+COPY --from=builder --chown=nodejs:nodejs /app/dashboard/public ./dashboard/public
 
 # Crear directorio para cache de Next.js con permisos correctos
-RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
+RUN mkdir -p dashboard/.next/cache && chown -R nextjs:nodejs dashboard
 
 USER nextjs
 
@@ -92,4 +93,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://127.0.0.1:3000/api/health || exit 1
 
-CMD ["node", "server.js"]
+CMD ["node", "dashboard/server.js"]
