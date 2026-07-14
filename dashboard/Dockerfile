@@ -11,7 +11,7 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 
 # Cache buster
-ARG CACHEBUST=11
+ARG CACHEBUST=12
 RUN echo "Cache bust: $CACHEBUST"
 
 # Corepack para pnpm
@@ -36,7 +36,7 @@ WORKDIR /app
 
 # Cache buster: cambiar este valor para forzar rebuild completo
 # Debe declararse en CADA stage donde se necesita invalidar cache
-ARG CACHEBUST=11
+ARG CACHEBUST=12
 ARG GIT_COMMIT=unknown
 ARG BUILD_TIME=unknown
 RUN echo "Cache bust: $CACHEBUST"
@@ -53,9 +53,8 @@ ENV NODE_ENV=production
 ENV NEXT_PUBLIC_GIT_COMMIT=$GIT_COMMIT
 ENV NEXT_PUBLIC_BUILD_TIME=$BUILD_TIME
 
-# Cache .next/cache y pnpm store entre builds
-RUN --mount=type=cache,target=/app/dashboard/.next/cache \
-    --mount=type=cache,target=/root/.local/share/pnpm/store \
+# Cache pnpm store entre builds (NO cacheamos .next/cache para forzar fresh build)
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     corepack enable && corepack prepare pnpm@9 --activate && pnpm build
 
 # ─── Stage 3: Runner (producción) ────────────────────────────────────────────
