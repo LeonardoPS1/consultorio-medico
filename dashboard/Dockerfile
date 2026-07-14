@@ -11,7 +11,7 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 
 # Cache buster
-ARG CACHEBUST=13
+ARG CACHEBUST=14
 RUN echo "Cache bust: $CACHEBUST"
 
 # Corepack para pnpm
@@ -36,7 +36,7 @@ WORKDIR /app
 
 # Cache buster: cambiar este valor para forzar rebuild completo
 # Debe declararse en CADA stage donde se necesita invalidar cache
-ARG CACHEBUST=13
+ARG CACHEBUST=14
 ARG GIT_COMMIT=unknown
 ARG BUILD_TIME=unknown
 RUN echo "Cache bust: $CACHEBUST"
@@ -66,6 +66,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME="0.0.0.0"
 ENV PORT=3000
 ENV TZ=America/Santiago
+
+# Instalar curl para health check (necesario en node:22-alpine)
+RUN apk add --no-cache curl
 
 # Crear usuario no-root para seguridad
 RUN addgroup --system --gid 1001 nodejs && \
