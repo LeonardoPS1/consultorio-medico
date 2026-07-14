@@ -620,6 +620,11 @@ consultorio-medico/
 | **Storybook con Vite 5** | 5 stories (Button 12, Card 3, Badge 5, Skeleton 4, Tooltip 2), @alias resolve, globals.css. Commit `a77b82d` | 10/07 |
 | **Fase 4: Calidad de Código** | schema.ts split (1594→10 módulos), DRY KPIs (3 switch→config object), tipado any→Session/MedicoDia/TurnoDia, split config (1584→528) y turnos (1069→779), 38 tests nuevos, @vitest/coverage-v8. Commit `150922a` | 12/07 |
 | **Fase 5: Performance** | Self-fetch→DB directo, CSS code-split globals (450 líneas→landing.css), useOrganization hook, useReducedMotion en 3 componentes, cascading useEffect fix. Commit `73a14da` | 12/07 |
+| **Next.js 14→16.2 + React 19** | Upgrade mayor con migración de breaking changes (cookies() await, params async, useRef init, revalidateTag). Commit `063c1fa` | 13/07 |
+| **Fix novedades** | 3 bugs: force-dynamic page, importar solo faltantes, llamar import siempre. Commit `536db39`, `bab038b`, `399b122` | 13/07 |
+| **Docker optimizaciones** | BuildKit cache mounts, .dockerignore expandido, standalone-fix removido, pnpm 9→11.13.0, outputFileTracingRoot. Commit `03ffe26`, `7c89879`, `80eb720` | 14/07 |
+| **Fix deploy Dokploy (bug crítico)** | Dokploy build nativo no actualiza Swarm service. Solución: GitHub Actions → ghcr.io → Dokploy Docker sourceType. Workflow en `.github/workflows/deploy.yml`. Commit `e4139bb` | 14/07 |
+| **HEALTHCHECK curl** | Agregado `curl` apk add en Dockerfile para HEALTHCHECK funcionando. Commit `80eb720` | 14/07 |
 
 ### 🟡 Prioridad Media
 
@@ -677,11 +682,12 @@ consultorio-medico/
 - **`docker-compose.prod.yml`** (Swarm): rolling update (parallelism=1, delay=10s, order=start-first, failure_action=rollback). 2 réplicas dashboard, placement constraints DB/GPU, resource limits.
 
 ### Despliegue
-- **Dashboard**: Docker build multistage con `ARG CACHEBUST`
-- **Actualización**: Dokploy detecta push a `main` y redeploya automáticamente. Rolling update vía Swarm para zero-downtime.
+- **Dashboard**: GitHub Actions build → ghcr.io → Dokploy (Docker sourceType). CI/CD en `.github/workflows/deploy.yml`.
+- **Build**: Docker build multistage con `ARG CACHEBUST` (GitHub Actions). Push a `ghcr.io/leonardops1/consultorio-medico:latest`.
+- **Deploy**: Dokploy con sourceType `docker`, imagen `ghcr.io/leonardops1/consultorio-medico:latest`. Se triggera via webhook desde GitHub Actions.
+- **⚠️ Bug conocido**: Dokploy build nativo (sourceType git) **no funciona** — la build completa pero `docker service update` no se ejecuta. Swarm service queda corriendo imagen vieja. Usar GitHub Actions + ghcr.io obligatorio.
 - **Backup**: Script `backup-docker.sh` corre diariamente a las 3AM vía n8n WF-07
 - **Workflows n8n**: Se deployan via `scripts/deploy-workflows.js --activate`
-- **CI/CD**: GitHub Actions con 4 jobs paralelos (quality, test, build, docker) + migrate + e2e.
 
 ### Comandos de Infra
 ```bash
