@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+const path = require('path');
 
 const withBundleAnalyzer = process.env.ANALYZE === 'true'
   ? require('@next/bundle-analyzer')({ enabled: true })
@@ -23,6 +24,8 @@ const nextConfig = withBundleAnalyzer({
     remotePatterns: [{ protocol: 'https', hostname: '**' }],
     formats: ['image/avif', 'image/webp'],
   },
+  // Para pnpm monorepo: apunta al root del workspace para tracing correcto
+  outputFileTracingRoot: path.join(__dirname, '..'),
   // Solo usar standalone output en Docker/Linux: pnpm symlinks causan EPERM en Windows
   output: process.env.DISABLE_STANDALONE === 'true' ? undefined : 'standalone',
   // Variables de entorno que expone al cliente
