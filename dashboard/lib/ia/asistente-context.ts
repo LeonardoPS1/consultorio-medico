@@ -21,11 +21,13 @@ import { eq, and, gte, lte, count, isNull, isNotNull, or } from 'drizzle-orm';
  *
  * @param usuarioId - ID del usuario autenticado (session.user.id)
  * @param _ruta - Ruta actual del dashboard (reservado para contexto futuro)
+ * @param incluirAnomalias - Si debe incluir un bloque extra de anomalías detectadas (modo activo)
  * @returns Texto con datos reales, o null si no se pudo consultar nada
  */
 export async function buildContextoDB(
   usuarioId: string,
   _ruta?: string,
+  incluirAnomalias?: boolean,
 ): Promise<string | null> {
   try {
     const now = new Date();
@@ -83,6 +85,8 @@ export async function buildContextoDB(
       recetasActivas,
       mensajesSinResponder,
       recetasPorVencer,
+      anomaliaTurnosHoySinConf,
+      anomaliaMensajesSinRespDetalle,
     ] = await Promise.all([
       // Turnos próximos (7 días)
       db
@@ -200,6 +204,42 @@ export async function buildContextoDB(
         )
         .then((r) => r[0])
         .catch(() => ({ total: 0 })),
+
+      // ── Anomalías (solo modo activo) ──────────────────────
+      // Turnos de hoy sin confirmar (próximos 120 min)
+      incluirAnomalias
+        ? db
+            .select({ total: count() })
+            .from(turnos)
+            .where(
+              and(
+                filtroMedico,
+                gte(turnos.fechaHora, new Date(today + 'T00:00:00.000Z')),
+                lte(turnos.fechaHora, new Date(today + 'T23:59:59.999Z')),
+                eq(turnos.estado, turnoEstadoEnum.enumValues[0]), // 'pendiente'
+                isNull(turnos.deletedAt),
+              ),
+            )
+            .then((r) => r[0]?.total ?? 0)
+            .catch(() => 0)
+        : Promise.resolve(0),
+
+      // Detalle de conversaciones sin responder (texto)
+      incluirAnomalias
+        ? db
+            .select({ total: count() })
+            .from(conversaciones)
+            .where(
+              and(
+                eq(conversaciones.estado, 'activa'),
+                eq(conversaciones.ultimoMensajeRol, 'paciente'),
+                isNull(conversaciones.deletedAt),
+              ),
+            )
+            .then((r) => r[0]?.total ?? 0)
+            .catch(() => 0)
+        : Promise.resolve(0),
+
     ]);
 
     // ─── 3. Construir texto formateado ─────────────────────
@@ -246,6 +286,23 @@ export async function buildContextoDB(
           ? ` (vence ${new Date(r.fechaFin).toLocaleDateString('es-CL')})`
           : '';
         partes.push(`  • ${r.medicamento} [${r.estado}]${vencimiento}`);
+      }
+    }
+
+    // ── Anomalías detectadas (solo modo activo) ──────────────
+    if (incluirAnomalias) {
+      const anomalias: string[] = [];
+
+      if (typeof anomaliaTurnosHoySinConf === 'number' && anomaliaTurnosHoySinConf > 0) {
+        anomalias.push(`⚠️ ${anomaliaTurnosHoySinConf} turno${anomaliaTurnosHoySinConf !== 1 ? 's' : ''} de HOY sin confirmar — revisar antes de la atención`);
+      }
+
+      if (typeof anomaliaMensajesSinRespDetalle === 'number' && anomaliaMensajesSinRespDetalle > 3) {
+        anomalias.push(`📩 ${anomaliaMensajesSinRespDetalle} mensajes de pacientes sin responder — hay conversaciones esperando`);
+      }
+
+      if (anomalias.length > 0) {
+        partes.push(`\n🔍 ANOMALÍAS DETECTADAS:\n${anomalias.join('\n')}`);
       }
     }
 

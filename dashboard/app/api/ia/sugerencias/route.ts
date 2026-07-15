@@ -7,7 +7,8 @@
 
 import { apiHandler, success } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
-import { getSugerencias } from '@/lib/ia/asistente-prompts';
+import { getSugerencias, getAlertasProactivas } from '@/lib/ia/asistente-prompts';
+import { buildContextoDB } from '@/lib/ia/asistente-context';
 
 export const dynamic = 'force-dynamic';
 import { db } from '@/lib/db';
@@ -18,10 +19,12 @@ import type { ConfigIa } from '@/drizzle/schema';
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 
 export const GET = apiHandler(async (request) => {
-  await requireAuth();
+  const session = await requireAuth();
+  const usuarioId = session.user.id as string;
 
   const { searchParams } = new URL(request.url);
   const ruta = searchParams.get('ruta') || '/dashboard';
+  const incluirAlertas = searchParams.get('alertas') === 'true';
 
   // ─── Cargar config del tenant ─────────────────────────────
   const [tenant] = await db
@@ -39,5 +42,12 @@ export const GET = apiHandler(async (request) => {
   // ─── Obtener sugerencias filtradas ─────────────────────────
   const sugerencias = getSugerencias(ruta, configIa?.sugerenciasHabilitadas);
 
-  return success({ sugerencias });
+  // ─── Alertas proactivas (solo modo activo) ─────────────────
+  let alertas: ReturnType<typeof getAlertasProactivas> = [];
+  if (incluirAlertas) {
+    const datosDB = await buildContextoDB(usuarioId, ruta, true);
+    alertas = getAlertasProactivas(datosDB);
+  }
+
+  return success({ sugerencias, alertas });
 });

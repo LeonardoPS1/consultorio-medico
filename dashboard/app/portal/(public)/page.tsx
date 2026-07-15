@@ -18,6 +18,8 @@ import {
   Shield,
   HeartPulse,
   Loader2,
+  ChevronDown,
+  User,
 } from 'lucide-react';
 import { isValidPhone } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -98,6 +100,13 @@ const BENEFICIOS = [
 /* ─── States ───────────────────────────────────────────── */
 type Step = 'landing' | 'form' | 'sent';
 
+interface BypassPaciente {
+  id: string;
+  nombre: string;
+  apellido: string;
+  telefono: string;
+}
+
 /* ─── Componente principal ─────────────────────────────── */
 export default function PortalLogin() {
   const [step, setStep] = useState<Step>('landing');
@@ -106,20 +115,33 @@ export default function PortalLogin() {
   const [error, setError] = useState('');
   const [bypassActivo, setBypassActivo] = useState(false);
   const [statusChecked, setStatusChecked] = useState(false);
+  const [bypassPacientes, setBypassPacientes] = useState<BypassPaciente[]>([]);
+  const [pacienteSeleccionado, setPacienteSeleccionado] = useState<BypassPaciente | null>(null);
+  const [selectorOpen, setSelectorOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/portal/auth/status')
       .then((r) => r.json())
-      .then((data) => setBypassActivo(data.bypass === true))
+      .then((data) => {
+        setBypassActivo(data.bypass === true);
+        if (data.pacientes?.length > 0) {
+          setBypassPacientes(data.pacientes);
+          setPacienteSeleccionado(data.pacientes[0]);
+        }
+      })
       .catch(() => {})
       .finally(() => setStatusChecked(true));
   }, []);
 
-  async function handleTestAccess() {
+  async function handleTestAccess(pacienteId?: string) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/portal/auth/test', { method: 'POST' });
+      const res = await fetch('/api/portal/auth/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pacienteId }),
+      });
       const data = await res.json();
       if (res.ok && data.redirect) {
         window.location.href = data.redirect;
@@ -338,6 +360,78 @@ export default function PortalLogin() {
                 >
                   Acceso seguro mediante enlace por WhatsApp
                 </p>
+
+                {/* Bypass directo en landing */}
+                {bypassActivo && statusChecked && bypassPacientes.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4, duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
+                    className="mt-8 pt-6 border-t border-portal-border-light"
+                  >
+                    <p className="text-[10px] text-center font-medium mb-3 uppercase tracking-wider text-portal-muted-fg/40">
+                      Modo desarrollo — acceso directo
+                    </p>
+
+                    {/* Selector de paciente */}
+                    <div className="relative mb-2">
+                      <button
+                        onClick={() => setSelectorOpen(!selectorOpen)}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left text-xs border border-portal-border bg-portal-muted/40 text-portal-fg hover:border-portal-primary/30 transition-colors"
+                      >
+                        <User className="h-3.5 w-3.5 text-portal-muted-fg/50 shrink-0" />
+                        <span className="flex-1 truncate">
+                          {pacienteSeleccionado
+                            ? `${pacienteSeleccionado.nombre} ${pacienteSeleccionado.apellido} — ${pacienteSeleccionado.telefono}`
+                            : 'Seleccionar paciente...'}
+                        </span>
+                        <ChevronDown className={`h-3.5 w-3.5 text-portal-muted-fg/50 transition-transform duration-200 ${selectorOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      <AnimatePresence>
+                        {selectorOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -4, scale: 0.96 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute bottom-full mb-1 left-0 right-0 z-10 max-h-48 overflow-y-auto rounded-xl border border-portal-border bg-portal-bg-alt shadow-lg"
+                          >
+                            {bypassPacientes.map((p) => (
+                              <button
+                                key={p.id}
+                                onClick={() => {
+                                  setPacienteSeleccionado(p);
+                                  setSelectorOpen(false);
+                                }}
+                                className={`w-full text-left px-3 py-2 text-xs transition-colors hover:bg-portal-primary/5 ${
+                                  pacienteSeleccionado?.id === p.id
+                                    ? 'bg-portal-primary/10 text-portal-primary font-medium'
+                                    : 'text-portal-fg'
+                                }`}
+                              >
+                                <span className="block truncate">{p.nombre} {p.apellido}</span>
+                                <span className="block text-[10px] text-portal-muted-fg/60 truncate">{p.telefono}</span>
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    <PortalButton
+                      variant="secondary"
+                      fullWidth
+                      onClick={() => handleTestAccess(pacienteSeleccionado?.id)}
+                      disabled={loading || !pacienteSeleccionado}
+                      loading={loading}
+                      className="!h-9 !text-xs"
+                    >
+                      <Bug className="mr-1.5 h-3.5 w-3.5" />
+                      Ingresar como {pacienteSeleccionado?.nombre || '...'}
+                    </PortalButton>
+                  </motion.div>
+                )}
               </motion.div>
             ) : (
               /* ── Formulario ────────────────────────── */

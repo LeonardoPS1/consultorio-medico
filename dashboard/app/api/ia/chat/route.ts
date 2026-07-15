@@ -91,9 +91,11 @@ export const POST = apiHandler(async (request: NextRequest) => {
     datos: body.datosContexto,
   };
 
+  const incluirAnomalias = body.modo === 'activo';
+
   const [systemPrompt, datosDB] = await Promise.all([
     buildSystemPrompt(contexto, configIa),
-    buildContextoDB(usuarioId, body.ruta),
+    buildContextoDB(usuarioId, body.ruta, incluirAnomalias),
   ]);
 
   // ─── Prompt compacto y DIRECTIVO ─────────────────────────

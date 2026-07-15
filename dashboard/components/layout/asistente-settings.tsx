@@ -83,7 +83,7 @@ className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px
           })}
         </div>
         <p className="text-[10px] text-muted-foreground/40 mt-1.5 leading-relaxed text-center">
-          {MODOS_ASISTENTE.find((m) => m.id === modo)?.descripcion}
+          {MODOS_ASISTENTE.find((m) => m.id === modo)?.descripcionLarga}
         </p>
       </div>
 

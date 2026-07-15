@@ -245,38 +245,146 @@ export function getSugerencias(
 }
 
 // ============================================================
+// Alerta proactiva (solo modo activo)
+// ============================================================
+
+export interface AlertaProactiva {
+  id: string;
+  tipo: 'turnos_sin_confirmar' | 'mensajes_acumulados' | 'recetas_por_vencer' | 'pacientes_sin_turno' | 'anomalia_horaria';
+  titulo: string;
+  descripcion: string;
+  severidad: 'info' | 'warning' | 'critical';
+  href?: string;
+}
+
+// ============================================================
 // Constantes exportadas
 // ============================================================
 
 export function buildModoPrompt(modo: ModoAsistente): string {
   const prompts: Record<ModoAsistente, string> = {
     silencioso:
-      '📌 Modo SILENCIOSO: Respondé solo cuando te pregunten directamente. Sé breve (máximo 1-2 párrafos). No ofrezcas ayuda adicional ni sugerencias no solicitadas.',
+      [
+        '📌 Modo SILENCIOSO',
+        '',
+        'Reglas:',
+        '- Respondé SOLO cuando te hagan una pregunta directa.',
+        '- Sé breve: máximo 1-2 párrafos. No agregues información no solicitada.',
+        '- NO ofrezcas ayuda adicional ni sugerencias no solicitadas.',
+        '- NO analices los datos por iniciativa propia.',
+      ].join('\n'),
     sugerente:
-      '📌 Modo SUGERENTE: Respondé de forma clara y concisa con los datos disponibles. Ofrecé información útil de forma natural.',
+      [
+        '📌 Modo SUGERENTE — Asistente pasivo con sugerencias contextuales',
+        '',
+        'Reglas:',
+        '- Respondé preguntas de forma clara y concisa usando los datos disponibles.',
+        '- Ofrecé información útil cuando sea relevante, pero sin insistir.',
+        '- Esperá a que el médico solicite antes de profundizar.',
+        '- Las sugerencias aparecen como botones en pantalla — no las repitas en texto.',
+        '- No analices datos por iniciativa propia a menos que te lo pidan.',
+      ].join('\n'),
     activo:
-      '📌 Modo ACTIVO: Respondé de forma completa y ofrecete proactivamente a ayudar. Después de responder, preguntá si el médico necesita revisar algo más (turnos, pacientes, recetas) o analizar algo en detalle.',
+      [
+        '📌 Modo ACTIVO — Asistente proactivo con alertas inteligentes',
+        '',
+        'REGLAS ESTRICTAS:',
+        '',
+        '1. ANALIZÁ los datos disponibles ANTES de responder. Identificá patrones, anomalías y oportunidades.',
+        '2. ANTICIPATE: si ves algo que el médico debería saber (turnos sin confirmar próximos, recetas por vencer, mensajes acumulados, pacientes que no vienen hace tiempo), DECILO aunque no te lo hayan preguntado.',
+        '3. Después de responder sobre un tema específico, ofrecé insights adicionales relacionados.',
+        '4. Preguntá activamente si el médico necesita que revises algo más:',
+        '   - "¿Querés que revise los turnos sin confirmar de mañana?"',
+        '   - "Hay 3 pacientes que no han confirmado turno para esta semana. ¿Te aviso si no confirman?"',
+        '   - "Detecté que X paciente tiene 2 inasistencias seguidas. ¿Querés que lo contacte?"',
+        '5. Tono profesional y directo. No seas insistente — ofrecé, no exijas.',
+        '6. Si el médico dice "no" o "después", no volvás a ofrecer sobre el mismo tema en esa conversación.',
+      ].join('\n'),
   };
   return prompts[modo];
 }
 
-export const MODOS_ASISTENTE: { id: ModoAsistente; label: string; descripcion: string; icono: string }[] = [
+export const MODOS_ASISTENTE: { id: ModoAsistente; label: string; descripcion: string; descripcionLarga: string; icono: string }[] = [
   {
     id: 'silencioso',
     label: 'Silencioso',
     descripcion: 'Solo responde cuando lo llamás',
+    descripcionLarga: 'El asistente está en segundo plano. No muestra sugerencias ni alertas. Solo responde preguntas directas. Ideal cuando querés trabajar sin distracciones.',
     icono: '🔇',
   },
   {
     id: 'sugerente',
     label: 'Sugerente',
-    descripcion: 'Muestra sugerencias relevantes',
+    descripcion: 'Sugerencias pasivas en pantalla',
+    descripcionLarga: 'Muestra sugerencias contextuales como botones. El asistente responde preguntas pero no se anticipa. Ideal cuando querés ayuda a pedido sin interrupciones.',
     icono: '💡',
   },
   {
     id: 'activo',
     label: 'Activo',
-    descripcion: 'Sugerencias + alertas proactivas',
+    descripcion: 'Alertas proactivas + análisis automático',
+    descripcionLarga: 'El asistente monitorea activamente el consultorio. Detecta anomalías, anticipa necesidades y ofrece insights sin que se los pidas. Ideal para no perderte nada importante.',
     icono: '🔔',
   },
 ];
+
+export function getAlertasProactivas(datosContextoDB: string | null): AlertaProactiva[] {
+  if (!datosContextoDB) return [];
+
+  const alertas: AlertaProactiva[] = [];
+  const lines = datosContextoDB.split('\n');
+
+  // Detectar turnos sin confirmar mencionados en los datos
+  const pendientes = lines.filter(l => l.includes('pendiente') && !l.includes('confirmado'));
+  if (pendientes.length > 0) {
+    alertas.push({
+      id: 'turnos-sin-confirmar',
+      tipo: 'turnos_sin_confirmar',
+      titulo: 'Turnos sin confirmar',
+      descripcion: `Hay ${pendientes.length} turnos pendientes de confirmación. Revisalos para evitar ausencias.`,
+      severidad: 'warning',
+      href: '/dashboard/turnos',
+    });
+  }
+
+  // Detectar mensajes sin responder
+  const msgMatch = datosContextoDB.match(/(\d+)\s*mensajes?\s*sin\s*responder/i);
+  if (msgMatch && parseInt(msgMatch[1]) > 3) {
+    alertas.push({
+      id: 'mensajes-acumulados',
+      tipo: 'mensajes_acumulados',
+      titulo: `${msgMatch[1]} mensajes sin responder`,
+      descripcion: `Tenés ${msgMatch[1]} mensajes de pacientes esperando respuesta. Revisá la bandeja de conversaciones.`,
+      severidad: parseInt(msgMatch[1]) > 5 ? 'critical' : 'warning',
+      href: '/dashboard/conversaciones',
+    });
+  }
+
+  // Detectar recetas por vencer
+  const recetasMatch = datosContextoDB.match(/(\d+)\s*por\s*vencer/i);
+  if (recetasMatch && parseInt(recetasMatch[1]) > 0) {
+    alertas.push({
+      id: 'recetas-por-vencer',
+      tipo: 'recetas_por_vencer',
+      titulo: `${recetasMatch[1]} receta${parseInt(recetasMatch[1]) !== 1 ? 's' : ''} por vencer`,
+      descripcion: `Revisá las recetas próximas a vencer y gestioná las renovaciones necesarias.`,
+      severidad: 'info',
+      href: '/dashboard/recetas',
+    });
+  }
+
+  // Detectar si no hay turnos programados (anomalía)
+  const noHayTurnos = datosContextoDB.includes('No hay turnos programados');
+  if (noHayTurnos) {
+    alertas.push({
+      id: 'sin-turnos-programados',
+      tipo: 'anomalia_horaria',
+      titulo: 'Sin turnos en los próximos 7 días',
+      descripcion: 'No hay turnos programados para la semana. ¿Querés que revise la agenda o active la lista de espera?',
+      severidad: 'warning',
+      href: '/dashboard/turnos',
+    });
+  }
+
+  return alertas;
+}

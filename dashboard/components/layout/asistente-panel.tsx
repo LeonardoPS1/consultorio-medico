@@ -18,13 +18,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   X, Send, Loader2, Sparkles, Trash2, AlertCircle, Bot, User,
-  ChevronDown, Settings,
+  ChevronDown, Settings, Bell, AlertTriangle, Info, ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAsistenteIA } from '@/lib/hooks/use-asistente-ia';
-import { MODOS_ASISTENTE, type ModoAsistente } from '@/lib/ia/asistente-prompts';
+import { MODOS_ASISTENTE, type ModoAsistente, type AlertaProactiva } from '@/lib/ia/asistente-prompts';
 import { AsistenteSettings } from './asistente-settings';
 import type { Sugerencia } from '@/lib/ia/asistente-prompts';
 
@@ -53,6 +53,7 @@ export function AsistentePanel() {
     modo,
     mensajes,
     sugerencias,
+    alertasProactivas,
     cargando,
     disponible,
     error,
@@ -140,7 +141,7 @@ export function AsistentePanel() {
             handleSubmit, handleKeyDown, inputRef, scrollRef, bottomRef,
             checkNearBottom, nearBottom, setShowSettings, showSettings,
             mostrarSugerencias, sugerencias, enviarSugerencia, modo, modoInfo,
-            limpiarChat, setModo, quickPrompt, cerrar,
+            limpiarChat, setModo, quickPrompt, cerrar, alertasProactivas,
           }}
         />
       </motion.div>
@@ -160,7 +161,7 @@ export function AsistentePanel() {
             handleSubmit, handleKeyDown, inputRef, scrollRef, bottomRef,
             checkNearBottom, nearBottom, setShowSettings, showSettings,
             mostrarSugerencias, sugerencias, enviarSugerencia, modo, modoInfo,
-            limpiarChat, setModo, quickPrompt, cerrar,
+            limpiarChat, setModo, quickPrompt, cerrar, alertasProactivas,
           }}
         />
       </motion.div>
@@ -171,6 +172,36 @@ export function AsistentePanel() {
 // ================================================================
 // PANEL CONTENT (compartido mobile/desktop)
 // ================================================================
+
+// ─── Helper de severidad ──────────────────────────────────────
+function SeveridadIcon({ severidad }: { severidad: AlertaProactiva['severidad'] }) {
+  if (severidad === 'critical') return <Bell className="h-3.5 w-3.5 text-red-500 shrink-0" />;
+  if (severidad === 'warning') return <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />;
+  return <Info className="h-3.5 w-3.5 text-blue-500 shrink-0" />;
+}
+
+function SeveridadBg({ severidad }: { severidad: AlertaProactiva['severidad'] }) {
+  if (severidad === 'critical') return 'bg-red-500/5 border-red-500/15 hover:bg-red-500/10';
+  if (severidad === 'warning') return 'bg-amber-500/5 border-amber-500/15 hover:bg-amber-500/10';
+  return 'bg-blue-500/5 border-blue-500/15 hover:bg-blue-500/10';
+}
+
+// ─── Componente de alerta proactiva ──────────────────────────
+function AlertaBanner({ alerta, onClick }: { alerta: AlertaProactiva; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition-colors w-full ${SeveridadBg({ severidad: alerta.severidad })}`}
+    >
+      <SeveridadIcon severidad={alerta.severidad} />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-foreground">{alerta.titulo}</p>
+        <p className="text-[11px] text-muted-foreground/70 mt-0.5 leading-tight">{alerta.descripcion}</p>
+      </div>
+      <ArrowRight className="h-3 w-3 text-muted-foreground/30 shrink-0 mt-1" />
+    </button>
+  );
+}
 
 interface PanelContentProps {
   mensajes: Array<{ rol: 'user' | 'assistant'; contenido: string; timestamp: number }>;
@@ -192,11 +223,12 @@ interface PanelContentProps {
   sugerencias: Sugerencia[];
   enviarSugerencia: (s: Sugerencia) => void;
   modo: string;
-  modoInfo?: { icono: string; label: string };
+  modoInfo?: { icono: string; label: string; descripcionLarga?: string };
   limpiarChat: () => void;
   setModo: (modo: ModoAsistente) => void;
   quickPrompt: (t: string) => void;
   cerrar: () => void;
+  alertasProactivas: AlertaProactiva[];
 }
 
 function PanelContent({
@@ -204,7 +236,7 @@ function PanelContent({
   handleSubmit, handleKeyDown, inputRef, scrollRef, bottomRef,
   checkNearBottom, showSettings, setShowSettings,
   mostrarSugerencias, sugerencias, enviarSugerencia, modo, modoInfo,
-  limpiarChat, setModo, quickPrompt, cerrar,
+  limpiarChat, setModo, quickPrompt, cerrar, alertasProactivas,
 }: PanelContentProps) {
   return (
     <>
@@ -213,8 +245,20 @@ function PanelContent({
       {/* ════════════════════════════════════════════════════ */}
       <div className="flex items-center justify-between border-b border-border/40 px-4 py-2.5 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 shadow-sm">
-            <Sparkles className="h-4 w-4 text-white" />
+          <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm ${
+            modo === 'activo'
+              ? 'bg-gradient-to-br from-amber-500 to-orange-600'
+              : modo === 'sugerente'
+                ? 'bg-gradient-to-br from-indigo-500 to-purple-500'
+                : 'bg-gradient-to-br from-slate-500 to-gray-600'
+          }`}>
+            {modo === 'activo' ? (
+              <Bell className="h-4 w-4 text-white" />
+            ) : modo === 'sugerente' ? (
+              <Sparkles className="h-4 w-4 text-white" />
+            ) : (
+              <Sparkles className="h-4 w-4 text-white/70" />
+            )}
           </div>
           <div className="min-w-0">
             <h3 className="text-sm font-semibold leading-tight truncate">Asistente IA</h3>
@@ -222,6 +266,11 @@ function PanelContent({
               {modoInfo && (
                 <span className="text-[10px] text-muted-foreground/60 leading-none">
                   {modoInfo.icono} {modoInfo.label}
+                </span>
+              )}
+              {modo === 'activo' && alertasProactivas.length > 0 && (
+                <span className="text-[10px] text-amber-500/70 leading-none">
+                  · {alertasProactivas.filter(a => a.severidad === 'critical').length > 0 ? '⚠ crítica' : `${alertasProactivas.length} alertas`}
                 </span>
               )}
               {disponible === false && (
@@ -418,6 +467,35 @@ function PanelContent({
             )}
 
             <div ref={bottomRef} />
+
+            {/* ─── Alertas Proactivas (solo modo activo) ──── */}
+            <AnimatePresence>
+              {modo === 'activo' && alertasProactivas.length > 0 && mensajes.length === 0 && !cargando && (
+                <motion.div
+                  key="alertas"
+                  className="flex flex-col gap-2"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
+                >
+                  <p className="text-[10px] font-medium text-muted-foreground/40 uppercase tracking-wider px-0.5">
+                    Alertas activas
+                  </p>
+                  {alertasProactivas.slice(0, 4).map((alerta) => (
+                    <AlertaBanner
+                      key={alerta.id}
+                      alerta={alerta}
+                      onClick={() => quickPrompt(
+                        alerta.href
+                          ? `Mostrame detalles sobre: ${alerta.titulo}`
+                          : alerta.descripcion
+                      )}
+                    />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* ─── Sugerencias Pills (dentro del scroll, flotan sobre el chat) ─── */}
             <AnimatePresence>

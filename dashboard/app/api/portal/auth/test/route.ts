@@ -1,8 +1,8 @@
 /**
  * POST /api/portal/auth/test — Acceso de prueba al portal
  *
- * Permite ingresar al portal sin necesidad de número de teléfono ni magic link.
- * Funciona en desarrollo O si PORTAL_BYPASS=true está configurado.
+ * Permite ingresar al portal sin magic link.
+ * Acepta { pacienteId } opcional para elegir qué paciente usar.
  */
 
 import { NextResponse } from 'next/server';
@@ -12,7 +12,7 @@ import { eq, and, sql } from 'drizzle-orm';
 import { setPortalSessionCookie } from '@/lib/portal-auth';
 import { safeError } from '@/lib/logger';
 
-export async function POST() {
+export async function POST(req: Request) {
   const bypass = process.env.PORTAL_BYPASS === 'true';
   const isDev = process.env.NODE_ENV !== 'production';
   if (!isDev && !bypass) {
@@ -20,36 +20,61 @@ export async function POST() {
   }
 
   try {
-    // Buscar el primer paciente activo como paciente de prueba
-    const [paciente] = await db
-      .select({
-        id: pacientes.id,
-        nombre: pacientes.nombre,
-        apellido: pacientes.apellido,
-        telefono: pacientes.telefono,
-      })
-      .from(pacientes)
-      .where(and(sql`${pacientes.deletedAt} IS NULL`))
-      .orderBy(pacientes.createdAt)
-      .limit(1);
+    let body: { pacienteId?: string } = {};
+    try {
+      body = await req.json();
+    } catch {
+      // body opcional
+    }
 
-    if (!paciente) {
+    const whereClause = and(sql`${pacientes.deletedAt} IS NULL`);
+    let targetPaciente;
+
+    if (body.pacienteId) {
+      // Buscar paciente específico
+      [targetPaciente] = await db
+        .select({
+          id: pacientes.id,
+          nombre: pacientes.nombre,
+          apellido: pacientes.apellido,
+          telefono: pacientes.telefono,
+        })
+        .from(pacientes)
+        .where(and(eq(pacientes.id, body.pacienteId), whereClause))
+        .limit(1);
+    }
+
+    if (!targetPaciente) {
+      // Fallback: último paciente modificado
+      [targetPaciente] = await db
+        .select({
+          id: pacientes.id,
+          nombre: pacientes.nombre,
+          apellido: pacientes.apellido,
+          telefono: pacientes.telefono,
+        })
+        .from(pacientes)
+        .where(whereClause)
+        .orderBy(sql`${pacientes.updatedAt} DESC NULLS LAST`)
+        .limit(1);
+    }
+
+    if (!targetPaciente) {
       return NextResponse.json(
         { error: 'No hay pacientes de prueba disponibles. Creá un paciente primero.' },
         { status: 404 },
       );
     }
 
-    // Crear sesión para el paciente
     const token = await setPortalSessionCookie({
-      pacienteId: paciente.id,
-      nombre: paciente.nombre || 'Paciente',
-      apellido: paciente.apellido || 'Prueba',
-      telefono: paciente.telefono || '+56900000000',
+      pacienteId: targetPaciente.id,
+      nombre: targetPaciente.nombre || 'Paciente',
+      apellido: targetPaciente.apellido || 'Prueba',
+      telefono: targetPaciente.telefono || '+56900000000',
     });
 
     return NextResponse.json(
-      { success: true, redirect: '/portal/dashboard', token },
+      { success: true, redirect: '/portal/dashboard', token, paciente: targetPaciente },
       { status: 200 },
     );
   } catch (error) {

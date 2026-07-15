@@ -25,7 +25,7 @@ import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { canAccess } from '@/lib/features';
-import type { ModoAsistente, Sugerencia, MensajeChat } from '@/lib/ia/asistente-prompts';
+import type { ModoAsistente, Sugerencia, MensajeChat, AlertaProactiva } from '@/lib/ia/asistente-prompts';
 
 // ============================================================
 // Tipos
@@ -48,6 +48,8 @@ interface AsistenteState {
   sugerencias: Sugerencia[];
   /** Sugerencias pendientes de revisar (para badge en FAB) */
   sugerenciasPendientes: number;
+  /** Alertas proactivas (solo modo activo) */
+  alertasProactivas: AlertaProactiva[];
   /** Si está cargando una respuesta */
   cargando: boolean;
   /** Si el asistente está disponible (Ollama respondió ok) */
@@ -85,6 +87,8 @@ interface AsistenteActions {
   setAsistenteActivado: (activado: boolean) => void;
   /** Si el asistente está activado por el usuario */
   asistenteActivado: boolean;
+  /** Alertas proactivas (solo modo activo) */
+  alertasProactivas: AlertaProactiva[];
 }
 
 type AsistenteContextType = AsistenteState & AsistenteActions;
@@ -154,6 +158,10 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
   const [disponible, setDisponible] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [datosContexto, setDatosContexto] = useState<Record<string, unknown>>({});
+  const [alertasProactivas, setAlertasProactivas] = useState<AlertaProactiva[]>([]);
+
+  // ─── Refetch interval según modo ─────────────────────────
+  const refetchInterval = userSettings.modo === 'activo' ? 20000 : 60000;
 
   // ─── Sugerencias contextuales ────────────────────────────
   const {
@@ -168,15 +176,51 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
       return (json.data?.sugerencias || []) as Sugerencia[];
     },
     enabled: habilitado && userSettings.modo !== 'silencioso',
-    refetchInterval: 60000, // cada minuto
-    staleTime: 30000,
+    refetchInterval,
+    staleTime: refetchInterval / 2,
   });
 
   const sugerencias = (sugerenciasData || []).filter(
     (s) => !userSettings.silenciadas[s.categoria],
   );
 
+  // ─── Alertas proactivas (solo modo activo) ───────────────
+  const {
+    data: alertasData,
+  } = useQuery({
+    queryKey: ['ia-alertas', pathname],
+    queryFn: async () => {
+      if (!habilitado) return [];
+      const res = await fetch(`/api/ia/sugerencias?ruta=${encodeURIComponent(pathname)}&alertas=true`);
+      if (!res.ok) return [];
+      const json = await res.json();
+      return (json.data?.alertas || []) as AlertaProactiva[];
+    },
+    enabled: habilitado && userSettings.modo === 'activo',
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
+
+  useEffect(() => {
+    if (alertasData) setAlertasProactivas(alertasData);
+  }, [alertasData]);
+
   // ─── Chat mutation ──────────────────────────────────────
+  // ─── Auto-insight al abrir en modo activo ────────────────
+  const autoInsightSentRef = useRef(false);
+  useEffect(() => {
+    if (open && userSettings.modo === 'activo' && mensajes.length === 0 && !autoInsightSentRef.current && habilitado) {
+      autoInsightSentRef.current = true;
+      const timer = setTimeout(() => {
+        enviarMensaje('Analizá el estado actual del consultorio. Decime si hay algo que deba saber: anomalías, pacientes sin confirmar, mensajes pendientes o cualquier cosa que requiera mi atención.');
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+    if (!open) {
+      autoInsightSentRef.current = false;
+    }
+  }, [open, userSettings.modo, mensajes.length, habilitado]);
+
   const chatMutation = useMutation({
     mutationFn: async (mensaje: string) => {
       const res = await fetch('/api/ia/chat', {
@@ -292,13 +336,19 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
     setUserSettings((prev) => ({ ...prev, activado }));
   }, []);
 
+  // ─── Sugerencias pendientes (incluye alertas activas en modo activo) ─
+  const sugerenciasPendientes = userSettings.modo !== 'silencioso'
+    ? sugerencias.length + (userSettings.modo === 'activo' ? alertasProactivas.length : 0)
+    : 0;
+
   // ─── Value ──────────────────────────────────────────────
   const value: AsistenteContextType = {
     open,
     modo: userSettings.modo,
     mensajes,
     sugerencias,
-    sugerenciasPendientes: userSettings.modo !== 'silencioso' ? sugerencias.length : 0,
+    sugerenciasPendientes,
+    alertasProactivas: userSettings.modo === 'activo' ? alertasProactivas : [],
     cargando,
     disponible,
     habilitado,
