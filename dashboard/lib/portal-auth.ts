@@ -12,12 +12,11 @@
 
 import { db } from '@/lib/db';
 import { safeWarn, safeError } from '@/lib/logger';
-import { pacientes, blacklist, rateLimits, usuarios, sucursales } from '@/drizzle/schema';
+import { pacientes, blacklist, rateLimits, usuarios, sucursales, turnos, medicos } from '@/drizzle/schema';
 import { eq, and, sql, lte, gte } from 'drizzle-orm';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
-import { turnos } from '@/drizzle/schema';
 import { canAccess, type FeatureId } from './features';
 
 // ─── Config ──────────────────────────────────────────────────
@@ -405,21 +404,53 @@ export async function checkPortalFeatureAccess(
   pacienteId: string,
 ): Promise<{ allowed: boolean; plan?: string }> {
   try {
-    const [result] = await db
-      .select({ plan: usuarios.plan })
+    // 1. Obtener sucursalId del paciente
+    const [paciente] = await db
+      .select({ sucursalId: pacientes.sucursalId })
       .from(pacientes)
-      .innerJoin(sucursales, eq(pacientes.sucursalId, sucursales.id))
-      .innerJoin(usuarios, eq(usuarios.tenantId, sucursales.tenantId))
-      .where(and(eq(pacientes.id, pacienteId), eq(usuarios.activo, true)))
+      .where(eq(pacientes.id, pacienteId))
       .limit(1);
 
-    if (!result) {
-      safeWarn(`[PortalAuth] No se encontró usuario para paciente ${pacienteId}`);
+    if (!paciente) {
+      safeWarn(`[PortalAuth] Paciente no encontrado: ${pacienteId}`);
       return { allowed: false };
     }
 
-    const allowed = canAccess(result.plan, 'portal-paciente' as FeatureId);
-    return { allowed, plan: result.plan };
+    let plan: string | null = null;
+
+    // 2a. Intentar via sucursalId → tenant → usuario
+    if (paciente.sucursalId) {
+      const [result] = await db
+        .select({ plan: usuarios.plan })
+        .from(sucursales)
+        .innerJoin(usuarios, eq(usuarios.tenantId, sucursales.tenantId))
+        .where(and(eq(sucursales.id, paciente.sucursalId), eq(usuarios.activo, true)))
+        .limit(1);
+
+      if (result) plan = result.plan;
+    }
+
+    // 2b. Fallback: via turnos → médico → usuario
+    if (!plan) {
+      const [result] = await db
+        .select({ plan: usuarios.plan })
+        .from(turnos)
+        .innerJoin(medicos, eq(turnos.medicoId, medicos.id))
+        .innerJoin(usuarios, eq(usuarios.id, medicos.usuarioId))
+        .where(and(eq(turnos.pacienteId, pacienteId), eq(usuarios.activo, true)))
+        .orderBy(sql`${turnos.createdAt} DESC`)
+        .limit(1);
+
+      if (result) plan = result.plan;
+    }
+
+    if (!plan) {
+      safeWarn(`[PortalAuth] No se encontró plan para paciente ${pacienteId}`);
+      return { allowed: false };
+    }
+
+    const allowed = canAccess(plan, 'portal-paciente' as FeatureId);
+    return { allowed, plan };
   } catch (e) {
     safeError(
       '[PortalAuth] Error verificando acceso portal:',
