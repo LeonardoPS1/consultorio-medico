@@ -12,12 +12,13 @@
 
 import { db } from '@/lib/db';
 import { safeWarn, safeError } from '@/lib/logger';
-import { pacientes, blacklist } from '@/drizzle/schema';
+import { pacientes, blacklist, rateLimits, usuarios, sucursales } from '@/drizzle/schema';
 import { eq, and, sql, lte, gte } from 'drizzle-orm';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
 import { turnos } from '@/drizzle/schema';
+import { canAccess, type FeatureId } from './features';
 
 // ─── Config ──────────────────────────────────────────────────
 
@@ -33,28 +34,53 @@ const AUTH_SECRET = () => {
   return new TextEncoder().encode(secret);
 };
 
-// ─── Rate limiting en memoria (por teléfono) ────────────────
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+// ─── Rate limiting en DB (por teléfono) ─────────────────────
+export async function checkPhoneRateDB(
+  telefono: string,
+  maxRequests = RATE_LIMIT_MAX,
+  windowMs = RATE_LIMIT_WINDOW_MS,
+): Promise<boolean> {
+  const key = `portal-magic-link:${telefono}`;
+  const now = new Date();
 
-function checkPhoneRate(telefono: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(telefono);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(telefono, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+  const [existing] = await db
+    .select()
+    .from(rateLimits)
+    .where(eq(rateLimits.key, key))
+    .limit(1);
+
+  if (!existing || now >= existing.resetAt) {
+    await db
+      .insert(rateLimits)
+      .values({
+        key,
+        count: 1,
+        maxRequests,
+        windowMs,
+        resetAt: new Date(now.getTime() + windowMs),
+      })
+      .onConflictDoUpdate({
+        target: rateLimits.key,
+        set: {
+          count: 1,
+          maxRequests,
+          windowMs,
+          resetAt: new Date(now.getTime() + windowMs),
+          updatedAt: now,
+        },
+      });
     return true;
   }
-  if (entry.count >= RATE_LIMIT_MAX) return false;
-  entry.count++;
+
+  if (existing.count >= existing.maxRequests) return false;
+
+  await db
+    .update(rateLimits)
+    .set({ count: existing.count + 1, updatedAt: now })
+    .where(eq(rateLimits.id, existing.id));
+
   return true;
 }
-
-// Cleanup cada 10 min
-setInterval(() => {
-  const now = Date.now();
-  for (const [k, v] of Array.from(rateLimitMap)) {
-    if (now > v.resetAt) rateLimitMap.delete(k);
-  }
-}, 10 * 60_000);
 
 // ─── Blacklist check ─────────────────────────────────────────
 
@@ -128,8 +154,8 @@ export async function generateMagicLink(
   telefono: string,
   redirect?: string,
 ): Promise<GenerateTokenResult | null> {
-  // 0. Rate limiting por teléfono
-  if (!checkPhoneRate(telefono)) {
+  // 0. Rate limiting por teléfono (DB-backed)
+  if (!(await checkPhoneRateDB(telefono))) {
     safeWarn(`[PortalAuth] Rate limit excedido para ${telefono}`);
     return null;
   }
@@ -343,5 +369,62 @@ No compartas este mensaje.`;
       e instanceof Error ? { message: e.message } : e,
     );
     return false;
+  }
+}
+
+// ─── CSRF Protection ─────────────────────────────────────────
+
+/**
+ * Valida el header Origin contra el host del servidor.
+ * Previene CSRF en rutas POST/PATCH del portal.
+ */
+export function validateCSRFOrigin(req: Request): boolean {
+  const origin = req.headers.get('origin');
+  const host = req.headers.get('host');
+  // Sin origin → misma-origen GET/HEAD o server-side
+  if (!origin) return true;
+  try {
+    const originUrl = new URL(origin);
+    return originUrl.host === host;
+  } catch {
+    return false;
+  }
+}
+
+// ─── Feature Gate — Portal del Paciente ───────────────────────
+
+/**
+ * Verifica si el tenant del paciente tiene acceso al portal
+ * según el plan del usuario asociado.
+ *
+ * 1. Paciente → sucursal → tenantId
+ * 2. Busca el primer usuario activo de ese tenant
+ * 3. Verifica canAccess(plan, 'portal-paciente')
+ */
+export async function checkPortalFeatureAccess(
+  pacienteId: string,
+): Promise<{ allowed: boolean; plan?: string }> {
+  try {
+    const [result] = await db
+      .select({ plan: usuarios.plan })
+      .from(pacientes)
+      .innerJoin(sucursales, eq(pacientes.sucursalId, sucursales.id))
+      .innerJoin(usuarios, eq(usuarios.tenantId, sucursales.tenantId))
+      .where(and(eq(pacientes.id, pacienteId), eq(usuarios.activo, true)))
+      .limit(1);
+
+    if (!result) {
+      safeWarn(`[PortalAuth] No se encontró usuario para paciente ${pacienteId}`);
+      return { allowed: false };
+    }
+
+    const allowed = canAccess(result.plan, 'portal-paciente' as FeatureId);
+    return { allowed, plan: result.plan };
+  } catch (e) {
+    safeError(
+      '[PortalAuth] Error verificando acceso portal:',
+      e instanceof Error ? { message: e.message } : e,
+    );
+    return { allowed: false };
   }
 }

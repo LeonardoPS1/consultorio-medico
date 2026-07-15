@@ -74,7 +74,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(
-      { success: true, redirect: '/portal/dashboard', token, paciente: targetPaciente },
+      { success: true, redirect: '/portal/dashboard', paciente: targetPaciente },
       { status: 200 },
     );
   } catch (error) {

@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useSearchParams } from 'next/navigation';
 import {
   Phone,
   ArrowRight,
@@ -20,6 +21,7 @@ import {
   Loader2,
   ChevronDown,
   User,
+  Lock,
 } from 'lucide-react';
 import { isValidPhone } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -109,10 +111,12 @@ interface BypassPaciente {
 
 /* ─── Componente principal ─────────────────────────────── */
 export default function PortalLogin() {
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>('landing');
   const [telefono, setTelefono] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(searchParams.get('sin-acceso') ? 'El portal no está disponible para tu plan actual. Contactá a tu médico para más información.' : '');
+  const [sinAcceso] = useState(searchParams.get('sin-acceso') === '1');
   const [bypassActivo, setBypassActivo] = useState(false);
   const [statusChecked, setStatusChecked] = useState(false);
   const [bypassPacientes, setBypassPacientes] = useState<BypassPaciente[]>([]);
@@ -347,6 +351,29 @@ export default function PortalLogin() {
                     </motion.div>
                   ))}
                 </div>
+
+                {sinAcceso && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6"
+                  >
+                    <PortalCard padding="md">
+                      <div className="flex items-start gap-3">
+                        <div className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center bg-portal-destructive/10">
+                          <Lock className="h-4 w-4 text-portal-destructive" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm text-portal-fg">Acceso no disponible</p>
+                          <p className="text-xs text-portal-muted-fg mt-1">
+                            El portal no está disponible para tu plan actual. Comunicate con tu
+                            médico para más información.
+                          </p>
+                        </div>
+                      </div>
+                    </PortalCard>
+                  </motion.div>
+                )}
 
                 <PortalButton variant="primary" fullWidth onClick={() => setStep('form')} className="!h-12 !text-base">
                   <span className="flex items-center justify-center gap-2">

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPortalSession } from '@/lib/portal-auth';
+import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 import { db } from '@/lib/db';
 import { conversaciones, mensajes } from '@/drizzle/schema';
 import { eq, and, isNull } from 'drizzle-orm';
@@ -82,6 +82,9 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
  * POST: Envía un mensaje del paciente en la conversación.
  */
 export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  if (!validateCSRFOrigin(request)) {
+    return NextResponse.json({ error: 'Origen no válido' }, { status: 403 });
+  }
   const { id } = await paramsPromise;
   const session = await getPortalSession();
   if (!session) {

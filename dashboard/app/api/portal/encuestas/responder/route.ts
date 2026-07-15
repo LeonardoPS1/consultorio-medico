@@ -6,7 +6,7 @@
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getPortalSession } from '@/lib/portal-auth';
+import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 import { db } from '@/lib/db';
 import { turnos, historialMedico } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
@@ -20,6 +20,9 @@ const encuestaSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  if (!validateCSRFOrigin(request)) {
+    return NextResponse.json({ error: 'Origen no válido' }, { status: 403 });
+  }
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });

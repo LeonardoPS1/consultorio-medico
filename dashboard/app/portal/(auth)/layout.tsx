@@ -5,17 +5,30 @@
  */
 
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import PortalNav from './portal-nav';
 import { PortalContent } from './portal-content';
 import { PortalThemeToggle } from '@/components/portal/theme-toggle';
 import { PortalLogoutButton } from '@/components/portal/logout-button';
+import { getPortalSession, checkPortalFeatureAccess } from '@/lib/portal-auth';
+import { safeWarn } from '@/lib/logger';
 
 export const metadata = {
   title: 'Portal del Paciente — AicoreMed',
   description: 'Accedé a tus turnos, recetas e historial médico',
 };
 
-export default function PortalAuthLayout({ children }: { children: React.ReactNode }) {
+export default async function PortalAuthLayout({ children }: { children: React.ReactNode }) {
+  const session = await getPortalSession();
+  if (!session) redirect('/portal');
+
+  const { allowed, plan } = await checkPortalFeatureAccess(session.pacienteId);
+  if (!allowed) {
+    safeWarn(
+      `[PortalAuth] Paciente ${session.pacienteId} sin plan suficiente (${plan || 'sin plan'} — requiere premium)`,
+    );
+    redirect('/portal?sin-acceso=1');
+  }
   return (
     <div className="portal-layout min-h-screen">
       {/* Ambient gradient background */}

@@ -6,13 +6,17 @@
 
 import { NextRequest } from 'next/server';
 import { apiHandler, ok, fail } from '@/lib/api-handler';
-import { getPortalSession } from '@/lib/portal-auth';
+import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 import { parseBody, updatePortalPerfilSchema } from '@/lib/validations';
 import { db } from '@/lib/db';
 import { pacientes } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 
 export const PATCH = apiHandler(async (request: NextRequest) => {
+  if (!validateCSRFOrigin(request)) {
+    fail('Origen no válido', 403);
+  }
+
   const session = await getPortalSession();
   if (!session) {
     fail('No autorizado', 401);

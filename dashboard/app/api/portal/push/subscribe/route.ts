@@ -3,10 +3,13 @@
  * Protegido: requiere cookie portal_session
  */
 import { NextResponse } from 'next/server';
-import { getPortalSession } from '@/lib/portal-auth';
+import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 import { pushService } from '@/lib/services/push';
 
 export async function POST(req: Request) {
+  if (!validateCSRFOrigin(req)) {
+    return NextResponse.json({ error: 'Origen no válido' }, { status: 403 });
+  }
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });

@@ -4,12 +4,15 @@
  * Lee ipFirma del header x-forwarded-for o la IP de la request
  */
 import { NextResponse } from 'next/server';
-import { getPortalSession } from '@/lib/portal-auth';
+import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 import { db } from '@/lib/db';
 import { consentimientos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
 
 export async function POST(req: Request, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  if (!validateCSRFOrigin(req)) {
+    return NextResponse.json({ error: 'Origen no válido' }, { status: 403 });
+  }
   const { id } = await paramsPromise;
   const session = await getPortalSession();
   if (!session) {

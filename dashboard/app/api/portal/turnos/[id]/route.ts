@@ -5,7 +5,7 @@
 
 import { NextRequest } from 'next/server';
 import { apiHandler, ok, fail, notFound } from '@/lib/api-handler';
-import { getPortalSession } from '@/lib/portal-auth';
+import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 import { parseBody, portalTurnoUpdateSchema } from '@/lib/validations';
 import { db } from '@/lib/db';
 import { turnos } from '@/drizzle/schema';
@@ -13,6 +13,7 @@ import { eq, and } from 'drizzle-orm';
 
 export const PATCH = apiHandler(
   async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+    if (!validateCSRFOrigin(request)) fail('Origen no válido', 403);
   const { id } = await paramsPromise;
     const session = await getPortalSession();
     if (!session) fail('No autorizado', 401);
