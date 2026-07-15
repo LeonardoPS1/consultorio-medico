@@ -1,11 +1,16 @@
 /**
  * Portal Recetas — Lista de recetas del paciente
+ * Server component con DB directo (no self-fetch).
  */
 
 import { getPortalSession } from '@/lib/portal-auth';
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { db } from '@/lib/db';
+import { recetas, medicos } from '@/drizzle/schema';
+import { eq, desc, sql } from 'drizzle-orm';
 import PortalRecetasClient from './portal-recetas-client';
+
+export const dynamic = 'force-dynamic';
 
 interface Receta {
   id: string;
@@ -25,20 +30,24 @@ export default async function PortalRecetasPage() {
   const session = await getPortalSession();
   if (!session) redirect('/portal');
 
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('portal_session')?.value;
+  const recetasData = await db
+    .select({
+      id: recetas.id,
+      estado: recetas.estado,
+      medicamento: recetas.medicamento,
+      dosis: recetas.dosis,
+      frecuencia: recetas.frecuencia,
+      duracion: sql<string>`COALESCE(${recetas.duracion}, '')`,
+      indicaciones: sql<string>`COALESCE(${recetas.indicaciones}, '')`,
+      fechaInicio: sql<string>`COALESCE(${recetas.fechaInicio}::text, '')`,
+      fechaFin: sql<string>`COALESCE(${recetas.fechaFin}::text, '')`,
+      medicoNombre: sql<string>`COALESCE(${medicos.nombre}, '')`,
+      medicoEspecialidad: sql<string>`COALESCE(${medicos.especialidad}, '')`,
+    })
+    .from(recetas)
+    .leftJoin(medicos, eq(recetas.medicoId, medicos.id))
+    .where(eq(recetas.pacienteId, session.pacienteId))
+    .orderBy(desc(recetas.createdAt));
 
-  let recetas: Receta[] = [];
-  try {
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/portal/recetas`, {
-      headers: { Cookie: `portal_session=${sessionCookie}` },
-    });
-    const data = await res.json();
-    recetas = (data.recetas as Receta[]) || [];
-  } catch (e) {
-    console.error('Portal recetas fetch error:', e);
-  }
-
-  return <PortalRecetasClient recetas={recetas} />;
+  return <PortalRecetasClient recetas={recetasData} />;
 }

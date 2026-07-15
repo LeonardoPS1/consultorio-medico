@@ -1,12 +1,16 @@
 /**
  * Portal Turnos — Lista de turnos del paciente
- * Server component con fetch a la API protegida.
+ * Server component con DB directo (no self-fetch).
  */
 
 import { getPortalSession } from '@/lib/portal-auth';
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { db } from '@/lib/db';
+import { turnos, medicos } from '@/drizzle/schema';
+import { eq, desc, sql } from 'drizzle-orm';
 import PortalTurnosClient from './portal-turnos-client';
+
+export const dynamic = 'force-dynamic';
 
 interface Turno {
   id: string;
@@ -26,21 +30,31 @@ export default async function PortalTurnosPage() {
   const session = await getPortalSession();
   if (!session) redirect('/portal');
 
-  // Fetch turnos via API interna
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('portal_session')?.value;
+  const turnosData = await db
+    .select({
+      id: turnos.id,
+      fechaHora: sql<string>`${turnos.fechaHora}::text`,
+      hora: sql<string>`TO_CHAR(${turnos.fechaHora}, 'HH24:MI')`,
+      estado: turnos.estado,
+      motivo: turnos.motivo,
+      tipoConsulta: turnos.tipoConsulta,
+      duracionMinutos: turnos.duracionMinutos,
+      linkVideollamada: turnos.linkVideollamada,
+      medicoNombre: sql<string>`COALESCE(${medicos.nombre}, '')`,
+      medicoEspecialidad: sql<string>`COALESCE(${medicos.especialidad}, '')`,
+      pagado: turnos.pagado,
+    })
+    .from(turnos)
+    .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
+    .where(eq(turnos.pacienteId, session.pacienteId))
+    .orderBy(desc(turnos.fechaHora))
+    .limit(50);
 
-  let turnos: Turno[] = [];
-  try {
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/portal/turnos`, {
-      headers: { Cookie: `portal_session=${sessionCookie}` },
-    });
-    const data = await res.json();
-    turnos = (data.turnos as Turno[]) || [];
-  } catch (e) {
-    console.error('Portal turnos fetch error:', e);
-  }
-
-  return <PortalTurnosClient turnos={turnos} />;
+  return <PortalTurnosClient
+    turnos={turnosData.map((t) => ({
+      ...t,
+      motivo: t.motivo ?? undefined,
+      linkVideollamada: t.linkVideollamada ?? undefined,
+    }))}
+  />;
 }

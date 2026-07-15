@@ -80,6 +80,7 @@ export default function PortalPerfilClient({
   );
 
   const [regiones, setRegiones] = useState<Region[]>([]);
+  const [loadingRegiones, setLoadingRegiones] = useState(true);
   const [comunas, setComunas] = useState<Comuna[]>([]);
   const [loadingComunas, setLoadingComunas] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -87,10 +88,12 @@ export default function PortalPerfilClient({
   const [error, setError] = useState('');
 
   useEffect(() => {
+    setLoadingRegiones(true);
     fetch('/api/regiones')
       .then((r) => r.json())
       .then((data) => setRegiones(data.data || []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingRegiones(false));
   }, []);
 
   useEffect(() => {
@@ -363,7 +366,9 @@ export default function PortalPerfilClient({
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <option value="">Seleccionar región...</option>
+                <option value="">
+                  {loadingRegiones ? 'Cargando...' : 'Seleccionar región...'}
+                </option>
                 {regiones.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.numeroRomano
