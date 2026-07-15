@@ -71,6 +71,7 @@ export async function POST(req: Request) {
       nombre: targetPaciente.nombre || 'Paciente',
       apellido: targetPaciente.apellido || 'Prueba',
       telefono: targetPaciente.telefono || '+56900000000',
+      esPrueba: true,
     });
 
     return NextResponse.json(

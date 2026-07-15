@@ -135,6 +135,7 @@ export interface PortalSession {
   nombre: string;
   apellido: string;
   telefono: string;
+  esPrueba?: boolean;
 }
 
 // ─── Generar Magic Link Token ────────────────────────────────

@@ -22,12 +22,15 @@ export default async function PortalAuthLayout({ children }: { children: React.R
   const session = await getPortalSession();
   if (!session) redirect('/portal');
 
-  const { allowed, plan } = await checkPortalFeatureAccess(session.pacienteId);
-  if (!allowed) {
-    safeWarn(
-      `[PortalAuth] Paciente ${session.pacienteId} sin plan suficiente (${plan || 'sin plan'} — requiere premium)`,
-    );
-    redirect('/portal?sin-acceso=1');
+  // Sesiones de prueba (bypass dev) saltan feature gate
+  if (!session.esPrueba) {
+    const { allowed, plan } = await checkPortalFeatureAccess(session.pacienteId);
+    if (!allowed) {
+      safeWarn(
+        `[PortalAuth] Paciente ${session.pacienteId} sin plan suficiente (${plan || 'sin plan'} — requiere premium)`,
+      );
+      redirect('/portal?sin-acceso=1');
+    }
   }
   return (
     <div className="portal-layout min-h-screen">
