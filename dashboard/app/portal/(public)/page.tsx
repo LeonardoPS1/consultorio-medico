@@ -524,7 +524,7 @@ export default function PortalLogin() {
                     Modo desarrollo — acceso directo sin autenticación
                   </p>
                   <Button
-                    onClick={handleTestAccess}
+                    onClick={() => handleTestAccess()}
                     disabled={loading}
                     variant="secondary"
                     className="w-full"

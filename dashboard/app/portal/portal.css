@@ -55,7 +55,7 @@
   --portal-font-size-2xl: 1.5rem;
 
   /* Nav */
-  --portal-nav-item-width: 55px;
+  /* (removed --portal-nav-item-width, now inline min-w-[55px]) */
 
   background: hsl(var(--portal-bg));
   color: hsl(var(--portal-foreground));
@@ -204,30 +204,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ─── Portal Nav Scroll Mask (CSS mask-image, sin JS overhead) ─ */
-.portal-nav-scroll {
-  mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
-  transition: mask-image 300ms ease, -webkit-mask-image 300ms ease;
-}
-.portal-nav-scroll-mask-start {
-  mask-image: linear-gradient(to right, transparent 24px, black 56px);
-  -webkit-mask-image: linear-gradient(to right, transparent 24px, black 56px);
-}
-.portal-nav-scroll-mask-end {
-  mask-image: linear-gradient(to left, transparent 24px, black 56px);
-  -webkit-mask-image: linear-gradient(to left, transparent 24px, black 56px);
-}
-.portal-nav-scroll-mask-both {
-  mask-image: linear-gradient(to right, transparent 24px, black 56px, calc(100% - 56px), transparent calc(100% - 24px));
-  -webkit-mask-image: linear-gradient(to right, transparent 24px, black 56px, calc(100% - 56px), transparent calc(100% - 24px));
-}
-
-/* Portal Nav Item */
-.portal-nav-item {
-  min-width: var(--portal-nav-item-width);
-}
-
 /* ─── Portal Section Title ───────────────────────────────── */
 .portal-section-title {
   font-size: var(--portal-font-size-xs);
@@ -253,10 +229,9 @@
 /* ─── Responsive Touch Optimizations ─────────────────────── */
 @container portal (max-width: 640px) {
   .portal-card { border-radius: calc(var(--radius) + 0.125rem); }
-  .portal-nav-item { min-width: 48px; padding-left: 0.5rem; padding-right: 0.5rem; }
 }
 @container portal (max-width: 380px) {
-  .portal-nav-item { min-width: 42px; }
+  /* nav items use inline min-w-[55px] via Tailwind */
 }
 
 /* ─── Reduced motion for portal ──────────────────────────── */
