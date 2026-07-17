@@ -15,7 +15,7 @@ ARG CACHEBUST=15
 RUN echo "Cache bust: $CACHEBUST"
 
 # Corepack para pnpm
-RUN corepack enable && corepack prepare pnpm@11.13.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.14.0 --activate
 
 # Cache pnpm store entre builds (Docker BuildKit)
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
@@ -55,7 +55,7 @@ ENV NEXT_PUBLIC_BUILD_TIME=$BUILD_TIME
 
 # Cache pnpm store entre builds (NO cacheamos .next/cache para forzar fresh build)
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    corepack enable && corepack prepare pnpm@11.13.0 --activate && pnpm build
+    corepack enable && corepack prepare pnpm@11.14.0 --activate && pnpm build
 
 # ─── Stage 3: Runner (producción) ────────────────────────────────────────────
 FROM node:22-alpine AS runner

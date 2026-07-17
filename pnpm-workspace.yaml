@@ -7,3 +7,9 @@ allowBuilds:
   unrs-resolver: true
   '@swc/core': true
   core-js-pure: true
+  '@scarf/scarf': true
+  '@sentry/cli': true
+  '@tree-sitter-grammars/tree-sitter-yaml': true
+  msgpackr-extract: true
+  tree-sitter-json: true
+  tree-sitter: true
