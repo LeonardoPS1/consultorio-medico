@@ -27,5 +27,18 @@
   },
   "dependencies": {
     "pdfkit": "^0.18.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@scarf/scarf",
+      "@sentry/cli",
+      "@swc/core",
+      "esbuild",
+      "sharp",
+      "msgpackr-extract",
+      "tree-sitter",
+      "tree-sitter-json",
+      "@tree-sitter-grammars/tree-sitter-yaml"
+    ]
   }
 }
