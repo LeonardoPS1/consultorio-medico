@@ -28,7 +28,7 @@ COPY dashboard/package.json ./dashboard/
 
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     --mount=type=cache,target=/root/.npm \
-    pnpm install --frozen-lockfile
+    pnpm install --no-frozen-lockfile
 
 # ─── Stage 2: Build ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS builder
