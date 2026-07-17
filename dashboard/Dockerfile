@@ -7,7 +7,7 @@
 # =============================================================================
 
 # ─── Stage 1: Dependencias ───────────────────────────────────────────────────
-FROM node:22-alpine AS deps
+FROM node:26-alpine AS deps
 WORKDIR /app
 
 # Cache buster
@@ -31,7 +31,7 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm install --no-frozen-lockfile
 
 # ─── Stage 2: Build ──────────────────────────────────────────────────────────
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 
 # Cache buster: cambiar este valor para forzar rebuild completo
@@ -58,7 +58,7 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     corepack enable && corepack prepare pnpm@11.14.0 --activate && pnpm build
 
 # ─── Stage 3: Runner (producción) ────────────────────────────────────────────
-FROM node:22-alpine AS runner
+FROM node:26-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
