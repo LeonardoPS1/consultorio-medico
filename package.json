@@ -27,6 +27,5 @@
   },
   "dependencies": {
     "pdfkit": "^0.18.0"
-  },
-
+  }
 }
