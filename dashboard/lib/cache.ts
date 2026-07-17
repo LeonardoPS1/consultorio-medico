@@ -1,167 +1,54 @@
-/**
- * Cache in-memory con TTL para datos de respuesta lenta o consultas frecuentes.
- *
- * Uso:
- *   import { cache } from '@/lib/cache';
- *
- *   // Cachear resultado de una función async
- *   const medicos = await cache.getOrSet('medicos:lista', () => db.select().from(medicos), 60_000);
- *
- *   // Invalidar en escritura
- *   cache.invalidate('medicos');
- *
- * Características:
- * - TTL configurable por entrada (default 30s)
- * - Invalidación por prefijo (ideal para invalidar grupos)
- * - Límite de entradas (default 500, evita memory leak)
- * - Cleanup automático cada 60s
- * - Seguro para server components y API routes (singleton en Node.js)
- */
+import { getRedis } from '@/lib/redis';
+import { safeWarn } from '@/lib/logger';
 
-interface CacheEntry<T> {
-  data: T;
-  expiresAt: number;
+const DEFAULT_TTL = 60;
+
+export async function cacheGet<T>(key: string): Promise<T | null> {
+  try {
+    const redis = await getRedis();
+    if (!redis) return null;
+    const raw = await redis.get(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
 }
 
-interface CacheOptions {
-  ttlMs?: number;
-  key?: string;
+export async function cacheSet(key: string, data: unknown, ttlSec = DEFAULT_TTL): Promise<void> {
+  try {
+    const redis = await getRedis();
+    if (!redis) return;
+    const serialized = JSON.stringify(data);
+    await redis.setex(key, ttlSec, serialized);
+  } catch {
+    safeWarn('[Cache] Error al guardar en Redis');
+  }
 }
 
-class MemoryCache {
-  private store = new Map<string, CacheEntry<unknown>>();
-  private defaultTTL: number;
-  private maxEntries: number;
-  private cleanupInterval: ReturnType<typeof setInterval> | null = null;
-
-  constructor(defaultTTLMs = 30_000, maxEntries = 500) {
-    this.defaultTTL = defaultTTLMs;
-    this.maxEntries = maxEntries;
-
-    // Cleanup cada 60s para evitar memory leaks
-    if (typeof setInterval !== 'undefined') {
-      this.cleanupInterval = setInterval(() => this.cleanup(), 60_000);
-      this.cleanupInterval.unref();
+export async function cacheDel(pattern: string): Promise<void> {
+  try {
+    const redis = await getRedis();
+    if (!redis) return;
+    const keys = await redis.keys(pattern);
+    if (keys.length > 0) {
+      await redis.del(...keys);
     }
+  } catch {
+    safeWarn('[Cache] Error al limpiar cache');
   }
+}
 
-  /**
-   * Obtiene un valor del cache. Retorna null si no existe o expiró.
-   */
-  get<T>(key: string): T | null {
-    const entry = this.store.get(key);
-    if (!entry) return null;
-
-    if (Date.now() > entry.expiresAt) {
-      this.store.delete(key);
-      return null;
-    }
-
-    return entry.data as T;
-  }
-
-  /**
-   * Guarda un valor en el cache con TTL opcional.
-   */
-  set<T>(key: string, data: T, ttlMs?: number): void {
-    // Si alcanzó el límite, eliminar la entrada más vieja
-    if (this.store.size >= this.maxEntries) {
-      const oldest = this.store.keys().next().value;
-      if (oldest) this.store.delete(oldest);
-    }
-
-    this.store.set(key, {
-      data,
-      expiresAt: Date.now() + (ttlMs ?? this.defaultTTL),
-    });
-  }
-
-  /**
-   * Obtiene o calcula un valor cacheado.
-   * Si el valor está en cache y no expiró, lo retorna.
-   * Si no, ejecuta el fetcher, lo cachea y lo retorna.
-   */
-  async getOrSet<T>(key: string, fetcher: () => Promise<T>, ttlMs?: number): Promise<T> {
-    const cached = this.get<T>(key);
+// Compat: API legacy usan cache.getOrSet() y cache.invalidate()
+export const cache = {
+  async getOrSet<T>(key: string, fetchFn: () => Promise<T>, ttlSec = DEFAULT_TTL): Promise<T> {
+    const cached = await cacheGet<T>(key);
     if (cached !== null) return cached;
-
-    const data = await fetcher();
-    this.set(key, data, ttlMs);
-    return data;
-  }
-
-  /**
-   * Versión síncrona de getOrSet para datos que ya están en memoria.
-   */
-  getOrSetSync<T>(key: string, fetcher: () => T, ttlMs?: number): T {
-    const cached = this.get<T>(key);
-    if (cached !== null) return cached;
-
-    const data = fetcher();
-    this.set(key, data, ttlMs);
-    return data;
-  }
-
-  /**
-   * Invalida entradas del cache.
-   * - Sin argumentos: limpia todo
-   * - Con prefijo: invalida todas las entradas que empiecen con el prefijo
-   */
-  invalidate(prefix?: string): void {
-    if (!prefix) {
-      this.store.clear();
-      return;
-    }
-
-    for (const key of Array.from(this.store.keys())) {
-      if (key.startsWith(prefix)) {
-        this.store.delete(key);
-      }
-    }
-  }
-
-  /**
-   * Verifica si una clave existe y no expiró.
-   */
-  has(key: string): boolean {
-    return this.get(key) !== null;
-  }
-
-  /**
-   * Limpia entradas expiradas.
-   */
-  cleanup(): void {
-    const now = Date.now();
-    for (const [key, entry] of Array.from(this.store.entries())) {
-      if (now > entry.expiresAt) {
-        this.store.delete(key);
-      }
-    }
-  }
-
-  /**
-   * Destruye el cache y el intervalo de cleanup.
-   */
-  destroy(): void {
-    if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval);
-      this.cleanupInterval = null;
-    }
-    this.store.clear();
-  }
-
-  /**
-   * Estadísticas del cache (útil para debugging)
-   */
-  stats(): { size: number; maxEntries: number; defaultTTL: number; keys: string[] } {
-    return {
-      size: this.store.size,
-      maxEntries: this.maxEntries,
-      defaultTTL: this.defaultTTL,
-      keys: Array.from(this.store.keys()),
-    };
-  }
-}
-
-// Singleton global — reusable en todos los servicios
-export const cache = new MemoryCache(30_000, 500);
+    const value = await fetchFn();
+    await cacheSet(key, value, ttlSec);
+    return value;
+  },
+  async invalidate(pattern: string): Promise<void> {
+    await cacheDel(pattern);
+  },
+};

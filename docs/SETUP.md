@@ -1,7 +1,7 @@
 # 🚀 Guía de Instalación — AicoreMed
 
 > **Última actualización:** 03/06/2026
-> **Stack:** Next.js 14 · PostgreSQL 16 · n8n · Ollama · Twilio · Docker
+> **Stack:** Next.js 16 · PostgreSQL 16 · n8n · Ollama · Twilio · Docker
 
 ---
 

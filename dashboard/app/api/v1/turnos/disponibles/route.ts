@@ -1,84 +1,65 @@
-/**
- * GET /api/v1/turnos/disponibles — Slots disponibles
- *
- * Query params: fecha (YYYY-MM-DD), medicoId (opcional)
- * Scope requerido: turnos:read
- * Público: Sí (con API key)
- */
-
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { turnos, medicos } from '@/drizzle/schema';
-import { sql, and, gte, lte, eq } from 'drizzle-orm';
-import {
-  publicApiHandler,
-  jsonResponse,
-  errorResponse,
-  type AuthenticatedRequest,
-} from '@/lib/public-api-handler';
-import { API_SCOPES } from '@/lib/public-api-auth';
+import { turnos, horariosAtencion } from '@/drizzle/schema';
+import { eq, and, gte, lt, isNull, sql } from 'drizzle-orm';
 
-export const GET = publicApiHandler(
-  async (request: AuthenticatedRequest) => {
-    const { searchParams } = new URL(request.url);
-    const fechaStr = searchParams.get('fecha');
-    const medicoId = searchParams.get('medicoId');
+export const dynamic = 'force-dynamic';
 
-    if (!fechaStr) {
-      return errorResponse('Parámetro requerido: fecha (YYYY-MM-DD)', 400);
+export async function GET(request: NextRequest) {
+  const fecha = request.nextUrl.searchParams.get('fecha');
+  const sucursalId = request.nextUrl.searchParams.get('sucursalId');
+
+  if (!fecha) {
+    return NextResponse.json({ error: 'fecha es obligatoria' }, { status: 400 });
+  }
+
+  const targetDate = new Date(fecha + 'T00:00:00');
+  const dayOfWeek = targetDate.getDay();
+
+  const horariosFiltro = [eq(horariosAtencion.dia, String(dayOfWeek)), eq(horariosAtencion.activo, true)];
+  if (sucursalId) horariosFiltro.push(eq(horariosAtencion.sucursalId, sucursalId));
+
+  const slots = await db
+    .select({
+      horaInicio: horariosAtencion.inicio,
+      horaFin: horariosAtencion.fin,
+      sucursalId: horariosAtencion.sucursalId,
+      tipo: horariosAtencion.tipo,
+    })
+    .from(horariosAtencion)
+    .where(and(...horariosFiltro));
+
+  const occupied = await db
+    .select({ fechaHora: turnos.fechaHora })
+    .from(turnos)
+    .where(
+      and(
+        gte(turnos.fechaHora, targetDate),
+        lt(turnos.fechaHora, new Date(targetDate.getTime() + 24 * 60 * 60 * 1000)),
+        isNull(turnos.deletedAt),
+      ),
+    );
+
+  const occupiedTimes = new Set(occupied.map((o) => o.fechaHora.toISOString()));
+
+  const disponibles = [];
+  for (const slot of slots) {
+    const hInicio = parseInt(slot.horaInicio.split(':')[0]);
+    const hFin = parseInt(slot.horaFin.split(':')[0]);
+
+    for (let h = hInicio; h < hFin; h++) {
+      const horaStr = `${String(h).padStart(2, '0')}:00`;
+      const slotDate = new Date(`${fecha}T${horaStr}:00`);
+      if (!occupiedTimes.has(slotDate.toISOString())) {
+        disponibles.push({
+          fecha,
+          hora: horaStr,
+          sucursalId: slot.sucursalId,
+          tipo: slot.tipo,
+        });
+      }
     }
+  }
 
-    // Validar formato de fecha
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) {
-      return errorResponse('Formato de fecha inválido. Usar YYYY-MM-DD', 400);
-    }
-
-    // Construir condiciones base
-    const fechaInicio = `${fechaStr}T00:00:00Z`;
-    const fechaFin = `${fechaStr}T23:59:59Z`;
-
-    const conditions = [
-      gte(turnos.fechaHora, new Date(fechaInicio)),
-      lte(turnos.fechaHora, new Date(fechaFin)),
-      sql`${turnos.deletedAt} IS NULL`,
-    ];
-
-    if (medicoId) {
-      conditions.push(eq(turnos.medicoId, medicoId));
-    }
-
-    // Obtener médicos activos (para ofrecer filtro)
-    const medicosList = await db
-      .select({
-        id: medicos.id,
-        nombre: medicos.nombre,
-        especialidad: medicos.especialidad,
-        colorEvento: medicos.colorEvento,
-      })
-      .from(medicos)
-      .where(sql`${medicos.deletedAt} IS NULL`);
-
-    // Obtener turnos ocupados en esa fecha
-    const turnosOcupados = await db
-      .select({
-        id: turnos.id,
-        medicoId: turnos.medicoId,
-        fechaHora: turnos.fechaHora,
-        duracionMinutos: turnos.duracionMinutos,
-        estado: turnos.estado,
-      })
-      .from(turnos)
-      .where(
-        and(...conditions, sql`${turnos.estado} IN ('pendiente', 'confirmada', 'en_atencion')`),
-      )
-      .orderBy(turnos.fechaHora);
-
-    return jsonResponse({
-      fecha: fechaStr,
-      medicos: medicosList,
-      turnosOcupados,
-    });
-  },
-  { scopes: [API_SCOPES.TURNOS_READ] },
-);
-
-export { OPTIONS } from '@/lib/public-api-handler';
+  return NextResponse.json(disponibles);
+}

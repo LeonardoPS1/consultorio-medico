@@ -4,6 +4,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+function generateRequestId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 // ─── Rate Limiter en memoria ─────────────────────────────────
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
@@ -90,15 +97,18 @@ function detectTenant(hostname: string): string {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ─── 1. Detectar tenant y pasar a la request ──────────
+  // ─── 1. Detectar tenant, requestId y pasar a la request ──
   const hostname = request.headers.get('host') || 'localhost';
   const tenantId = detectTenant(hostname);
+  const requestId = generateRequestId();
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-tenant-id', tenantId);
+  requestHeaders.set('x-request-id', requestId);
 
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
+  response.headers.set('x-request-id', requestId);
 
   // Copiar security headers al nuevo response
   Object.entries(securityHeaders).forEach(([key, value]) => {
@@ -113,7 +123,7 @@ export function middleware(request: NextRequest) {
   // Content-Security-Policy (CSP)
   // Centralizado aquí con next.config.js como fallback
   const cspBase =
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' wss://livekit.aicorebots.com https://livekit.aicorebots.com https://api.mercadopago.com https://api.twilio.com https://api.whatsapp.com https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self'; media-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; report-uri /api/csp-report";
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' wss://livekit.aicorebots.com https://livekit.aicorebots.com https://api.mercadopago.com https://api.twilio.com https://api.whatsapp.com https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self'; media-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; report-uri /api/csp-report";
   const csp = process.env.NODE_ENV === 'development'
     ? cspBase.replace("script-src 'self' 'unsafe-inline'", "script-src 'self' 'unsafe-inline' 'unsafe-eval'")
     : cspBase;

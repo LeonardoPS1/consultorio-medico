@@ -11,25 +11,33 @@
  *   });
  */
 
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { safeError } from '@/lib/logger';
 import { withTenantScope } from '@/lib/rls';
+import { runWithContext } from '@/lib/request-context';
+import { captureError } from '@/lib/glitchtip';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- wrapper que acepta distintos tipos de callbacks
 export function apiHandler(fn: (...args: any[]) => Promise<NextResponse> | NextResponse) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async (...args: any[]) => {
     const request = args[0] as NextRequest;
+    const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+    const tenantId = request.headers.get('x-tenant-id') || '00000000-0000-0000-0000-000000000000';
+
     try {
       // Establecer contexto tenant automáticamente (si hay sesión activa)
       await withTenantScope();
-      return await fn(...args);
+      return await runWithContext({ requestId, tenantId }, () => fn(...args));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error interno del servidor';
       const status = error instanceof HttpError ? error.status : 500;
       safeError(`[API] ${request.method} ${request.nextUrl.pathname}:`, { error: message });
-      // Mostrar el error real siempre para facilitar debugging
-      // En producción se puede ocultar después de diagnosticar
+      captureError(error, {
+        tags: { ruta: request.nextUrl.pathname, method: request.method, tenantId },
+        level: status >= 500 ? 'error' : 'warning',
+      });
       const userFacing = status < 500;
       return NextResponse.json(
         {

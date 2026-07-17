@@ -58,7 +58,7 @@ graph TD
         T12[auditoría]
     end
 
-    PG --> DASH["📊 Dashboard Web (Next.js 14 + shadcn/ui)"]
+    PG --> DASH["📊 Dashboard Web (Next.js 16 + shadcn/ui)"]
 
     subgraph DASH [Dashboard]
         D1[KPIs]
@@ -137,7 +137,7 @@ graph LR
 
 ```mermaid
 graph TD
-    NEXT["Next.js 14 (App Router)"] --> PUBLIC["Páginas públicas"]
+    NEXT["Next.js 16 (App Router)"] --> PUBLIC["Páginas públicas"]
     NEXT --> PRIV["Páginas protegidas dashboard/"]
 
     subgraph PUBLIC [Públicas]

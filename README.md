@@ -22,10 +22,10 @@
 
 <div align="center">
 
-`TypeScript` `Next.js 14` `PostgreSQL` `Drizzle ORM` `n8n` `Ollama` `Gemma3` `Twilio` `Docker` `MercadoPago` `LiveKit`
+`TypeScript` `Next.js 16` `PostgreSQL` `Drizzle ORM` `n8n` `Ollama` `Gemma3` `Twilio` `Docker` `MercadoPago` `LiveKit` `GlitchTip` `Pino`
 
 [![Estado](https://img.shields.io/badge/Estado-Producci%C3%B3n-10b981?style=flat-square)](https://med.aicorebots.com)
-[![Next.js](https://img.shields.io/badge/Next.js-14.2-000000?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.2-000000?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql)](https://postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Swarm-2496ED?style=flat-square&logo=docker)](https://docker.com/)
@@ -105,7 +105,7 @@
                     └──────────────────────┬──────────────────────────────┘
                                            │
                     ┌──────────────────────▼──────────────────────────────┐
-                    │          DASHBOARD WEB (Next.js 14)                  │
+                    │          DASHBOARD WEB (Next.js 16)                  │
                     │  KPIs · Turnos · Pacientes · Recetas · Reportes    │
                     │  Configuración · Admin · Onboarding IA             │
                     │  Portal Paciente · Verificación QR                 │
@@ -175,7 +175,7 @@ Twilio → Webhook Dashboard (HMAC validation) →
 
 | Capa | Tecnología | Versión | Propósito |
 |------|-----------|---------|-----------|
-| **Frontend** | Next.js 14 (App Router) | 14.2.x | Dashboard y portal web |
+| **Frontend** | Next.js 16 (App Router) | ^16.2.10 | Dashboard y portal web |
 | **UI** | Tailwind CSS + shadcn/ui | — | Componentes y estilos |
 | **Animaciones** | framer-motion | 12.x | Transiciones y micro-interacciones |
 | **Gráficos** | Recharts | 2.x | KPIs y analytics |
@@ -190,6 +190,8 @@ Twilio → Webhook Dashboard (HMAC validation) →
 | **Infraestructura** | Docker Swarm | — | Orquestación de contenedores |
 | **Proxy** | Traefik + Let's Encrypt | — | HTTPS y routing |
 | **Validación** | Zod | 3.x | Schemas de datos |
+| **Error Tracking** | GlitchTip (Sentry-compatible) | — | Monitoreo de errores y performance |
+| **Logging** | Pino | 9.x | Logging estructurado JSON |
 | **Autenticación** | NextAuth v5 (beta) | 5.0.0-beta.19 | JWT + 2FA |
 | **JWT** | jose | 6.x | Tokens seguros |
 
@@ -315,7 +317,7 @@ AicoreMed está diseñado específicamente para el mercado chileno:
 ```
 consultorio-medico/
 │
-├── dashboard/                          # ★ CORE: Next.js 14 App Router
+├── dashboard/                          # ★ CORE: Next.js 16 App Router
 │   ├── app/
 │   │   ├── (login)/                    # Login, forgot/reset password
 │   │   ├── api/                        # API Routes RESTful (30+ endpoints)

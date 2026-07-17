@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { turnos, pacientes, conversaciones, pacienteEventos, mensajes } from '@/drizzle/schema';
 import { eq, and, gte, lt, desc, sql, count } from 'drizzle-orm';
+import { cacheGet, cacheSet, cacheDel } from '@/lib/cache';
 
 const DEFAULT_STATS_RESPONSE = {
   kpis: [
@@ -28,6 +29,11 @@ export async function getDashboardStats(opts: {
   sucursalId?: string;
 }) {
   const { medicoId, isMedico, sucursalId } = opts;
+  const cacheKey = `stats:dashboard:${medicoId || 'all'}:${sucursalId || 'all'}`;
+
+  const cached = await cacheGet<typeof DEFAULT_STATS_RESPONSE>(cacheKey);
+  if (cached) return cached;
+
   try {
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -286,7 +292,7 @@ export async function getDashboardStats(opts: {
           ? '+100%'
           : '0%';
 
-    return {
+    const result = {
       kpis: [
         {
           title: 'Turnos Hoy',
@@ -334,7 +340,16 @@ export async function getDashboardStats(opts: {
         datosReales: true,
       },
     };
+
+    await cacheSet(cacheKey, result, 30);
+
+    return result;
   } catch {
     return DEFAULT_STATS_RESPONSE;
   }
+}
+
+export function invalidateDashboardStats(medicoId?: string, sucursalId?: string) {
+  const pattern = `stats:dashboard:${medicoId || '*'}*`;
+  cacheDel(pattern);
 }

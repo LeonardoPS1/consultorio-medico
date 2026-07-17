@@ -1,74 +1,83 @@
-/**
- * Rate limiter persistente en PostgreSQL.
- *
- * Reemplaza la versión in-memory que se perdía al reiniciar el servidor.
- * Usa la tabla `rate_limits` con TTL manejado por resetAt.
- * Las entradas expiradas se limpian automáticamente en cada consulta.
- */
-
+import crypto from 'crypto';
+import { NextRequest, NextResponse } from 'next/server';
+import { getRedis } from '@/lib/redis';
 import { db } from '@/lib/db';
 import { rateLimits } from '@/drizzle/schema';
-import { eq, and, sql } from 'drizzle-orm';
-import { NextRequest, NextResponse } from 'next/server';
+import { eq, sql } from 'drizzle-orm';
+import { safeWarn } from '@/lib/logger';
 
 export interface RateLimitConfig {
-  maxRequests: number; // Máximo de requests en la ventana
-  windowMs: number; // Ventana de tiempo en ms
-  message?: string; // Mensaje de error
+  maxRequests: number;
+  windowMs: number;
+  message?: string;
 }
 
 const DEFAULT_CONFIG: RateLimitConfig = {
   maxRequests: 30,
-  windowMs: 60_000, // 1 minuto
+  windowMs: 60_000,
   message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.',
 };
 
-/**
- * Verifica si una request excede el rate limit.
- * Usa PostgreSQL como almacenamiento persistente.
- */
-export async function checkRateLimit(
-  key: string,
-  config: Partial<RateLimitConfig> = {},
-): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
-  const { maxRequests, windowMs } = { ...DEFAULT_CONFIG, ...config };
+function hashKey(key: string): string {
+  return crypto.createHash('sha256').update(key).digest('hex').slice(0, 16);
+}
+
+async function checkRateLimitRedis(key: string, config: RateLimitConfig): Promise<{ allowed: boolean; remaining: number; resetAt: number } | null> {
+  const redis = await getRedis();
+  if (!redis) return null;
+
+  const now = Date.now();
+  const redisKey = `rl:${hashKey(key)}`;
+  const windowSec = Math.ceil(config.windowMs / 1000);
+
+  try {
+    const count = await redis.incr(redisKey);
+    if (count === 1) {
+      await redis.expire(redisKey, windowSec);
+    }
+
+    const ttl = await redis.ttl(redisKey);
+    const resetAt = now + (ttl > 0 ? ttl * 1000 : config.windowMs);
+
+    return {
+      allowed: count <= config.maxRequests,
+      remaining: Math.max(0, config.maxRequests - count),
+      resetAt,
+    };
+  } catch {
+    safeWarn('[RateLimit] Redis falló, usando fallback Postgres');
+    return null;
+  }
+}
+
+async function checkRateLimitPostgres(key: string, config: RateLimitConfig): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
+  const { maxRequests, windowMs } = config;
   const now = new Date();
 
-  // Limpiar entradas expiradas older than 1h (housekeeping)
   await db
     .delete(rateLimits)
     .where(sql`${rateLimits.resetAt} < ${now}`)
     .execute()
-    .catch(() => {}); // fire-and-forget, no crítico
+    .catch(() => {});
 
-  // Buscar entrada existente
   const [existing] = await db.select().from(rateLimits).where(eq(rateLimits.key, key)).limit(1);
 
   if (!existing || new Date(existing.resetAt) < now) {
-    // Crear nueva ventana
     const resetAt = new Date(now.getTime() + windowMs);
-    await db
-      .insert(rateLimits)
-      .values({
-        key,
-        maxRequests,
-        count: 1,
-        windowMs,
-        resetAt,
-      })
-      .onConflictDoUpdate({
-        target: rateLimits.key,
-        set: { count: 1, resetAt, maxRequests, windowMs, updatedAt: sql`CURRENT_TIMESTAMP` },
-      });
+    await db.execute(sql`
+      INSERT INTO rate_limits (key, max_requests, count, window_ms, reset_at, created_at, updated_at)
+      VALUES (${key}, ${maxRequests}, 1, ${windowMs}, ${resetAt}, NOW(), NOW())
+      ON CONFLICT (key) DO UPDATE SET
+        count = 1,
+        reset_at = ${resetAt},
+        max_requests = ${maxRequests},
+        window_ms = ${windowMs},
+        updated_at = NOW()
+    `);
 
-    return {
-      allowed: true,
-      remaining: maxRequests - 1,
-      resetAt: resetAt.getTime(),
-    };
+    return { allowed: true, remaining: maxRequests - 1, resetAt: resetAt.getTime() };
   }
 
-  // Ventana activa — incrementar contador
   const newCount = existing.count + 1;
   await db.update(rateLimits).set({ count: newCount }).where(eq(rateLimits.key, key));
 
@@ -79,14 +88,18 @@ export async function checkRateLimit(
   };
 }
 
-/**
- * Middleware-style wrapper para Next.js API routes con rate limiting persistente.
- *
- * Uso:
- *   export const POST = withRateLimit(async (request) => {
- *     ...
- *   }, { maxRequests: 10, windowMs: 60000 });
- */
+export async function checkRateLimit(
+  key: string,
+  config: Partial<RateLimitConfig> = {},
+): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
+  const fullConfig = { ...DEFAULT_CONFIG, ...config };
+
+  const redisResult = await checkRateLimitRedis(key, fullConfig);
+  if (redisResult) return redisResult;
+
+  return checkRateLimitPostgres(key, fullConfig);
+}
+
 export function withRateLimit(
   handler: (request: NextRequest) => Promise<NextResponse>,
   config?: Partial<RateLimitConfig>,

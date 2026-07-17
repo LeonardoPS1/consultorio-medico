@@ -6,8 +6,6 @@ const withBundleAnalyzer = process.env.ANALYZE === 'true'
   : (config) => config;
 
 const nextConfig = withBundleAnalyzer({
-  // Aumenta timeout de generación de páginas estáticas (default 60s)
-  // Previene timeout en /_not-found durante build en VPS con recursos limitados
   staticPageGenerationTimeout: 180,
   experimental: {
     optimizePackageImports: [
@@ -24,11 +22,8 @@ const nextConfig = withBundleAnalyzer({
     remotePatterns: [{ protocol: 'https', hostname: '**' }],
     formats: ['image/avif', 'image/webp'],
   },
-  // Para pnpm monorepo: apunta al root del workspace para tracing correcto
   outputFileTracingRoot: path.join(__dirname, '..'),
-  // Solo usar standalone output en Docker/Linux: pnpm symlinks causan EPERM en Windows
   output: process.env.DISABLE_STANDALONE === 'true' ? undefined : 'standalone',
-  // Variables de entorno que expone al cliente
   env: {
     NEXT_PUBLIC_APP_NAME: 'AiCoreMed',
     NEXT_PUBLIC_APP_VERSION: '1.18.1',
@@ -37,11 +32,8 @@ const nextConfig = withBundleAnalyzer({
     NEXT_PUBLIC_TENANT_PRIMARY: process.env.NEXT_PUBLIC_TENANT_PRIMARY || '#2563eb',
     NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY: process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || '',
   },
-  // ─── Headers de Service Worker ─────────────────────────
-  // Seguridad vía middleware.ts (todo centralizado allá)
   async headers() {
     return [
-      // Cache service worker para que siempre esté fresco
       {
         source: '/sw.js',
         headers: [
@@ -53,4 +45,19 @@ const nextConfig = withBundleAnalyzer({
   },
 });
 
-module.exports = nextConfig;
+let config = nextConfig;
+
+try {
+  const { withSentryConfig } = require('@sentry/nextjs');
+  config = withSentryConfig(config, {
+    silent: !process.env.CI,
+    sourcemaps: {
+      disable: true,
+    },
+    widenClientFileUpload: false,
+    tunnelRoute: '/monitoring',
+  });
+} catch {
+}
+
+module.exports = config;

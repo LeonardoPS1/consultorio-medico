@@ -1778,7 +1778,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         titulo: 'Stack tecnológico',
         descripcion: 'Tecnologías utilizadas en el sistema.',
         tips: [
-          'Frontend: Next.js 14 + Tailwind CSS + shadcn/ui',
+          'Frontend: Next.js 16 + Tailwind CSS + shadcn/ui',
           'Base de datos: PostgreSQL 16 con Drizzle ORM',
           'IA Local: Ollama + Gemma3 (todo corre en tu servidor)',
           'Automatización: n8n self-hosted',

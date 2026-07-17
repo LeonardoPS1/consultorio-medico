@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -81,6 +81,41 @@ interface Props {
 export function ConversacionesClient({ initialConversaciones }: Props) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+
+  const handleSSEMessage = useCallback((event: MessageEvent) => {
+    try {
+      const data = JSON.parse(event.data);
+      const tipo = event.type;
+
+      if (tipo === 'nuevo-mensaje' || tipo === 'nueva-conversacion') {
+        queryClient.invalidateQueries({ queryKey: ['conversaciones'] });
+        if (data.conversacionId) {
+          queryClient.invalidateQueries({ queryKey: ['mensajes', data.conversacionId] });
+        }
+      }
+    } catch {}
+  }, [queryClient]);
+
+  useEffect(() => {
+    let eventSource: EventSource | null = null;
+
+    try {
+      eventSource = new EventSource('/api/sse/events');
+      eventSource.addEventListener('nuevo-mensaje', handleSSEMessage);
+      eventSource.addEventListener('nueva-conversacion', handleSSEMessage);
+      eventSource.addEventListener('heartbeat', () => {});
+      eventSource.onerror = () => {
+        eventSource?.close();
+      };
+    } catch {
+      /* SSE no disponible */
+    }
+
+    return () => {
+      eventSource?.close();
+    };
+  }, [handleSSEMessage]);
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mensajeInput, setMensajeInput] = useState('');
   const [filterCanal, setFilterCanal] = useState<string>('');

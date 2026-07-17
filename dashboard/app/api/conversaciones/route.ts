@@ -15,6 +15,7 @@ import {
   createConversacionSchema,
   conversacionQuerySchema,
 } from '@/lib/validations';
+import { emitEvent } from '@/lib/sse-events';
 import { z } from 'zod';
 
 const conversacionCreateSchema = createConversacionSchema
@@ -111,6 +112,13 @@ export const POST = apiHandler(async (request: NextRequest) => {
     mensajeInicial: body.mensaje,
     rolMensajeInicial: 'paciente',
     intencionInicial: body.intencion,
+  });
+
+  const session = await auth();
+  const tenantId = session?.user?.tenantId || '00000000-0000-0000-0000-000000000000';
+  emitEvent(tenantId, {
+    type: 'nueva-conversacion',
+    data: { conversacionId: conversacion!.id, pacienteId: paciente.id },
   });
 
   return created(conversacion);

@@ -1,40 +1,15 @@
-/**
- * GET /api/v1/medicos — Lista de médicos activos
- *
- * Scope requerido: medicos:read
- * Público: Sí (con API key)
- */
-
+import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { medicos } from '@/drizzle/schema';
-import { sql } from 'drizzle-orm';
-import {
-  publicApiHandler,
-  jsonResponse,
-  type AuthenticatedRequest,
-} from '@/lib/public-api-handler';
-import { API_SCOPES } from '@/lib/public-api-auth';
+import { isNull } from 'drizzle-orm';
 
-export const GET = publicApiHandler(
-  async (request: AuthenticatedRequest) => {
-    const result = await db
-      .select({
-        id: medicos.id,
-        nombre: medicos.nombre,
-        especialidad: medicos.especialidad,
-        email: medicos.email,
-        telefono: medicos.telefono,
-        whatsapp: medicos.whatsapp,
-        matricula: medicos.matricula,
-        colorEvento: medicos.colorEvento,
-      })
-      .from(medicos)
-      .where(sql`${medicos.deletedAt} IS NULL`)
-      .orderBy(medicos.nombre);
+export const dynamic = 'force-dynamic';
 
-    return jsonResponse({ medicos: result });
-  },
-  { scopes: [API_SCOPES.MEDICOS_READ] },
-);
+export async function GET() {
+  const result = await db
+    .select({ id: medicos.id, nombre: medicos.nombre, especialidad: medicos.especialidad, email: medicos.email, telefono: medicos.telefono })
+    .from(medicos)
+    .where(isNull(medicos.deletedAt));
 
-export { OPTIONS } from '@/lib/public-api-handler';
+  return NextResponse.json(result);
+}

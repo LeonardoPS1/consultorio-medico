@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { logWorkflowExecution } from '@/lib/services/n8n-monitor';
 import { safeWarn } from '@/lib/logger';
+import { captureError } from '@/lib/glitchtip';
 import { verifyRequestSecret } from '@/lib/verify-webhook-secret';
 
 // Rate limiter en memoria para este webhook
@@ -64,6 +65,7 @@ export async function POST(request: Request) {
       '[n8n-alert] Error procesando alerta:',
       err instanceof Error ? { message: err.message } : err,
     );
+    captureError(err, { tags: { webhook: 'n8n-alert' } });
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
   }
 }

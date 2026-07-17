@@ -83,19 +83,46 @@ export async function GET(request: NextRequest) {
         ),
       );
 
+    const [pendientesTot] = await db
+      .select({ total: count() })
+      .from(turnos)
+      .where(
+        and(
+          gte(turnos.fechaHora, startDate),
+          lt(turnos.fechaHora, todayStart),
+          eq(turnos.estado, turnoEstadoEnum.enumValues[1]), // 'pendiente'
+          sql`${turnos.deletedAt} IS NULL`,
+        ),
+      );
     const totalTurnos = Number(turnosTot?.total ?? 0);
     const totalCompletados = Number(completadosTot?.total ?? 0);
+    const totalCancelados = Number(canceladosTot?.total ?? 0);
 
     // Si no hay datos reales, devolver demo
-    if (totalTurnos === 0 && totalCompletados === 0) {
+    if (totalTurnos === 0) {
       safeWarn('[Reportes API] DB sin datos, usando demo');
       const demo = getDemoReportes(periodo);
       return NextResponse.json({ ...demo, _demo: true });
     }
 
-    // ─── Datos reales (abreviado — solo lo que tiene datos) ──
-    const demo = getDemoReportes(periodo);
-    return NextResponse.json({ ...demo, _demo: true });
+    // ─── Datos reales ──
+    return NextResponse.json({
+      resumen: {
+        totalTurnos,
+        completados: totalCompletados,
+        cancelados: totalCancelados,
+        pendientes: Number(pendientesTot?.total ?? 0),
+        tasaConfirmacion: totalTurnos > 0
+          ? Math.round(((totalTurnos - totalCancelados) / totalTurnos) * 100)
+          : 0,
+      },
+      tendencias: [],
+      distribucion: [],
+      _demo: false,
+      _periodo: periodo,
+      _desde: startDate.toISOString(),
+      _hasta: todayStart.toISOString(),
+    });
   } catch (error) {
     safeWarn(
       '[Reportes API] Error DB, usando datos demo:',

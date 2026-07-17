@@ -19,7 +19,7 @@ Ver [`AGENTS.md → Metodología de Trabajo`](./AGENTS.md#-metodología-de-traba
 | Regla | Estándar |
 |-------|----------|
 | **Lenguaje** | TypeScript estricto (`strict: true`) |
-| **Framework** | Next.js 14 App Router |
+| **Framework** | Next.js 16 App Router |
 | **ORM** | Drizzle ORM puro (sin SQL raw excepto migraciones) |
 | **UI** | shadcn/ui + Tailwind CSS |
 | **Validación** | Zod en todas las API routes |

@@ -1,62 +1,30 @@
-/**
- * GET /api/v1/pacientes/:id — Información de un paciente
- *
- * Scope requerido: pacientes:read
- * Público: Sí (con API key)
- * Nota: solo devuelve datos no sensibles.
- */
-
+import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { pacientes } from '@/drizzle/schema';
-import { eq, and, sql } from 'drizzle-orm';
-import {
-  publicApiHandler,
-  jsonResponse,
-  errorResponse,
-  type AuthenticatedRequest,
-} from '@/lib/public-api-handler';
-import { API_SCOPES } from '@/lib/public-api-auth';
+import { eq, isNull, and } from 'drizzle-orm';
 
-async function handler(
-  request: AuthenticatedRequest,
-  context?: { params: Record<string, string> },
+export const dynamic = 'force-dynamic';
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const pacienteId = context?.params?.id;
-
-  if (!pacienteId) {
-    return errorResponse('ID de paciente requerido', 400);
-  }
-
-  const result = await db
-    .select()
+  const { id } = await params;
+  const [paciente] = await db
+    .select({
+      id: pacientes.id,
+      nombre: pacientes.nombre,
+      apellido: pacientes.apellido,
+      email: pacientes.email,
+      telefono: pacientes.telefono,
+    })
     .from(pacientes)
-    .where(and(eq(pacientes.id, pacienteId), sql`${pacientes.deletedAt} IS NULL`))
+    .where(and(eq(pacientes.id, id), isNull(pacientes.deletedAt)))
     .limit(1);
 
-  if (result.length === 0) {
-    return errorResponse('Paciente no encontrado', 404);
+  if (!paciente) {
+    return NextResponse.json({ error: 'Paciente no encontrado' }, { status: 404 });
   }
 
-  const p = result[0];
-
-  // Devolver solo datos no sensibles
-  return jsonResponse({
-    paciente: {
-      id: p.id,
-      nombre: p.nombre,
-      apellido: p.apellido,
-      email: p.email,
-      telefono: p.telefono,
-      fechaNacimiento: p.fechaNacimiento,
-      obraSocial: p.obraSocial,
-      consentimientoWhatsapp: p.consentimientoWhatsapp,
-      consentimientoEmail: p.consentimientoEmail,
-    },
-  });
+  return NextResponse.json(paciente);
 }
-
-export const GET = publicApiHandler(handler, {
-  scopes: [API_SCOPES.PACIENTES_READ],
-});
-
-export { OPTIONS } from '@/lib/public-api-handler';

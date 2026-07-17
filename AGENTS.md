@@ -92,7 +92,7 @@
 
 | Capa | Tecnología | Versión |
 |------|-----------|---------|
-| **Frontend** | Next.js 14 (App Router) + Tailwind CSS + shadcn/ui | 14.2.x |
+| **Frontend** | Next.js 16 (App Router) + Tailwind CSS + shadcn/ui | ^16.2.10 |
 | **Autenticación** | NextAuth v5 (beta) + JWT + 2FA TOTP | 5.0.0-beta.19 |
 | **ORM** | Drizzle ORM | ^0.31.0 |
 | **Base de datos** | PostgreSQL 16 | 16 |
@@ -140,7 +140,7 @@ Ollama (Gemma3 - IA Local)
 PostgreSQL (26+ tablas)
   │
   ▼
-Dashboard Web (Next.js 14 - med.aicorebots.com)
+Dashboard Web (Next.js 16 - med.aicorebots.com)
 ```
 
 ### Flujo de Mensaje WhatsApp (Crítico)
@@ -162,7 +162,7 @@ Twilio → Webhook → Dashboard (valida firma HMAC) →
 
 ```
 consultorio-medico/
-├── dashboard/                  # Next.js 14 App Router
+├── dashboard/                  # Next.js 16 App Router
 │   ├── app/
 │   │   ├── (login)/           # Login, forgot/reset password
 │   │   ├── dashboard/         # Dashboard principal (protegido)

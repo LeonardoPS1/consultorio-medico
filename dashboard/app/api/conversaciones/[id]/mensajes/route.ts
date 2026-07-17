@@ -3,6 +3,7 @@ import { getMensajesByConversacion, createMensaje, getConversacionById } from '@
 import { auth } from '@/lib/auth';
 import { apiHandler, created, notFound, fail } from '@/lib/api-handler';
 import { parseBody, createMensajeSchema } from '@/lib/validations';
+import { emitEvent } from '@/lib/sse-events';
 import { z } from 'zod';
 
 const mensajeCreateSchema = createMensajeSchema
@@ -72,6 +73,12 @@ export const POST = apiHandler(async (request: NextRequest) => {
     twilioStatus: body.twilioStatus,
     n8nExecutionId: body.n8nExecutionId,
     metadata: body.metadata || {},
+  });
+
+  const tenantId = session?.user?.tenantId || '00000000-0000-0000-0000-000000000000';
+  emitEvent(tenantId, {
+    type: 'nuevo-mensaje',
+    data: { conversacionId: id, mensajeId: mensaje!.id, rol: body.rol },
   });
 
   return created(mensaje);

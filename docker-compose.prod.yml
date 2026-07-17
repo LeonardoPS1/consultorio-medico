@@ -141,6 +141,35 @@ services:
           cpus: '0.5'
           memory: 512M
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - target: 6379
+        published: 6379
+        protocol: tcp
+        mode: host
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
   ollama:
     image: ollama/ollama:latest
     ports:
@@ -181,6 +210,8 @@ volumes:
   postgres_data:
     driver: local
   n8n_data:
+    driver: local
+  redis_data:
     driver: local
   ollama_data:
     driver: local

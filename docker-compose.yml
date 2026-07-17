@@ -68,6 +68,20 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
   ollama:
     image: ollama/ollama:latest
     ports:
@@ -86,4 +100,5 @@ services:
 volumes:
   postgres_data:
   n8n_data:
+  redis_data:
   ollama_data:

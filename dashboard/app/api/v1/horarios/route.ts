@@ -1,27 +1,19 @@
-/**
- * GET /api/v1/horarios — Horarios de atención
- *
- * Scope requerido: horarios:read
- * Público: Sí (con API key)
- */
-
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { horariosAtencion } from '@/drizzle/schema';
-import { asc } from 'drizzle-orm';
-import {
-  publicApiHandler,
-  jsonResponse,
-  type AuthenticatedRequest,
-} from '@/lib/public-api-handler';
-import { API_SCOPES } from '@/lib/public-api-auth';
+import { eq, and } from 'drizzle-orm';
 
-export const GET = publicApiHandler(
-  async (_request: AuthenticatedRequest) => {
-    const result = await db.select().from(horariosAtencion).orderBy(asc(horariosAtencion.dia));
+export const dynamic = 'force-dynamic';
 
-    return jsonResponse({ horarios: result });
-  },
-  { scopes: [API_SCOPES.HORARIOS_READ] },
-);
+export async function GET(request: NextRequest) {
+  const medicoId = request.nextUrl.searchParams.get('sucursalId');
+  const filters = [eq(horariosAtencion.activo, true)];
+  if (medicoId) filters.push(eq(horariosAtencion.sucursalId, medicoId));
 
-export { OPTIONS } from '@/lib/public-api-handler';
+  const result = await db
+    .select({ dia: horariosAtencion.dia, horaInicio: horariosAtencion.inicio, horaFin: horariosAtencion.fin })
+    .from(horariosAtencion)
+    .where(and(...filters));
+
+  return NextResponse.json(result);
+}

@@ -17,6 +17,7 @@ import { detectSurveyResponse, storeSurveyResponse } from '@/lib/encuestas';
 import { handleWaitlistResponse } from '@/lib/whatsapp-waitlist';
 import { escapeHtml } from '@/lib/html-utils';
 import { safeLog, safeWarn, safeError } from '@/lib/logger';
+import { captureError } from '@/lib/glitchtip';
 
 /**
  * Forwardea el webhook a n8n para procesamiento con IA.
@@ -551,6 +552,12 @@ export const POST = withRateLimit(
       });
     } catch (error) {
       safeError('[Twilio Webhook] Error:', error);
+      captureError(error, {
+        tags: {
+          webhook: 'twilio',
+          tenantId: request.headers.get('x-tenant-id') || 'unknown',
+        },
+      });
       const isProduction = process.env.NODE_ENV === 'production';
       return NextResponse.json(
         {

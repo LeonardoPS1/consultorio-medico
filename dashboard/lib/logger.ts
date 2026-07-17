@@ -1,80 +1,64 @@
-/**
- * Logger Seguro — Safe logging utility.
- *
- * 🛡️ Previene la fuga accidental de PII (Personally Identifiable Information)
- * en logs del sistema, consola y archivos.
- *
- * Uso:
- *   import { safeLog, safeWarn, safeError } from '@/lib/logger';
- *   safeLog('Usuario creado', { userId: 'abc-123', email: 'test@test.com' });
- *   // → "[SafeLog] Usuario creado" { userId: 'abc-123', email: 'te***@test.com' }
- *
- * Para logs internos sin PII, usar los métodos regulares.
- * Para logs con datos de pacientes, SIEMPRE usar safe*.
- */
-
+import pino from 'pino';
 import { maskPII } from '@/lib/anonymize';
+import { getRequestId, getTenantId, getUserId } from '@/lib/request-context';
 
-type LogLevel = 'log' | 'warn' | 'error';
+const level = (process.env.LOG_LEVEL as pino.Level) ?? 'info';
 
-function safeLogMessage(level: LogLevel, message: string, data?: unknown): void {
+const transport =
+  process.env.NODE_ENV === 'development'
+    ? pino.transport({
+        target: 'pino/file',
+        options: { destination: 1 },
+      })
+    : undefined;
+
+const baseLogger = pino({
+  level,
+  transport,
+  serializers: {
+    error: pino.stdSerializers.err,
+  },
+  redact: {
+    paths: ['password', 'token', 'secret', 'authorization', 'cookie', 'rut', 'email'],
+    censor: '[REDACTED]',
+  },
+});
+
+function childLogger() {
+  return baseLogger.child({
+    requestId: getRequestId(),
+    tenantId: getTenantId(),
+    userId: getUserId(),
+  });
+}
+
+function safeLogMessage(level: 'info' | 'warn' | 'error' | 'debug', message: string, data?: unknown): void {
+  const log = childLogger();
   const sanitized = data !== undefined ? maskPII(data as Record<string, unknown>) : undefined;
-  const prefix = `[Safe${level.charAt(0).toUpperCase() + level.slice(1)}]`;
 
   if (sanitized !== undefined) {
-    switch (level) {
-      case 'log':
-        console.log(prefix, message, sanitized);
-        break;
-      case 'warn':
-        console.warn(prefix, message, sanitized);
-        break;
-      case 'error':
-        console.error(prefix, message, sanitized);
-        break;
-    }
+    log[level]({ data: sanitized }, message);
   } else {
-    switch (level) {
-      case 'log':
-        console.log(prefix, message);
-        break;
-      case 'warn':
-        console.warn(prefix, message);
-        break;
-      case 'error':
-        console.error(prefix, message);
-        break;
-    }
+    log[level](message);
   }
 }
 
-/**
- * Loggea un mensaje informativo con sanitización automática de PII.
- * @param message Mensaje descriptivo
- * @param data Opcional: objeto con datos que serán sanitizados automáticamente
- */
 export function safeLog(message: string, data?: unknown): void {
-  safeLogMessage('log', message, data);
+  safeLogMessage('info', message, data);
 }
 
-/**
- * Loggea una advertencia con sanitización automática de PII.
- */
 export function safeWarn(message: string, data?: unknown): void {
   safeLogMessage('warn', message, data);
 }
 
-/**
- * Loggea un error con sanitización automática de PII.
- */
 export function safeError(message: string, data?: unknown): void {
   safeLogMessage('error', message, data);
 }
 
-/**
- * Alternativa directa a console.log con sanitización.
- * Similar a safeLog pero sin prefijo, para reemplazar console.log existente.
- */
+export function safeDebug(message: string, data?: unknown): void {
+  safeLogMessage('debug', message, data);
+}
+
 export function safeConsoleLog(...args: unknown[]): void {
   const sanitized = args.map((arg) => {
     if (arg !== null && typeof arg === 'object' && !(arg instanceof Error)) {
@@ -82,5 +66,7 @@ export function safeConsoleLog(...args: unknown[]): void {
     }
     return arg;
   });
-  console.log(...sanitized);
+  childLogger().info({ data: sanitized }, 'console');
 }
+
+export const logger = baseLogger;

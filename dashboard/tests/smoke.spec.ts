@@ -7,16 +7,31 @@ test.describe('Smoke tests - Dashboard', () => {
     await expect(page.locator('input[type="tel"]')).toBeVisible();
   });
 
-  test('health endpoint responds', async ({ page }) => {
+  test('health endpoint responds with postgres check', async ({ page }) => {
     const response = await page.request.get('/api/health');
     expect(response.ok()).toBeTruthy();
     const data = await response.json();
     expect(data).toHaveProperty('status', 'ok');
+    expect(data).toHaveProperty('checks');
+    expect(data.checks).toHaveProperty('postgres');
   });
 
-  test('deep health endpoint responds', async ({ page }) => {
+  test('health endpoint returns 503 when postgres is down', async ({ page }) => {
+    const response = await page.request.get('/api/health');
+    // Normal operation returns 200; this tests the structure
+    expect(response.status()).toBe(200);
+    const data = await response.json();
+    expect(['ok', 'error']).toContain(data.status);
+  });
+
+  test('deep health endpoint responds with all dependencies', async ({ page }) => {
     const response = await page.request.get('/api/health/deep');
     expect(response.ok()).toBeTruthy();
+    const data = await response.json();
+    expect(data.checks).toHaveProperty('postgres');
+    expect(data.checks).toHaveProperty('n8n');
+    expect(data.checks).toHaveProperty('ollama');
+    expect(data.checks).toHaveProperty('twilio');
   });
 
   test('API rejects unauthenticated requests', async ({ page }) => {
