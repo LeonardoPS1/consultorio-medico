@@ -30,6 +30,27 @@ import { horariosAtencion } from './operations';
 import { listaEspera } from './waitlist';
 
 // ============================================================
+// Types for JSONB columns
+// ============================================================
+
+export interface ConfigRegional {
+  pais: string;
+  moneda: {
+    codigo: string;
+    simbolo: string;
+    decimales: number;
+    formato: string;
+  };
+  documentoId: {
+    tipo: string;
+    label: string;
+    formato: string;
+  };
+  sistemaSalud: string[];
+  regiones: string;
+}
+
+// ============================================================
 // TENANTS (multi-tenant)
 // ============================================================
 export const tenants = pgTable('tenants', {
@@ -37,9 +58,17 @@ export const tenants = pgTable('tenants', {
   nombre: varchar('nombre', { length: 255 }).notNull(),
   subdomain: varchar('subdomain', { length: 100 }).unique().notNull(),
   logoUrl: text('logo_url').default('/aicoremed_dark_1200.svg'),
-  colores: jsonb('colores').default({ primary: '#2563eb' }),
+  dominioCustom: varchar('dominio_custom', { length: 255 }),
+  colores: jsonb('colores').default({ primary: '#2563eb', secondary: '#059669' }),
   activo: boolean('activo').notNull().default(true),
   featuresEnabled: jsonb('features_enabled').default({} as Record<string, boolean>),
+  configRegional: jsonb('config_regional').default({
+    pais: 'CL',
+    moneda: { codigo: 'CLP', simbolo: '$', decimales: 0, formato: 'CLP' },
+    documentoId: { tipo: 'RUT', label: 'RUT', formato: 'XX.XXX.XXX-X' },
+    sistemaSalud: ['Fonasa', 'Isapre'],
+    regiones: 'cl',
+  } satisfies ConfigRegional),
   configPrivacidad: jsonb('config_privacidad').default({
     periodoRetencionBajaDias: 90,
   } satisfies ConfigPrivacidad),

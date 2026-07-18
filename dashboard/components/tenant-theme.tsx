@@ -1,45 +1,49 @@
 'use client';
 
 import { useEffect } from 'react';
-import { hexToHsl } from '@/lib/tenant-config';
+import { useTheme } from 'next-themes';
 
 /**
- * Inyecta las variables CSS del tenant (color primario, etc.)
- * basadas en variables de entorno NEXT_PUBLIC_*.
- *
- * En Phase 1: se leen de env vars (build-time).
- * En Phase 2+: se leerán de la tabla tenants en DB.
+ * Client-side theme manager.
+ * Works alongside TenantProvider (server-side CSS injection).
+ * Handles dark mode CSS var overrides when next-themes toggles .dark class.
  */
 export function TenantTheme() {
+  const { theme, resolvedTheme } = useTheme();
+
   useEffect(() => {
     const root = document.documentElement;
+    const style = document.getElementById('tenant-theme-vars');
+    if (!style) return;
 
-    // Color primario desde env
-    const primaryHex = process.env.NEXT_PUBLIC_TENANT_PRIMARY || '#2563eb';
-    const primaryHsl = hexToHsl(primaryHex);
+    // Read current tenant CSS vars from the style tag content
+    const content = style.textContent || '';
+    const primaryMatch = content.match(/--tenant-primary-hsl:\s*([^;]+)/);
+    const secondaryMatch = content.match(/--tenant-secondary-hsl:\s*([^;]+)/);
 
-    // Recalcular tonos derivados automáticamente
-    // Extraer H (hue) para generar variantes armónicas
+    if (!primaryMatch) return;
+
+    const primaryHsl = primaryMatch[1].trim();
+    const secondaryHsl = secondaryMatch ? secondaryMatch[1].trim() : null;
     const hue = parseInt(primaryHsl.split(' ')[0]);
 
-    // --primary: el color base
-    root.style.setProperty('--primary', primaryHsl);
+    const isDark = resolvedTheme === 'dark' || root.classList.contains('dark');
 
-    // --ring: mismo tono, saturación similar, brillo ajustado
-    root.style.setProperty('--ring', `${hue} 83% 53%`);
-
-    // Derivated tones for dark mode (we'll keep defaults mostly)
-    // but set --primary for dark mode based on the hue
-    if (document.querySelector('.dark')) {
-      root.style.setProperty('--primary', `${hue} 91% 60%`);
+    if (isDark) {
+      // Override for dark mode: use same hue but adjusted lightness/saturation
+      root.style.setProperty('--primary', `${hue} 72% 50%`);
+      if (secondaryHsl) {
+        const secHue = parseInt(secondaryHsl.split(' ')[0]);
+        root.style.setProperty('--secondary', `${secHue} 65% 45%`);
+      }
     }
-
     // Theme-color meta tag
     const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (metaTheme) {
+      const primaryHex = content.match(/--tenant-primary:\s*([^;]+)/)?.[1]?.trim() || '#2563eb';
       metaTheme.setAttribute('content', primaryHex);
     }
-  }, []);
+  }, [resolvedTheme]);
 
   return null;
 }

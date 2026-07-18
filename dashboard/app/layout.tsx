@@ -5,6 +5,7 @@ import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/toaster';
 import { PWARegister } from '@/components/pwa-register';
 import { TenantTheme } from '@/components/tenant-theme';
+import { TenantProvider } from '@/components/tenant-provider';
 import { ScrollToTopButton } from '@/components/ui/scroll-to-top';
 import { WebVitals } from '@/components/web-vitals';
 import { validateN8nConfig } from '@/lib/n8n-sync';
@@ -78,6 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="preconnect" href="https://med.aicorebots.com" />
         <link rel="dns-prefetch" href="https://api.mercadopago.com" />
+        <TenantProvider />
       </head>
       <body className={inter.className}>
         <a
