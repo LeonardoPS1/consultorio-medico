@@ -38,15 +38,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image (simple test)
+      - name: Build and push dashboard image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./dashboard/Dockerfile
-          push: false
-          tags: ghcr.io/${{ github.repository }}:test
-          load: true
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
           platforms: linux/amd64
+
+      - name: Trigger Dokploy deploy (dashboard) via Dashboard proxy
+        run: |
+          curl -s -k -X POST 'https://med.aicorebots.com/api/deploy/dokploy' \
+            -H 'accept: application/json' \
+            -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{"applicationId":"${{ secrets.DOKPLOY_APP_ID }}"}'
 
   docs-build-and-push:
     runs-on: ubuntu-latest
