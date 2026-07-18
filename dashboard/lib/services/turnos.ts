@@ -297,7 +297,7 @@ export const turnosService = {
       }
 
       // Si es turno virtual, generar sala LiveKit (fire-and-forget)
-      if (input.tipoConsulta === 'virtual') {
+      if (input.tipoConsulta === 'telemedicina') {
         telemedicinaService.configurarSala(nuevo.id, fechaHora).catch((err) => {
           safeError(
             '[LiveKit] Error configurando sala virtual:',

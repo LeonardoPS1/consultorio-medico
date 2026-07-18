@@ -18,7 +18,7 @@ export interface TurnoVirtual {
   paciente: string;
   pacienteId: string;
   tipo: string;
-  tipoConsulta: 'virtual' | 'presencial' | 'telefonica';
+  tipoConsulta: 'telemedicina' | 'consulta' | 'control' | 'urgencia' | 'procedimiento' | 'otro';
   medico: string;
   medicoId: string;
   estado: string;
@@ -37,7 +37,7 @@ async function getVirtualTurnos(): Promise<TurnoVirtual[]> {
       undefined, // fecha
       undefined, // estado
       undefined, // medico
-      'virtual', // tipo
+      'telemedicina', // tipo
       undefined, // search
       200,
       0,
@@ -55,7 +55,7 @@ async function getVirtualTurnos(): Promise<TurnoVirtual[]> {
         paciente: String(t.paciente ?? ''),
         pacienteId: String(t.pacienteId ?? ''),
         tipo: String(t.tipo ?? ''),
-        tipoConsulta: 'virtual' as const,
+        tipoConsulta: 'telemedicina' as const,
         medico: String(t.medico ?? ''),
         medicoId: String(t.medicoId ?? ''),
         estado: String(t.estado ?? ''),

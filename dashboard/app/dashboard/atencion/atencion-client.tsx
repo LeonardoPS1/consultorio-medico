@@ -132,7 +132,7 @@ function TurnoCard({
   const color = getTurnoColor(turno.estado);
   const isPending = turno.estado === 'pendiente' || turno.estado === 'confirmada';
   const isInAttention = turno.estado === 'en_atencion';
-  const isVirtual = turno.tipoConsulta === 'virtual';
+  const isVirtual = turno.tipoConsulta === 'telemedicina';
 
   const style = useMemo(
     () => ({
@@ -209,7 +209,7 @@ function TurnoCard({
 
         <p className="text-xs text-muted-foreground truncate mb-2">
           {turno.tipo} &middot; {turno.medico}
-          {turno.tipoConsulta === 'virtual' && (
+          {turno.tipoConsulta === 'telemedicina' && (
             <span className="inline-flex items-center gap-0.5 ml-1.5 text-[10px] font-medium text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30 px-1.5 py-0.5 rounded-full align-middle">
               <Video className="h-2.5 w-2.5" />
               Virtual
@@ -318,7 +318,7 @@ function TurnoCard({
 
 function DragPreview({ turno }: { turno: Turno }) {
   const color = getTurnoColor(turno.estado);
-  const isVirtual = turno.tipoConsulta === 'virtual';
+  const isVirtual = turno.tipoConsulta === 'telemedicina';
 
   return (
     <div

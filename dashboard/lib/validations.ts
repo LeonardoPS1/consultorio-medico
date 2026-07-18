@@ -91,7 +91,7 @@ export const createTurnoSchema = z.object({
     .string()
     .min(1, 'Hora es obligatoria')
     .regex(/^\d{2}:\d{2}$/, 'Formato: HH:MM'),
-  tipoConsulta: z.enum(['presencial', 'virtual', 'telefonica']).optional().default('presencial'),
+  tipoConsulta: z.enum(['presencial', 'telemedicina', 'telefonica']).optional().default('presencial'),
   motivo: z.string().optional().nullable(),
   duracionMinutos: z.number().min(10).max(120).optional().default(30),
   sucursalId: z.string().uuid().optional().nullable(),

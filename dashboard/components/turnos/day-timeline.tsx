@@ -94,7 +94,7 @@ function isEnHorario(minutos: number, blocks: { inicio: number; fin: number }[])
 /** Get tipoConsulta icon */
 function TipoIcon({ tipo }: { tipo: string | null }) {
   switch (tipo) {
-    case 'virtual':
+    case 'telemedicina':
       return <Video className="h-3 w-3" />;
     case 'telefonica':
       return <Phone className="h-3 w-3" />;

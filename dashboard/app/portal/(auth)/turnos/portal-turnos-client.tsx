@@ -176,7 +176,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
 
                   <div className="flex flex-col gap-1 items-end shrink-0 ml-3">
                     {!cancelados.has(t.id) &&
-                      t.tipoConsulta === 'virtual' &&
+                      t.tipoConsulta === 'telemedicina' &&
                       t.linkVideollamada && (
                         <a
                           href={t.linkVideollamada}

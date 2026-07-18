@@ -38,7 +38,7 @@ export function TelemedicinaClient({ initialTurnos }: TelemedicinaClientProps) {
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      params.set('tipo', 'virtual');
+      params.set('tipo', 'telemedicina');
       params.set('limit', '200');
 
       if (filtroMedico) params.set('medico', filtroMedico);
