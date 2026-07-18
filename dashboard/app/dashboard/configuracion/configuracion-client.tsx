@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import { Bot, CreditCard, Sparkles } from 'lucide-react';
+import { Bot, CreditCard, Globe, Sparkles } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +43,7 @@ import { ConfigHorarios } from '@/components/config/config-horarios';
 import { ConfigPlantillas } from '@/components/config/config-plantillas';
 import { ConfigNotificaciones } from '@/components/config/config-notificaciones';
 import { ConfigEquipo } from '@/components/config/config-equipo';
+import { ConfigRegional } from '@/components/config/config-regional';
 
 // ============================================================
 // Tipos
@@ -203,6 +204,10 @@ function ConfigContent() {
             </svg>
             <span className="hidden sm:inline">Perfil</span>
           </TabsTrigger>
+          <TabsTrigger value="regional" className="px-2 sm:px-3 shrink-0">
+            <Globe className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Regional</span>
+          </TabsTrigger>
           <TabsTrigger value="suscripcion" className="px-2 sm:px-3 shrink-0">
             <CreditCard className="h-4 w-4 sm:mr-1" />
             <span className="hidden sm:inline">Suscripción</span>
@@ -255,6 +260,11 @@ function ConfigContent() {
               </Button>
             </CardHeader>
           </Card>
+        </TabsContent>
+
+        {/* ======== REGIONALIZACIÓN ======== */}
+        <TabsContent value="regional" className="mt-4">
+          <ConfigRegional />
         </TabsContent>
 
         {/* ======== SUSCRIPCIÓN ======== */}
