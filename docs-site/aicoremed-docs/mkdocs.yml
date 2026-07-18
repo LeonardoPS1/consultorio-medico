@@ -1,0 +1,98 @@
+site_name: AicoreMed — Documentación Técnica
+site_description: Documentación técnica completa de AicoreMed (Aicore Agency)
+site_url: https://docs.aicorebots.com
+
+theme:
+  name: material
+  language: es
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      toggle:
+        icon: material/weather-night
+        name: Cambiar a modo oscuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Cambiar a modo claro
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+extra_css:
+  - stylesheets/aicoremed.css
+
+repo_url: https://github.com/LeonardoPS1/consultorio-medico
+repo_name: consultorio-medico
+edit_uri: edit/main/docs/
+
+nav:
+  - Inicio: index.md
+  - Stack Tecnológico:
+      - Overview: stack/overview.md
+  - Guías de Referencia:
+      - Instalación: existente/instalacion.md
+      - Arquitectura: existente/arquitectura.md
+      - Base de Datos: existente/base-de-datos.md
+      - Seguridad: existente/seguridad.md
+      - Workflows n8n: existente/workflows-n8n.md
+  - Módulos de Producto:
+      - Turnos y Agenda: modulos/turnos.md
+      - Pacientes: modulos/pacientes.md
+      - Conversaciones: modulos/conversaciones.md
+      - Recetas: modulos/recetas.md
+      - Telemedicina: modulos/telemedicina.md
+      - Portal de Pacientes: modulos/portal-pacientes.md
+  - API Reference:
+      - v1: api/reference.md
+  - Decisiones de Arquitectura (ADRs):
+      - "ADR-0001 — AI Agents vs HTTP a Ollama": decisiones/0001-ai-agents-vs-http-ollama.md
+      - "ADR-0002 — Pre-carga de datos vs toolCode": decisiones/0002-precarga-datos-vs-toolcode.md
+      - "ADR-0003 — Almacenamiento dual Postgres+JSON": decisiones/0003-almacenamiento-dual.md
+      - "ADR-0004 — Feature gating single source of truth": decisiones/0004-feature-gating-single-source-of-truth.md
+      - "ADR-0005 — Token de recuperación en tabla usuarios": decisiones/0005-token-recuperacion-en-tabla-usuarios.md
+      - Plantilla para nuevos ADRs: decisiones/plantilla.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search:
+      lang: es
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/LeonardoPS1/consultorio-medico

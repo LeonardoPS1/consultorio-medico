@@ -1,0 +1,31 @@
+# Agrega este servicio a tu docker-compose.prod.yml existente
+# (o inclúyelo con `docker stack deploy -c docker-compose.prod.yml -c docker-compose.docs.yml aicoremed`)
+#
+# Ajusta `networks` y las labels de Traefik al nombre real de tu red/proveedor de
+# certificados — usa como referencia las labels que ya tengas en el servicio del dashboard.
+
+services:
+  docs:
+    build:
+      context: ./docs-site        # carpeta donde vive este scaffold dentro del repo
+      dockerfile: Dockerfile
+    image: aicoremed-docs:latest
+    networks:
+      - traefik-public            # <- reemplaza por el nombre real de tu red externa
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.aicoremed-docs.rule=Host(`docs.aicorebots.com`)"
+        - "traefik.http.routers.aicoremed-docs.entrypoints=websecure"
+        - "traefik.http.routers.aicoremed-docs.tls.certresolver=letsencrypt"  # <- ajusta al resolver que ya uses
+        - "traefik.http.services.aicoremed-docs.loadbalancer.server.port=80"
+      resources:
+        limits:
+          memory: 64M              # nginx sirviendo estáticos, consumo mínimo
+      restart_policy:
+        condition: on-failure
+
+networks:
+  traefik-public:
+    external: true

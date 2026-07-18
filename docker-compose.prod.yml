@@ -170,6 +170,47 @@ services:
           cpus: '0.25'
           memory: 128M
 
+  docs:
+    build:
+      context: ./docs-site/aicoremed-docs
+      dockerfile: Dockerfile
+    image: ghcr.io/leonardops1/consultorio-medico-docs:latest
+    ports:
+      - target: 80
+        published: 8080
+        protocol: tcp
+        mode: host
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost/']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      mode: replicated
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+        monitor: 60s
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+        reservations:
+          cpus: '0.1'
+          memory: 32M
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.role == worker
+
   ollama:
     image: ollama/ollama:latest
     ports:
