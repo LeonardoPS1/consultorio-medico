@@ -144,17 +144,56 @@ function TurnoCard({
     [transform, isDragging, color, isInAttention],
   );
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      // Left/Right: move between columns (prev/next status)
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        e.stopPropagation();
+        const columnOrder: Record<string, string> = {
+          pendiente: 'en_atencion',
+          en_atencion: 'atendido',
+          atendido: 'cancelada',
+          cancelada: 'no_asistio',
+        };
+        const prevOrder: Record<string, string> = {
+          en_atencion: 'pendiente',
+          atendido: 'en_atencion',
+          cancelada: 'atendido',
+          no_asistio: 'cancelada',
+        };
+        if (e.key === 'ArrowRight' && isPending) {
+          onAtender(turno.id);
+        } else if (e.key === 'ArrowLeft' && isInAttention) {
+          onCancelar(turno.id);
+        }
+      }
+      // Enter: atender si está pendiente, finalizar si en_atencion
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (isPending) onAtender(turno.id);
+        else if (isInAttention) onFinalizar(turno.id);
+      }
+    },
+    [turno.id, isPending, isInAttention, onAtender, onFinalizar, onCancelar],
+  );
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
+      tabIndex={0}
+      role="button"
+      aria-label={`Turno de ${turno.paciente} a las ${turno.hora} - ${getTurnoLabel(turno.estado)}`}
+      onKeyDown={handleKeyDown}
       className={`group relative rounded-xl border bg-card p-3 transition-[box-shadow] duration-200
         hoverable:hover:shadow-card-hover hoverable:hover:-translate-y-0.5
         ${isInAttention ? 'ring-2 shadow-lg scale-[1.02]' : ''}
         cursor-grab active:cursor-grabbing active:shadow-xl active:scale-[0.97]
-        touch-none select-none
+        touch-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
       `}
     >
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
