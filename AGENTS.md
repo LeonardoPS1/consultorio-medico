@@ -633,6 +633,7 @@ consultorio-medico/
 | **Command palette fuse.js offline** | use-command-search.ts con fuse.js (500 pacientes offline) + parallel API search. Commit `ffa8897` | 18/07 |
 | **Accesibilidad + Chromatic CI** | @axe-core/playwright tests, Kanban keyboard nav (ArrowLeft/Right/Enter), Chromatic workflow en CI. Commit `eea58ce` | 18/07 |
 | **Docs MkDocs site** | 6 módulos documentados (turnos, pacientes, recetas, conversaciones, telemedicina, portal-pacientes) + docker-compose.prod.yml + GitHub Actions CI/CD. Commit `ae2ad88` | 18/07 |
+| **Pipeline GHA→ghcr.io→Dokploy** | Proxy endpoint POST /api/deploy/dokploy, sourceType docker apps, registry ghcr.io con PAT, GHA deploy trigger via dashboard proxy. Commit `fb11710` | 18/07 |
 
 ### 🟡 Prioridad Media
 
@@ -692,7 +693,9 @@ consultorio-medico/
 ### Despliegue
 - **Dashboard**: GitHub Actions build → ghcr.io → Dokploy (Docker sourceType). CI/CD en `.github/workflows/deploy.yml`.
 - **Build**: Docker build multistage con `ARG CACHEBUST` (GitHub Actions). Push a `ghcr.io/leonardops1/consultorio-medico:latest`.
-- **Deploy**: Dokploy con sourceType `docker`, imagen `ghcr.io/leonardops1/consultorio-medico:latest`. Se triggera via webhook desde GitHub Actions.
+- **Deploy**: GHA → POST a `med.aicorebots.com/api/deploy/dokploy` (proxy) → interno `http://dokploy:3000/api/application.deploy`. Evita Cloudflare.
+- **Registro ghcr.io**: Creado en Dokploy con `read:packages` PAT, vinculado a dashboard y docs.
+- **Docs**: Misma pipeline, imagen `ghcr.io/leonardops1/consultorio-medico-docs:latest`.
 - **⚠️ Bug conocido**: Dokploy build nativo (sourceType git) **no funciona** — la build completa pero `docker service update` no se ejecuta. Swarm service queda corriendo imagen vieja. Usar GitHub Actions + ghcr.io obligatorio.
 - **Backup**: Script `backup-docker.sh` corre diariamente a las 3AM vía n8n WF-07
 - **Workflows n8n**: Se deployan via `scripts/deploy-workflows.js --activate`
