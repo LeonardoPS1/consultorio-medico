@@ -2,7 +2,7 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 12/07/2026
+**Última actualización:** 18/07/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
@@ -625,6 +625,14 @@ consultorio-medico/
 | **Docker optimizaciones** | BuildKit cache mounts, .dockerignore expandido, standalone-fix removido, pnpm 9→11.13.0, outputFileTracingRoot. Commit `03ffe26`, `7c89879`, `80eb720` | 14/07 |
 | **Fix deploy Dokploy (bug crítico)** | Dokploy build nativo no actualiza Swarm service. Solución: GitHub Actions → ghcr.io → Dokploy Docker sourceType. Workflow en `.github/workflows/deploy.yml`. Commit `e4139bb` | 14/07 |
 | **HEALTHCHECK curl** | Agregado `curl` apk add en Dockerfile para HEALTHCHECK funcionando. Commit `80eb720` | 14/07 |
+| **Fix pnpm deploy (allowBuilds)** | allowBuilds movido a pnpm-workspace.yaml (evita error `ERR_PNPM_UNSUPPORTED_PROTOCOL` en Dokploy). Commit `7b7fa80` | 18/07 |
+| **Enum virtual→telemedicina** | Normalizado en 7 archivos (drizzle/tenant.ts, services, seed, atencion-client, routes, componentes). Commit `ac66555` | 18/07 |
+| **White-labeling** | Schema (dominioCustom, colorSecundario, configRegional), migration 0045, TenantProvider con CSS vars desde DB. API mergea branding. Commit `b717097` | 18/07 |
+| **Internacionalización** | regions-data.ts (CL/AR), region-config.ts (formatMoneda, getRegionConfig), API GET/POST /api/tenant/regional-config. Commit `5ed2368` | 18/07 |
+| **Regional config UI** | ConfigRegional component (country selector, preview warning), tab en configuracion-client.tsx. Commit `760fd3f` | 18/07 |
+| **Command palette fuse.js offline** | use-command-search.ts con fuse.js (500 pacientes offline) + parallel API search. Commit `ffa8897` | 18/07 |
+| **Accesibilidad + Chromatic CI** | @axe-core/playwright tests, Kanban keyboard nav (ArrowLeft/Right/Enter), Chromatic workflow en CI. Commit `eea58ce` | 18/07 |
+| **Docs MkDocs site** | 6 módulos documentados (turnos, pacientes, recetas, conversaciones, telemedicina, portal-pacientes) + docker-compose.prod.yml + GitHub Actions CI/CD. Commit `ae2ad88` | 18/07 |
 
 ### 🟡 Prioridad Media
 
