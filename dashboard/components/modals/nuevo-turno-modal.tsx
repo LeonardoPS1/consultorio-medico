@@ -387,7 +387,7 @@ export function NuevoTurnoModal({
                       <MapPin className="h-3.5 w-3.5" /> Presencial
                     </span>
                   </SelectItem>
-                  <SelectItem value="virtual">
+                  <SelectItem value="telemedicina">
                     <span className="flex items-center gap-2">
                       <Video className="h-3.5 w-3.5" /> Virtual
                     </span>
