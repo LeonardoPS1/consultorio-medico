@@ -26,6 +26,9 @@ jobs:
           echo "=== Build Context ==="
           ls -laR
 
+      - name: Set lowercase repository name
+        run: echo "REPOSITORY_LC=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -43,8 +46,8 @@ jobs:
           file: ./dashboard/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ lower(github.repository) }}:latest
-            ghcr.io/${{ lower(github.repository) }}:${{ github.sha }}
+            ghcr.io/${{ env.REPOSITORY_LC }}:latest
+            ghcr.io/${{ env.REPOSITORY_LC }}:${{ github.sha }}
           platforms: linux/amd64
 
       - name: Trigger Dokploy deploy (dashboard) via Dashboard proxy
@@ -72,6 +75,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set lowercase repository name
+        run: echo "REPOSITORY_LC=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
       - name: Build and push docs image
         uses: docker/build-push-action@v5
         with:
@@ -79,8 +85,8 @@ jobs:
           file: ./docs-site/aicoremed-docs/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ lower(github.repository) }}-docs:latest
-            ghcr.io/${{ lower(github.repository) }}-docs:${{ github.sha }}
+            ghcr.io/${{ env.REPOSITORY_LC }}-docs:latest
+            ghcr.io/${{ env.REPOSITORY_LC }}-docs:${{ github.sha }}
 
       - name: Trigger Dokploy deploy (docs) via Dashboard proxy
         run: |
