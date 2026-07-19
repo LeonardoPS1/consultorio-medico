@@ -18,6 +18,9 @@ import {
   ExternalLink,
   RefreshCw,
   Receipt,
+  AlertTriangle,
+  Syringe,
+  Plus,
 } from 'lucide-react';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalBadge } from '@/components/portal/portal-badge';
@@ -42,9 +45,12 @@ interface Props {
 }
 
 const TIPO_ICONS: Record<string, React.ReactNode> = {
-  presencial: <MapPin className="h-4 w-4" />,
-  virtual: <Video className="h-4 w-4" />,
-  telefonica: <Phone className="h-4 w-4" />,
+  consulta: <MapPin className="h-4 w-4" />,
+  telemedicina: <Video className="h-4 w-4" />,
+  control: <RefreshCw className="h-4 w-4" />,
+  urgencia: <AlertTriangle className="h-4 w-4" />,
+  procedimiento: <Syringe className="h-4 w-4" />,
+  otro: <Plus className="h-4 w-4" />,
 };
 
 function formatDate(date: string): string {

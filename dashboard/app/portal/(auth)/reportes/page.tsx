@@ -53,9 +53,12 @@ function formatDateCL(dateStr: string): string {
 }
 
 const tipoLabels: Record<string, string> = {
-  presencial: 'Presencial',
-  videollamada: 'Videollamada',
-  domicilio: 'Domicilio',
+  consulta: 'Presencial',
+  telemedicina: 'Telemedicina',
+  control: 'Control',
+  urgencia: 'Urgencia',
+  procedimiento: 'Procedimiento',
+  otro: 'Otro',
 };
 
 /* ─── Mini Bar Chart ───────────────────────────────────── */

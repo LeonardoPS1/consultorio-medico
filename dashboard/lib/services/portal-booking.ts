@@ -338,7 +338,7 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
     fechaHora,
     duracionMinutos: servicio.duracionMinutos || 30,
     estado: 'pendiente',
-    tipoConsulta: 'presencial',
+    tipoConsulta: 'consulta',
     motivo: input.motivo || null,
     fuente: 'portal',
   };

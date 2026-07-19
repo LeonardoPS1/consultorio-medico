@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Search, Plus, User, Video, Phone, MapPin } from 'lucide-react';
+import { Loader2, Search, Plus, User, Video, Phone, MapPin, RefreshCw, AlertTriangle, Syringe } from 'lucide-react';
 
 interface MedicoOption {
   id: string;
@@ -53,7 +53,7 @@ export function NuevoTurnoModal({
 }: NuevoTurnoModalProps) {
   const [paciente, setPaciente] = useState(pacienteName || '');
   const [tipo, setTipo] = useState('Consulta');
-  const [tipoConsulta, setTipoConsulta] = useState('presencial');
+  const [tipoConsulta, setTipoConsulta] = useState('consulta');
   const [medicoId, setMedicoId] = useState('');
   const [medicoNombre, setMedicoNombre] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
@@ -255,7 +255,7 @@ export function NuevoTurnoModal({
         setPacienteSearch('');
       }
       setTipo('Consulta');
-      setTipoConsulta('presencial');
+      setTipoConsulta('consulta');
       setHora('09:00');
     }, 300);
   };
@@ -382,19 +382,34 @@ export function NuevoTurnoModal({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="presencial">
+                  <SelectItem value="consulta">
                     <span className="flex items-center gap-2">
                       <MapPin className="h-3.5 w-3.5" /> Presencial
                     </span>
                   </SelectItem>
                   <SelectItem value="telemedicina">
                     <span className="flex items-center gap-2">
-                      <Video className="h-3.5 w-3.5" /> Virtual
+                      <Video className="h-3.5 w-3.5" /> Telemedicina
                     </span>
                   </SelectItem>
-                  <SelectItem value="telefonica">
+                  <SelectItem value="control">
                     <span className="flex items-center gap-2">
-                      <Phone className="h-3.5 w-3.5" /> Telefónica
+                      <RefreshCw className="h-3.5 w-3.5" /> Control
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="urgencia">
+                    <span className="flex items-center gap-2">
+                      <AlertTriangle className="h-3.5 w-3.5" /> Urgencia
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="procedimiento">
+                    <span className="flex items-center gap-2">
+                      <Syringe className="h-3.5 w-3.5" /> Procedimiento
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="otro">
+                    <span className="flex items-center gap-2">
+                      <Plus className="h-3.5 w-3.5" /> Otro
                     </span>
                   </SelectItem>
                 </SelectContent>

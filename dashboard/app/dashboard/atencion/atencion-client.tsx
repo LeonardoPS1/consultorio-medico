@@ -35,6 +35,9 @@ import {
   Video,
   Phone,
   MapPin,
+  RefreshCw,
+  AlertTriangle,
+  Syringe,
 } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
@@ -254,16 +257,28 @@ function TurnoCard({
               Virtual
             </span>
           )}
-          {turno.tipoConsulta === 'telefonica' && (
-            <span className="inline-flex items-center gap-0.5 ml-1.5 text-[10px] font-medium text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-900/30 px-1.5 py-0.5 rounded-full align-middle">
-              <Phone className="h-2.5 w-2.5" />
-              Telefónica
-            </span>
-          )}
-          {turno.tipoConsulta === 'presencial' && (
+          {turno.tipoConsulta === 'consulta' && (
             <span className="inline-flex items-center gap-0.5 ml-1.5 text-[10px] font-medium text-emerald-600 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-full align-middle">
               <MapPin className="h-2.5 w-2.5" />
               Presencial
+            </span>
+          )}
+          {turno.tipoConsulta === 'control' && (
+            <span className="inline-flex items-center gap-0.5 ml-1.5 text-[10px] font-medium text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full align-middle">
+              <RefreshCw className="h-2.5 w-2.5" />
+              Control
+            </span>
+          )}
+          {turno.tipoConsulta === 'urgencia' && (
+            <span className="inline-flex items-center gap-0.5 ml-1.5 text-[10px] font-medium text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30 px-1.5 py-0.5 rounded-full align-middle">
+              <AlertTriangle className="h-2.5 w-2.5" />
+              Urgencia
+            </span>
+          )}
+          {turno.tipoConsulta === 'procedimiento' && (
+            <span className="inline-flex items-center gap-0.5 ml-1.5 text-[10px] font-medium text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-900/30 px-1.5 py-0.5 rounded-full align-middle">
+              <Syringe className="h-2.5 w-2.5" />
+              Procedimiento
             </span>
           )}
         </p>

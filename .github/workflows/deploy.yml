@@ -18,6 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Debug - Environment Info
+        shell: bash
         run: |
           echo "=== Environment ==="
           env | grep -E '^(GITHUB|DOCKER|RUNNER)' || true

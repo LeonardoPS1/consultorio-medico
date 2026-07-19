@@ -3,7 +3,7 @@
 import { useMemo, useRef, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
-import { Video, Phone, MapPin, Clock, AlertTriangle } from 'lucide-react';
+import { Video, Phone, MapPin, Clock, AlertTriangle, RefreshCw, Syringe, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ============================================================
@@ -96,8 +96,14 @@ function TipoIcon({ tipo }: { tipo: string | null }) {
   switch (tipo) {
     case 'telemedicina':
       return <Video className="h-3 w-3" />;
-    case 'telefonica':
-      return <Phone className="h-3 w-3" />;
+    case 'control':
+      return <RefreshCw className="h-3 w-3" />;
+    case 'urgencia':
+      return <AlertTriangle className="h-3 w-3" />;
+    case 'procedimiento':
+      return <Syringe className="h-3 w-3" />;
+    case 'otro':
+      return <Plus className="h-3 w-3" />;
     default:
       return <MapPin className="h-3 w-3" />;
   }
