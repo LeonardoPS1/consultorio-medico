@@ -33,7 +33,8 @@ export function apiHandler(fn: (...args: any[]) => Promise<NextResponse> | NextR
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error interno del servidor';
       const status = error instanceof HttpError ? error.status : 500;
-      safeError(`[API] ${request.method} ${request.nextUrl.pathname}:`, { error: message });
+      console.error(`[API ERROR] ${request.method} ${request.nextUrl.pathname}:`, error);
+      safeError(`[API] ${request.method} ${request.nextUrl.pathname}:`, { error: message, stack: error instanceof Error ? error.stack : undefined });
       captureError(error, {
         tags: { ruta: request.nextUrl.pathname, method: request.method, tenantId },
         level: status >= 500 ? 'error' : 'warning',
