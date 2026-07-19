@@ -44,8 +44,8 @@ export const turnosService = {
         const whereConditions = and(
           ...fechaConditions,
           sql`${turnos.deletedAt} IS NULL`,
-          estado ? eq(turnos.estado, sql`${estado}::turno_estado`) : undefined,
-          tipo ? eq(turnos.tipoConsulta, sql`${tipo}::turno_tipo`) : undefined,
+          estado ? eq(turnos.estado, estado) : undefined,
+          tipo ? eq(turnos.tipoConsulta, tipo) : undefined,
           medico
             ? sql`EXISTS (SELECT 1 FROM ${medicos} WHERE ${medicos.id} = ${turnos.medicoId} AND ${medicos.nombre} ILIKE ${'%' + medico + '%'})`
             : undefined,
