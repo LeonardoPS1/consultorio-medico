@@ -223,8 +223,8 @@ importers:
         specifier: 8.6.18
         version: 8.6.18(@types/react@19.2.17)(storybook@8.6.18(prettier@3.9.5))
       '@storybook/addon-webpack5-compiler-swc':
-        specifier: 1.0.5
-        version: 1.0.5(@swc/helpers@0.5.21)(webpack@5.108.4(@swc/core@1.15.43(@swc/helpers@0.5.21))(esbuild@0.19.12)(lightningcss@1.32.0)(postcss@8.5.14))
+        specifier: 4.0.3
+        version: 4.0.3(@swc/helpers@0.5.21)(storybook@8.6.18(prettier@3.9.5))(webpack@5.108.4(@swc/core@1.15.43(@swc/helpers@0.5.21))(esbuild@0.19.12)(lightningcss@1.32.0)(postcss@8.5.14))
       '@storybook/builder-vite':
         specifier: 8.6.18
         version: 8.6.18(storybook@8.6.18(prettier@3.9.5))(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
@@ -3274,9 +3274,11 @@ packages:
     peerDependencies:
       storybook: ^8.6.18
 
-  '@storybook/addon-webpack5-compiler-swc@1.0.5':
-    resolution: {integrity: sha512-1NlM3noit2vA22OyWb8Ma2lhcEKCS1Snv2kr+EkaVABUqNDfVc9AD/GgYQhF7F/2CoF5N2JU7uzXDzFHd5TzZg==}
+  '@storybook/addon-webpack5-compiler-swc@4.0.3':
+    resolution: {integrity: sha512-REJZBArIBcqzxmhQY9R1br9hjfcFYdl4FeWD/okx1eRwPZkl49aUhTYqZPrA+MWXfKJkuuNQ5vnfSoR0c9HyvA==}
     engines: {node: '>=18'}
+    peerDependencies:
+      storybook: ^9.0.0 || ^10.0.0-0 || ^10.1.0-0 || ^10.2.0-0 || ^10.3.0-0 || ^10.4.0-0
 
   '@storybook/blocks@8.6.18':
     resolution: {integrity: sha512-esZv4msPQ9LxgTb8YUIZhhxVMuI6BPi5bkXtk8c7w7sWuAsqsCe/RnVInn7ooUry2gjnD4hd9+8Eqj0b8oTVoA==}
@@ -11117,9 +11119,10 @@ snapshots:
       memoizerific: 1.11.3
       storybook: 8.6.18(prettier@3.9.5)
 
-  '@storybook/addon-webpack5-compiler-swc@1.0.5(@swc/helpers@0.5.21)(webpack@5.108.4(@swc/core@1.15.43(@swc/helpers@0.5.21))(esbuild@0.19.12)(lightningcss@1.32.0)(postcss@8.5.14))':
+  '@storybook/addon-webpack5-compiler-swc@4.0.3(@swc/helpers@0.5.21)(storybook@8.6.18(prettier@3.9.5))(webpack@5.108.4(@swc/core@1.15.43(@swc/helpers@0.5.21))(esbuild@0.19.12)(lightningcss@1.32.0)(postcss@8.5.14))':
     dependencies:
       '@swc/core': 1.15.43(@swc/helpers@0.5.21)
+      storybook: 8.6.18(prettier@3.9.5)
       swc-loader: 0.2.7(@swc/core@1.15.43(@swc/helpers@0.5.21))(webpack@5.108.4(@swc/core@1.15.43(@swc/helpers@0.5.21))(esbuild@0.19.12)(lightningcss@1.32.0)(postcss@8.5.14))
     transitivePeerDependencies:
       - '@swc/helpers'
