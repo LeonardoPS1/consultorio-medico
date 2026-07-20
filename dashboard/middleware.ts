@@ -111,9 +111,21 @@ export function middleware(request: NextRequest) {
   response.headers.set('x-request-id', requestId);
 
   // Copiar security headers al nuevo response
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
+  // Excluir videollamada de COEP/COOP/CRP porque LiveKit es cross-origin
+  const isVideoRoute = pathname.startsWith('/videollamada');
+  if (isVideoRoute) {
+    const relaxedHeaders = { ...securityHeaders };
+    delete relaxedHeaders['Cross-Origin-Embedder-Policy'];
+    delete relaxedHeaders['Cross-Origin-Opener-Policy'];
+    delete relaxedHeaders['Cross-Origin-Resource-Policy'];
+    Object.entries(relaxedHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+  } else {
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+  }
 
   // Strict-Transport-Security solo en producción
   if (process.env.NODE_ENV === 'production') {

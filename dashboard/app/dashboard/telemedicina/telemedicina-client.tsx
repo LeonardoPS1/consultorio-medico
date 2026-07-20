@@ -138,38 +138,35 @@ export function TelemedicinaClient({ initialTurnos }: TelemedicinaClientProps) {
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <div className="relative">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 h-9 min-w-[160px] justify-between"
-                onClick={() => setFiltroEstado(filtroEstado === 'todos' ? 'proximos' : 'todos')}
-              >
-                <Filter className="h-4 w-4" />
-                <span>
-                  {filtroEstado === 'todos'
-                    ? 'Todos'
-                    : filtroEstado === 'proximos'
-                      ? 'Próximos'
-                      : filtroEstado === 'en_curso'
-                        ? 'En curso'
-                        : 'Finalizados'}
-                </span>
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </div>
+              <div className="relative">
+                <select
+                  value={filtroEstado}
+                  onChange={(e) => setFiltroEstado(e.target.value as FiltroEstado)}
+                  className="flex items-center gap-2 h-9 min-w-[160px] justify-between px-3 text-sm border rounded-lg bg-background appearance-none cursor-pointer"
+                  title="Filtrar por estado"
+                >
+                  <option value="todos">Todos</option>
+                  <option value="proximos">Próximos</option>
+                  <option value="en_curso">En curso</option>
+                  <option value="finalizados">Finalizados</option>
+                </select>
+                <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
+              </div>
 
             {medicos.length > 0 && (
               <div className="relative">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 h-9 min-w-[160px] justify-between"
+                <select
+                  value={filtroMedico ?? ''}
+                  onChange={(e) => setFiltroMedico(e.target.value || null)}
+                  className="flex items-center gap-2 h-9 min-w-[160px] justify-between px-3 text-sm border rounded-lg bg-background appearance-none cursor-pointer"
+                  title="Filtrar por médico"
                 >
-                  <Users className="h-4 w-4" />
-                  <span>{filtroMedico ? filtroMedico : 'Todos los médicos'}</span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
+                  <option value="">Todos los médicos</option>
+                  {medicos.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+                <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
               </div>
             )}
 
