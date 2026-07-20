@@ -1,0 +1,46 @@
+name: Build & Deploy Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs-site/**'
+
+jobs:
+  docs-build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set lowercase repository name
+        run: echo "REPOSITORY_LC=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
+      - name: Build and push docs image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docs-site/aicoremed-docs
+          file: ./docs-site/aicoremed-docs/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ env.REPOSITORY_LC }}-docs:latest
+            ghcr.io/${{ env.REPOSITORY_LC }}-docs:${{ github.sha }}
+
+      - name: Trigger Dokploy deploy (docs) via Dashboard proxy
+        run: |
+          curl -s -k -X POST 'https://med.aicorebots.com/api/deploy/dokploy' \
+            -H 'accept: application/json' \
+            -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{"applicationId":"${{ secrets.DOKPLOY_DOCS_APP_ID }}"}'
