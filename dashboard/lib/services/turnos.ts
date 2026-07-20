@@ -94,6 +94,8 @@ export const turnosService = {
             medicoId: medicos.id,
             pacienteId: pacientes.id,
             inicioAtencionAt: turnos.inicioAtencionAt,
+            riskScore: turnos.riskScore,
+            riskNivel: turnos.riskNivel,
           })
           .from(turnos)
           .leftJoin(pacientes, eq(turnos.pacienteId, pacientes.id))
@@ -115,6 +117,8 @@ export const turnosService = {
           linkVideollamada: t.linkVideollamada,
           estado: t.estado,
           fecha: fechaStr || t.fecha,
+          riskScore: t.riskScore ? Number(t.riskScore) : null,
+          riskNivel: t.riskNivel,
           inicioAtencionAt: t.inicioAtencionAt
             ? t.inicioAtencionAt instanceof Date
               ? t.inicioAtencionAt.toISOString()

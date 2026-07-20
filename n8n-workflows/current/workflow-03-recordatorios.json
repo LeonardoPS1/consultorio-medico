@@ -16,6 +16,20 @@
       }
     },
     {
+      "id": "query-48h",
+      "name": "PG - Turnos Alto Riesgo 48h",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [250, 50],
+      "credentials": {
+        "postgres": { "id": "fersBxOXicK7tW99", "name": "Consultorio - postgres" }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.id, t.fecha_hora, t.estado,\n  p.id as paciente_id, p.nombre, p.apellido, p.telefono, p.consentimiento_whatsapp,\n  m.nombre as medico_nombre, m.telefono as medico_telefono,\n  COALESCE(\n    (SELECT pm.contenido FROM plantillas_mensajes pm\n     WHERE pm.categoria = 'recordatorios' AND pm.nombre LIKE '%48h%' AND pm.activa = TRUE LIMIT 1),\n    '🔴 ALTO RIESGO: Hola {{nombre}}! Te recordamos que tenés un turno en 48hs ({{fecha_hora}}) con {{medico_nombre}}. Por favor confirmá tu asistencia respondiendo CONFIRMAR. Si necesitás reprogramar, avisanos. 🏥'\n  ) as plantilla_contenido\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nJOIN medicos m ON m.id = t.medico_id\nWHERE t.estado IN ('pendiente', 'confirmada')\n  AND t.risk_nivel = 'alto'\n  AND t.recordatorio_48h_enviado = FALSE\n  AND t.fecha_hora BETWEEN NOW() + INTERVAL '24 hours' AND NOW() + INTERVAL '48 hours'\n  AND p.consentimiento_whatsapp = TRUE\n  AND EXTRACT(HOUR FROM NOW()) BETWEEN 8 AND 20\nORDER BY t.fecha_hora;"
+      }
+    },
+    {
       "id": "query-24h",
       "name": "PG - Turnos Próximas 24hs",
       "type": "n8n-nodes-base.postgres",
@@ -41,6 +55,20 @@
       "parameters": {
         "operation": "executeQuery",
         "query": "SELECT t.id, t.fecha_hora, t.estado,\n  p.id as paciente_id, p.nombre, p.apellido, p.telefono, p.consentimiento_whatsapp,\n  m.nombre as medico_nombre, m.telefono as medico_telefono,\n  COALESCE(\n    (SELECT pm.contenido FROM plantillas_mensajes pm\n     WHERE pm.categoria = 'recordatorios' AND pm.nombre LIKE '%1h%' AND pm.activa = TRUE LIMIT 1),\n    '⏰ Recordatorio {{nombre}}: en 1 hora tenés turno con {{medico_nombre}} ({{fecha_hora}}). Te esperamos! 🏥'\n  ) as plantilla_contenido\nFROM turnos t\nJOIN pacientes p ON p.id = t.paciente_id\nJOIN medicos m ON m.id = t.medico_id\nWHERE t.estado IN ('pendiente', 'confirmada')\n  AND t.recordatorio_1h_enviado = FALSE\n  AND t.fecha_hora BETWEEN NOW() AND NOW() + INTERVAL '1 hour'\n  AND p.consentimiento_whatsapp = TRUE\n  AND EXTRACT(HOUR FROM NOW()) BETWEEN 8 AND 20\nORDER BY t.fecha_hora;"
+      }
+    },
+    {
+      "id": "if-48h",
+      "name": "¿Hay turnos 48h (alto riesgo)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [500, 50],
+      "parameters": {
+        "conditions": {
+          "number": [
+            { "value1": "={{ $items().length }}", "operation": "larger", "value2": 0 }
+          ]
+        }
       }
     },
     {
@@ -72,6 +100,17 @@
       }
     },
     {
+      "id": "template-48h",
+      "name": "Plantilla 48h: Armar Mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 0],
+      "parameters": {
+        "language": "javaScript",
+        "code": "// Template: Recordatorio 48h (alto riesgo) — leído desde plantillas_mensajes (categoria: recordatorios)\nreturn items.map(item => {\n  let body = item.json.plantilla_contenido || '🔴 ALTO RIESGO: Hola {{nombre}}! Te recordamos tu turno en 48hs {{fecha_hora}} con {{medico_nombre}}.';\n  const vars = item.json;\n  body = body.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (match, key) => {\n    return vars[key] !== undefined ? String(vars[key]) : match;\n  });\n  return { json: { ...vars, body } };\n});"
+      }
+    },
+    {
       "id": "template-24h",
       "name": "Plantilla 24h: Armar Mensaje",
       "type": "n8n-nodes-base.code",
@@ -91,6 +130,23 @@
       "parameters": {
         "language": "javaScript",
         "code": "// Template: Recordatorio 1h — leído desde plantillas_mensajes (categoria: recordatorios)\nreturn items.map(item => {\n  let body = item.json.plantilla_contenido || '⏰ Recordatorio {{nombre}}: en 1 hora tenés turno con {{medico_nombre}} ({{fecha_hora}}).';\n  const vars = item.json;\n  body = body.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (match, key) => {\n    return vars[key] !== undefined ? String(vars[key]) : match;\n  });\n  return { json: { ...vars, body } };\n});"
+      }
+    },
+    {
+      "id": "twilio-48h",
+      "name": "Twilio - Recordatorio 48h (Alto Riesgo)",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
+      "position": [1000, 0],
+      "credentials": {
+        "twilioApi": { "id": "aE31QgQsM9spWb5a", "name": "Consultorio - Twilio API" }
+      },
+      "parameters": {
+        "resource": "message",
+        "operation": "create",
+        "to": "={{ 'whatsapp:+549' + $json.telefono }}",
+        "from": "={{ $env.TWILIO_WHATSAPP_NUMBER }}",
+        "body": "={{ $json.body }}"
       }
     },
     {
@@ -128,6 +184,23 @@
       }
     },
     {
+      "id": "mark-48h",
+      "name": "PG - Marcar Recordatorio 48h",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 0],
+      "credentials": {
+        "postgres": { "id": "fersBxOXicK7tW99", "name": "Consultorio - postgres" }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE turnos SET recordatorio_48h_enviado = TRUE, updated_at = NOW() WHERE id = $1;",
+        "additionalFields": {
+          "queryParams": "={{ [$json.id] }}"
+        }
+      }
+    },
+    {
       "id": "mark-24h",
       "name": "PG - Marcar Recordatorio 24h",
       "type": "n8n-nodes-base.postgres",
@@ -158,6 +231,23 @@
         "query": "UPDATE turnos SET recordatorio_1h_enviado = TRUE, updated_at = NOW() WHERE id = $1;",
         "additionalFields": {
           "queryParams": "={{ [$json.id] }}"
+        }
+      }
+    },
+    {
+      "id": "evento-48h",
+      "name": "PG - Evento Timeline 48h",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1500, 0],
+      "credentials": {
+        "postgres": { "id": "fersBxOXicK7tW99", "name": "Consultorio - postgres" }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO paciente_eventos (paciente_id, tipo, descripcion, metadata)\nVALUES ($1, 'recordatorio', $2, $3);",
+        "additionalFields": {
+          "queryParams": "={{ [$json.paciente_id, 'Recordatorio 48h (alto riesgo) enviado - turno: ' + $json.id, JSON.stringify({turno_id: $json.id, tipo: '48h', riesgo: 'alto'})] }}"
         }
       }
     },
@@ -200,7 +290,7 @@
       "name": "PG - Log de Envío",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
-      "position": [1750, 250],
+      "position": [1750, 200],
       "credentials": {
         "postgres": { "id": "fersBxOXicK7tW99", "name": "Consultorio - postgres" }
       },
@@ -208,7 +298,7 @@
         "operation": "executeQuery",
         "query": "INSERT INTO workflow_logs (workflow_id, execution_id, nivel, mensaje, metadata)\nVALUES ('workflow-03', $1, 'info', $2, $3);",
         "additionalFields": {
-          "queryParams": "={{ [$json.executionId, 'Recordatorio enviado - turno: ' + $json.id, JSON.stringify({turno_id: $json.id, paciente: $json.nombre + ' ' + $json.apellido})] }}"
+          "queryParams": "={{ [$json.executionId, 'Recordatorio enviado - turno: ' + $json.id, JSON.stringify({turno_id: $json.id, paciente: $json.nombre + ' ' + $json.apellido, tipo_recordatorio: $json.tipo_recordatorio || '24h'})] }}"
         }
       }
     },
@@ -273,17 +363,27 @@
     "Cron - Cada Hora": {
       "main": [
         [
+          { "node": "PG - Turnos Alto Riesgo 48h", "type": "main", "index": 0 },
           { "node": "PG - Turnos Próximas 24hs", "type": "main", "index": 0 },
           { "node": "PG - Turnos Próxima 1h", "type": "main", "index": 0 },
           { "node": "PG - Turnos No Confirmados", "type": "main", "index": 0 }
         ]
       ]
     },
+    "PG - Turnos Alto Riesgo 48h": {
+      "main": [[{ "node": "¿Hay turnos 48h (alto riesgo)?", "type": "main", "index": 0 }]]
+    },
     "PG - Turnos Próximas 24hs": {
       "main": [[{ "node": "¿Hay turnos 24h?", "type": "main", "index": 0 }]]
     },
     "PG - Turnos Próxima 1h": {
       "main": [[{ "node": "¿Hay turnos 1h?", "type": "main", "index": 0 }]]
+    },
+    "¿Hay turnos 48h (alto riesgo)?": {
+      "main": [
+        [{ "node": "Plantilla 48h: Armar Mensaje", "type": "main", "index": 0 }],
+        []
+      ]
     },
     "¿Hay turnos 24h?": {
       "main": [
@@ -297,11 +397,17 @@
         []
       ]
     },
+    "Plantilla 48h: Armar Mensaje": {
+      "main": [[{ "node": "Twilio - Recordatorio 48h (Alto Riesgo)", "type": "main", "index": 0 }]]
+    },
     "Plantilla 24h: Armar Mensaje": {
       "main": [[{ "node": "Twilio - Recordatorio 24h", "type": "main", "index": 0 }]]
     },
     "Plantilla 1h: Armar Mensaje": {
       "main": [[{ "node": "Twilio - Recordatorio 1h", "type": "main", "index": 0 }]]
+    },
+    "Twilio - Recordatorio 48h (Alto Riesgo)": {
+      "main": [[{ "node": "PG - Marcar Recordatorio 48h", "type": "main", "index": 0 }]]
     },
     "Twilio - Recordatorio 24h": {
       "main": [[{ "node": "PG - Marcar Recordatorio 24h", "type": "main", "index": 0 }]]
@@ -309,11 +415,17 @@
     "Twilio - Recordatorio 1h": {
       "main": [[{ "node": "PG - Marcar Recordatorio 1h", "type": "main", "index": 0 }]]
     },
+    "PG - Marcar Recordatorio 48h": {
+      "main": [[{ "node": "PG - Evento Timeline 48h", "type": "main", "index": 0 }]]
+    },
     "PG - Marcar Recordatorio 24h": {
       "main": [[{ "node": "PG - Evento Timeline 24h", "type": "main", "index": 0 }]]
     },
     "PG - Marcar Recordatorio 1h": {
       "main": [[{ "node": "PG - Evento Timeline 1h", "type": "main", "index": 0 }]]
+    },
+    "PG - Evento Timeline 48h": {
+      "main": [[{ "node": "PG - Log de Envío", "type": "main", "index": 0 }]]
     },
     "PG - Evento Timeline 24h": {
       "main": [[{ "node": "PG - Log de Envío", "type": "main", "index": 0 }]]
@@ -337,6 +449,6 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "tags": ["recordatorios", "cron", "whatsapp"],
+  "tags": ["recordatorios", "cron", "whatsapp", "no-show"],
   "active": false
 }

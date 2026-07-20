@@ -14,8 +14,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
-
-// ─── Types ────────────────────────────────────────────────
+import { Badge } from '@/components/ui/badge';
+import { AlertTriangle, ShieldCheck, HelpCircle } from 'lucide-react';
 
 interface TurnoData {
   id: string;
@@ -27,6 +27,41 @@ interface TurnoData {
   pacienteId: string;
   estado: string;
   fecha: string;
+  riskScore?: number | null;
+  riskNivel?: 'bajo' | 'medio' | 'alto' | null;
+}
+
+function RiskCard({ riskNivel, riskScore }: { riskNivel: 'bajo' | 'medio' | 'alto' | null | undefined; riskScore?: number | null }) {
+  if (!riskNivel) {
+    return (
+      <div className="p-3 bg-muted/50 rounded-lg border">
+        <p className="text-sm text-muted-foreground">Score de riesgo no calculado</p>
+      </div>
+    );
+  }
+
+  const config = {
+    alto: { icon: AlertTriangle, label: 'Alto riesgo de inasistencia', color: 'destructive', bg: 'bg-destructive/10', border: 'border-destructive/20', desc: 'Se enviará recordatorio extra a las 48h' },
+    medio: { icon: HelpCircle, label: 'Riesgo medio de inasistencia', color: 'secondary', bg: 'bg-secondary/10', border: 'border-secondary/20', desc: 'Recordatorios estándar (24h y 1h)' },
+    bajo: { icon: ShieldCheck, label: 'Bajo riesgo de inasistencia', color: 'default', bg: 'bg-green-100 dark:bg-green-900/20', border: 'border-green-200 dark:border-green-800', desc: 'Recordatorios estándar (24h y 1h)' },
+  }[riskNivel];
+
+  const Icon = config.icon;
+
+  return (
+    <div className={`p-3 rounded-lg border ${config.bg} ${config.border}`}>
+      <div className="flex items-center gap-2">
+        <Icon className={`h-4 w-4 text-${config.color}`} />
+        <span className="font-medium text-sm">{config.label}</span>
+        {riskScore !== undefined && riskScore !== null && (
+          <Badge variant="outline" className="text-xs ml-auto">
+            Score: {riskScore}
+          </Badge>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground mt-1">{config.desc}</p>
+    </div>
+  );
 }
 
 interface TurnoDetailModalProps {
@@ -52,9 +87,10 @@ export function TurnoDetailModal({ editTurno, onOpenChange, onSaveEdit }: TurnoD
           <DialogTitle>Editar Turno</DialogTitle>
           <DialogDescription>Modificá los datos del turno</DialogDescription>
         </DialogHeader>
-        {editTurno && (
-          <div className="space-y-4 py-2">
-            <div className="space-y-1">
+{editTurno && (
+            <div className="space-y-4 py-2">
+              <RiskCard riskNivel={editTurno.riskNivel} riskScore={editTurno.riskScore} />
+              <div className="space-y-1">
               <Label>Paciente</Label>
               <Input id="edit-paciente" defaultValue={editTurno.paciente} disabled />
             </div>

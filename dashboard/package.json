@@ -23,6 +23,7 @@
     "db:studio": "drizzle-kit studio",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "backfill:no-show-scores": "tsx scripts/backfill-no-show-scores.ts",
     "prepare": "husky"
   },
   "dependencies": {

@@ -342,3 +342,77 @@ export async function calcularTodosLosScores(opts?: {
 
   return scoresMap;
 }
+
+/**
+ * Actualiza los scores de no-show para todos los turnos próximos (próximos 30 días).
+ * Usa el score a nivel paciente (calculado con calcularScoreBulk) y lo asigna a cada turno.
+ * Retorna cantidad de turnos actualizados.
+ */
+export async function actualizarScoresTurnosProximos(opts?: {
+  sucursalId?: string;
+  diasAntelacion?: number;
+}): Promise<{ actualizados: number; errores: number }> {
+  const dias = opts?.diasAntelacion ?? 30;
+  const ahora = new Date();
+  const fechaLimite = new Date(ahora);
+  fechaLimite.setDate(fechaLimite.getDate() + dias);
+
+  // 1) Obtener turnos próximos en estados relevantes
+  const filtrosTurnos = [
+    eq(turnos.estado, 'pendiente'),
+    gte(turnos.fechaHora, ahora),
+    lte(turnos.fechaHora, fechaLimite),
+    isNull(turnos.deletedAt),
+  ];
+  if (opts?.sucursalId) {
+    filtrosTurnos.push(eq(turnos.sucursalId, opts.sucursalId));
+  }
+
+  const turnosProximos = await db
+    .select({
+      id: turnos.id,
+      pacienteId: turnos.pacienteId,
+    })
+    .from(turnos)
+    .where(and(...filtrosTurnos));
+
+  if (turnosProximos.length === 0) {
+    return { actualizados: 0, errores: 0 };
+  }
+
+  // 2) Obtener patient IDs únicos
+  const pacienteIds = Array.from(new Set(turnosProximos.map((t) => t.pacienteId)));
+
+  // 3) Calcular scores en bulk
+  const scores = await calcularScoreBulk(pacienteIds, { sucursalId: opts?.sucursalId });
+  const scoresMap = new Map(scores.map((s) => [s.pacienteId, s]));
+
+  // 4) Preparar updates en batch
+  const now = new Date();
+  let actualizados = 0;
+  let errores = 0;
+
+  for (const turno of turnosProximos) {
+    const scoreData = scoresMap.get(turno.pacienteId);
+    if (!scoreData) {
+      errores++;
+      continue;
+    }
+
+    try {
+      await db
+        .update(turnos)
+        .set({
+          riskScore: scoreData.score.toString(),
+          riskNivel: scoreData.nivel,
+          riskCalculatedAt: now,
+        })
+        .where(eq(turnos.id, turno.id));
+      actualizados++;
+    } catch {
+      errores++;
+    }
+  }
+
+  return { actualizados, errores };
+}

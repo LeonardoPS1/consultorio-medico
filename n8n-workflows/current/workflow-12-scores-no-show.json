@@ -1,0 +1,151 @@
+{
+  "name": "12 - Actualizar Scores No-Show",
+  "nodes": [
+    {
+      "id": "cron-trigger",
+      "name": "Cron - Diario 03:30",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyDay",
+              "hour": 3,
+              "minute": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-request",
+      "name": "HTTP - Actualizar Scores",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://med.aicorebots.com/api/internal/scores/actualizar",
+        "authentication": "none",
+        "options": {
+          "timeout": 30000
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "x-internal-key": "={{ $env.INTERNAL_API_KEY }}"
+        },
+        "jsonParameters": true,
+        "parameters": {
+          "diasAntelacion": 30
+        }
+      }
+    },
+    {
+      "id": "if-success",
+      "name": "¿Éxito?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [750, 300],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.mensaje }}",
+              "operation": "contains",
+              "value2": "actualizados"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "log-success",
+      "name": "PG - Log Éxito",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1000, 200],
+      "credentials": {
+        "postgres": {
+          "id": "fersBxOXicK7tW99",
+          "name": "Consultorio - postgres"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, execution_id, nivel, mensaje, metadata) VALUES ('workflow-12', $1, 'info', $2, $3);",
+        "additionalFields": {
+          "queryParams": "={{ [$json.executionId, $json.mensaje, JSON.stringify($json) ] }}"
+        }
+      }
+    },
+    {
+      "id": "log-error",
+      "name": "PG - Log Error",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1000, 400],
+      "credentials": {
+        "postgres": {
+          "id": "fersBxOXicK7tW99",
+          "name": "Consultorio - postgres"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, execution_id, nivel, mensaje, metadata) VALUES ('workflow-12', $1, 'error', $2, $3);",
+        "additionalFields": {
+          "queryParams": "={{ [$json.executionId, 'Error actualizando scores: ' + $json.error?.message || 'Error desconocido', JSON.stringify($json) ] }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cron - Diario 03:30": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Actualizar Scores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Actualizar Scores": {
+      "main": [
+        [
+          {
+            "node": "¿Éxito?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Éxito?": {
+      "main": [
+        [
+          {
+            "node": "PG - Log Éxito",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PG - Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["scoring", "cron", "no-show"],
+  "active": false
+}

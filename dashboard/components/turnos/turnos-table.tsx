@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
+import { RiskBadge } from './risk-badge';
 import { descargarICS } from '@/lib/ics';
 import { generateGCalUrl, formatGCalEventText } from '@/lib/google-calendar';
 import {
@@ -46,6 +47,8 @@ export interface TurnoData {
   pacienteId: string;
   estado: string;
   fecha: string;
+  riskScore?: number | null;
+  riskNivel?: 'bajo' | 'medio' | 'alto' | null;
 }
 
 interface TurnosTableProps {
@@ -142,14 +145,17 @@ function TurnoRow({
         {turno.hora}
       </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
+      {/* Info + Risk Badge */}
+      <div className="flex-1 min-w-0 flex items-center gap-2">
         <p className="font-medium text-sm truncate">{turno.paciente}</p>
-        <p className="text-xs text-muted-foreground truncate hidden md:block">
-          {turno.tipo} &middot; {turno.medico}
-        </p>
-        <p className="text-xs text-muted-foreground truncate md:hidden">{turno.tipo}</p>
+        {turno.riskNivel && (
+          <RiskBadge riskNivel={turno.riskNivel} riskScore={turno.riskScore} />
+        )}
       </div>
+      <div className="text-xs text-muted-foreground truncate hidden md:block">
+        {turno.tipo} &middot; {turno.medico}
+      </div>
+      <div className="text-xs text-muted-foreground truncate md:hidden">{turno.tipo}</div>
 
       {/* Estado */}
       <Badge
