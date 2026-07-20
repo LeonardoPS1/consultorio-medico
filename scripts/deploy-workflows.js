@@ -76,7 +76,7 @@ async function main() {
 
   // Verificar conexión
   try {
-    await apiRequest('GET', 'workflows?take=1');
+    await apiRequest('GET', 'workflows');
     console.log('✅ Conectado a n8n\n');
   } catch (e) {
     console.error(`❌ No se pudo conectar a n8n: ${e.message}`);
@@ -108,23 +108,20 @@ async function main() {
     console.log(`📦 ${workflowName}`);
 
     try {
-      // Buscar si ya existe un workflow con ese nombre
-      const existing = await apiRequest(
-        'GET',
-        `workflows?filter=${encodeURIComponent(workflowName)}`
-      );
+      // Buscar si ya existe un workflow con ese nombre (fetch all and filter locally)
+      const allWorkflows = await apiRequest('GET', 'workflows');
+      const existing = allWorkflows?.data?.find(w => w.name === workflowName);
 
-      if (existing && existing.data && existing.data.length > 0) {
-        const existingId = existing.data[0].id;
+      if (existing) {
+        const existingId = existing.id;
         console.log(`   ⚠️ Ya existe (id: ${existingId}), actualizando...`);
 
-        // Update workflow
-        await apiRequest('PATCH', `workflows/${existingId}`, {
+        // Update workflow - use PUT, include settings (required), exclude tags (read-only)
+        await apiRequest('PUT', `workflows/${existingId}`, {
           name: workflowName,
           nodes: workflow.nodes || [],
           connections: workflow.connections || {},
           settings: workflow.settings || {},
-          tags: (workflow.tags || []).map(t => ({ name: t })),
         });
 
         if (ACTIVATE && !existing.active) {
@@ -133,13 +130,13 @@ async function main() {
         }
         exist++;
       } else {
-        // Create new workflow
+        // Create new workflow - exclude tags from body
         const created = await apiRequest('POST', 'workflows', {
           name: workflowName,
           nodes: workflow.nodes || [],
           connections: workflow.connections || {},
           settings: workflow.settings || {},
-          tags: (workflow.tags || []).map(t => ({ name: t })),
+          // tags are read-only in API
         });
 
         const newId = created?.id || created?.data?.id || '?';

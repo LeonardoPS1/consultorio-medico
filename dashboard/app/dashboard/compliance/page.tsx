@@ -3,16 +3,40 @@ import { redirect } from 'next/navigation';
 import { canAccess } from '@/lib/features';
 import { ComplianceClient } from './compliance-client';
 import { getDemoComplianceData } from '@/lib/services/compliance';
-import type { ComplianceData } from './types';
+import type { ComplianceData, AccesoAuditoria, SolicitudARCO } from './types';
 
 export const dynamic = 'force-dynamic';
 
-async function fetchData(): Promise<ComplianceData | null> {
+async function fetchComplianceData(): Promise<ComplianceData | null> {
   try {
     const res = await fetch(
       'http://localhost:3000/api/compliance?periodo=mes&demo=true',
       { cache: 'no-store' },
     );
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+async function fetchAuditoriaData(): Promise<{ accesos: AccesoAuditoria[]; paginacion: any } | null> {
+  try {
+    const res = await fetch('http://localhost:3000/api/auditoria-accesos?pagina=1&limite=50', {
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+async function fetchArcData(): Promise<{ solicitudes: SolicitudARCO[]; paginacion: any } | null> {
+  try {
+    const res = await fetch('http://localhost:3000/api/arco?pagina=1&limite=50', {
+      cache: 'no-store',
+    });
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -29,7 +53,17 @@ export default async function CompliancePage() {
     redirect('/dashboard');
   }
 
-  const initialData = await fetchData();
+  const [initialData, auditoriaData, arcoData] = await Promise.all([
+    fetchComplianceData(),
+    fetchAuditoriaData(),
+    fetchArcData(),
+  ]);
 
-  return <ComplianceClient initialData={initialData} />;
+  return (
+    <ComplianceClient
+      initialData={initialData}
+      initialAuditoriaData={auditoriaData}
+      initialArcData={arcoData}
+    />
+  );
 }
