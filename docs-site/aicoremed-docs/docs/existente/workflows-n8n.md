@@ -1,7 +1,7 @@
 # 🔄 Workflows n8n — AicoreMed
 
-> **10 workflows activos** · Automatización inteligente del consultorio
-> **Última actualización:** 26/06/2026
+> **12 workflows activos** · Automatización inteligente del consultorio
+> **Última actualización:** 19/07/2026
 
 ---
 
@@ -18,8 +18,10 @@
 9. [WF-07: Backup Automático Encriptado](#wf-07-backup-automatico-encriptado)
 10. [WF-08: Google Calendar Sync](#wf-08-google-calendar-sync)
 11. [WF-09: Anonimización Post-Retención](#wf-09-anonimizacion-post-retencion)
-12. [Deploy de Workflows](#deploy-de-workflows)
-13. [Buenas Prácticas](#buenas-practicas)
+12. [WF-11: Novedades desde Commits](#wf-11-novedades-desde-commits)
+13. [WF-12: Actualizar Scores No-Show](#wf-12-actualizar-scores-no-show)
+14. [Deploy de Workflows](#deploy-de-workflows)
+15. [Buenas Prácticas](#buenas-practicas)
 
 ---
 
@@ -37,7 +39,9 @@ n8n-workflows/
 │   ├── workflow-07-backup.json
 │   ├── workflow-08-google-calendar-sync.json
 │   ├── workflow-09-anonimizar.json
-│   └── workflow-10-expiracion-waitlist.json
+│   ├── workflow-10-expiracion-waitlist.json
+│   ├── workflow-11-novedades.json    # Novedades desde Commits
+│   └── workflow-12-scores-no-show.json  # Scoring No-Show Nocturno
 │
 └── archive/                          # Versiones legacy y diseños
 ```
@@ -47,7 +51,7 @@ n8n-workflows/
 ## Matriz de Workflows
 
 | # | Nombre | Trigger | Nodos | Ollama | Twilio | PG | GCal | IMAP |
-|---|--------|---------|-------|--------|--------|----|------|------|
+|   |--------|---------|-------|--------|--------|----|------|------|
 | **01** | WhatsApp Inbound + Triaje IA | Webhook | 17 | ✅ Agent | ✅ | ✅ | ❌ | ❌ |
 | **02** | Gestión de Turnos | Webhook | 9 | ✅ 2 nodos | ✅ | ✅ | ✅ | ❌ |
 | **03** | Recordatorios Automáticos | Cron (c/hora) | 12 | ❌ | ✅ | ✅ | ❌ | ❌ |
@@ -58,6 +62,8 @@ n8n-workflows/
 | **08** | Google Calendar Sync | Webhook | 8 | ❌ | ❌ | ✅ | ✅ | ❌ |
 | **09** | Anonimización Post-Retención | Cron (4:00 AM) | 5 | ❌ | ❌ | ✅ | ❌ | ❌ |
 | **10** | Expiración Waitlist | Cron (diario) | — | ❌ | ✅ | ✅ | ❌ | ❌ |
+| **11** | Novedades desde Commits | Webhook (GH) | 5 | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **12** | Scoring No-Show Nocturno | Cron (3:30 AM) | 3 | ❌ | ❌ | ✅ | ❌ | ❌ |
 
 ---
 
@@ -279,6 +285,59 @@ Cron → POST a /api/privacidad/anonimizar (con x-webhook-secret) →
 - Ley de datos personales (Chile)
 - Período de retención configurable (default: 90 días)
 - No reversible (anonimización completa)
+
+---
+
+## WF-11: Novedades desde Commits
+
+### Propósito
+Genera automáticamente entradas de novedades a partir de los mensajes de commits de GitHub.
+
+### Trigger
+**Webhook** → `POST /webhook/novedades-generar` (GitHub Push)
+
+### Flujo
+```
+GitHub Push → Webhook → POST /api/novedades/generar (x-internal-key) →
+  → Si generó novedades: OK →
+  → Sin commits nuevos: skip
+```
+
+### Configuración
+- Webhook de GitHub configurado apuntando a `https://med.aicorebots.com/webhook/novedades-generar`
+- Usa `NOVEDADES_INTERNAL_KEY` como header de autenticación
+- Dashboard API clasifica commits por tipo (`feat`, `fix`, `perf`, `security`, `chore`) y crea entradas en la tabla `novedades`
+
+---
+
+## WF-12: Actualizar Scores No-Show
+
+### Propósito
+Workflow nocturno que actualiza el score de riesgo de inasistencia (`risk_score`) para turnos próximos y envía recordatorios anticipados (48h) a pacientes de alto riesgo.
+
+### Trigger
+**Cron** → Todos los días a las 3:30 AM
+
+### Nodos
+3 (Cron → HTTP Request → noOp)
+
+### Flujo
+```
+Cron (3:30 AM) → POST /api/internal/scores/actualizar (x-internal-key) →
+  → Dashboard ejecuta scoringPacientesService.actualizarScoresBatch(30) →
+    → Calcula risk_score para turnos de los próximos 30 días →
+    → Envía recordatorios 48h a pacientes con riesgo alto/crítico →
+    → Loggea todo en workflow_logs
+```
+
+### Integración con WF-03
+WF-03 (Recordatorios Automáticos) fue modificado para incluir un tercer bloque de recordatorios:
+
+| Bloque | Antelación | Destinatarios |
+|--------|------------|---------------|
+| 1 (nuevo) | 48h | Solo pacientes con `risk_nivel = alto` o `crítico` |
+| 2 (original) | 24h | Todos los pacientes con turno próximo |
+| 3 (original) | 1h | Todos los pacientes con turno próximo |
 
 ---
 

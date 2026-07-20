@@ -54,6 +54,7 @@ nav:
       - Recetas: modulos/recetas.md
       - Telemedicina: modulos/telemedicina.md
       - Portal de Pacientes: modulos/portal-pacientes.md
+      - Scoring y Compliance: modulos/scoring-compliance.md
   - API Reference:
       - v1: api/reference.md
   - Decisiones de Arquitectura (ADRs):

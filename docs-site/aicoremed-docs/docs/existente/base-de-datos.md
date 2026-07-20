@@ -62,6 +62,10 @@ Las migraciones son **acumulativas** y deben ejecutarse en orden:
 | 008 | `008_seguridad.sql` | `auditoria_accesos` + columnas 2FA en `usuarios` |
 | 010 | `010_suscripciones.sql` | `suscripciones` con integración MercadoPago |
 | 011 | `011_multitenant.sql` | Tabla `tenants` + columna `tenant_id` en 22 tablas |
+| 044 | `044_novedades.sql` | Tabla `novedades` con versionado y changelog |
+| 045 | `045_white_labeling.sql` | Columnas `dominio_custom`, `color_secundario`, `config_regional` en `tenants` |
+| 046 | `046_regional_config.sql` | Tablas `regiones`, `comunas`, columna `region_id`, `comuna_id` en pacientes |
+| 047 | `047_scoring.sql` | Columnas `risk_score`, `risk_nivel`, `recordatorio_48h_enviado` en `turnos` |
 
 ```bash
 # Ejecutar todas las migraciones
@@ -137,6 +141,9 @@ Citas programadas.
 | `recordatorio_1h_enviado` | BOOLEAN | Si ya se envió recordatorio 1h antes |
 | `confirmo_asistencia` | BOOLEAN | Si el paciente confirmó |
 | `google_calendar_event_id` | VARCHAR(500) | ID del evento en Google Calendar |
+| `risk_score` | DECIMAL(4,1) | Score de riesgo de inasistencia (0–100) |
+| `risk_nivel` | VARCHAR(10) | Nivel: `bajo`, `medio`, `alto`, `critico` |
+| `recordatorio_48h_enviado` | BOOLEAN | Recordatorio anticipado para alto riesgo |
 
 #### `servicios`
 Prestaciones que ofrece cada médico.
@@ -231,6 +238,7 @@ Suscripciones a planes de MercadoPago.
 | `twilio_logs` | Status callbacks de Twilio (sent, delivered, failed) |
 | `ia_logs` | Consultas a Ollama (latencia, tokens, prompt) |
 | `audit_log` | Acciones de usuarios en el dashboard |
+| `novedades` | Changelog de versiones con título, items (JSONB), tipo y fecha |
 
 ## Vistas Optimizadas
 

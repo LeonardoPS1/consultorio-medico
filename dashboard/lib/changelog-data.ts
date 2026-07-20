@@ -12,6 +12,22 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.19.0',
+    date: '19/07/2026',
+    title: 'Scoring No-Show y Dashboard Compliance',
+    items: [
+      'Migration 0047: riesgo de inasistencia en turnos (risk_score, risk_nivel)',
+      'RiskBadge visual en tabla de turnos con score de color (verde/amarillo/naranja/rojo)',
+      'WF-12: workflow nocturno para actualizar risk_score y enviar recordatorios 48h',
+      'WF-03 modificado: nuevo bloque de recordatorios 48h para pacientes de alto riesgo',
+      'Backfill script para calcular scoring histórico de turnos (npm run backfill-scores)',
+      'Dashboard Compliance: monitoreo Ley 21.719 con 4 KPIs y 2 charts dinámicos',
+      'ComposedChart de tiempo de espera promedio y % de cumplimiento mensual',
+      'BarChart horizontal de cumplimiento por médico con colores semáforo',
+      'Feature gate "compliance" disponible en plan Professional+',
+    ],
+  },
+  {
     version: '1.18.0',
     date: '13/07/2026',
     title: 'Actualización de estabilidad y UI',
