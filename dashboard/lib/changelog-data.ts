@@ -10,7 +10,7 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 20/07/2026 — incluye scoring no-show y compliance
+// Actualizado: 20/07/2026 — v1.19.0 scoring + compliance
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: '1.19.0',
