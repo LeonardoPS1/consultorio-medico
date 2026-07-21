@@ -1758,6 +1758,56 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     ],
   },
   {
+    id: 'proxy-arquitectura',
+    titulo: 'Proxy y Sistema Multi-Agente',
+    descripcion: 'Arquitectura del proxy de seguridad y los agentes de IA conversacionales',
+    icono: 'Shield',
+    pasos: [
+      {
+        titulo: 'Proxy de Seguridad (Next.js 16+)',
+        descripcion: 'El proxy reemplaza al middleware tradicional de Next.js. Se encarga de la seguridad y autenticación de todas las peticiones.',
+        tips: [
+          'Migrado de middleware.ts a proxy.ts en julio 2026',
+          'Inyecta headers de seguridad: CSP, HSTS, COOP, COEP, CORP',
+          'Aplica rate limiting: login 5/min, API 120/min, magic link 3/min',
+          'Detecta el tenant por subdominio y lo pasa como header x-tenant-id',
+          'Protege rutas del dashboard (requiere sesión) y del portal (requiere portal_session)',
+        ],
+      },
+      {
+        titulo: 'WF-01: WhatsApp Multi-Agente',
+        descripcion: 'El workflow de WhatsApp usa 2 agentes de IA especializados con handoff conversacional.',
+        tips: [
+          'Triaje Agent: saluda, responde info general, clasifica intención y decide si deriva',
+          'Agenda Agent: crea, cancela, modifica y consulta turnos',
+          'Handoff: cuando Triaje detecta una solicitud de turno, emite ###HANDOFF### y deriva a Agenda',
+          'Memoria compartida: ambos agentes usan el mismo Postgres Chat Memory (sessionKey=teléfono)',
+          'El paciente no nota el cambio de agente — la conversación fluye naturalmente',
+        ],
+      },
+      {
+        titulo: 'ADRs (Architecture Decision Records)',
+        descripcion: 'Decisiones de arquitectura documentadas en el repositorio.',
+        tips: [
+          'ADR-0001 reemplazado por ADR-0006 (multi-agente especializado con handoff)',
+          'ADR-0002: Pre-carga de datos vs toolCode (vigente)',
+          'ADR-0006 documenta la arquitectura multi-agente actual',
+          'Los ADRs están en docs/decisiones/ del repositorio',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Qué pasa si el Triaje Agent no entiende la intención?',
+        respuesta: 'Responde un mensaje amigable pidiendo clarificación. Si el paciente insiste con algo que no puede manejar, deriva al médico vía notificación.',
+      },
+      {
+        pregunta: '¿Los agentes recuerdan conversaciones anteriores?',
+        respuesta: 'Sí. La memoria conversacional se guarda en PostgreSQL (n8n_chat_histories) asociada al número de WhatsApp del paciente. La ventana de contexto es de 10 mensajes.',
+      },
+    ],
+  },
+  {
     id: 'acerca-de',
     titulo: 'Acerca de',
     descripcion: 'Información del sistema, versión, créditos y documentación técnica',

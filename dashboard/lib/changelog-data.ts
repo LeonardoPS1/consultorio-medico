@@ -10,8 +10,34 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 20/07/2026 — v1.19.0 scoring + compliance
+// Actualizado: 21/07/2026 — v1.21.0 proxy + multi-agent
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.21.0',
+    date: '21/07/2026',
+    title: 'Proxy y Sistema Multi-Agente',
+    items: [
+      'Migración middleware.ts → proxy.ts (Next.js 16.2+): función exportada renombrada, 0 errores',
+      'WF-01 refactorizado: monolítico 17 nodos → 23 nodos multi-agente con handoff conversacional',
+      'Triaje Agent + Agenda Agent con memoria compartida vía Postgres Chat Memory',
+      'ADR-0006: Multi-agente especializado con handoff (reemplaza ADR-0001)',
+      'Backup del workflow original en n8n-workflows/archive/',
+    ],
+  },
+  {
+    version: '1.20.0',
+    date: '20/07/2026',
+    title: 'Doc Completa, Compliance y Metabase',
+    items: [
+      'Documentación completa: AGENTS.md, ACCESS.md y docs-site (8 archivos mkdocs) actualizados',
+      'Metabase agregado: Stack, Roadmap, Infra, instalación, DNS pendiente',
+      'Dashboard Compliance: página completa con tabs Auditoría + ARCO + Metabase',
+      'WF-12 Scoring No-Show nocturno y WF-03 recordatorios 48h para pacientes de alto riesgo',
+      'Tabla consentimiento_log y auditoria_accesos documentadas en base-de-datos.md',
+      '6 nuevos endpoints en API Reference: compliance, auditoria-accesos, arco, scores',
+      'MkDocs build 0 errores (strict mode)',
+    ],
+  },
   {
     version: '1.19.0',
     date: '19/07/2026',
