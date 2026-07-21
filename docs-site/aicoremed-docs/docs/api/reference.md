@@ -25,10 +25,15 @@ integradores externos, no las rutas internas del dashboard) hasta que el spec
 autogenerado reemplace esta sección.
 
 | Método | Ruta | Descripción | Auth |
-|---|---|---|---|
+|---|---|---|---|---|
 | `POST` | `/api/webhooks/twilio` | Webhook entrante de WhatsApp/SMS | Firma HMAC Twilio |
 | `POST` | `/api/webhooks/mercadopago` | Webhook de confirmación de pago | Firma MercadoPago |
-| | | | |
+| `GET` | `/api/compliance` | Métricas de cumplimiento (tiempos espera, no-show, cancelaciones) | Sesión JWT |
+| `GET` | `/api/auditoria-accesos` | Registro de accesos a datos (paginado, filtrable) | Sesión JWT |
+| `GET` | `/api/auditoria-accesos/exportar` | Exportar CSV de accesos | Sesión JWT |
+| `GET` | `/api/arco` | Listar solicitudes ARCO | Sesión JWT |
+| `POST` | `/api/arco` | Crear solicitud ARCO | Sesión JWT |
+| `POST` | `/api/internal/scores/actualizar` | Actualizar scores no-show (job nocturno WF-12) | `x-internal-key` |
 
 *(completar a medida que se identifiquen los endpoints realmente consumidos por
 integradores externos — no es necesario documentar aquí las rutas internas del dashboard,

@@ -284,6 +284,21 @@ Registro de todas las operaciones sobre datos sensibles (cumplimiento Ley 26.529
 | `user_agent` | TEXT | User-Agent del navegador |
 | `created_at` | TIMESTAMPTZ | Fecha del evento |
 
+## Tabla: `consentimiento_log`
+
+Registro de solicitudes ARCO (Acceso, Rectificación, Cancelación, Oposición) y cambios de consentimiento (Ley 19.628 Chile).
+
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | UUID PK | Identificador único |
+| `paciente_id` | UUID FK → `pacientes.id` | Paciente relacionado |
+| `tipo` | VARCHAR(50) | Tipo: `acceso`, `rectificacion`, `cancelacion`, `oposicion`, `whatsapp`, `email` |
+| `accion` | VARCHAR(50) | Acción: `grant`, `revoke`, `request`, `accept`, `deny` |
+| `aceptado` | BOOLEAN | `true` si el consentimiento fue otorgado |
+| `ip` | VARCHAR(45) | Dirección IP del cliente |
+| `user_agent` | TEXT | User-Agent |
+| `created_at` | TIMESTAMPTZ | Fecha del registro |
+
 ## Triggers
 
 Todas las tablas principales tienen un trigger `BEFORE UPDATE` que actualiza automáticamente la columna `updated_at` a `NOW()`.

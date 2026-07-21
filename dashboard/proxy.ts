@@ -1,5 +1,5 @@
 // ============================================================
-// Middleware de Seguridad
+// Proxy de Seguridad (Next.js 16.2+)
 // ============================================================
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -42,7 +42,7 @@ if (typeof setInterval !== 'undefined') {
 }
 
 // ─── Headers de seguridad ──────────────────────────────────
-// Todos centralizados AQUÍ (middleware corre después de next.config.js).
+// Todos centralizados AQUÍ (proxy corre después de next.config.js).
 // next.config.js solo mantiene headers para caching del SW y CSP report.
 const securityHeaders: Record<string, string> = {
   'X-Frame-Options': 'DENY',
@@ -93,8 +93,8 @@ function detectTenant(hostname: string): string {
   return '00000000-0000-0000-0000-000000000000';
 }
 
-// ─── Middleware principal ──────────────────────────────────
-export function middleware(request: NextRequest) {
+// ─── Proxy principal ──────────────────────────────────────
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ─── 1. Detectar tenant, requestId y pasar a la request ──
@@ -238,7 +238,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Aplicar middleware a todas las rutas excepto archivos estáticos
+    // Aplicar proxy a todas las rutas excepto archivos estáticos
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$).*)',
   ],
 };

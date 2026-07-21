@@ -142,7 +142,7 @@ ANTI-JAILBREAK:
 
 ### Multi-Tenant
 - `tenantId` presente en 22+ tablas
-- Aislado por middleware que inyecta `x-tenant-id` header
+- Aislado por proxy que inyecta `x-tenant-id` header
 - Cada query filtra por `tenantId`
 
 ### Soft Delete

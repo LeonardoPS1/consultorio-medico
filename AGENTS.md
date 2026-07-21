@@ -99,6 +99,7 @@
 | **Automatización** | n8n (self-hosted) | 2.19.5 |
 | **IA Local** | Ollama + gemma3/llama3.2 | Último |
 | **WhatsApp** | Twilio API | ^5.0.0 |
+| **Analítica** | Metabase (self-hosted) | 0.52.x |
 | **Pagos** | MercadoPago (sandbox, CLP) | ^2.12.1 |
 | **Calendario** | Google Calendar API (service account) | — |
 | **Infraestructura** | Docker Swarm + Dokploy | — |
@@ -634,6 +635,9 @@ consultorio-medico/
 | **Accesibilidad + Chromatic CI** | @axe-core/playwright tests, Kanban keyboard nav (ArrowLeft/Right/Enter), Chromatic workflow en CI. Commit `eea58ce` | 18/07 |
 | **Docs MkDocs site** | 6 módulos documentados (turnos, pacientes, recetas, conversaciones, telemedicina, portal-pacientes) + docker-compose.prod.yml + GitHub Actions CI/CD. Commit `ae2ad88` | 18/07 |
 | **Pipeline GHA→ghcr.io→Dokploy** | Proxy endpoint POST /api/deploy/dokploy, sourceType docker apps, registry ghcr.io con PAT, GHA deploy trigger via dashboard proxy. Commit `fb11710` | 18/07 |
+| **Compliance Tabs (Auditoría + ARCO)** | Página compliance con 3 tabs: tiempos espera, registro accesos (filtros + CSV export), solicitudes ARCO (CRUD). APIs `/api/auditoria-accesos`, `/api/arco`, `/api/auditoria-accesos/exportar`. Commit `8650ebd` | 20/07 |
+| **WF-12 Scoring No-Show Nocturno** | Workflow n8n nocturno (3:30 AM) actualiza risk_score para turnos próximos. WF-03 modificado para recordatorios 48h a pacientes alto/crítico. API `/api/internal/scores/actualizar`. Commit `8650ebd` | 20/07 |
+| **Metabase infraestructura** | Servicio agregado a `docker-compose.prod.yml` (imagen v0.52, PostgreSQL backend, read-only user para datos). Script `scripts/setup-metabase.sql`. Commit `8650ebd` | 20/07 |
 
 ### 🟡 Prioridad Media
 
@@ -672,18 +676,21 @@ consultorio-medico/
 |--------|--------|------------|
 | `app-hack-back-end-sensor-jd2eu3` | **AicoreMed-dashboard** | `/etc/dokploy/applications/app-hack-back-end-sensor-jd2eu3/code/` |
 | `aicore-n8nrunnerpostgresollama-a715gi` | **Backend** (n8n+PG+Ollama) | `/etc/dokploy/compose/aicore-n8nrunnerpostgresollama-a715gi/code/` |
+| `AER47YKE7QxHmysEfklXu` | **AiCoreMed-Docs** | Swarm service `med-docs` |
 
 ### URLs
 | Servicio | URL |
 |----------|-----|
 | Dashboard | `https://med.aicorebots.com` |
 | n8n | `https://n8n.aicorebots.com` |
-| Dokploy UI | `https://51.222.207.250:3000` |
+| Dokploy UI | `https://dokploy.aicorebots.com` |
+| Metabase | `https://metabase.aicorebots.com` (pendiente DNS) |
 
 ### Resource Limits
 | Contenedor | CPU | RAM |
 |------------|-----|-----|
 | Dashboard | 0.5 | 512MB |
+| Metabase | 1 | 2GB |
 | Ollama | — | 8GB |
 
 ### Docker Compose

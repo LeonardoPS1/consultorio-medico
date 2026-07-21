@@ -29,6 +29,7 @@ graph TD
         WF4[WF-04: Correo Inteligente]
         WF5[WF-05: Resumen Diario]
         WF6[WF-06: Recetas]
+        WF12[WF-12: Scoring No-Show]
     end
 
     N8N --> OLLAMA["🧠 IA Local (Ollama + Gemma3)"]
@@ -56,9 +57,11 @@ graph TD
         T10[suscripciones]
         T11[credenciales]
         T12[auditoría]
+        T13[risk_score]
     end
 
-    PG --> DASH["📊 Dashboard Web (Next.js 14 + shadcn/ui)"]
+    PG --> DASH["📊 Dashboard Web (Next.js 16 + shadcn/ui)"]
+    PG --> MB["📈 Metabase (Analytics)"]
 
     subgraph DASH [Dashboard]
         D1[KPIs]
@@ -69,6 +72,13 @@ graph TD
         D6[Reportes]
         D7[Configuración]
         D8[Admin]
+        D9[Compliance]
+    end
+
+    subgraph MB [Metabase]
+        M1[Dashboards personalizados]
+        M2[Reportes SQL]
+        M3[Sincronización horaria]
     end
 ```
 
@@ -137,7 +147,7 @@ graph LR
 
 ```mermaid
 graph TD
-    NEXT["Next.js 14 (App Router)"] --> PUBLIC["Páginas públicas"]
+    NEXT["Next.js 16 (App Router)"] --> PUBLIC["Páginas públicas"]
     NEXT --> PRIV["Páginas protegidas dashboard/"]
 
     subgraph PUBLIC [Públicas]
@@ -148,12 +158,13 @@ graph TD
 
     subgraph PRIV [Dashboard]
         KPIS["Panel principal (KPIs)"]
-        TURNOS["Turnos + FullCalendar"]
+        TURNOS["Turnos + Kanban + FullCalendar"]
         PACI["Pacientes (CRUD + historial)"]
         CONV["Conversaciones (bandeja unificada)"]
-        RECE["Recetas (activas + vencidas)"]
+        RECE["Recetas (activas + vencidas + QR)"]
         REPORT["Reportes (gráficos + métricas)"]
-        CONFIG["Configuración (perfil, suscripción, equipo)"]
+        CONFIG["Configuración (perfil, suscripción, equipo, regional)"]
+        COMPLI["Compliance (tiempos, auditoría, ARCO)"]
     end
 
     PRIV --> API["API Routes (app/api/)"]
@@ -251,6 +262,7 @@ graph TD
 | **Base de Datos** | PostgreSQL | 15+ |
 | **Automatización** | n8n (self-hosted) | Última |
 | **IA Local** | Ollama + Gemma3 | - |
+| **Analítica** | Metabase (self-hosted) | 0.52.x |
 | **Mensajería** | Twilio (WhatsApp, SMS) | - |
 | **Autenticación** | NextAuth v5 + bcrypt | - |
 | **Pagos** | MercadoPago SDK | 2.12+ |
@@ -328,7 +340,7 @@ En lugar de una tabla separada, se agregaron columnas `reset_token` y `reset_tok
 - HMAC timingSafeEqual en webhooks n8n
 - Sanitización de prompts IA anti-jailbreak
 - Consentimiento explícito para comunicación por WhatsApp/email
-- CSP centralizado en middleware + COOP/COEP/CORP
+- CSP centralizado en proxy + COOP/COEP/CORP
 - Docker secrets en producción (credenciales no en .env)
 - Mínimo privilegio PostgreSQL (REVOKE CREATE post-migración)
 - Variables de entorno para todas las credenciales

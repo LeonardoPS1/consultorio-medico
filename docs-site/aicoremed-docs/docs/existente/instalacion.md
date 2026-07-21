@@ -148,6 +148,48 @@ credenciales, plantillas_mensajes, preferencias_notificaciones,
 auditoria_accesos, api_keys, workflow_logs, encuestas, etc.
 ```
 
+### Metabase (Analytics)
+
+El sistema incluye **Metabase v0.52** para self-service analytics.
+
+#### Setup inicial
+
+1. **Ejecutar script SQL** como superusuario PostgreSQL para crear usuarios y DB de metadata:
+   ```bash
+   sudo docker exec -i postgres_container psql -U superuser < scripts/setup-metabase.sql
+   ```
+
+2. **Crear secrets en Docker Swarm** (si no existen):
+   ```bash
+   echo "password_metabase_db" | docker secret create metabase_db_password -
+   echo "password_metabase_readonly" | docker secret create metabase_readonly_password -
+   echo "clave_encriptacion_32_chars_min" | docker secret create metabase_encryption_key -
+   ```
+
+3. **Acceder a Metabase** en `http://<vps-ip>:3001` y configurar:
+   - Cuenta admin inicial
+   - Agregar DB `consultorio_medico` con usuario `metabase_readonly`
+   - Crear dashboards según necesidad
+
+#### Servicio Docker
+Metabase corre como servicio en `docker-compose.prod.yml`:
+```yaml
+metabase:
+  image: metabase/metabase:v0.52
+  ports:
+    - "3001:3000"
+  secrets:
+    - metabase_db_password
+    - metabase_encryption_key
+  environment:
+    - MB_DB_TYPE=postgres
+    - MB_DB_HOST=postgres
+    - MB_DB_DBNAME=metabase
+    - MB_DB_USER=metabase_user
+    - MB_DB_PASS_FILE=/run/secrets/metabase_db_password
+    - MB_ENCRYPTION_SECRET_KEY_FILE=/run/secrets/metabase_encryption_key
+```
+
 ### Migraciones
 ```bash
 # Generar nueva migración

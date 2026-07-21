@@ -41,7 +41,7 @@ export async function GET() {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  // Obtener tenantId del header (inyectado por middleware)
+  // Obtener tenantId del header (inyectado por proxy)
   // Usar el del usuario como fallback
   const keys = await listApiKeys('00000000-0000-0000-0000-000000000000');
 

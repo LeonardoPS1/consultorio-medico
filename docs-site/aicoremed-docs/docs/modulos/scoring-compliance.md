@@ -169,6 +169,98 @@ Eje X: meses del período. Barras azules para días de espera promedio, línea v
 
 Cada médico con su % de cumplimiento. Barras coloreadas (verde ≥90%, amarillo ≥75%, rojo <75%).
 
+## Tabs de Cumplimiento (Ley 21.719)
+
+La página `/dashboard/compliance` tiene 3 tabs navegables:
+
+| Tab | Propósito |
+|-----|-----------|
+| **Tiempos de Espera** | KPIs y charts de cumplimiento de plazos |
+| **Registro de Accesos** | Auditoría de accesos a datos de pacientes |
+| **Solicitudes ARCO** | Gestión de derechos ARCO (Acceso, Rectificación, Cancelación, Oposición) |
+
+### Tab: Registro de Accesos
+
+#### Propósito
+Registro detallado de quién accedió a qué datos de pacientes, cuándo y desde dónde. Cumplimiento de la Ley 19.628 (Chile) sobre protección de datos personales.
+
+#### API Endpoint
+
+**`GET /api/auditoria-accesos`**
+
+| Parámetro | Tipo | Default | Descripción |
+|-----------|------|---------|-------------|
+| `pagina` | int | `1` | Número de página |
+| `limite` | int | `50` | Registros por página (max 100) |
+| `accion` | string | — | Filtrar por acción (`login`, `logout`, `view_paciente`, `edit_turno`, etc.) |
+| `entidad` | string | — | Filtrar por entidad (`pacientes`, `turnos`, `recetas`, etc.) |
+| `usuarioId` | UUID | — | Filtrar por usuario |
+| `desde` | ISO date | — | Fecha inicial |
+| `hasta` | ISO date | — | Fecha final |
+
+**Respuesta**:
+```typescript
+{
+  accesos: Array<{
+    id: string;
+    accion: string;
+    entidad: string;
+    entidadId: string | null;
+    detalle: string | null;
+    ip: string | null;
+    userAgent: string | null;
+    createdAt: Date;
+    usuarioNombre: string | null;
+    usuarioEmail: string | null;
+  }>;
+  paginacion: { pagina: number; limite: number; total: number; totalPaginas: number; hayMas: boolean };
+}
+```
+
+#### UI: AuditoriaTab
+
+- Tabla paginada con columnas: Fecha, Usuario, Acción, Entidad, Detalle, IP
+- Filtros combinables: acción, entidad, usuario, rango de fechas
+- Exportación CSV desde botón "Exportar CSV"
+- El export usa `GET /api/auditoria-accesos/exportar` con los mismos filtros
+- Los accesos se registran automáticamente en `auditoria_accesos` via proxy y server actions
+
+### Tab: Solicitudes ARCO
+
+#### Propósito
+Gestión de derechos ARCO: pacientes pueden solicitar acceso, rectificación, cancelación u oposición al tratamiento de sus datos personales.
+
+#### API Endpoint
+
+**`GET /api/arco`** — Lista solicitudes
+
+| Parámetro | Tipo | Default | Descripción |
+|-----------|------|---------|-------------|
+| `pagina` | int | `1` | Número de página |
+| `limite` | int | `50` | Registros por página |
+| `tipo` | string | — | Filtrar por tipo (`acceso`, `rectificacion`, `cancelacion`, `oposicion`) |
+| `pacienteId` | UUID | — | Filtrar por paciente |
+
+**Respuesta**: Lista de solicitudes con datos del paciente (nombre, apellido), tipo, acción, fecha.
+
+**`POST /api/arco`** — Crear solicitud
+
+```json
+{
+  "pacienteId": "uuid",
+  "tipo": "acceso|rectificacion|cancelacion|oposicion",
+  "accion": "grant|revoke|request",
+  "motivo": "string (opcional)"
+}
+```
+
+#### UI: ArcOTab
+
+- Tabla con solicitudes ARCO: Paciente, Tipo, Acción, Fecha
+- Modal para crear nueva solicitud (seleccionar paciente, tipo, acción, motivo opcional)
+- Cada solicitud se registra en `consentimiento_log` y en `auditoria_accesos`
+- Filtro por tipo de solicitud
+
 ### Reglas de Negocio
 
 - Plazo máximo de 30 días naturales para atención de salud general
@@ -176,3 +268,45 @@ Cada médico con su % de cumplimiento. Barras coloreadas (verde ≥90%, amarillo
 - El score de cumplimiento se calcula sobre turnos `completada`, `atendido`, `no_asistio`
 - Turnos cancelados por el médico cuentan como incumplimiento
 - No-show del paciente NO cuenta como incumplimiento del médico
+
+## Metabase Analytics
+
+### Propósito
+Self-service analytics para que el médico cree dashboards y reportes personalizados sobre la base de datos del consultorio, sin intervención del equipo técnico.
+
+### Infraestructura
+
+| Propiedad | Valor |
+|-----------|-------|
+| **Imagen** | `metabase/metabase:v0.52` |
+| **Puerto** | 3001 (interno) |
+| **Base de datos** | PostgreSQL metabase (metadata interna) |
+| **Usuario DB** | `metabase_user` |
+| **Usuario lectura** | `metabase_readonly` (solo SELECT en `consultorio_medico`) |
+| **Secrets Docker** | `metabase_db_password`, `metabase_readonly_password`, `metabase_encryption_key` |
+
+### Configuración Inicial (después del primer deploy)
+
+1. Acceder a `http://<vps-ip>:3001` (o `https://metabase.aicorebots.com` cuando DNS esté configurado)
+2. Crear cuenta admin
+3. Agregar base de datos:
+   - Tipo: PostgreSQL
+   - Host: `postgres` (dentro de la red Docker)
+   - Puerto: `5432`
+   - Base de datos: `consultorio_medico`
+   - Usuario: `metabase_readonly`
+   - Contraseña: la del secret `metabase_readonly_password`
+4. Configurar sincronización automática (cada hora)
+5. Crear dashboards según necesidad
+
+### Setup Script
+
+`scripts/setup-metabase.sql` crea:
+- Base de datos `metabase` para metadata interna
+- Usuario `metabase_user` con permisos totales sobre `metabase` DB
+- Usuario `metabase_readonly` con permisos SELECT sobre `consultorio_medico` (todas las tablas existentes y futuras)
+
+```sql
+-- Ejecutar como superusuario en PostgreSQL
+\i scripts/setup-metabase.sql
+```

@@ -43,6 +43,7 @@ integrado cada uno vive en [Arquitectura](../existente/arquitectura.md).
 - **Docker Swarm + Traefik** — despliegue self-hosted en VPS propia, sin dependencia de
   proveedores cloud administrados.
 - **Dokploy** — capa de gestión de despliegues sobre la VPS.
+- **Metabase** — self-service analytics con dashboards configurables sobre PostgreSQL.
 
 ## Por qué self-hosted en cada capa
 

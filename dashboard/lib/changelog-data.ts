@@ -154,7 +154,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     items: [
       'Webhook secret con timingSafeEqual en 3 endpoints (n8n, anonimizar, waitlist)',
       'Docker secrets para credenciales sensibles + env fallback',
-      'CSP centralizado en middleware + headers COOP/COEP/CORP',
+      'CSP centralizado en proxy + headers COOP/COEP/CORP',
       'Rate limiting PostgreSQL en endpoints sensibles',
       'Migraciones productivas con permisos mínimos (revoca CREATE)',
       'CI: pnpm audit + Trivy scan + Dependabot (npm+docker+actions)',
