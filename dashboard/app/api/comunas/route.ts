@@ -5,6 +5,7 @@ import { eq, asc } from 'drizzle-orm';
 import { cache } from '@/lib/cache';
 
 // Datos estáticos (cambian una vez por década) — cache de 24hs
+export const dynamic = 'force-dynamic';
 export const revalidate = 86400;
 
 const CACHE_TTL = 86_400_000; // 24hs
