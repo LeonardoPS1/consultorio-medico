@@ -1,11 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { sql } from 'drizzle-orm';
-import fs from 'fs';
-import path from 'path';
-import zlib from 'zlib';
-import { Readable } from 'stream';
 
 // ============================================================
 // Config
@@ -13,7 +9,8 @@ import { Readable } from 'stream';
 
 const BACKUP_DIR = process.env.BACKUP_DIR || '/tmp/backups';
 
-function ensureDir() {
+async function ensureDir() {
+  const fs = await import('fs');
   if (!fs.existsSync(BACKUP_DIR)) {
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
   }
@@ -30,7 +27,9 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    ensureDir();
+    const fs = await import('fs');
+    const path = await import('path');
+    await ensureDir();
     const files = fs
       .readdirSync(BACKUP_DIR)
       .filter((f) => f.endsWith('.sql.gz'))
@@ -75,7 +74,11 @@ export async function POST() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    ensureDir();
+    const fs = await import('fs');
+    const path = await import('path');
+    const zlib = await import('zlib');
+    const { Readable } = await import('stream');
+    await ensureDir();
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const id = `backup_${timestamp}`;

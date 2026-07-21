@@ -23,6 +23,9 @@ const nextConfig = withBundleAnalyzer({
     formats: ['image/avif', 'image/webp'],
   },
   outputFileTracingRoot: path.join(__dirname, '..'),
+  outputFileTracingExcludes: {
+    '**/*': ['**/app/api/admin/backups/**'],
+  },
   output: process.env.DISABLE_STANDALONE === 'true' ? undefined : 'standalone',
   env: {
     NEXT_PUBLIC_APP_NAME: 'AiCoreMed',
