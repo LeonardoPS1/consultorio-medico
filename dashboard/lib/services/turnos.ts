@@ -307,7 +307,7 @@ export const turnosService = {
       }
 
       // Invalidar cache de listados
-      cache.invalidate('turnos:list:');
+      cache.invalidate('turnos:list:*');
 
       return nuevo;
     } catch (error) {
@@ -438,7 +438,7 @@ export const turnosService = {
       }
 
       // Invalidar cache de listados
-      cache.invalidate('turnos:list:');
+      cache.invalidate('turnos:list:*');
 
       return turnoActualizado;
     } catch (error) {

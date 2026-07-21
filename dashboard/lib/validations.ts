@@ -587,7 +587,7 @@ export const bulkWhatsAppSchema = z.object({
 
 export const bulkStatusSchema = z.object({
   turnoIds: z.array(z.string().regex(UUID_REGEX, 'ID de turno inválido')).min(1).max(500),
-  estado: z.enum(['pendiente', 'confirmado', 'en_curso', 'completado', 'cancelado', 'no_asistio']),
+  estado: z.enum(['pendiente', 'confirmada', 'en_atencion', 'atendido', 'cancelada', 'completada', 'no_asistio']),
 });
 
 export type BulkWhatsAppData = z.infer<typeof bulkWhatsAppSchema>;
