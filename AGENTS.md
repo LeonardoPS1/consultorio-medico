@@ -201,25 +201,33 @@ consultorio-medico/
 |-----------|-------|
 | **Archivo** | `n8n-workflows/current/workflow-01-agent.json` |
 | **Trigger** | Webhook → `POST /webhook/consultorio-inbound` |
-| **Estado** | ✅ **ACTIVO** |
-| **Nodos** | 17 (webhook, IF, set, postgres×5, code×2, Ollama Agent, Postgres Memory, Twilio) |
+| **Estado** | ✅ **ACTIVO** (refactorizado a multi-agente) |
+| **Nodos** | 23 (webhook, IF, set, postgres×5, code×5, merge, AI Agent×2, Chat Model×2, Memory×2, Twilio) |
+| **Arquitectura** | [ADR-0006](../docs/decisiones/0006-multi-agente-especializado.md) — Multi-agente con handoff conversacional |
 
-**Flujo:**
+**Flujo Multi-Agente:**
 1. Webhook recibe mensaje de Twilio (con `x-webhook-secret` validado)
 2. Busca/crea paciente en PostgreSQL por teléfono
 3. Consulta turnos próximos y recetas activas del paciente
-4. Construye contexto estructurado para el AI Agent
-5. **AI Agent** (Ollama Gemma3 + Postgres Chat Memory) analiza y responde
-6. Si detecta acciones estructuradas: `crear_turno`, `cancelar_turno`, `receta`, `urgencia`
-7. Envía respuesta vía Twilio WhatsApp
-8. Loggea todo en PostgreSQL
+4. Construye contexto estructurado con datos del paciente
+5. **Triaje Agent** (Ollama Gemma3 + Postgres Chat Memory) clasifica intención:
+   - **Saludo / info general / urgencia** → responde directamente (sin handoff)
+   - **Crear/cancelar/modificar turno** → emite `###HANDOFF###{"destino":"agenda"}###FIN###`
+   - **Recetas/consultas clínicas** → emite HANDOFF clínico (Fase 2)
+6. Si hay HANDOFF → **Agenda Agent** (Ollama Gemma3 + misma Chat Memory) gestiona turnos
+7. Si detecta acciones estructuradas: `crear_turno`, `cancelar_turno`
+8. Envía respuesta vía Twilio WhatsApp
+9. Loggea todo en PostgreSQL con campo `subAgente` (`triaje`|`agenda`)
 
 **Configuración IA:**
-- Modelo: `gemma3` (Ollama)
-- Base URL: `http://ollama:11434`
-- Temperatura: 0.3
-- Chat Memory: Postgres (`n8n_chat_histories`, sessionKey=telefono, contextWindow=10)
-- System Prompt: Completo con reglas de negocio, formato de acciones, contexto del paciente
+
+| Parámetro | Triaje Agent | Agenda Agent |
+|-----------|-------------|--------------|
+| Modelo | `gemma3` | `gemma3` |
+| Base URL | `http://ollama:11434` | `http://ollama:11434` |
+| Temperatura | 0.3 | 0.3 |
+| Prompt | ~20 líneas (saludo + clasificación + handoff) | ~15 líneas (solo turnos + acciones) |
+| Chat Memory | Postgres (sessionKey=phone, contextWindow=10) | Postgres (mismo sessionKey=phone) |
 
 **Credenciales:** Consultorio - PostgreSQL, Consultorio - Twilio Basic Auth, Ollama - Consultorio Medico
 
@@ -456,7 +464,7 @@ consultorio-medico/
 
 | # | Nombre | Trigger | Ollama | Twilio | PG | GCal | IMAP | Webhook |
 |---|--------|---------|--------|--------|----|------|------|---------|
-| **WF-01** | WhatsApp Inbound + Triaje IA | Webhook | ✅ Agent | ✅ | ✅ | ❌ | ❌ | `/consultorio-inbound` |
+| **WF-01** | WhatsApp Inbound + Triaje IA | Webhook | ✅ 2 Agents | ✅ | ✅ | ❌ | ❌ | `/consultorio-inbound` |
 | **WF-02** | Gestión de Turnos | Webhook | ✅ 2 nodos | ✅ | ✅ | ✅ | ❌ | `/turno-solicitar` |
 | **WF-03** | Recordatorios Automáticos | Cron | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **WF-04** | Correo Inteligente | IMAP | ✅ Agent | ✅ | ✅ | ❌ | ✅ | ❌ |

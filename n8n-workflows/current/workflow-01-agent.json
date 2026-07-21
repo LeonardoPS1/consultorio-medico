@@ -126,8 +126,7 @@
     },
     {
       "parameters": {
-        "code": "// Obtener datos del paciente\nconst paciente = $(\"Obtener o Crear Paciente\").first().json;\nconst turnos = $(\"Consultar Turnos del Paciente\").all().map(i => i.json);\nconst recetas = $(\"Consultar Recetas Activas\").all().map(i => i.json).filter(r => r.estado === 'activa' || r.estado === 'pendiente');\nconst extraer = $(\"Extraer Datos\").first().json;\n\n// Helper para escapar strings SQL\nconst esc = (s) => (s || '').replace(/'/g, \"''\");\n\n// Formatear turnos y recetas para el prompt\nconst turnosTexto = turnos.length > 0\n  ? turnos.map(t => `- ${new Date(t.fecha_hora).toLocaleDateString(\"es-AR\", {weekday: \"long\", day: \"numeric\", month: \"long\"})} a las ${(t.hora_inicio || '').substring(0,5)} con Dr. ${t.medico_nombre} (${t.motivo || 'consulta'})`).join('\\n')\n  : 'No tiene turnos pr\u00f3ximos.';\n\nconst recetasTexto = recetas.length > 0\n  ? recetas.map(r => `- ${r.medicamento} ${r.dosis || ''} (vence: ${(r.created_at || \"\", 0, 10) || 'N/A'})`).join('\\n')\n  : 'No tiene recetas activas.';\n\nconst fechaActual = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });\n\n// System prompt completo para el AI Agent\nconst systemPrompt = `Sos el asistente virtual del Consultorio M\u00e9dico. Atend\u00e9s pacientes por WhatsApp.\nFecha actual: ${fechaActual}\n\n=== DATOS DEL PACIENTE ===\nNombre: ${paciente.nombre || extraer.profileName}\nTel\u00e9fono: ${paciente.telefono}\n\n=== TURNOS PR\u00d3XIMOS ===\n${turnosTexto}\n\n=== RECETAS ACTIVAS ===\n${recetasTexto}\n\n=== INSTRUCCIONES ===\nRespond\u00e9 en espa\u00f1ol argentino, con tono c\u00e1lido y profesional. S\u00e9 breve y resolutivo.\n\nREGLAS:\n- NO inventes diagn\u00f3sticos\n- NO recetes medicamentos ni recomiendes tratamientos\n- SIEMPRE deriv\u00e1 urgencias al m\u00e9dico\n- Horarios: \"Lunes a viernes de 8 a 20hs, s\u00e1bados de 9 a 13hs\"\n- Urgencias: \"Si es una emergencia, dirigite a la guardia o llam\u00e1 al 107\"\n\nCUANDO EL PACIENTE PIDA UNA ACCI\u00d3N (crear/cancelar turno, renovar receta):\nRespond\u00e9 de forma natural, y al final agreg\u00e1 SOLAMENTE:\n###ACCION###\n{\"tipo\": \"crear_turno\", \"data\": {\"fecha\": \"YYYY-MM-DD\", \"hora\": \"HH:MM\", \"motivo\": \"...\"}}\n###FIN###\n\nTipos: crear_turno | cancelar_turno | solicitar_receta | notificar_urgencia\nNO incluyas ###ACCION### si solo respond\u00e9s una consulta o saludo.`;\n\nconst contexto = {\n  paciente: {\n    id: paciente.id,\n    telefono: paciente.telefono,\n    nombre: paciente.nombre || extraer.profileName,\n    apellido: paciente.apellido\n  },\n  turnosProximos: turnos.map(t => ({\n    id: t.id, fecha: t.fecha_hora, hora: (t.hora_inicio || '').substring(0,5),\n    medico: t.medico_nombre, especialidad: t.especialidad,\n    motivo: t.motivo, estado: t.estado\n  })),\n  recetasActivas: recetas.map(r => ({\n    id: r.id, medicamento: r.medicamento, dosis: r.dosis,\n    indicaciones: r.indicaciones, estado: r.estado\n  })),\n  systemPrompt: systemPrompt,\n  phone: extraer.phone,\n  message: extraer.message,\n  profileName: extraer.profileName,\n  twilioSid: extraer.twilioSid,\n  toNumber: extraer.toNumber,\n  fromNumber: extraer.fromNumber\n};\n\nreturn [contexto];",
-        "options": {}
+        "code": "// Obtener datos del paciente\nconst paciente = $(\"Obtener o Crear Paciente\").first().json;\nconst turnos = $(\"Consultar Turnos del Paciente\").all().map(i => i.json);\nconst recetas = $(\"Consultar Recetas Activas\").all().map(i => i.json).filter(r => r.estado === 'activa' || r.estado === 'pendiente');\nconst extraer = $(\"Extraer Datos\").first().json;\n\nconst esc = (s) => (s || '').replace(/'/g, \"''\");\n\nconst turnosTexto = turnos.length > 0\n  ? turnos.map(t => `- ${new Date(t.fecha_hora).toLocaleDateString(\"es-AR\", {weekday: \"long\", day: \"numeric\", month: \"long\"})} con Dr. ${t.medico_nombre} (${t.motivo || 'consulta'})`).join('\\n')\n  : 'No tiene turnos pr\u00f3ximos.';\n\nconst recetasTexto = recetas.length > 0\n  ? recetas.map(r => `- ${r.medicamento} ${r.dosis || ''}`).join('\\n')\n  : 'No tiene recetas activas.';\n\nconst fechaActual = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });\n\n// TRIAGE system prompt - clasifica y deriva\nconst triajePrompt = `Sos el asistente de atenci\u00f3n inicial del Consultorio M\u00e9dico. Atend\u00e9s pacientes por WhatsApp.\n\nFecha actual: ${fechaActual}\n\n=== DATOS DEL PACIENTE ===\nNombre: ${paciente.nombre || extraer.profileName}\nTel\u00e9fono: ${paciente.telefono}\n\n=== TURNOS PR\u00d3XIMOS ===\n${turnosTexto}\n\n=== RECETAS ACTIVAS ===\n${recetasTexto}\n\n=== INSTRUCCIONES ===\nRespond\u00e9 en espa\u00f1ol argentino, con tono c\u00e1lido y profesional. S\u00e9 breve.\n\nFUNCIONES:\n- Saludar y responder info general (horarios: Lun-Vie 8-20hs, S\u00e1b 9-13hs)\n- Informar turnos pr\u00f3ximos y recetas activas del paciente\n- Derivar urgencias (dec\u00ed \"Si es una emergencia, dirigite a la guardia o llam\u00e1 al 107\")\n- Si el paciente QUIERE crear/cancelar/modificar/consultar un turno: decile \"Dale, te paso con el \u00e1rea de turnos\" y agreg\u00c1 al final: ###HANDOFF###\\n{\"destino\":\"agenda\"}\\n###FIN###\n- Si el paciente pregunta por recetas o consultas cl\u00ednicas: decile \"Te paso con el \u00e1rea de recetas\" y agreg\u00c1: ###HANDOFF###\\n{\"destino\":\"clinico\"}\\n###FIN###\n- Para TODO lo que no sea saludo/info general/urgencia, us\u00c1 HANDOFF\n- NO inventes diagn\u00f3sticos ni recetes medicamentos`;\n\n// Pasar tambi\u00e9n datos estructurados para los sub-agentes\nreturn [{\n  paciente: { id: paciente.id, telefono: paciente.telefono, nombre: paciente.nombre || extraer.profileName, apellido: paciente.apellido || '' },\n  turnosProximos: turnos.map(t => ({ id: t.id, fecha: t.fecha_hora, medico: t.medico_nombre, especialidad: t.especialidad, motivo: t.motivo, estado: t.estado })),\n  recetasActivas: recetas.map(r => ({ id: r.id, medicamento: r.medicamento, dosis: r.dosis, indicaciones: r.indicaciones, estado: r.estado })),\n  phone: extraer.phone,\n  message: extraer.message,\n  profileName: extraer.profileName,\n  twilioSid: extraer.twilioSid,\n  toNumber: extraer.toNumber,\n  fromNumber: extraer.fromNumber,\n  systemPrompt: triajePrompt\n}];"
       },
       "name": "Construir Contexto Paciente",
       "type": "n8n-nodes-base.code",
@@ -142,7 +141,7 @@
           "temperature": 0.3
         }
       },
-      "name": "Ollama Chat Model",
+      "name": "Ollama - Triaje",
       "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
       "typeVersion": 1,
       "position": [1800, 80]
@@ -152,7 +151,7 @@
         "sessionKey": "={{ $('Extraer Datos').first().json.phone }}",
         "contextWindowLength": 10
       },
-      "name": "Postgres Chat Memory",
+      "name": "Postgres Memory - Triaje",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgres",
       "typeVersion": 1,
       "position": [1800, 520]
@@ -163,7 +162,7 @@
         "systemMessage": "={{ $json.systemPrompt }}",
         "options": {}
       },
-      "name": "AI Agent",
+      "name": "Triaje Agent",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 1,
       "position": [2100, 300]
@@ -181,20 +180,131 @@
         },
         "options": {}
       },
-      "name": "Extraer Output del Agente",
+      "name": "Extraer Output Triaje",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [2370, 300]
     },
     {
       "parameters": {
-        "code": "// Obtener la respuesta del agente\nconst rawText = $input.first().json.agentOutput || $input.first().json.output || '';\n\n// Datos de contexto\nconst ctx = $(\"Construir Contexto Paciente\").first().json;\nconst pacienteId = $(\"Obtener o Crear Paciente\").first().json.id;\nconst extraer = $(\"Extraer Datos\").first().json;\n\n// Helper para escapar SQL (protecci\u00f3n contra inyecci\u00f3n)\n// NOTA: En producci\u00f3n considerar migrar esto a nodos PostgreSQL con queryParams\nconst esc = (s) => {\n  if (!s) return '';\n  return String(s)\n    .replace(/'/g, \"''\")         // Escapar comillas simples (SQL injection)\n    .replace(/\\\\/g, '\\\\\\\\')  // Escapar backslashes\n    .replace(/\\0/g, '')          // Eliminar null bytes\n    .replace(/\\x1a/g, '');       // Eliminar caracteres de control\n};\n\n// Buscar acci\u00f3n estructurada\nconst actionMatch = rawText.match(/###ACCION###\\n([\\s\\S]*?)\\n###FIN###/);\nlet accion = null;\nlet textoLimpio = rawText;\n\nif (actionMatch) {\n  try {\n    accion = JSON.parse(actionMatch[1].trim());\n    textoLimpio = rawText.replace(/###ACCION###[\\s\\S]*?###FIN###/, '').trim();\n  } catch (e) { accion = null; }\n}\n\n// Construir SQL para guardar conversaci\u00f3n\nconst sqlGuardar = `INSERT INTO mensajes (conversacion_id, rol, contenido, tipo, twilio_sid, n8n_execution_id) VALUES ((SELECT id FROM conversaciones WHERE paciente_id = ${pacienteId} AND estado = 'activa' LIMIT 1), 'paciente', '${esc(extraer.message)}', 'texto', '${esc(extraer.twilioSid)}', '${$execution.id}'); INSERT INTO mensajes (conversacion_id, rol, contenido, tipo, n8n_execution_id) VALUES ((SELECT id FROM conversaciones WHERE paciente_id = ${pacienteId} AND estado = 'activa' LIMIT 1), 'asistente', '${esc(textoLimpio)}', 'texto', '${$execution.id}');`;\n\n// Construir SQL para log\nconst sqlLog = `INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje) VALUES ('${$execution.id}', 'WhatsApp Agent', '${$execution.id}', 'info', '${esc('WhatsApp procesado por AI Agent. Paciente: ' + (pacienteId || '') + ' | Respuesta: ' + textoLimpio.substring(0, 100))}');`;\n\n// Construir SQL para acci\u00f3n pendiente (si aplica)\nlet sqlAccion = null;\nif (accion) {\n  sqlAccion = `INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje) VALUES ('${$execution.id}', 'WhatsApp Agent', '${$execution.id}', '${esc(accion.tipo || 'accion')}', '${esc('ACCION PENDIENTE: ' + JSON.stringify(accion))}');`;\n}\n\n// Output unificado\nreturn [{\n  responseText: textoLimpio,\n  tieneAccion: accion !== null,\n  accionTipo: accion ? accion.tipo : null,\n  accionData: accion ? accion.data : null,\n  sqlGuardar: sqlGuardar,\n  sqlLog: sqlLog,\n  sqlAccion: sqlAccion,\n  // Preservar datos para Twilio\n  toNumber: ctx.toNumber,\n  fromNumber: ctx.fromNumber,\n  profileName: ctx.profileName,\n  pacienteId: pacienteId\n}];",
+        "code": "// Parsear output del Triaje Agent para detectar HANDOFF\nconst rawText = $input.first().json.agentOutput || $input.first().json.output || '';\nconst ctx = $(\"Construir Contexto Paciente\").first().json;\n\n// Buscar handoff marker\nconst handoffMatch = rawText.match(/###HANDOFF###\\n([\\s\\S]*?)\\n###FIN###/);\nlet destino = null;\nlet textoLimpio = rawText;\n\nif (handoffMatch) {\n  try {\n    const parsed = JSON.parse(handoffMatch[1].trim());\n    destino = parsed.destino;\n    textoLimpio = rawText.replace(/###HANDOFF###[\\s\\S]*?###FIN###/, '').trim();\n  } catch (e) { destino = null; }\n}\n\nreturn [{\n  responseText: textoLimpio,\n  tieneHandoff: destino !== null,\n  destinoHandoff: destino,\n  // Preservar datos para downstream\n  paciente: ctx.paciente,\n  phone: ctx.phone,\n  message: ctx.message,\n  toNumber: ctx.toNumber,\n  fromNumber: ctx.fromNumber,\n  profileName: ctx.profileName,\n  twilioSid: ctx.twilioSid,\n  turnosProximos: ctx.turnosProximos\n}];"
+      },
+      "name": "Parsear Handoff",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2600, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.tieneHandoff }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
         "options": {}
+      },
+      "name": "Hay Handoff?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [2850, 300]
+    },
+    {
+      "parameters": {
+        "code": "// Construir system prompt para el Agenda Agent\nconst ctx = $(\"Construir Contexto Paciente\").first().json;\nconst paciente = ctx.paciente;\nconst turnos = ctx.turnosProximos || [];\n\nconst turnosTexto = turnos.length > 0\n  ? turnos.map(t => `- ${new Date(t.fecha).toLocaleDateString(\"es-AR\", {weekday: \"long\", day: \"numeric\", month: \"long\"})} con Dr. ${t.medico} (${t.motivo || 'consulta'})`).join('\\n')\n  : 'No tiene turnos pr\u00f3ximos.';\n\nconst fechaActual = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });\n\nconst agendaPrompt = `Sos el especialista en turnos del Consultorio M\u00e9dico.\n\nFecha actual: ${fechaActual}\n\n=== DATOS DEL PACIENTE ===\nNombre: ${paciente.nombre}\nTel\u00e9fono: ${paciente.telefono}\n\n=== TURNOS PR\u00d3XIMOS ===\n${turnosTexto}\n\n=== INSTRUCCIONES ===\nRespond\u00e9 en espa\u00f1ol argentino, c\u00e1lido y breve.\n\nSOLO pod\u00e9s gestionar turnos:\n- CREAR: verific\u00e1 disponibilidad (horarios: Lun-Vie 8-20hs, S\u00e1b 9-13hs)\n- CANCELAR: ped\u00ed confirmaci\u00f3n antes de cancelar\n- MODIFICAR: cancel\u00e1 el turno actual y cre\u00e1 uno nuevo\n- CONSULTAR: mostr\u00e1 los turnos pr\u00f3ximos del paciente\n\nNO respondas sobre:\n- Recetas o medicamentos\n- Diagn\u00f3sticos o consultas cl\u00ednicas\n- Precios u obra social\n\nPara acciones que requieran cambios en DB:\n###ACCION###\\n{\"tipo\":\"crear_turno|cancelar_turno\",\"data\":{...}}\\n###FIN###`;\n\n// Merge incoming data with new system prompt\nconst input = $input.first().json;\nreturn [{ ...input, systemPrompt: agendaPrompt, subAgente: 'agenda' }];"
+      },
+      "name": "Preparar Prompt Agenda",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2850, 100]
+    },
+    {
+      "parameters": {
+        "model": "mistral",
+        "baseUrl": "http://ollama:11434",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "name": "Ollama - Agenda",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [3120, 80]
+    },
+    {
+      "parameters": {
+        "sessionKey": "={{ $('Extraer Datos').first().json.phone }}",
+        "contextWindowLength": 10
+      },
+      "name": "Postgres Memory - Agenda",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgres",
+      "typeVersion": 1,
+      "position": [3120, 520]
+    },
+    {
+      "parameters": {
+        "agentType": "conversational",
+        "systemMessage": "={{ $json.systemPrompt }}",
+        "options": {}
+      },
+      "name": "Agenda Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [3390, 100]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "agentOutput",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "name": "subAgente",
+              "value": "=agenda",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Extraer Output Agenda",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [3660, 100]
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "name": "Merger",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [3100, 300]
+    },
+    {
+      "parameters": {
+        "code": "// Parsear y preparar respuesta final\nconst rawText = $input.first().json.agentOutput || $input.first().json.output || '';\nconst ctx = $(\"Construir Contexto Paciente\").first().json;\nconst pacienteId = ctx.paciente?.id || $(\"Obtener o Crear Paciente\").first().json.id;\nconst extraer = $(\"Extraer Datos\").first().json;\n\n// Helper para escapar strings\nconst esc = (s) => {\n  if (!s) return '';\n  return String(s)\n    .replace(/'/g, \"''\")\n    .replace(/\\\\/g, '\\\\\\\\')\n    .replace(/\\0/g, '')\n    .replace(/\\x1a/g, '');\n};\n\n// Determinar sub-agente\nconst subAgente = $input.first().json.subAgente || 'triaje';\n\n// Buscar acci\u00f3n estructurada\nconst actionMatch = rawText.match(/###ACCION###\\n([\\s\\S]*?)\\n###FIN###/);\nlet accion = null;\nlet textoLimpio = rawText;\n\nif (actionMatch) {\n  try {\n    accion = JSON.parse(actionMatch[1].trim());\n    textoLimpio = rawText.replace(/###ACCION###[\\s\\S]*?###FIN###/, '').trim();\n  } catch (e) { accion = null; }\n}\n\n// SQL para guardar conversaci\u00f3n\nconst sqlGuardar = `INSERT INTO mensajes (conversacion_id, rol, contenido, tipo, twilio_sid, n8n_execution_id) VALUES ((SELECT id FROM conversaciones WHERE paciente_id = ${pacienteId} AND estado = 'activa' LIMIT 1), 'paciente', '${esc(extraer.message)}', 'texto', '${esc(extraer.twilioSid)}', '${$execution.id}'); INSERT INTO mensajes (conversacion_id, rol, contenido, tipo, n8n_execution_id) VALUES ((SELECT id FROM conversaciones WHERE paciente_id = ${pacienteId} AND estado = 'activa' LIMIT 1), 'asistente', '${esc(textoLimpio)}', 'texto', '${$execution.id}');`;\n\n// SQL para log (con sub_agente en nivel)\nconst sqlLog = `INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje) VALUES ('${$execution.id}', 'WhatsApp Agent', '${$execution.id}', '${esc(subAgente)}', '${esc('Sub-agente: ' + subAgente + ' | Paciente: ' + (pacienteId || '') + ' | ' + textoLimpio.substring(0, 100))}');`;\n\n// SQL para registrar acci\u00f3n\nlet sqlAccion = null;\nif (accion) {\n  sqlAccion = `INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje) VALUES ('${$execution.id}', 'WhatsApp Agent', '${$execution.id}', '${esc(subAgente + '_accion')}', '${esc(JSON.stringify(accion))}');`;\n}\n\nconst responseText = textoLimpio || $input.first().json.responseText || 'Gracias por comunicarte con el consultorio. Te responderemos a la brevedad.';\n\nreturn [{\n  responseText: responseText,\n  subAgente: subAgente,\n  tieneAccion: accion !== null,\n  accionTipo: accion ? accion.tipo : null,\n  accionData: accion ? accion.data : null,\n  sqlGuardar: sqlGuardar,\n  sqlLog: sqlLog,\n  sqlAccion: sqlAccion,\n  phone: 'whatsapp:' + extraer.phone,\n  fromNumber: extraer.fromNumber,\n  toNumber: extraer.toNumber,\n  profileName: extraer.profileName,\n  pacienteId: pacienteId\n}];"
       },
       "name": "Parsear y Preparar",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2600, 300]
+      "position": [3370, 300]
     },
     {
       "parameters": {
@@ -208,10 +318,12 @@
         "queryParameters": {
           "parameters": [
             {
-              "name": "From", "value": "={{ $json.fromNumber }}"
+              "name": "From",
+              "value": "={{ $json.fromNumber }}"
             },
             {
-              "name": "To", "value": "={{ $json.phone }}"
+              "name": "To",
+              "value": "={{ $json.phone }}"
             },
             {
               "name": "Body",
@@ -223,7 +335,7 @@
       "name": "Twilio - Enviar WhatsApp",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2850, 300]
+      "position": [3640, 300]
     },
     {
       "parameters": {
@@ -251,7 +363,7 @@
       "name": "Hay Accion?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [3100, 300]
+      "position": [3910, 300]
     },
     {
       "parameters": {
@@ -262,7 +374,7 @@
       "name": "Registrar Accion Pendiente",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [3350, 100]
+      "position": [4160, 100]
     },
     {
       "parameters": {
@@ -273,7 +385,7 @@
       "name": "Guardar Conversacion en DB",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [3350, 350]
+      "position": [4160, 350]
     },
     {
       "parameters": {
@@ -284,7 +396,7 @@
       "name": "Log a PostgreSQL",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [3350, 550]
+      "position": [4160, 550]
     }
   ],
   "connections": {
@@ -310,18 +422,45 @@
       "main": [[{"node": "Construir Contexto Paciente", "type": "main", "index": 0}]]
     },
     "Construir Contexto Paciente": {
-      "main": [[{"node": "AI Agent", "type": "main", "index": 0}]]
+      "main": [[{"node": "Triaje Agent", "type": "main", "index": 0}]]
     },
-    "Ollama Chat Model": {
-      "ai_languageModel": [[{"node": "AI Agent", "type": "ai_languageModel", "index": 0}]]
+    "Ollama - Triaje": {
+      "ai_languageModel": [[{"node": "Triaje Agent", "type": "ai_languageModel", "index": 0}]]
     },
-    "Postgres Chat Memory": {
-      "ai_memory": [[{"node": "AI Agent", "type": "ai_memory", "index": 0}]]
+    "Postgres Memory - Triaje": {
+      "ai_memory": [[{"node": "Triaje Agent", "type": "ai_memory", "index": 0}]]
     },
-    "AI Agent": {
-      "main": [[{"node": "Extraer Output del Agente", "type": "main", "index": 0}]]
+    "Triaje Agent": {
+      "main": [[{"node": "Extraer Output Triaje", "type": "main", "index": 0}]]
     },
-    "Extraer Output del Agente": {
+    "Extraer Output Triaje": {
+      "main": [[{"node": "Parsear Handoff", "type": "main", "index": 0}]]
+    },
+    "Parsear Handoff": {
+      "main": [[{"node": "Hay Handoff?", "type": "main", "index": 0}]]
+    },
+    "Hay Handoff?": {
+      "main": [
+        [{"node": "Preparar Prompt Agenda", "type": "main", "index": 0}],
+        [{"node": "Merger", "type": "main", "index": 0}]
+      ]
+    },
+    "Preparar Prompt Agenda": {
+      "main": [[{"node": "Agenda Agent", "type": "main", "index": 0}]]
+    },
+    "Ollama - Agenda": {
+      "ai_languageModel": [[{"node": "Agenda Agent", "type": "ai_languageModel", "index": 0}]]
+    },
+    "Postgres Memory - Agenda": {
+      "ai_memory": [[{"node": "Agenda Agent", "type": "ai_memory", "index": 0}]]
+    },
+    "Agenda Agent": {
+      "main": [[{"node": "Extraer Output Agenda", "type": "main", "index": 0}]]
+    },
+    "Extraer Output Agenda": {
+      "main": [[{"node": "Merger", "type": "main", "index": 0}]]
+    },
+    "Merger": {
       "main": [[{"node": "Parsear y Preparar", "type": "main", "index": 0}]]
     },
     "Parsear y Preparar": {

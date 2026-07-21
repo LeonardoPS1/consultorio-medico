@@ -1,6 +1,6 @@
 # ADR-0001: AI Agents de n8n en lugar de múltiples llamadas HTTP a Ollama
 
-**Estado:** Aceptado
+**Estado:** Reemplazado por ADR-0006
 
 ## Contexto
 

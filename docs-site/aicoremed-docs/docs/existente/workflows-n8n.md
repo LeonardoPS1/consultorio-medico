@@ -1,7 +1,7 @@
 # 🔄 Workflows n8n — AicoreMed
 
 > **12 workflows activos** · Automatización inteligente del consultorio
-> **Última actualización:** 19/07/2026
+> **Última actualización:** 21/07/2026
 
 ---
 
@@ -52,7 +52,7 @@ n8n-workflows/
 
 | # | Nombre | Trigger | Nodos | Ollama | Twilio | PG | GCal | IMAP |
 |   |--------|---------|-------|--------|--------|----|------|------|
-| **01** | WhatsApp Inbound + Triaje IA | Webhook | 17 | ✅ Agent | ✅ | ✅ | ❌ | ❌ |
+| **01** | WhatsApp Inbound + Triaje IA | Webhook | 23 | ✅ 2 Agents (Triaje+Agenda) | ✅ | ✅ | ❌ | ❌ |
 | **02** | Gestión de Turnos | Webhook | 9 | ✅ 2 nodos | ✅ | ✅ | ✅ | ❌ |
 | **03** | Recordatorios Automáticos | Cron (c/hora) | 12 | ❌ | ✅ | ✅ | ❌ | ❌ |
 | **04** | Correo Inteligente | IMAP (5 min) | 10 | ✅ Agent | ✅ | ✅ | ❌ | ✅ |
@@ -70,36 +70,113 @@ n8n-workflows/
 ## WF-01: WhatsApp Inbound + Triaje IA ⭐ (Crítico)
 
 ### Propósito
-Workflow principal que recibe mensajes de WhatsApp de pacientes, los procesa con IA y responde automáticamente.
+Workflow principal que recibe mensajes de WhatsApp de pacientes, los procesa con
+IA multi-agente y responde automáticamente. Usa **sub-agentes especializados con
+handoff conversacional** — el paciente habla con un único asistente que deriva a
+especialistas según la necesidad.
 
 ### Trigger
 **Webhook** → `POST /webhook/consultorio-inbound`
 
-### Flujo
+### Flujo Multi-Agente
 ```
 Twilio → Webhook (x-webhook-secret validado) →
-  → Busca/crea paciente en PostgreSQL por teléfono →
+  → Busca/crea paciente en PostgreSQL →
   → Consulta turnos próximos y recetas activas →
   → Construye contexto estructurado →
-  → AI Agent (Ollama Gemma3 + Chat Memory) →
-  → Analiza intención →
-  → Ejecuta acción (responder, crear turno, etc.) →
-  → Envía respuesta vía Twilio WhatsApp →
-  → Loggea todo en PostgreSQL
+
+  ┌──────────────────────────────────────┐
+  │ TRIAGE AGENT (clasifica + responde)  │
+  │   • Saludo / info general / urgencia → responde directo (sin handoff)
+  │   • Crear/cancelar/modificar turno  → HANDOFF → AGENDA AGENT
+  │   • Recetas / consultas clínicas    → HANDOFF → CLÍNICO (Fase 2)
+  └─────────────────┬────────────────────┘
+                    │
+              ┌─────┴─────┐
+              │           │
+          HANDOFF      SIN HANDOFF
+              │           │
+              ▼           ▼
+  ┌─────────────────┐
+  │ AGENDA AGENT    │    ──→ Merger → Parsear → Twilio → Log
+  │ (turnos)        │
+  │ temp=0.3        │
+  │ memoria         │
+  │ compartida      │
+  └─────────────────┘
 ```
 
 ### Configuración IA
-| Parámetro | Valor |
-|-----------|-------|
-| Modelo | `gemma3` |
-| Base URL | `http://ollama:11434` |
-| Temperatura | 0.3 |
-| Chat Memory | Postgres (`n8n_chat_histories`, sessionKey=teléfono, contextWindow=10) |
+
+| Parámetro | Triaje Agent | Agenda Agent |
+|-----------|-------------|--------------|
+| Modelo | `gemma3` | `gemma3` |
+| Base URL | `http://ollama:11434` | `http://ollama:11434` |
+| Temperatura | 0.3 | 0.3 |
+| Prompt | ~20 líneas (saludo + clasificación) | ~15 líneas (solo turnos) |
+| Chat Memory | Postgres (sessionKey=phone) | Postgres (sessionKey=phone misma instancia) |
+
+### Memoria Compartida
+Ambos sub-agentes usan el mismo `sessionKey` (número de teléfono) en Postgres
+Chat Memory. Como la memoria se almacena en PostgreSQL, todos los agentes
+comparten el historial conversacional. El paciente no percibe el cambio.
+
+### Mecanismo de Handoff
+El Triaje Agent emite un marcador estructurado al final de su respuesta cuando
+necesita delegar:
+
+```
+###HANDOFF###
+{"destino": "agenda"}
+###FIN###
+```
+
+Un Code node parsea el marcador y un IF node enruta al sub-agente. Si no hay
+handoff, la respuesta del Triaje es la respuesta final.
+
+### Acciones Estructuradas
+El Agenda Agent (y futuros sub-agentes) pueden emitir acciones que requieren
+cambios en la base de datos usando el mismo formato establecido:
+
+```
+###ACCION###
+{"tipo": "crear_turno", "data": {"motivo": "...", "fecha": "..."}}
+###FIN###
+```
+
+### Nodos (23 en total)
+1. Webhook ← Twilio WhatsApp
+2. Validar Mensaje (IF)
+3. Extraer Datos (Set)
+4. Obtener o Crear Paciente (PG)
+5. Consultar Turnos del Paciente (PG)
+6. Consultar Recetas Activas (PG)
+7. Construir Contexto (Code)
+8. Ollama - Triaje (Chat Model)
+9. Postgres Memory - Triaje
+10. **Triaje Agent** (AI Agent)
+11. Extraer Output Triaje (Set)
+12. Parsear Handoff (Code)
+13. Hay Handoff? (IF)
+14. Preparar Prompt Agenda (Code)
+15. Ollama - Agenda (Chat Model)
+16. Postgres Memory - Agenda
+17. **Agenda Agent** (AI Agent)
+18. Extraer Output Agenda (Set)
+19. Merger (Merge)
+20. Parsear y Preparar (Code)
+21. Twilio - Enviar WhatsApp (HTTP)
+22. Hay Accion? (IF)
+23. PG nodes (Registrar, Guardar, Log)
+
+### Logging
+Cada respuesta incluye `subAgente` (`"triaje"` | `"agenda"` | `"clinico"` en
+Fase 2) registrado en `workflow_logs.nivel` para trazabilidad.
 
 ### Seguridad
 - Webhook autenticado con `x-webhook-secret`
 - Mensajes sanitizados antes de enviar a IA
-- Anti-jailbreak en system prompt
+- Anti-jailbreak en system prompts de todos los sub-agentes
 
 ---
 
