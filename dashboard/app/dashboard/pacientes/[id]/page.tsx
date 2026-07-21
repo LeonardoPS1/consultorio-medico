@@ -316,8 +316,9 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
 
 // ─── Page ──────────────────────────────────────────────────
 
-export default async function PacienteDetallePage({ params }: { params: { id: string } }) {
-  const data = await getPacienteDetalle(params.id);
+export default async function PacienteDetallePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const data = await getPacienteDetalle(id);
   if (!data) notFound();
 
   const {

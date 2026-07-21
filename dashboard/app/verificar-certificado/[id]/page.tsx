@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { VerificarCertificadoClient } from './verificar-certificado-client';
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -32,11 +32,12 @@ async function getCertificadoData(id: string) {
 }
 
 export default async function VerificarCertificadoPage({ params }: Props) {
-  const data = await getCertificadoData(params.id);
+  const { id } = await params;
+  const data = await getCertificadoData(id);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center p-4">
-      <VerificarCertificadoClient data={data} certId={params.id} />
+      <VerificarCertificadoClient data={data} certId={id} />
     </div>
   );
 }

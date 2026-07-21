@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { VerificarRecetaClient } from './verificar-receta-client';
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -29,11 +29,12 @@ async function getRecetaData(id: string) {
 }
 
 export default async function VerificarRecetaPage({ params }: Props) {
-  const data = await getRecetaData(params.id);
+  const { id } = await params;
+  const data = await getRecetaData(id);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center p-4">
-      <VerificarRecetaClient data={data} recetaId={params.id} />
+      <VerificarRecetaClient data={data} recetaId={id} />
     </div>
   );
 }
