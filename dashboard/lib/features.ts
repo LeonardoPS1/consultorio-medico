@@ -62,9 +62,10 @@ export type FeatureId =
   | 'carga-masiva'
   | 'command-palette'
   | 'patient-panel'
-  |   'ia-asistente-flotante'
+  | 'ia-asistente-flotante'
   | 'compliance'
-  | 'transcripcion-soap';
+  | 'transcripcion-soap'
+  | 'documentos-ocr';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -122,6 +123,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'ia-asistente-flotante': 'professional',
   compliance: 'professional',
   'transcripcion-soap': 'starter',
+  'documentos-ocr': 'starter',
 };
 
 // ============================================================

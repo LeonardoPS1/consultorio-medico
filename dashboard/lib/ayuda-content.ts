@@ -1871,6 +1871,68 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     ],
   },
   {
+    id: 'documentos-ocr',
+    titulo: 'Documentos Médicos con OCR',
+    descripcion: 'Subí documentos desde el portal del paciente, extraé datos automáticamente con IA y revisalos en el dashboard',
+    icono: 'Scan',
+    pasos: [
+      {
+        titulo: 'Paciente sube documento',
+        descripcion: 'Desde el Portal del Paciente, se puede subir una foto o PDF de cualquier documento médico.',
+        tips: [
+          'Formatos aceptados: JPG, PNG, PDF',
+          'Tamaño máximo: 20MB',
+          'Ejemplos: estudios de laboratorio, recetas externas, certificados, órdenes médicas',
+          'La subida dispara automáticamente el proceso OCR',
+        ],
+      },
+      {
+        titulo: 'OCR con IA local',
+        descripcion: 'Ollama llava procesa la imagen y extrae datos estructurados.',
+        tips: [
+          'Modelo llava (~4GB) corre 100% local en el VPS',
+          'Extrae: tipo de documento, médico, fecha, diagnóstico, medicamentos, observaciones',
+          'Devuelve confianza de extracción (0-100%)',
+          'Si falla, el documento queda marcado para revisión manual',
+        ],
+      },
+      {
+        titulo: 'Confirmación del paciente',
+        descripcion: 'El paciente ve los datos extraídos y puede confirmar, editar o descartar.',
+        tips: [
+          'Si los datos son correctos → Confirma (pasa a revisión médica)',
+          'Si hay errores → Edita manualmente los campos',
+          'Si no sirve → Descarta el documento',
+        ],
+      },
+      {
+        titulo: 'Revisión médica en Dashboard',
+        descripcion: 'El médico revisa los documentos desde la ficha del paciente.',
+        tips: [
+          'Accedé al tab "Documentos" en la ficha del paciente',
+          'Estado pendiente: documentos sin revisar',
+          'Al aprobar → se integra al historial médico del paciente',
+          'Al rechazar → el documento se elimina',
+          'Disponible en plan Starter+',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿El OCR es preciso con fotos de mala calidad?',
+        respuesta: 'Depende de la calidad de la imagen. Fotos bien iluminadas y enfocadas tienen alta precisión. Si el OCR falla o tiene baja confianza, el documento se marca para revisión manual del médico.',
+      },
+      {
+        pregunta: '¿Qué modelo de IA se usa para el OCR?',
+        respuesta: 'Ollama llava, un modelo de visión-lenguaje que corre 100% local en tu VPS. No se envía ninguna imagen a servidores externos.',
+      },
+      {
+        pregunta: '¿Los documentos aprobados quedan en el historial?',
+        respuesta: 'Sí. Cuando el médico aprueba un documento, los datos extraídos se guardan como una entrada estructurada en el historial médico del paciente, visible tanto en el dashboard como en el portal.',
+      },
+    ],
+  },
+  {
     id: 'acerca-de',
     titulo: 'Acerca de',
     descripcion: 'Información del sistema, versión, créditos y documentación técnica',

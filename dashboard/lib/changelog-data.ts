@@ -10,8 +10,22 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 21/07/2026 — v1.22.0 transcripción + SOAP por IA
+// Actualizado: 21/07/2026 — v1.23.0 documentos médicos + OCR
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.23.0',
+    date: '21/07/2026',
+    title: 'Documentos Médicos con OCR por IA',
+    items: [
+      'Subida de documentos desde el Portal del Paciente (fotos o PDF)',
+      'OCR automático con Ollama llava: extrae datos estructurados de imágenes',
+      'Confirmación en 2 etapas: paciente confirma → médico aprueba',
+      'Integración con historial clínico al aprobar',
+      'Dashboard: tab de documentos en ficha del paciente para revisión médica',
+      'ADR-0008: Documentos Médicos + OCR con IA',
+      'Feature gate "documentos-ocr" disponible en plan Starter+',
+    ],
+  },
   {
     version: '1.22.0',
     date: '21/07/2026',

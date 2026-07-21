@@ -23,6 +23,7 @@ import {
   Bell,
   LogOut,
   X,
+  Upload,
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 
@@ -47,6 +48,7 @@ const secondaryGroups: SecondaryGroup[] = [
       { href: '/portal/certificados', label: 'Certificados', icon: ScrollText },
       { href: '/portal/consentimientos', label: 'Docs Legales', icon: PenTool },
       { href: '/portal/ordenes-estudio', label: 'Estudios', icon: FlaskConical },
+      { href: '/portal/documentos', label: 'Documentos Subidos', icon: Upload },
     ],
   },
   {

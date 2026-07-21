@@ -65,6 +65,7 @@ nav:
       - "ADR-0005 — Token de recuperación en tabla usuarios": decisiones/0005-token-recuperacion-en-tabla-usuarios.md
       - "ADR-0006 — Multi-agente especializado con handoff": decisiones/0006-multi-agente-especializado.md
       - "ADR-0007 — Transcripción automática + SOAP por IA": decisiones/0007-transcripcion-soap-ia.md
+      - "ADR-0008 — Documentos médicos + OCR con IA": decisiones/0008-documentos-medicos-ocr.md
       - Plantilla para nuevos ADRs: decisiones/plantilla.md
 
 markdown_extensions:

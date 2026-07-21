@@ -183,6 +183,45 @@ export type OrdenEstudio = InferSelectModel<typeof ordenesEstudio>;
 export type NewOrdenEstudio = InferInsertModel<typeof ordenesEstudio>;
 
 // ============================================================
+// DOCUMENTOS MÉDICOS (OCR - subidos por paciente)
+// ============================================================
+export const documentosMedicos = pgTable(
+  'documentos_medicos',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    pacienteId: uuid('paciente_id')
+      .notNull()
+      .references(() => pacientes.id),
+    medicoId: uuid('medico_id').references(() => medicos.id),
+    turnoId: uuid('turno_id').references(() => turnos.id),
+    tipo: varchar('tipo', { length: 50 }).notNull().default('receta'),
+    archivoUrl: text('archivo_url').notNull(),
+    extraccionEstado: varchar('extraccion_estado', { length: 20 }).notNull().default('pendiente'),
+    datosExtraidos: jsonb('datos_extraidos').default({}),
+    confianzaExtraccion: integer('confianza_extraccion').default(0),
+    estadoRevision: varchar('estado_revision', { length: 20 }).default('pendiente'),
+    revisadoPor: uuid('revisado_por').references(() => medicos.id),
+    revisadoAt: timestamp('revisado_at', { withTimezone: true }),
+    textoOriginalOcr: text('texto_original_ocr'),
+    historialId: uuid('historial_id').references(() => historialMedico.id),
+    metadata: jsonb('metadata').default({}),
+    tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => ({
+    idxDocumentosPaciente: index('idx_documentos_paciente').on(table.pacienteId),
+    idxDocumentosEstado: index('idx_documentos_estado').on(table.extraccionEstado),
+    idxDocumentosRevision: index('idx_documentos_revision').on(table.estadoRevision),
+    idxDocumentosCreatedAt: index('idx_documentos_created_at').on(table.createdAt),
+  }),
+);
+
+export type DocumentoMedico = InferSelectModel<typeof documentosMedicos>;
+export type NewDocumentoMedico = InferInsertModel<typeof documentosMedicos>;
+
+// ============================================================
 // RELACIONES
 // ============================================================
 export const notasSoapRelations = relations(notasSoap, ({ one }) => ({

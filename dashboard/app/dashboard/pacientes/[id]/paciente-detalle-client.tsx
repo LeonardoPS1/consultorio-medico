@@ -41,12 +41,14 @@ import {
   MoreHorizontal,
   Ban,
   FileSignature,
+  Upload,
 } from 'lucide-react';
 import { formatPhone, getInitials, formatDate, getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { DocumentosPaciente } from '@/components/pacientes/documentos-paciente-tab';
 import { Cie10Search } from '@/components/ui/cie10-search';
 import {
   DropdownMenu,
@@ -1152,6 +1154,9 @@ export function PacienteDetalleClient({
           <TabsTrigger value="consentimientos" className="shrink-0 whitespace-nowrap">
             <FileSignature className="h-4 w-4 mr-1 shrink-0" /> Consentimientos
           </TabsTrigger>
+          <TabsTrigger value="documentos" className="shrink-0 whitespace-nowrap">
+            <Upload className="h-4 w-4 mr-1 shrink-0" /> Documentos
+          </TabsTrigger>
         </TabsList>
 
         {/* Turnos */}
@@ -1993,6 +1998,11 @@ export function PacienteDetalleClient({
               </p>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Documentos */}
+        <TabsContent value="documentos" className="mt-4">
+          <DocumentosPaciente pacienteId={paciente.id} />
         </TabsContent>
       </Tabs>
 
