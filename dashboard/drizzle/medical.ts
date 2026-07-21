@@ -88,6 +88,11 @@ export const notasSoap = pgTable(
     derivarA: varchar('derivar_a', { length: 255 }),
     requiereControl: boolean('requiere_control').default(false),
     controlEnDias: integer('control_en_dias'),
+    iaGenerated: boolean('ia_generated').default(false),
+    createdByIa: boolean('created_by_ia').default(false),
+    estadoRevision: varchar('estado_revision', { length: 20 }).default('pendiente'),
+    audioUrl: text('audio_url'),
+    transcripcionTexto: text('transcripcion_texto'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
@@ -95,6 +100,7 @@ export const notasSoap = pgTable(
     idxNotasSoapPacienteId: index('idx_notas_soap_paciente_id').on(table.pacienteId),
     idxNotasSoapMedicoId: index('idx_notas_soap_medico_id').on(table.medicoId),
     idxNotasSoapTurnoId: index('idx_notas_soap_turno_id').on(table.turnoId),
+    idxNotasSoapEstadoRevision: index('idx_notas_soap_estado_revision').on(table.estadoRevision),
   }),
 );
 

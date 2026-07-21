@@ -48,6 +48,8 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
         derivarA: notasSoap.derivarA,
         requiereControl: notasSoap.requiereControl,
         controlEnDias: notasSoap.controlEnDias,
+        iaGenerated: notasSoap.iaGenerated,
+        estadoRevision: notasSoap.estadoRevision,
         medicoNombre: medicos.nombre,
         createdAt: notasSoap.createdAt,
         updatedAt: notasSoap.updatedAt,
@@ -119,6 +121,10 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
         derivarA: body.derivarA || null,
         requiereControl: body.requiereControl ?? false,
         controlEnDias: body.controlEnDias || null,
+        iaGenerated: body.iaGenerated ?? false,
+        createdByIa: body.createdByIa ?? false,
+        estadoRevision: body.estadoRevision || 'pendiente',
+        transcripcionTexto: body.transcripcionTexto || null,
       })
       .returning();
 
@@ -171,6 +177,8 @@ export async function PATCH(request: NextRequest, { params: paramsPromise }: { p
     if (body.derivarA !== undefined) updateData.derivarA = body.derivarA;
     if (body.requiereControl !== undefined) updateData.requiereControl = body.requiereControl;
     if (body.controlEnDias !== undefined) updateData.controlEnDias = body.controlEnDias;
+    if (body.estadoRevision !== undefined) updateData.estadoRevision = body.estadoRevision;
+    if (body.iaGenerated !== undefined) updateData.iaGenerated = body.iaGenerated;
 
     const [updated] = await db
       .update(notasSoap)

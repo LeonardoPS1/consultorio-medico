@@ -89,6 +89,8 @@ export const tenants = pgTable('tenants', {
       'Sos el asistente IA del consultorio médico. Ayudás al médico con información rápida, sugerencias de respuestas para pacientes, resúmenes de historiales y recordatorios de turnos. Respondés en español neutro chileno, de forma concisa y profesional. Si no sabés algo, decilo honestamente. Nunca inventes datos médicos.',
     maxTokensAsistente: 400,
     temperaturaAsistente: 0.3,
+    transcripcionHabilitada: false,
+    retencionAudioHoras: 0,
   } satisfies ConfigIa),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),

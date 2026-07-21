@@ -64,6 +64,7 @@ nav:
       - "ADR-0004 — Feature gating single source of truth": decisiones/0004-feature-gating-single-source-of-truth.md
       - "ADR-0005 — Token de recuperación en tabla usuarios": decisiones/0005-token-recuperacion-en-tabla-usuarios.md
       - "ADR-0006 — Multi-agente especializado con handoff": decisiones/0006-multi-agente-especializado.md
+      - "ADR-0007 — Transcripción automática + SOAP por IA": decisiones/0007-transcripcion-soap-ia.md
       - Plantilla para nuevos ADRs: decisiones/plantilla.md
 
 markdown_extensions:

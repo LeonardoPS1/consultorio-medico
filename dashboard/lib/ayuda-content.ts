@@ -1808,6 +1808,69 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     ],
   },
   {
+    id: 'transcripcion-soap',
+    titulo: 'Transcripción Automática y SOAP por IA',
+    descripcion: 'Grabación de videoconsultas, transcripción automática con Whisper y generación de notas SOAP con IA',
+    icono: 'Mic',
+    pasos: [
+      {
+        titulo: 'Configurar transcripción',
+        descripcion: 'Activá la transcripción automática desde Configuración → IA.',
+        tips: [
+          'Disponible en plan Starter+',
+          'Activá "Transcripción habilitada" y configurá horas de retención de audio',
+          'Sin esta activación, las videoconsultas funcionan normalmente sin grabación',
+        ],
+      },
+      {
+        titulo: 'Consentimiento del paciente',
+        descripcion: 'Al agendar una teleconsulta con transcripción activa, el paciente ve una pantalla de consentimiento antes de entrar a la sala.',
+        tips: [
+          'Si acepta → se inicia la grabación automática (Egress de LiveKit)',
+          'Si no acepta → entra a la videollamada sin grabación',
+          'El médico puede iniciar la grabación manualmente durante la llamada',
+          'El consentimiento queda registrado en consentimiento_log para auditoría',
+        ],
+      },
+      {
+        titulo: 'Pipeline post-consulta',
+        descripcion: 'Cuando termina la videoconsulta, el sistema procesa el audio automáticamente.',
+        tips: [
+          'LiveKit Egress guarda el audio grabado',
+          'Whisper.cpp transcribe el audio a texto',
+          'Ollama Gemma3 analiza el texto y genera una nota SOAP estructurada (S/O/A/P)',
+          'La nota se guarda en estado "pendiente" marcada como generada por IA',
+          'El médico recibe una notificación (Twilio + in-app) para revisarla',
+        ],
+      },
+      {
+        titulo: 'Revisar notas SOAP generadas',
+        descripcion: 'Accedé desde la ficha del paciente o desde el panel de revisión.',
+        tips: [
+          'Abrí la nota SOAP generada: tiene los campos S/O/A/P completados por IA',
+          'Podés editar cualquier campo antes de aprobar',
+          'Al aprobar → la nota se guarda definitivamente, el audio se elimina',
+          'Al rechazar → la nota se elimina por completo, el audio se elimina',
+          'Si no revisás en 48h → el sistema elimina el audio y conserva la transcripción textual',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Dónde se procesa el audio? ¿Se envía a servidores externos?',
+        respuesta: 'No. Todo el procesamiento es 100% local en tu VPS: Whisper.cpp corre en Docker, Ollama con Gemma3 también. Ningún dato sale del servidor.',
+      },
+      {
+        pregunta: '¿Qué modelo de Whisper se usa?',
+        respuesta: 'Whisper.cpp con modelo "small" (~500MB). Corre eficientemente en CPU y tiene buena precisión para español.',
+      },
+      {
+        pregunta: '¿Qué pasa con el audio después de la transcripción?',
+        respuesta: 'Se elimina automáticamente cuando el médico aprueba o rechaza la nota. Si no revisa en 48 horas, el sistema elimina el audio pero conserva la transcripción textual.',
+      },
+    ],
+  },
+  {
     id: 'acerca-de',
     titulo: 'Acerca de',
     descripcion: 'Información del sistema, versión, créditos y documentación técnica',

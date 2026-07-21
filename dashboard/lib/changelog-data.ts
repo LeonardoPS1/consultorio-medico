@@ -10,8 +10,23 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 21/07/2026 — v1.21.0 proxy + multi-agent
+// Actualizado: 21/07/2026 — v1.22.0 transcripción + SOAP por IA
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.22.0',
+    date: '21/07/2026',
+    title: 'Transcripción Automática y SOAP por IA',
+    items: [
+      'Whisper.cpp integrado: transcripción automática de videoconsultas',
+      'Pipeline post-consulta: audio → Whisper → Ollama Gemma3 → nota SOAP estructurada',
+      'Consentimiento de grabación en el portal del paciente antes de entrar a la sala',
+      'Panel de revisión de notas SOAP generadas por IA (aprobar/rechazar/editar)',
+      'Política de retención: audio eliminado post-aprobación/rechazo, timeout 48h',
+      'Config IA: transcripcionHabilitada y retencionAudioHoras por tenant',
+      'Feature gate "transcripcion-soap" disponible en plan Starter+',
+      'ADR-0007: Transcripción automática + SOAP por IA',
+    ],
+  },
   {
     version: '1.21.0',
     date: '21/07/2026',

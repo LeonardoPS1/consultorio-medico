@@ -237,6 +237,8 @@ export interface ConfigIa {
   promptAsistente?: string;
   maxTokensAsistente?: number;
   temperaturaAsistente?: number;
+  transcripcionHabilitada?: boolean;
+  retencionAudioHoras?: number;
 }
 
 // ============================================================
