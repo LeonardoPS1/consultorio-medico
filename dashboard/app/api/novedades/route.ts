@@ -13,19 +13,17 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const limitParam = searchParams.get('limit');
   const limit = limitParam ? parseInt(limitParam, 10) : undefined;
 
-  let entries = await listarNovedades(limit);
-
-  // Auto-importar el CHANGELOG estático a la DB si está vacía
-  if (entries.length === 0) {
-    try {
-      const importadas = await importarChangelogEstatico();
-      if (importadas > 0) {
-        entries = await listarNovedades(limit);
-      }
-    } catch (err) {
-      console.error('[API Novedades] Error al importar CHANGELOG:', err);
+  // Auto-importar versiones del CHANGELOG estático que falten en la DB
+  try {
+    const importadas = await importarChangelogEstatico();
+    if (importadas > 0) {
+      console.log(`[API Novedades] Importadas ${importadas} novedades del CHANGELOG estático`);
     }
+  } catch (err) {
+    console.error('[API Novedades] Error al importar CHANGELOG:', err);
   }
+
+  let entries = await listarNovedades(limit);
 
   return success(entries);
 });
