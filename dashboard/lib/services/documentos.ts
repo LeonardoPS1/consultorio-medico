@@ -2,7 +2,7 @@ import { db } from '@/lib/db';
 import { documentosMedicos, historialMedico } from '@/drizzle/medical';
 import { pacientes } from '@/drizzle/core';
 import { eq, and, desc, isNull, asc, lte } from 'drizzle-orm';
-import { extraerTextoImagen } from '@/lib/vision-ocr';
+import { extraerTextoImagen, extraerLaboratorio, extraerReceta } from '@/lib/vision-ocr';
 import { unlinkSync, existsSync } from 'fs';
 
 export interface DocumentoInput {
@@ -18,6 +18,8 @@ export interface RevisionInput {
   accion: 'aprobar' | 'rechazar' | 'editar';
   datosEditados?: Record<string, unknown>;
   medicoId: string;
+  turnoId?: string;
+  motivoRechazo?: string;
 }
 
 export const documentosService = {
@@ -56,7 +58,14 @@ export const documentosService = {
       }
     }
 
-    const resultado = await extraerTextoImagen(imageBase64, doc.tipo || 'estudio');
+    let resultado;
+    if (doc.tipo === 'laboratorio') {
+      resultado = await extraerLaboratorio(imageBase64);
+    } else if (doc.tipo === 'receta') {
+      resultado = await extraerReceta(imageBase64);
+    } else {
+      resultado = await extraerTextoImagen(imageBase64, doc.tipo || 'estudio');
+    }
 
     if (resultado && (resultado.confianza ?? 0) >= 30) {
       await db
@@ -151,24 +160,36 @@ export const documentosService = {
     if (!doc) throw new Error('Documento no encontrado');
 
     if (input.accion === 'aprobar') {
+      const datosStr = doc.datosExtraidos
+        ? Object.entries(doc.datosExtraidos as Record<string, unknown>)
+            .map(([k, v]) => `${k}: ${v}`)
+            .join('\n')
+        : '';
+
+      const [historial] = await db
+        .insert(historialMedico)
+        .values({
+          pacienteId: doc.pacienteId,
+          medicoId: input.medicoId,
+          turnoId: input.turnoId || null,
+          tipo: 'otro',
+          titulo: doc.tipo === 'laboratorio' ? 'Examen de laboratorio' : `Documento: ${doc.tipo}`,
+          descripcion: datosStr,
+          archivos: [{ url: doc.archivoUrl, tipo: doc.tipo, datos: doc.datosExtraidos }] as unknown as JSON,
+          visibleParaPaciente: true,
+        })
+        .returning({ id: historialMedico.id });
+
       await db
         .update(documentosMedicos)
         .set({
           estadoRevision: 'aprobado',
           revisadoPor: input.medicoId,
+          revisadoAt: new Date(),
+          historialId: historial?.id || null,
           updatedAt: new Date(),
         })
         .where(eq(documentosMedicos.id, input.notaId));
-
-      await db.insert(historialMedico).values({
-        pacienteId: doc.pacienteId,
-        medicoId: input.medicoId,
-        tipo: 'otro' as const,
-        titulo: `Documento ${doc.tipo}`,
-        descripcion: `Documento ${doc.tipo} aprobado. OCR: ${JSON.stringify(doc.datosExtraidos)}`,
-        archivos: JSON.stringify([{ url: doc.archivoUrl, tipo: doc.tipo }]),
-        visibleParaPaciente: true,
-      });
     } else if (input.accion === 'rechazar') {
       const archivoPath = doc.archivoUrl.replace('/api/uploads/', '');
       const uploadDir = process.env.UPLOAD_DIR || '.data/uploads';
@@ -177,11 +198,14 @@ export const documentosService = {
         try { unlinkSync(fullPath); } catch { /* ignore */ }
       }
 
+      const metadataAtual = (doc.metadata as Record<string, unknown>) || {};
       await db
         .update(documentosMedicos)
         .set({
           estadoRevision: 'rechazado',
           revisadoPor: input.medicoId,
+          revisadoAt: new Date(),
+          metadata: { ...metadataAtual, motivoRechazo: input.motivoRechazo || '' },
           updatedAt: new Date(),
         })
         .where(eq(documentosMedicos.id, input.notaId));
@@ -192,6 +216,7 @@ export const documentosService = {
           estadoRevision: 'editado',
           datosExtraidos: input.datosEditados as unknown as Record<string, unknown>,
           revisadoPor: input.medicoId,
+          revisadoAt: new Date(),
           updatedAt: new Date(),
         })
         .where(eq(documentosMedicos.id, input.notaId));

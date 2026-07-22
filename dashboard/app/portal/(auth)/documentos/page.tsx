@@ -12,6 +12,8 @@ import {
   Loader2,
   Scan,
   AlertCircle,
+  Eye,
+  Save,
 } from 'lucide-react';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalBadge } from '@/components/portal/portal-badge';
@@ -39,14 +41,28 @@ function formatDate(date: string): string {
 function getEstadoBadge(estado: string) {
   switch (estado) {
     case 'completada':
+      return <PortalBadge variant="warning" className="flex items-center gap-1"><Scan className="h-3 w-3" /> Extraído — revisa</PortalBadge>;
     case 'confirmado':
-      return <PortalBadge variant="success" className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Completado</PortalBadge>;
+      return <PortalBadge variant="success" className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Confirmado</PortalBadge>;
     case 'pendiente':
       return <PortalBadge variant="warning" className="flex items-center gap-1"><Clock className="h-3 w-3" /> Pendiente</PortalBadge>;
     case 'fallida':
       return <PortalBadge variant="destructive" className="flex items-center gap-1"><XCircle className="h-3 w-3" /> Falló OCR</PortalBadge>;
     default:
       return <span className="text-xs text-portal-muted-fg">{estado}</span>;
+  }
+}
+
+function getRevisionBadge(estado: string) {
+  switch (estado) {
+    case 'pendiente':
+      return <PortalBadge variant="warning" className="flex items-center gap-1"><Clock className="h-3 w-3" /> Pendiente revisión médica</PortalBadge>;
+    case 'aprobado':
+      return <PortalBadge variant="success" className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Aprobado — en historial</PortalBadge>;
+    case 'rechazado':
+      return <PortalBadge variant="destructive" className="flex items-center gap-1"><XCircle className="h-3 w-3" /> Rechazado</PortalBadge>;
+    default:
+      return null;
   }
 }
 
@@ -57,12 +73,16 @@ export default function PortalDocumentosPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState('');
+  const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const cargar = useCallback(() => {
     fetch('/api/portal/documentos')
       .then((res) => res.json())
-      .then((data) => setDocs(Array.isArray(data) ? data : []))
+      .then((data) => {
+        const list = data?.documentos || data || [];
+        setDocs(Array.isArray(list) ? list : []);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -76,7 +96,8 @@ export default function PortalDocumentosPage() {
       formData.append('file', file);
       const res = await fetch('/api/portal/documentos', { method: 'POST', body: formData });
       if (!res.ok) throw new Error('Error al subir');
-      const doc = await res.json();
+      const data = await res.json();
+      const doc = data?.documento || data;
       setDocs((prev) => [doc, ...prev]);
       setProcessingId(doc.id);
       pollOcrResult(doc.id);
@@ -90,10 +111,11 @@ export default function PortalDocumentosPage() {
   function pollOcrResult(id: string) {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/portal/documentos`);
+        const res = await fetch('/api/portal/documentos');
         if (!res.ok) return;
         const data = await res.json();
-        const updated = Array.isArray(data) ? data.find((d: DocumentoMedico) => d.id === id) : null;
+        const list = data?.documentos || data || [];
+        const updated = Array.isArray(list) ? list.find((d: DocumentoMedico) => d.id === id) : null;
         if (!updated) return;
         if (updated.extraccionEstado !== 'pendiente') {
           clearInterval(interval);
@@ -111,7 +133,11 @@ export default function PortalDocumentosPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accion: 'confirmar' }),
     });
-    if (res.ok) cargar();
+    if (res.ok) {
+      setConfirmMessage('Datos confirmados. El médico los revisará para incorporarlos a tu historial.');
+      setTimeout(() => setConfirmMessage(null), 5000);
+      cargar();
+    }
   }
 
   async function handleDelete(id: string) {
@@ -148,6 +174,13 @@ export default function PortalDocumentosPage() {
       <p className="text-sm mb-6 text-portal-muted-fg">
         Subí estudios, recetas o certificados para procesarlos automáticamente
       </p>
+
+      {confirmMessage && (
+        <div className="mb-4 p-3 rounded-xl bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-sm text-green-800 dark:text-green-200 flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+          {confirmMessage}
+        </div>
+      )}
 
       <input
         ref={fileRef}
@@ -205,13 +238,21 @@ export default function PortalDocumentosPage() {
                   <FileText className="h-5 w-5 text-portal-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h3 className="font-medium truncate text-portal-fg">
                       {doc.filename || 'Documento'}
                     </h3>
                     {getEstadoBadge(doc.extraccionEstado)}
+                    {getRevisionBadge(doc.estadoRevision)}
                   </div>
                   <p className="text-xs text-portal-muted-fg">{formatDate(doc.createdAt)}</p>
+
+                  {doc.extraccionEstado === 'fallida' && (
+                    <div className="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
+                      <p className="font-medium mb-1">Documento guardado</p>
+                      <p>No se pudieron extraer los datos automáticamente. El médico lo revisará manualmente para incorporarlo a tu historial.</p>
+                    </div>
+                  )}
 
                   {doc.extraccionEstado === 'completada' && doc.datosExtraidos && (
                     <div className="mt-3 p-3 rounded-xl bg-portal-muted/50 space-y-1">
@@ -224,7 +265,9 @@ export default function PortalDocumentosPage() {
                             onChange={(e) => setEditData(e.target.value)}
                           />
                           <div className="flex gap-2">
-                            <Button size="sm" onClick={() => handleEditSave(doc.id)}>Guardar</Button>
+                            <Button size="sm" onClick={() => handleEditSave(doc.id)}>
+                              <Save className="h-3 w-3 mr-1" /> Guardar
+                            </Button>
                             <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>Cancelar</Button>
                           </div>
                         </div>
@@ -249,15 +292,32 @@ export default function PortalDocumentosPage() {
                     </div>
                   )}
 
-                  {doc.extraccionEstado === 'fallida' && (
-                    <p className="mt-2 text-sm text-portal-muted-fg/80">
-                      No se pudieron extraer datos automáticamente. El médico lo revisará manualmente.
-                    </p>
+                  {doc.extraccionEstado === 'confirmado' && doc.datosExtraidos && (
+                    <div className="mt-3 p-3 rounded-xl bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 space-y-1">
+                      {Object.entries(doc.datosExtraidos).map(([key, val]) => (
+                        <p key={key} className="text-sm text-portal-fg">
+                          <span className="font-medium capitalize text-portal-muted-fg">{key}: </span>
+                          {String(val ?? '—')}
+                        </p>
+                      ))}
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                        <CheckCircle2 className="h-3 w-3 inline mr-1" />
+                        Confirmado — pendiente de revisión médica
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
 
               <div className="flex items-center gap-1 flex-shrink-0">
+                <button
+                  onClick={() => window.open(doc.archivoUrl, '_blank')}
+                  className="p-2 rounded-lg hover:bg-portal-muted/50 text-portal-muted-fg transition-colors"
+                  title="Ver original"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
+
                 {doc.extraccionEstado === 'completada' && doc.estadoRevision === 'pendiente' && (
                   <>
                     <button
@@ -279,13 +339,16 @@ export default function PortalDocumentosPage() {
                     </button>
                   </>
                 )}
-                <button
-                  onClick={() => handleDelete(doc.id)}
-                  className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-950/30 text-portal-muted-fg hover:text-red-500 transition-colors"
-                  title="Eliminar"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+
+                {doc.extraccionEstado !== 'confirmado' && (
+                  <button
+                    onClick={() => handleDelete(doc.id)}
+                    className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-950/30 text-portal-muted-fg hover:text-red-500 transition-colors"
+                    title="Eliminar"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
           </PortalCard>

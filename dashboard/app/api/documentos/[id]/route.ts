@@ -14,7 +14,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { accion, datosEditados } = body;
+    const { accion, datosEditados, turnoId, motivoRechazo } = body;
 
     if (!accion || !['aprobar', 'rechazar', 'editar'].includes(accion)) {
       return NextResponse.json(
@@ -33,6 +33,8 @@ export async function PATCH(
       accion,
       datosEditados: datosEditados || undefined,
       medicoId,
+      turnoId: turnoId || undefined,
+      motivoRechazo: motivoRechazo || undefined,
     });
 
     return NextResponse.json({ success: true, documento: doc });
