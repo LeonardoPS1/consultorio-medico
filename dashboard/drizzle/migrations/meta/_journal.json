@@ -253,6 +253,34 @@
       "when": 1787443200000,
       "tag": "0046_fix_tipo_consulta_check",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1787500000000,
+      "tag": "0047_no_show_scoring",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1787510000000,
+      "tag": "0048_transcripcion_soap",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1787520000000,
+      "tag": "0049_documentos_medicos",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1787530000000,
+      "tag": "0050_webhooks",
+      "breakpoints": true
     }
   ]
 }

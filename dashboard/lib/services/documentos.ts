@@ -4,6 +4,7 @@ import { pacientes } from '@/drizzle/core';
 import { eq, and, desc, isNull, asc, lte } from 'drizzle-orm';
 import { extraerTextoImagen, extraerLaboratorio, extraerReceta } from '@/lib/vision-ocr';
 import { unlinkSync, existsSync } from 'fs';
+import { getUploadDir } from '@/lib/upload-dir';
 
 export interface DocumentoInput {
   pacienteId: string;
