@@ -52,7 +52,10 @@ export const documentosService = {
     if (typeof window === 'undefined' && doc.archivoUrl) {
       const fs = await import('fs');
       const pathModule = await import('path');
-      const filePath = pathModule.resolve(doc.archivoUrl);
+      // Extract filename from URL and combine with actual upload directory
+      const filename = pathModule.basename(doc.archivoUrl);
+      const uploadDir = await getUploadDir();
+      const filePath = pathModule.join(uploadDir, filename);
       if (fs.existsSync(filePath)) {
         imageBase64 = fs.readFileSync(filePath).toString('base64');
       }
