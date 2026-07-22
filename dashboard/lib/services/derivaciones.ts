@@ -4,11 +4,11 @@
  */
 
 import { db } from '@/lib/db';
-import { derivaciones, pacientes, medicos } from '@/drizzle/schema';
+import { derivaciones, pacientes, medicos, consentimientoCompartir } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, like, or } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import { notFound } from '@/lib/api-handler';
-import type { CreateDerivacion, UpdateDerivacion } from '@/lib/validations';
+import type { UpdateDerivacion } from '@/lib/validations';
 
 export interface ListDerivacionesOptions {
   limit?: number;
@@ -68,6 +68,8 @@ export const derivacionesService = {
         notasOrigen: derivaciones.notasOrigen,
         notasDestino: derivaciones.notasDestino,
         fechaRespuesta: derivaciones.fechaRespuesta,
+        consentimientoId: derivaciones.consentimientoId,
+        tenantDestinoId: derivaciones.tenantDestinoId,
         createdAt: derivaciones.createdAt,
         updatedAt: derivaciones.updatedAt,
         pacienteNombre: pacientes.nombre,
@@ -127,6 +129,8 @@ export const derivacionesService = {
       notasOrigen: r.notasOrigen,
       notasDestino: r.notasDestino,
       fechaRespuesta: r.fechaRespuesta?.toISOString?.() || r.fechaRespuesta,
+      consentimientoId: r.consentimientoId,
+      tenantDestinoId: r.tenantDestinoId,
       createdAt: r.createdAt?.toISOString?.() || r.createdAt,
       updatedAt: r.updatedAt?.toISOString?.() || r.updatedAt,
       pacienteNombre:
@@ -189,7 +193,21 @@ export const derivacionesService = {
     };
   },
 
-  async create(input: CreateDerivacion) {
+  async create(input: {
+    pacienteId: string;
+    medicoOrigenId: string;
+    medicoDestinoId?: string | null;
+    especialidad: string;
+    motivo: string;
+    diagnostico?: string | null;
+    cie10Codigo?: string | null;
+    gravedad?: string;
+    notasOrigen?: string | null;
+    sucursalId?: string | null;
+    consentimientoId?: string | null;
+    tenantDestinoId?: string | null;
+    tenantId?: string;
+  }) {
     const [nueva] = await db
       .insert(derivaciones)
       .values({
@@ -203,6 +221,9 @@ export const derivacionesService = {
         gravedad: input.gravedad ?? 'normal',
         notasOrigen: input.notasOrigen || null,
         sucursalId: input.sucursalId ?? null,
+        consentimientoId: input.consentimientoId ?? null,
+        tenantDestinoId: input.tenantDestinoId ?? null,
+        tenantId: input.tenantId ?? '00000000-0000-0000-0000-000000000000',
       })
       .returning();
 
@@ -255,6 +276,7 @@ export const derivacionesService = {
     if (input.motivo !== undefined) updateData.motivo = input.motivo;
     if (input.diagnostico !== undefined) updateData.diagnostico = input.diagnostico;
     if (input.cie10Codigo !== undefined) updateData.cie10Codigo = input.cie10Codigo;
+    if (input.consentimientoId !== undefined) updateData.consentimientoId = input.consentimientoId;
 
     await db.update(derivaciones).set(updateData).where(eq(derivaciones.id, id));
 
@@ -346,5 +368,35 @@ export const derivacionesService = {
       .from(medicos)
       .where(and(sql`${medicos.deletedAt} IS NULL`, eq(medicos.activo, true)))
       .orderBy(medicos.nombre);
+  },
+
+  async getCrossTenant(tenantId: string) {
+    const rows = await db
+      .select()
+      .from(derivaciones)
+      .where(
+        and(
+          eq(derivaciones.tenantDestinoId, tenantId),
+          sql`${derivaciones.deletedAt} IS NULL`,
+        ),
+      )
+      .orderBy(desc(derivaciones.createdAt));
+
+    return { data: rows, total: rows.length };
+  },
+
+  async getByConsentimientoId(consentimientoId: string) {
+    const rows = await db
+      .select()
+      .from(derivaciones)
+      .where(
+        and(
+          eq(derivaciones.consentimientoId, consentimientoId),
+          sql`${derivaciones.deletedAt} IS NULL`,
+        ),
+      )
+      .limit(1);
+
+    return rows[0] || null;
   },
 };

@@ -44,7 +44,9 @@ API (app/api/pacientes/)
 | `regionId` | UUID FK→regiones.id | |
 | `comunaId` | UUID FK→comunas.id | |
 | `sistemaSalud` | varchar(20) | fonasa, isapre, particular, otro |
-| `isapreNombre` | varchar(100) | |
+| `prevision` | varchar(30) | `fonasa`, `isapre`, `particular`, `prais`, `otro` |
+| `tramoFonasa` | varchar(5) | `A`, `B`, `C`, `D` (solo FONASA) |
+| `isapreNombre` | varchar(100) | Nombre de la ISAPRE |
 | `alergias` | text | |
 | `medicacionCronica` | text | |
 | `notasMedicas` | text | |
@@ -52,6 +54,7 @@ API (app/api/pacientes/)
 | `consentimientoEmail` | boolean | default false |
 | `canalPreferido` | varchar(20) | default 'whatsapp' |
 | `fuente` | varchar(50) | default 'whatsapp' |
+| `numeroAfiliado` | varchar(100) | Número de afiliado en FONASA/ISAPRE |
 | `tags` | text[] | |
 | `metadata` | jsonb | |
 | `portalToken` | varchar(255) | Magic link |
@@ -85,12 +88,13 @@ pacientes ──1:N── turnos, conversaciones, recetas, historialMedico
 - **Búsqueda**: 6 campos ILIKE (nombre, apellido, teléfono, rut, dni, nombre+apellido).
 - **Scoring automático** (Starter+): score 0-100 (no-shows ×40, cancelaciones ×25, confirmación ×20, lectura recordatorios ×10, asistencia ×5+). Niveles: bajo/medio/alto.
 - **Tags automáticos**: según sistemaSalud (Fonasa → ['Fonasa'], isapre → [isapreNombre], particular → ['Particular']).
+- **Previsión chilena**: campo `prevision` con valores `fonasa`, `isapre`, `particular`, `prais`, `otro`. Si es FONASA, se puede especificar tramo (A/B/C/D). Si es ISAPRE, se puede especificar nombre de la ISAPRE y número de afiliado.
 
 ## Feature Gating
 
 | Feature | Plan mínimo |
 |---------|-------------|
-| pacientes | Starter |
+| pacientes (datos básicos, incluye previsión) | Starter |
 | scoring-pacientes | Starter |
 | historial | Starter |
 | certificados-qr | Professional |
@@ -145,6 +149,48 @@ pacientes ──1:N── turnos, conversaciones, recetas, historialMedico
 | `getById()` | Obtiene por ID. Cache 30s. NotFound si no existe. |
 | `update()` | Actualización parcial. Invalida cache. |
 | `delete()` | Soft-delete cascade via privacidadService. Invalida cache. |
+
+## Previsión y FONASA (Chile)
+
+### Sistema de Salud Chileno
+
+El módulo de pacientes soporta el sistema de salud chileno con los siguientes tipos de previsión:
+
+| Previsión | Descripción |
+|-----------|-------------|
+| `fonasa` | Fondo Nacional de Salud |
+| `isapre` | Instituciones de Salud Previsional |
+| `particular` | Paciente particular (sin cobertura) |
+| `prais` | Programa de Reparación y Atención Integral en Salud |
+| `otro` | Otro sistema (FF.AA., etc.) |
+
+### Tramos FONASA
+
+| Tramo | Copago | Descripción |
+|-------|--------|-------------|
+| A | 0% | Exento — sin copago |
+| B | 10% | 10% copago (excepto pensionados) |
+| C | 20% | 20% copago |
+| D | 20% | 20% copago |
+
+### ISAPREs Soportadas
+
+15 ISAPREs registradas: Colmena Golden Cross, Cruz Blanca, Banmédica, Consalud, Masvida, Vida Tres, Esencial, Nueva Masvida, Cruz del Norte, Ripley Corp, Fundación, CHCC Salud, Cooperativa, Fusat, Lautaro.
+
+### Cálculo de Copago
+
+La función `calcularCopago(tramo, valorPrestacion)` en `lib/aranceles-fonasa.ts` calcula el copago según el tramo FONASA:
+
+```typescript
+calcularCopago('A', 10000) → 0
+calcularCopago('C', 10000) → 2000
+```
+
+### Feature Gate
+
+| Feature | Plan mínimo |
+|---------|-------------|
+| previsión (campos en paciente) | Starter (incluido en datos básicos) |
 
 ## Privacidad ARCO
 

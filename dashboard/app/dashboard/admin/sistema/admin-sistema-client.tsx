@@ -4,9 +4,10 @@ import { Suspense, useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Brain, Link, Shield, Key, Lock, Users } from 'lucide-react';
+import { Settings, Brain, Link, Shield, Key, Lock, Users, Globe } from 'lucide-react';
 import SistemaTab from '@/components/configuracion/sistema-tab';
 import AdminUsuariosTab from '@/components/admin/admin-usuarios-tab';
+import ConveniosTab from '@/components/configuracion/convenios-tab';
 import { PageHeader } from '@/components/page-header';
 
 const SYSTEM_TABS = [
@@ -17,6 +18,7 @@ const SYSTEM_TABS = [
   { id: 'credenciales', label: 'Credenciales', icon: Shield },
   { id: 'apikeys', label: 'API Keys', icon: Key },
   { id: 'privacidad', label: 'Privacidad', icon: Lock },
+  { id: 'convenios', label: 'Convenios', icon: Globe },
 ] as const;
 
 const VALID_TABS = SYSTEM_TABS.map((t) => t.id);
@@ -65,6 +67,8 @@ function SistemaContent() {
           <TabsContent key={t.id} value={t.id} className="mt-4">
             {t.id === 'usuarios' ? (
               <AdminUsuariosTab />
+            ) : t.id === 'convenios' ? (
+              <ConveniosTab isAdmin={true} />
             ) : (
               <SistemaTab isAdmin={true} section={t.id} />
             )}

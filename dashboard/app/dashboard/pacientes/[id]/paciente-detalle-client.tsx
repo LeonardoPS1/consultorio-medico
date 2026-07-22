@@ -126,6 +126,8 @@ interface PacienteData {
   obraSocial: string | null;
   sistemaSalud: string | null;
   isapreNombre: string | null;
+  prevision: string | null;
+  tramoFonasa: string | null;
   numeroAfiliado: string | null;
   regionId: string | null;
   comunaId: string | null;
@@ -900,21 +902,38 @@ export function PacienteDetalleClient({
                 )}
               </div>
               <div className="flex items-center gap-2 mt-3 flex-wrap">
-                <Badge variant="secondary" className="text-xs" title="Sistema de Salud">
-                  {paciente.sistemaSalud
+                <Badge variant="secondary" className="text-xs" title="Previsión">
+                  {paciente.prevision
                     ? (() => {
-                        const saludMap: Record<string, string> = {
+                        const prevMap: Record<string, string> = {
                           fonasa: 'FONASA',
                           isapre: 'ISAPRE',
                           particular: 'Particular',
+                          prais: 'PRAIS',
                           otro: 'Otro',
                         };
-                        const base = saludMap[paciente.sistemaSalud] || paciente.sistemaSalud;
-                        return paciente.sistemaSalud === 'isapre' && paciente.isapreNombre
-                          ? `${base} · ${paciente.isapreNombre}`
-                          : base;
+                        const base = prevMap[paciente.prevision] || paciente.prevision;
+                        const tramo = paciente.tramoFonasa ? ` · Tramo ${paciente.tramoFonasa}` : '';
+                        const isapre = paciente.prevision === 'isapre' && paciente.isapreNombre
+                          ? ` · ${paciente.isapreNombre}`
+                          : '';
+                        return `${base}${tramo}${isapre}`;
                       })()
-                    : paciente.obraSocial || 'Sin cobertura'}
+                    : paciente.sistemaSalud
+                      ? (() => {
+                          const saludMap: Record<string, string> = {
+                            fonasa: 'FONASA',
+                            isapre: 'ISAPRE',
+                            particular: 'Particular',
+                            prais: 'PRAIS',
+                            otro: 'Otro',
+                          };
+                          const base = saludMap[paciente.sistemaSalud] || paciente.sistemaSalud;
+                          return paciente.sistemaSalud === 'isapre' && paciente.isapreNombre
+                            ? `${base} · ${paciente.isapreNombre}`
+                            : base;
+                        })()
+                      : paciente.obraSocial || 'Sin cobertura'}
                   {paciente.numeroAfiliado && ` · #${paciente.numeroAfiliado}`}
                 </Badge>
                 {paciente.consentimientoWhatsapp && (

@@ -47,6 +47,48 @@ export const auditoriaAccesos = pgTable(
 );
 
 // ============================================================
+// CONSENTIMIENTO DE COMPARTIR DATOS (cross-tenant)
+// ============================================================
+export const consentimientoCompartir = pgTable(
+  'consentimiento_compartir',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    pacienteId: uuid('paciente_id')
+      .notNull()
+      .references(() => pacientes.id),
+    medicoOrigenId: uuid('medico_origen_id')
+      .notNull()
+      .references(() => medicos.id),
+    medicoDestinoId: uuid('medico_destino_id')
+      .notNull()
+      .references(() => medicos.id),
+    tenantDestinoId: uuid('tenant_destino_id')
+      .notNull()
+      .references(() => tenants.id),
+    alcance: varchar('alcance', { length: 30 }).notNull().default('historial_completo'),
+    datosAutorizados: jsonb('datos_autorizados').default({}),
+    estado: varchar('estado', { length: 20 }).notNull().default('pendiente'),
+    fechaExpiracion: timestamp('fecha_expiracion', { withTimezone: true }),
+    firmaPacienteAt: timestamp('firma_paciente_at', { withTimezone: true }),
+    ipFirma: varchar('ip_firma', { length: 50 }),
+    metadata: jsonb('metadata').default({}),
+    tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => ({
+    idxConsentimientoPaciente: index('idx_consent_compartir_paciente').on(table.pacienteId),
+    idxConsentimientoEstado: index('idx_consent_compartir_estado').on(table.estado),
+    idxConsentimientoDestino: index('idx_consent_compartir_destino').on(table.medicoDestinoId),
+    idxConsentimientoTenantDestino: index('idx_consent_compartir_tenant_dest').on(table.tenantDestinoId),
+  }),
+);
+
+export type ConsentimientoCompartir = InferSelectModel<typeof consentimientoCompartir>;
+export type NewConsentimientoCompartir = InferInsertModel<typeof consentimientoCompartir>;
+
+// ============================================================
 // RATE LIMITS (persistente en PostgreSQL)
 // ============================================================
 export const rateLimits = pgTable(

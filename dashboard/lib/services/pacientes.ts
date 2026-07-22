@@ -11,6 +11,8 @@ import type { CreatePaciente, UpdatePaciente } from '@/lib/validations';
 import { conflict, notFound } from '@/lib/api-handler';
 import { privacidadService } from '@/lib/services/privacidad';
 import { cache } from '@/lib/cache';
+import { emitirWebhook } from '@/lib/webhook-outbox';
+import { getTenantId } from '@/lib/request-context';
 
 export const pacientesService = {
   /** Listar pacientes con búsqueda y stats */
@@ -139,6 +141,9 @@ export const pacientesService = {
         obraSocial: input.obraSocial || null,
         sistemaSalud: input.sistemaSalud || null,
         isapreNombre: input.isapreNombre || null,
+        prevision: input.prevision || null,
+        tramoFonasa: input.tramoFonasa || null,
+        numeroAfiliado: input.numeroAfiliado || null,
         dni: input.dni || null,
         fechaNacimiento: input.fechaNacimiento || null,
         direccion: input.direccion || null,
@@ -172,6 +177,23 @@ export const pacientesService = {
     // Invalidar cache de listados
     cache.invalidate('pacientes:list:*');
 
+    // Webhook fire-and-forget
+    const tenantId = getTenantId();
+    if (tenantId && tenantId !== '00000000-0000-0000-0000-000000000000') {
+      emitirWebhook(
+        'paciente.creado',
+        {
+          id: nuevo.id,
+          nombre: nuevo.nombre,
+          apellido: nuevo.apellido,
+          telefono: nuevo.telefono,
+          email: nuevo.email,
+          sistemaSalud: nuevo.sistemaSalud,
+        },
+        tenantId,
+      ).catch(() => {});
+    }
+
     return nuevo;
   },
 
@@ -203,6 +225,22 @@ export const pacientesService = {
     // Invalidar cache
     cache.invalidate('pacientes:list:*');
     cache.invalidate(`pacientes:get:${id}`);
+
+    // Webhook fire-and-forget
+    const tenantId = getTenantId();
+    if (tenantId && tenantId !== '00000000-0000-0000-0000-000000000000') {
+      emitirWebhook(
+        'paciente.actualizado',
+        {
+          id: updated.id,
+          nombre: updated.nombre,
+          apellido: updated.apellido,
+          telefono: updated.telefono,
+          email: updated.email,
+        },
+        tenantId,
+      ).catch(() => {});
+    }
 
     return updated;
   },

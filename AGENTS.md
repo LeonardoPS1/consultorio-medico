@@ -2,7 +2,7 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 18/07/2026
+**Última actualización:** 22/07/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
@@ -646,6 +646,9 @@ consultorio-medico/
 | **Compliance Tabs (Auditoría + ARCO)** | Página compliance con 3 tabs: tiempos espera, registro accesos (filtros + CSV export), solicitudes ARCO (CRUD). APIs `/api/auditoria-accesos`, `/api/arco`, `/api/auditoria-accesos/exportar`. Commit `8650ebd` | 20/07 |
 | **WF-12 Scoring No-Show Nocturno** | Workflow n8n nocturno (3:30 AM) actualiza risk_score para turnos próximos. WF-03 modificado para recordatorios 48h a pacientes alto/crítico. API `/api/internal/scores/actualizar`. Commit `8650ebd` | 20/07 |
 | **Metabase infraestructura** | Servicio agregado a `docker-compose.prod.yml` (imagen v0.52, PostgreSQL backend, read-only user para datos). Script `scripts/setup-metabase.sql`. Commit `8650ebd` | 20/07 |
+| **Previsión FONASA + ISAPREs** | Sistema de previsión de salud chilena: tramos A/B/C/D con copagos de referencia, 15 ISAPREs, badge en ficha paciente. `lib/aranceles-fonasa.ts`, migration 0045. | 22/07 |
+| **Webhooks salientes** | Webhooks configurables por tenant con HMAC-SHA256, 3 retry exponencial, delivery logs. Tab Integraciones en Configuración (Professional+). 6 API endpoints + UI completa. | 22/07 |
+| **Derivaciones cross-tenant + consentimiento** | Derivaciones entre organizaciones con consentimiento del paciente (alcance granular, expiración, revocable). Convenios de intercambio administrativos. Features: `consentimiento-compartir` (Professional), `convenios-intercambio` (Enterprise). | 22/07 |
 
 ### 🟡 Prioridad Media
 

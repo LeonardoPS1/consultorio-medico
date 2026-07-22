@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SISTEMAS_SALUD, ISAPRES_CHILENAS } from '@/lib/isapres';
+import { getTramos } from '@/lib/aranceles-fonasa';
 
 interface Region {
   id: string;
@@ -39,6 +40,9 @@ interface PacienteData {
   obraSocial: string | null;
   sistemaSalud: string | null;
   isapreNombre: string | null;
+  prevision: string | null;
+  tramoFonasa: string | null;
+  numeroAfiliado: string | null;
   regionId: string | null;
   comunaId: string | null;
 }
@@ -85,6 +89,9 @@ export function EditarPacienteModal({
   const [direccion, setDireccion] = useState('');
   const [sistemaSalud, setSistemaSalud] = useState('particular');
   const [isapreNombre, setIsapreNombre] = useState('');
+  const [prevision, setPrevision] = useState('particular');
+  const [tramoFonasa, setTramoFonasa] = useState('');
+  const [numeroAfiliado, setNumeroAfiliado] = useState('');
   const [regionId, setRegionId] = useState('');
   const [comunaId, setComunaId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -106,6 +113,9 @@ export function EditarPacienteModal({
       setDireccion(paciente.direccion || '');
       setSistemaSalud(paciente.sistemaSalud || 'particular');
       setIsapreNombre(paciente.isapreNombre || '');
+      setPrevision(paciente.prevision || paciente.sistemaSalud || 'particular');
+      setTramoFonasa(paciente.tramoFonasa || '');
+      setNumeroAfiliado(paciente.numeroAfiliado || '');
       setRegionId(paciente.regionId || '');
       setComunaId(paciente.comunaId || '');
     }
@@ -141,7 +151,7 @@ export function EditarPacienteModal({
 
     setLoading(true);
     try {
-      const isapreValue = sistemaSalud === 'isapre' ? isapreNombre : null;
+      const isapreValue = prevision === 'isapre' ? isapreNombre : null;
       const body: Record<string, unknown> = {
         nombre: nombre.trim(),
         apellido: apellido.trim(),
@@ -150,9 +160,12 @@ export function EditarPacienteModal({
         dni: dni.trim() || null,
         fechaNacimiento: fechaNacimiento || null,
         direccion: direccion.trim() || null,
-        sistemaSalud,
+        sistemaSalud: prevision === 'prais' ? 'otro' : prevision,
         isapreNombre: isapreValue,
-        obraSocial: isapreValue || sistemaSalud || 'Particular',
+        prevision,
+        tramoFonasa: prevision === 'fonasa' ? tramoFonasa : null,
+        numeroAfiliado: prevision === 'isapre' ? numeroAfiliado : null,
+        obraSocial: isapreValue || prevision || 'Particular',
         regionId: regionId || null,
         comunaId: comunaId || null,
       };
@@ -267,42 +280,80 @@ export function EditarPacienteModal({
           </div>
 
           <div className="space-y-2">
-            <Label>Sistema de Salud</Label>
+            <Label>Previsión</Label>
             <Select
-              value={sistemaSalud}
+              value={prevision}
               onValueChange={(val) => {
-                setSistemaSalud(val);
+                setPrevision(val);
                 setIsapreNombre('');
+                setTramoFonasa('');
+                setNumeroAfiliado('');
               }}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {SISTEMAS_SALUD.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>
-                    {s.label}
-                  </SelectItem>
-                ))}
+                <SelectItem value="fonasa">FONASA</SelectItem>
+                <SelectItem value="isapre">ISAPRE</SelectItem>
+                <SelectItem value="particular">Particular</SelectItem>
+                <SelectItem value="prais">PRAIS</SelectItem>
+                <SelectItem value="otro">Otro</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {sistemaSalud === 'isapre' && (
+          {prevision === 'fonasa' && (
             <div className="space-y-2">
-              <Label>Isapre</Label>
-              <Select value={isapreNombre} onValueChange={setIsapreNombre}>
+              <Label>Tramo FONASA</Label>
+              <Select value={tramoFonasa} onValueChange={setTramoFonasa}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccioná una Isapre" />
+                  <SelectValue placeholder="Seleccioná tramo" />
                 </SelectTrigger>
                 <SelectContent>
-                  {ISAPRES_CHILENAS.map((i) => (
-                    <SelectItem key={i.value} value={i.value}>
-                      {i.label}
+                  {getTramos().map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label} — {t.descripcion}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {prevision === 'isapre' && (
+            <>
+              <div className="space-y-2">
+                <Label>Isapre</Label>
+                <Select value={isapreNombre} onValueChange={setIsapreNombre}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccioná una Isapre" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ISAPRES_CHILENAS.map((i) => (
+                      <SelectItem key={i.value} value={i.value}>
+                        {i.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-numero-afiliado">N° de Afiliado</Label>
+                <Input
+                  id="edit-numero-afiliado"
+                  placeholder="Número de afiliado"
+                  value={numeroAfiliado}
+                  onChange={(e) => setNumeroAfiliado(e.target.value)}
+                  maxLength={100}
+                />
+              </div>
+            </>
+          )}
+
+          {prevision === 'particular' && (
+            <div className="rounded-lg border border-muted bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+              Sin copago por arancel particular
             </div>
           )}
 

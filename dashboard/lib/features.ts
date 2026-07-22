@@ -66,7 +66,9 @@ export type FeatureId =
   | 'compliance'
   | 'transcripcion-soap'
   | 'documentos-ocr'
-  | 'fhir-export';
+  | 'fhir-export'
+  | 'consentimiento-compartir'
+  | 'convenios-intercambio';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -106,7 +108,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   blacklist: 'professional',
   'consentimiento-informado': 'professional',
   telemedicina: 'professional',
-  integraciones: 'premium',
+  integraciones: 'professional',
   auditoria: 'premium',
   'backup-encriptado': 'premium',
   'webhooks-log': 'premium',
@@ -126,6 +128,8 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'transcripcion-soap': 'starter',
   'documentos-ocr': 'starter',
   'fhir-export': 'professional',
+  'consentimiento-compartir': 'professional',
+  'convenios-intercambio': 'enterprise',
 };
 
 // ============================================================

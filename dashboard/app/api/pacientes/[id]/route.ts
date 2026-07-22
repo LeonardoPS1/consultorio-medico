@@ -63,6 +63,8 @@ export const GET = apiHandler(async (_req: NextRequest, { params: paramsPromise 
       fechaNacimiento: pacientes.fechaNacimiento,
       direccion: pacientes.direccion,
       obraSocial: pacientes.obraSocial,
+      prevision: pacientes.prevision,
+      tramoFonasa: pacientes.tramoFonasa,
       numeroAfiliado: pacientes.numeroAfiliado,
       sistemaSalud: pacientes.sistemaSalud,
       isapreNombre: pacientes.isapreNombre,

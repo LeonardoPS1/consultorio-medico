@@ -65,8 +65,11 @@ export const createPacienteSchema = z.object({
     .regex(telefonoRegex, 'Teléfono inválido: debe tener entre 7 y 15 dígitos, con o sin +'),
   email: z.string().trim().email('Email inválido').optional().nullable().or(z.literal('')),
   obraSocial: z.string().optional().nullable(),
-  sistemaSalud: z.enum(['fonasa', 'isapre', 'particular', 'otro']).optional().nullable(),
+  sistemaSalud: z.enum(['fonasa', 'isapre', 'particular', 'prais', 'otro']).optional().nullable(),
   isapreNombre: z.string().optional().nullable(),
+  prevision: z.enum(['fonasa', 'isapre', 'particular', 'prais', 'otro']).optional().nullable(),
+  tramoFonasa: z.enum(['A', 'B', 'C', 'D']).optional().nullable(),
+  numeroAfiliado: z.string().max(100).optional().nullable(),
   dni: z.string().optional().nullable(),
   fechaNacimiento: z.string().optional().nullable(),
   direccion: z.string().optional().nullable(),
@@ -443,6 +446,8 @@ export const createDerivacionSchema = z.object({
   gravedad: z.enum(['normal', 'prioritaria', 'urgente']).optional().default('normal'),
   notasOrigen: z.string().optional().nullable(),
   sucursalId: z.string().uuid().optional().nullable(),
+  consentimientoId: z.string().uuid().optional().nullable(),
+  tenantDestinoId: z.string().uuid().optional().nullable(),
 });
 
 export const updateDerivacionSchema = z
@@ -456,6 +461,7 @@ export const updateDerivacionSchema = z
     diagnostico: z.string().optional().nullable(),
     cie10Codigo: z.string().optional().nullable(),
     fechaRespuesta: z.string().optional().nullable(),
+    consentimientoId: z.string().uuid().optional().nullable(),
   })
   .partial();
 
@@ -617,6 +623,45 @@ export type LiveKitTokenData = z.infer<typeof liveKitTokenSchema>;
 export type CreateBloqueoData = z.infer<typeof createBloqueoSchema>;
 export type CreateNotaSoapData = z.infer<typeof createNotaSoapSchema>;
 export type UpdateNotaSoapData = z.infer<typeof updateNotaSoapSchema>;
+
+// ─── Consentimiento Compartir ──────────────────────────────
+
+export const createConsentimientoCompartirSchema = z.object({
+  pacienteId: z.string().uuid('pacienteId debe ser UUID'),
+  medicoOrigenId: z.string().uuid('medicoOrigenId debe ser UUID'),
+  medicoDestinoId: z.string().uuid('medicoDestinoId debe ser UUID'),
+  tenantDestinoId: z.string().uuid('tenantDestinoId debe ser UUID'),
+  alcance: z
+    .enum(['historial_completo', 'solo_recetas', 'solo_turnos', 'solo_diagnosticos'])
+    .optional()
+    .default('historial_completo'),
+  datosAutorizados: z.record(z.unknown()).optional(),
+  fechaExpiracion: z.string().optional().nullable(),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+export const updateConsentimientoCompartirSchema = z.object({
+  estado: z.enum(['firmado', 'revocado']).optional(),
+});
+
+export type CreateConsentimientoCompartir = z.infer<typeof createConsentimientoCompartirSchema>;
+export type UpdateConsentimientoCompartir = z.infer<typeof updateConsentimientoCompartirSchema>;
+
+// ─── Convenios de Intercambio ──────────────────────────────
+
+export const createConvenioSchema = z.object({
+  tenantDestinoId: z.string().uuid('tenantDestinoId debe ser UUID'),
+  fechaInicio: z.string().optional().nullable(),
+  fechaFin: z.string().optional().nullable(),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+export const updateConvenioSchema = z.object({
+  estado: z.enum(['activo', 'inactivo']),
+});
+
+export type CreateConvenio = z.infer<typeof createConvenioSchema>;
+export type UpdateConvenio = z.infer<typeof updateConvenioSchema>;
 
 // ─── Contact Form ─────────────────────────────────────────
 

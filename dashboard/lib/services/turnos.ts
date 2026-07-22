@@ -9,6 +9,8 @@ import { buildGCalPayload, syncTurnoToGCal } from '@/lib/google-calendar-sync';
 import { waitlistService } from '@/lib/services/waitlist';
 import { cache } from '@/lib/cache';
 import { telemedicinaService } from '@/lib/services/livekit-telemedicina';
+import { emitirWebhook } from '@/lib/webhook-outbox';
+import { getTenantId } from '@/lib/request-context';
 
 export const turnosService = {
   async list(
@@ -309,6 +311,21 @@ export const turnosService = {
       // Invalidar cache de listados
       cache.invalidate('turnos:list:*');
 
+      // Webhook fire-and-forget
+      const tenantId = getTenantId();
+      if (tenantId && tenantId !== '00000000-0000-0000-0000-000000000000') {
+        const webhookPayload = {
+          id: nuevo.id,
+          pacienteId: nuevo.pacienteId,
+          medicoId: nuevo.medicoId,
+          fechaHora: nuevo.fechaHora,
+          motivo: nuevo.motivo,
+          estado: nuevo.estado,
+          tipoConsulta: nuevo.tipoConsulta,
+        };
+        emitirWebhook('turno.creado', webhookPayload, tenantId).catch(() => {});
+      }
+
       return nuevo;
     } catch (error) {
       safeError(
@@ -439,6 +456,23 @@ export const turnosService = {
 
       // Invalidar cache de listados
       cache.invalidate('turnos:list:*');
+
+      // Webhook fire-and-forget
+      const tenantId = getTenantId();
+      if (tenantId && tenantId !== '00000000-0000-0000-0000-000000000000') {
+        const evento = turnoActualizado.estado === 'cancelada' ? 'turno.cancelado' : 'turno.actualizado';
+        const webhookPayload = {
+          id: turnoActualizado.id,
+          pacienteId: turnoActualizado.pacienteId,
+          medicoId: turnoActualizado.medicoId,
+          fechaHora: turnoActualizado.fechaHora,
+          motivo: turnoActualizado.motivo,
+          estado: turnoActualizado.estado,
+          tipoConsulta: turnoActualizado.tipoConsulta,
+          cambios: input.estado ? { estado: input.estado } : undefined,
+        };
+        emitirWebhook(evento, webhookPayload, tenantId).catch(() => {});
+      }
 
       return turnoActualizado;
     } catch (error) {

@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SISTEMAS_SALUD, ISAPRES_CHILENAS } from '@/lib/isapres';
+import { getTramos } from '@/lib/aranceles-fonasa';
 
 interface Region {
   id: string;
@@ -34,10 +35,13 @@ const nuevoPacienteSchema = z.object({
   telefono: z.string().regex(/^\+569\d{8}$/, 'Formato: +569XXXXXXXX'),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   dni: z.string().regex(/^\d{1,2}\.\d{3}\.\d{3}[-][0-9Kk]{1}$/, 'Formato: 12.345.678-9').optional().or(z.literal('')),
-  sistemaSalud: z.enum(['fonasa', 'isapre', 'particular', 'otro']),
+  sistemaSalud: z.enum(['fonasa', 'isapre', 'particular', 'prais', 'otro']),
   isapreNombre: z.string().optional(),
   regionId: z.string().optional(),
   comunaId: z.string().optional(),
+  prevision: z.enum(['fonasa', 'isapre', 'particular', 'prais', 'otro']),
+  tramoFonasa: z.enum(['A', 'B', 'C', 'D']).optional(),
+  numeroAfiliado: z.string().optional(),
 });
 
 /** Formatea RUT chileno: 12.345.678-9 */
@@ -77,6 +81,9 @@ interface NuevoPacienteModalProps {
     isapreNombre?: string;
     regionId?: string;
     comunaId?: string;
+    prevision?: string;
+    tramoFonasa?: string;
+    numeroAfiliado?: string;
   }) => void;
 }
 
@@ -88,6 +95,9 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
   const [dni, setDni] = useState('');
   const [sistemaSalud, setSistemaSalud] = useState('particular');
   const [isapreNombre, setIsapreNombre] = useState('');
+  const [prevision, setPrevision] = useState('particular');
+  const [tramoFonasa, setTramoFonasa] = useState('');
+  const [numeroAfiliado, setNumeroAfiliado] = useState('');
   const [regionId, setRegionId] = useState('');
   const [comunaId, setComunaId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -151,8 +161,11 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
       telefono: formatTelefonoChile(telefono),
       email,
       dni: dni.trim() || '',
-      sistemaSalud,
+      sistemaSalud: prevision === 'prais' ? 'otro' : prevision,
       isapreNombre,
+      prevision,
+      tramoFonasa: prevision === 'fonasa' ? tramoFonasa : undefined,
+      numeroAfiliado: prevision === 'isapre' ? numeroAfiliado : undefined,
       regionId: regionId || undefined,
       comunaId: comunaId || undefined,
     };
@@ -167,7 +180,7 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
       setErrors(fieldErrors);
       return;
     }
-    const isapreValue = sistemaSalud === 'isapre' ? isapreNombre : undefined;
+    const isapreValue = prevision === 'isapre' ? isapreNombre : undefined;
     setLoading(true);
     onSubmit?.({
       nombre,
@@ -175,9 +188,12 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
       telefono: formatTelefonoChile(telefono),
       email,
       dni: dni.trim() || null,
-      obraSocial: isapreValue || sistemaSalud || 'Particular',
-      sistemaSalud,
+      obraSocial: isapreValue || prevision || 'Particular',
+      sistemaSalud: prevision === 'prais' ? 'otro' : prevision,
       isapreNombre: isapreValue,
+      prevision,
+      tramoFonasa: prevision === 'fonasa' ? tramoFonasa : undefined,
+      numeroAfiliado: prevision === 'isapre' ? numeroAfiliado : undefined,
       regionId: regionId || undefined,
       comunaId: comunaId || undefined,
     });
@@ -190,6 +206,9 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
     setDni('');
     setSistemaSalud('particular');
     setIsapreNombre('');
+    setPrevision('particular');
+    setTramoFonasa('');
+    setNumeroAfiliado('');
     setRegionId('');
     setComunaId('');
     setErrors({});
@@ -278,42 +297,80 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
           </div>
 
           <div className="space-y-2">
-            <Label>Sistema de Salud</Label>
+            <Label>Previsión</Label>
             <Select
-              value={sistemaSalud}
+              value={prevision}
               onValueChange={(val) => {
-                setSistemaSalud(val);
+                setPrevision(val);
                 setIsapreNombre('');
+                setTramoFonasa('');
+                setNumeroAfiliado('');
               }}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {SISTEMAS_SALUD.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>
-                    {s.label}
-                  </SelectItem>
-                ))}
+                <SelectItem value="fonasa">FONASA</SelectItem>
+                <SelectItem value="isapre">ISAPRE</SelectItem>
+                <SelectItem value="particular">Particular</SelectItem>
+                <SelectItem value="prais">PRAIS</SelectItem>
+                <SelectItem value="otro">Otro</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {sistemaSalud === 'isapre' && (
+          {prevision === 'fonasa' && (
             <div className="space-y-2">
-              <Label>Isapre</Label>
-              <Select value={isapreNombre} onValueChange={setIsapreNombre}>
+              <Label>Tramo FONASA</Label>
+              <Select value={tramoFonasa} onValueChange={setTramoFonasa}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecciona una Isapre" />
+                  <SelectValue placeholder="Selecciona tramo" />
                 </SelectTrigger>
                 <SelectContent>
-                  {ISAPRES_CHILENAS.map((i) => (
-                    <SelectItem key={i.value} value={i.value}>
-                      {i.label}
+                  {getTramos().map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label} — {t.descripcion}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {prevision === 'isapre' && (
+            <>
+              <div className="space-y-2">
+                <Label>Isapre</Label>
+                <Select value={isapreNombre} onValueChange={setIsapreNombre}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una Isapre" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ISAPRES_CHILENAS.map((i) => (
+                      <SelectItem key={i.value} value={i.value}>
+                        {i.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="nuevo-numero-afiliado">N° de Afiliado</Label>
+                <Input
+                  id="nuevo-numero-afiliado"
+                  placeholder="Número de afiliado"
+                  value={numeroAfiliado}
+                  onChange={(e) => setNumeroAfiliado(e.target.value)}
+                  maxLength={100}
+                />
+              </div>
+            </>
+          )}
+
+          {prevision === 'particular' && (
+            <div className="rounded-lg border border-muted bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+              Sin copago por arancel particular
             </div>
           )}
 

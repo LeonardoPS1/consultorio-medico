@@ -17,7 +17,7 @@ import {
   tareaPrioridadEnum,
 } from './enums';
 import { pacientes, medicos, usuarios } from './core';
-import { sucursales } from './tenant';
+import { sucursales, tenants } from './tenant';
 
 // ============================================================
 // SERVICIOS / PRESTACIONES
@@ -116,6 +116,69 @@ export const workflowErrors = pgTable('workflow_errors', {
 export type WorkflowError = InferSelectModel<typeof workflowErrors>;
 
 // ============================================================
+// WEBHOOK CONFIGS (outgoing webhooks por tenant)
+// ============================================================
+export const webhookConfigs = pgTable(
+  'webhook_configs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    evento: varchar('evento', { length: 50 }).notNull(),
+    url: text('url').notNull(),
+    secret: varchar('secret', { length: 64 }).notNull(),
+    activo: boolean('activo').notNull().default(true),
+    ultimoEstado: varchar('ultimo_estado', { length: 20 }).default('pendiente'),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    idxWebhookTenant: index('idx_webhook_configs_tenant').on(table.tenantId),
+    idxWebhookEvento: index('idx_webhook_configs_evento').on(table.evento),
+    uniqueTenantEventoUrl: uniqueIndex('uq_webhook_tenant_evento_url').on(
+      table.tenantId,
+      table.evento,
+      table.url,
+    ),
+  }),
+);
+
+export type WebhookConfig = InferSelectModel<typeof webhookConfigs>;
+export type NewWebhookConfig = InferInsertModel<typeof webhookConfigs>;
+
+// ============================================================
+// WEBHOOK LOGS (delivery log)
+// ============================================================
+export const webhookLogs = pgTable(
+  'webhook_logs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    configId: uuid('config_id')
+      .notNull()
+      .references(() => webhookConfigs.id),
+    evento: varchar('evento', { length: 50 }).notNull(),
+    payload: jsonb('payload').default({}),
+    url: text('url').notNull(),
+    statusCode: integer('status_code'),
+    respuesta: text('respuesta'),
+    duracionMs: integer('duracion_ms'),
+    intentos: integer('intentos').notNull().default(1),
+    error: text('error'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    idxWebhookLogsConfig: index('idx_webhook_logs_config').on(table.configId),
+    idxWebhookLogsEvento: index('idx_webhook_logs_evento').on(table.evento),
+    idxWebhookLogsCreatedAt: index('idx_webhook_logs_created_at').on(table.createdAt),
+  }),
+);
+
+export type WebhookLog = InferSelectModel<typeof webhookLogs>;
+export type NewWebhookLog = InferInsertModel<typeof webhookLogs>;
+
+// ============================================================
 // HORARIOS DE ATENCIÓN
 // ============================================================
 export const horariosAtencion = pgTable(
@@ -170,5 +233,20 @@ export const horariosAtencionRelations = relations(horariosAtencion, ({ one }) =
   sucursal: one(sucursales, {
     fields: [horariosAtencion.sucursalId],
     references: [sucursales.id],
+  }),
+}));
+
+export const webhookConfigsRelations = relations(webhookConfigs, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [webhookConfigs.tenantId],
+    references: [tenants.id],
+  }),
+  logs: many(webhookLogs),
+}));
+
+export const webhookLogsRelations = relations(webhookLogs, ({ one }) => ({
+  config: one(webhookConfigs, {
+    fields: [webhookLogs.configId],
+    references: [webhookConfigs.id],
   }),
 }));

@@ -44,6 +44,7 @@ import { ConfigPlantillas } from '@/components/config/config-plantillas';
 import { ConfigNotificaciones } from '@/components/config/config-notificaciones';
 import { ConfigEquipo } from '@/components/config/config-equipo';
 import { ConfigRegional } from '@/components/config/config-regional';
+import { WebhooksTab } from '@/components/configuracion/webhooks-tab';
 
 // ============================================================
 // Tipos
@@ -232,6 +233,11 @@ function ConfigContent() {
               Equipo
             </TabsTrigger>
           )}
+          {canAccess(userPlan, 'integraciones') && (
+            <TabsTrigger value="integraciones" className="px-2 sm:px-3 shrink-0">
+              Integraciones
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* ======== PERFIL / ORGANIZACIÓN ======== */}
@@ -402,6 +408,13 @@ function ConfigContent() {
             <div className="mt-4">
               <MedicosSection plan={userPlan} />
             </div>
+          </TabsContent>
+        )}
+
+        {/* ======== INTEGRACIONES ======== */}
+        {canAccess(userPlan, 'integraciones') && (
+          <TabsContent value="integraciones" className="mt-4">
+            <WebhooksTab />
           </TabsContent>
         )}
       </Tabs>

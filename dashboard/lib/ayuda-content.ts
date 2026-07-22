@@ -198,6 +198,10 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         respuesta:
           'Sí, desde el Portal del Paciente pueden editar email, región, comuna y sistema de salud.',
       },
+      {
+        pregunta: '¿Cómo registro la previsión de salud de un paciente?',
+        respuesta: 'Al crear o editar un paciente, encontrás la sección "Previsión". Seleccioná el tipo (FONASA, ISAPRE, Particular, PRAIS, Otro). Si es FONASA, elegí el tramo (A/B/C/D). Si es ISAPRE, seleccioná la ISAPRE de la lista y opcionalmente el número de afiliado. El badge de previsión se muestra automáticamente en la ficha del paciente.',
+      },
     ],
   },
   {
@@ -360,6 +364,10 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         pregunta: '¿El paciente recibe notificación de la derivación?',
         respuesta:
           'Por ahora las notificaciones son internas entre médicos. El paciente puede enterarse cuando el médico destino lo contacte para agendar el turno.',
+      },
+      {
+        pregunta: '¿Puedo derivar un paciente a un médico de otra organización?',
+        respuesta: 'Sí. Si existe un convenio de intercambio entre organizaciones, podés derivar pacientes a especialistas de otras instituciones. El paciente debe firmar un consentimiento de intercambio de datos, donde se especifica el alcance (historial completo, solo recetas, solo turnos o solo diagnósticos) y la fecha de expiración. Las derivaciones cross-tenant requieren planes Enterprise.',
       },
     ],
   },
@@ -1994,6 +2002,52 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       {
         pregunta: '¿Se necesita consentimiento del paciente?',
         respuesta: 'Sí. El paciente debe haber firmado un consentimiento de exportación de datos. Si no está firmado, el endpoint devuelve 403 Forbidden.',
+      },
+    ],
+  },
+  {
+    id: 'integraciones',
+    titulo: 'Integraciones y Webhooks',
+    descripcion: 'Configuración de webhooks salientes para conectar AicoreMed con tus sistemas externos',
+    icono: 'Webhook',
+    pasos: [
+      {
+        titulo: '1. Crear un webhook',
+        descripcion: 'En Configuración → Integraciones, hacé clic en "Agregar Webhook". Seleccioná el evento (turno creado, paciente actualizado, etc.) y la URL donde recibirás las notificaciones.',
+        tips: [
+          'La URL debe ser HTTPS (no HTTP)',
+          'Los eventos disponibles son: turno.creado, turno.actualizado, turno.cancelado, paciente.creado, paciente.actualizado, receta.creada, derivacion.creada, pago.completado',
+          'Cada webhook recibe un secreto HMAC único generado automáticamente',
+        ],
+      },
+      {
+        titulo: '2. Verificar la firma HMAC',
+        descripcion: 'Cada webhook incluye headers de verificación: X-Webhook-Signature (sha256=<hmac>), X-Webhook-Timestamp y X-Webhook-Event. Tu sistema debe verificar la firma con el secreto usando HMAC-SHA256.',
+        tips: [
+          'El payload se firma como JSON.stringify(body)',
+          'Usá timingSafeEqual para comparación segura',
+          'El timestamp permite evitar replay attacks (recomendado tolerancia 5 min)',
+        ],
+      },
+      {
+        titulo: '3. Monitorear entregas',
+        descripcion: 'Cada webhook tiene logs de delivery visibles en la misma interfaz. Podés ver status code, tiempo de respuesta, número de intentos y errores.',
+        tips: [
+          '3 reintentos automáticos con backoff exponencial (1s, 2s, 4s)',
+          'Si fallan todos los reintentos, el webhook se marca con estado "error"',
+          'Podés probar un webhook manualmente con el botón "Probar"',
+          'Si necesitás regenerar el secreto, usá la opción en el menú de cada webhook',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Los webhooks funcionan en cualquier plan?',
+        respuesta: 'Los webhooks salientes están disponibles en planes Professional y superiores. En Starter podés recibir webhooks entrantes desde n8n, pero no configurar webhooks salientes.',
+      },
+      {
+        pregunta: '¿Puedo tener múltiples webhooks para el mismo evento?',
+        respuesta: 'Sí. Podés crear varios webhooks para el mismo evento, cada uno con una URL y secreto diferente. Todos recibirán el payload cuando el evento ocurra.',
       },
     ],
   },

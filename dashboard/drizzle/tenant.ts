@@ -28,6 +28,7 @@ import {
 import { suscripciones } from './finance';
 import { horariosAtencion } from './operations';
 import { listaEspera } from './waitlist';
+import { consentimientoCompartir } from './access';
 
 // ============================================================
 // Types for JSONB columns
@@ -118,6 +119,36 @@ export const sucursales = pgTable('sucursales', {
 
 export type Sucursal = InferSelectModel<typeof sucursales>;
 export type NewSucursal = InferInsertModel<typeof sucursales>;
+
+// ============================================================
+// CONVENIOS DE INTERCAMBIO (entre tenants para derivaciones)
+// ============================================================
+export const conveniosIntercambio = pgTable(
+  'convenios_intercambio',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    tenantOrigenId: uuid('tenant_origen_id')
+      .notNull()
+      .references(() => tenants.id),
+    tenantDestinoId: uuid('tenant_destino_id')
+      .notNull()
+      .references(() => tenants.id),
+    estado: varchar('estado', { length: 20 }).notNull().default('activo'),
+    fechaInicio: timestamp('fecha_inicio', { withTimezone: true }).defaultNow().notNull(),
+    fechaFin: timestamp('fecha_fin', { withTimezone: true }),
+    metadata: jsonb('metadata').default({}),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    idxConveniosOrigen: index('idx_convenios_origen').on(table.tenantOrigenId),
+    idxConveniosDestino: index('idx_convenios_destino').on(table.tenantDestinoId),
+    uniqueConvenio: uniqueIndex('uq_convenios_par').on(table.tenantOrigenId, table.tenantDestinoId),
+  }),
+);
+
+export type ConvenioIntercambio = InferSelectModel<typeof conveniosIntercambio>;
+export type NewConvenioIntercambio = InferInsertModel<typeof conveniosIntercambio>;
 
 // ============================================================
 // PORTAL CONFIG (configuración por tenant)
@@ -370,6 +401,8 @@ export const derivaciones = pgTable(
     notasOrigen: text('notas_origen'),
     notasDestino: text('notas_destino'),
     fechaRespuesta: timestamp('fecha_respuesta', { withTimezone: true }),
+    consentimientoId: uuid('consentimiento_id').references(() => consentimientoCompartir.id),
+    tenantDestinoId: uuid('tenant_destino_id').references(() => tenants.id),
     sucursalId: uuid('sucursal_id').references(() => sucursales.id),
     tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

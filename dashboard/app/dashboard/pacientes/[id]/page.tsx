@@ -29,6 +29,8 @@ interface PacienteDetalle {
     obraSocial: string | null;
     sistemaSalud: string | null;
     isapreNombre: string | null;
+    prevision: string | null;
+    tramoFonasa: string | null;
     numeroAfiliado: string | null;
     regionId: string | null;
     comunaId: string | null;
@@ -126,6 +128,8 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
     // ─── Datos Chile (pueden no existir si faltan migraciones) ──
     let sistemaSalud: string | null = null;
     let isapreNombre: string | null = null;
+    let prevision: string | null = null;
+    let tramoFonasa: string | null = null;
     let regionId: string | null = null;
     let comunaId: string | null = null;
     let regionNombre: string | null = null;
@@ -135,6 +139,7 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
       const [extra] = await db.execute(sql`
         SELECT
           p.sistema_salud, p.isapre_nombre, p.region_id, p.comuna_id,
+          p.prevision, p.tramo_fonasa,
           r.nombre AS region_nombre, c.nombre AS comuna_nombre
         FROM pacientes p
         LEFT JOIN regiones r ON r.id = p.region_id
@@ -145,6 +150,8 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
         const row = extra as Record<string, unknown>;
         sistemaSalud = row.sistema_salud ? String(row.sistema_salud) : null;
         isapreNombre = row.isapre_nombre ? String(row.isapre_nombre) : null;
+        prevision = row.prevision ? String(row.prevision) : null;
+        tramoFonasa = row.tramo_fonasa ? String(row.tramo_fonasa) : null;
         regionId = row.region_id ? String(row.region_id) : null;
         comunaId = row.comuna_id ? String(row.comuna_id) : null;
         regionNombre = row.region_nombre ? String(row.region_nombre) : null;
@@ -261,7 +268,6 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
       {} as Record<string, number>,
     );
 
-    // Mapear tipos: Drizzle devuelve Date/nulleables, la interface espera strings/no-nulos
     const pacienteData = {
       ...paciente,
       tags: paciente.tags ?? [],
@@ -271,6 +277,8 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
       fechaNacimiento: paciente.fechaNacimiento ?? null,
       sistemaSalud,
       isapreNombre,
+      prevision,
+      tramoFonasa,
       regionId,
       comunaId,
       regionNombre,

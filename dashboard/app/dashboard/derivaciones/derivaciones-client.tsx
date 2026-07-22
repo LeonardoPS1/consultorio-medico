@@ -179,13 +179,18 @@ export function DerivacionesClient({
     pacienteId: '',
     medicoOrigenId: '',
     medicoDestinoId: 'ninguno',
+    tenantDestinoId: '',
     especialidad: '',
     motivo: '',
     diagnostico: '',
     cie10Codigo: '',
     gravedad: 'normal' as Gravedad,
     notasOrigen: '',
+    consentimientoAlcance: 'historial_completo' as string,
+    consentimientoAceptado: false,
   });
+
+  const isCrossTenant = form.tenantDestinoId.trim().length > 0;
 
   // ── Cargar datos ──────────────────────────────────────
 
@@ -242,12 +247,52 @@ export function DerivacionesClient({
       });
       return;
     }
+
+    if (isCrossTenant && !form.consentimientoAceptado) {
+      toast({
+        title: 'Consentimiento requerido',
+        description: 'El paciente debe autorizar el intercambio de datos con el tenant destino',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setSaving(true);
     try {
-      const payload = {
-        ...form,
+      let consentimientoId: string | null = null;
+
+      if (isCrossTenant) {
+        const consentRes = await fetch('/api/consentimiento-compartir', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pacienteId: form.pacienteId,
+            medicoOrigenId: form.medicoOrigenId,
+            medicoDestinoId: form.medicoDestinoId === 'ninguno' ? null : form.medicoDestinoId,
+            tenantDestinoId: form.tenantDestinoId,
+            alcance: form.consentimientoAlcance,
+          }),
+        });
+        if (consentRes.ok) {
+          const consentJson = await consentRes.json();
+          consentimientoId = consentJson.data?.id || null;
+        }
+      }
+
+      const payload: Record<string, unknown> = {
+        pacienteId: form.pacienteId,
+        medicoOrigenId: form.medicoOrigenId,
         medicoDestinoId: form.medicoDestinoId === 'ninguno' ? null : form.medicoDestinoId,
+        especialidad: form.especialidad,
+        motivo: form.motivo,
+        diagnostico: form.diagnostico || null,
+        cie10Codigo: form.cie10Codigo || null,
+        gravedad: form.gravedad,
+        notasOrigen: form.notasOrigen || null,
+        tenantDestinoId: form.tenantDestinoId || null,
+        consentimientoId,
       };
+
       const res = await fetch('/api/derivaciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -263,12 +308,15 @@ export function DerivacionesClient({
         pacienteId: '',
         medicoOrigenId: '',
         medicoDestinoId: 'ninguno',
+        tenantDestinoId: '',
         especialidad: '',
         motivo: '',
         diagnostico: '',
         cie10Codigo: '',
         gravedad: 'normal',
         notasOrigen: '',
+        consentimientoAlcance: 'historial_completo',
+        consentimientoAceptado: false,
       });
       fetchData();
     } catch (err) {
@@ -645,6 +693,59 @@ export function DerivacionesClient({
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <Label>Tenant destino (cross-tenant)</Label>
+              <Input
+                placeholder="UUID del tenant destino (opcional)"
+                value={form.tenantDestinoId}
+                onChange={(e) => setForm((f) => ({ ...f, tenantDestinoId: e.target.value }))}
+              />
+              {isCrossTenant && (
+                <p className="text-xs text-amber-600">
+                  Se requiere consentimiento del paciente para compartir datos
+                </p>
+              )}
+            </div>
+
+            {isCrossTenant && (
+              <div className="space-y-3 p-4 border border-amber-200 rounded-lg bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                  Consentimiento para intercambio de datos
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  El paciente debe autorizar el intercambio de sus datos clínicos con el tenant destino
+                </p>
+                <div className="space-y-2">
+                  <Label>Alcance del intercambio</Label>
+                  <Select
+                    value={form.consentimientoAlcance}
+                    onValueChange={(v) => setForm((f) => ({ ...f, consentimientoAlcance: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="historial_completo">Historial completo</SelectItem>
+                      <SelectItem value="solo_recetas">Solo recetas</SelectItem>
+                      <SelectItem value="solo_turnos">Solo turnos</SelectItem>
+                      <SelectItem value="solo_diagnosticos">Solo diagnósticos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={form.consentimientoAceptado}
+                    onChange={(e) => setForm((f) => ({ ...f, consentimientoAceptado: e.target.checked }))}
+                  />
+                  <span className="text-sm">
+                    El paciente ha sido informado y autoriza el intercambio de sus datos con el tenant destino
+                  </span>
+                </label>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Notas del origen</Label>

@@ -68,6 +68,9 @@ interface PacienteEditData {
   obraSocial: string | null;
   sistemaSalud: string | null;
   isapreNombre: string | null;
+  prevision: string | null;
+  tramoFonasa: string | null;
+  numeroAfiliado: string | null;
   regionId: string | null;
   comunaId: string | null;
 }
@@ -120,6 +123,9 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
         obraSocial: p.obraSocial,
         sistemaSalud: p.sistemaSalud,
         isapreNombre: p.isapreNombre,
+        prevision: p.prevision,
+        tramoFonasa: p.tramoFonasa,
+        numeroAfiliado: p.numeroAfiliado,
         regionId: p.regionId,
         comunaId: p.comunaId,
       });
@@ -307,6 +313,9 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
     isapreNombre?: string;
     regionId?: string;
     comunaId?: string;
+    prevision?: string;
+    tramoFonasa?: string;
+    numeroAfiliado?: string;
   }) => {
     try {
       const res = await fetch('/api/pacientes', {

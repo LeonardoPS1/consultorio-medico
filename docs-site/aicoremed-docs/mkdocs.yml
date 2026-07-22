@@ -55,6 +55,8 @@ nav:
       - Telemedicina: modulos/telemedicina.md
       - Portal de Pacientes: modulos/portal-pacientes.md
       - Scoring y Compliance: modulos/scoring-compliance.md
+      - Derivaciones: modulos/derivaciones.md
+      - Integraciones y Webhooks: modulos/integraciones.md
   - API Reference:
       - v1: api/reference.md
   - Decisiones de Arquitectura (ADRs):

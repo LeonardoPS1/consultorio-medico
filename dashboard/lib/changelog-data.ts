@@ -10,8 +10,26 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 22/07/2026 — v1.24.0 OCR especializado + FHIR-lite + fixes
+// Actualizado: 22/07/2026 — v1.25.0 Previsión FONASA, Webhooks Salientes y Derivaciones Cross-Tenant
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.25.0',
+    date: '22/07/2026',
+    title: 'Previsión FONASA, Webhooks Salientes y Derivaciones Cross-Tenant',
+    items: [
+      'Previsión del paciente: selector de tipo (FONASA/ISAPRE/Particular/PRAIS), tramos A/B/C/D con copagos de referencia, lista completa de ISAPREs chilenas',
+      'Badge de previsión en ficha del paciente con tramo FONASA o nombre de ISAPRE',
+      'Webhooks salientes configurables: creá webhooks propios por evento (turnos y pacientes) con firma HMAC-SHA256',
+      'Delivery automático con 3 reintentos y backoff exponencial, logs de entrega visibles en dashboard',
+      'Delivery logs: historial de entregas con status code, respuesta, duración e intentos',
+      'UI de integraciones en Configuración con test, regeneración de secret y toggle activo/inactivo',
+      'Derivaciones cross-tenant entre organizaciones con consentimiento del paciente',
+      'Consentimiento de compartir datos: alcance granular (historial, recetas, turnos, diagnósticos), expiración configurable, revocable',
+      'Convenios de intercambio entre tenants para administrar derivaciones inter-organización',
+      'Feature gate "integraciones" movido a Professional (antes Premium)',
+      'Nuevos features: consentimiento-compartir (Professional), convenios-intercambio (Enterprise)',
+    ],
+  },
   {
     version: '1.24.0',
     date: '22/07/2026',
