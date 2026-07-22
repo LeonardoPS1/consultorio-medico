@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { bulkUpdateTurnoStatus } from '@/lib/services/bulk-operations';
 import { safeWarn } from '@/lib/logger';
+import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
+import { cache } from '@/lib/cache';
 import type { TurnoEstado } from '@/lib/services/bulk-operations';
 
 const ESTADOS_VALIDOS: TurnoEstado[] = [
@@ -44,6 +46,9 @@ export async function PATCH(request: Request) {
     }
 
     const result = await bulkUpdateTurnoStatus(turnoIds, estado as TurnoEstado);
+
+    revalidate([CACHE_TAGS.TURNOS, CACHE_TAGS.PACIENTES, CACHE_TAGS.DASHBOARD_STATS]);
+    cache.invalidate('turnos:list:*');
 
     return NextResponse.json({ data: result });
   } catch (err) {

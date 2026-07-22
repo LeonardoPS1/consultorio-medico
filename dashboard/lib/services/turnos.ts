@@ -504,7 +504,7 @@ export const turnosService = {
     await db.update(turnos).set({ deletedAt: new Date() }).where(eq(turnos.id, id));
 
     // Invalidar cache de listados
-    cache.invalidate('turnos:list:');
+    cache.invalidate('turnos:list:*');
 
     return { deleted: true };
   },

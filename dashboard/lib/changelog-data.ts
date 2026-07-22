@@ -10,8 +10,27 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 21/07/2026 — v1.23.0 documentos médicos + OCR
+// Actualizado: 22/07/2026 — v1.24.0 OCR especializado + FHIR-lite + fixes
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.24.0',
+    date: '22/07/2026',
+    title: 'OCR Especializado, FHIR-lite y Correcciones de Cache',
+    items: [
+      'OCR especializado por tipo: prompts dedicados para laboratorio (valores, rangos, flags) y recetas (medicamento, dosis, frecuencia)',
+      'Confirmación en 3 etapas: paciente sube → OCR extrae → paciente confirma → médico aprueba (inserta en historial clínico)',
+      'Manejo de falla: OCR con baja confianza marca el documento para revisión manual del médico',
+      'Interfaz de revisión médica: botones Aprobar/Rechazar/Editar con motivo de rechazo inline',
+      'Portal: selector de tipo de documento, subida en 2 pasos (upload file → crear doc), diseño por estado',
+      'Exportación FHIR-lite: Bundle FHIR R4 con Patient, Encounter, Condition, MedicationRequest',
+      'Endpoint GET /api/exportar-fhir/[pacienteId] con verificación de consentimiento y headers FHIR',
+      'Feature gate "fhir-export" disponible en plan Professional+',
+      'Fix: cache de turnos no se invalidaba correctamente al cambiar estado (wildcard faltante)',
+      'Fix: cache de pacientes y médicos con wildcard para invalidación correcta',
+      'Fix: bulk-status ahora invalida cache (Next.js + Redis)',
+      'Planes actualizados con nuevas funcionalidades en descripciones',
+    ],
+  },
   {
     version: '1.23.0',
     date: '21/07/2026',

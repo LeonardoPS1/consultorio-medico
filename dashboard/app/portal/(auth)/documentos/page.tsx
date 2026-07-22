@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Eye,
   Save,
+  ChevronDown,
 } from 'lucide-react';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalBadge } from '@/components/portal/portal-badge';
@@ -74,7 +75,18 @@ export default function PortalDocumentosPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState('');
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
+  const [selectedTipo, setSelectedTipo] = useState<string>('');
+  const [showTipoPicker, setShowTipoPicker] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const TIPOS_DOCUMENTO = [
+    { value: 'laboratorio', label: 'Exámenes de laboratorio' },
+    { value: 'receta', label: 'Receta médica' },
+    { value: 'informe', label: 'Informe médico' },
+    { value: 'estudio', label: 'Estudio / Imagen' },
+    { value: 'certificado', label: 'Certificado' },
+    { value: 'otro', label: 'Otro' },
+  ];
 
   const cargar = useCallback(() => {
     fetch('/api/portal/documentos')
@@ -90,16 +102,30 @@ export default function PortalDocumentosPage() {
   useEffect(() => { cargar(); }, [cargar]);
 
   async function handleUpload(file: File) {
+    if (!selectedTipo) {
+      alert('Seleccioná el tipo de documento antes de subir');
+      return;
+    }
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch('/api/portal/documentos', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error('Error al subir');
+      const uploadForm = new FormData();
+      uploadForm.append('file', file);
+      uploadForm.append('source', 'portal');
+      const uploadRes = await fetch('/api/upload', { method: 'POST', body: uploadForm });
+      if (!uploadRes.ok) throw new Error('Error al subir archivo');
+      const { url } = await uploadRes.json();
+
+      const res = await fetch('/api/portal/documentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, tipo: selectedTipo }),
+      });
+      if (!res.ok) throw new Error('Error al crear documento');
       const data = await res.json();
       const doc = data?.documento || data;
       setDocs((prev) => [doc, ...prev]);
       setProcessingId(doc.id);
+      setSelectedTipo('');
       pollOcrResult(doc.id);
     } catch {
       alert('Error al subir el archivo');
@@ -190,9 +216,39 @@ export default function PortalDocumentosPage() {
         onChange={handleFileChange}
       />
 
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-portal-fg mb-2">Tipo de documento</label>
+        <div className="relative">
+          <button
+            onClick={() => setShowTipoPicker(!showTipoPicker)}
+            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-portal-border-light bg-white/50 dark:bg-black/20 text-sm text-portal-fg"
+          >
+            <span className={selectedTipo ? '' : 'text-portal-muted-fg'}>
+              {selectedTipo ? TIPOS_DOCUMENTO.find((t) => t.value === selectedTipo)?.label : 'Seleccioná el tipo...'}
+            </span>
+            <ChevronDown className="h-4 w-4 text-portal-muted-fg" />
+          </button>
+          {showTipoPicker && (
+            <div className="absolute z-10 mt-1 w-full rounded-xl border border-portal-border-light bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
+              {TIPOS_DOCUMENTO.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => { setSelectedTipo(t.value); setShowTipoPicker(false); }}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-portal-muted/50 transition-colors ${
+                    selectedTipo === t.value ? 'bg-portal-primary/10 text-portal-primary font-medium' : 'text-portal-fg'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       <PortalCard
-        className="mb-6 cursor-pointer hover:opacity-80 transition-opacity"
-        onClick={() => fileRef.current?.click()}
+        className={`mb-6 transition-opacity ${selectedTipo ? 'cursor-pointer hover:opacity-80' : 'opacity-50'}`}
+        onClick={() => { if (selectedTipo) fileRef.current?.click(); }}
       >
         <div className="flex flex-col items-center py-6 gap-2">
           {uploading ? (

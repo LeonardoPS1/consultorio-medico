@@ -1873,7 +1873,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
   {
     id: 'documentos-ocr',
     titulo: 'Documentos Médicos con OCR',
-    descripcion: 'Subí documentos desde el portal del paciente, extraé datos automáticamente con IA y revisalos en el dashboard',
+    descripcion: 'Subí documentos desde el portal del paciente, extraé datos automáticamente con IA especializada y revisalos en el dashboard',
     icono: 'Scan',
     pasos: [
       {
@@ -1883,17 +1883,20 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
           'Formatos aceptados: JPG, PNG, PDF',
           'Tamaño máximo: 20MB',
           'Ejemplos: estudios de laboratorio, recetas externas, certificados, órdenes médicas',
+          'Antes de subir, seleccioná el tipo de documento (laboratorio, receta, etc.)',
           'La subida dispara automáticamente el proceso OCR',
         ],
       },
       {
-        titulo: 'OCR con IA local',
-        descripcion: 'Ollama llava procesa la imagen y extrae datos estructurados.',
+        titulo: 'OCR especializado por tipo de documento',
+        descripcion: 'Ollama llava usa prompts específicos según el tipo de documento para extraer datos estructurados precisos.',
         tips: [
           'Modelo llava (~4GB) corre 100% local en el VPS',
-          'Extrae: tipo de documento, médico, fecha, diagnóstico, medicamentos, observaciones',
+          'Laboratorio: extrae tipo de examen, fecha, laboratorio, valores con nombre/unidad/rango/flags',
+          'Receta: extrae medicamento, dosis, frecuencia, duración, indicaciones',
+          'Otros documentos: extracción genérica con texto completo',
           'Devuelve confianza de extracción (0-100%)',
-          'Si falla, el documento queda marcado para revisión manual',
+          'Si falla o confianza baja, el documento queda marcado para revisión manual',
         ],
       },
       {
@@ -1901,18 +1904,20 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         descripcion: 'El paciente ve los datos extraídos y puede confirmar, editar o descartar.',
         tips: [
           'Si los datos son correctos → Confirma (pasa a revisión médica)',
-          'Si hay errores → Edita manualmente los campos',
+          'Si hay errores → Edita manualmente los campos antes de confirmar',
+          'También puede ver la imagen original haciendo clic en "Ver original"',
           'Si no sirve → Descarta el documento',
         ],
       },
       {
         titulo: 'Revisión médica en Dashboard',
-        descripcion: 'El médico revisa los documentos desde la ficha del paciente.',
+        descripcion: 'El médico revisa los documentos desde la ficha del paciente con opciones de Aprobar, Rechazar o Editar.',
         tips: [
           'Accedé al tab "Documentos" en la ficha del paciente',
-          'Estado pendiente: documentos sin revisar',
-          'Al aprobar → se integra al historial médico del paciente',
-          'Al rechazar → el documento se elimina',
+          'Estado pendiente: documentos sin revisar (requieren acción)',
+          'Aprobar: los datos extraídos se integran al historial médico del paciente',
+          'Rechazar: se solicita un motivo y el documento se elimina',
+          'Editar: permite modificar los datos extraídos antes de guardar',
           'Disponible en plan Starter+',
         ],
       },
@@ -1929,6 +1934,66 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       {
         pregunta: '¿Los documentos aprobados quedan en el historial?',
         respuesta: 'Sí. Cuando el médico aprueba un documento, los datos extraídos se guardan como una entrada estructurada en el historial médico del paciente, visible tanto en el dashboard como en el portal.',
+      },
+    ],
+  },
+  {
+    id: 'fhir-export',
+    titulo: 'Exportación FHIR-lite',
+    descripcion: 'Exportá el historial clínico de pacientes en formato FHIR R4 simplificado para interoperabilidad',
+    icono: 'FileDown',
+    pasos: [
+      {
+        titulo: 'Verificar consentimiento',
+        descripcion: 'Antes de exportar, el paciente debe tener consentimiento firmado para exportación de datos.',
+        tips: [
+          'Revisá los consentimientos del paciente en su ficha',
+          'Se requiere consentimiento "datos" o "consentimientoEmail" firmado',
+          'Si no hay consentimiento, el endpoint devuelve error 403',
+        ],
+      },
+      {
+        titulo: 'Exportar desde la API',
+        descripcion: 'Endpoint protegido que genera un Bundle FHIR R4 con los datos del paciente.',
+        tips: [
+          'GET /api/exportar-fhir/[pacienteId] requiere sesión de médico/admin',
+          'Devuelve Content-Type: application/fhir+json',
+          'Headers: X-FHIR-Version: 4.0.1, X-FHIR-Profile: simplified',
+          'Incluye disclaimer de que es FHIR-lite (no certificado HL7 FHIR)',
+        ],
+      },
+      {
+        titulo: 'Datos incluidos en el Bundle',
+        descripcion: 'El Bundle FHIR contiene 4 tipos de recursos del paciente.',
+        tips: [
+          'Patient: datos demográficos, RUT, fecha de nacimiento, contacto',
+          'Encounter[]: turnos con estado, médico, fecha, motivo de consulta',
+          'Condition[]: diagnósticos desde historial clínico y notas SOAP con codificación ICD-10',
+          'MedicationRequest[]: recetas con dosis, frecuencia, duración e indicaciones',
+        ],
+      },
+      {
+        titulo: 'Disponibilidad por plan',
+        descripcion: 'La exportación FHIR-lite está disponible en plan Professional+.',
+        tips: [
+          'Plan Starter: no incluye exportación FHIR',
+          'Plan Professional+: acceso completo a exportación FHIR-lite',
+          'Feature gate: fhir-export',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Es compatible con HL7 FHIR oficial?',
+        respuesta: 'Es FHIR-lite: usa el formato y estructura de FHIR R4 pero no está certificado por HL7. Es útil para interoperabilidad básica con otros sistemas que soporten FHIR.',
+      },
+      {
+        pregunta: '¿Qué datos del paciente se exportan?',
+        respuesta: 'Datos demográficos, turnos (encounters), diagnósticos (conditions) y recetas (medication requests). No incluye documentos adjuntos, conversaciones ni datos de facturación.',
+      },
+      {
+        pregunta: '¿Se necesita consentimiento del paciente?',
+        respuesta: 'Sí. El paciente debe haber firmado un consentimiento de exportación de datos. Si no está firmado, el endpoint devuelve 403 Forbidden.',
       },
     ],
   },

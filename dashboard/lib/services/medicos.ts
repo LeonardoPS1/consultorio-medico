@@ -68,6 +68,6 @@ export const medicosService = {
    * Llamar después de crear/editar/eliminar un médico.
    */
   invalidate(): void {
-    cache.invalidate(CACHE_PREFIX);
+    cache.invalidate(`${CACHE_PREFIX}:*`);
   },
 };

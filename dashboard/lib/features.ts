@@ -65,7 +65,8 @@ export type FeatureId =
   | 'ia-asistente-flotante'
   | 'compliance'
   | 'transcripcion-soap'
-  | 'documentos-ocr';
+  | 'documentos-ocr'
+  | 'fhir-export';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -124,6 +125,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   compliance: 'professional',
   'transcripcion-soap': 'starter',
   'documentos-ocr': 'starter',
+  'fhir-export': 'professional',
 };
 
 // ============================================================

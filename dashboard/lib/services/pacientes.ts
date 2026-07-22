@@ -170,7 +170,7 @@ export const pacientesService = {
       .catch(() => {});
 
     // Invalidar cache de listados
-    cache.invalidate('pacientes:list:');
+    cache.invalidate('pacientes:list:*');
 
     return nuevo;
   },
@@ -201,7 +201,7 @@ export const pacientesService = {
     const [updated] = await db.update(pacientes).set(data).where(eq(pacientes.id, id)).returning();
 
     // Invalidar cache
-    cache.invalidate('pacientes:list:');
+    cache.invalidate('pacientes:list:*');
     cache.invalidate(`pacientes:get:${id}`);
 
     return updated;
@@ -216,7 +216,7 @@ export const pacientesService = {
     const result = await privacidadService.confirmarBaja(id);
 
     // Invalidar cache
-    cache.invalidate('pacientes:list:');
+    cache.invalidate('pacientes:list:*');
     cache.invalidate(`pacientes:get:${id}`);
 
     return result;
