@@ -289,7 +289,7 @@ services:
           - node.role == worker
 
   metabase:
-    image: metabase/metabase:v0.52
+    image: metabase/metabase:latest
     ports:
       - target: 3000
         published: 3001
