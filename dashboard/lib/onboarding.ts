@@ -26,6 +26,7 @@ import {
 } from './onboarding-types';
 import { auth } from '@/lib/auth';
 import { ollamaChat } from './ollama';
+import { withTenantScope } from '@/lib/rls';
 import { getOrganization, DEFAULT_ORG } from './organization-store';
 
 // ─── Verificar pasos completados ────────────────────────────
@@ -53,6 +54,8 @@ export async function getOnboardingState(callerUserId?: string): Promise<Onboard
       // Sin sesión, solo chequeos DB sin filtro por usuario
     }
   }
+
+  await withTenantScope();
 
   // ─── 1. Chequeos reales de DB ──────────────────────────
 

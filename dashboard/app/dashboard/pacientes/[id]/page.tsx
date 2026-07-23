@@ -13,6 +13,7 @@ import {
 import { eq, and, sql, desc } from 'drizzle-orm';
 
 import { auth } from '@/lib/auth';
+import { withTenantScope } from '@/lib/rls';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -96,6 +97,8 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
   try {
     const session = await auth();
     if (!session?.user?.id) return null;
+
+    await withTenantScope();
 
     // ─── Datos del paciente (core — siempre existen) ──
     const [paciente] = await db

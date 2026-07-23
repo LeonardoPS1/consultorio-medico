@@ -268,7 +268,7 @@ Cantidad de pacientes registrados agrupados por mes.
 
 ## Tabla: `auditoria_accesos`
 
-Registro de todas las operaciones sobre datos sensibles (cumplimiento Ley 26.529).
+Registro de todas las operaciones sobre datos sensibles (cumplimiento Ley 20.584 y Ley 19.628).
 
 | Columna | Tipo | Descripción |
 |---------|------|-------------|
