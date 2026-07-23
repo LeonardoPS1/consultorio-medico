@@ -190,7 +190,7 @@ function genPDF() {
     ['5', 'Auditoría de accesos (tabla + utility + APIs)', 'lib/audit-log.ts, schema.ts'],
     ['6', 'Validación firmas Twilio (X-Twilio-Signature)', 'app/api/webhooks/twilio/route.ts'],
     ['7', '2FA TOTP (speakeasy + QR + backup codes)', 'lib/mfa.ts, Configuración'],
-    ['8', 'Backup encriptado (pg_dump + GPG + rotación)', 'scripts/backup-encriptado.sh, WF-07'],
+    ['8', 'Backup encriptado (pg_dump + GPG + rotación + volúmenes Docker)', 'scripts/backup-encriptado.sh, scripts/backup-volumenes.sh, WF-07, backup-agent'],
     ['9', 'Sanitización prompts Ollama (anti-jailbreak)', 'docs/prompts-seguridad.md'],
   ];
   alt = false;
@@ -531,7 +531,8 @@ function genPDF() {
     ['n8n-workflows/current/wf-01-agent.json', 'SQL injection fix'],
     ['n8n-workflows/current/wf-02-gestion-turnos.json', 'Nodo huérfano conectado'],
     ['n8n-workflows/current/wf-05-resumen-diario.json', 'Merge + Code aggregator'],
-    ['scripts/backup-encriptado.sh', 'Backup pg_dump + GPG'],
+    ['scripts/backup-encriptado.sh', 'Backup pg_dump + GPG + rotación'],
+    ['scripts/backup-volumenes.sh', 'Backup volúmenes Docker (n8n_data, metabase_data, recordings)'],
     ['scripts/generate-pdf.js', 'Generador PDF con pdfkit'],
     ['docs/*', 'Documentación completa (10+ archivos)'],
   ];

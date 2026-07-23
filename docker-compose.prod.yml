@@ -401,6 +401,68 @@ services:
         max_attempts: 3
         window: 120s
 
+  backup-agent:
+    image: alpine:3.20
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - GPG_RECIPIENT=admin@consultorio.com
+      - BACKUP_DIR=/backup
+      - RETENTION_DAYS=30
+      - TZ=America/Santiago
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./scripts:/opt/consultorio/scripts:ro
+      - backup_agent_data:/backup
+      - backup_agent_gnupg:/root/.gnupg
+    command:
+      - /bin/sh
+      - -c
+      - |
+        apk add --no-cache docker-cli gpg bash curl >/dev/null 2>&1
+        echo "[backup-agent] Importando GPG key si existe..."
+        if [ -f /opt/consultorio/scripts/gpg-key.asc ]; then
+          gpg --batch --import /opt/consultorio/scripts/gpg-key.asc 2>/dev/null || true
+        fi
+        echo "[backup-agent] Iniciado. Esperando hora de backup..."
+        while true; do
+          HOUR=$$(date +%H)
+          MIN=$$(date +%M)
+          if [ "$$HOUR" = "03" ] && [ "$$MIN" = "15" ]; then
+            echo "[backup-agent] === Iniciando backup de volúmenes ==="
+            bash /opt/consultorio/scripts/backup-volumenes.sh /backup
+            echo "[backup-agent] === Backup completado, esperando 24h ==="
+            sleep 60
+          fi
+          sleep 30
+        done
+    healthcheck:
+      test: ['CMD', 'pgrep', '-f', 'sleep 30']
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+
 secrets:
   database_url:
     external: true
@@ -435,4 +497,8 @@ volumes:
   recordings:
     driver: local
   metabase_data:
+    driver: local
+  backup_agent_data:
+    driver: local
+  backup_agent_gnupg:
     driver: local

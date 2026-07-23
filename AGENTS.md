@@ -372,6 +372,23 @@ consultorio-medico/
 2. Ejecuta script `/opt/consultorio/scripts/backup-encriptado.sh`
 3. Script: pg_dump → compresión gzip → encriptación → limpieza 30 días
 
+### Backup de Volúmenes (backup-agent)
+
+> **No es un workflow n8n** — es un sidecar en `docker-compose.prod.yml` independiente.
+
+| Propiedad | Valor |
+|-----------|-------|
+| **Archivo** | `docker-compose.prod.yml` (servicio `backup-agent`) |
+| **Trigger** | Cron interno (3:15 AM todos los días) |
+| **Estado** | ✅ **ACTIVO** |
+| **Imagen** | `alpine:3.20` con `docker-cli` + `gpg` |
+
+**Flujo:**
+1. Cron interno a las 3:15 AM
+2. Ejecuta `backup-volumenes.sh`: por cada volumen (n8n_data, metabase_data, recordings), `docker run --rm alpine tar czf` → GPG encrypt → /backup/
+3. Verifica integridad de cada archivo encriptado
+4. Limpieza automática de backups > 30 días
+
 ---
 
 ### WF-08: Google Calendar Sync
@@ -717,7 +734,8 @@ consultorio-medico/
 - **Registro ghcr.io**: Creado en Dokploy con `read:packages` PAT, vinculado a dashboard y docs.
 - **Docs**: Misma pipeline, imagen `ghcr.io/leonardops1/consultorio-medico-docs:latest`.
 - **⚠️ Bug conocido**: Dokploy build nativo (sourceType git) **no funciona** — la build completa pero `docker service update` no se ejecuta. Swarm service queda corriendo imagen vieja. Usar GitHub Actions + ghcr.io obligatorio.
-- **Backup**: Script `backup-docker.sh` corre diariamente a las 3AM vía n8n WF-07
+- **Backup PG (WF-07)**: `backup-encriptado.sh` corre a las 3:00 AM vía n8n — pg_dump + GPG + limpieza 30 días
+- **Backup volúmenes (backup-agent)**: `backup-volumenes.sh` corre a las 3:15 AM — n8n_data + metabase_data + recordings + GPG + limpieza 30 días
 - **Workflows n8n**: Se deployan via `scripts/deploy-workflows.js --activate`
 
 ### Comandos de Infra
@@ -728,8 +746,11 @@ docker service update --force med-dashboard
 # Deploy stack a Swarm (producción)
 make docker-stack
 
-# Backup manual
+# Backup manual (PostgreSQL)
 bash /opt/consultorio/scripts/backup-encriptado.sh
+
+# Backup manual (volúmenes)
+bash /opt/consultorio/scripts/backup-volumenes.sh /var/backups/consultorio
 
 # Ver logs de n8n
 docker logs $(docker ps -q -f name=n8n) --tail 100
