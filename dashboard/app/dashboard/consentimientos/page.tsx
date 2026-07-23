@@ -48,7 +48,8 @@ async function getInitialData(): Promise<{
   try {
     const session = await auth();
     const userPlan = session?.user?.plan ?? 'free';
-    const view = canAccess(userPlan, 'consentimiento-informado');
+    const isAdmin = session?.user?.role === 'admin';
+    const view = isAdmin || canAccess(userPlan, 'consentimiento-informado');
 
     if (!view) {
       return { data: [], total: 0, stats: null, canView: false };
