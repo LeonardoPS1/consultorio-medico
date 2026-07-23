@@ -10,8 +10,21 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 22/07/2026 — v1.25.0 Previsión FONASA, Webhooks Salientes y Derivaciones Cross-Tenant
+// Actualizado: 23/07/2026 — v1.26.0 RLS Multi-Tenant, Backup Fix y Documentación
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.26.0',
+    date: '23/07/2026',
+    title: 'RLS Multi-Tenant, Backup Fix y Documentación',
+    items: [
+      'RLS (Row Level Security) habilitado en 10 tablas adicionales: portal_config, web_vitals_metrics, derivaciones, webhook_configs, ordenes_estudio, documentos_medicos, paquetes_portal, consentimiento_compartir, blacklist, consentimientos',
+      'Server Components now call withTenantScope(): aislamiento multi-tenant en página de detalle de paciente y onboarding',
+      'Migración 0051 con políticas FOR ALL para tablas faltantes',
+      'Documentación de Disaster Recovery actualizada con procedimientos de backup y restauración',
+      'PgBouncer config ready en código (db.ts), documentado para deploy',
+      'Corrección de referencia legal: Ley 26.529 → Ley 20.584 + Ley 19.628',
+    ],
+  },
   {
     version: '1.25.0',
     date: '22/07/2026',

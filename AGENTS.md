@@ -649,6 +649,8 @@ consultorio-medico/
 | **Previsión FONASA + ISAPREs** | Sistema de previsión de salud chilena: tramos A/B/C/D con copagos de referencia, 15 ISAPREs, badge en ficha paciente. `lib/aranceles-fonasa.ts`, migration 0045. | 22/07 |
 | **Webhooks salientes** | Webhooks configurables por tenant con HMAC-SHA256, 3 retry exponencial, delivery logs. Tab Integraciones en Configuración (Professional+). 6 API endpoints + UI completa. | 22/07 |
 | **Derivaciones cross-tenant + consentimiento** | Derivaciones entre organizaciones con consentimiento del paciente (alcance granular, expiración, revocable). Convenios de intercambio administrativos. Features: `consentimiento-compartir` (Professional), `convenios-intercambio` (Enterprise). | 22/07 |
+| **RLS Multi-Tenant (completado)** | Migration 0051: RLS en 10 tablas restantes (portal_config, web_vitals_metrics, derivaciones, webhook_configs, ordenes_estudio, documentos_medicos, paquetes_portal, consentimiento_compartir, blacklist, consentimientos). withTenantScope() en Server Components. | 23/07 |
+| **Disaster Recovery docs** | `disaster-recovery.md` con procedimientos de backup/restauración. `rls-multi-tenant.md` con documentación RLS. Corrección Ley 26.529→20.584+19.628. | 23/07 |
 
 ### 🟡 Prioridad Media
 

@@ -117,6 +117,40 @@ services:
         max_attempts: 3
         window: 120s
 
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    ports:
+      - target: 6432
+        published: 6432
+        protocol: tcp
+        mode: host
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=dashboard_user
+      - DB_PASSWORD=${DB_PASSWORD}
+      - AUTH_TYPE=scram-sha-256
+      - POOL_MODE=transaction
+      - MAX_CLIENT_CONN=100
+      - DEFAULT_POOL_SIZE=20
+    depends_on:
+      - postgres
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+      restart_policy:
+        condition: any
+
   n8n:
     image: n8nio/n8n:latest
     ports:
@@ -143,10 +177,13 @@ services:
       - EXECUTIONS_DATA_PRUNE=true
       - EXECUTIONS_DATA_MAX_AGE=168
       - TZ=America/Santiago
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGUSER=dashboard_user
+      - PGDATABASE=consultorio_medico
     volumes:
       - n8n_data:/home/node/.n8n
-    depends_on:
-      - postgres
+      - ./scripts:/opt/consultorio/scripts:ro
     deploy:
       mode: replicated
       replicas: 1

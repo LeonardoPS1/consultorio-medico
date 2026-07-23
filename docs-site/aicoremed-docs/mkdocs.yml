@@ -46,6 +46,8 @@ nav:
       - Arquitectura: existente/arquitectura.md
       - Base de Datos: existente/base-de-datos.md
       - Seguridad: existente/seguridad.md
+      - RLS Multi-Tenant: existente/rls-multi-tenant.md
+      - Disaster Recovery: existente/disaster-recovery.md
       - Workflows n8n: existente/workflows-n8n.md
   - Módulos de Producto:
       - Turnos y Agenda: modulos/turnos.md
