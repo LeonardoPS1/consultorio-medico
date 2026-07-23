@@ -92,6 +92,13 @@ export async function importarChangelogEstatico(): Promise<number> {
 
 // ─── Auto-generación desde mensajes de commits (producción) ─
 
+interface GitCommit {
+  hash: string;
+  date: string;
+  message: string;
+  type: 'feature' | 'bugfix' | 'improvement' | 'security' | 'other';
+}
+
 function parseCommitMessage(message: string): {
   type: GitCommit['type'];
   text: string;
@@ -151,16 +158,7 @@ export async function generarDesdeCommits(commitMessages: string[]): Promise<Nov
   return [entry];
 }
 
-/**
-
 // ─── Auto-generación desde git log ─────────────────────────
-
-interface GitCommit {
-  hash: string;
-  date: string;
-  message: string;
-  type: 'feature' | 'bugfix' | 'improvement' | 'security' | 'other';
-}
 
 /** Parsea un commit message en formato conventional commits */
 function parseCommitType(message: string): GitCommit['type'] {
