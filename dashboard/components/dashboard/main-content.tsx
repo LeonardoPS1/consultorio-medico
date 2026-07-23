@@ -39,7 +39,7 @@ export function MainContent({ children }: { children: React.ReactNode }) {
               GitHub
             </a>
             <span className="hidden sm:inline">
-              v{process.env.NEXT_PUBLIC_APP_VERSION || '1.18.0'}
+              v{process.env.NEXT_PUBLIC_APP_VERSION || '1.26.0'}
             </span>
           </span>
         </footer>

@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'AiCoreMed';
-const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '1.18.0';
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '1.26.0';
 const TENANT_NAME = process.env.NEXT_PUBLIC_TENANT_NAME || 'Consultorio';
 
 const features = [

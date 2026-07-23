@@ -130,6 +130,30 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
     description: 'Videoconsultas en vivo con LiveKit y envío automático del link por WhatsApp',
     category: 'modulos',
   },
+  {
+    id: 'historial',
+    label: 'Historial Clínico',
+    description: 'Historial completo de actividades del paciente en una línea de tiempo',
+    category: 'modulos',
+  },
+  {
+    id: 'scoring-pacientes',
+    label: 'Scoring de Pacientes',
+    description: 'Predicción de inasistencia y riesgo de abandono',
+    category: 'modulos',
+  },
+  {
+    id: 'transcripcion-soap',
+    label: 'Transcripción SOAP Automática',
+    description: 'Transcripción de videoconsultas con Whisper + nota SOAP por IA',
+    category: 'modulos',
+  },
+  {
+    id: 'documentos-ocr',
+    label: 'Documentos con OCR',
+    description: 'Subida de documentos con extracción automática por IA',
+    category: 'modulos',
+  },
 
   // ─── Funcionalidades avanzadas ──────────────────────────
   {
@@ -142,6 +166,24 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
     id: 'ia-assistant',
     label: 'Asistente IA',
     description: 'Respuestas automáticas y triaje con IA',
+    category: 'avanzado',
+  },
+  {
+    id: 'ia-autorespuestas',
+    label: 'Auto-respuestas WhatsApp',
+    description: 'Respuestas automáticas a mensajes frecuentes de pacientes',
+    category: 'avanzado',
+  },
+  {
+    id: 'ia-triaje',
+    label: 'Triaje IA',
+    description: 'Clasificación automática de consultas entrantes con IA',
+    category: 'avanzado',
+  },
+  {
+    id: 'ia-renovacion',
+    label: 'Renovación IA de Recetas',
+    description: 'Gestión automática de renovaciones de recetas con IA',
     category: 'avanzado',
   },
   {
@@ -222,6 +264,54 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
     description: 'Registro y gestión de consentimientos informados de pacientes',
     category: 'avanzado',
   },
+  {
+    id: 'consentimiento-compartir',
+    label: 'Consentimiento Compartir Datos',
+    description: 'Permite que pacientes autoricen compartir su historial entre organizaciones',
+    category: 'avanzado',
+  },
+  {
+    id: 'command-palette',
+    label: 'Command Palette (Cmd+K)',
+    description: 'Búsqueda rápida de navegación, acciones y pacientes con Ctrl+K',
+    category: 'avanzado',
+  },
+  {
+    id: 'patient-panel',
+    label: 'Panel Lateral de Paciente',
+    description: 'Historial lateral rápido con búsqueda difusa y acciones',
+    category: 'avanzado',
+  },
+  {
+    id: 'ia-asistente-flotante',
+    label: 'Asistente IA Flotante',
+    description: 'Chat contextual con IA en cualquier página del dashboard',
+    category: 'avanzado',
+  },
+  {
+    id: 'compliance',
+    label: 'Cumplimiento Normativo',
+    description: 'Dashboard compliance con KPIs de atención, accesos y solicitudes ARCO',
+    category: 'avanzado',
+  },
+  {
+    id: 'fhir-export',
+    label: 'Exportación FHIR',
+    description: 'Exportación de historial clínico en formato FHIR R4',
+    category: 'avanzado',
+  },
+  {
+    id: 'carga-masiva',
+    label: 'Carga Masiva',
+    description: 'Importación de pacientes desde archivos Excel o CSV',
+    category: 'avanzado',
+  },
+  {
+    id: 'convenios-intercambio',
+    label: 'Convenios Intercambio',
+    description: 'Convenios administrativos entre organizaciones para compartir datos',
+    category: 'avanzado',
+  },
 
   // ─── Sistema ────────────────────────────────────────────
   {
@@ -264,6 +354,24 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
     id: 'n8n-monitor',
     label: 'n8n Monitor',
     description: 'Dashboard de monitoreo de workflows n8n en vivo',
+    category: 'sistema',
+  },
+  {
+    id: 'web-vitals',
+    label: 'Web Vitals',
+    description: 'Métricas de rendimiento web con LCP, INP, CLS y compliance score',
+    category: 'sistema',
+  },
+  {
+    id: 'portal-analytics',
+    label: 'Portal Analytics',
+    description: 'Analíticas de uso del portal del paciente',
+    category: 'sistema',
+  },
+  {
+    id: 'data-cache',
+    label: 'Caché Inteligente',
+    description: 'Sistema de caché con invalidación selectiva para mejor performance',
     category: 'sistema',
   },
 ];

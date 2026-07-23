@@ -267,9 +267,11 @@ export function SidebarNav({ collapsed, closeMobile, status, session, onboarding
       ) : (
         <>
           {navItems.map((item) => {
+            const isAdmin = session?.user?.role === 'admin';
             const userPlan = session?.user?.plan ?? 'free';
             const hasAccess =
               !item.feature ||
+              isAdmin ||
               (canAccess(userPlan, item.feature) && isFeatureEnabled(item.feature));
             const isActive =
               item.href === '/dashboard'

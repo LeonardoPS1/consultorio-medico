@@ -130,7 +130,7 @@ export async function generarDesdeCommits(commitMessages: string[]): Promise<Nov
   if (items.length === 0) return [];
 
   const ultima = await obtenerUltimaNovedad();
-  let nuevaVersion = '1.16.0';
+  let nuevaVersion = '1.26.0';
   if (ultima) {
     const [major, minor, patch] = ultima.version.split('.').map(Number);
     if (tieneFeatures) {
@@ -150,6 +150,8 @@ export async function generarDesdeCommits(commitMessages: string[]): Promise<Nov
 
   return [entry];
 }
+
+/**
 
 // ─── Auto-generación desde git log ─────────────────────────
 
@@ -238,7 +240,7 @@ export async function generarDesdeGitLog(desdeTag?: string): Promise<Novedad[]> 
   // feat → minor (ej: 1.15.0 → 1.16.0) | solo fix/improvement → patch (ej: 1.15.0 → 1.15.1)
   const tieneFeatures = commits.some((c) => c.type === 'feature');
   const ultima = await obtenerUltimaNovedad();
-  let nuevaVersion = '1.16.0';
+  let nuevaVersion = '1.26.0';
   if (ultima) {
     const [major, minor, patch] = ultima.version.split('.').map(Number);
     if (tieneFeatures) {
