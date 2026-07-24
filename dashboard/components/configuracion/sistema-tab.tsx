@@ -154,6 +154,12 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
     description: 'Subida de documentos con extracción automática por IA',
     category: 'modulos',
   },
+  {
+    id: 'soporte',
+    label: 'Soporte y Feedback',
+    description: 'Canal de soporte para pacientes con envío a Chatwoot o WhatsApp',
+    category: 'modulos',
+  },
 
   // ─── Funcionalidades avanzadas ──────────────────────────
   {
@@ -310,6 +316,12 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
     id: 'convenios-intercambio',
     label: 'Convenios Intercambio',
     description: 'Convenios administrativos entre organizaciones para compartir datos',
+    category: 'avanzado',
+  },
+  {
+    id: 'onboarding',
+    label: 'Onboarding Asistido',
+    description: 'Configuración inicial guiada con asistente IA',
     category: 'avanzado',
   },
 

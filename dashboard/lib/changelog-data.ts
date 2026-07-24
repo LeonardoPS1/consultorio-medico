@@ -10,8 +10,27 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 23/07/2026 — v1.26.0 RLS Multi-Tenant, Backup Fix y Documentación
+// Actualizado: 24/07/2026 — v1.27.0 Chatwoot, MercadoPago Billing y Onboarding
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.27.0',
+    date: '24/07/2026',
+    title: 'Chatwoot, MercadoPago Billing y Onboarding',
+    items: [
+      'Chatwoot + Evolution API: sistema de mensajería alternativo a Twilio con webhooks, colas y contacto automático',
+      'lib/whatsapp.ts: enrutamiento centralizado entre Twilio y Chatwoot según variable CANAL_MENSAJERIA',
+      'API de soporte: canal de feedback para pacientes con envío a Chatwoot o WhatsApp del doctor',
+      'Feature toggle "soporte" en sidebar con página de feedback y formulario de contacto',
+      'MercadoPago: idempotencia en webhook con caché en memoria TTL 5 min (evita cargos duplicados)',
+      'MercadoPago: grace period de 7 días con estado "past_due" antes de cancelar suscripción',
+      'Endpoint interno POST /api/internal/suscripciones-vencidas para cron nocturno de downgrade',
+      'Onboarding: auto-redirect a /dashboard/onboarding tras registro express (antes iba a suscripción)',
+      'Onboarding: nuevo paso "configura WhatsApp" con detección automática de credenciales',
+      'WF-01 expandido a 31 nodos: sub-agente clínico para recetas y consultas clínicas con handoff conversacional',
+      'ADR-0006 actualizado: arquitectura multi-agente completa (Triaje, Agenda, Clínico)',
+      'Soporte: FeatureId, sidebar LifeBuoy, página con formulario de feedback',
+    ],
+  },
   {
     version: '1.26.0',
     date: '23/07/2026',

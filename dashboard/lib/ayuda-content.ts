@@ -2052,6 +2052,46 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     ],
   },
   {
+    id: 'soporte',
+    titulo: 'Soporte y Feedback',
+    descripcion: 'Canal de comunicación para reportar problemas, sugerencias y obtener ayuda técnica',
+    icono: 'LifeBuoy',
+    pasos: [
+      {
+        titulo: 'Enviar un mensaje de soporte',
+        descripcion: 'Desde la página de Soporte, completá el formulario con tu consulta o problema.',
+        tips: [
+          'Incluí el máximo detalle posible para una respuesta más rápida',
+          'Si es un error técnico, mencioná qué estabas haciendo cuando ocurrió',
+          'Podés adjuntar capturas de pantalla o descripciones detalladas',
+          'Los mensajes se enrutan al equipo de soporte vía Chatwoot o WhatsApp',
+        ],
+        enlace: { href: '/dashboard/soporte', label: 'Ir a Soporte' },
+      },
+      {
+        titulo: 'Tiempo de respuesta',
+        descripcion: 'El equipo de soporte responde dentro de las próximas 24-48 horas hábiles.',
+        tips: [
+          'Problemas críticos (sistema caído, error de pago) tienen prioridad',
+          'Consultas generales sobre funcionalidades se responden en 48h',
+          'Sugerencias y feedback se revisan semanalmente',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Puedo reportar un bug desde Soporte?',
+        respuesta:
+          'Sí. Describí el problema con el mayor detalle posible: qué página estabas viendo, qué acción realizaste, qué esperabas que pasara y qué pasó realmente. Si es posible, incluí capturas de pantalla.',
+      },
+      {
+        pregunta: '¿El soporte está disponible 24/7?',
+        respuesta:
+          'El formulario de soporte está siempre disponible para recibir tu mensaje. La respuesta se da en horario hábil (lunes a viernes, 9:00-18:00 CLT). Problemas críticos tienen prioridad.',
+      },
+    ],
+  },
+  {
     id: 'acerca-de',
     titulo: 'Acerca de',
     descripcion: 'Información del sistema, versión, créditos y documentación técnica',

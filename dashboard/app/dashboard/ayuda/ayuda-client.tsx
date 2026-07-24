@@ -29,6 +29,7 @@ import {
   Shield,
   Mic,
   Scan,
+  LifeBuoy,
 } from 'lucide-react';
 import type { AyudaSeccion } from '@/lib/ayuda-content';
 import Link from 'next/link';
@@ -59,6 +60,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Shield,
   Mic,
   Scan,
+  LifeBuoy,
 };
 
 export function AyudaClient({ sections, iconMap: _iconMap }: AyudaClientProps) {
