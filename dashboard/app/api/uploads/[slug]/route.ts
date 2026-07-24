@@ -3,16 +3,23 @@ import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { auth } from '@/lib/auth';
+import { getPortalSession } from '@/lib/portal-auth';
 import { getUploadDir } from '@/lib/upload-dir';
 
 /**
  * Sirve archivos subidos (imágenes) desde .data/uploads/
+ * Acepta tanto sesión de dashboard (NextAuth) como sesión de portal (portal_session cookie)
  */
 export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ slug: string }> }) {
   const { slug } = await paramsPromise;
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Intentar autenticación de dashboard primero
+    const dashboardSession = await auth();
+    
+    // Si no hay sesión de dashboard, intentar sesión de portal
+    const portalSession = dashboardSession?.user?.id ? null : await getPortalSession();
+    
+    if (!dashboardSession?.user?.id && !portalSession?.pacienteId) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
