@@ -343,6 +343,9 @@ export const POST = withRateLimit(
         return NextResponse.json({ error: 'Firma inválida' }, { status: 403 });
       }
 
+      // ─── Verificar canal activo ──────────────────────────────────
+      const canalActivo = process.env.CANAL_MENSAJERIA || 'twilio';
+
       // ─────────────────────────────────────────────────────────────
       // STATUS CALLBACK: Twilio nos avisa el estado de un mensaje
       // enviado (entregado, leído, falló, etc.)
@@ -350,6 +353,8 @@ export const POST = withRateLimit(
       const messageStatus = params.MessageStatus;
       const callbackMessageSid = params.MessageSid;
 
+      // Los status callbacks se procesan siempre (incluso si el canal
+      // activo es Chatwoot, para actualizar mensajes legacy)
       if (messageStatus && callbackMessageSid) {
         const errorCode = params.ErrorCode || null;
         const errorMessage = params.ErrorMessage ? escapeHtml(params.ErrorMessage) : null;
@@ -382,6 +387,13 @@ export const POST = withRateLimit(
         }
 
         // Twilio espera un 200 vacío para status callbacks
+        return new NextResponse(null, { status: 200 });
+      }
+
+      // Si el canal activo no es Twilio, ignoramos mensajes entrantes
+      // (Twilio necesita un 200 para no reintentar)
+      if (canalActivo !== 'twilio') {
+        safeLog(`[Twilio] Canal inactivo (CANAL_MENSAJERIA=${canalActivo}), ignorando mensaje`);
         return new NextResponse(null, { status: 200 });
       }
 

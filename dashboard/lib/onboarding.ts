@@ -142,6 +142,20 @@ export async function getOnboardingState(callerUserId?: string): Promise<Onboard
     safeWarn('[Onboarding] Error al verificar notificaciones:', e instanceof Error ? e.message : e);
   }
 
+  // WhatsApp — verificar canal de mensajería configurado
+  try {
+    const canal = process.env.CANAL_MENSAJERIA || 'twilio';
+    const twilioConfigured = !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN);
+    const chatwootConfigured = !!(
+      process.env.CHATWOOT_API_URL && process.env.CHATWOOT_BOT_TOKEN
+    );
+    if ((canal === 'chatwoot' && chatwootConfigured) || (canal === 'twilio' && twilioConfigured)) {
+      completed.push('configuracion_whatsapp');
+    }
+  } catch {
+    /* ignorar */
+  }
+
   // ─── 2. Combinar con progreso manual (onboarding_progress) ──
   let manualSteps: { stepId: string }[] = [];
   try {

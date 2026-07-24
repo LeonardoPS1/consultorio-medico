@@ -57,6 +57,23 @@ function verifySignature(
 // POST /api/pagos/webhook
 // Webhook de MercadoPago (IPN) - notificaciones de pago
 // ⚠️ PÚBLICO — MercadoPago llama a este endpoint sin autenticación
+// ─── Idempotencia en memoria (TTL 5 min) ─────────────────────
+const processedPayments = new Map<string, number>();
+const IDEMPOTENCY_TTL = 5 * 60 * 1000;
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, ts] of processedPayments) {
+    if (now - ts > IDEMPOTENCY_TTL) processedPayments.delete(key);
+  }
+}, 60_000);
+
+function isAlreadyProcessed(paymentId: string): boolean {
+  if (processedPayments.has(paymentId)) return true;
+  processedPayments.set(paymentId, Date.now());
+  return false;
+}
+
 export const POST = apiHandler(async (request: Request) => {
   // Leer body crudo una sola vez
   const rawBody = await request.text();
@@ -96,6 +113,12 @@ export const POST = apiHandler(async (request: Request) => {
     return NextResponse.json({ ok: false, error: 'Payload inválido' }, { status: 400 });
   }
 
+  // Idempotencia: evitar procesar el mismo pago dos veces
+  if (type === 'payment' && isAlreadyProcessed(String(data.id))) {
+    safeLog(`[MP Webhook] Payment ${data.id} ya procesado, saltando`);
+    return ok({ ok: true });
+  }
+
   // Procesar según tipo de notificación
   switch (type) {
     case 'payment':
@@ -110,6 +133,9 @@ export const POST = apiHandler(async (request: Request) => {
 
   return ok({ ok: true });
 });
+
+// Período de gracia para pagos fallidos (días antes de downgrade)
+const GRACE_PERIOD_DAYS = 7;
 
 // ─── Manejar notificación de pago ────────────────────────────
 async function handlePaymentNotification(paymentId: string) {
@@ -219,12 +245,23 @@ async function handlePaymentNotification(paymentId: string) {
     safeLog(`[MP Webhook] ✅ Suscripción ${planId} activada para ${payerEmail}`);
   } else if (['cancelled', 'rejected', 'refunded'].includes(status ?? '')) {
     if (existing.length > 0) {
+      // Poner en `past_due` (período de gracia) en lugar de cancelar inmediatamente.
+      // El plan del usuario se mantiene activo durante GRACE_PERIOD_DAYS.
+      // Un cron diario se encarga de downgrade a free si no se regulariza.
+      const graceEnd = new Date(now);
+      graceEnd.setDate(graceEnd.getDate() + GRACE_PERIOD_DAYS);
       await db
         .update(suscripciones)
-        .set({ estado: 'cancelled', updatedAt: now })
+        .set({
+          estado: 'past_due',
+          periodEnd: graceEnd,
+          updatedAt: now,
+        })
         .where(eq(suscripciones.id, existing[0].id));
+      safeLog(`[MP Webhook] ⏳ Pago ${status} — suscripción en período de gracia hasta ${graceEnd.toISOString()}`);
+    } else {
+      safeLog(`[MP Webhook] ❌ Pago ${status} para ${payerEmail} (sin suscripción previa)`);
     }
-    safeLog(`[MP Webhook] ❌ Pago ${status} para ${payerEmail}`);
   }
 }
 

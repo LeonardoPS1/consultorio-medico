@@ -2,7 +2,7 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 22/07/2026
+**Última actualización:** 24/07/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
@@ -97,6 +97,7 @@
 | **ORM** | Drizzle ORM | ^0.31.0 |
 | **Base de datos** | PostgreSQL 16 | 16 |
 | **Automatización** | n8n (self-hosted) | 2.19.5 |
+| **Chat / WhatsApp** | Chatwoot (self-hosted) + Evolution API | latest |
 | **IA Local** | Ollama + gemma3/llama3.2 | Último |
 | **WhatsApp** | Twilio API | ^5.0.0 |
 | **Analítica** | Metabase (self-hosted) | 0.52.x |
@@ -597,6 +598,7 @@ consultorio-medico/
 | Webhook | Endpoint | Validación |
 |---------|----------|------------|
 | Twilio Inbound | `POST /api/webhooks/twilio` | HMAC-SHA256 + Status Callback |
+| Chatwoot Inbound | `POST /api/webhooks/chatwoot` | `x-chatwoot-signature` HMAC-SHA256 |
 | n8n Consultorio | `POST /webhook/consultorio-inbound` | `x-webhook-secret` |
 | n8n Turnos | `POST /webhook/turno-solicitar` | — |
 | n8n Recetas | `POST /webhook/receta-solicitar` | — |
@@ -668,13 +670,16 @@ consultorio-medico/
 | **Derivaciones cross-tenant + consentimiento** | Derivaciones entre organizaciones con consentimiento del paciente (alcance granular, expiración, revocable). Convenios de intercambio administrativos. Features: `consentimiento-compartir` (Professional), `convenios-intercambio` (Enterprise). | 22/07 |
 | **RLS Multi-Tenant (completado)** | Migration 0051: RLS en 10 tablas restantes (portal_config, web_vitals_metrics, derivaciones, webhook_configs, ordenes_estudio, documentos_medicos, paquetes_portal, consentimiento_compartir, blacklist, consentimientos). withTenantScope() en Server Components. | 23/07 |
 | **Disaster Recovery docs** | `disaster-recovery.md` con procedimientos de backup/restauración. `rls-multi-tenant.md` con documentación RLS. Corrección Ley 26.529→20.584+19.628. | 23/07 |
+| **Sprint: Chatwoot + Evolution API** | Chatwoot en `docker-compose.prod.yml` (servicio + volumen), `lib/services/chatwoot.ts` (cliente API: createContact, sendMessage, verifyWebhookSignature), `app/api/webhooks/chatwoot/route.ts` (webhook handler con HMAC). `CANAL_MENSAJERIA=chatwoot|twilio` flag. `lib/whatsapp.ts` (enviador unificado). `scripts/setup-chatwoot.sql`. | 24/07 |
+| **Sprint: Onboarding mejoras** | Auto-redirect a `/dashboard/onboarding` tras registro express (antes iba a suscripción). Nuevo paso `configuracion_whatsapp` con detección de env vars. | 24/07 |
+| **Sprint: MercadoPago billing robustness** | Idempotencia en memoria (Map TTL 5 min). Grace period 7 días (estado `past_due` en vez de `cancelled` inmediato). Endpoint interno `POST /api/internal/suscripciones-vencidas` para cron nocturno (downgrade → free). | 24/07 |
 
 ### 🟡 Prioridad Media
 
 | Feature | Descripción | Dependencias |
 |---------|-------------|--------------|
 | **WF-04 Correo Inteligente completo** | Configurar IMAP/SMTP real en n8n. Ya tiene el workflow completo (10 nodos), falta activar las credenciales | Credenciales IMAP/SMTP |
-| **Tests de integración** | Suite de tests automatizados para flujo completo: webhook → DB → n8n → Twilio | Playwright/Jest |
+| **Tests de integración** | Suite de tests automatizados para flujo completo: webhook → DB → n8n → Chatwoot | Playwright/Jest |
 
 ### 🟢 Prioridad Baja
 
@@ -682,6 +687,7 @@ consultorio-medico/
 |---------|-------------|
 | WhatsApp Business API (producción) | Migrar de sandbox a producción con número dedicado |
 | Soporte multimedia en WhatsApp | Imágenes, PDFs, audio en conversaciones |
+| **Migración n8n → Evolution API** | Reemplazar nodos Twilio por HTTP a Evolution API en WF-01 a WF-06 |
 
 ### 💡 Ideas a Futuro
 - Chat en vivo en dashboard (WebSocket)
@@ -721,6 +727,7 @@ consultorio-medico/
 |------------|-----|-----|
 | Dashboard | 0.5 | 512MB |
 | Metabase | 1 | 2GB |
+| Chatwoot | 1 | 1GB |
 | Ollama | — | 8GB |
 
 ### Docker Compose

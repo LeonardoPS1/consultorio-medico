@@ -16,6 +16,7 @@ import {
   Clock,
   UserPlus,
   Bell,
+  MessageCircle,
   ListChecks,
   Sparkles,
   RefreshCw,
@@ -50,6 +51,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Clock,
   UserPlus,
   Bell,
+  MessageCircle,
   Sparkles,
 };
 

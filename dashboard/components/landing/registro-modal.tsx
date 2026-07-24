@@ -99,8 +99,9 @@ export function RegistroExpressModal({ open, onOpenChange, planId }: RegistroMod
       // 4. Redirigir después de una pausa para mostrar el success
       setTimeout(() => {
         onOpenChange(false);
-        const baseUrl = '/dashboard/configuracion?tab=suscripcion';
-        const url = planId ? `${baseUrl}&plan=${planId}` : baseUrl;
+        const url = planId
+          ? `/dashboard/configuracion?tab=suscripcion&plan=${planId}`
+          : '/dashboard/onboarding';
         router.push(url);
         router.refresh();
       }, 1200);

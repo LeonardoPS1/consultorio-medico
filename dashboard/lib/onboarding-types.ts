@@ -56,6 +56,8 @@ export const FALLBACK_TIPS: Record<string, string> = {
     'Carga un paciente de prueba para ver el sistema en funcionamiento. Los datos clave son nombre, teléfono con código de país y sistema de salud (FONASA/Isapre) si aplica. Después de cargarlo ya le puedes asignar un turno virtual o presencial, y va a recibir recordatorios automáticos por WhatsApp.',
   notificaciones:
     'Las notificaciones te avisan sobre urgencias, recordatorios de turnos, alertas inteligentes y bajas por consentimiento. Te recomiendo activar las notificaciones push en el navegador y los recordatorios automáticos para pacientes. Este es el último paso, ya casi tienes todo listo.',
+  configuracion_whatsapp:
+    'Los mensajes por WhatsApp se envían automáticamente a través de Evolution API y Chatwoot. Verifica que el webhook de WhatsApp esté configurado correctamente en Evolution API apuntando a tu dashboard, y que el número esté conectado en el panel de Evolution. Después podés enviar un mensaje de prueba para confirmar que todo funciona.',
 };
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
@@ -109,5 +111,14 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     icon: 'Bell',
     actionLink: '/dashboard/configuracion?tab=notificaciones',
     actionLabel: 'Configurar notificaciones',
+  },
+  {
+    id: 'configuracion_whatsapp',
+    title: 'Configura WhatsApp',
+    description:
+      'Verifica que el canal de WhatsApp esté conectado y funcionando para que tus pacientes reciban recordatorios y puedan comunicarse.',
+    icon: 'MessageCircle',
+    actionLink: '/dashboard/configuracion?tab=integraciones',
+    actionLabel: 'Ir a integraciones',
   },
 ];

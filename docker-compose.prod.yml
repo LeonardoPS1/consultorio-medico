@@ -401,6 +401,63 @@ services:
         max_attempts: 3
         window: 120s
 
+  chatwoot:
+    image: chatwoot/chatwoot:latest
+    ports:
+      - target: 3000
+        published: 3002
+        protocol: tcp
+        mode: host
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - DATABASE_URL=postgres://chatwoot_user:${CHATWOOT_DB_PASSWORD}@postgres:5432/chatwoot
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY_BASE=${CHATWOOT_SECRET_KEY}
+      - FRONTEND_URL=https://chatwoot.aicorebots.com
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - DEFAULT_LOCALE=es
+      - ENABLE_MAPBOX=false
+      - ACTIVE_STORAGE_SERVICE=local
+      - INSTALLATION_ENV=docker
+      - TZ=America/Santiago
+    volumes:
+      - chatwoot_data:/app/storage
+    depends_on:
+      - postgres
+      - redis
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    deploy:
+      mode: replicated
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+        monitor: 60s
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+
   backup-agent:
     image: alpine:3.20
     logging:
@@ -497,6 +554,8 @@ volumes:
   recordings:
     driver: local
   metabase_data:
+    driver: local
+  chatwoot_data:
     driver: local
   backup_agent_data:
     driver: local
