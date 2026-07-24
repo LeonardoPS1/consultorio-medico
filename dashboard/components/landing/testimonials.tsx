@@ -32,6 +32,11 @@ const defaultTestimonials: TestimonialItem[] = [
     author: 'Clínica Médica del Pacífico',
     role: 'Valparaíso, Chile',
   },
+  {
+    text: 'El OCR para análisis de laboratorio nos ahorra horas de tipeo manual. Escaneamos el papel y la IA extrae valores, rangos y flags de alerta automáticamente. Una tecnología impresionante.',
+    author: 'Dr. Andrés Muñoz',
+    role: 'Médico Internista, Concepción, Chile',
+  },
 ];
 
 export function Testimonials({ testimonials: customTestimonials }: TestimonialsProps = {}) {
@@ -50,7 +55,7 @@ export function Testimonials({ testimonials: customTestimonials }: TestimonialsP
           </p>
         </AnimatedSection>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 stagger-children">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children max-w-5xl mx-auto">
           {items.map((t, idx) => (
             <div
               key={t.author}

@@ -440,3 +440,66 @@ html {
   transform: scale(1.03);
   transition: all 0.2s var(--ease-out);
 }
+
+/* === NEW: Enhanced visual polish === */
+
+/* Stagger children reveal for feature grid */
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.stagger-children > * {
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 30ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 90ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 210ms; }
+.stagger-children > *:nth-child(9) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(10) { animation-delay: 270ms; }
+.stagger-children > *:nth-child(11) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(12) { animation-delay: 330ms; }
+.stagger-children > *:nth-child(13) { animation-delay: 360ms; }
+.stagger-children > *:nth-child(14) { animation-delay: 390ms; }
+.stagger-children > *:nth-child(15) { animation-delay: 420ms; }
+.stagger-children > *:nth-child(16) { animation-delay: 450ms; }
+
+/* Content visibility optimization for sections below fold */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 600px;
+}
+
+/* Heading gradient accent line */
+.heading-accent {
+  position: relative;
+  display: inline-block;
+}
+
+.heading-accent::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.6), transparent);
+}
+
+/* Text balance for headings */
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+/* Button transition smoothing */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}

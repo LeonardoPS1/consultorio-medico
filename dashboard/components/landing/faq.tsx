@@ -15,27 +15,35 @@ export interface FAQProps {
 
 const defaultFAQS: FAQItem[] = [
   {
-    q: '¿Cómo se integra AiCoreMed con mi agenda actual?',
+    q: 'Cómo se integra AiCoreMed con mi agenda actual?',
     a: 'AiCoreMed es un sistema completo que incluye su propia gestión de turnos, pacientes y agenda. No requiere integración con sistemas externos. Si ya usas otro software, podemos migrar tus datos existentes o conectar via API con sistemas como Dentalink, Medilink o Doctoralia mediante nuestros workflows de n8n.',
   },
   {
-    q: '¿La IA realmente entiende el contexto de mis pacientes?',
+    q: 'La IA realmente entiende el contexto de mis pacientes?',
     a: 'Sí. El asistente con Mistral (IA local) se entrena con la información de tu consultorio: horarios, médicos, especialidades, sistemas de salud (FONASA/Isapre) aceptados y más. Cuando un paciente escribe por WhatsApp, la IA entiende el contexto completo: si es paciente nuevo o recurrente, qué médico atiende, y puede agendar, reprogramar o cancelar turnos sin intervención humana.',
   },
   {
-    q: '¿Es seguro? ¿Dónde se almacenan los datos médicos?',
+    q: 'Es seguro? Dónde se almacenan los datos médicos?',
     a: 'Todos los datos se almacenan en tu propia base de datos PostgreSQL en tu VPS. La IA corre localmente con Ollama, sin enviar datos a servicios externos. Además contás con autenticación 2FA, rate limiting, auditoría de accesos, backup encriptado automático y cumplimiento de normativas de salud.',
   },
   {
-    q: '¿Qué pasa si un paciente cancela a último momento?',
+    q: 'Qué pasa si un paciente cancela a último momento?',
     a: 'Cuando un paciente cancela por WhatsApp, la IA detecta la cancelación al instante, libera el turno en la agenda y automáticamente contacta a pacientes en lista de espera para ofrecerles esa hora disponible. Esto reduce las horas muertas en tu consultorio a casi cero.',
   },
   {
-    q: '¿Necesito conocimientos técnicos para usarlo?',
+    q: 'Cómo funciona el OCR y la transcripción de consultas?',
+    a: 'El OCR con visión IA escanea recetas, análisis de laboratorio e informes médicos, extrayendo datos como medicamentos, dosis y valores de exámenes automáticamente. La transcripción SOAP graba la consulta y genera notas estructuradas al instante usando Whisper.cpp local. Todo sin enviar datos a la nube.',
+  },
+  {
+    q: 'Puedo compartir datos con otros centros médicos?',
+    a: 'Sí. Con los planes Professional y Enterprise podés derivar pacientes entre especialistas con seguimiento completo, y crear consentimientos de compartición de datos entre organizaciones. Cada paciente controla el alcance y puede revocar el acceso en cualquier momento desde el portal.',
+  },
+  {
+    q: 'Necesito conocimientos técnicos para usarlo?',
     a: 'No. AiCoreMed está diseñado para médicos, no para programadores. La configuración inicial la hacemos nosotros. Después, todo se maneja desde un dashboard intuitivo. El asistente IA, los recordatorios por WhatsApp y las automatizaciones funcionan solas desde el día uno.',
   },
   {
-    q: '¿Puedo probarlo antes de pagar?',
+    q: 'Puedo probarlo antes de pagar?',
     a: 'Sí. Todos los planes incluyen 14 días de prueba gratis sin tarjeta de crédito. Configuras tu consultorio en minutos y empieza a probar todas las funcionalidades. Si no te convence, cancelas sin compromiso.',
   },
 ];

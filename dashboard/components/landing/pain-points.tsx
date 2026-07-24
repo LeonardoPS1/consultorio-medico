@@ -1,5 +1,5 @@
 import { AnimatedSection } from '@/components/landing/animated-section';
-import { CalendarX, PhoneCall, BellOff, FileText, Receipt, MessageCircleOff } from 'lucide-react';
+import { CalendarX, PhoneCall, BellOff, FileText, Receipt, MessageCircleOff, Sparkles } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export interface PainPointItem {
@@ -110,7 +110,7 @@ export function PainPoints({
         {/* Mensaje de cierre */}
         <AnimatedSection className="text-center mt-12" delay={0.3}>
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary text-sm font-medium px-5 py-2.5">
-            <span className="text-lg leading-none">💡</span>
+            <Sparkles className="h-4 w-4" />
             AiCoreMed resuelve cada uno de estos problemas. Descubrí cómo.
           </div>
         </AnimatedSection>

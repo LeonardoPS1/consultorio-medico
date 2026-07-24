@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { motion, useMotionValue, useSpring, useReducedMotion } from 'motion/react';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, Bot, Play, MessageCircle, ShieldCheck, Lock, Server, Smartphone } from 'lucide-react';
+import { ChevronRight, Bot, Play, MessageCircle } from 'lucide-react';
 import { RegistroExpressModal } from '@/components/landing/registro-modal';
 
 export interface HeroProps {
@@ -17,14 +17,14 @@ export interface HeroProps {
 }
 
 export function Hero({
-  badgeText = 'Sin llamadas · Sin papeles · Sin ausentismo',
+  badgeText = 'WhatsApp con IA · Gestión clínica · Sin ausentismo',
   titleNormal = 'Tu consultorio abierto 24/7',
   titleHighlight = 'sin tener que estar ahí',
   subtitle = 'WhatsApp con IA, gestión clínica, portal del paciente y automatizaciones.\n              Todo en un solo panel. IA 100% local, tus datos nunca salen de tu servidor.',
-  subtitleBold = 'Ahorrá hasta 10 horas por semana en gestión.',
+  subtitleBold = 'Ahorrá hasta 15 horas por semana en gestión administrativa.',
   stats = [
-    { value: '85%', label: 'menos ausentismo' },
-    { value: '10h+', label: 'ahorradas/semana' },
+    { value: '92%', label: 'menos ausentismo' },
+    { value: '15h+', label: 'ahorradas/semana' },
     { value: '24/7', label: 'atención con IA' },
   ],
 }: HeroProps = {}) {

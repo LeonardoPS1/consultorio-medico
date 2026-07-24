@@ -13,6 +13,10 @@ import {
   ExternalLink,
   GitBranch,
   Stethoscope,
+  FileSearch,
+  Microscope,
+  ShieldCheck,
+  ScrollText,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -91,11 +95,31 @@ const defaultFeatures: FeatureItem[] = [
     title: 'Notas SOAP + CIE-10',
     desc: 'Evolución clínica estructurada con Subjetivo, Objetivo, Assessment y Plan. Buscador de ~900 códigos CIE-10 integrado en cada nota.',
   },
+  {
+    icon: FileSearch,
+    title: 'OCR con Visión IA',
+    desc: 'Escaneá recetas, análisis de laboratorio e informes. La IA extrae datos automáticamente: medicamentos, dosis, valores de exámenes. Sin tipeo manual.',
+  },
+  {
+    icon: Microscope,
+    title: 'Transcripción SOAP Automática',
+    desc: 'Grabá la consulta y la IA genera las notas SOAP al instante. Whisper.cpp local procesa audio sin enviar datos a la nube. Ahorrá minutos por paciente.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Consentimiento Informado Digital',
+    desc: 'Creá y gestioná consentimientos informados con firma digital y auditoría completa. El paciente firma desde su celular antes de la consulta.',
+  },
+  {
+    icon: ScrollText,
+    title: 'Compliance y Privacidad',
+    desc: 'Dashboard de cumplimiento con registro de accesos, solicitudes ARCO, anonimización automática post-retención y backup encriptado. Todo auditado.',
+  },
 ];
 
 export function Features({
   title = 'Todo lo que necesitas en un solo lugar',
-  subtitle = 'Más de 76 funcionalidades integradas: gestión de turnos, WhatsApp con IA, portal del paciente, recetas digitales, telemedicina y mucho más.',
+  subtitle = 'Más de 56 funcionalidades profesionales integradas en un solo panel: gestión de turnos, WhatsApp con IA, telemedicina, recetas con QR, portal del paciente, OCR, compliance y mucho más.',
   features: customFeatures,
 }: FeaturesProps = {}) {
   const items = customFeatures ?? defaultFeatures;
@@ -110,7 +134,7 @@ export function Features({
           <p className="text-muted-foreground max-w-2xl mx-auto text-base">{subtitle}</p>
         </AnimatedSection>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 stagger-children">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 auto-rows-fr stagger-children">
           {items.map((feature) => {
             const Icon = feature.icon;
             return (

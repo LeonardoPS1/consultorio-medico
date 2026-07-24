@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     absolute: 'AiCoreMed – Software de Gestión para Consultorios con IA | Chile',
   },
   description:
-    'Agenda turnos, automatiza WhatsApp y gestiona historiales clínicos con IA local. Sin costos de API. Prueba gratis 14 días. Para médicos en Chile.',
+    'Agenda turnos por WhatsApp, gestiona historiales clínicos y recibe a tus pacientes con IA local. Sin costos de API. OCR de documentos, telemedicina, portal del paciente. Prueba gratis 14 días.',
 };
 
 const jsonLd: Record<string, unknown> = {
@@ -40,10 +40,13 @@ const jsonLd: Record<string, unknown> = {
   applicationCategory: 'HealthApplication',
   operatingSystem: 'Web',
   offers: {
-    '@type': 'Offer',
-    price: '49',
+    '@type': 'AggregateOffer',
+    lowPrice: '0',
+    highPrice: '549',
     priceCurrency: 'USD',
   },
+  description:
+    'Software de gestión para consultorios médicos con IA local. WhatsApp integrado, telemedicina, portal del paciente, OCR, recetas digitales y más.',
 };
 
 export default function LandingPage() {
