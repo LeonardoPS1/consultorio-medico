@@ -33,20 +33,35 @@ Se adopta el patrón **multi-agente con handoff conversacional**:
 MENSAJE WHATSAPP
     │
     ▼
-┌──────────────────────┐
-│   TRIAGE AGENT       │ ← detecta intención + urgencia
-│   (saludo, info,     │   saludo/info/urgencia → responde directo
-│    clasificación)    │   crear/cancelar/modificar turno → HANDOFF agenda
-│   temp=0.3           │   recetas/consultas clínicas → HANDOFF clínico
-└──────┬───────────────┘
+┌──────────────────────────┐
+│   TRIAGE AGENT           │ ← detecta intención + urgencia
+│   (saludo, info,         │   saludo/info/urgencia → responde directo
+│    clasificación)        │   crear/cancelar/modificar turno → HANDOFF agenda
+│   temp=0.3               │   recetas/consultas clínicas → HANDOFF clínico
+└──────┬───────────────────┘
        │
        ▼ (Handoff detectado)
-┌──────────────────────┐
-│   AGENDA AGENT       │ ← especialista en turnos
-│   (crear, cancelar,  │   comparte memoria con Triaje
-│    modificar turnos) │   emite ###ACCION### para cambios en DB
-│   temp=0.3           │
-└──────────────────────┘
+┌──────────────────┐
+│ DESTINO HANDOFF? │ ← IF node: chequea $json.destinoHandoff
+└───┬──────────────┘
+    │ agenda                 │ clínico
+    ▼                        ▼
+┌──────────────────┐  ┌──────────────────┐
+│ AGENDA AGENT     │  │ CLINICO AGENT    │
+│ (turnos)         │  │ (recetas)        │
+│ temp=0.3         │  │ temp=0.3         │
+│ memoria          │  │ memoria          │
+│ compartida       │  │ compartida       │
+└────────┬─────────┘  └────────┬─────────┘
+         │                     │
+         ▼                     ▼
+    ┌────────────────────┐
+    │      MERGER        │
+    └────────┬───────────┘
+             ▼
+    ┌────────────────────┐
+    │ Parsear y Preparar │ ← parsea ###ACCION### de cualquier agente
+    └────────────────────┘
 ```
 
 ### Mecanismo de Handoff
@@ -84,8 +99,9 @@ interacción.
   por lo que no hay overhead de red entre agentes.
 - **Complejidad de workflow** — El número de nodos aumenta (17 → 23), pero cada
   nodo individual es más simple.
-- **Fase 2**: El sub-agente Clínico (recetas + consultas) se implementará en un
-  sprint posterior, pero la arquitectura ya lo contempla.
+- **Implementado**: El sub-agente Clínico (recetas + consultas) se implementó en
+  el sprint del 24/07/2026, completando la arquitectura de 3 agentes definida
+  originalmente.
 
 ## Referencias
 

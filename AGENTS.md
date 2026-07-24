@@ -203,7 +203,7 @@ consultorio-medico/
 | **Archivo** | `n8n-workflows/current/workflow-01-agent.json` |
 | **Trigger** | Webhook → `POST /webhook/consultorio-inbound` |
 | **Estado** | ✅ **ACTIVO** (refactorizado a multi-agente) |
-| **Nodos** | 23 (webhook, IF, set, postgres×5, code×5, merge, AI Agent×2, Chat Model×2, Memory×2, Twilio) |
+| **Nodos** | 31 (webhook, IF×3, set×4, postgres×5, code×5, merge, AI Agent×3, Chat Model×3, Memory×3, Twilio) |
 | **Arquitectura** | [ADR-0006](../docs/decisiones/0006-multi-agente-especializado.md) — Multi-agente con handoff conversacional |
 
 **Flujo Multi-Agente:**
@@ -214,21 +214,25 @@ consultorio-medico/
 5. **Triaje Agent** (Ollama Gemma3 + Postgres Chat Memory) clasifica intención:
    - **Saludo / info general / urgencia** → responde directamente (sin handoff)
    - **Crear/cancelar/modificar turno** → emite `###HANDOFF###{"destino":"agenda"}###FIN###`
-   - **Recetas/consultas clínicas** → emite HANDOFF clínico (Fase 2)
-6. Si hay HANDOFF → **Agenda Agent** (Ollama Gemma3 + misma Chat Memory) gestiona turnos
-7. Si detecta acciones estructuradas: `crear_turno`, `cancelar_turno`
-8. Envía respuesta vía Twilio WhatsApp
-9. Loggea todo en PostgreSQL con campo `subAgente` (`triaje`|`agenda`)
+   - **Recetas/consultas clínicas** → emite `###HANDOFF###{"destino":"clinico"}###FIN###`
+6. **Destino Handoff?** (IF node) chequea `$json.destinoHandoff`:
+   - `"agenda"` → **Agenda Agent**: gestiona turnos
+   - `"clinico"` → **Clinico Agent**: gestiona recetas y consultas clínicas
+7. Cada sub-agente emite acciones estructuradas via `###ACCION###`:
+   - Agenda: `crear_turno`, `cancelar_turno`
+   - Clínico: `renovar_receta`, `consultar_receta`
+8. Merger combina ambas ramas, envía respuesta vía Twilio WhatsApp
+9. Loggea todo en PostgreSQL con campo `subAgente` (`triaje`|`agenda`|`clinico`)
 
 **Configuración IA:**
 
-| Parámetro | Triaje Agent | Agenda Agent |
-|-----------|-------------|--------------|
-| Modelo | `gemma3` | `gemma3` |
-| Base URL | `http://ollama:11434` | `http://ollama:11434` |
-| Temperatura | 0.3 | 0.3 |
-| Prompt | ~20 líneas (saludo + clasificación + handoff) | ~15 líneas (solo turnos + acciones) |
-| Chat Memory | Postgres (sessionKey=phone, contextWindow=10) | Postgres (mismo sessionKey=phone) |
+| Parámetro | Triaje Agent | Agenda Agent | Clinico Agent |
+|-----------|-------------|--------------|---------------|
+| Modelo | `mistral` | `mistral` | `mistral` |
+| Base URL | `http://ollama:11434` | `http://ollama:11434` | `http://ollama:11434` |
+| Temperatura | 0.3 | 0.3 | 0.3 |
+| Prompt | ~20 líneas (saludo + clasificación + handoff) | ~15 líneas (solo turnos + acciones) | ~15 líneas (solo recetas + acciones) |
+| Chat Memory | Postgres (sessionKey=phone, contextWindow=10) | Postgres (mismo sessionKey=phone) | Postgres (mismo sessionKey=phone) |
 
 **Credenciales:** Consultorio - PostgreSQL, Consultorio - Twilio Basic Auth, Ollama - Consultorio Medico
 
@@ -670,7 +674,7 @@ consultorio-medico/
 | **Derivaciones cross-tenant + consentimiento** | Derivaciones entre organizaciones con consentimiento del paciente (alcance granular, expiración, revocable). Convenios de intercambio administrativos. Features: `consentimiento-compartir` (Professional), `convenios-intercambio` (Enterprise). | 22/07 |
 | **RLS Multi-Tenant (completado)** | Migration 0051: RLS en 10 tablas restantes (portal_config, web_vitals_metrics, derivaciones, webhook_configs, ordenes_estudio, documentos_medicos, paquetes_portal, consentimiento_compartir, blacklist, consentimientos). withTenantScope() en Server Components. | 23/07 |
 | **Disaster Recovery docs** | `disaster-recovery.md` con procedimientos de backup/restauración. `rls-multi-tenant.md` con documentación RLS. Corrección Ley 26.529→20.584+19.628. | 23/07 |
-| **Sprint: Chatwoot + Evolution API** | Chatwoot en `docker-compose.prod.yml` (servicio + volumen), `lib/services/chatwoot.ts` (cliente API: createContact, sendMessage, verifyWebhookSignature), `app/api/webhooks/chatwoot/route.ts` (webhook handler con HMAC). `CANAL_MENSAJERIA=chatwoot|twilio` flag. `lib/whatsapp.ts` (enviador unificado). `scripts/setup-chatwoot.sql`. | 24/07 |
+| **Sprint: Chatwoot + Evolution API** | Chatwoot en `docker-compose.prod.yml` (servicio + volumen), `lib/services/chatwoot.ts` (cliente API), `app/api/webhooks/chatwoot/route.ts` (webhook handler). `CANAL_MENSAJERIA` flag, `lib/whatsapp.ts`, `scripts/setup-chatwoot.sql`. T2: WF-01 sub-agente clínico (Destino Handoff? IF + 5 nodos: Preparar Prompt Clinico, Ollama - Clinico, Postgres Memory - Clinico, Clinico Agent, Extraer Output Clinico). T3: Feature `soporte`, sidebar nav item, page `/dashboard/soporte` + API `POST /api/soporte/enviar` (enruta a Chatwoot soporte inbox o Twilio). | 24/07 |
 | **Sprint: Onboarding mejoras** | Auto-redirect a `/dashboard/onboarding` tras registro express (antes iba a suscripción). Nuevo paso `configuracion_whatsapp` con detección de env vars. | 24/07 |
 | **Sprint: MercadoPago billing robustness** | Idempotencia en memoria (Map TTL 5 min). Grace period 7 días (estado `past_due` en vez de `cancelled` inmediato). Endpoint interno `POST /api/internal/suscripciones-vencidas` para cron nocturno (downgrade → free). | 24/07 |
 

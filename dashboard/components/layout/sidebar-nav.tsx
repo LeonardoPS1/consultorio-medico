@@ -24,6 +24,7 @@ import {
   Star,
   Rocket,
   BookOpen,
+  LifeBuoy,
   ListChecks,
   Bell,
   Newspaper,
@@ -70,6 +71,7 @@ const navItems: NavItem[] = [
   { title: 'Notificaciones', href: '/dashboard/notificaciones', icon: Bell },
   { title: 'Ajustes', href: '/dashboard/configuracion', icon: Sliders },
   { title: 'Novedades', href: '/dashboard/novedades', icon: Newspaper },
+  { title: 'Soporte', href: '/dashboard/soporte', icon: LifeBuoy, feature: 'soporte' },
   { title: 'Ayuda', href: '/dashboard/ayuda', icon: BookOpen },
   { title: 'Acerca de', href: '/dashboard/acerca', icon: Info },
 ];

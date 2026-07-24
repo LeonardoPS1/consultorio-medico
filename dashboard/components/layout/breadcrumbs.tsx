@@ -24,6 +24,7 @@ const routeLabels: Record<string, string> = {
   atencion: 'Atención',
   telemedicina: 'Telemedicina',
   novedades: 'Novedades',
+  soporte: 'Soporte',
   ayuda: 'Ayuda',
   acerca: 'Acerca de',
   admin: 'Administración',

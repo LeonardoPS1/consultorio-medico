@@ -68,7 +68,8 @@ export type FeatureId =
   | 'documentos-ocr'
   | 'fhir-export'
   | 'consentimiento-compartir'
-  | 'convenios-intercambio';
+  | 'convenios-intercambio'
+  | 'soporte';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -130,6 +131,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'fhir-export': 'professional',
   'consentimiento-compartir': 'professional',
   'convenios-intercambio': 'enterprise',
+  soporte: 'starter',
 };
 
 // ============================================================
