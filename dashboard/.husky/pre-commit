@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-pnpm exec lint-staged
+cd dashboard && pnpm exec lint-staged
