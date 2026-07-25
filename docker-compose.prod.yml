@@ -520,6 +520,61 @@ services:
         delay: 5s
         max_attempts: 3
 
+  ops-console:
+    image: ghcr.io/leonardops1/consultorio-medico-ops:latest
+    ports:
+      - target: 3001
+        published: 3001
+        protocol: tcp
+        mode: host
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    secrets:
+      - ops_database_url
+      - ops_jwt_secret
+      - ops_setup_token_pepper
+    environment:
+      - NODE_ENV=production
+      - TZ=America/Santiago
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3001/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      mode: replicated
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+        monitor: 60s
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.role == worker
+
 secrets:
   database_url:
     external: true
@@ -538,6 +593,12 @@ secrets:
   metabase_readonly_password:
     external: true
   metabase_encryption_key:
+    external: true
+  ops_database_url:
+    external: true
+  ops_jwt_secret:
+    external: true
+  ops_setup_token_pepper:
     external: true
 
 volumes:
