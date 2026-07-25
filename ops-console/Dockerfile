@@ -15,10 +15,10 @@ RUN corepack enable && corepack prepare pnpm@11.14.0 --activate
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     mkdir -p /root/.local/share/pnpm/store
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json ./
 
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm install --no-frozen-lockfile
+    pnpm install --no-frozen-lockfile --ignore-workspace
 
 # ─── Stage 2: Build ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS builder
