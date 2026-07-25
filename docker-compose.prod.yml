@@ -523,7 +523,7 @@ services:
   ops-console:
     image: ghcr.io/leonardops1/consultorio-medico-ops:latest
     ports:
-      - target: 3001
+      - target: 3002
         published: 3002
         protocol: tcp
         mode: host
@@ -539,7 +539,7 @@ services:
     environment:
       - NODE_ENV=production
       - TZ=America/Santiago
-      - PORT=3001
+      - PORT=3002
     depends_on:
       - postgres
     healthcheck:

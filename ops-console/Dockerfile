@@ -26,7 +26,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME="0.0.0.0"
-ENV PORT=3001
+ENV PORT=3002
 ENV TZ=America/Santiago
 
 RUN apk add --no-cache curl
@@ -42,9 +42,9 @@ RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
 
 USER nextjs
 
-EXPOSE 3001
+EXPOSE 3002
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://127.0.0.1:3001/api/health || exit 1
+  CMD curl -f http://127.0.0.1:3002/api/health || exit 1
 
 CMD ["node", "server.js"]
