@@ -12,6 +12,7 @@ export default function SetupPage() {
   const [loading, setLoading] = useState(false)
   const [qrCode, setQrCode] = useState('')
   const [setupToken, setSetupToken] = useState('')
+  const [totpSecret, setTotpSecret] = useState('')
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -56,6 +57,35 @@ export default function SetupPage() {
       }
 
       setQrCode(completeJson.data.totpQrCode)
+      setTotpSecret(completeJson.data.totpUri)
+      setStep('totp')
+    } catch (err: any) {
+      setError(err?.message || 'Error de conexión')
+    } finally {
+      setLoading(false)
+    }
+  }, [email, setupToken])
+
+  const handleSkipPasskey = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      const res = await fetch('/api/auth/register/begin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, setupToken, skipPasskey: true }),
+      })
+      const json = await res.json()
+
+      if (!json.success) {
+        setError(json.error || 'Error al configurar TOTP')
+        return
+      }
+
+      setQrCode(json.data.totpQrCode)
+      setTotpSecret(json.data.totpUri)
       setStep('totp')
     } catch (err: any) {
       setError(err?.message || 'Error de conexión')
@@ -105,51 +135,77 @@ export default function SetupPage() {
 
         <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6">
           {step === 'passkey' && (
-            <form onSubmit={handlePasskeyRegister} className="space-y-4">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-1.5">
-                  Email del operador
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  autoFocus
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-                  placeholder="leo@aicorebots.com"
-                />
+            <div className="space-y-4">
+              <form onSubmit={handlePasskeyRegister} className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium mb-1.5">
+                    Email del operador
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    autoFocus
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
+                    placeholder="leo@aicorebots.com"
+                  />
+                </div>
+
+                {setupToken && (
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Token de setup detectado
+                  </p>
+                )}
+
+                {error && (
+                  <p className="text-sm text-[var(--danger)]">{error}</p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading || !email}
+                  className="w-full py-2 px-4 bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
+                >
+                  {loading ? 'Registrando...' : 'Registrar Passkey'}
+                </button>
+
+                <p className="text-xs text-[var(--text-muted)] text-center">
+                  Tu navegador te pedirá crear un passkey (Touch ID, Windows Hello, YubiKey, etc.)
+                </p>
+              </form>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-[var(--border)]" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-[var(--bg-card)] text-[var(--text-muted)]">
+                    O
+                  </span>
+                </div>
               </div>
 
-              {setupToken && (
-                <p className="text-xs text-[var(--text-muted)]">
-                  Token de setup detectado
+              <form onSubmit={handleSkipPasskey} className="space-y-4 pt-2">
+                <button
+                  type="submit"
+                  disabled={loading || !email}
+                  className="w-full py-2 px-4 bg-transparent border border-[var(--border)] hover:bg-[var(--bg-secondary)] disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
+                >
+                  {loading ? 'Generando...' : 'Omitir passkey → Usar solo Google Authenticator (TOTP)'}
+                </button>
+                <p className="text-xs text-[var(--text-muted)] text-center">
+                  Solo código de 6 dígitos en tu app de autenticación
                 </p>
-              )}
-
-              {error && (
-                <p className="text-sm text-[var(--danger)]">{error}</p>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading || !email}
-                className="w-full py-2 px-4 bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
-              >
-                {loading ? 'Registrando...' : 'Registrar Passkey'}
-              </button>
-
-              <p className="text-xs text-[var(--text-muted)] text-center">
-                Tu navegador te pedirá crear un passkey (Touch ID, Windows Hello, etc.)
-              </p>
-            </form>
+              </form>
+            </div>
           )}
 
           {step === 'totp' && (
             <form onSubmit={handleTotpSubmit} className="space-y-4">
               <p className="text-sm text-[var(--text-secondary)] text-center">
-                Escanea este código QR con Google Authenticator
+                Escanea este código QR con Google Authenticator, Authy o 1Password
               </p>
 
               {qrCode && (
@@ -162,9 +218,20 @@ export default function SetupPage() {
                 </div>
               )}
 
+              {totpSecret && (
+                <details className="group">
+                  <summary className="text-xs text-[var(--text-muted)] cursor-pointer text-center">
+                    Ver clave secreta (copia manual)
+                  </summary>
+                  <div className="mt-2 p-2 bg-[var(--bg-secondary)] rounded text-xs font-mono break-all text-center">
+                    {totpSecret.split('=')[1]?.split('&')[0] || totpSecret}
+                  </div>
+                </details>
+              )}
+
               <div>
                 <label htmlFor="code" className="block text-sm font-medium mb-1.5">
-                  Código de verificación
+                  Código de verificación (6 dígitos)
                 </label>
                 <input
                   id="code"

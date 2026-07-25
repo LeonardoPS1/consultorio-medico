@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, setupToken } = body
+    const { email, setupToken, skipPasskey } = body
 
     if (!email) {
       return error('Email requerido')
@@ -38,6 +38,24 @@ export async function POST(request: Request) {
       ) {
         return error('Token de setup inválido o expirado', 401)
       }
+    }
+
+    if (skipPasskey) {
+      const { generateTotpSecret, generateTotpUri, generateTotpQrCode } = await import('@/lib/totp')
+      const totpSecret = generateTotpSecret()
+      const totpUri = generateTotpUri(totpSecret, email)
+      const qrCode = await generateTotpQrCode(totpUri)
+
+      await db
+        .update(platformOperators)
+        .set({ totpSecret, setupToken: null, setupTokenExpires: null })
+        .where(eq(platformOperators.id, operator.id))
+
+      return ok({
+        skipPasskey: true,
+        totpQrCode: qrCode,
+        totpUri,
+      })
     }
 
     const existingPasskeysRaw = await db
