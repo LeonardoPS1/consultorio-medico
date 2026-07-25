@@ -4,9 +4,9 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   serverExternalPackages: ['postgres'],
-  outputFileTracingRoot: 'D:/OPENCODE/consultorio-medico',
+  outputFileTracingRoot: '/app/D/OPENCODE/consultorio-medico',
   turbopack: {
-    root: 'D:/OPENCODE/consultorio-medico',
+    root: '/app/D/OPENCODE/consultorio-medico',
   },
   experimental: {
     serverActions: {
