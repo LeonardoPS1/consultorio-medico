@@ -18,10 +18,10 @@ RUN npm install -g pnpm@11.14.0
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY ops-console/package.json ./ops-console/package.json
-RUN pnpm install --frozen-lockfile --filter ops-console
+RUN pnpm install --frozen-lockfile --filter aicore-ops
 
 COPY ops-console/ ./ops-console/
-RUN pnpm --filter ops-console run build
+RUN pnpm --filter aicore-ops run build
 
 # ─── Stage 2: Runner ────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner

@@ -46,7 +46,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Pre-build check (ops-console)
-        run: pnpm --filter ops-console run build
+        run: pnpm --filter aicore-ops run build
 
       - name: Build and push ops-console image
         uses: docker/build-push-action@v5
