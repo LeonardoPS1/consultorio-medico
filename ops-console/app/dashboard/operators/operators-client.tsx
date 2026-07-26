@@ -93,8 +93,82 @@ export function OperatorsClient({
     setEditingId(null)
   }
 
+  const currentOp = operators.find(o => o.id === currentOperatorId)
+
   return (
     <div className="space-y-6">
+      {currentOp && (
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-5">
+          <h2 className="text-sm font-semibold mb-3">Mi perfil</h2>
+          <div className="flex items-center gap-4">
+            {editingId === '__self__' ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  onKeyDown={async e => {
+                    if (e.key === 'Enter') {
+                      if (!editName.trim()) return
+                      const res = await fetch('/api/operators/me', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nombre: editName.trim() }),
+                      })
+                      const data = await res.json()
+                      if (data.success) {
+                        setOperators(operators.map(o => o.id === currentOp.id ? { ...o, nombre: editName.trim() } : o))
+                        window.location.reload()
+                      }
+                      setEditingId(null)
+                    }
+                    if (e.key === 'Escape') setEditingId(null)
+                  }}
+                  className="px-2 py-1 rounded bg-[var(--bg-primary)] border border-[var(--border)] text-sm w-56 focus:outline-none focus:border-[var(--accent)]"
+                  autoFocus
+                />
+                <button
+                  onClick={async () => {
+                    if (!editName.trim()) return
+                    const res = await fetch('/api/operators/me', {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ nombre: editName.trim() }),
+                    })
+                    const data = await res.json()
+                    if (data.success) {
+                      setOperators(operators.map(o => o.id === currentOp.id ? { ...o, nombre: editName.trim() } : o))
+                      window.location.reload()
+                    }
+                    setEditingId(null)
+                  }}
+                  className="text-xs text-[var(--success)] hover:opacity-80"
+                >
+                  ✓
+                </button>
+                <button onClick={() => setEditingId(null)} className="text-xs text-[var(--text-muted)] hover:opacity-80">✕</button>
+              </div>
+            ) : (
+              <>
+                <div className="w-10 h-10 rounded-full bg-[var(--accent)]/20 flex items-center justify-center text-sm font-bold text-[var(--accent)]">
+                  {currentOp.nombre.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{currentOp.nombre}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{currentOp.email}</p>
+                </div>
+                <button
+                  onClick={() => { setEditingId('__self__'); setEditName(currentOp.nombre) }}
+                  className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
+                >
+                  Editar nombre
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold">Operadores</h1>
