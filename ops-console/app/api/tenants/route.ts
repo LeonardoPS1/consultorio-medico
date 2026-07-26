@@ -24,7 +24,6 @@ export async function GET(request: Request) {
         t.subdomain,
         t.activo,
         t.created_at,
-        t.config_regional,
         (SELECT COUNT(*) FROM public.usuarios u WHERE u.tenant_id = t.id) AS usuario_count,
         (SELECT COUNT(*) FROM public.pacientes p WHERE p.tenant_id = t.id) AS paciente_count,
         (SELECT COUNT(*) FROM public.turnos tu WHERE tu.tenant_id = t.id) AS turno_count,

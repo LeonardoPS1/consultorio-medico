@@ -17,7 +17,6 @@ export default async function TenantsPage() {
       t.subdomain,
       t.activo,
       t.created_at,
-      t.config_regional,
       (SELECT COUNT(*)::int FROM public.usuarios u WHERE u.tenant_id = t.id) AS usuario_count,
       (SELECT COUNT(*)::int FROM public.pacientes p WHERE p.tenant_id = t.id) AS paciente_count,
       (SELECT COUNT(*)::int FROM public.turnos tu WHERE tu.tenant_id = t.id) AS turno_count,
@@ -32,7 +31,6 @@ export default async function TenantsPage() {
     subdomain: string | null
     activo: boolean
     created_at: Date
-    config_regional: any
     usuario_count: number
     paciente_count: number
     turno_count: number
