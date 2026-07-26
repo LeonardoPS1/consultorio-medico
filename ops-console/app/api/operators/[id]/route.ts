@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db'
 import { platformOperators } from '@/drizzle/schema'
 import { eq } from 'drizzle-orm'
 import { logAudit } from '@/lib/audit'
+import { createSessionToken, setSessionCookie } from '@/lib/auth'
 import { ok, error, serverError, unauthorized, notFound } from '@/lib/api-handler'
 
 export const dynamic = 'force-dynamic'
@@ -21,7 +22,7 @@ export async function PATCH(
     const db = getDb()
 
     const existing = await db
-      .select({ id: platformOperators.id, email: platformOperators.email, activo: platformOperators.activo })
+      .select({ id: platformOperators.id, email: platformOperators.email, nombre: platformOperators.nombre, activo: platformOperators.activo })
       .from(platformOperators)
       .where(eq(platformOperators.id, id))
       .limit(1)
@@ -52,6 +53,15 @@ export async function PATCH(
         .update(platformOperators)
         .set({ nombre: body.nombre })
         .where(eq(platformOperators.id, id))
+
+      if (id === operatorId) {
+        const newToken = await createSessionToken({
+          id: operatorId,
+          email: operatorEmail,
+          nombre: body.nombre,
+        })
+        await setSessionCookie(newToken.token)
+      }
     }
 
     if (body.regenerateSetupToken !== undefined) {

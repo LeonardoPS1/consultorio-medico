@@ -27,9 +27,9 @@ export default async function TenantDetailPage({
       t.dominio_custom,
       (SELECT COUNT(*)::int FROM public.usuarios u WHERE u.tenant_id = t.id) AS usuario_count,
       (SELECT COUNT(*)::int FROM public.pacientes p WHERE p.tenant_id = t.id) AS paciente_count,
-      (SELECT COUNT(*)::int FROM public.turnos tu WHERE tu.tenant_id = t.id) AS turno_count,
+      (SELECT COUNT(*)::int FROM public.turnos tu JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE s.tenant_id = t.id) AS turno_count,
       (SELECT COUNT(*)::int FROM public.recetas r WHERE r.tenant_id = t.id) AS receta_count,
-      (SELECT MAX(tu.fecha) FROM public.turnos tu WHERE tu.tenant_id = t.id) AS ultimo_turno,
+      (SELECT MAX(tu.fecha_hora) FROM public.turnos tu JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE s.tenant_id = t.id) AS ultimo_turno,
       (SELECT MAX(r.created_at) FROM public.recetas r WHERE r.tenant_id = t.id) AS ultima_receta,
       (SELECT COUNT(*)::int FROM platform.platform_audit_log al WHERE al.tenant_afectado = t.nombre AND al.created_at > now() - interval '7 days') AS audit_7d
     FROM public.tenants t

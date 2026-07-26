@@ -4,6 +4,9 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'AicoreOps — Panel de Plataforma',
   description: 'Monitoreo y soporte multi-tenant de AicoreMed',
+  icons: {
+    icon: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({

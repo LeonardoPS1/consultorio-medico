@@ -81,14 +81,26 @@ export function OperatorsClient({
       setEditingId(null)
       return
     }
-    const res = await fetch(`/api/operators/${op.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre: editName.trim() }),
-    })
-    const data = await res.json()
-    if (data.success) {
-      setOperators(operators.map(o => o.id === op.id ? { ...o, nombre: editName.trim() } : o))
+    if (op.id === currentOperatorId) {
+      const res = await fetch('/api/operators/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: editName.trim() }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        window.location.reload()
+      }
+    } else {
+      const res = await fetch(`/api/operators/${op.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: editName.trim() }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setOperators(operators.map(o => o.id === op.id ? { ...o, nombre: editName.trim() } : o))
+      }
     }
     setEditingId(null)
   }
