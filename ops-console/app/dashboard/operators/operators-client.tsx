@@ -61,6 +61,9 @@ export function OperatorsClient({
     }
   }
 
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+
   async function toggleActive(op: Operator) {
     const res = await fetch(`/api/operators/${op.id}`, {
       method: 'PATCH',
@@ -71,6 +74,23 @@ export function OperatorsClient({
     if (data.success) {
       setOperators(operators.map(o => o.id === op.id ? { ...o, activo: !op.activo } : o))
     }
+  }
+
+  async function updateName(op: Operator) {
+    if (!editName.trim() || editName.trim() === op.nombre) {
+      setEditingId(null)
+      return
+    }
+    const res = await fetch(`/api/operators/${op.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: editName.trim() }),
+    })
+    const data = await res.json()
+    if (data.success) {
+      setOperators(operators.map(o => o.id === op.id ? { ...o, nombre: editName.trim() } : o))
+    }
+    setEditingId(null)
   }
 
   return (
@@ -145,9 +165,32 @@ export function OperatorsClient({
             {operators.map(op => (
               <tr key={op.id} className="border-b border-[var(--border)] hover:bg-[var(--bg-hover)] transition-colors">
                 <td className="py-3 px-4 font-medium">
-                  {op.nombre}
-                  {op.id === currentOperatorId && (
-                    <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-[var(--accent)]/20 text-[var(--accent)]">tú</span>
+                  {editingId === op.id ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') updateName(op); if (e.key === 'Escape') setEditingId(null) }}
+                        className="px-2 py-1 rounded bg-[var(--bg-primary)] border border-[var(--border)] text-sm w-40 focus:outline-none focus:border-[var(--accent)]"
+                        autoFocus
+                      />
+                      <button onClick={() => updateName(op)} className="text-xs text-[var(--success)] hover:opacity-80">✓</button>
+                      <button onClick={() => setEditingId(null)} className="text-xs text-[var(--text-muted)] hover:opacity-80">✕</button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => { setEditingId(op.id); setEditName(op.nombre) }}
+                        className="hover:text-[var(--accent)] transition-colors text-left"
+                        title="Editar nombre"
+                      >
+                        {op.nombre}
+                      </button>
+                      {op.id === currentOperatorId && (
+                        <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-[var(--accent)]/20 text-[var(--accent)]">tú</span>
+                      )}
+                    </>
                   )}
                 </td>
                 <td className="py-3 px-4 text-[var(--text-secondary)]">{op.email}</td>

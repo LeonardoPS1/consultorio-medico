@@ -45,7 +45,7 @@ if (!rawUrl) {
 const SUPERUSER_URL: string = rawUrl
 
 const SETUP_EMAIL = process.env.OPS_SETUP_EMAIL || 'leo@aicorebots.com'
-const SETUP_NOMBRE = process.env.OPS_SETUP_NOMBRE || 'Leonardo Piombi'
+const SETUP_NOMBRE = process.env.OPS_SETUP_NOMBRE || 'Leonardo Spedaletti'
 const OPS_PASSWORD = process.env.OPS_PASSWORD || randomBytes(16).toString('hex')
 
 function generateSetupToken(): { token: string; hash: string } {
