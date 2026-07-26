@@ -6,6 +6,7 @@ const PUBLIC_PATHS = [
   '/api/auth/register/complete',
   '/api/auth/login/begin',
   '/api/auth/login/complete',
+  '/api/auth/logout',
   '/api/auth/totp/setup',
   '/api/auth/totp/verify',
   '/api/auth/session',
@@ -102,7 +103,7 @@ export async function proxy(request: NextRequest) {
       )
       return addSecurityHeaders(response)
     }
-  } else if (isApiRoute) {
+  } else if (isApiRoute && !pathname.startsWith('/api/auth/logout')) {
     const { allowed, remaining, resetAt } = checkRateLimit(rateLimitKey, RATE_LIMIT_MAX_API)
     if (!allowed) {
       const retryAfter = Math.ceil((resetAt - Date.now()) / 1000)
@@ -153,11 +154,13 @@ export async function proxy(request: NextRequest) {
   requestHeaders.set('x-operator-nombre', session.nombre)
   requestHeaders.set('x-session-jti', session.jti)
 
+  const isCrossTenant = CROSS_TENANT_PATHS.some(p => pathname.startsWith(p))
+
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   })
 
-  if (CROSS_TENANT_PATHS.some(p => pathname.startsWith(p))) {
+  if (isCrossTenant) {
     response.headers.set('x-ops-audit', '1')
     response.headers.set('x-ops-audit-path', pathname)
   }

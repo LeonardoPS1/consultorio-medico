@@ -1,0 +1,108 @@
+import { getDb } from '@/lib/db'
+import { sql } from 'drizzle-orm'
+import { getSessionFromCookie } from '@/lib/auth'
+import { notFound } from 'next/navigation'
+
+export const dynamic = 'force-dynamic'
+
+export default async function TenantDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const session = await getSessionFromCookie()
+  if (!session) return null
+
+  const { id } = await params
+  const db = getDb()
+
+  const [tenantResult] = await db.execute(sql`
+    SELECT
+      t.id,
+      t.nombre,
+      t.subdomain,
+      t.activo,
+      t.created_at,
+      t.plan,
+      t.dominio_custom,
+      (SELECT COUNT(*)::int FROM public.usuarios u WHERE u.tenant_id = t.id) AS usuario_count,
+      (SELECT COUNT(*)::int FROM public.pacientes p WHERE p.tenant_id = t.id) AS paciente_count,
+      (SELECT COUNT(*)::int FROM public.turnos tu WHERE tu.tenant_id = t.id) AS turno_count,
+      (SELECT COUNT(*)::int FROM public.recetas r WHERE r.tenant_id = t.id) AS receta_count,
+      (SELECT MAX(tu.fecha) FROM public.turnos tu WHERE tu.tenant_id = t.id) AS ultimo_turno,
+      (SELECT MAX(r.created_at) FROM public.recetas r WHERE r.tenant_id = t.id) AS ultima_receta,
+      (SELECT COUNT(*)::int FROM platform.platform_audit_log al WHERE al.tenant_afectado = t.nombre AND al.created_at > now() - interval '7 days') AS audit_7d
+    FROM public.tenants t
+    WHERE t.id = ${id}
+  `)
+
+  if (!tenantResult) notFound()
+
+  const t = tenantResult as Record<string, unknown>
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <a href="/dashboard/tenants" className="text-sm text-[var(--accent)] hover:underline mb-2 inline-block">
+          ← Volver a tenants
+        </a>
+        <h1 className="text-xl font-bold">{t.nombre as string}</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
+          {t.subdomain ? `${t.subdomain}.aicorebots.com` : 'Sin subdominio'}
+          <span className="mx-2">·</span>
+          Plan: {String(t.plan || 'free')}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatBox label="Usuarios" value={String(t.usuario_count || 0)} />
+        <StatBox label="Pacientes" value={String(t.paciente_count || 0)} />
+        <StatBox label="Turnos" value={String(t.turno_count || 0)} />
+        <StatBox label="Recetas" value={String(t.receta_count || 0)} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <InfoCard title="Información general">
+          <InfoRow label="ID" value={t.id as string} mono />
+          <InfoRow label="Estado" value={t.activo ? 'Activo' : 'Inactivo'} />
+          <InfoRow label="Creado" value={new Date(t.created_at as string).toLocaleString('es-CL')} />
+          <InfoRow label="Plan" value={String(t.plan || 'free')} />
+          <InfoRow label="Dominio custom" value={String(t.dominio_custom || '—')} />
+        </InfoCard>
+
+        <InfoCard title="Actividad reciente">
+          <InfoRow label="Último turno" value={t.ultimo_turno ? new Date(t.ultimo_turno as string).toLocaleDateString('es-CL') : '—'} />
+          <InfoRow label="Última receta" value={t.ultima_receta ? new Date(t.ultima_receta as string).toLocaleDateString('es-CL') : '—'} />
+          <InfoRow label="Auditoría (7d)" value={String(t.audit_7d || 0)} />
+        </InfoCard>
+      </div>
+    </div>
+  )
+}
+
+function StatBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
+      <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">{label}</p>
+      <p className="text-2xl font-bold mt-1">{value}</p>
+    </div>
+  )
+}
+
+function InfoCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-5">
+      <h2 className="text-sm font-semibold mb-3">{title}</h2>
+      <div className="space-y-2">{children}</div>
+    </div>
+  )
+}
+
+function InfoRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex justify-between text-sm py-1">
+      <span className="text-[var(--text-secondary)]">{label}</span>
+      <span className={`${mono ? 'font-mono text-xs' : ''} text-right max-w-[60%] truncate`}>{value}</span>
+    </div>
+  )
+}

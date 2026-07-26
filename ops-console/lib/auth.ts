@@ -1,16 +1,10 @@
-import { SignJWT, jwtVerify, type JWTPayload } from 'jose'
+import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { v4 as uuidv4 } from 'uuid'
+import type { OpsSessionPayload } from '@/types'
 
 const SESSION_COOKIE = '__Secure-ops.session'
 const SESSION_DURATION = 4 * 60 * 60 // 4 horas en segundos
-
-export interface OpsSessionPayload extends JWTPayload {
-  sub: string
-  email: string
-  nombre: string
-  jti: string
-}
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.OPS_JWT_SECRET

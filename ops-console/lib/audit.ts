@@ -1,17 +1,6 @@
-import { eq } from 'drizzle-orm'
 import { getDb } from './db'
 import { platformAuditLog } from '../drizzle/schema'
-
-export interface AuditEntry {
-  operatorId?: string
-  operatorEmail: string
-  accion: string
-  tenantAfectado?: string
-  recurso?: string
-  motivo?: string
-  ipAddress?: string
-  detalles?: Record<string, unknown>
-}
+import type { AuditEntry } from '@/types'
 
 export async function logAudit(entry: AuditEntry) {
   try {

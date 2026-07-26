@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 import { getSessionFromCookie } from '@/lib/auth'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,7 +63,11 @@ export default async function TenantsPage() {
           <tbody>
             {tenantsList.map(t => (
               <tr key={t.id} className="border-b border-[var(--border)] hover:bg-[var(--bg-hover)] transition-colors">
-                <td className="py-3 px-4 font-medium">{t.nombre}</td>
+                <td className="py-3 px-4 font-medium">
+                  <Link href={`/dashboard/tenants/${t.id}`} className="hover:text-[var(--accent)] transition-colors">
+                    {t.nombre}
+                  </Link>
+                </td>
                 <td className="py-3 px-4 text-[var(--text-secondary)] font-mono text-xs">
                   {t.subdomain || '—'}
                 </td>
