@@ -38,23 +38,38 @@ export async function POST(request: Request) {
       .from(platformPasskeys)
       .where(eq(platformPasskeys.operatorId, operator.id))
 
-    if (passkeysRaw.length === 0) {
-      return error('No hay passkeys registrados. Usa el setup inicial.', 400)
+    const hasPasskeys = passkeysRaw.length > 0
+    const hasTotp = !!operator.totpSecret
+
+    if (!hasPasskeys && !hasTotp) {
+      return error('No hay métodos de autenticación configurados. Contacta al administrador.', 400)
     }
 
-    const credentials: PasskeyCredential[] = passkeysRaw.map(pk => ({
-      id: pk.credentialId,
-      publicKey: pk.publicKey,
-      counter: Number(pk.counter),
-      transports: (pk.transports || []) as PasskeyCredential['transports'],
-    }))
+    if (hasPasskeys) {
+      const credentials: PasskeyCredential[] = passkeysRaw.map(pk => ({
+        id: pk.credentialId,
+        publicKey: pk.publicKey,
+        counter: Number(pk.counter),
+        transports: (pk.transports || []) as PasskeyCredential['transports'],
+      }))
 
-    const options = await generateLogin(credentials)
+      const options = await generateLogin(credentials)
+
+      return ok({
+        operatorId: operator.id,
+        hasPasskeys: true,
+        hasTotp,
+        requiresTotp: hasTotp,
+        options,
+      })
+    }
 
     return ok({
       operatorId: operator.id,
-      requiresTotp: operator.totpVerified,
-      options,
+      hasPasskeys: false,
+      hasTotp: true,
+      requiresTotp: true,
+      options: null,
     })
   } catch (err) {
     return serverError(err)
