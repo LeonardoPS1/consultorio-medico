@@ -39,10 +39,10 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
 COPY --from=builder --chown=nextjs:nodejs /app/ops-console/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/ops-console/.next/static ./.next/static
-COPY --from=builder --chown=nodejs:nodejs /app/ops-console/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/ops-console/.next/static ./ops-console/.next/static
+COPY --from=builder --chown=nodejs:nodejs /app/ops-console/public ./ops-console/public
 
-RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
+RUN mkdir -p ops-console/.next/cache && chown -R nextjs:nodejs ops-console
 
 USER nextjs
 
@@ -51,4 +51,4 @@ EXPOSE 3002
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://127.0.0.1:3002/api/health || exit 1
 
-CMD ["node", "server.js"]
+CMD ["node", "ops-console/server.js"]
