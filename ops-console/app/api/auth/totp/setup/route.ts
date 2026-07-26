@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server'
 import { eq } from 'drizzle-orm'
 import { getDb } from '@/lib/db'
 import { platformOperators } from '@/drizzle/schema'
 import { generateTotpSecret, generateTotpUri, generateTotpQrCode } from '@/lib/totp'
+import { totpSetupSchema } from '@/lib/validation'
 import { ok, error, serverError } from '@/lib/api-handler'
 
 export const dynamic = 'force-dynamic'
@@ -10,11 +10,11 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email } = body
-
-    if (!email) {
-      return error('Email requerido')
+    const parsed = totpSetupSchema.safeParse(body)
+    if (!parsed.success) {
+      return error(parsed.error.errors[0].message, 400)
     }
+    const { email } = parsed.data
 
     const db = getDb()
 

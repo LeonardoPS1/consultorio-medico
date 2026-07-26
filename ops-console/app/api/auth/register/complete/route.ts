@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db'
 import { platformOperators, platformPasskeys } from '@/drizzle/schema'
 import { verifyRegistration, type PasskeyCredential } from '@/lib/webauthn'
 import { generateTotpSecret, generateTotpUri, generateTotpQrCode } from '@/lib/totp'
+import { registerCompleteSchema } from '@/lib/validation'
 import { ok, error, serverError } from '@/lib/api-handler'
 
 export const dynamic = 'force-dynamic'
@@ -10,11 +11,11 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, credential, challenge } = body
-
-    if (!email || !credential || !challenge) {
-      return error('Email, credential y challenge requeridos')
+    const parsed = registerCompleteSchema.safeParse(body)
+    if (!parsed.success) {
+      return error(parsed.error.errors[0].message, 400)
     }
+    const { email, credential, challenge } = parsed.data
 
     const db = getDb()
 
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
       credentialId: credentialID,
       publicKey: btoa(String.fromCharCode(...new Uint8Array(credentialPublicKey))),
       counter: BigInt(counter),
-      transports: credential.response?.transports || [],
+      transports: (credential as { response?: { transports?: string[] } }).response?.transports || [],
     })
 
     await db

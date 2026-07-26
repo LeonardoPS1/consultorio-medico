@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db'
 import { platformOperators, platformSessions } from '@/drizzle/schema'
 import { verifyTotpCode } from '@/lib/totp'
 import { createSessionToken, setSessionCookie } from '@/lib/auth'
+import { totpVerifySchema } from '@/lib/validation'
 import { ok, error, serverError, unauthorized } from '@/lib/api-handler'
 
 export const dynamic = 'force-dynamic'
@@ -10,11 +11,11 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, token, partialToken: partialCredentialId } = body
-
-    if (!email || !token) {
-      return error('Email y código TOTP requeridos')
+    const parsed = totpVerifySchema.safeParse(body)
+    if (!parsed.success) {
+      return error(parsed.error.errors[0].message, 400)
     }
+    const { email, token } = parsed.data
 
     const db = getDb()
 

@@ -4,6 +4,7 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   serverExternalPackages: ['postgres'],
+  turbopack: {},
   experimental: {
     serverActions: {
       bodySizeLimit: '1mb',
@@ -11,4 +12,19 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+let config = nextConfig
+
+try {
+  const { withSentryConfig } = require('@sentry/nextjs')
+  config = withSentryConfig(config, {
+    silent: !process.env.CI,
+    sourcemaps: {
+      disable: true,
+    },
+    widenClientFileUpload: false,
+    tunnelRoute: '/monitoring',
+  })
+} catch {
+}
+
+module.exports = config

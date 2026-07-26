@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { getDb } from '@/lib/db'
 import { platformOperators, platformPasskeys } from '@/drizzle/schema'
 import { generateLogin, type PasskeyCredential } from '@/lib/webauthn'
+import { loginBeginSchema } from '@/lib/validation'
 import { ok, error, serverError, unauthorized } from '@/lib/api-handler'
 
 export const dynamic = 'force-dynamic'
@@ -9,11 +10,11 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email } = body
-
-    if (!email) {
-      return error('Email requerido')
+    const parsed = loginBeginSchema.safeParse(body)
+    if (!parsed.success) {
+      return error(parsed.error.errors[0].message, 400)
     }
+    const { email } = parsed.data
 
     const db = getDb()
 

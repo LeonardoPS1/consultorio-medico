@@ -12,6 +12,7 @@
     "bootstrap": "tsx scripts/bootstrap-ops.ts"
   },
   "dependencies": {
+    "@sentry/nextjs": "^9.12.0",
     "@simplewebauthn/browser": "^10.0.0",
     "@simplewebauthn/server": "^10.0.0",
     "drizzle-orm": "^0.31.0",

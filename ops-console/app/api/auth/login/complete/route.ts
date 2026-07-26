@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db'
 import { platformOperators, platformPasskeys, platformSessions } from '@/drizzle/schema'
 import { verifyLogin } from '@/lib/webauthn'
 import { createSessionToken, setSessionCookie } from '@/lib/auth'
+import { loginCompleteSchema } from '@/lib/validation'
 
 type AuthenticatorTransport = 'ble' | 'internal' | 'nfc' | 'usb' | 'hybrid'
 import { ok, error, serverError, unauthorized } from '@/lib/api-handler'
@@ -12,7 +13,12 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, credential, challenge, operatorId } = body
+    const parsed = loginCompleteSchema.safeParse(body)
+    if (!parsed.success) {
+      return error(parsed.error.errors[0].message, 400)
+    }
+    const { email, credential, challenge } = parsed.data
+    const operatorId = parsed.data.operatorId
 
     if (!email || !credential || !challenge) {
       return error('Email, credential y challenge requeridos')
@@ -46,7 +52,7 @@ export async function POST(request: Request) {
       .from(platformPasskeys)
       .where(eq(platformPasskeys.operatorId, operator.id))
 
-    const passkey = passkeysRaw.find(pk => pk.credentialId === credential.id)
+    const passkey = passkeysRaw.find(pk => pk.credentialId === (credential as { id: string }).id)
     if (!passkey) {
       return error('Passkey no encontrado', 404)
     }
