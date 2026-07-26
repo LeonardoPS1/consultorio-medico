@@ -51,7 +51,7 @@ jobs:
       - name: Build and push ops-console image
         uses: docker/build-push-action@v5
         with:
-          context: ./ops-console
+          context: .
           file: ./ops-console/Dockerfile
           push: true
           tags: |
