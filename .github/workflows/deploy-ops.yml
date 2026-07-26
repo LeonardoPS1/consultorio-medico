@@ -43,7 +43,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Pre-build check (ops-console)
         run: pnpm --filter ops-console run build
