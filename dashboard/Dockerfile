@@ -6,12 +6,12 @@
 # Run:     docker run -p 3000:3000 consultorio-medico-dashboard
 # =============================================================================
 
-# ─── Stage 1: Dependencies ───────────────────────────────────────────────────
+# ─── Stage 1: Dependencias ───────────────────────────────────────────────────
 FROM node:22-alpine AS deps
 WORKDIR /app
 
 # Cache buster
-ARG CACHEBUST=1
+ARG CACHEBUST=15
 RUN echo "Cache bust: $CACHEBUST"
 
 # Corepack para pnpm
@@ -36,7 +36,7 @@ WORKDIR /app
 
 # Cache buster: cambiar este valor para forzar rebuild completo
 # Debe declararse en CADA stage donde se necesita invalidar cache
-ARG CACHEBUST=1
+ARG CACHEBUST=15
 ARG GIT_COMMIT=unknown
 ARG BUILD_TIME=unknown
 RUN echo "Cache bust: $CACHEBUST"
@@ -93,8 +93,7 @@ EXPOSE 3000
 
 # Health check: usa curl (más compatible con Docker Swarm).
 # Usa 127.0.0.1 en vez de localhost para evitar problemas de DNS.
-# Verifica solo que el servidor responde, no conectividad DB.
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -f http://127.0.0.1:3000/ || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3000 || exit 1
 
 CMD ["node", "dashboard/server.js"]
