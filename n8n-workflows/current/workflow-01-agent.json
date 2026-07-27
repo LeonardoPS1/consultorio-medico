@@ -34,9 +34,18 @@
                 "operation": "isNotEmpty",
                 "name": "filter.operator.isNotEmpty"
               }
+            },
+            {
+              "leftValue": "={{ $json.mensaje }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty",
+                "name": "filter.operator.isNotEmpty"
+              }
             }
           ],
-          "combinator": "and"
+          "combinator": "or"
         },
         "options": {}
       },
@@ -54,32 +63,47 @@
           "assignments": [
             {
               "name": "phone",
-              "value": "={{ $json.body.From.replace('whatsapp:', '') }}",
+              "value": "={{ $json.canal === 'chatwoot' ? $json.telefono : $json.body.From.replace('whatsapp:', '') }}",
               "type": "string"
             },
             {
               "name": "message",
-              "value": "={{ $json.body.Body }}",
+              "value": "={{ $json.canal === 'chatwoot' ? $json.mensaje : $json.body.Body }}",
               "type": "string"
             },
             {
               "name": "profileName",
-              "value": "={{ $json.body.ProfileName || 'Paciente' }}",
+              "value": "={{ $json.canal === 'chatwoot' ? ($json.nombrePaciente || 'Paciente') : ($json.body.ProfileName || 'Paciente') }}",
               "type": "string"
             },
             {
               "name": "twilioSid",
-              "value": "={{ $json.body.SmsSid }}",
+              "value": "={{ $json.canal === 'chatwoot' ? ('chatwoot_' + ($json.chatwootConversationId || Date.now())) : $json.body.SmsSid }}",
               "type": "string"
             },
             {
               "name": "toNumber",
-              "value": "={{ $json.body.To }}",
+              "value": "={{ $json.canal === 'chatwoot' ? 'whatsapp:chatwoot' : $json.body.To }}",
               "type": "string"
             },
             {
               "name": "fromNumber",
-              "value": "={{ $json.body.From }}",
+              "value": "={{ $json.canal === 'chatwoot' ? ('whatsapp:' + $json.telefono) : $json.body.From }}",
+              "type": "string"
+            },
+            {
+              "name": "canal",
+              "value": "={{ $json.canal || 'twilio' }}",
+              "type": "string"
+            },
+            {
+              "name": "chatwootConversationId",
+              "value": "={{ $json.chatwootConversationId || 0 }}",
+              "type": "number"
+            },
+            {
+              "name": "pacienteId",
+              "value": "={{ $json.pacienteId || '' }}",
               "type": "string"
             }
           ]
@@ -144,7 +168,7 @@
     },
     {
       "parameters": {
-        "code": "// Obtener datos del paciente\nconst paciente = $(\"Obtener o Crear Paciente\").first().json;\nconst turnos = $(\"Consultar Turnos del Paciente\").all().map(i => i.json);\nconst recetas = $(\"Consultar Recetas Activas\").all().map(i => i.json).filter(r => r.estado === 'activa' || r.estado === 'pendiente');\nconst extraer = $(\"Extraer Datos\").first().json;\n\nconst esc = (s) => (s || '').replace(/'/g, \"''\");\n\nconst turnosTexto = turnos.length > 0\n  ? turnos.map(t => `- ${new Date(t.fecha_hora).toLocaleDateString(\"es-AR\", {weekday: \"long\", day: \"numeric\", month: \"long\"})} con Dr. ${t.medico_nombre} (${t.motivo || 'consulta'})`).join('\\n')\n  : 'No tiene turnos próximos.';\n\nconst recetasTexto = recetas.length > 0\n  ? recetas.map(r => `- ${r.medicamento} ${r.dosis || ''}`).join('\\n')\n  : 'No tiene recetas activas.';\n\nconst fechaActual = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });\n\n// TRIAGE system prompt - clasifica y deriva\nconst triajePrompt = `Sos el asistente de atención inicial del Consultorio Médico. Atendés pacientes por WhatsApp.\n\nFecha actual: ${fechaActual}\n\n=== DATOS DEL PACIENTE ===\nNombre: ${paciente.nombre || extraer.profileName}\nTeléfono: ${paciente.telefono}\n\n=== TURNOS PRÓXIMOS ===\n${turnosTexto}\n\n=== RECETAS ACTIVAS ===\n${recetasTexto}\n\n=== INSTRUCCIONES ===\nRespondé en español argentino, con tono cálido y profesional. Sé breve.\n\nFUNCIONES:\n- Saludar y responder info general (horarios: Lun-Vie 8-20hs, Sáb 9-13hs)\n- Informar turnos próximos y recetas activas del paciente\n- Derivar urgencias (decí \"Si es una emergencia, dirigite a la guardia o llamá al 107\")\n- Si el paciente QUIERE crear/cancelar/modificar/consultar un turno: decile \"Dale, te paso con el área de turnos\" y agregÁ al final: ###HANDOFF###\\n{\"destino\":\"agenda\"}\\n###FIN###\n- Si el paciente pregunta por recetas o consultas clínicas: decile \"Te paso con el área de recetas\" y agregÁ: ###HANDOFF###\\n{\"destino\":\"clinico\"}\\n###FIN###\n- Para TODO lo que no sea saludo/info general/urgencia, usÁ HANDOFF\n- NO inventes diagnósticos ni recetes medicamentos`;\n\n// Pasar también datos estructurados para los sub-agentes\nreturn [{\n  paciente: { id: paciente.id, telefono: paciente.telefono, nombre: paciente.nombre || extraer.profileName, apellido: paciente.apellido || '' },\n  turnosProximos: turnos.map(t => ({ id: t.id, fecha: t.fecha_hora, medico: t.medico_nombre, especialidad: t.especialidad, motivo: t.motivo, estado: t.estado })),\n  recetasActivas: recetas.map(r => ({ id: r.id, medicamento: r.medicamento, dosis: r.dosis, indicaciones: r.indicaciones, estado: r.estado })),\n  phone: extraer.phone,\n  message: extraer.message,\n  profileName: extraer.profileName,\n  twilioSid: extraer.twilioSid,\n  toNumber: extraer.toNumber,\n  fromNumber: extraer.fromNumber,\n  systemPrompt: triajePrompt\n}];"
+        "code": "// Obtener datos del paciente\nconst paciente = $(\"Obtener o Crear Paciente\").first().json;\nconst turnos = $(\"Consultar Turnos del Paciente\").all().map(i => i.json);\nconst recetas = $(\"Consultar Recetas Activas\").all().map(i => i.json).filter(r => r.estado === 'activa' || r.estado === 'pendiente');\nconst extraer = $(\"Extraer Datos\").first().json;\n\nconst esc = (s) => (s || '').replace(/'/g, \"''\");\n\nconst turnosTexto = turnos.length > 0\n  ? turnos.map(t => `- ${new Date(t.fecha_hora).toLocaleDateString(\"es-AR\", {weekday: \"long\", day: \"numeric\", month: \"long\"})} con Dr. ${t.medico_nombre} (${t.motivo || 'consulta'})`).join('\\n')\n  : 'No tiene turnos próximos.';\n\nconst recetasTexto = recetas.length > 0\n  ? recetas.map(r => `- ${r.medicamento} ${r.dosis || ''}`).join('\\n')\n  : 'No tiene recetas activas.';\n\nconst fechaActual = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });\n\n// TRIAGE system prompt - clasifica y deriva\nconst triajePrompt = `Sos el asistente de atención inicial del Consultorio Médico. Atendés pacientes por WhatsApp.\n\nFecha actual: ${fechaActual}\n\n=== DATOS DEL PACIENTE ===\nNombre: ${paciente.nombre || extraer.profileName}\nTeléfono: ${paciente.telefono}\n\n=== TURNOS PRÓXIMOS ===\n${turnosTexto}\n\n=== RECETAS ACTIVAS ===\n${recetasTexto}\n\n=== INSTRUCCIONES ===\nRespondé en español argentino, con tono cálido y profesional. Sé breve.\n\nFUNCIONES:\n- Saludar y responder info general (horarios: Lun-Vie 8-20hs, Sáb 9-13hs)\n- Informar turnos próximos y recetas activas del paciente\n- Derivar urgencias (decí \"Si es una emergencia, dirigite a la guardia o llamá al 107\")\n- Si el paciente QUIERE crear/cancelar/modificar/consultar un turno: decile \"Dale, te paso con el área de turnos\" y agregÁ al final: ###HANDOFF###\\n{\"destino\":\"agenda\"}\\n###FIN###\n- Si el paciente pregunta por recetas o consultas clínicas: decile \"Te paso con el área de recetas\" y agregÁ: ###HANDOFF###\\n{\"destino\":\"clinico\"}\\n###FIN###\n- Para TODO lo que no sea saludo/info general/urgencia, usÁ HANDOFF\n- NO inventes diagnósticos ni recetes medicamentos`;\n\n// Pasar también datos estructurados para los sub-agentes\nreturn [{\n  paciente: { id: paciente.id, telefono: paciente.telefono, nombre: paciente.nombre || extraer.profileName, apellido: paciente.apellido || '' },\n  turnosProximos: turnos.map(t => ({ id: t.id, fecha: t.fecha_hora, medico: t.medico_nombre, especialidad: t.especialidad, motivo: t.motivo, estado: t.estado })),\n  recetasActivas: recetas.map(r => ({ id: r.id, medicamento: r.medicamento, dosis: r.dosis, indicaciones: r.indicaciones, estado: r.estado })),\n  phone: extraer.phone,\n  message: extraer.message,\n  profileName: extraer.profileName,\n  twilioSid: extraer.twilioSid,\n  toNumber: extraer.toNumber,\n  fromNumber: extraer.fromNumber,\n  canal: extraer.canal,\n  chatwootConversationId: extraer.chatwootConversationId,\n  systemPrompt: triajePrompt\n}];"
       },
       "name": "Construir Contexto Paciente",
       "type": "n8n-nodes-base.code",
@@ -220,7 +244,7 @@
     },
     {
       "parameters": {
-        "code": "// Parsear output del Triaje Agent para detectar HANDOFF\nconst rawText = $input.first().json.agentOutput || $input.first().json.output || '';\nconst ctx = $(\"Construir Contexto Paciente\").first().json;\n\n// Buscar handoff marker\nconst handoffMatch = rawText.match(/###HANDOFF###\\n([\\s\\S]*?)\\n###FIN###/);\nlet destino = null;\nlet textoLimpio = rawText;\n\nif (handoffMatch) {\n  try {\n    const parsed = JSON.parse(handoffMatch[1].trim());\n    destino = parsed.destino;\n    textoLimpio = rawText.replace(/###HANDOFF###[\\s\\S]*?###FIN###/, '').trim();\n  } catch (e) { destino = null; }\n}\n\nreturn [{\n  responseText: textoLimpio,\n  tieneHandoff: destino !== null,\n  destinoHandoff: destino,\n  // Preservar datos para downstream\n  paciente: ctx.paciente,\n  phone: ctx.phone,\n  message: ctx.message,\n  toNumber: ctx.toNumber,\n  fromNumber: ctx.fromNumber,\n  profileName: ctx.profileName,\n  twilioSid: ctx.twilioSid,\n  turnosProximos: ctx.turnosProximos\n}];"
+        "code": "// Parsear output del Triaje Agent para detectar HANDOFF\nconst rawText = $input.first().json.agentOutput || $input.first().json.output || '';\nconst ctx = $(\"Construir Contexto Paciente\").first().json;\n\n// Buscar handoff marker\nconst handoffMatch = rawText.match(/###HANDOFF###\\n([\\s\\S]*?)\\n###FIN###/);\nlet destino = null;\nlet textoLimpio = rawText;\n\nif (handoffMatch) {\n  try {\n    const parsed = JSON.parse(handoffMatch[1].trim());\n    destino = parsed.destino;\n    textoLimpio = rawText.replace(/###HANDOFF###[\\s\\S]*?###FIN###/, '').trim();\n  } catch (e) { destino = null; }\n}\n\nreturn [{\n  responseText: textoLimpio,\n  tieneHandoff: destino !== null,\n  destinoHandoff: destino,\n  // Preservar datos para downstream\n  paciente: ctx.paciente,\n  phone: ctx.phone,\n  message: ctx.message,\n  toNumber: ctx.toNumber,\n  fromNumber: ctx.fromNumber,\n  profileName: ctx.profileName,\n  twilioSid: ctx.twilioSid,\n  canal: ctx.canal,\n  chatwootConversationId: ctx.chatwootConversationId,\n  turnosProximos: ctx.turnosProximos\n}];"
       },
       "name": "Parsear Handoff",
       "type": "n8n-nodes-base.code",
@@ -399,7 +423,7 @@
     },
     {
       "parameters": {
-        "code": "// Parsear y preparar respuesta final\nconst rawText = $input.first().json.agentOutput || $input.first().json.output || '';\nconst ctx = $(\"Construir Contexto Paciente\").first().json;\nconst pacienteId = ctx.paciente?.id || $(\"Obtener o Crear Paciente\").first().json.id;\nconst extraer = $(\"Extraer Datos\").first().json;\n\n// Helper para escapar strings\nconst esc = (s) => {\n  if (!s) return '';\n  return String(s)\n    .replace(/'/g, \"''\")\n    .replace(/\\\\/g, '\\\\\\\\')\n    .replace(/\\0/g, '')\n    .replace(/\\x1a/g, '');\n};\n\n// Determinar sub-agente\nconst subAgente = $input.first().json.subAgente || 'triaje';\n\n// Buscar acción estructurada\nconst actionMatch = rawText.match(/###ACCION###\\n([\\s\\S]*?)\\n###FIN###/);\nlet accion = null;\nlet textoLimpio = rawText;\n\nif (actionMatch) {\n  try {\n    accion = JSON.parse(actionMatch[1].trim());\n    textoLimpio = rawText.replace(/###ACCION###[\\s\\S]*?###FIN###/, '').trim();\n  } catch (e) { accion = null; }\n}\n\n// SQL para guardar conversación\nconst sqlGuardar = `INSERT INTO mensajes (conversacion_id, rol, contenido, tipo, twilio_sid, n8n_execution_id) VALUES ((SELECT id FROM conversaciones WHERE paciente_id = ${pacienteId} AND estado = 'activa' LIMIT 1), 'paciente', '${esc(extraer.message)}', 'texto', '${esc(extraer.twilioSid)}', '${$execution.id}'); INSERT INTO mensajes (conversacion_id, rol, contenido, tipo, n8n_execution_id) VALUES ((SELECT id FROM conversaciones WHERE paciente_id = ${pacienteId} AND estado = 'activa' LIMIT 1), 'asistente', '${esc(textoLimpio)}', 'texto', '${$execution.id}');`;\n\n// SQL para log (con sub_agente en nivel)\nconst sqlLog = `INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje) VALUES ('${$execution.id}', 'WhatsApp Agent', '${$execution.id}', '${esc(subAgente)}', '${esc('Sub-agente: ' + subAgente + ' | Paciente: ' + (pacienteId || '') + ' | ' + textoLimpio.substring(0, 100))}');`;\n\n// SQL para registrar acción\nlet sqlAccion = null;\nif (accion) {\n  sqlAccion = `INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje) VALUES ('${$execution.id}', 'WhatsApp Agent', '${$execution.id}', '${esc(subAgente + '_accion')}', '${esc(JSON.stringify(accion))}');`;\n}\n\nconst responseText = textoLimpio || $input.first().json.responseText || 'Gracias por comunicarte con el consultorio. Te responderemos a la brevedad.';\n\nreturn [{\n  responseText: responseText,\n  subAgente: subAgente,\n  tieneAccion: accion !== null,\n  accionTipo: accion ? accion.tipo : null,\n  accionData: accion ? accion.data : null,\n  sqlGuardar: sqlGuardar,\n  sqlLog: sqlLog,\n  sqlAccion: sqlAccion,\n  phone: 'whatsapp:' + extraer.phone,\n  fromNumber: extraer.fromNumber,\n  toNumber: extraer.toNumber,\n  profileName: extraer.profileName,\n  pacienteId: pacienteId\n}];"
+        "code": "// Parsear y preparar respuesta final\nconst rawText = $input.first().json.agentOutput || $input.first().json.output || '';\nconst ctx = $(\"Construir Contexto Paciente\").first().json;\nconst pacienteId = ctx.paciente?.id || $(\"Obtener o Crear Paciente\").first().json.id;\nconst extraer = $(\"Extraer Datos\").first().json;\n\n// Helper para escapar strings\nconst esc = (s) => {\n  if (!s) return '';\n  return String(s)\n    .replace(/'/g, \"''\")\n    .replace(/\\\\/g, '\\\\\\\\')\n    .replace(/\\0/g, '')\n    .replace(/\\x1a/g, '');\n};\n\n// Determinar sub-agente\nconst subAgente = $input.first().json.subAgente || 'triaje';\n\n// Buscar acción estructurada\nconst actionMatch = rawText.match(/###ACCION###\\n([\\s\\S]*?)\\n###FIN###/);\nlet accion = null;\nlet textoLimpio = rawText;\n\nif (actionMatch) {\n  try {\n    accion = JSON.parse(actionMatch[1].trim());\n    textoLimpio = rawText.replace(/###ACCION###[\\s\\S]*?###FIN###/, '').trim();\n  } catch (e) { accion = null; }\n}\n\n// SQL para guardar conversación\nconst sqlGuardar = `INSERT INTO mensajes (conversacion_id, rol, contenido, tipo, twilio_sid, n8n_execution_id) VALUES ((SELECT id FROM conversaciones WHERE paciente_id = ${pacienteId} AND estado = 'activa' LIMIT 1), 'paciente', '${esc(extraer.message)}', 'texto', '${esc(extraer.twilioSid)}', '${$execution.id}'); INSERT INTO mensajes (conversacion_id, rol, contenido, tipo, n8n_execution_id) VALUES ((SELECT id FROM conversaciones WHERE paciente_id = ${pacienteId} AND estado = 'activa' LIMIT 1), 'asistente', '${esc(textoLimpio)}', 'texto', '${$execution.id}');`;\n\n// SQL para log (con sub_agente en nivel)\nconst sqlLog = `INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje) VALUES ('${$execution.id}', 'WhatsApp Agent', '${$execution.id}', '${esc(subAgente)}', '${esc('Sub-agente: ' + subAgente + ' | Paciente: ' + (pacienteId || '') + ' | ' + textoLimpio.substring(0, 100))}');`;\n\n// SQL para registrar acción\nlet sqlAccion = null;\nif (accion) {\n  sqlAccion = `INSERT INTO workflow_logs (workflow_id, workflow_name, execution_id, nivel, mensaje) VALUES ('${$execution.id}', 'WhatsApp Agent', '${$execution.id}', '${esc(subAgente + '_accion')}', '${esc(JSON.stringify(accion))}');`;\n}\n\nconst responseText = textoLimpio || $input.first().json.responseText || 'Gracias por comunicarte con el consultorio. Te responderemos a la brevedad.';\n\nreturn [{\n  responseText: responseText,\n  subAgente: subAgente,\n  tieneAccion: accion !== null,\n  accionTipo: accion ? accion.tipo : null,\n  accionData: accion ? accion.data : null,\n  sqlGuardar: sqlGuardar,\n  sqlLog: sqlLog,\n  sqlAccion: sqlAccion,\n  phone: 'whatsapp:' + extraer.phone,\n  fromNumber: extraer.fromNumber,\n  toNumber: extraer.toNumber,\n  profileName: extraer.profileName,\n  canal: extraer.canal,\n  chatwootConversationId: extraer.chatwootConversationId,\n  pacienteId: pacienteId\n}];"
       },
       "name": "Parsear y Preparar",
       "type": "n8n-nodes-base.code",
@@ -480,33 +504,11 @@
     },
     {
       "parameters": {
-        "url": "https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBasicAuth",
-        "sendBody": true,
-        "method": "POST",
-        "options": {},
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "From",
-              "value": "={{ $json.fromNumber }}"
-            },
-            {
-              "name": "To",
-              "value": "={{ $json.phone }}"
-            },
-            {
-              "name": "Body",
-              "value": "={{ $json.responseText }}"
-            }
-          ]
-        }
+        "code": "// Enviar mensaje seg�n canal activo\nconst input = $input.first().json;\nconst canal = input.canal || 'twilio';\nconst accountSid = $env.TWILIO_ACCOUNT_SID;\nconst authToken = $env.TWILIO_AUTH_TOKEN;\nconst dashboardUrl = $env.DASHBOARD_URL || 'https://med.aicorebots.com';\nconst internalKey = $env.INTERNAL_API_KEY || $env.NOVEDADES_INTERNAL_KEY || '';\n\nasync function sendToTwilio() {\n  const auth = Buffer.from(accountSid + ':' + authToken).toString('base64');\n  const params = new URLSearchParams({\n    From: input.fromNumber || '',\n    To: input.phone || '',\n    Body: input.responseText || ''\n  });\n\n  const res = await fetch(\n    'https://api.twilio.com/2010-04-01/Accounts/' + accountSid + '/Messages.json',\n    {\n      method: 'POST',\n      headers: {\n        'Authorization': 'Basic ' + auth,\n        'Content-Type': 'application/x-www-form-urlencoded',\n      },\n      body: params.toString(),\n    }\n  );\n  return res.json();\n}\n\nasync function sendViaDashboard() {\n  const res = await fetch(dashboardUrl + '/api/internal/enviar-mensaje', {\n    method: 'POST',\n    headers: {\n      'Content-Type': 'application/json',\n      'x-internal-key': internalKey,\n    },\n    body: JSON.stringify({\n      telefono: input.phone || '',\n      mensaje: input.responseText || '',\n      conversationId: input.chatwootConversationId || undefined,\n      pacienteId: input.pacienteId || undefined,\n    }),\n  });\n  return res.json();\n}\n\nconst result = canal === 'chatwoot' ? await sendViaDashboard() : await sendToTwilio();\n\n// Preservar campos para downstream\nreturn [{\n  ...result,\n  canal: canal,\n  tieneAccion: input.tieneAccion,\n  sqlGuardar: input.sqlGuardar,\n  sqlLog: input.sqlLog,\n  sqlAccion: input.sqlAccion,\n  responseText: input.responseText,\n  phone: input.phone,\n}];"
       },
       "name": "Twilio - Enviar WhatsApp",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         3640,
         300
