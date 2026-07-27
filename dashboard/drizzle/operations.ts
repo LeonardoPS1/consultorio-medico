@@ -205,6 +205,27 @@ export const horariosAtencion = pgTable(
 export type HorarioAtencion = InferSelectModel<typeof horariosAtencion>;
 
 // ============================================================
+// IMPERSONATION TOKENS (soporte "Entrar como")
+// ============================================================
+export const impersonationTokens = pgTable('impersonation_tokens', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  token: uuid('token').defaultRandom().notNull().unique(),
+  tenantId: uuid('tenant_id').notNull(),
+  tenantName: varchar('tenant_name', { length: 255 }).notNull(),
+  creadoPor: varchar('creado_por', { length: 255 }).notNull(),
+  creadoPorNombre: varchar('creado_por_nombre', { length: 255 }),
+  motivo: text('motivo').notNull(),
+  usado: boolean('usado').notNull().default(false),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  usadoEn: timestamp('usado_en', { withTimezone: true }),
+  usadoPor: varchar('usado_por', { length: 255 }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type ImpersonationToken = InferSelectModel<typeof impersonationTokens>;
+export type NewImpersonationToken = InferInsertModel<typeof impersonationTokens>;
+
+// ============================================================
 // RELACIONES
 // ============================================================
 export const bloqueosAgendaRelations = relations(bloqueosAgenda, ({ one }) => ({

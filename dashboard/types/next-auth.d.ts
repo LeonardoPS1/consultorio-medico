@@ -1,5 +1,4 @@
 import { DefaultSession } from 'next-auth';
-import { JWT } from 'next-auth/jwt';
 
 declare module 'next-auth' {
   interface Session {
@@ -9,6 +8,10 @@ declare module 'next-auth' {
       plan?: string;
       medicoId?: string;
       tenantId?: string;
+      isImpersonating?: boolean;
+      impersonatedBy?: string;
+      impersonatedByName?: string;
+      impersonationMotivo?: string;
     } & DefaultSession['user'];
   }
 
@@ -27,5 +30,9 @@ declare module 'next-auth/jwt' {
     plan?: string;
     medicoId?: string;
     tenantId?: string;
+    isImpersonating?: boolean;
+    impersonatedBy?: string;
+    impersonatedByName?: string;
+    impersonationMotivo?: string;
   }
 }

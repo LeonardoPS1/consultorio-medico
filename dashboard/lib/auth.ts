@@ -163,6 +163,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (token.plan) session.user.plan = token.plan;
         if (token.medicoId) session.user.medicoId = token.medicoId;
         if (token.tenantId) session.user.tenantId = token.tenantId;
+        if (token.isImpersonating) session.user.isImpersonating = true;
+        if (token.impersonatedBy) session.user.impersonatedBy = token.impersonatedBy;
+        if (token.impersonatedByName) session.user.impersonatedByName = token.impersonatedByName;
+        if (token.impersonationMotivo) session.user.impersonationMotivo = token.impersonationMotivo;
       }
       return session;
     },
