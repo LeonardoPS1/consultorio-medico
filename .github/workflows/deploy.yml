@@ -51,9 +51,9 @@ jobs:
             ghcr.io/${{ env.REPOSITORY_LC }}:${{ github.sha }}
           platforms: linux/amd64
 
-      - name: Trigger Dokploy deploy (dashboard) via Dashboard proxy
+      - name: Trigger Dokploy deploy (dashboard) via direct API
         run: |
-          curl -s -k -X POST 'https://med.aicorebots.com/api/deploy/dokploy' \
+          curl -s -k -X POST 'https://dokploy.aicorebots.com/api/application.deploy' \
             -H 'accept: application/json' \
             -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
             -H 'Content-Type: application/json' \

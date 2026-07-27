@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 
     const jwtToken = await encode({
       secret,
-      salt: '__Secure-next-auth.session-token',
+      salt: '__Secure-authjs.session-token',
       token: {
         sub: targetUser.id,
         email: targetUser.email,
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
       new URL('/dashboard', request.url),
     );
 
-    response.cookies.set('next-auth.session-token', sessionToken, {
+    response.cookies.set('authjs.session-token', sessionToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
       path: '/',
     });
 
-    response.cookies.set('__Secure-next-auth.session-token', jwtToken, {
+    response.cookies.set('__Secure-authjs.session-token', jwtToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
