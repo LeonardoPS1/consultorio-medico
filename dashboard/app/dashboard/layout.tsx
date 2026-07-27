@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
-import { ImpersonationBanner } from '@/components/impersonation-banner';
 import { CommandPalette } from '@/components/layout/command-palette';
 import { PatientPanel } from '@/components/layout/patient-panel';
 import { AsistenteFlotante } from '@/components/layout/asistente-flotante';
@@ -32,11 +31,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <PatientPanelProvider>
         <AsistenteProvider>
         <DashboardLayoutClient>
-          <div className="flex h-screen overflow-hidden bg-background">
+        <div className="flex h-screen overflow-hidden bg-background">
           <div className="ambient-bg" />
           <Sidebar />
           <div className="flex flex-1 flex-col overflow-hidden relative z-[1]">
-            <ImpersonationBanner />
             <Header />
             <CommandPalette />
             <PatientPanel />

@@ -27,7 +27,6 @@ export function getAuditAccion(pathname: string, method: string): string {
     return 'tenant.access'
   }
   if (pathname.startsWith('/api/audit')) return 'audit.query'
-  if (pathname.startsWith('/api/internal/impersonate-proxy')) return 'impersonate.start'
   if (pathname.startsWith('/api/health')) return 'health.check'
   return 'api.access'
 }
