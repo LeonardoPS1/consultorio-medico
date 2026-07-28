@@ -2,7 +2,7 @@
 # Dockerfile — Consultorio Médico Dashboard
 # Multi-stage build optimizado para Dokploy / producción
 #
-# Build:   docker build -t consultorio-medico-dashboard .
+# Build:   docker build -t consultorio-medico-dashboard dashboard/
 # Run:     docker run -p 3000:3000 consultorio-medico-dashboard
 # =============================================================================
 
@@ -10,19 +10,15 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 
-# Cache buster
 ARG CACHEBUST=15
 RUN echo "Cache bust: $CACHEBUST"
 
-# Corepack para pnpm
 RUN corepack enable && corepack prepare pnpm@11.14.0 --activate
 
-# Cache pnpm store entre builds (Docker BuildKit)
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     --mount=type=cache,target=/root/.npm \
     mkdir -p /root/.local/share/pnpm/store
 
-# Copiar solo los archivos de dependencias para cachear capa
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY dashboard/package.json ./dashboard/
 
@@ -34,26 +30,23 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
 FROM node:22-alpine AS builder
 WORKDIR /app
 
-# Cache buster: cambiar este valor para forzar rebuild completo
-# Debe declararse en CADA stage donde se necesita invalidar cache
 ARG CACHEBUST=15
 ARG GIT_COMMIT=unknown
 ARG BUILD_TIME=unknown
 RUN echo "Cache bust: $CACHEBUST"
 
-# Copiar dependencias desde stage anterior
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/dashboard/node_modules ./dashboard/node_modules
-COPY . .
 
-WORKDIR /app
+# Copy only what's needed for the build (workspace root + dashboard)
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY dashboard/ ./dashboard
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV NEXT_PUBLIC_GIT_COMMIT=$GIT_COMMIT
 ENV NEXT_PUBLIC_BUILD_TIME=$BUILD_TIME
 
-# Cache pnpm store entre builds (NO cacheamos .next/cache para forzar fresh build)
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     corepack enable && corepack prepare pnpm@11.14.0 --activate && pnpm build
 
@@ -67,32 +60,26 @@ ENV HOSTNAME="0.0.0.0"
 ENV PORT=3000
 ENV TZ=America/Santiago
 
-# Instalar curl para health check (necesario en node:22-alpine)
 RUN apk add --no-cache curl
 
-# Crear usuario no-root para seguridad
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copiar standalone output: en Next.js 16 con pnpm workspace,
-# server.js queda en dashboard/server.js (preserva el path del workspace).
+# Copy standalone output (preserves pnpm workspace path)
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/standalone ./
 
-# Copiar static assets (dentro del path dashboard/)
+# Copy static assets
 COPY --from=builder --chown=nextjs:nodejs /app/dashboard/.next/static ./dashboard/.next/static
 
-# Copiar assets públicos
+# Copy public assets
 COPY --from=builder --chown=nodejs:nodejs /app/dashboard/public ./dashboard/public
 
-# Crear directorio para cache de Next.js con permisos correctos
 RUN mkdir -p dashboard/.next/cache && chown -R nextjs:nodejs dashboard
 
 USER nextjs
 
 EXPOSE 3000
 
-# Health check: usa curl (más compatible con Docker Swarm).
-# Usa 127.0.0.1 en vez de localhost para evitar problemas de DNS.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:3000 || exit 1
 

@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend,
-} from 'recharts';
+import dynamic from 'next/dynamic';
+
+const WebVitalsLineChart = dynamic(
+  () => import('@/components/charts/web-vitals-line-chart').then((m) => ({ default: m.WebVitalsLineChart })),
+  { ssr: false },
+);
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -93,14 +95,6 @@ function formatDate(iso: string) {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
   return d.toLocaleString('es-CL');
-}
-
-function formatBucket(bucket: string, bucketType: string) {
-  if (!bucket) return '—';
-  const d = new Date(bucket.includes('T') ? bucket : bucket.replace(' ', 'T') + 'Z');
-  if (isNaN(d.getTime())) return bucket;
-  if (bucketType === 'hour') return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
-  return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
 }
 
 function categorizeUrl(url: string | null): string {
@@ -448,50 +442,7 @@ export function PortalAnalyticsClient() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {timelineChartData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={timelineChartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis
-                          dataKey="bucket"
-                          tickFormatter={(v) => formatBucket(v, bucketType)}
-                          className="text-[10px]"
-                          interval={timelineChartData.length > 10 ? Math.floor(timelineChartData.length / 7) : 0}
-                        />
-                        <YAxis className="text-[10px]" />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: 'hsl(var(--popover))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                            fontSize: '12px',
-                          }}
-                          labelFormatter={(v) => formatBucket(v, bucketType)}
-                          formatter={(value: number, name: string) => [
-                            `${formatValue(name, value)} ${METRIC_UNITS[name] || ''}`,
-                            METRIC_LABELS[name] || name,
-                          ]}
-                        />
-                        <Legend formatter={(value: string) => <span className="text-xs" title={METRIC_LABELS[value] || value}>{value}</span>} />
-                        {(['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as const).map((metric) => (
-                          <Line
-                            key={metric}
-                            type="monotone"
-                            dataKey={metric}
-                            name={metric}
-                            stroke={METRIC_COLORS[metric]}
-                            strokeWidth={2}
-                            dot={false}
-                            connectNulls
-                          />
-                        ))}
-                      </LineChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p className="text-sm text-muted-foreground py-12 text-center">
-                      Sin datos suficientes para tendencia
-                    </p>
-                  )}
+                  <WebVitalsLineChart data={timelineChartData} bucketType={bucketType} />
                 </CardContent>
               </Card>
             </TabsContent>

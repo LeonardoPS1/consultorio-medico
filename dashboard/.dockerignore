@@ -1,4 +1,4 @@
-# Dependencias
+# Dependencias (ya cacheadas por stage deps)
 node_modules/
 .pnp
 .pnp.js
@@ -30,24 +30,20 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Git
+# Git (no necesarios en build)
 .git/
 .gitignore
 .gitattributes
 
-# Next.js
-next-env.d.ts
-
 # TypeScript
+next-env.d.ts
 *.tsbuildinfo
 
-# Datos locales
-.data/
-
-# Documentación (no necesaria en runtime)
+# Sin necesidad en runtime
 README.md
 INSTALL.md
 CHANGELOG.md
+*.md
 docs/
 
 # Docker
@@ -57,3 +53,26 @@ docker-compose.yml
 
 # Husky
 .husky/
+
+# Otros proyectos del workspace (no necesarios para dashboard build)
+/docs-site/
+/ops-console/
+/n8n-workflows/
+/scripts/
+/config/
+/livekit-server/
+
+# OpenCode (local, ~53MB)
+.opencode/
+
+# Backups locales
+*.sql
+*.sql.gz
+*.gpg
+*.tar.gz
+*.tar
+
+# Tests (no en producción)
+/coverage/
+__pycache__/
+*.pyc

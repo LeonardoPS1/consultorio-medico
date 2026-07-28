@@ -1,11 +1,20 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend, LineChart, Line, ReferenceLine,
-  PieChart, Pie, Cell,
-} from 'recharts';
+import dynamic from 'next/dynamic';
+
+const WebVitalsLineChart = dynamic(
+  () => import('@/components/charts/web-vitals-line-chart').then((m) => ({ default: m.WebVitalsLineChart })),
+  { ssr: false },
+);
+const WebVitalsAverageBarChart = dynamic(
+  () => import('@/components/charts/web-vitals-average-bar-chart').then((m) => ({ default: m.WebVitalsAverageBarChart })),
+  { ssr: false },
+);
+const WebVitalsPercentileBarChart = dynamic(
+  () => import('@/components/charts/web-vitals-percentile-bar-chart').then((m) => ({ default: m.WebVitalsPercentileBarChart })),
+  { ssr: false },
+);
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -118,14 +127,6 @@ function formatDate(iso: string) {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
   return d.toLocaleString('es-CL');
-}
-
-function formatBucket(bucket: string, bucketType: string) {
-  if (!bucket) return '—';
-  const d = new Date(bucket.includes('T') ? bucket : bucket.replace(' ', 'T') + 'Z');
-  if (isNaN(d.getTime())) return bucket;
-  if (bucketType === 'hour') return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
-  return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
 }
 
 // ─── Interfaces ────────────────────────────────────────────
@@ -474,7 +475,6 @@ export function WebVitalsClient() {
             <TabsContent value="resumen" className="mt-4 space-y-4">
               {/* Timeline + Bar chart */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Timeline chart */}
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
@@ -483,58 +483,10 @@ export function WebVitalsClient() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {timelineChartData.length > 0 ? (
-                      <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={timelineChartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                          <XAxis
-                            dataKey="bucket"
-                            tickFormatter={(v) => formatBucket(v, bucketType)}
-                            className="text-[10px]"
-                            interval={timelineChartData.length > 10 ? Math.floor(timelineChartData.length / 7) : 0}
-                          />
-                          <YAxis className="text-[10px]" />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: 'hsl(var(--popover))',
-                              border: '1px solid hsl(var(--border))',
-                              borderRadius: '8px',
-                              fontSize: '12px',
-                            }}
-                            labelFormatter={(v) => formatBucket(v, bucketType)}
-                            formatter={(value: number, name: string) => [
-                              `${formatValue(name, value)} ${METRIC_UNITS[name] || ''}`,
-                              METRIC_LABELS[name] || name,
-                            ]}
-                          />
-                          <Legend
-                            formatter={(value: string) => (
-                              <span className="text-xs" title={METRIC_LABELS[value] || value}>{value}</span>
-                            )}
-                          />
-                          {(['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as const).map((metric) => (
-                            <Line
-                              key={metric}
-                              type="monotone"
-                              dataKey={metric}
-                              name={metric}
-                              stroke={METRIC_COLORS[metric]}
-                              strokeWidth={2}
-                              dot={false}
-                              connectNulls
-                            />
-                          ))}
-                        </LineChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <p className="text-sm text-muted-foreground py-12 text-center">
-                        Sin datos suficientes para tendencia
-                      </p>
-                    )}
+                    <WebVitalsLineChart data={timelineChartData} bucketType={bucketType} />
                   </CardContent>
                 </Card>
 
-                {/* Bar chart: promedios */}
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
@@ -543,41 +495,7 @@ export function WebVitalsClient() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={pieData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis dataKey="name" className="text-xs" tickFormatter={(v) => v} />
-                        <YAxis className="text-xs" />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: 'hsl(var(--popover))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                          }}
-                          formatter={(value: number, name: string) => [formatValue('', value), 'Promedio']}
-                          labelFormatter={(label: string) => METRIC_LABELS[label] || label}
-                        />
-                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                          {pieData.map((entry, idx) => (
-                            <Cell key={idx} fill={entry.fill} />
-                          ))}
-                        </Bar>
-                        {/* Threshold reference lines */}
-                        {pieData.map((entry) => {
-                          const t = METRIC_THRESHOLDS[entry.name];
-                          if (!t) return null;
-                          return (
-                            <ReferenceLine
-                              key={`good-${entry.name}`}
-                              y={t.good}
-                              stroke="#22c55e"
-                              strokeDasharray="4 4"
-                              strokeWidth={1}
-                            />
-                          );
-                        })}
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <WebVitalsAverageBarChart data={pieData} />
                     <p className="text-[10px] text-muted-foreground mt-1 text-center">
                       Líneas punteadas verdes = umbral &quot;bueno&quot; de cada métrica
                     </p>
@@ -640,54 +558,12 @@ export function WebVitalsClient() {
                       </table>
                     </div>
 
-                    {/* Stacked bar chart: P50→P99 spread */}
                     {percentiles.length > 0 && (
                       <div className="border-t border-border px-3 pt-3 pb-4">
                         <p className="text-xs text-muted-foreground mb-2 font-medium">
                           Dispersión percentilar (P50 → P99)
                         </p>
-                        <ResponsiveContainer width="100%" height={220}>
-                          <BarChart
-                            data={percentiles.map((p) => ({
-                              name: p.name,
-                              good: Number(p.p50) || 0,
-                              fair: (Number(p.p75) || 0) - (Number(p.p50) || 0),
-                              poor: (Number(p.p95) || 0) - (Number(p.p75) || 0),
-                              bad: (Number(p.p99) || 0) - (Number(p.p95) || 0),
-                            }))}
-                            layout="vertical"
-                            barSize={18}
-                            margin={{ top: 6, right: 8, left: 40, bottom: 4 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
-                            <XAxis type="number" tick={{ fontSize: 10 }} />
-                            <YAxis
-                              type="category"
-                              dataKey="name"
-                              tick={{ fontSize: 11 }}
-                              width={32}
-                            />
-                            <Tooltip
-                              formatter={(value: number, name: string) => {
-                                const labels: Record<string, string> = {
-                                  good: 'P50',
-                                  fair: 'P50→P75',
-                                  poor: 'P75→P95',
-                                  bad: 'P95→P99',
-                                };
-                                return [value.toFixed(1), labels[name] || name];
-                              }}
-                              contentStyle={{ fontSize: 11 }}
-                            />
-                            <Bar dataKey="good" stackId="a" fill="#22c55e" name="good" />
-                            <Bar dataKey="fair" stackId="a" fill="#eab308" name="fair" />
-                            <Bar dataKey="poor" stackId="a" fill="#f97316" name="poor" />
-                            <Bar dataKey="bad" stackId="a" fill="#ef4444" name="bad" />
-                            <Legend
-                              wrapperStyle={{ fontSize: 10, paddingTop: 4 }}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
+                        <WebVitalsPercentileBarChart data={percentiles} />
                       </div>
                     )}
                   </CardContent>

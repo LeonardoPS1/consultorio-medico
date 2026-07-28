@@ -25,7 +25,5 @@
     "deploy": "python deploy_vps.py",
     "deploy:api": "python deploy_vps_api.py"
   },
-  "dependencies": {
-    "pdfkit": "^0.18.0"
-  }
+  "dependencies": {}
 }
