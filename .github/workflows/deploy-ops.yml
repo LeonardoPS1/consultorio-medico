@@ -90,4 +90,4 @@ jobs:
         continue-on-error: true
         run: |
           RESPONSE=$(curl -s 'https://ops.aicorebots.com/api/health')
-          echo "$RESPONSE" | grep -q '"connected":true' && echo "Smoke test passed" || (echo "Smoke test failed: $RESPONSE" && exit 1)
+          echo "$RESPONSE" | grep -q '"status":"healthy"' && echo "Smoke test passed" || (echo "Smoke test failed: $RESPONSE" && exit 1)
