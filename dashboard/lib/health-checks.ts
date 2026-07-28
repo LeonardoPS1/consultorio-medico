@@ -14,7 +14,7 @@ export async function checkPostgres(): Promise<CheckResult> {
     return { status: 'ok', latencyMs: Date.now() - start };
   } catch (e: unknown) {
     return {
-      status: 'error',
+      status: 'degraded',
       message: getMessage(e),
       latencyMs: Date.now() - start,
     };
@@ -68,7 +68,7 @@ export async function checkRedis(): Promise<CheckResult> {
     await redis.ping();
     return { status: 'ok', latencyMs: Date.now() - start };
   } catch (e: unknown) {
-    return { status: 'error', message: getMessage(e), latencyMs: Date.now() - start };
+    return { status: 'degraded', message: getMessage(e), latencyMs: Date.now() - start };
   }
 }
 

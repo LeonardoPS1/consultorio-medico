@@ -61,6 +61,10 @@ ENV HOSTNAME="0.0.0.0"
 ENV PORT=3000
 ENV TZ=America/Santiago
 
+# Database & Cache connections (required for health checks)
+ENV POSTGRES_URL=postgres://med-pg:5432/consultorio_medico
+ENV REDIS_URL=redis://med-redis:6379
+
 RUN apk add --no-cache curl
 
 RUN addgroup --system --gid 1001 nodejs && \
