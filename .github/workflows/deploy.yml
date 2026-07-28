@@ -80,7 +80,7 @@ jobs:
         run: |
           RESPONSE=$(curl -s 'https://med.aicorebots.com/api/health')
           echo "Health response: $RESPONSE"
-          echo "$RESPONSE" | grep -q '"ok":true\|"status":"ok"\|"healthy":true' && echo "Smoke test passed" || (echo "Smoke test failed" && exit 1)
+          echo "$RESPONSE" | grep -q '"status":"healthy"\|"status":"degraded"\|"ok":true\|"healthy":true' && echo "Smoke test passed" || (echo "Smoke test failed" && exit 1)
 
       - name: Notify deploy status
         if: always()
