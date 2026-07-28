@@ -2,7 +2,7 @@
 // Versión determinada por sw-version.js (auto-generado en cada build)
 // Estrategia: Cache first para assets con hash, Network first para API/navegación
 // Offline: fallback a página offline.html
-// __SW_BUILD__: v32a05af2
+// __SW_BUILD__: vcb4ac3e8
 
 importScripts('/sw-version.js');
 
