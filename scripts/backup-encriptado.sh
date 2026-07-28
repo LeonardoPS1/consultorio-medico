@@ -16,24 +16,14 @@ DUMP_FILE="/tmp/${DB_NAME}_${TIMESTAMP}.dump"
 # En Docker Swarm/Dokploy, el contenedor postgres tiene un nombre distinto.
 # Buscar el contenedor postgres activo por comando.
 PG_CONTAINER=""
-for TRY_NAME in postgres postgres-1 aicore-n8nrunnerpostgresollama-a715gi-postgres-1; do
-  if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "$TRY_NAME"; then
-    PG_CONTAINER="$TRY_NAME"
-    break
-  fi
-done
+PG_CONTAINER=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E '\-postgres-1$' | head -1 || echo "")
 
 # Crear directorio si no existe
 mkdir -p "$BACKUP_DIR"
 
 if [[ -z "$PG_CONTAINER" ]]; then
-  echo "[Backup] ❌ No se encontró contenedor PostgreSQL. Buscando..."
-  PG_CONTAINER=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -i postgres | head -1 || echo "")
-  if [[ -z "$PG_CONTAINER" ]]; then
-    echo "[Backup] ❌ No hay contenedor PostgreSQL disponible"
-    exit 1
-  fi
-  echo "[Backup] Usando contenedor: $PG_CONTAINER"
+  echo "[Backup] ❌ No hay contenedor PostgreSQL disponible"
+  exit 1
 fi
 
 echo "[Backup] Iniciando backup de $DB_NAME desde contenedor $PG_CONTAINER..."
