@@ -41,21 +41,15 @@ RUN echo "Cache bust: $CACHEBUST"
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/dashboard/node_modules ./dashboard/node_modules
 
-# Copy only what's needed for the build (workspace root + dashboard)
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY dashboard/ ./dashboard
+# Full repo copy for Next.js standalone tracing
+COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV NEXT_PUBLIC_GIT_COMMIT=$GIT_COMMIT
 ENV NEXT_PUBLIC_BUILD_TIME=$BUILD_TIME
 
-# Ensure all workspace members exist for pnpm resolution (pnpm-workspace.yaml lists ops-console)
-RUN mkdir -p /app/ops-console && echo '{"name":"ops-console","version":"0.0.0","private":true}' > /app/ops-console/package.json
-
-# Bypass pnpm workspace (runs next build directly from dashboard directory)
-RUN corepack enable && corepack prepare pnpm@11.14.0 --activate && \
-    cd /app/dashboard && next build && node scripts/generate-sw-version.mjs
+RUN corepack enable && corepack prepare pnpm@11.14.0 --activate && pnpm build
 
 # ─── Stage 3: Runner (producción) ────────────────────────────────────────────
 FROM node:22-alpine AS runner
