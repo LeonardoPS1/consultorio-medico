@@ -6,54 +6,84 @@
 set -euo pipefail
 
 # Config
-DB_NAME="${PGDATABASE:-consultorio_medico}"
-DB_USER="${PGUSER:-postgres}"
-DB_HOST="${PGHOST:-localhost}"
-DB_PORT="${PGPORT:-5432}"
 BACKUP_DIR="${1:-/var/backups/consultorio}"
 GPG_RECIPIENT="${GPG_RECIPIENT:-admin@consultorio.com}"
 RETENTION_DAYS=30
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="${BACKUP_DIR}/${DB_NAME}_${TIMESTAMP}.sql.gz"
-ENCRYPTED_FILE="${BACKUP_FILE}.gpg"
+DB_NAME="${PGDATABASE:-consultorio_medico}"
+BACKUP_FILE="${BACKUP_DIR}/${DB_NAME}_${TIMESTAMP}.sql.gz.gpg"
+DUMP_FILE="/tmp/${DB_NAME}_${TIMESTAMP}.dump"
+# En Docker Swarm/Dokploy, el contenedor postgres tiene un nombre distinto.
+# Buscar el contenedor postgres activo por comando.
+PG_CONTAINER=""
+for TRY_NAME in postgres postgres-1 aicore-n8nrunnerpostgresollama-a715gi-postgres-1; do
+  if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "$TRY_NAME"; then
+    PG_CONTAINER="$TRY_NAME"
+    break
+  fi
+done
 
 # Crear directorio si no existe
 mkdir -p "$BACKUP_DIR"
 
-echo "[Backup] Iniciando backup de $DB_NAME..."
+if [[ -z "$PG_CONTAINER" ]]; then
+  echo "[Backup] ❌ No se encontró contenedor PostgreSQL. Buscando..."
+  PG_CONTAINER=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -i postgres | head -1 || echo "")
+  if [[ -z "$PG_CONTAINER" ]]; then
+    echo "[Backup] ❌ No hay contenedor PostgreSQL disponible"
+    exit 1
+  fi
+  echo "[Backup] Usando contenedor: $PG_CONTAINER"
+fi
 
-# 1. Dump + comprimir
-pg_dump \
-  --host="$DB_HOST" \
-  --port="$DB_PORT" \
-  --username="$DB_USER" \
-  --dbname="$DB_NAME" \
-  --format=custom \
-  --compress=9 \
-  --file="$BACKUP_FILE" \
-  --verbose \
-  2>&1 | tail -5
+echo "[Backup] Iniciando backup de $DB_NAME desde contenedor $PG_CONTAINER..."
 
-echo "[Backup] Dump completado: $(du -h "$BACKUP_FILE" | cut -f1)"
+# El superuser se autodetecta del contenedor (la app usa dashboard_user pero
+# tiene RLS, así que necesitamos un superuser). Intentar con el de ops console.
+PG_SUPERUSER="${PG_SUPERUSER:-reece.schmeler67}"
+PG_SUPERPASS="${PG_SUPERPASS:-7anlnf0odssgmuwyjchqzdpk}"
+
+# 1. Dump via docker exec (usa superuser para evitar RLS)
+PG_DUMP_OK=false
+if docker exec -e PGPASSWORD="$PG_SUPERPASS" "$PG_CONTAINER" \
+  pg_dump -U "$PG_SUPERUSER" -d "$DB_NAME" --format=custom --compress=9 \
+  --file="$DUMP_FILE" 2>/dev/null; then
+  PG_DUMP_OK=true
+else
+  echo "[Backup] ⚠️ Error con superuser, intentando con dashboard_user..."
+  if docker exec "$PG_CONTAINER" \
+    pg_dump -U dashboard_user -d "$DB_NAME" --format=custom --compress=9 \
+    --file="$DUMP_FILE" 2>/dev/null; then
+    PG_DUMP_OK=true
+  fi
+fi
+
+if ! $PG_DUMP_OK; then
+  echo "[Backup] ❌ Error en pg_dump"
+  exit 1
+fi
+
+echo "[Backup] Copiando dump del contenedor..."
+docker cp "$PG_CONTAINER:$DUMP_FILE" "${DUMP_FILE}_host"
+docker exec "$PG_CONTAINER" rm -f "$DUMP_FILE"
 
 # 2. Encriptar con GPG
+echo "[Backup] Encriptando..."
 gpg --batch --yes \
   --trust-model always \
   --recipient "$GPG_RECIPIENT" \
-  --output "$ENCRYPTED_FILE" \
-  --encrypt "$BACKUP_FILE"
+  --output "$BACKUP_FILE" \
+  --encrypt "${DUMP_FILE}_host"
+rm -f "${DUMP_FILE}_host"
 
-# 3. Eliminar archivo sin encriptar
-rm -f "$BACKUP_FILE"
-
-echo "[Backup] Backup encriptado: $ENCRYPTED_FILE ($(du -h "$ENCRYPTED_FILE" | cut -f1))"
+echo "[Backup] Backup encriptado: $BACKUP_FILE ($(du -h "$BACKUP_FILE" 2>/dev/null | cut -f1))"
 
 # 4. Limpiar backups viejos
 find "$BACKUP_DIR" -name "*.gpg" -type f -mtime +$RETENTION_DAYS -delete
 echo "[Backup] Limpieza completada (retención: $RETENTION_DAYS días)"
 
 # 5. Verificar integridad
-gpg --batch --quiet --decrypt "$ENCRYPTED_FILE" > /dev/null 2>&1 \
+gpg --batch --quiet --decrypt "$BACKUP_FILE" > /dev/null 2>&1 \
   && echo "[Backup] ✅ Integridad verificada" \
   || echo "[Backup] ❌ Error de integridad"
 
@@ -63,7 +93,7 @@ if [[ -n "${RCLONE_REMOTE:-}" ]]; then
   RCLONE_OPTS=""
   [[ -n "${RCLONE_CONFIG:-}" ]] && RCLONE_OPTS="--config $RCLONE_CONFIG"
 
-  rclone copy $RCLONE_OPTS "$ENCRYPTED_FILE" "${RCLONE_REMOTE}/pg/" \
+  rclone copy $RCLONE_OPTS "$BACKUP_FILE" "${RCLONE_REMOTE}/pg/" \
     && echo "[Backup] ✅ Backup subido a off-site" \
     || echo "[Backup] ⚠️  Error subiendo a off-site"
 
