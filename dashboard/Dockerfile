@@ -49,7 +49,10 @@ ENV NODE_ENV=production
 ENV NEXT_PUBLIC_GIT_COMMIT=$GIT_COMMIT
 ENV NEXT_PUBLIC_BUILD_TIME=$BUILD_TIME
 
-RUN corepack enable && corepack prepare pnpm@11.14.0 --activate && pnpm build
+# Debug: verify node_modules and pnpm setup
+RUN ls -la /app/node_modules/.bin/ | head -20 && ls -la /app/dashboard/node_modules/.bin/ | head -20
+
+RUN set -x && corepack enable && corepack prepare pnpm@11.14.0 --activate && pnpm build 2>&1
 
 # ─── Stage 3: Runner (producción) ────────────────────────────────────────────
 FROM node:22-alpine AS runner
