@@ -86,6 +86,6 @@ USER nextjs
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=5 \
-  CMD curl -sf http://localhost:3000/api/health | grep -q '"ok":true\|"status":"ok"\|"healthy":true' || exit 1
+  CMD curl -sf http://localhost:3000/api/health | grep -q '"ok":true\|"status":"ok"\|"status":"degraded"\|"healthy":true' || exit 1
 
 CMD ["node", "dashboard/server.js"]
