@@ -33,7 +33,7 @@ ENV HOSTNAME="0.0.0.0"
 ENV PORT=3002
 ENV TZ=America/Santiago
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl docker-cli gpg bash
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs

@@ -13,46 +13,78 @@ interface BackupsData {
   volumes: BackupFile[]
 }
 
+interface ScriptResult {
+  success: boolean
+  output: string
+}
+
+interface CreateBackupResult {
+  success: boolean
+  message: string
+  results?: Record<string, ScriptResult>
+  error?: string
+}
+
+interface TriggerResult {
+  success?: boolean
+  message?: string
+  error?: string
+  executionId?: string
+  workflowsDisponibles?: string[]
+}
+
 export default function RecuperacionPage() {
   const [backups, setBackups] = useState<BackupsData | null>(null)
   const [diskSpace, setDiskSpace] = useState('')
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [triggering, setTriggering] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [createProgress, setCreateProgress] = useState('')
   const [showGuide, setShowGuide] = useState(false)
   const [showProcedure, setShowProcedure] = useState(false)
   const [showInfra, setShowInfra] = useState(false)
-  const [result, setResult] = useState<{
-    success?: boolean
-    message?: string
-    error?: string
-    executionId?: string
-    workflowsDisponibles?: string[]
-  } | null>(null)
+  const [result, setResult] = useState<TriggerResult | null>(null)
+  const [createResult, setCreateResult] = useState<CreateBackupResult | null>(null)
 
-  const fetchBackups = useCallback(async () => {
+  const fetchBackups = useCallback(async (showLoading = false) => {
+    if (showLoading) setLoading(true)
+    setRefreshing(true)
+    setFetchError(null)
     try {
       const res = await fetch('/api/recuperacion')
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || `Error ${res.status}`)
+      }
       const data = await res.json()
       if (data.backups) setBackups(data.backups)
       if (data.diskSpace) setDiskSpace(data.diskSpace)
-    } catch {
-      // ignore
+    } catch (e) {
+      setFetchError(e instanceof Error ? e.message : 'Error al cargar backups')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }, [])
 
-  useEffect(() => { fetchBackups() }, [fetchBackups])
+  useEffect(() => { fetchBackups(true) }, [fetchBackups])
 
   const handleTriggerRecovery = async () => {
     setTriggering(true)
     setResult(null)
     try {
       const res = await fetch('/api/recuperacion/trigger', { method: 'POST' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setResult({ error: data.error || `Error ${res.status}: Sin autorización o WF-14 no encontrado` })
+        return
+      }
       const data = await res.json()
       setResult(data)
-    } catch {
-      setResult({ error: 'Error de conexión' })
+    } catch (e) {
+      setResult({ error: e instanceof Error ? e.message : 'Error de conexión' })
     } finally {
       setTriggering(false)
     }
@@ -83,10 +115,15 @@ export default function RecuperacionPage() {
           </p>
         </div>
         <button
-          onClick={fetchBackups}
-          className="px-3 py-1.5 text-xs border border-[var(--border)] rounded-lg hover:bg-[var(--bg-hover)] transition-colors"
+          onClick={() => fetchBackups(false)}
+          disabled={refreshing}
+          className="px-3 py-1.5 text-xs border border-[var(--border)] rounded-lg hover:bg-[var(--bg-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
         >
-          Refrescar
+          {refreshing ? (
+            <><span className="inline-block w-3 h-3 border-2 border-[var(--text-secondary)] border-t-transparent rounded-full animate-spin" /> Actualizando...</>
+          ) : (
+            'Refrescar'
+          )}
         </button>
       </div>
 
@@ -96,7 +133,17 @@ export default function RecuperacionPage() {
         </div>
       )}
 
-      {!loading && !hasBackups && (
+      {fetchError && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-sm">
+          <strong className="text-red-500">❌ Error al cargar backups:</strong>
+          <p className="text-[var(--text-secondary)] mt-1">{fetchError}</p>
+          <button onClick={() => fetchBackups(false)} className="mt-2 text-xs underline hover:no-underline">
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      {!loading && !hasBackups && !fetchError && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-sm">
           <strong className="text-amber-600">⚠️ No hay backups disponibles.</strong>
           <p className="text-[var(--text-secondary)] mt-1">
@@ -110,7 +157,10 @@ export default function RecuperacionPage() {
         <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
           <h2 className="text-sm font-semibold mb-3">📦 PostgreSQL</h2>
           {loading ? (
-            <p className="text-xs text-[var(--text-muted)]">Cargando...</p>
+            <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+              <span className="inline-block w-3 h-3 border-2 border-[var(--text-secondary)] border-t-transparent rounded-full animate-spin" />
+              Cargando...
+            </div>
           ) : !backups?.postgres?.length ? (
             <div className="space-y-1">
               <p className="text-xs text-[var(--text-muted)]">Sin backups</p>
@@ -125,11 +175,20 @@ export default function RecuperacionPage() {
               ))}
             </div>
           )}
+          {refreshing && (
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+              <span className="inline-block w-2 h-2 border-2 border-[var(--text-secondary)] border-t-transparent rounded-full animate-spin" />
+              Refrescando...
+            </div>
+          )}
         </div>
         <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
           <h2 className="text-sm font-semibold mb-3">💾 Volúmenes Docker</h2>
           {loading ? (
-            <p className="text-xs text-[var(--text-muted)]">Cargando...</p>
+            <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+              <span className="inline-block w-3 h-3 border-2 border-[var(--text-secondary)] border-t-transparent rounded-full animate-spin" />
+              Cargando...
+            </div>
           ) : !backups?.volumes?.length ? (
             <p className="text-xs text-[var(--text-muted)]">Sin backups</p>
           ) : (
@@ -143,6 +202,69 @@ export default function RecuperacionPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* 🛡️ Crear Backup */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-5">
+        <h2 className="text-sm font-semibold mb-2">🛡️ Crear Backup Ahora</h2>
+        <p className="text-xs text-[var(--text-secondary)] mb-4">
+          Ejecuta los scripts de backup directamente desde este panel.
+          Los backups se guardan en /var/backups/consultorio del VPS.
+        </p>
+
+        <button
+          onClick={async () => {
+            setCreating(true)
+            setCreateProgress('Iniciando backups...')
+            setCreateResult(null)
+            try {
+              const res = await fetch('/api/recuperacion/crear-backup', { method: 'POST' })
+              const data = await res.json()
+              setCreateResult(data)
+              if (data.success) {
+                setCreateProgress('Backups creados. Refrescando lista...')
+                setTimeout(() => fetchBackups(false), 1000)
+              } else {
+                setCreateProgress('')
+              }
+            } catch {
+              setCreateResult({ success: false, message: 'Error de conexión', error: 'Error de conexión' })
+              setCreateProgress('')
+            } finally {
+              setCreating(false)
+            }
+          }}
+          disabled={creating}
+          className="px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+        >
+          {creating ? (
+            <><span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> {createProgress || 'Creando...'}</>
+          ) : (
+            '📦 Crear Backup'
+          )}
+        </button>
+
+        {createResult && (
+          <div className={`mt-4 p-3 rounded-lg text-sm ${
+            createResult.success
+              ? 'bg-green-500/10 border border-green-500/30 text-green-600'
+              : 'bg-red-500/10 border border-red-500/30 text-red-500'
+          }`}>
+            <strong>{createResult.success ? '✅' : '❌'} {createResult.success ? 'Backups creados' : 'Error'}</strong>
+            {!createResult.success && createResult.error && (
+              <p className="mt-1 text-xs">{createResult.error}</p>
+            )}
+            {createResult.results && (
+              <div className="mt-2 space-y-1 text-xs font-mono">
+                {Object.entries(createResult.results).map(([name, r]) => (
+                  <div key={name} className={r.success ? 'text-green-500' : 'text-red-500'}>
+                    {r.success ? '✓' : '✗'} {name}: {r.output.slice(0, 200)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 🚀 Recuperación automática */}
