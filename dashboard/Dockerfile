@@ -22,6 +22,9 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY dashboard/package.json ./dashboard/
 
+# Ensure all workspace members exist for pnpm resolution
+RUN mkdir -p /app/ops-console && echo '{"name":"ops-console","version":"0.0.0","private":true}' > /app/ops-console/package.json
+
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     --mount=type=cache,target=/root/.npm \
     pnpm install --no-frozen-lockfile
@@ -46,6 +49,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV NEXT_PUBLIC_GIT_COMMIT=$GIT_COMMIT
 ENV NEXT_PUBLIC_BUILD_TIME=$BUILD_TIME
+
+# Ensure all workspace members exist for pnpm resolution (pnpm-workspace.yaml lists ops-console)
+RUN mkdir -p /app/ops-console && echo '{"name":"ops-console","version":"0.0.0","private":true}' > /app/ops-console/package.json
 
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     corepack enable && corepack prepare pnpm@11.14.0 --activate && pnpm build
