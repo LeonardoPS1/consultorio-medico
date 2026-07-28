@@ -85,6 +85,15 @@ recover-vols: ## Recuperar solo volúmenes Docker
 recover-status: ## Verificar estado de backups disponibles
 	bash scripts/check-backups.sh
 
+backup-infra: ## Backup manual de infraestructura VPS (Dokploy, Traefik, env, firewall)
+	bash scripts/backup-infra.sh
+
+backup-now: ## Backup manual inmediato (PG + volúmenes + infra)
+	bash scripts/backup-encriptado.sh && bash scripts/backup-volumenes.sh && bash scripts/backup-infra.sh
+
+backup-n8n: ## Backup manual de workflows n8n
+	bash scripts/backup-n8n-workflows.sh
+
 # ─── Docker ────────────────────────────────────────────────────────────────
 
 docker-up: ## Levanta servicios con Docker Compose (dev)
