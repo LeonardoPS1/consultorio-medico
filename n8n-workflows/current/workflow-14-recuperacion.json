@@ -1,0 +1,69 @@
+{
+  "name": "14 - Recuperación Automática Completa",
+  "nodes": [
+    {
+      "id": "webhook-trigger",
+      "name": "Webhook - Iniciar Recuperación",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 300],
+      "parameters": {
+        "path": "recuperacion-iniciar",
+        "responseMode": "lastNode",
+        "responseData": "all",
+        "options": {}
+      }
+    },
+    {
+      "id": "log-inicio",
+      "name": "Log - Inicio",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, workflow_name, nivel, mensaje) VALUES ('WF-14', 'Recuperación Automática', 'info', 'Recuperación iniciada ejecutando restore-full.sh')"
+      }
+    },
+    {
+      "id": "execute-restore",
+      "name": "Ejecutar Restauración Completa",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "parameters": {
+        "command": "bash",
+        "arguments": ["/opt/consultorio/scripts/recover.sh", "--force"]
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "log-resultado",
+      "name": "Log - Resultado",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [750, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, workflow_name, nivel, mensaje, metadata) VALUES ('WF-14', 'Recuperación Automática', '{{ $json.exitCode == 0 ? \"info\" : \"error\" }}', {{ $json.exitCode == 0 ? \"'Recuperación completada exitosamente'\" : \"'Error en recuperación: ' || COALESCE($json.error, 'exit code ' || $json.exitCode)\" }}, '{\"exitCode\": {{ $json.exitCode }}}'::jsonb)"
+      }
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [[ { "node": "log-inicio", "type": "main", "index": 0 } ]]
+    },
+    "log-inicio": {
+      "main": [[ { "node": "execute-restore", "type": "main", "index": 0 } ]]
+    },
+    "execute-restore": {
+      "main": [[ { "node": "log-resultado", "type": "main", "index": 0 } ]]
+    }
+  },
+  "settings": {
+    "callerPolicy": "workflowFromSameOwner",
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["recuperacion", "dr", "critico"]
+}

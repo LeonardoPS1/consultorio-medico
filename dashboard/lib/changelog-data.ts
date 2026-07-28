@@ -10,8 +10,26 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 24/07/2026 — v1.27.0 Chatwoot, MercadoPago Billing y Onboarding
+// Actualizado: 28/07/2026 — v1.28.0 DR Infrastructure y Recuperación Automatizada
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.28.0',
+    date: '28/07/2026',
+    title: 'DR Infrastructure y Recuperación Automatizada',
+    items: [
+      'Restore scripts: restore-pg.sh, restore-volumes.sh, restore-full.sh con modo drill en containers aislados',
+      'Recuperación 1-click: scripts/recover.sh auto-detecta último backup y orquesta restore completo',
+      'Makefile targets: make recover, recover-force, recover-drill, recover-pg, recover-vols, recover-status',
+      'Ops Console: página de Recuperación en ops.aicorebots.com con listado de backups + botón de restore',
+      'WF-14: workflow n8n de recuperación completa disparado desde Ops Console o webhook',
+      'Monitoreo: scripts/check-backups.sh con alertas por antigüedad, integridad GPG y espacio en disco',
+      'Off-site backup: rclone sync en backup-encriptado.sh y backup-volumenes.sh (B2/S3/GCS)',
+      'GPG key management: scripts/gpg-key.asc con instrucciones, healthcheck robusto en backup-agent',
+      'Backup de workflows n8n: scripts/backup-n8n-workflows.sh exporta todos los workflows a JSON',
+      'CI/CD: deploy.yml con health check (18 intentos), smoke test y notificación post-deploy',
+      'WF-13: recordatorio trimestral de drill DR con envío WhatsApp al médico',
+    ],
+  },
   {
     version: '1.27.0',
     date: '24/07/2026',

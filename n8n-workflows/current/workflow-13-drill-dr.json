@@ -1,0 +1,108 @@
+{
+  "name": "13 - Recordatorio Drill DR Trimestral",
+  "nodes": [
+    {
+      "id": "cron-trimestral",
+      "name": "Cron - Primer día del trimestre",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            { "mode": "custom", "expression": "0 10 1 1,4,7,10 *" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "if-weekday",
+      "name": "¿Es día hábil?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $now.getDay() }}",
+              "operation": "isNotEqual",
+              "value2": 0
+            },
+            {
+              "value1": "={{ $now.getDay() }}",
+              "operation": "isNotEqual",
+              "value2": 6
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "noop-weekend",
+      "name": "Skip (finde)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [500, 200],
+      "parameters": {}
+    },
+    {
+      "id": "http-notify",
+      "name": "Notificar al médico",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 400],
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_URL || 'https://med.aicorebots.com' }}/api/internal/drill-recordatorio",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-internal-key",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "drill_dr"
+            }
+          ]
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "cron-trimestral": {
+      "main": [[ { "node": "if-weekday", "type": "main", "index": 0 } ]]
+    },
+    "if-weekday": {
+      "main": [
+        [ { "node": "noop-weekend", "type": "main", "index": 0 } ],
+        [ { "node": "http-notify", "type": "main", "index": 0 } ]
+      ]
+    }
+  },
+  "settings": {
+    "callerPolicy": "workflowFromSameOwner",
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["mantenimiento", "dr"]
+}

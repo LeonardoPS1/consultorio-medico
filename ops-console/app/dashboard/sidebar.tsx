@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/sessions', label: 'Sesiones', icon: '🔑' },
   { href: '/dashboard/passkeys', label: 'Passkeys', icon: '🔐' },
   { href: '/dashboard/health', label: 'Estado', icon: '❤' },
+  { href: '/dashboard/recuperacion', label: 'Recuperación', icon: '🚀' },
 ]
 
 export function Sidebar({

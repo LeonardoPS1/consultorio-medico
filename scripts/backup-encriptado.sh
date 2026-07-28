@@ -57,4 +57,21 @@ gpg --batch --quiet --decrypt "$ENCRYPTED_FILE" > /dev/null 2>&1 \
   && echo "[Backup] ✅ Integridad verificada" \
   || echo "[Backup] ❌ Error de integridad"
 
+# ─── Off-site backup (rclone) ───────────────────────────────────────────────
+if [[ -n "${RCLONE_REMOTE:-}" ]]; then
+  echo "[Backup] Subiendo a off-site (rclone)..."
+  RCLONE_OPTS=""
+  [[ -n "${RCLONE_CONFIG:-}" ]] && RCLONE_OPTS="--config $RCLONE_CONFIG"
+
+  rclone copy $RCLONE_OPTS "$ENCRYPTED_FILE" "${RCLONE_REMOTE}/pg/" \
+    && echo "[Backup] ✅ Backup subido a off-site" \
+    || echo "[Backup] ⚠️  Error subiendo a off-site"
+
+  # Limpiar backups off-site viejos
+  rclone delete $RCLONE_OPTS "${RCLONE_REMOTE}/pg/" --min-age "${RETENTION_DAYS}d" 2>/dev/null || true
+  echo "[Backup] ✅ Off-site sync completado"
+else
+  echo "[Backup] ℹ️  Off-site no configurado (RCLONE_REMOTE no definido)"
+fi
+
 echo "[Backup] ✅ Backup completado: $TIMESTAMP"

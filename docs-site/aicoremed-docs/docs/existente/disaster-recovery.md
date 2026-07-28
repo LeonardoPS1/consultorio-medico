@@ -301,10 +301,216 @@ Se propone ejecutar este drill **cada 3 meses** (trimestral). Idealmente:
 
 ---
 
+## Herramientas de Restauración Automatizada
+
+### restore-pg.sh
+
+Script para restaurar PostgreSQL desde backup GPG encriptado.
+
+```bash
+# Restauración directa (con advertencia de 5s)
+./scripts/restore-pg.sh /var/backups/consultorio/backup_20260722.sql.gz.gpg
+
+# Drill en container aislado (sin afectar prod)
+./scripts/restore-pg.sh --drill /var/backups/consultorio/backup_20260722.sql.gz.gpg
+
+# Restauración con parámetros custom
+./scripts/restore-pg.sh --db-host postgres --db-port 5432 --db-user dashboard_user backup.gpg
+
+# Ayuda completa
+./scripts/restore-pg.sh --help
+```
+
+**Características:**
+- Desencriptado automático con GPG
+- Restaura con `pg_restore --clean --if-exists`
+- Modo drill en container PostgreSQL aislado (puerto 5433)
+- Verificación post-restauración
+- Limpieza automática de archivos temporales
+
+### restore-volumes.sh
+
+Script para restaurar volúmenes Docker desde backup GPG encriptado.
+
+```bash
+# Restaurar un volumen
+./scripts/restore-volumes.sh /backup/n8n_data_20260722.tar.gz.gpg n8n_data
+
+# Restaurar metabase_data
+./scripts/restore-volumes.sh /backup/metabase_data_20260722.tar.gz.gpg metabase_data
+```
+
+**Características:**
+- Desencriptado, extracción y copia al volumen Docker
+- Crea el volumen si no existe
+- Verificación de contenido post-restauración
+
+### restore-full.sh
+
+Orquestador de restauración completa del sistema (BD + volúmenes).
+
+```bash
+# Drill completo
+./scripts/restore-full.sh --drill --pg-backup /backup/consultorio_20260722.sql.gz.gpg
+
+# Restauración real
+./scripts/restore-full.sh \
+  --pg-backup /backup/consultorio_20260722.sql.gz.gpg \
+  --vol-backup n8n_data:/backup/n8n_data_20260722.tar.gz.gpg \
+  --vol-backup metabase_data:/backup/metabase_data_20260722.tar.gz.gpg
+```
+
+**Características:**
+- Orquesta PG + volúmenes en orden correcto
+- Modo drill para testing sin afectar producción
+- Checklist de verificación post-restauración
+
+---
+
+## Monitoreo de Backups
+
+### check-backups.sh
+
+Script de monitoreo que verifica el estado de los backups automatizados.
+
+```bash
+# Verificación manual
+./scripts/check-backups.sh
+
+# Con umbrales custom
+./scripts/check-backups.sh --alert-hours 26 --dir /var/backups/consultorio
+
+# Integrar en cron (cada hora)
+# 0 * * * * /opt/consultorio/scripts/check-backups.sh >> /var/log/backup-check.log 2>&1
+```
+
+**Verifica:**
+- Antigüedad del último backup de PostgreSQL (alerta > 26h, crítico > 50h)
+- Antigüedad de cada tipo de backup de volúmenes
+- Integridad GPG del backup más reciente de cada tipo
+- Espacio en disco disponible (alerta < 20%, crítico < 10%)
+- Tamaño total de backups
+
+**Exit codes:** 0=OK, 1=Warning, 2=Critical
+
+Se recomienda ejecutar cada hora vía cron en el VPS para detectar fallas temprano.
+
+---
+
+## Backup de Workflows n8n
+
+### backup-n8n-workflows.sh
+
+Exporta todos los workflows activos de n8n a archivos JSON individuales.
+
+```bash
+# Configurar API key
+export N8N_API_KEY=tu-api-key
+
+# Backup a directorio con timestamp
+./scripts/backup-n8n-workflows.sh
+
+# Backup a directorio específico
+./scripts/backup-n8n-workflows.sh ./n8n-backup-$(date +%Y%m%d)
+
+# Sugerencia: encriptar el backup de workflows
+tar czf n8n-workflows.tar.gz n8n-workflows-backup-*/
+gpg --encrypt --recipient admin@consultorio.com n8n-workflows.tar.gz
+```
+
+Genera `_metadata.json` con timestamp, cantidad de workflows y lista de archivos.
+
+---
+
+## Off-Site Backup (rclone)
+
+Los scripts `backup-encriptado.sh` y `backup-volumenes.sh` soportan sincronización a almacenamiento externo vía **rclone**.
+
+### Configuración
+
+1. **Instalar y configurar rclone:**
+   ```bash
+   # En el VPS
+   curl https://rclone.org/install.sh | bash
+   rclone config  # Configurar remote (B2, S3, etc.)
+   ```
+
+2. **Configurar variables de entorno:**
+   ```bash
+   # En docker-compose.prod.yml (backup-agent) o en n8n
+   RCLONE_REMOTE="b2:consultorio-backups"
+   RCLONE_CONFIG="/root/.config/rclone/rclone.conf"
+   ```
+
+3. **Verificar:**
+   ```bash
+   rclone ls b2:consultorio-backups/pg/
+   rclone ls b2:consultorio-backups/volumes/
+   ```
+
+### Destinos Soportados
+
+| Servicio | Rclone remote type | Config example |
+|----------|-------------------|----------------|
+| Backblaze B2 | `b2` | `b2:consultorio-backups` |
+| AWS S3 | `s3` | `s3:consultorio-backups` |
+| Google Cloud Storage | `gcs` | `gcs:consultorio-backups` |
+| Wasabi | `s3` | `wasabi:consultorio-backups` |
+
+---
+
+## CI/CD — Health Check y Smoke Test
+
+El workflow `deploy.yml` ahora incluye verificación post-deploy:
+
+1. **Health check:** 18 intentos (3 min) esperando HTTP 200 en `/api/health`
+2. **Smoke test:** Verifica que la respuesta contenga `"ok":true`
+3. **Notificación:** POST a n8n webhook con resultado del deploy
+
+Si el health check falla, el GHA reporta error (exit 1). Docker Swarm ya tiene `rollback_config` automático.
+
+---
+
+## GPG Key Management
+
+### Archivo de clave pública
+
+`scripts/gpg-key.asc` — clave pública GPG para encriptar backups.
+
+- Se importa automáticamente en el `backup-agent` al arrancar
+- Debe coincidir con el recipient `admin@consultorio.com`
+- **No incluir la clave privada en el repositorio**
+
+### Generar par de claves
+
+```bash
+gpg --full-generate-key
+# Tipo: RSA, Tamaño: 4096, Expiración: no expira
+# Email: admin@consultorio.com
+
+# Exportar clave pública (para el repositorio)
+gpg --armor --export admin@consultorio.com > scripts/gpg-key.asc
+
+# Exportar clave privada (guardar FUERA del VPS)
+gpg --armor --export-secret-keys admin@consultorio.com > /tmp/backup-gpg-private.key
+# Guardar en: 1Password, Bitwarden, o pendrive en caja fuerte
+# NUNCA en el repositorio ni en el VPS
+```
+
+### Importar clave privada (para restaurar)
+
+```bash
+# En el VPS donde se va a restaurar
+gpg --import backup-gpg-private.key
+```
+
+---
+
 ## Notas
 
 - La clave GPG `admin@consultorio.com` debe estar disponible en el sistema para desencriptar backups.
 - Los backups de volúmenes se almacenan en el volumen Docker `backup_agent_data` montado en `/backup/` del contenedor backup-agent.
 - Los backups de PostgreSQL se almacenan en `/var/backups/consultorio/` dentro del contenedor n8n (path montado desde el host).
 - `ollama_data` y `redis_data` no se respaldan automáticamente — ver sección "Recuperación de volúmenes reproducibles" para comandos de regeneración.
-- Para off-site backup (futuro): descomentar paso de `rclone` en los scripts y configurar credenciales B2.
+- **Off-site backup disponible** vía rclone en ambos scripts de backup. Configurar `RCLONE_REMOTE` para activar.
+- **RTO real:** monitorear con `scripts/check-backups.sh` (recomendado: cron cada hora).

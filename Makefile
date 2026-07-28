@@ -65,6 +65,26 @@ db-push: ## Push schema a DB
 db-studio: ## Abre Drizzle Studio
 	pnpm --filter ./dashboard db:studio
 
+# ─── DR / Recuperación ─────────────────────────────────────────────────────
+
+recover: ## Recuperación completa (auto-detecta último backup)
+	bash scripts/recover.sh
+
+recover-force: ## Recuperación forzada (sin confirmación)
+	bash scripts/recover.sh --force
+
+recover-drill: ## Drill de recuperación en containers aislados
+	bash scripts/recover.sh --drill
+
+recover-pg: ## Recuperar solo PostgreSQL
+	bash scripts/recover.sh --pg-only
+
+recover-vols: ## Recuperar solo volúmenes Docker
+	bash scripts/recover.sh --vols-only
+
+recover-status: ## Verificar estado de backups disponibles
+	bash scripts/check-backups.sh
+
 # ─── Docker ────────────────────────────────────────────────────────────────
 
 docker-up: ## Levanta servicios con Docker Compose (dev)

@@ -73,4 +73,40 @@ done
 find "$BACKUP_DIR" -name "*.tar.gz.gpg" -type f -mtime +$RETENTION_DAYS -delete
 echo "[Backup-Vol] Limpieza completada (retención: $RETENTION_DAYS días)"
 
+# ─── Off-site backup (rclone) ───────────────────────────────────────────────
+# Configurar vía variables de entorno:
+#   RCLONE_REMOTE    — nombre del remote rclone (ej: "b2:consultorio-backups")
+#   RCLONE_CONFIG    — ruta al archivo de config de rclone
+#
+# Ejemplo con Backblaze B2:
+#   RCLONE_REMOTE="b2:consultorio-backups" RCLONE_CONFIG="/root/.config/rclone/rclone.conf"
+#
+# Ejemplo con S3 compatible:
+#   RCLONE_REMOTE="s3:consultorio-backups"
+
+if [[ -n "${RCLONE_REMOTE:-}" ]]; then
+  echo "[Backup-Vol] Subiendo backups a off-site (rclone)..."
+  RCLONE_OPTS=""
+  if [[ -n "${RCLONE_CONFIG:-}" ]]; then
+    RCLONE_OPTS="--config $RCLONE_CONFIG"
+  fi
+
+  for VOLUME in "${!VOLUMES[@]}"; do
+    LABEL="${VOLUMES[$VOLUME]}"
+    ENCRYPTED_FILE="${BACKUP_DIR}/${LABEL}_${TIMESTAMP}.tar.gz.gpg"
+    if [[ -f "$ENCRYPTED_FILE" ]]; then
+      rclone copy $RCLONE_OPTS "$ENCRYPTED_FILE" "${RCLONE_REMOTE}/volumes/" \
+        && echo "[Backup-Vol] ✅ $LABEL subido a off-site" \
+        || echo "[Backup-Vol] ⚠️  Error subiendo $LABEL a off-site"
+    fi
+  done
+
+  # Limpiar backups off-site viejos (> RETENTION_DAYS)
+  echo "[Backup-Vol] Limpiando backups off-site viejos..."
+  rclone delete $RCLONE_OPTS "${RCLONE_REMOTE}/volumes/" --min-age "${RETENTION_DAYS}d" 2>/dev/null || true
+  echo "[Backup-Vol] ✅ Off-site sync completado"
+else
+  echo "[Backup-Vol] ℹ️  Off-site no configurado (RCLONE_REMOTE no definido)"
+fi
+
 echo "[Backup-Vol] === Backup de volúmenes completado: $TIMESTAMP ==="

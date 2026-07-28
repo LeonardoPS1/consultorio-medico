@@ -677,6 +677,7 @@ consultorio-medico/
 | **Sprint: Chatwoot + Evolution API** | Chatwoot en `docker-compose.prod.yml` (servicio + volumen), `lib/services/chatwoot.ts` (cliente API), `app/api/webhooks/chatwoot/route.ts` (webhook handler). `CANAL_MENSAJERIA` flag, `lib/whatsapp.ts`, `scripts/setup-chatwoot.sql`. T2: WF-01 sub-agente clínico (Destino Handoff? IF + 5 nodos: Preparar Prompt Clinico, Ollama - Clinico, Postgres Memory - Clinico, Clinico Agent, Extraer Output Clinico). T3: Feature `soporte`, sidebar nav item, page `/dashboard/soporte` + API `POST /api/soporte/enviar` (enruta a Chatwoot soporte inbox o Twilio). | 24/07 |
 | **Sprint: Onboarding mejoras** | Auto-redirect a `/dashboard/onboarding` tras registro express (antes iba a suscripción). Nuevo paso `configuracion_whatsapp` con detección de env vars. | 24/07 |
 | **Sprint: MercadoPago billing robustness** | Idempotencia en memoria (Map TTL 5 min). Grace period 7 días (estado `past_due` en vez de `cancelled` inmediato). Endpoint interno `POST /api/internal/suscripciones-vencidas` para cron nocturno (downgrade → free). | 24/07 |
+| **DR Infrastructure + Recuperación** | restore-pg/volumes/full.sh, recover.sh, Makefile targets, Ops Console recovery page, WF-14, check-backups.sh, off-site rclone, GPG key mgmt, CI/CD health check, backup-n8n-workflows.sh, WF-13 drill reminder. | 28/07 |
 
 ### 🟡 Prioridad Media
 
@@ -762,6 +763,26 @@ bash /opt/consultorio/scripts/backup-encriptado.sh
 
 # Backup manual (volúmenes)
 bash /opt/consultorio/scripts/backup-volumenes.sh /var/backups/consultorio
+
+# Recuperación completa (auto-detecta último backup)
+make recover
+
+# Recuperación forzada (sin confirmación)
+make recover-force
+
+# Drill de recuperación en containers aislados
+make recover-drill
+
+# Ver estado de backups disponibles
+make recover-status
+
+# Backup de workflows n8n
+bash /opt/consultorio/scripts/backup-n8n-workflows.sh
+
+# Monitoreo de backups
+bash /opt/consultorio/scripts/check-backups.sh
+
+# Ruta 3 (web): ops.aicorebots.com → Recuperación → Iniciar Recuperación
 
 # Ver logs de n8n
 docker logs $(docker ps -q -f name=n8n) --tail 100

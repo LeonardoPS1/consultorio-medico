@@ -470,16 +470,21 @@ services:
       - BACKUP_DIR=/backup
       - RETENTION_DAYS=30
       - TZ=America/Santiago
+      # Off-site backup (rclone) — descomentar y configurar:
+      # - RCLONE_REMOTE=b2:consultorio-backups
+      # - RCLONE_CONFIG=/root/.config/rclone/rclone.conf
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./scripts:/opt/consultorio/scripts:ro
       - backup_agent_data:/backup
       - backup_agent_gnupg:/root/.gnupg
+      # Descomentar si se usa rclone:
+      # - /root/.config/rclone:/root/.config/rclone:ro
     command:
       - /bin/sh
       - -c
       - |
-        apk add --no-cache docker-cli gpg bash curl >/dev/null 2>&1
+        apk add --no-cache docker-cli gpg bash curl rclone >/dev/null 2>&1
         echo "[backup-agent] Importando GPG key si existe..."
         if [ -f /opt/consultorio/scripts/gpg-key.asc ]; then
           gpg --batch --import /opt/consultorio/scripts/gpg-key.asc 2>/dev/null || true
@@ -497,11 +502,11 @@ services:
           sleep 30
         done
     healthcheck:
-      test: ['CMD', 'pgrep', '-f', 'sleep 30']
-      interval: 60s
-      timeout: 10s
+      test: ['CMD', 'sh', '-c', 'pgrep -f "sleep 30" >/dev/null && ls -la /backup/*.gpg 2>/dev/null | head -1 || exit 1']
+      interval: 300s
+      timeout: 15s
       retries: 3
-      start_period: 10s
+      start_period: 3600s
     deploy:
       mode: replicated
       replicas: 1
