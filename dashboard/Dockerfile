@@ -10,7 +10,7 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 
-ARG CACHEBUST=15
+ARG CACHEBUST=16
 RUN echo "Cache bust: $CACHEBUST"
 
 RUN corepack enable && corepack prepare pnpm@11.14.0 --activate
