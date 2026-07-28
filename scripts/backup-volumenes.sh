@@ -17,28 +17,32 @@ GPG_RECIPIENT="${GPG_RECIPIENT:-admin@consultorio.com}"
 RETENTION_DAYS=30
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
-# Volúmenes a respaldar (nombre_docker_swarm -> etiqueta legible)
-declare -A VOLUMES
-VOLUMES[n8n_data]="n8n_data"
-VOLUMES[metabase_data]="metabase_data"
-VOLUMES[recordings]="recordings"
+# Volúmenes a respaldar (sufijo -> etiqueta legible)
+# En Docker Swarm/Dokploy, los volúmenes tienen prefijo del stack.
+# Se buscan por sufijo para encontrar el activo.
+declare -A VOLUME_SUFFIXES
+VOLUME_SUFFIXES[n8n_data]="n8n_data"
+VOLUME_SUFFIXES[metabase_data]="metabase_data"
+VOLUME_SUFFIXES[recordings]="recordings"
 
 mkdir -p "$BACKUP_DIR"
 
 echo "[Backup-Vol] === Backup de volúmenes Docker: $(date +%Y-%m-%d) ==="
 
-for VOLUME in "${!VOLUMES[@]}"; do
-  LABEL="${VOLUMES[$VOLUME]}"
+for SUFFIX in "${!VOLUME_SUFFIXES[@]}"; do
+  LABEL="${VOLUME_SUFFIXES[$SUFFIX]}"
   BACKUP_FILE="${BACKUP_DIR}/${LABEL}_${TIMESTAMP}.tar.gz"
   ENCRYPTED_FILE="${BACKUP_FILE}.gpg"
 
-  echo "[Backup-Vol] Respaldando volumen: $VOLUME ..."
+  # Buscar volumen por sufijo (Docker Swarm/Dokploy añade prefijo del stack)
+  VOLUME=$(docker volume ls --format '{{.Name}}' 2>/dev/null | grep -E "_${SUFFIX}$" | head -1 || echo "")
 
-  # Verificar que el volumen existe
-  if ! docker volume inspect "$VOLUME" >/dev/null 2>&1; then
-    echo "[Backup-Vol] ⚠️ Volumen $VOLUME no existe, saltando..."
+  if [[ -z "$VOLUME" ]]; then
+    echo "[Backup-Vol] ⚠️ No se encontró volumen con sufijo $SUFFIX, saltando..."
     continue
   fi
+
+  echo "[Backup-Vol] Respaldando volumen: $VOLUME ..."
 
   # Dump volumen a tar.gz usando contenedor temporal
   if docker run --rm \
@@ -91,8 +95,8 @@ if [[ -n "${RCLONE_REMOTE:-}" ]]; then
     RCLONE_OPTS="--config $RCLONE_CONFIG"
   fi
 
-  for VOLUME in "${!VOLUMES[@]}"; do
-    LABEL="${VOLUMES[$VOLUME]}"
+  for VOLUME in "${!VOLUME_SUFFIXES[@]}"; do
+    LABEL="${VOLUME_SUFFIXES[$VOLUME]}"
     ENCRYPTED_FILE="${BACKUP_DIR}/${LABEL}_${TIMESTAMP}.tar.gz.gpg"
     if [[ -f "$ENCRYPTED_FILE" ]]; then
       rclone copy $RCLONE_OPTS "$ENCRYPTED_FILE" "${RCLONE_REMOTE}/volumes/" \
