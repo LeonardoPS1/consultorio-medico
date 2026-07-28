@@ -10,7 +10,7 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 
-ARG CACHEBUST=15
+ARG CACHEBUST=16
 RUN echo "Cache bust: $CACHEBUST"
 
 RUN corepack enable && corepack prepare pnpm@11.14.0 --activate
@@ -21,6 +21,9 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY dashboard/package.json ./dashboard/
+
+# Ensure all workspace members exist for pnpm resolution
+RUN mkdir -p /app/ops-console && echo '{"name":"ops-console","version":"0.0.0","private":true}' > /app/ops-console/package.json
 
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     --mount=type=cache,target=/root/.npm \
@@ -38,17 +41,15 @@ RUN echo "Cache bust: $CACHEBUST"
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/dashboard/node_modules ./dashboard/node_modules
 
-# Copy only what's needed for the build (workspace root + dashboard)
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY dashboard/ ./dashboard
+# Full repo copy for Next.js standalone tracing (outputFileTracingRoot: '..')
+COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV NEXT_PUBLIC_GIT_COMMIT=$GIT_COMMIT
 ENV NEXT_PUBLIC_BUILD_TIME=$BUILD_TIME
 
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    corepack enable && corepack prepare pnpm@11.14.0 --activate && pnpm build
+RUN corepack enable && corepack prepare pnpm@11.14.0 --activate && pnpm build
 
 # ─── Stage 3: Runner (producción) ────────────────────────────────────────────
 FROM node:22-alpine AS runner
