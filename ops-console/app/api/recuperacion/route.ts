@@ -10,7 +10,7 @@ const BACKUP_DIR = process.env.BACKUP_DIR || '/var/backups/consultorio'
 export async function GET() {
   try {
     const session = await getSessionFromCookie()
-    if (!session?.rol || session.rol !== 'admin') {
+    if (!session) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
