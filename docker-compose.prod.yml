@@ -547,7 +547,7 @@ services:
       - PORT=3002
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /var/backups/consultorio:/var/backups/consultorio:ro
+      - /var/backups/consultorio:/var/backups/consultorio:rw
       - ./scripts:/opt/consultorio/scripts:ro
     depends_on:
       - postgres

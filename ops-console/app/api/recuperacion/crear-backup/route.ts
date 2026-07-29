@@ -8,9 +8,52 @@ export const dynamic = 'force-dynamic'
 const BACKUP_DIR = process.env.BACKUP_DIR || '/var/backups/consultorio'
 const SCRIPTS_DIR = '/opt/consultorio/scripts'
 
-async function runScript(name: string, script: string): Promise<{ success: boolean; output: string }> {
+function checkDockerSocket(): boolean {
+  try {
+    execSync('docker info', { stdio: 'pipe', timeout: 5000 })
+    return true
+  } catch {
+    return false
+  }
+}
+
+function checkScriptsDir(): boolean {
+  try {
+    return fs.existsSync(SCRIPTS_DIR) && fs.existsSync(`${SCRIPTS_DIR}/backup-encriptado.sh`)
+  } catch {
+    return false
+  }
+}
+
+async function runScriptInDocker(
+  scriptFile: string,
+  extraDeps: string,
+): Promise<{ success: boolean; output: string }> {
   return new Promise((resolve) => {
-    exec(`bash ${script} ${BACKUP_DIR} 2>&1`, {
+    const cmd = [
+      'docker run --rm',
+      '-v /var/run/docker.sock:/var/run/docker.sock',
+      `-v ${SCRIPTS_DIR}:/scripts:ro`,
+      `-v ${BACKUP_DIR}:/backup`,
+      'alpine:3.20',
+      'sh -c',
+      `"apk add --no-cache docker-cli gpg bash ${extraDeps} >/dev/null 2>&1 && bash /scripts/${scriptFile} /backup"`,
+    ].join(' ')
+
+    exec(cmd, { timeout: 300_000 }, (err, stdout, stderr) => {
+      const output = stdout + (stderr ? `\nSTDERR: ${stderr}` : '')
+      if (err) {
+        resolve({ success: false, output: output || err.message })
+      } else {
+        resolve({ success: true, output })
+      }
+    })
+  })
+}
+
+async function runScriptDirect(scriptPath: string): Promise<{ success: boolean; output: string }> {
+  return new Promise((resolve) => {
+    exec(`bash ${scriptPath} ${BACKUP_DIR} 2>&1`, {
       timeout: 300_000,
       env: { ...process.env, BACKUP_DIR },
     }, (err, stdout, stderr) => {
@@ -31,30 +74,40 @@ export async function POST() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const scriptsExist = fs.existsSync(SCRIPTS_DIR)
-    const dockerExists = (() => {
-      try {
-        execSync('docker --version', { stdio: 'pipe' })
-        return true
-      } catch { return false }
-    })()
+    const hasDockerSocket = checkDockerSocket()
+    const hasScripts = checkScriptsDir()
 
-    if (!dockerExists) {
-      return NextResponse.json({ error: 'Docker CLI no disponible en este container' }, { status: 500 })
+    if (!hasDockerSocket && !hasScripts) {
+      return NextResponse.json({
+        success: false,
+        message: 'No es posible crear backups: Docker socket no disponible y scripts no encontrados. ' +
+          'Verifica que el contenedor ops-console tenga acceso a /var/run/docker.sock y /opt/consultorio/scripts.',
+        results: {},
+      }, { status: 500 })
     }
 
     const results: Record<string, { success: boolean; output: string }> = {}
 
-    if (scriptsExist && fs.existsSync(`${SCRIPTS_DIR}/backup-encriptado.sh`)) {
-      results.postgres = await runScript('backup-encriptado', `${SCRIPTS_DIR}/backup-encriptado.sh`)
+    if (hasDockerSocket) {
+      results.postgres = await runScriptInDocker('backup-encriptado.sh', 'postgresql-client')
+      results.volumes = await runScriptInDocker('backup-volumenes.sh', '')
+      if (hasScripts && fs.existsSync(`${SCRIPTS_DIR}/backup-infra.sh`)) {
+        results.infra = await runScriptInDocker('backup-infra.sh', '')
+      }
+    } else {
+      results.postgres = await runScriptDirect(`${SCRIPTS_DIR}/backup-encriptado.sh`)
+      results.volumes = await runScriptDirect(`${SCRIPTS_DIR}/backup-volumenes.sh`)
+      if (fs.existsSync(`${SCRIPTS_DIR}/backup-infra.sh`)) {
+        results.infra = await runScriptDirect(`${SCRIPTS_DIR}/backup-infra.sh`)
+      }
     }
 
-    if (scriptsExist && fs.existsSync(`${SCRIPTS_DIR}/backup-volumenes.sh`)) {
-      results.volumes = await runScript('backup-volumenes', `${SCRIPTS_DIR}/backup-volumenes.sh`)
-    }
-
-    if (scriptsExist && fs.existsSync(`${SCRIPTS_DIR}/backup-infra.sh`)) {
-      results.infra = await runScript('backup-infra', `${SCRIPTS_DIR}/backup-infra.sh`)
+    if (Object.keys(results).length === 0) {
+      return NextResponse.json({
+        success: false,
+        message: 'No se ejecutó ningún script de backup. Verifica que los scripts existan en /opt/consultorio/scripts.',
+        results: {},
+      })
     }
 
     const allOk = Object.values(results).every(r => r.success)
@@ -63,7 +116,7 @@ export async function POST() {
       success: allOk,
       message: allOk
         ? 'Backups creados exitosamente'
-        : 'Algunos backups fallaron',
+        : 'Algunos backups fallaron. Revisa los detalles abajo.',
       results,
     })
   } catch (e) {
