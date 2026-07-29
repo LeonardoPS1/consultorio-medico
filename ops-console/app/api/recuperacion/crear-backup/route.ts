@@ -10,42 +10,52 @@ const SCRIPTS_DIR = '/opt/consultorio/scripts'
 const SSH_KEY_FILE = '/tmp/ops_ssh_key'
 
 const SSH_HOST = process.env.OPS_SSH_HOST || '51.222.207.250'
-const SSH_USER = process.env.OPS_SSH_USER || 'root'
+const SSH_USER = process.env.OPS_SSH_USER || 'ubuntu'
 
-function hasVolumes(key: keyof typeof VOLUME_CHECKS): boolean {
-  try {
-    return VOLUME_CHECKS[key]()
-  } catch {
-    return false
-  }
+function checkDockerSocket(): boolean {
+  try { execSync('docker info', { stdio: 'pipe', timeout: 5000 }); return true }
+  catch { return false }
 }
 
-const VOLUME_CHECKS = {
-  dockerSocket: () => { execSync('docker info', { stdio: 'pipe', timeout: 5000 }); return true },
-  scriptsDir: () => fs.existsSync(SCRIPTS_DIR) && fs.existsSync(`${SCRIPTS_DIR}/backup-encriptado.sh`),
-  sshKey: () => {
-    const key = fs.readFileSync(SSH_KEY_FILE, 'utf8').trim()
-    return key.length > 0
-  },
-} as const
+function checkScriptsDir(): boolean {
+  try { return fs.existsSync(SCRIPTS_DIR) && fs.existsSync(`${SCRIPTS_DIR}/backup-encriptado.sh`) }
+  catch { return false }
+}
+
+function writeSshKey(content: string): boolean {
+  try {
+    const normalized = content.replace(/\r\n/g, '\n').trim()
+    fs.writeFileSync(SSH_KEY_FILE, normalized + '\n', { mode: 0o600 })
+    return fs.existsSync(SSH_KEY_FILE) && fs.readFileSync(SSH_KEY_FILE, 'utf8').length > 50
+  } catch { return false }
+}
 
 function setupSshKey(): boolean {
   try {
-    const keyFromSecret = fs.readFileSync('/run/secrets/ops_ssh_key', 'utf8').trim()
-    if (keyFromSecret) {
-      fs.writeFileSync(SSH_KEY_FILE, keyFromSecret, { mode: 0o600 })
-      return true
-    }
+    const keyFromSecret = fs.readFileSync('/run/secrets/ops_ssh_key', 'utf8')
+    if (keyFromSecret && writeSshKey(keyFromSecret)) return true
   } catch { /* not a docker secret */ }
 
   const keyFromEnv = process.env.OPS_SSH_KEY
-  if (keyFromEnv) {
-    const decoded = Buffer.from(keyFromEnv, 'base64').toString('utf8')
-    fs.writeFileSync(SSH_KEY_FILE, decoded, { mode: 0o600 })
-    return true
+  if (!keyFromEnv) return false
+
+  if (keyFromEnv.startsWith('-----BEGIN')) {
+    if (writeSshKey(keyFromEnv)) return true
   }
 
+  try {
+    const decoded = Buffer.from(keyFromEnv, 'base64').toString('utf8')
+    if (writeSshKey(decoded)) return true
+  } catch { /* not base64 */ }
+
   return false
+}
+
+function checkSshKey(): boolean {
+  try {
+    const key = fs.readFileSync(SSH_KEY_FILE, 'utf8')
+    return key.includes('BEGIN') && key.includes('END')
+  } catch { return false }
 }
 
 async function runViaSsh(scriptName: string): Promise<{ success: boolean; output: string }> {
@@ -118,9 +128,9 @@ export async function POST() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const hasDockerSocket = hasVolumes('dockerSocket')
-    const hasScripts = hasVolumes('scriptsDir')
-    const hasSshKey = setupSshKey()
+    const hasDockerSocket = checkDockerSocket()
+    const hasScripts = checkScriptsDir()
+    const hasSshKey = setupSshKey() && checkSshKey()
 
     if (!hasDockerSocket && !hasScripts && !hasSshKey) {
       return NextResponse.json({
