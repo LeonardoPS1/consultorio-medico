@@ -7,28 +7,72 @@ export const dynamic = 'force-dynamic'
 
 const BACKUP_DIR = process.env.BACKUP_DIR || '/var/backups/consultorio'
 const SCRIPTS_DIR = '/opt/consultorio/scripts'
+const SSH_KEY_FILE = '/tmp/ops_ssh_key'
 
-function checkDockerSocket(): boolean {
+const SSH_HOST = process.env.OPS_SSH_HOST || '51.222.207.250'
+const SSH_USER = process.env.OPS_SSH_USER || 'root'
+
+function hasVolumes(key: keyof typeof VOLUME_CHECKS): boolean {
   try {
-    execSync('docker info', { stdio: 'pipe', timeout: 5000 })
+    return VOLUME_CHECKS[key]()
+  } catch {
+    return false
+  }
+}
+
+const VOLUME_CHECKS = {
+  dockerSocket: () => { execSync('docker info', { stdio: 'pipe', timeout: 5000 }); return true },
+  scriptsDir: () => fs.existsSync(SCRIPTS_DIR) && fs.existsSync(`${SCRIPTS_DIR}/backup-encriptado.sh`),
+  sshKey: () => {
+    const key = fs.readFileSync(SSH_KEY_FILE, 'utf8').trim()
+    return key.length > 0
+  },
+} as const
+
+function setupSshKey(): boolean {
+  try {
+    const keyFromSecret = fs.readFileSync('/run/secrets/ops_ssh_key', 'utf8').trim()
+    if (keyFromSecret) {
+      fs.writeFileSync(SSH_KEY_FILE, keyFromSecret, { mode: 0o600 })
+      return true
+    }
+  } catch { /* not a docker secret */ }
+
+  const keyFromEnv = process.env.OPS_SSH_KEY
+  if (keyFromEnv) {
+    const decoded = Buffer.from(keyFromEnv, 'base64').toString('utf8')
+    fs.writeFileSync(SSH_KEY_FILE, decoded, { mode: 0o600 })
     return true
-  } catch {
-    return false
   }
+
+  return false
 }
 
-function checkScriptsDir(): boolean {
-  try {
-    return fs.existsSync(SCRIPTS_DIR) && fs.existsSync(`${SCRIPTS_DIR}/backup-encriptado.sh`)
-  } catch {
-    return false
-  }
+async function runViaSsh(scriptName: string): Promise<{ success: boolean; output: string }> {
+  return new Promise((resolve) => {
+    const cmd = [
+      'ssh',
+      '-i', SSH_KEY_FILE,
+      '-o StrictHostKeyChecking=no',
+      '-o UserKnownHostsFile=/dev/null',
+      '-o BatchMode=yes',
+      '-o ConnectTimeout=10',
+      `${SSH_USER}@${SSH_HOST}`,
+      `"bash /opt/consultorio/scripts/${scriptName} ${BACKUP_DIR} 2>&1"`,
+    ].join(' ')
+
+    exec(cmd, { timeout: 300_000 }, (err, stdout, stderr) => {
+      const output = stdout + (stderr ? `\nSTDERR: ${stderr}` : '')
+      if (err) {
+        resolve({ success: false, output: output || err.message })
+      } else {
+        resolve({ success: true, output })
+      }
+    })
+  })
 }
 
-async function runScriptInDocker(
-  scriptFile: string,
-  extraDeps: string,
-): Promise<{ success: boolean; output: string }> {
+async function runViaDocker(scriptFile: string, extraDeps: string): Promise<{ success: boolean; output: string }> {
   return new Promise((resolve) => {
     const cmd = [
       'docker run --rm',
@@ -51,7 +95,7 @@ async function runScriptInDocker(
   })
 }
 
-async function runScriptDirect(scriptPath: string): Promise<{ success: boolean; output: string }> {
+async function runDirect(scriptPath: string): Promise<{ success: boolean; output: string }> {
   return new Promise((resolve) => {
     exec(`bash ${scriptPath} ${BACKUP_DIR} 2>&1`, {
       timeout: 300_000,
@@ -74,37 +118,43 @@ export async function POST() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const hasDockerSocket = checkDockerSocket()
-    const hasScripts = checkScriptsDir()
+    const hasDockerSocket = hasVolumes('dockerSocket')
+    const hasScripts = hasVolumes('scriptsDir')
+    const hasSshKey = setupSshKey()
 
-    if (!hasDockerSocket && !hasScripts) {
+    if (!hasDockerSocket && !hasScripts && !hasSshKey) {
       return NextResponse.json({
-        error: 'No es posible crear backups: Docker socket no disponible y scripts no encontrados. ' +
-          'Verifica que el contenedor ops-console tenga acceso a /var/run/docker.sock y /opt/consultorio/scripts.',
+        error: 'No hay método disponible para crear backups. ' +
+          'Configurá una clave SSH (OPS_SSH_KEY / secret ops_ssh_key) ' +
+          'o montá los volúmenes docker.sock y scripts en el contenedor ops-console.',
       }, { status: 500 })
     }
 
     const results: Record<string, { success: boolean; output: string }> = {}
 
-    if (hasDockerSocket) {
-      results.postgres = await runScriptInDocker('backup-encriptado.sh', 'postgresql-client')
-      results.volumes = await runScriptInDocker('backup-volumenes.sh', '')
+    if (hasSshKey) {
+      results.postgres = await runViaSsh('backup-encriptado.sh')
+      results.volumes = await runViaSsh('backup-volumenes.sh')
+      if (fs.existsSync(`${SCRIPTS_DIR}/backup-infra.sh`)) {
+        results.infra = await runViaSsh('backup-infra.sh')
+      }
+    } else if (hasDockerSocket) {
+      results.postgres = await runViaDocker('backup-encriptado.sh', 'postgresql-client')
+      results.volumes = await runViaDocker('backup-volumenes.sh', '')
       if (hasScripts && fs.existsSync(`${SCRIPTS_DIR}/backup-infra.sh`)) {
-        results.infra = await runScriptInDocker('backup-infra.sh', '')
+        results.infra = await runViaDocker('backup-infra.sh', '')
       }
     } else {
-      results.postgres = await runScriptDirect(`${SCRIPTS_DIR}/backup-encriptado.sh`)
-      results.volumes = await runScriptDirect(`${SCRIPTS_DIR}/backup-volumenes.sh`)
+      results.postgres = await runDirect(`${SCRIPTS_DIR}/backup-encriptado.sh`)
+      results.volumes = await runDirect(`${SCRIPTS_DIR}/backup-volumenes.sh`)
       if (fs.existsSync(`${SCRIPTS_DIR}/backup-infra.sh`)) {
-        results.infra = await runScriptDirect(`${SCRIPTS_DIR}/backup-infra.sh`)
+        results.infra = await runDirect(`${SCRIPTS_DIR}/backup-infra.sh`)
       }
     }
 
     if (Object.keys(results).length === 0) {
       return NextResponse.json({
-        success: false,
-        message: 'No se ejecutó ningún script de backup. Verifica que los scripts existan en /opt/consultorio/scripts.',
-        results: {},
+        error: 'No se ejecutó ningún script de backup. Verifica que los scripts existan.',
       })
     }
 

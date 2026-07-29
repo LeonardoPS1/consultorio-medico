@@ -541,10 +541,13 @@ services:
       - ops_database_url
       - ops_jwt_secret
       - ops_setup_token_pepper
+      - ops_ssh_key
     environment:
       - NODE_ENV=production
       - TZ=America/Santiago
       - PORT=3002
+      - OPS_SSH_HOST=51.222.207.250
+      - OPS_SSH_USER=ubuntu
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/backups/consultorio:/var/backups/consultorio:rw
@@ -609,6 +612,8 @@ secrets:
   ops_jwt_secret:
     external: true
   ops_setup_token_pepper:
+    external: true
+  ops_ssh_key:
     external: true
 
 volumes:
