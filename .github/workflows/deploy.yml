@@ -65,7 +65,7 @@ jobs:
       - name: Health check
         run: |
           for i in $(seq 1 36); do
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' 'https://med.aicorebots.com/api/health' 2>/dev/null || echo "000")
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' -H 'Accept: application/json' 'https://med.aicorebots.com/api/health' 2>/dev/null || echo "000")
             if [ "$STATUS" = "200" ] || [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
               echo "Health check passed ($STATUS)"
               exit 0
@@ -78,7 +78,7 @@ jobs:
 
       - name: Smoke test
         run: |
-          RESPONSE=$(curl -s 'https://med.aicorebots.com/api/health')
+          RESPONSE=$(curl -s -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' -H 'Accept: application/json' 'https://med.aicorebots.com/api/health')
           echo "Health response: $RESPONSE"
           echo "$RESPONSE" | grep -q '"status":"healthy"\|"status":"ok"\|"status":"degraded"\|"ok":true\|"healthy":true' && echo "Smoke test passed" || (echo "Smoke test failed" && exit 1)
 
