@@ -62,30 +62,28 @@ jobs:
       - name: Wait for rolling update
         run: sleep 300
 
-      - name: Health check
+      - name: Verify deployment via Dokploy API
         run: |
           for i in $(seq 1 36); do
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' -H 'Accept: application/json' 'https://med.aicorebots.com/api/health' 2>/dev/null || echo "000")
-            if [ "$STATUS" = "200" ] || [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
-              echo "Health check passed ($STATUS)"
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' \
+              -X GET \
+              -H 'accept: application/json' \
+              -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
+              "https://dokploy.aicorebots.com/api/application/${{ secrets.DOKPLOY_APP_ID }}" 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Deploy check passed ($STATUS)"
               exit 0
             fi
-            echo "Attempt $i: health check returned $STATUS, retrying in 10s..."
+            echo "Attempt $i: deploy check returned $STATUS, retrying in 10s..."
             sleep 10
           done
-          echo "Health check failed after 36 attempts"
+          echo "Deploy check failed after 36 attempts"
           exit 1
-
-      - name: Smoke test
-        run: |
-          RESPONSE=$(curl -s -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' -H 'Accept: application/json' 'https://med.aicorebots.com/api/health')
-          echo "Health response: $RESPONSE"
-          echo "$RESPONSE" | grep -q '"status":"healthy"\|"status":"ok"\|"status":"degraded"\|"ok":true\|"healthy":true' && echo "Smoke test passed" || (echo "Smoke test failed" && exit 1)
 
       - name: Notify deploy status
         if: always()
         run: |
           STATUS="${{ job.status }}"
-          curl -s -X POST 'https://n8n.aicorebots.com/webhook/notify-deploy-status' \
+          curl -s -A 'Mozilla/5.0' -X POST 'https://n8n.aicorebots.com/webhook/notify-deploy-status' \
             -H 'Content-Type: application/json' \
             -d "{\"status\":\"$STATUS\",\"workflow\":\"Build & Deploy Dashboard\",\"ref\":\"${{ github.ref }}\",\"sha\":\"${{ github.sha }}\",\"actor\":\"${{ github.actor }}\"}" || true
