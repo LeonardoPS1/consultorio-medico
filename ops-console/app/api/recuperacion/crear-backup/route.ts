@@ -25,9 +25,9 @@ function checkScriptsDir(): boolean {
 
 function writeSshKey(content: string): boolean {
   try {
-    const normalized = content.replace(/\r\n/g, '\n').trim()
-    fs.writeFileSync(SSH_KEY_FILE, normalized + '\n', { mode: 0o600 })
-    return fs.existsSync(SSH_KEY_FILE) && fs.readFileSync(SSH_KEY_FILE, 'utf8').length > 50
+    const normalized = content.replace(/\r\n/g, '\n').trim() + '\n'
+    fs.writeFileSync(SSH_KEY_FILE, normalized, { mode: 0o600 })
+    return fs.readFileSync(SSH_KEY_FILE, 'utf8').includes('-----BEGIN')
   } catch { return false }
 }
 
@@ -59,28 +59,59 @@ function checkSshKey(): boolean {
   } catch { return false }
 }
 
-async function runViaSsh(scriptName: string): Promise<{ success: boolean; output: string }> {
-  return new Promise((resolve) => {
-    const cmd = [
-      'ssh',
-      '-i', SSH_KEY_FILE,
-      '-o StrictHostKeyChecking=no',
-      '-o UserKnownHostsFile=/dev/null',
-      '-o BatchMode=yes',
-      '-o ConnectTimeout=10',
-      `${SSH_USER}@${SSH_HOST}`,
-      `"bash ${SSH_SCRIPTS_DIR}/${scriptName} ${BACKUP_DIR} 2>&1"`,
-    ].join(' ')
+function sshBaseCmd(): string[] {
+  return [
+    'ssh',
+    '-i', SSH_KEY_FILE,
+    '-o StrictHostKeyChecking=no',
+    '-o UserKnownHostsFile=/dev/null',
+    '-o BatchMode=yes',
+    '-o ConnectTimeout=10',
+    `${SSH_USER}@${SSH_HOST}`,
+  ]
+}
 
-    exec(cmd, { timeout: 300_000 }, (err, stdout, stderr) => {
-      const output = stdout + (stderr ? `\nSTDERR: ${stderr}` : '')
-      if (err) {
-        resolve({ success: false, output: output || err.message })
-      } else {
-        resolve({ success: true, output })
-      }
+async function readScriptViaSsh(scriptName: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const cmd = [...sshBaseCmd(), `"cat ${SSH_SCRIPTS_DIR}/${scriptName}"`].join(' ')
+    exec(cmd, { timeout: 30_000 }, (err, stdout) => {
+      if (err) reject(new Error(err.message))
+      else resolve(stdout)
     })
   })
+}
+
+async function runScriptViaSsh(scriptName: string, patches?: Record<string, string>): Promise<{ success: boolean; output: string }> {
+  try {
+    const content = await readScriptViaSsh(scriptName)
+
+    let patched = content
+    if (patches) {
+      for (const [from, to] of Object.entries(patches)) {
+        patched = patched.replaceAll(from, to)
+      }
+    }
+
+    const b64 = Buffer.from(patched, 'utf8').toString('base64')
+
+    return new Promise((resolve) => {
+      const cmd = [
+        ...sshBaseCmd(),
+        `"echo ${b64} | base64 -d | bash -s -- ${BACKUP_DIR} 2>&1"`,
+      ].join(' ')
+
+      exec(cmd, { timeout: 300_000 }, (err, stdout, stderr) => {
+        const output = stdout + (stderr ? `\nSTDERR: ${stderr}` : '')
+        if (err) {
+          resolve({ success: false, output: output || err.message })
+        } else {
+          resolve({ success: true, output })
+        }
+      })
+    })
+  } catch (e) {
+    return { success: false, output: `Error al leer script: ${e instanceof Error ? e.message : e}` }
+  }
 }
 
 async function runViaDocker(scriptFile: string, extraDeps: string): Promise<{ success: boolean; output: string }> {
@@ -144,10 +175,14 @@ export async function POST() {
     const results: Record<string, { success: boolean; output: string }> = {}
 
     if (hasSshKey) {
-      results.postgres = await runViaSsh('backup-encriptado.sh')
-      results.volumes = await runViaSsh('backup-volumenes.sh')
+      results.postgres = await runScriptViaSsh('backup-encriptado.sh', {
+        'docker ps --format': 'docker ps --no-trunc --format',
+      })
+      results.volumes = await runScriptViaSsh('backup-volumenes.sh', {
+        '"_${SUFFIX}$"': '"(^|_)${SUFFIX}$"',
+      })
       if (fs.existsSync(`${SCRIPTS_DIR}/backup-infra.sh`)) {
-        results.infra = await runViaSsh('backup-infra.sh')
+        results.infra = await runScriptViaSsh('backup-infra.sh')
       }
     } else if (hasDockerSocket) {
       results.postgres = await runViaDocker('backup-encriptado.sh', 'postgresql-client')
