@@ -11,6 +11,7 @@ const SSH_KEY_FILE = '/tmp/ops_ssh_key'
 
 const SSH_HOST = process.env.OPS_SSH_HOST || '51.222.207.250'
 const SSH_USER = process.env.OPS_SSH_USER || 'ubuntu'
+const SSH_SCRIPTS_DIR = process.env.OPS_SCRIPTS_DIR || '/opt/consultorio-medico/scripts'
 
 function checkDockerSocket(): boolean {
   try { execSync('docker info', { stdio: 'pipe', timeout: 5000 }); return true }
@@ -68,7 +69,7 @@ async function runViaSsh(scriptName: string): Promise<{ success: boolean; output
       '-o BatchMode=yes',
       '-o ConnectTimeout=10',
       `${SSH_USER}@${SSH_HOST}`,
-      `"bash /opt/consultorio/scripts/${scriptName} ${BACKUP_DIR} 2>&1"`,
+      `"bash ${SSH_SCRIPTS_DIR}/${scriptName} ${BACKUP_DIR} 2>&1"`,
     ].join(' ')
 
     exec(cmd, { timeout: 300_000 }, (err, stdout, stderr) => {
