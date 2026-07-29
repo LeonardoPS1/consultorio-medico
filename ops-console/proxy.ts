@@ -86,6 +86,11 @@ export async function proxy(request: NextRequest) {
   const isLoginRoute = pathname.startsWith('/api/auth/login/') || pathname.startsWith('/api/auth/register/')
   const isStaticFile = /\.(svg|png|jpg|jpeg|gif|webp|ico|css|js)$/.test(pathname)
 
+  if (pathname === '/favicon.ico') {
+    const response = NextResponse.redirect(new URL('/favicon.svg', request.url))
+    return addSecurityHeaders(response)
+  }
+
   if (isStaticFile || pathname.startsWith('/_next/static') || pathname.startsWith('/_next/image')) {
     const response = NextResponse.next()
     return addSecurityHeaders(response)

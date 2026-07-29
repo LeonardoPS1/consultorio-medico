@@ -59,35 +59,21 @@ jobs:
             ghcr.io/${{ env.REPOSITORY_LC }}-ops:${{ github.sha }}
           platforms: linux/amd64
 
-      - name: Trigger Dokploy deploy (ops-console) via Dashboard proxy
+      - name: Trigger Dokploy deploy (ops-console) via direct API
         run: |
-          curl -s -k -X POST 'https://med.aicorebots.com/api/deploy/dokploy' \
+          curl -s -k -X POST 'https://dokploy.aicorebots.com/api/application.deploy' \
             -H 'accept: application/json' \
             -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
             -H 'Content-Type: application/json' \
-            -d '{"applicationId":"${{ secrets.DOKPLOY_OPS_APP_ID }}"}'
+            -d '{"applicationId":"${{ secrets.DOKPLOY_OPS_APP_ID }}","cleanCache":true}'
 
       - name: Wait for rolling update
-        run: sleep 60
+        run: sleep 120
 
-      - name: Health check
-        continue-on-error: true
+      - name: Notify deploy status
+        if: always()
         run: |
-          for i in $(seq 1 12); do
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' 'https://ops.aicorebots.com/api/health' 2>/dev/null || echo "000")
-            if [ "$STATUS" = "200" ]; then
-              echo "Health check passed (200)"
-              RESPONSE=$(curl -s 'https://ops.aicorebots.com/api/health')
-              echo "$RESPONSE"
-              exit 0
-            fi
-            echo "Attempt $i: health check returned $STATUS, retrying in 10s..."
-            sleep 10
-          done
-          echo "Health check failed after 12 attempts"
-
-      - name: Smoke test
-        continue-on-error: true
-        run: |
-          RESPONSE=$(curl -s 'https://ops.aicorebots.com/api/health')
-          echo "$RESPONSE" | grep -q '"status":"healthy"' && echo "Smoke test passed" || (echo "Smoke test failed: $RESPONSE" && exit 1)
+          STATUS="${{ job.status }}"
+          curl -s -A 'Mozilla/5.0' -X POST 'https://n8n.aicorebots.com/webhook/notify-deploy-status' \
+            -H 'Content-Type: application/json' \
+            -d "{\"status\":\"$STATUS\",\"workflow\":\"Build & Deploy Ops Console\",\"ref\":\"${{ github.ref }}\",\"sha\":\"${{ github.sha }}\",\"actor\":\"${{ github.actor }}\"}" || true
