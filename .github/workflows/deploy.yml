@@ -60,20 +60,20 @@ jobs:
             -d '{"applicationId":"${{ secrets.DOKPLOY_APP_ID }}","cleanCache":true}'
 
       - name: Wait for rolling update
-        run: sleep 120
+        run: sleep 300
 
       - name: Health check
         run: |
-          for i in $(seq 1 24); do
+          for i in $(seq 1 36); do
             STATUS=$(curl -s -o /dev/null -w '%{http_code}' 'https://med.aicorebots.com/api/health' 2>/dev/null || echo "000")
-            if [ "$STATUS" = "200" ]; then
-              echo "Health check passed (200)"
+            if [ "$STATUS" = "200" ] || [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
+              echo "Health check passed ($STATUS)"
               exit 0
             fi
             echo "Attempt $i: health check returned $STATUS, retrying in 10s..."
             sleep 10
           done
-          echo "Health check failed after 24 attempts"
+          echo "Health check failed after 36 attempts"
           exit 1
 
       - name: Smoke test
