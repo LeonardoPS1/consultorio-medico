@@ -15,7 +15,7 @@ export async function GET() {
     }
 
     if (!fs.existsSync(BACKUP_DIR)) {
-      return NextResponse.json({ backups: [], error: null })
+      return NextResponse.json({ backups: { postgres: [], volumes: [] }, error: null })
     }
 
     const pgBackups = fs.readdirSync(BACKUP_DIR)

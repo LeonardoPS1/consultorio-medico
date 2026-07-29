@@ -103,7 +103,7 @@ export default function RecuperacionPage() {
     })
   }
 
-  const hasBackups = backups && (backups.postgres.length > 0 || backups.volumes.length > 0)
+  const hasBackups = (backups?.postgres?.length ?? 0) > 0 || (backups?.volumes?.length ?? 0) > 0
 
   return (
     <div className="space-y-6">
