@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
 import { getDb } from '@/lib/db'
-import { sql } from 'drizzle-orm'
+import { platformAuditLog } from '@/drizzle/schema'
 import { exec } from 'child_process'
 import fs from 'fs'
 
@@ -97,21 +97,15 @@ export async function POST() {
 
     const fullOutput = result.stdout + (result.stderr ? `\nSTDERR: ${result.stderr}` : '')
     const isOk = result.exitCode === 0
+    const mensaje = `Recuperación ${isOk ? 'completada' : 'falló'} desde ops.aicorebots.com por ${session.nombre}`
 
-    await getDb().execute(sql`
-      INSERT INTO workflow_logs (workflow_id, workflow_name, nivel, mensaje, metadata)
-      VALUES (
-        'WF-14',
-        'Recuperación Automática',
-        ${isOk ? 'info' : 'warning'},
-        'Recuperación ${isOk ? 'completada' : 'falló'} desde ops.aicorebots.com por ${session.nombre}',
-        ${JSON.stringify({
-          operator: session.email,
-          exitCode: result.exitCode,
-          output: fullOutput.slice(0, 2000),
-        })}
-      )
-    `)
+    await getDb().insert(platformAuditLog).values({
+      operatorEmail: session.email,
+      accion: 'recuperacion',
+      recurso: 'sistema',
+      detalles: { exitCode: result.exitCode, output: fullOutput.slice(0, 1000) },
+      motivo: mensaje,
+    })
 
     return NextResponse.json({
       success: isOk,
