@@ -2,8 +2,61 @@ import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
 import { getDb } from '@/lib/db'
 import { sql } from 'drizzle-orm'
+import { exec } from 'child_process'
+import fs from 'fs'
 
 export const dynamic = 'force-dynamic'
+
+const SSH_KEY_FILE = '/tmp/ops_ssh_key'
+const SSH_HOST = process.env.OPS_SSH_HOST || '51.222.207.250'
+const SSH_USER = process.env.OPS_SSH_USER || 'ubuntu'
+
+function writeSshKey(content: string): boolean {
+  try {
+    const normalized = content.replace(/\r\n/g, '\n').trim() + '\n'
+    fs.writeFileSync(SSH_KEY_FILE, normalized, { mode: 0o600 })
+    return fs.readFileSync(SSH_KEY_FILE, 'utf8').includes('-----BEGIN')
+  } catch { return false }
+}
+
+function setupSshKey(): boolean {
+  try {
+    const keyFromSecret = fs.readFileSync('/run/secrets/ops_ssh_key', 'utf8')
+    if (keyFromSecret && writeSshKey(keyFromSecret)) return true
+  } catch { /* not a docker secret */ }
+
+  const keyFromEnv = process.env.OPS_SSH_KEY
+  if (!keyFromEnv) return false
+
+  if (keyFromEnv.startsWith('-----BEGIN')) {
+    if (writeSshKey(keyFromEnv)) return true
+  }
+  try {
+    const decoded = Buffer.from(keyFromEnv, 'base64').toString('utf8')
+    if (writeSshKey(decoded)) return true
+  } catch { /* not base64 */ }
+
+  return false
+}
+
+function runViaSsh(cmd: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const sshCmd = [
+      'ssh',
+      '-i', SSH_KEY_FILE,
+      '-o StrictHostKeyChecking=no',
+      '-o UserKnownHostsFile=/dev/null',
+      '-o BatchMode=yes',
+      '-o ConnectTimeout=10',
+      `${SSH_USER}@${SSH_HOST}`,
+      `"${cmd.replace(/"/g, '\\"')}"`,
+    ].join(' ')
+    exec(sshCmd, { timeout: 120_000 }, (err, stdout, stderr) => {
+      if (err) reject(new Error(stderr || err.message))
+      else resolve(stdout)
+    })
+  })
+}
 
 export async function POST() {
   try {
@@ -12,72 +65,40 @@ export async function POST() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const n8nUrl = process.env.N8N_URL || 'https://n8n.aicorebots.com'
-    const n8nApiKey = process.env.N8N_API_KEY
-
-    if (!n8nApiKey) {
-      return NextResponse.json({ error: 'N8N_API_KEY no configurada' }, { status: 500 })
+    if (!setupSshKey()) {
+      return NextResponse.json({ error: 'SSH key no disponible' }, { status: 500 })
     }
 
-    const res = await fetch(`${n8nUrl}/api/v1/workflows`, {
-      headers: { 'X-N8N-API-KEY': n8nApiKey },
-    })
-    if (!res.ok) {
-      return NextResponse.json({ error: 'n8n no responde' }, { status: 502 })
-    }
+    const scriptPath = '/opt/consultorio-medico/scripts/recover.sh'
+    const cmd = `cd /opt/consultorio-medico && sudo bash ${scriptPath} --force 2>&1`
 
-    const workflows = await res.json()
-    const wf14 = workflows.data?.find(
-      (w: { name: string; id: string }) =>
-        w.name?.includes('14') && w.name?.toLowerCase().includes('recuperacion'),
-    ) || workflows.data?.find(
-      (w: { name: string; id: string }) =>
-        w.name?.toLowerCase().includes('recuperacion'),
-    )
+    const output = await runViaSsh(cmd)
 
-    if (!wf14) {
-      return NextResponse.json({
-        error: 'WF-14 no encontrado. ¿Está deployado en n8n?',
-        workflowsDisponibles: workflows.data?.map((w: { name: string; id: string }) => w.name),
-      }, { status: 404 })
-    }
-
-    const execRes = await fetch(`${n8nUrl}/api/v1/workflows/${wf14.id}/execute`, {
-      method: 'POST',
-      headers: {
-        'X-N8N-API-KEY': n8nApiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ mode: 'trigger' }),
-    })
-
-    if (!execRes.ok) {
-      const errBody = await execRes.text()
-      return NextResponse.json({
-        error: `Error al ejecutar WF-14: ${errBody}`,
-      }, { status: 502 })
-    }
-
-    const execData = await execRes.json()
+    const success = output.toLowerCase().includes('recuperación completada') ||
+      output.toLowerCase().includes('restore complete') ||
+      output.toLowerCase().includes('success')
 
     await getDb().execute(sql`
       INSERT INTO workflow_logs (workflow_id, workflow_name, nivel, mensaje, metadata)
       VALUES (
         'WF-14',
         'Recuperación Automática',
-        'info',
-        'Recuperación iniciada desde ops.aicorebots.com por ${session.nombre}',
-        ${JSON.stringify({ operator: session.email, executionId: execData.executionId })}
+        ${success ? 'info' : 'warning'},
+        'Recuperación ${success ? 'completada' : 'iniciada (verificar)'} desde ops.aicorebots.com por ${session.nombre}',
+        ${JSON.stringify({ operator: session.email, output: output.slice(0, 2000) })}
       )
     `)
 
     return NextResponse.json({
-      success: true,
-      message: 'WF-14 ejecutado. Revisar n8n para progreso.',
-      executionId: execData.executionId,
+      success,
+      message: success
+        ? 'Recuperación completada exitosamente'
+        : 'Recuperación ejecutada. Revisar logs para más detalles.',
+      output: output.slice(0, 3000),
     })
   } catch (e) {
-    console.error('[recuperacion] Error:', e)
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+    const msg = e instanceof Error ? e.message : 'Error desconocido'
+    console.error('[recuperacion] Error al ejecutar recuperación:', msg)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
