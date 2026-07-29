@@ -62,24 +62,6 @@ jobs:
       - name: Wait for rolling update
         run: sleep 300
 
-      - name: Verify deployment via Dokploy API
-        run: |
-          for i in $(seq 1 36); do
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' \
-              -X GET \
-              -H 'accept: application/json' \
-              -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
-              "https://dokploy.aicorebots.com/api/application/${{ secrets.DOKPLOY_APP_ID }}" 2>/dev/null || echo "000")
-            if [ "$STATUS" = "200" ]; then
-              echo "Deploy check passed ($STATUS)"
-              exit 0
-            fi
-            echo "Attempt $i: deploy check returned $STATUS, retrying in 10s..."
-            sleep 10
-          done
-          echo "Deploy check failed after 36 attempts"
-          exit 1
-
       - name: Notify deploy status
         if: always()
         run: |
