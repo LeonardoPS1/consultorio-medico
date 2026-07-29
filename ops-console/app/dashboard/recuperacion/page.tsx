@@ -31,6 +31,7 @@ interface TriggerResult {
   error?: string
   executionId?: string
   workflowsDisponibles?: string[]
+  output?: string
 }
 
 export default function RecuperacionPage() {
@@ -76,12 +77,11 @@ export default function RecuperacionPage() {
     setResult(null)
     try {
       const res = await fetch('/api/recuperacion/trigger', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        setResult({ error: data.error || `Error ${res.status}: Sin autorización o WF-14 no encontrado` })
+        setResult({ error: data.error || `Error ${res.status}` })
         return
       }
-      const data = await res.json()
       setResult(data)
     } catch (e) {
       setResult({ error: e instanceof Error ? e.message : 'Error de conexión' })
@@ -302,17 +302,22 @@ export default function RecuperacionPage() {
                 )}
               </>
             ) : (
-              <>
-                ❌ {result.error}
-                {result.workflowsDisponibles && (
-                  <div className="mt-1 text-xs">
-                    Workflows disponibles: {result.workflowsDisponibles.join(', ')}
-                  </div>
-                )}
-              </>
-            )}
+      <>
+        ❌ {result.error || result.message}
+        {result.workflowsDisponibles && (
+          <div className="mt-1 text-xs">
+            Workflows disponibles: {result.workflowsDisponibles.join(', ')}
           </div>
         )}
+      </>
+    )}
+    {result.output && (
+      <pre className="mt-2 p-2 bg-black/80 rounded text-green-400 text-xs font-mono max-h-48 overflow-auto whitespace-pre-wrap">
+        {result.output}
+      </pre>
+    )}
+  </div>
+)}
       </div>
 
       {/* 📋 Cómo crear backups */}
