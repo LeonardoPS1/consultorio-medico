@@ -331,21 +331,34 @@ export default function RecuperacionPage() {
         </button>
         {showGuide && (
           <div className="px-5 pb-5 space-y-4 text-xs text-[var(--text-secondary)]">
-            <p>Hay dos formas de crear backups:</p>
+            <p>Para que los backups funcionen, primero hay que generar un par de claves GPG desde el VPS:</p>
 
-            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3">
-              <strong className="text-emerald-600">✅ Método fácil — Botón &quot;📦 Crear Backup&quot;</strong>
-              <p className="mt-1">Usá el botón de más arriba en esta página. Crea ambos backups (PostgreSQL + volúmenes) simultáneamente vía SSH. No necesita GPG ni configuración previa.</p>
+            <div className="bg-black/80 rounded-lg p-3 font-mono text-xs text-green-400 space-y-1">
+              <div># 1. Conectarse al VPS por SSH</div>
+              <div>ssh ubuntu@51.222.207.250</div>
+              <div>sudo -i</div>
+              <div>&nbsp;</div>
+              <div># 2. Generar par de claves GPG (RSA 4096, sin expiración)</div>
+              <div>gpg --full-generate-key</div>
+              <div># Tipo: RSA (1), tamaño: 4096, exp: 0 (no expira)</div>
+              <div># Email: admin@consultorio.com (debe coincidir con GPG_RECIPIENT)</div>
+              <div>&nbsp;</div>
+              <div># 3. Exportar clave pública al repo</div>
+              <div>gpg --armor --export admin@consultorio.com &gt; /opt/consultorio/scripts/gpg-key.asc</div>
+              <div>&nbsp;</div>
+              <div># 4. Exportar clave privada (GUARDAR FUERA DEL VPS)</div>
+              <div>gpg --armor --export-secret-keys admin@consultorio.com &gt; ~/backup-gpg-private.key</div>
+              <div># Copiar a gestor de contraseñas (Bitwarden/1Password)</div>
             </div>
 
-            <p><strong>Método automático (scheduled):</strong> Los cron n8n WF-07 (3:00 AM) y backup-agent (3:15 AM) ejecutan los scripts de backup automáticamente todas las madrugadas.</p>
+            <p className="mt-3">Una vez generada la clave GPG, los backups se crean automáticamente vía:</p>
 
-            <div className="space-y-2">
+            <div className="space-y-2 mt-2">
               <div className="flex items-start gap-2">
                 <span className="text-amber-500">1.</span>
                 <div>
                   <strong>Backup de PostgreSQL (diario 3:00 AM)</strong>
-                  <p>Ejecutado por n8n WF-07. pg_dump → comprime → GPG encrypt.</p>
+                  <p>Ejecutado por n8n WF-07. Hace pg_dump, comprime, encripta con GPG y sincroniza a off-site (si configurado).</p>
                   <p className="font-mono mt-1">bash /opt/consultorio/scripts/backup-encriptado.sh</p>
                 </div>
               </div>
@@ -369,24 +382,14 @@ export default function RecuperacionPage() {
                 <span className="text-amber-500">4.</span>
                 <div>
                   <strong>Backup de workflows n8n (manual recomendado: semanal)</strong>
-                  <p>Exporta todos los workflows activos a archivos JSON individuales vía n8n API.</p>
+                  <p>Exporta todos los workflows activos a archivos JSON individuales.</p>
                   <p className="font-mono mt-1">N8N_API_KEY=tu-api-key bash /opt/consultorio/scripts/backup-n8n-workflows.sh</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-              <strong>🔐 Clave GPG:</strong> Para que los scripts de backup funcionen (tanto el botón como los cron), debe existir una clave GPG configurada en el VPS. Si no está configurada:
-              <div className="font-mono mt-1 text-green-400 bg-black/80 rounded p-2">
-                <div>ssh ubuntu@51.222.207.250</div>
-                <div>sudo gpg --full-generate-key</div>
-                <div># RSA 4096, sin expiración, email: admin@consultorio.com</div>
-              </div>
-              <p className="mt-1">La clave privada debe estar guardada en un gestor de contraseñas. Sin ella los backups encriptados <strong>no se pueden restaurar</strong>.</p>
-            </div>
-
-            <div className="bg-gray-500/10 border border-gray-500/30 rounded-lg p-3">
-              <strong>💡 Verificar estado:</strong>
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mt-2">
+              <strong>💡 Pro Tip:</strong> Para verificar que los backups están funcionando:
               <div className="font-mono mt-1">bash /opt/consultorio/scripts/check-backups.sh</div>
               <div className="font-mono">ls -la /var/backups/consultorio/</div>
             </div>
