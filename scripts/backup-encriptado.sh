@@ -16,7 +16,7 @@ DUMP_FILE="/tmp/${DB_NAME}_${TIMESTAMP}.dump"
 # En Docker Swarm/Dokploy, el contenedor postgres tiene un nombre distinto.
 # Buscar el contenedor postgres activo por comando.
 PG_CONTAINER=""
-PG_CONTAINER=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E '\-postgres-1$' | grep -v 'chatwoot\|evolution\|dokploy\|pgbouncer' | head -1 || echo "")
+PG_CONTAINER=$(docker ps --no-trunc --format '{{.Names}}' 2>/dev/null | grep -E '\-postgres-1(\.|$)' | grep -v 'chatwoot\|evolution\|dokploy\|pgbouncer' | head -1 || echo "")
 
 # Crear directorio si no existe
 mkdir -p "$BACKUP_DIR"

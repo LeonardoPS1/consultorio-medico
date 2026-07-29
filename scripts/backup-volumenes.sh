@@ -35,7 +35,7 @@ for SUFFIX in "${!VOLUME_SUFFIXES[@]}"; do
   ENCRYPTED_FILE="${BACKUP_FILE}.gpg"
 
   # Buscar volumen por sufijo (Docker Swarm/Dokploy añade prefijo del stack)
-  VOLUME=$(docker volume ls --format '{{.Name}}' 2>/dev/null | grep -E "_${SUFFIX}$" | head -1 || echo "")
+  VOLUME=$(docker volume ls --format '{{.Name}}' 2>/dev/null | grep -E "(^|_)${SUFFIX}$" | head -1 || echo "")
 
   if [[ -z "$VOLUME" ]]; then
     echo "[Backup-Vol] ⚠️ No se encontró volumen con sufijo $SUFFIX, saltando..."
