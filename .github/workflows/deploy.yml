@@ -65,8 +65,7 @@ jobs:
       - name: Health check
         run: |
           for i in $(seq 1 36); do
-            # Try via VPS IP with Host header to bypass Cloudflare, follow redirects
-            STATUS=$(curl -sL -o /dev/null -w '%{http_code}' -H "Host: med.aicorebots.com" 'http://51.222.207.250/api/health' 2>/dev/null || echo "000")
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' 'https://med.aicorebots.com/api/health' 2>/dev/null || echo "000")
             if [ "$STATUS" = "200" ] || [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
               echo "Health check passed ($STATUS)"
               exit 0
@@ -79,9 +78,9 @@ jobs:
 
       - name: Smoke test
         run: |
-          RESPONSE=$(curl -sL -H "Host: med.aicorebots.com" 'http://51.222.207.250/api/health')
+          RESPONSE=$(curl -s 'https://med.aicorebots.com/api/health')
           echo "Health response: $RESPONSE"
-          echo "$RESPONSE" | grep -q '"status":"healthy"\|"status":"degraded"\|"ok":true\|"healthy":true' && echo "Smoke test passed" || (echo "Smoke test failed" && exit 1)
+          echo "$RESPONSE" | grep -q '"status":"healthy"\|"status":"ok"\|"status":"degraded"\|"ok":true\|"healthy":true' && echo "Smoke test passed" || (echo "Smoke test failed" && exit 1)
 
       - name: Notify deploy status
         if: always()
