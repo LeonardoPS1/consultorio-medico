@@ -33,7 +33,7 @@ ENV HOSTNAME="0.0.0.0"
 ENV PORT=3002
 ENV TZ=America/Santiago
 
-RUN apk add --no-cache curl docker-cli gpg bash
+RUN apk add --no-cache curl docker-cli gpg bash su-exec
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
@@ -42,13 +42,15 @@ COPY --from=builder --chown=nextjs:nodejs /app/ops-console/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/ops-console/.next/static ./ops-console/.next/static
 COPY --from=builder --chown=nodejs:nodejs /app/ops-console/public ./ops-console/public
 
-RUN mkdir -p ops-console/.next/cache && chown -R nextjs:nodejs ops-console
+COPY ops-console/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-USER nextjs
+RUN mkdir -p ops-console/.next/cache && chown -R nextjs:nodejs ops-console
 
 EXPOSE 3002
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://127.0.0.1:3002/api/health || exit 1
 
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "ops-console/server.js"]

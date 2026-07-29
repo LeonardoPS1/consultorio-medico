@@ -79,10 +79,8 @@ export async function POST() {
 
     if (!hasDockerSocket && !hasScripts) {
       return NextResponse.json({
-        success: false,
-        message: 'No es posible crear backups: Docker socket no disponible y scripts no encontrados. ' +
+        error: 'No es posible crear backups: Docker socket no disponible y scripts no encontrados. ' +
           'Verifica que el contenedor ops-console tenga acceso a /var/run/docker.sock y /opt/consultorio/scripts.',
-        results: {},
       }, { status: 500 })
     }
 
