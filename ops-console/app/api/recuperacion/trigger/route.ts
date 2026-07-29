@@ -39,21 +39,27 @@ function setupSshKey(): boolean {
   return false
 }
 
-function runViaSsh(cmd: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const sshCmd = [
-      'ssh',
-      '-i', SSH_KEY_FILE,
-      '-o StrictHostKeyChecking=no',
-      '-o UserKnownHostsFile=/dev/null',
-      '-o BatchMode=yes',
-      '-o ConnectTimeout=10',
-      `${SSH_USER}@${SSH_HOST}`,
-      `"${cmd.replace(/"/g, '\\"')}"`,
-    ].join(' ')
-    exec(sshCmd, { timeout: 120_000 }, (err, stdout, stderr) => {
-      if (err) reject(new Error(stderr || err.message))
-      else resolve(stdout)
+function sshBaseCmd(): string[] {
+  return [
+    'ssh',
+    '-i', SSH_KEY_FILE,
+    '-o StrictHostKeyChecking=no',
+    '-o UserKnownHostsFile=/dev/null',
+    '-o BatchMode=yes',
+    '-o ConnectTimeout=10',
+    `${SSH_USER}@${SSH_HOST}`,
+  ]
+}
+
+async function runViaSsh(cmd: string): Promise<{ stdout: string; stderr: string; exitCode: number | null }> {
+  return new Promise((resolve) => {
+    const fullCmd = [...sshBaseCmd(), `"${cmd.replace(/"/g, '\\"')}"`].join(' ')
+    exec(fullCmd, { timeout: 120_000 }, (err, stdout, stderr) => {
+      resolve({
+        stdout,
+        stderr,
+        exitCode: err?.code ?? 0,
+      })
     })
   })
 }
@@ -69,32 +75,50 @@ export async function POST() {
       return NextResponse.json({ error: 'SSH key no disponible' }, { status: 500 })
     }
 
-    const scriptPath = '/opt/consultorio-medico/scripts/recover.sh'
-    const cmd = `cd /opt/consultorio-medico && sudo bash ${scriptPath} --force 2>&1`
+    const repos = ['/opt/consultorio-medico', '/opt/consultorio']
+    let repoPath = ''
 
-    const output = await runViaSsh(cmd)
+    for (const r of repos) {
+      const { stdout } = await runViaSsh(`test -d ${r} && echo "EXISTE" || true`)
+      if (stdout.trim() === 'EXISTE') {
+        repoPath = r
+        break
+      }
+    }
 
-    const success = output.toLowerCase().includes('recuperación completada') ||
-      output.toLowerCase().includes('restore complete') ||
-      output.toLowerCase().includes('success')
+    if (!repoPath) {
+      return NextResponse.json({
+        error: `No se encontró el repo en ninguna ruta conocida. Caminos probados: ${repos.join(', ')}`,
+      }, { status: 500 })
+    }
+
+    const cmd = `cd ${repoPath} && sudo -n bash scripts/recover.sh --force 2>&1`
+    const result = await runViaSsh(cmd)
+
+    const fullOutput = result.stdout + (result.stderr ? `\nSTDERR: ${result.stderr}` : '')
+    const isOk = result.exitCode === 0
 
     await getDb().execute(sql`
       INSERT INTO workflow_logs (workflow_id, workflow_name, nivel, mensaje, metadata)
       VALUES (
         'WF-14',
         'Recuperación Automática',
-        ${success ? 'info' : 'warning'},
-        'Recuperación ${success ? 'completada' : 'iniciada (verificar)'} desde ops.aicorebots.com por ${session.nombre}',
-        ${JSON.stringify({ operator: session.email, output: output.slice(0, 2000) })}
+        ${isOk ? 'info' : 'warning'},
+        'Recuperación ${isOk ? 'completada' : 'falló'} desde ops.aicorebots.com por ${session.nombre}',
+        ${JSON.stringify({
+          operator: session.email,
+          exitCode: result.exitCode,
+          output: fullOutput.slice(0, 2000),
+        })}
       )
     `)
 
     return NextResponse.json({
-      success,
-      message: success
+      success: isOk,
+      message: isOk
         ? 'Recuperación completada exitosamente'
-        : 'Recuperación ejecutada. Revisar logs para más detalles.',
-      output: output.slice(0, 3000),
+        : `Recuperación falló (exit code ${result.exitCode}). Revisar logs.`,
+      output: fullOutput.slice(0, 3000),
     })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Error desconocido'
