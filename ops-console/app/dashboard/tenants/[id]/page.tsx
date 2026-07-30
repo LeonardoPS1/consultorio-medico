@@ -55,10 +55,6 @@ export default async function TenantDetailPage({
 
   const t = { ...(tenantResult as Record<string, unknown>), audit_7d: audit7d }
 
-  if (!tenantResult) notFound()
-
-  const t = tenantResult as Record<string, unknown>
-
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
