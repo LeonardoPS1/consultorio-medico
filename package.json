@@ -2,7 +2,7 @@
   "name": "consultorio-medico",
   "version": "0.5.0",
   "private": true,
-  "packageManager": "pnpm@11.14.0",
+  "packageManager": "pnpm@11.18.0",
   "scripts": {
     "dev": "pnpm --filter ./dashboard dev",
     "build": "pnpm --filter ./dashboard build",
@@ -24,6 +24,5 @@
     "docker:build": "docker compose build --no-cache dashboard",
     "deploy": "python deploy_vps.py",
     "deploy:api": "python deploy_vps_api.py"
-  },
-  "dependencies": {}
+  }
 }
