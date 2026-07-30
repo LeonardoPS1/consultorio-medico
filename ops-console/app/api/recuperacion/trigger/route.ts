@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic'
 const SSH_KEY_FILE = '/tmp/ops_ssh_key'
 const SSH_HOST = process.env.OPS_SSH_HOST || '51.222.207.250'
 const SSH_USER = process.env.OPS_SSH_USER || 'ubuntu'
+const BACKUP_DIR = process.env.BACKUP_DIR || '/var/backups/consultorio'
 
 function writeSshKey(content: string): boolean {
   try {
@@ -24,10 +25,8 @@ function setupSshKey(): boolean {
     const keyFromSecret = fs.readFileSync('/run/secrets/ops_ssh_key', 'utf8')
     if (keyFromSecret && writeSshKey(keyFromSecret)) return true
   } catch { /* not a docker secret */ }
-
   const keyFromEnv = process.env.OPS_SSH_KEY
   if (!keyFromEnv) return false
-
   if (keyFromEnv.startsWith('-----BEGIN')) {
     if (writeSshKey(keyFromEnv)) return true
   }
@@ -35,7 +34,6 @@ function setupSshKey(): boolean {
     const decoded = Buffer.from(keyFromEnv, 'base64').toString('utf8')
     if (writeSshKey(decoded)) return true
   } catch { /* not base64 */ }
-
   return false
 }
 
@@ -64,7 +62,7 @@ async function runViaSsh(cmd: string): Promise<{ stdout: string; stderr: string;
   })
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const session = await getSessionFromCookie()
     if (!session) {
@@ -74,6 +72,9 @@ export async function POST() {
     if (!setupSshKey()) {
       return NextResponse.json({ error: 'SSH key no disponible' }, { status: 500 })
     }
+
+    const body = await request.json().catch(() => ({}))
+    const { backupFile, tenantId } = body as { backupFile?: string; tenantId?: string }
 
     const repos = ['/opt/consultorio-medico', '/opt/consultorio']
     let repoPath = ''
@@ -92,31 +93,52 @@ export async function POST() {
       }, { status: 500 })
     }
 
-    const cmd = `cd ${repoPath} && sudo -n bash scripts/recover.sh --force 2>&1`
+    // Build the command based on parameters
+    let cmd: string
+    let actionLabel: string
+
+    if (tenantId && backupFile) {
+      // Restore specific tenant from specific backup
+      cmd = `cd ${repoPath} && sudo -n bash scripts/recover.sh --force --tenant "${tenantId}" --tenant-backup "${backupFile}" 2>&1`
+      actionLabel = `Recuperación del tenant ${tenantId} desde ${backupFile}`
+    } else if (backupFile) {
+      // Restore specific PG backup
+      cmd = `cd ${repoPath} && sudo -n bash scripts/recover.sh --force --pg-backup "${backupFile}" 2>&1`
+      actionLabel = `Recuperación desde backup específico ${backupFile}`
+    } else if (tenantId) {
+      // Restore latest tenant backup
+      cmd = `cd ${repoPath} && sudo -n bash scripts/recover.sh --force --tenant "${tenantId}" 2>&1`
+      actionLabel = `Recuperación del último backup del tenant ${tenantId}`
+    } else {
+      // Full recovery (existing behavior)
+      cmd = `cd ${repoPath} && sudo -n bash scripts/recover.sh --force 2>&1`
+      actionLabel = 'Recuperación completa del sistema'
+    }
+
     const result = await runViaSsh(cmd)
 
     const fullOutput = result.stdout + (result.stderr ? `\nSTDERR: ${result.stderr}` : '')
     const isOk = result.exitCode === 0
-    const mensaje = `Recuperación ${isOk ? 'completada' : 'falló'} desde ops.aicorebots.com por ${session.nombre}`
+    const mensaje = `${actionLabel} ${isOk ? 'completada' : 'falló'} desde ops.aicorebots.com por ${session.nombre}`
 
     await getDb().insert(platformAuditLog).values({
       operatorEmail: session.email,
       accion: 'recuperacion',
-      recurso: 'sistema',
-      detalles: { exitCode: result.exitCode, output: fullOutput.slice(0, 1000) },
+      recurso: tenantId ? `tenant/${tenantId}` : 'sistema',
+      detalles: { exitCode: result.exitCode, backupFile, tenantId, output: fullOutput.slice(0, 1000) },
       motivo: mensaje,
     })
 
     return NextResponse.json({
       success: isOk,
       message: isOk
-        ? 'Recuperación completada exitosamente'
-        : `Recuperación falló (exit code ${result.exitCode}). Revisar logs.`,
+        ? `${actionLabel} exitosamente`
+        : `${actionLabel} falló (exit code ${result.exitCode}). Revisar logs.`,
       output: fullOutput.slice(0, 3000),
     })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Error desconocido'
-    console.error('[recuperacion] Error al ejecutar recuperación:', msg)
+    console.error('[recuperacion] Error:', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

@@ -5,19 +5,18 @@
 # Detecta automáticamente los últimos backups y restaura:
 #   - PostgreSQL: busca *.sql.gz.gpg más reciente
 #   - Volúmenes:  busca *.tar.gz.gpg más reciente por tipo
+#   - Tenant:     busca *.tenant.sql.gz.gpg más reciente
 #
 # Uso:
-#   ./scripts/recover.sh                    # Modo interactivo (pide confirmación)
-#   ./scripts/recover.sh --force            # Sin confirmación
-#   ./scripts/recover.sh --drill            # Drill en containers aislados
-#   ./scripts/recover.sh --drill --force    # Drill automático
-#   ./scripts/recover.sh --pg-only          # Solo restaurar PostgreSQL
-#   ./scripts/recover.sh --vols-only        # Solo restaurar volúmenes
-#
-# Requiere:
-#   - GPG private key importada
-#   - docker, gpg, pg_restore, psql instalados
-#   - Conexión a PostgreSQL via env vars o defaults
+#   ./scripts/recover.sh                          # Modo interactivo
+#   ./scripts/recover.sh --force                  # Sin confirmación
+#   ./scripts/recover.sh --drill                  # Drill aislado
+#   ./scripts/recover.sh --pg-only                # Solo PostgreSQL
+#   ./scripts/recover.sh --vols-only              # Solo volúmenes
+#   ./scripts/recover.sh --tenant <uuid>          # Restaurar un tenant
+#   ./scripts/recover.sh --tenant <uuid> --drill  # Tenant en drill
+#   ./scripts/recover.sh --pg-backup <archivo>    # Backup específico PG
+#   ./scripts/recover.sh --tenant-backup <archivo> --tenant <uuid>  # Tenant específico
 # ============================================================
 set -euo pipefail
 
@@ -27,6 +26,9 @@ FORCE=false
 DRILL=false
 PG_ONLY=false
 VOLS_ONLY=false
+TENANT_ID=""
+PG_BACKUP_SPECIFIC=""
+TENANT_BACKUP_SPECIFIC=""
 
 # ─── Parse args ───────────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -35,6 +37,9 @@ while [[ $# -gt 0 ]]; do
     --drill) DRILL=true; shift ;;
     --pg-only) PG_ONLY=true; shift ;;
     --vols-only) VOLS_ONLY=true; shift ;;
+    --tenant) TENANT_ID="${2:?--tenant requiere UUID}"; shift 2 ;;
+    --pg-backup) PG_BACKUP_SPECIFIC="${2:?--pg-backup requiere ruta}"; shift 2 ;;
+    --tenant-backup) TENANT_BACKUP_SPECIFIC="${2:?--tenant-backup requiere ruta}"; shift 2 ;;
     --help)
       sed -n '/^# =/,/^set -/p' "$0" | grep '^#' | sed 's/^# \?//'
       exit 0
@@ -56,7 +61,42 @@ fi
 echo "📁 Backups: $BACKUP_DIR"
 echo ""
 
-# ─── Verificar prerequisitos ──────────────────────────────────────────────────
+# ─── Modo tenant ──────────────────────────────────────────────────────────────
+if [[ -n "$TENANT_ID" ]]; then
+  echo "────────────────────────────────────────────────────────"
+  echo " 🎯 Modo TENANT — restaurando solo tenant $TENANT_ID"
+  echo "────────────────────────────────────────────────────────"
+
+  if [[ -n "$TENANT_BACKUP_SPECIFIC" ]]; then
+    TENANT_FILE="$TENANT_BACKUP_SPECIFIC"
+  else
+    TENANT_FILE=$(ls -t "$BACKUP_DIR"/*.tenant.sql.gz.gpg 2>/dev/null | head -1 || echo "")
+  fi
+
+  if [[ -z "$TENANT_FILE" ]]; then
+    echo "❌ No se encontró backup de tenant"
+    exit 1
+  fi
+
+  echo "📦 Backup: $(basename "$TENANT_FILE") ($(du -h "$TENANT_FILE" | cut -f1))"
+  echo ""
+
+  if $DRILL; then
+    bash "$SCRIPT_DIR/restore-tenant.sh" --drill "$TENANT_FILE" "$TENANT_ID"
+  elif $FORCE; then
+    bash "$SCRIPT_DIR/restore-tenant.sh" --force "$TENANT_FILE" "$TENANT_ID"
+  else
+    bash "$SCRIPT_DIR/restore-tenant.sh" "$TENANT_FILE" "$TENANT_ID"
+  fi
+
+  echo ""
+  echo "✅ Recuperación de tenant completada."
+  echo ""
+  echo "╚══════════════════════════════════════════════════════════╝"
+  exit $?
+fi
+
+# ─── Verificar prerequisitos (solo para modo completo) ─────────────────────────
 for CMD in docker gpg pg_restore; do
   if ! command -v "$CMD" &>/dev/null; then
     echo "❌ $CMD no instalado. Instalá: apk add docker-cli gpg postgresql-client"
@@ -69,7 +109,24 @@ echo "────────────────────────�
 echo " Buscando últimos backups..."
 echo "────────────────────────────────────────────────────────"
 
-PG_BACKUP=$(ls -t "$BACKUP_DIR"/*.sql.gz.gpg 2>/dev/null | head -1 || echo "")
+if [[ -n "$PG_BACKUP_SPECIFIC" ]]; then
+  PG_BACKUP="$PG_BACKUP_SPECIFIC"
+  if [[ ! -f "$PG_BACKUP" ]]; then
+    echo "❌ Backup específico no encontrado: $PG_BACKUP"
+    exit 1
+  fi
+  PG_SIZE=$(du -h "$PG_BACKUP" | cut -f1)
+  echo "  📦 PostgreSQL (específico): $(basename "$PG_BACKUP") ($PG_SIZE)"
+else
+  PG_BACKUP=$(ls -t "$BACKUP_DIR"/*.sql.gz.gpg 2>/dev/null | head -1 || echo "")
+  if [[ -n "$PG_BACKUP" ]]; then
+    PG_SIZE=$(du -h "$PG_BACKUP" | cut -f1)
+    echo "  📦 PostgreSQL: $(basename "$PG_BACKUP") ($PG_SIZE)"
+  else
+    echo "  ⚠️  No hay backup de PostgreSQL"
+  fi
+fi
+
 declare -A VOL_BACKUPS
 for VOL_TYPE in n8n_data metabase_data recordings; do
   LATEST=$(ls -t "$BACKUP_DIR"/${VOL_TYPE}_*.tar.gz.gpg 2>/dev/null | head -1 || echo "")
@@ -81,13 +138,6 @@ done
 if [[ -z "$PG_BACKUP" && ${#VOL_BACKUPS[@]} -eq 0 ]]; then
   echo "❌ No se encontraron backups en $BACKUP_DIR"
   exit 1
-fi
-
-if [[ -n "$PG_BACKUP" ]]; then
-  PG_SIZE=$(du -h "$PG_BACKUP" | cut -f1)
-  echo "  📦 PostgreSQL: $(basename "$PG_BACKUP") ($PG_SIZE)"
-else
-  echo "  ⚠️  No hay backup de PostgreSQL"
 fi
 
 for VOL_TYPE in "${!VOL_BACKUPS[@]}"; do

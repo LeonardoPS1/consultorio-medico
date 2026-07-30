@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
+import { getDb } from '@/lib/db'
+import { platformAuditLog } from '@/drizzle/schema'
 import { execSync, exec } from 'child_process'
 import fs from 'fs'
 
@@ -36,19 +38,15 @@ function setupSshKey(): boolean {
     const keyFromSecret = fs.readFileSync('/run/secrets/ops_ssh_key', 'utf8')
     if (keyFromSecret && writeSshKey(keyFromSecret)) return true
   } catch { /* not a docker secret */ }
-
   const keyFromEnv = process.env.OPS_SSH_KEY
   if (!keyFromEnv) return false
-
   if (keyFromEnv.startsWith('-----BEGIN')) {
     if (writeSshKey(keyFromEnv)) return true
   }
-
   try {
     const decoded = Buffer.from(keyFromEnv, 'base64').toString('utf8')
     if (writeSshKey(decoded)) return true
   } catch { /* not base64 */ }
-
   return false
 }
 
@@ -81,26 +79,25 @@ async function readScriptViaSsh(scriptName: string): Promise<string> {
   })
 }
 
-async function runScriptViaSsh(scriptName: string, patches?: Record<string, string>): Promise<{ success: boolean; output: string }> {
+async function runScriptViaSsh(scriptName: string, patches?: Record<string, string>, extraArgs?: string): Promise<{ success: boolean; output: string }> {
   try {
     const content = await readScriptViaSsh(scriptName)
-
     let patched = content
     if (patches) {
       for (const [from, to] of Object.entries(patches)) {
         patched = patched.replaceAll(from, to)
       }
     }
-
     const b64 = Buffer.from(patched, 'utf8').toString('base64')
 
     return new Promise((resolve) => {
+      const args = `${BACKUP_DIR} ${extraArgs || ''}`.trim()
       const cmd = [
         ...sshBaseCmd(),
-        `"echo ${b64} | base64 -d | bash -s -- ${BACKUP_DIR} 2>&1"`,
+        `"echo ${b64} | base64 -d | bash -s -- ${args} 2>&1"`,
       ].join(' ')
 
-      exec(cmd, { timeout: 300_000 }, (err, stdout, stderr) => {
+      exec(cmd, { timeout: 600_000 }, (err, stdout, stderr) => {
         const output = stdout + (stderr ? `\nSTDERR: ${stderr}` : '')
         if (err) {
           resolve({ success: false, output: output || err.message })
@@ -114,8 +111,9 @@ async function runScriptViaSsh(scriptName: string, patches?: Record<string, stri
   }
 }
 
-async function runViaDocker(scriptFile: string, extraDeps: string): Promise<{ success: boolean; output: string }> {
+async function runViaDocker(scriptFile: string, extraDeps: string, extraArgs?: string): Promise<{ success: boolean; output: string }> {
   return new Promise((resolve) => {
+    const args = `/backup ${extraArgs || ''}`.trim()
     const cmd = [
       'docker run --rm',
       '-v /var/run/docker.sock:/var/run/docker.sock',
@@ -123,10 +121,10 @@ async function runViaDocker(scriptFile: string, extraDeps: string): Promise<{ su
       `-v ${BACKUP_DIR}:/backup`,
       'alpine:3.20',
       'sh -c',
-      `"apk add --no-cache docker-cli gpg bash ${extraDeps} >/dev/null 2>&1 && bash /scripts/${scriptFile} /backup"`,
+      `"apk add --no-cache docker-cli gpg bash ${extraDeps} >/dev/null 2>&1 && bash /scripts/${scriptFile} ${args}"`,
     ].join(' ')
 
-    exec(cmd, { timeout: 300_000 }, (err, stdout, stderr) => {
+    exec(cmd, { timeout: 600_000 }, (err, stdout, stderr) => {
       const output = stdout + (stderr ? `\nSTDERR: ${stderr}` : '')
       if (err) {
         resolve({ success: false, output: output || err.message })
@@ -137,27 +135,33 @@ async function runViaDocker(scriptFile: string, extraDeps: string): Promise<{ su
   })
 }
 
-async function runDirect(scriptPath: string): Promise<{ success: boolean; output: string }> {
-  return new Promise((resolve) => {
-    exec(`bash ${scriptPath} ${BACKUP_DIR} 2>&1`, {
-      timeout: 300_000,
-      env: { ...process.env, BACKUP_DIR },
-    }, (err, stdout, stderr) => {
-      const output = stdout + (stderr ? `\nSTDERR: ${stderr}` : '')
-      if (err) {
-        resolve({ success: false, output: output || err.message })
-      } else {
-        resolve({ success: true, output })
-      }
-    })
-  })
+function isUUID(str: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const session = await getSessionFromCookie()
     if (!session) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    const body = await request.json().catch(() => ({}))
+    const tenantId = body.tenantId as string | undefined
+    const isTenant = !!tenantId && isUUID(tenantId)
+
+    // Validate tenant exists if provided
+    if (isTenant) {
+      try {
+        const db = getDb()
+        const { sql } = await import('drizzle-orm')
+        const result = await db.execute(sql`SELECT 1 FROM public.tenants WHERE id = ${tenantId}`)
+        if ((result as any[]).length === 0) {
+          return NextResponse.json({ error: 'Tenant no encontrado' }, { status: 404 })
+        }
+      } catch (e) {
+        return NextResponse.json({ error: 'Error validando tenant' }, { status: 500 })
+      }
     }
 
     const hasDockerSocket = checkDockerSocket()
@@ -174,42 +178,65 @@ export async function POST() {
 
     const results: Record<string, { success: boolean; output: string }> = {}
 
-    if (hasSshKey) {
-      results.postgres = await runScriptViaSsh('backup-encriptado.sh', {
-        'docker ps --format': 'docker ps --no-trunc --format',
-      })
-      results.volumes = await runScriptViaSsh('backup-volumenes.sh', {
-        '"_${SUFFIX}$"': '"(^|_)${SUFFIX}$"',
-      })
-      if (fs.existsSync(`${SCRIPTS_DIR}/backup-infra.sh`)) {
-        results.infra = await runScriptViaSsh('backup-infra.sh')
-      }
-    } else if (hasDockerSocket) {
-      results.postgres = await runViaDocker('backup-encriptado.sh', 'postgresql-client')
-      results.volumes = await runViaDocker('backup-volumenes.sh', '')
-      if (hasScripts && fs.existsSync(`${SCRIPTS_DIR}/backup-infra.sh`)) {
-        results.infra = await runViaDocker('backup-infra.sh', '')
+    if (isTenant) {
+      // Per-tenant backup
+      const tenantArg = `"${tenantId}"`
+
+      if (hasSshKey) {
+        results.tenant = await runScriptViaSsh('backup-tenant.sh', undefined, tenantArg)
+      } else if (hasDockerSocket) {
+        results.tenant = await runViaDocker('backup-tenant.sh', 'postgresql-client', tenantArg)
+      } else {
+        results.tenant = await runDirect(`${SCRIPTS_DIR}/backup-tenant.sh`, tenantArg)
       }
     } else {
-      results.postgres = await runDirect(`${SCRIPTS_DIR}/backup-encriptado.sh`)
-      results.volumes = await runDirect(`${SCRIPTS_DIR}/backup-volumenes.sh`)
-      if (fs.existsSync(`${SCRIPTS_DIR}/backup-infra.sh`)) {
-        results.infra = await runDirect(`${SCRIPTS_DIR}/backup-infra.sh`)
+      // Full PG backup (existing behavior)
+      if (hasSshKey) {
+        results.postgres = await runScriptViaSsh('backup-encriptado.sh', {
+          'docker ps --format': 'docker ps --no-trunc --format',
+        })
+        results.volumes = await runScriptViaSsh('backup-volumenes.sh', {
+          '"_${SUFFIX}$"': '"(^|_)${SUFFIX}$"',
+        })
+        if (fs.existsSync(`${SCRIPTS_DIR}/backup-infra.sh`)) {
+          results.infra = await runScriptViaSsh('backup-infra.sh')
+        }
+      } else if (hasDockerSocket) {
+        results.postgres = await runViaDocker('backup-encriptado.sh', 'postgresql-client')
+        results.volumes = await runViaDocker('backup-volumenes.sh', '')
+        if (hasScripts && fs.existsSync(`${SCRIPTS_DIR}/backup-infra.sh`)) {
+          results.infra = await runViaDocker('backup-infra.sh', '')
+        }
+      } else {
+        results.postgres = await runDirect(`${SCRIPTS_DIR}/backup-encriptado.sh`)
+        results.volumes = await runDirect(`${SCRIPTS_DIR}/backup-volumenes.sh`)
+        if (fs.existsSync(`${SCRIPTS_DIR}/backup-infra.sh`)) {
+          results.infra = await runDirect(`${SCRIPTS_DIR}/backup-infra.sh`)
+        }
       }
     }
 
     if (Object.keys(results).length === 0) {
       return NextResponse.json({
-        error: 'No se ejecutó ningún script de backup. Verifica que los scripts existan.',
+        error: 'No se ejecutó ningún script de backup.',
       })
     }
 
     const allOk = Object.values(results).every(r => r.success)
 
+    // Audit
+    await getDb().insert(platformAuditLog).values({
+      operatorEmail: session.email,
+      accion: 'backup.create',
+      recurso: isTenant ? `tenant/${tenantId}` : 'sistema',
+      detalles: { tenantId, results: Object.keys(results) },
+      motivo: `Backup ${isTenant ? 'per-tenant' : 'completo'} por ${session.nombre}`,
+    })
+
     return NextResponse.json({
       success: allOk,
       message: allOk
-        ? 'Backups creados exitosamente'
+        ? (isTenant ? 'Backup del tenant creado exitosamente' : 'Backups creados exitosamente')
         : 'Algunos backups fallaron. Revisa los detalles abajo.',
       results,
     })
@@ -217,4 +244,21 @@ export async function POST() {
     console.error('[crear-backup] Error:', e)
     return NextResponse.json({ error: 'Error interno al crear backup' }, { status: 500 })
   }
+}
+
+async function runDirect(scriptPath: string, ...extraArgs: string[]): Promise<{ success: boolean; output: string }> {
+  return new Promise((resolve) => {
+    const args = [BACKUP_DIR, ...extraArgs].join(' ')
+    exec(`bash ${scriptPath} ${args} 2>&1`, {
+      timeout: 300_000,
+      env: { ...process.env, BACKUP_DIR },
+    }, (err, stdout, stderr) => {
+      const output = stdout + (stderr ? `\nSTDERR: ${stderr}` : '')
+      if (err) {
+        resolve({ success: false, output: output || err.message })
+      } else {
+        resolve({ success: true, output })
+      }
+    })
+  })
 }
