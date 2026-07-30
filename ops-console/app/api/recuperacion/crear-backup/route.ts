@@ -105,48 +105,61 @@ function sshBaseCmdNoDir(): string[] {
 }
 
 function generateTenantBackupScript(tenantId: string): string {
-  const esc = (s: string) => s.replace(/'/g, "'\\''")
-  const tid = esc(tenantId)
+  const tables = [
+    'sucursales',
+    'medicos JOIN public.sucursales s ON s.id=medicos.sucursal_id',
+    'pacientes JOIN public.sucursales s ON s.id=pacientes.sucursal_id',
+    'turnos JOIN public.sucursales s ON s.id=turnos.sucursal_id',
+    'recetas JOIN public.pacientes p ON p.id=recetas.paciente_id JOIN public.sucursales s ON s.id=p.sucursal_id',
+    'notas_soap JOIN public.pacientes p ON p.id=notas_soap.paciente_id JOIN public.sucursales s ON s.id=p.sucursal_id',
+    'conversaciones JOIN public.pacientes p ON p.id=conversaciones.paciente_id JOIN public.sucursales s ON s.id=p.sucursal_id',
+    'facturacion JOIN public.turnos t ON t.id=facturacion.turno_id JOIN public.sucursales s ON s.id=t.sucursal_id',
+    'historial_medico JOIN public.pacientes p ON p.id=historial_medico.paciente_id JOIN public.sucursales s ON s.id=p.sucursal_id',
+    'bloqueos_agenda JOIN public.medicos m ON m.id=bloqueos_agenda.medico_id JOIN public.sucursales s ON s.id=m.sucursal_id',
+    'servicios JOIN public.medicos m ON m.id=servicios.medico_id JOIN public.sucursales s ON s.id=m.sucursal_id',
+    'usuarios',
+    'horarios_atencion',
+    'api_keys',
+    'plantillas_mensajes',
+    'derivaciones',
+    'webhook_configs',
+    'ordenes_estudio',
+    'documentos_medicos',
+    'consentimientos',
+    'blacklist',
+    'notificaciones',
+    'lista_espera l JOIN public.sucursales s ON s.id=l.sucursal_id',
+    'ofertas_turno o JOIN public.lista_espera l ON l.id=o.lista_espera_id JOIN public.sucursales s ON s.id=l.sucursal_id',
+    'suscripciones_paciente sp JOIN public.pacientes p ON p.id=sp.paciente_id JOIN public.sucursales s ON s.id=p.sucursal_id',
+    'paciente_eventos e JOIN public.pacientes p ON p.id=e.paciente_id JOIN public.sucursales s ON s.id=p.sucursal_id',
+    'tareas_pendientes tp JOIN public.pacientes p ON p.id=tp.paciente_id JOIN public.sucursales s ON s.id=p.sucursal_id',
+  ]
+  const where = (t: string) => t.includes('JOIN') ? 's.tenant_id' : 'tenant_id'
+  const alias = (t: string) => t.split(/\s/)[0].replace(/^[a-z]+_?/, '')
+  const lines = tables.map(t => {
+    const w = where(t)
+    const a = t.split(/\s/)[0].replace(/_.*/, '').slice(0, 4)
+    return `PSQL "\\copy (SELECT ${t.split(' JOIN')[0]}.* FROM public.${t} WHERE ${w}='\\$TENANT_ID') TO STDOUT CSV HEADER" > "$TMP/${a}.csv" 2>/dev/null`
+  })
   return [
     '#!/bin/bash',
     'set -euo pipefail',
     'BACKUP_DIR="${1:-/var/backups/consultorio}"',
-    'TENANT_ID="${2:' + tid + '}"',
     'GPG_RECIPIENT="${GPG_RECIPIENT:-admin@consultorio.com}"',
+    'TENANT_ID="' + tenantId.replace(/'/g, "'\\''") + '"',
     'TIMESTAMP=$(date +%Y%m%d_%H%M%S)',
     'OUTPUT="${BACKUP_DIR}/${TENANT_ID}_${TIMESTAMP}.tenant.sql.gz.gpg"',
     'mkdir -p "$BACKUP_DIR"',
-    'PG_CONTAINER=$(docker ps --no-trunc --format "{{.Names}}" 2>/dev/null | grep -E "\\-postgres-1(\\.|$)" | grep -v chatwoot | grep -v evolution | grep -v dokploy | grep -v pgbouncer | head -1)',
-    'if [[ -z "$PG_CONTAINER" ]]; then echo "No PG container"; exit 1; fi',
-    'echo "Backing up tenant ${TENANT_ID} from container ${PG_CONTAINER}..."',
-    'SQL=$(cat <<EOSQL',
-    'BEGIN;',
-    "\\COPY (SELECT * FROM public.sucursales WHERE tenant_id = '" + tid + "') TO '/tmp/t_suc.csv' CSV HEADER;",
-    "\\COPY (SELECT m.* FROM public.medicos m JOIN public.sucursales s ON s.id=m.sucursal_id WHERE s.tenant_id='" + tid + "') TO '/tmp/t_med.csv' CSV HEADER;",
-    "\\COPY (SELECT p.* FROM public.pacientes p JOIN public.sucursales s ON s.id=p.sucursal_id WHERE s.tenant_id='" + tid + "') TO '/tmp/t_pac.csv' CSV HEADER;",
-    "\\COPY (SELECT t.* FROM public.turnos t JOIN public.sucursales s ON s.id=t.sucursal_id WHERE s.tenant_id='" + tid + "') TO '/tmp/t_tur.csv' CSV HEADER;",
-    "\\COPY (SELECT r.* FROM public.recetas r JOIN public.pacientes p ON p.id=r.paciente_id JOIN public.sucursales s ON s.id=p.sucursal_id WHERE s.tenant_id='" + tid + "') TO '/tmp/t_rec.csv' CSV HEADER;",
-    "\\COPY (SELECT n.* FROM public.notas_soap n JOIN public.pacientes p ON p.id=n.paciente_id JOIN public.sucursales s ON s.id=p.sucursal_id WHERE s.tenant_id='" + tid + "') TO '/tmp/t_not.csv' CSV HEADER;",
-    "\\COPY (SELECT c.* FROM public.conversaciones c JOIN public.pacientes p ON p.id=c.paciente_id JOIN public.sucursales s ON s.id=p.sucursal_id WHERE s.tenant_id='" + tid + "') TO '/tmp/t_con.csv' CSV HEADER;",
-    "\\COPY (SELECT f.* FROM public.facturacion f JOIN public.turnos t ON t.id=f.turno_id JOIN public.sucursales s ON s.id=t.sucursal_id WHERE s.tenant_id='" + tid + "') TO '/tmp/t_fac.csv' CSV HEADER;",
-    "\\COPY (SELECT * FROM public.usuarios WHERE tenant_id='" + tid + "') TO '/tmp/t_usr.csv' CSV HEADER;",
-    "\\COPY (SELECT * FROM public.horarios_atencion WHERE tenant_id='" + tid + "') TO '/tmp/t_hor.csv' CSV HEADER;",
-    "\\COPY (SELECT * FROM public.api_keys WHERE tenant_id='" + tid + "') TO '/tmp/t_key.csv' CSV HEADER;",
-    "\\COPY (SELECT * FROM public.plantillas_mensajes WHERE tenant_id='" + tid + "') TO '/tmp/t_pla.csv' CSV HEADER;",
-    "\\COPY (SELECT * FROM public.derivaciones WHERE tenant_id='" + tid + "') TO '/tmp/t_der.csv' CSV HEADER;",
-    "\\COPY (SELECT * FROM public.webhook_configs WHERE tenant_id='" + tid + "') TO '/tmp/t_wbh.csv' CSV HEADER;",
-    "\\COPY (SELECT * FROM public.ordenes_estudio WHERE tenant_id='" + tid + "') TO '/tmp/t_ord.csv' CSV HEADER;",
-    "\\COPY (SELECT * FROM public.documentos_medicos WHERE tenant_id='" + tid + "') TO '/tmp/t_doc.csv' CSV HEADER;",
-    "\\COPY (SELECT * FROM public.consentimientos WHERE tenant_id='" + tid + "') TO '/tmp/t_cto.csv' CSV HEADER;",
-    "\\COPY (SELECT * FROM public.blacklist WHERE tenant_id='" + tid + "') TO '/tmp/t_blk.csv' CSV HEADER;",
-    "\\COPY (SELECT * FROM public.notificaciones WHERE tenant_id='" + tid + "') TO '/tmp/t_noti.csv' CSV HEADER;",
-    'COMMIT;',
-    'EOSQL',
-    ')',
-    'echo "$SQL" | PGPASSWORD="${PG_SUPERPASS:-7anlnf0odssgmuwyjchqzdpk}" docker exec -i "$PG_CONTAINER" psql -U "${PG_SUPERUSER:-reece.schmeler67}" -d consultorio_medico -v ON_ERROR_STOP=1 2>&1',
-    'tar czf - /tmp/t_*.csv 2>/dev/null | gpg --batch --yes --trust-model always --recipient "$GPG_RECIPIENT" --output "$OUTPUT" --encrypt',
-    'rm -f /tmp/t_*.csv',
-    'gpg --batch --quiet --decrypt "$OUTPUT" > /dev/null 2>&1 && echo "OK: $OUTPUT ($(du -h "$OUTPUT" | cut -f1))" || echo "FAIL"',
+    'PG=$(docker ps --no-trunc --format "{{.Names}}" 2>/dev/null | grep -E "\\-postgres-1(\\.|$)" | grep -v "chatwoot\\|evolution\\|dokploy\\|pgbouncer" | head -1)',
+    '[[ -z "$PG" ]] && { echo "No PG"; exit 1; }',
+    'PASS="${PG_SUPERPASS:-7anlnf0odssgmuwyjchqzdpk}"',
+    'PSQL() { docker exec -e PGPASSWORD=$PASS $PG psql -U reece.schmeler67 -d consultorio_medico -t -A -c "$@"; }',
+    'TMP=$(mktemp -d)',
+    'echo "=== $TENANT_ID desde $PG ==="',
+    ...lines,
+    'tar czf - -C "$TMP" . | gpg --batch --yes --trust-model always --recipient "$GPG_RECIPIENT" --output "$OUTPUT" --encrypt',
+    'rm -rf "$TMP"',
+    'gpg --batch --quiet --decrypt "$OUTPUT" > /dev/null 2>&1 && echo "OK: $(ls -lh "$OUTPUT" | awk \'{print $5}\')" || echo "FAIL"',
   ].join('\n')
 }
 
