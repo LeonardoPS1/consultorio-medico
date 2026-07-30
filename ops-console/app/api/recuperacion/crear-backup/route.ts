@@ -135,15 +135,16 @@ function generateTenantBackupScript(tenantId: string): string {
     'tareas_pendientes tp JOIN public.pacientes p ON p.id=tp.paciente_id JOIN public.sucursales s ON s.id=p.sucursal_id',
   ]
   const where = (t: string) => t.includes('JOIN') ? 's.tenant_id' : 'tenant_id'
-  const alias = (t: string) => t.split(/\s/)[0].replace(/^[a-z]+_?/, '')
-  const lines = tables.map(t => {
+  const idx = (i: number) => String(i + 1).padStart(2, '0')
+
+  const suff = tables.map((t, i) => {
     const w = where(t)
-    const a = t.split(/\s/)[0].replace(/_.*/, '').slice(0, 4)
-    return `PSQL "\\copy (SELECT ${t.split(' JOIN')[0]}.* FROM public.${t} WHERE ${w}='\\$TENANT_ID') TO STDOUT CSV HEADER" > "$TMP/${a}.csv" 2>/dev/null`
+    const sel = t.split(' JOIN')[0]
+    return `echo "[${idx(i)}] ${sel}" && docker exec -e PGPASSWORD=\\$PASS \\$PG psql -U reece.schmeler67 -d consultorio_medico -t -A -c "\\copy (SELECT ${sel}.* FROM public.${t} WHERE ${w}='\\$TENANT_ID') TO STDOUT CSV HEADER" > "\\$TMP/t_${idx(i)}.csv" 2>&1 || echo "[${idx(i)}] FAILED"`
   })
+
   return [
     '#!/bin/bash',
-    'set -euo pipefail',
     'BACKUP_DIR="${1:-/var/backups/consultorio}"',
     'GPG_RECIPIENT="${GPG_RECIPIENT:-admin@consultorio.com}"',
     'TENANT_ID="' + tenantId.replace(/'/g, "'\\''") + '"',
@@ -151,13 +152,15 @@ function generateTenantBackupScript(tenantId: string): string {
     'OUTPUT="${BACKUP_DIR}/${TENANT_ID}_${TIMESTAMP}.tenant.sql.gz.gpg"',
     'mkdir -p "$BACKUP_DIR"',
     'PG=$(docker ps --no-trunc --format "{{.Names}}" 2>/dev/null | grep -E "\\-postgres-1(\\.|$)" | grep -v "chatwoot\\|evolution\\|dokploy\\|pgbouncer" | head -1)',
-    '[[ -z "$PG" ]] && { echo "No PG"; exit 1; }',
+    '[[ -z "$PG" ]] && { echo "No PG container found"; exit 1; }',
     'PASS="${PG_SUPERPASS:-7anlnf0odssgmuwyjchqzdpk}"',
-    'PSQL() { docker exec -e PGPASSWORD=$PASS $PG psql -U reece.schmeler67 -d consultorio_medico -t -A -c "$@"; }',
     'TMP=$(mktemp -d)',
-    'echo "=== $TENANT_ID desde $PG ==="',
-    ...lines,
-    'tar czf - -C "$TMP" . | gpg --batch --yes --trust-model always --recipient "$GPG_RECIPIENT" --output "$OUTPUT" --encrypt',
+    'echo "=== TENANT $TENANT_ID | PG=$PG | TMP=$TMP ==="',
+    ...suff,
+    'echo "=== Comprimiendo y encriptando... ==="',
+    'tar czf - -C "$TMP" . 2>/dev/null | gpg --batch --yes --trust-model always --recipient "$GPG_RECIPIENT" --output "$OUTPUT" --encrypt',
+    'RC=$?',
+    'echo "gpg exit: $RC"',
     'rm -rf "$TMP"',
     'gpg --batch --quiet --decrypt "$OUTPUT" > /dev/null 2>&1 && echo "OK: $(ls -lh "$OUTPUT" | awk \'{print $5}\')" || echo "FAIL"',
   ].join('\n')
