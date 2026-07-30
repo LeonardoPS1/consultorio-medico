@@ -104,7 +104,13 @@ function sshBaseCmdNoDir(): string[] {
   return sshBaseCmd()
 }
 
-async function readScriptViaSsh(scriptName: string): Promise<string> {
+async function readScript(scriptName: string): Promise<string> {
+  // Intenta local primero (volumen montado en el container)
+  const localPath = `${SCRIPTS_DIR}/${scriptName}`
+  if (fs.existsSync(localPath)) {
+    return fs.readFileSync(localPath, 'utf8')
+  }
+  // Fallback: leer via SSH desde el VPS
   const dir = await getSshScriptsDir()
   return new Promise((resolve, reject) => {
     const cmd = [...sshBaseCmd(), `"cat ${dir}/${scriptName}"`].join(' ')
@@ -117,7 +123,7 @@ async function readScriptViaSsh(scriptName: string): Promise<string> {
 
 async function runScriptViaSsh(scriptName: string, patches?: Record<string, string>, extraArgs?: string): Promise<{ success: boolean; output: string }> {
   try {
-    const content = await readScriptViaSsh(scriptName)
+    const content = await readScript(scriptName)
     let patched = content
     if (patches) {
       for (const [from, to] of Object.entries(patches)) {
