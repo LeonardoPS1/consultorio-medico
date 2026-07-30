@@ -13,7 +13,38 @@ const SSH_KEY_FILE = '/tmp/ops_ssh_key'
 
 const SSH_HOST = process.env.OPS_SSH_HOST || '51.222.207.250'
 const SSH_USER = process.env.OPS_SSH_USER || 'ubuntu'
-const SSH_SCRIPTS_DIR = process.env.OPS_SCRIPTS_DIR || '/opt/consultorio-medico/scripts'
+const SSH_SCRIPTS_DIR_CANDIDATES = [
+  process.env.OPS_SCRIPTS_DIR,
+  '/opt/consultorio-medico/scripts',
+  '/opt/consultorio/scripts',
+].filter(Boolean) as string[]
+
+function pickSshScriptsDir(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const cmds = SSH_SCRIPTS_DIR_CANDIDATES.map(dir => ({
+      dir,
+      cmd: [...sshBaseCmdNoDir(), `"test -f ${dir}/backup-encriptado.sh && echo '${dir}' || true"`].join(' '),
+    }))
+
+    let idx = 0
+    const tryNext = () => {
+      if (idx >= cmds.length) return reject(new Error('No se encontró scripts dir en el VPS'))
+      const { dir, cmd } = cmds[idx++]
+      exec(cmd, { timeout: 10_000 }, (err, stdout) => {
+        if (!err && stdout.trim()) resolve(dir)
+        else tryNext()
+      })
+    }
+    tryNext()
+  })
+}
+
+let _cachedScriptsDir: string | null = null
+async function getSshScriptsDir(): Promise<string> {
+  if (_cachedScriptsDir) return _cachedScriptsDir
+  _cachedScriptsDir = await pickSshScriptsDir()
+  return _cachedScriptsDir
+}
 
 function checkDockerSocket(): boolean {
   try { execSync('docker info', { stdio: 'pipe', timeout: 5000 }); return true }
@@ -69,9 +100,14 @@ function sshBaseCmd(): string[] {
   ]
 }
 
+function sshBaseCmdNoDir(): string[] {
+  return sshBaseCmd()
+}
+
 async function readScriptViaSsh(scriptName: string): Promise<string> {
+  const dir = await getSshScriptsDir()
   return new Promise((resolve, reject) => {
-    const cmd = [...sshBaseCmd(), `"cat ${SSH_SCRIPTS_DIR}/${scriptName}"`].join(' ')
+    const cmd = [...sshBaseCmd(), `"cat ${dir}/${scriptName}"`].join(' ')
     exec(cmd, { timeout: 30_000 }, (err, stdout) => {
       if (err) reject(new Error(err.message))
       else resolve(stdout)
