@@ -17,6 +17,7 @@ export default async function TenantDetailPage({
   const { id } = await params
   const db = getDb()
 
+  // Fetch main tenant data first
   const [tenantResult] = await db.execute(sql`
     SELECT
       t.id,
@@ -31,11 +32,28 @@ export default async function TenantDetailPage({
       (SELECT COUNT(*)::int FROM public.turnos tu JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE s.tenant_id = t.id) AS turno_count,
       (SELECT COUNT(*)::int FROM public.recetas r WHERE r.tenant_id = t.id) AS receta_count,
       (SELECT MAX(tu.fecha_hora) FROM public.turnos tu JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE s.tenant_id = t.id) AS ultimo_turno,
-      (SELECT MAX(r.created_at) FROM public.recetas r WHERE r.tenant_id = t.id) AS ultima_receta,
-      (SELECT COUNT(*)::int FROM platform.platform_audit_log al WHERE al.tenant_afectado = t.nombre AND al.created_at > now() - interval '7 days') AS audit_7d
+      (SELECT MAX(r.created_at) FROM public.recetas r WHERE r.tenant_id = t.id) AS ultima_receta
     FROM public.tenants t
     WHERE t.id = ${id}
   `)
+
+  if (!tenantResult) notFound()
+
+  // Fetch audit count separately (optional - won't break page if table/column missing)
+  let audit7d = 0
+  try {
+    const [auditResult] = await db.execute(sql`
+      SELECT COUNT(*)::int AS count
+      FROM platform.platform_audit_log al
+      WHERE al.tenant_afectado = ${(tenantResult as Record<string, unknown>).nombre as string}
+        AND al.created_at > now() - interval '7 days'
+    `)
+    audit7d = (auditResult as Record<string, unknown>).count as number || 0
+  } catch {
+    // Ignore if table/column doesn't exist
+  }
+
+  const t = { ...(tenantResult as Record<string, unknown>), audit_7d: audit7d }
 
   if (!tenantResult) notFound()
 
