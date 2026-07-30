@@ -15,6 +15,8 @@ export function ImpersonateButton({ tenantId, tenantName }: Props) {
     message?: string
     adminNombre?: string
     adminEmail?: string
+    impersonateLink?: string
+    emailSent?: boolean
   } | null>(null)
 
   async function handleStart() {
@@ -28,7 +30,16 @@ export function ImpersonateButton({ tenantId, tenantName }: Props) {
       })
       const data = await res.json()
       if (res.ok) {
-        setResult({ ok: true, adminNombre: data.adminNombre, adminEmail: data.adminEmail, message: `Email enviado a ${data.adminEmail}` })
+        setResult({
+          ok: true,
+          adminNombre: data.adminNombre,
+          adminEmail: data.adminEmail,
+          emailSent: data.emailSent,
+          impersonateLink: data.impersonateLink,
+          message: data.emailSent
+            ? `Email enviado a ${data.adminEmail}`
+            : `Sin SMTP configurado — compartí el link manualmente:`,
+        })
       } else {
         setResult({ ok: false, message: data.error || 'Error al iniciar impersonación' })
       }
@@ -68,11 +79,30 @@ export function ImpersonateButton({ tenantId, tenantName }: Props) {
               <div className={`text-sm p-3 rounded-lg mb-4 ${result.ok ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-500'}`}>
                 {result.ok ? (
                   <div>
-                    <p className="font-semibold mb-1">✅ Email enviado</p>
-                    <p>Destino: {result.adminNombre} ({result.adminEmail})</p>
-                    <p className="text-xs mt-2 text-[var(--text-muted)]">
-                      El administrador debe hacer clic en el enlace del email para otorgar acceso.
+                    <p className="font-semibold mb-1">
+                      {result.emailSent ? '✅ Email enviado' : '🔗 Link generado'}
                     </p>
+                    <p>Destino: {result.adminNombre} ({result.adminEmail})</p>
+                    {result.impersonateLink ? (
+                      <div className="mt-2">
+                        <a
+                          href={result.impersonateLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-[var(--accent)] underline break-all"
+                        >
+                          {result.impersonateLink}
+                        </a>
+                        <p className="text-xs mt-1 text-amber-500">
+                          Sin SMTP configurado — compartí este link con el administrador.
+                          Expira en 1 hora, uso único.
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs mt-2 text-[var(--text-muted)]">
+                        El administrador debe hacer clic en el enlace del email para otorgar acceso.
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <p>❌ {result.message}</p>

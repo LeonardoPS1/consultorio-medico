@@ -67,6 +67,7 @@ export async function POST(request: Request) {
       adminNombre: data.adminNombre,
       emailSent: data.emailSent,
       expiresAt: data.expiresAt,
+      impersonateLink: data.impersonateLink,
     })
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 })

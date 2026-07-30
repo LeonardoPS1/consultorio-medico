@@ -91,6 +91,7 @@ export async function POST(request: Request) {
       adminNombre: admin.nombre,
       emailSent,
       expiresAt: expiresAt.toISOString(),
+      ...(emailSent ? {} : { impersonateLink }),
     });
   } catch (e) {
     safeWarn('[Impersionate] Error:', (e as Error).message);
