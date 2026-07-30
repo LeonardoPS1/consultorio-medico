@@ -29,9 +29,15 @@ DB_NAME="${PGDATABASE:-consultorio_medico}"
 DB_USER="${PGUSER:-dashboard_user}"
 DB_HOST="${PGHOST:-localhost}"
 DB_PORT="${PGPORT:-5432}"
+PG_SUPERUSER="${PG_SUPERUSER:-reece.schmeler67}"
+PG_SUPERPASS="${PG_SUPERPASS:-7anlnf0odssgmuwyjchqzdpk}"
 DRILL_MODE=false
 DRILL_PORT=5433
 KEEP_FILES=false
+
+# Auto-detectar contenedor PostgreSQL (como backup-encriptado.sh)
+PG_CONTAINER=""
+PG_CONTAINER=$(docker ps --no-trunc --format '{{.Names}}' 2>/dev/null | grep -E '\-postgres-1(\.|$)' | grep -v 'chatwoot\|evolution\|dokploy\|pgbouncer' | head -1 || echo "")
 
 # ─── Parsing de argumentos ────────────────────────────────────────────────────
 POSITIONAL=()
@@ -130,21 +136,32 @@ if [[ "$DRILL_MODE" == "true" ]]; then
 fi
 
 # ─── FASE 3: Restauración directa (producción) ───────────────────────────────
-echo "[Restore-PG] ⚠️  VAS A RESTAURAR SOBRE $DB_HOST:$DB_PORT/$DB_NAME"
+if [[ -z "$PG_CONTAINER" ]]; then
+  echo "[Restore-PG] ❌ No se pudo detectar el contenedor PostgreSQL"
+  rm -rf "$TMPDIR"
+  exit 3
+fi
+
+echo "[Restore-PG] ⚠️  VAS A RESTAURAR SOBRE $PG_CONTAINER ($DB_NAME)"
 echo "[Restore-PG]    Ctrl+C ahora para cancelar (esperando 5s)..."
 sleep 5
 
-echo "[Restore-PG] Iniciando restauración..."
-time pg_restore \
-  -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
-  --clean --if-exists \
-  "$TMPDIR/backup.dump"
+echo "[Restore-PG] Copiando backup al contenedor..."
+docker cp "$TMPDIR/backup.dump" "$PG_CONTAINER:/tmp/backup_restore.dump"
 
+echo "[Restore-PG] Iniciando restauración..."
+docker exec -e PGPASSWORD="$PG_SUPERPASS" "$PG_CONTAINER" \
+  pg_restore -U "$PG_SUPERUSER" -d "$DB_NAME" \
+  --clean --if-exists \
+  /tmp/backup_restore.dump
+
+docker exec "$PG_CONTAINER" rm -f /tmp/backup_restore.dump
 echo "[Restore-PG] ✅ Restauración completada"
 
 # ─── FASE 4: Verificación post-restauración ───────────────────────────────────
 echo "[Restore-PG] Verificando..."
-PGPASS_AUTO=true psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "
+docker exec -e PGPASSWORD="$PG_SUPERPASS" "$PG_CONTAINER" \
+  psql -U "$PG_SUPERUSER" -d "$DB_NAME" -c "
   SELECT count(*)::text || ' tablas' as total FROM information_schema.tables
   WHERE table_schema = 'public' AND table_type = 'BASE TABLE';
 " 2>/dev/null || echo "[Restore-PG] ⚠️  No se pudo verificar"
