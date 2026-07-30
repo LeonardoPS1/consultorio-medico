@@ -2,6 +2,7 @@ import { getDb } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 import { getSessionFromCookie } from '@/lib/auth'
 import { notFound } from 'next/navigation'
+import { ImpersonateButton } from './impersonate-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,16 +43,19 @@ export default async function TenantDetailPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <a href="/dashboard/tenants" className="text-sm text-[var(--accent)] hover:underline mb-2 inline-block">
-          ← Volver a tenants
-        </a>
-        <h1 className="text-xl font-bold">{t.nombre as string}</h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">
-          {t.subdomain ? `${t.subdomain}.aicorebots.com` : 'Sin subdominio'}
-          <span className="mx-2">·</span>
-          Plan: {String(t.plan || 'free')}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <a href="/dashboard/tenants" className="text-sm text-[var(--accent)] hover:underline mb-2 inline-block">
+            ← Volver a tenants
+          </a>
+          <h1 className="text-xl font-bold">{t.nombre as string}</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            {t.subdomain ? `${t.subdomain}.aicorebots.com` : 'Sin subdominio'}
+            <span className="mx-2">·</span>
+            Plan: {String(t.plan || 'free')}
+          </p>
+        </div>
+        <ImpersonateButton tenantId={id} tenantName={t.nombre as string} />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

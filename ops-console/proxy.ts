@@ -10,6 +10,7 @@ const PUBLIC_PATHS = [
   '/api/auth/totp/setup',
   '/api/auth/totp/verify',
   '/api/auth/session',
+  '/api/auth/impersonate/start',
   '/api/health',
   '/login',
   '/setup',

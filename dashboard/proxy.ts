@@ -59,13 +59,21 @@ const securityHeaders: Record<string, string> = {
 
 // ─── Helper: verificar si hay sesión activa via cookie ───
 // NextAuth v5 usa `authjs.session-token` (HTTP) o `__Secure-authjs.session-token` (HTTPS)
+// Admite también cookie de impersonación (__Secure-impersonation.session)
 function hasSessionCookie(request: NextRequest): boolean {
-  const cookieName =
+  const nextAuthCookie =
     process.env.NODE_ENV === 'production'
       ? '__Secure-authjs.session-token'
       : 'authjs.session-token';
 
-  return !!request.cookies.get(cookieName);
+  if (!!request.cookies.get(nextAuthCookie)) return true;
+
+  const impCookie =
+    process.env.NODE_ENV === 'production'
+      ? '__Secure-impersonation.session'
+      : 'impersonation.session';
+
+  return !!request.cookies.get(impCookie);
 }
 
 // ─── Helper: detectar tenant por subdominio ─────────────

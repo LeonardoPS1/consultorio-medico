@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/header';
 import { CommandPalette } from '@/components/layout/command-palette';
 import { PatientPanel } from '@/components/layout/patient-panel';
 import { AsistenteFlotante } from '@/components/layout/asistente-flotante';
+import { ImpersonationBanner } from '@/components/layout/impersonation-banner';
 import { PatientPanelProvider } from '@/lib/hooks/use-patient-panel';
 import { AsistenteProvider } from '@/lib/hooks/use-asistente-ia';
 import { GatedContent } from '@/components/gated-content';
@@ -14,13 +15,17 @@ import { DashboardLayoutClient } from '@/components/dashboard/dashboard-layout-c
 import { MainContent } from '@/components/dashboard/main-content';
 import { SidebarProvider } from '@/components/layout/sidebar-context';
 import { auth } from '@/lib/auth';
+import { getImpersonationSession } from '@/lib/auth-impersonation';
 import { redirect } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+  const [session, impSession] = await Promise.all([
+    auth(),
+    getImpersonationSession(),
+  ]);
 
-  if (!session) {
+  if (!session && !impSession) {
     redirect('/login');
   }
 
@@ -31,10 +36,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <PatientPanelProvider>
         <AsistenteProvider>
         <DashboardLayoutClient>
-        <div className="flex h-screen overflow-hidden bg-background">
+        <div
+          className="flex h-screen overflow-hidden bg-background"
+          {...(impSession ? {
+            'data-impersonating': 'true',
+            'data-impersonated-by': impSession.impersonatedBy,
+            'data-impersonated-user': impSession.name,
+          } : {})}
+        >
           <div className="ambient-bg" />
           <Sidebar />
           <div className="flex flex-1 flex-col overflow-hidden relative z-[1]">
+            <ImpersonationBanner />
             <Header />
             <CommandPalette />
             <PatientPanel />

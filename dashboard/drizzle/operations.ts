@@ -116,6 +116,37 @@ export const workflowErrors = pgTable('workflow_errors', {
 export type WorkflowError = InferSelectModel<typeof workflowErrors>;
 
 // ============================================================
+// IMPERSONATION TOKENS (operador → tenant admin)
+// ============================================================
+export const impersonationTokens = pgTable(
+  'impersonation_tokens',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    usuarioId: uuid('usuario_id')
+      .notNull()
+      .references(() => usuarios.id),
+    creadoPorOperatorId: varchar('creado_por_operator_id', { length: 255 }).notNull(),
+    creadoPorOperatorEmail: varchar('creado_por_operator_email', { length: 255 }).notNull(),
+    token: varchar('token', { length: 64 }).notNull().unique(),
+    usado: boolean('usado').notNull().default(false),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    idxImpToken: index('idx_impersonation_tokens_token').on(table.token),
+    idxImpTenant: index('idx_impersonation_tokens_tenant').on(table.tenantId),
+  }),
+);
+
+export type ImpersonationToken = InferSelectModel<typeof impersonationTokens>;
+export type NewImpersonationToken = InferInsertModel<typeof impersonationTokens>;
+
+// ============================================================
 // WEBHOOK CONFIGS (outgoing webhooks por tenant)
 // ============================================================
 export const webhookConfigs = pgTable(

@@ -9,6 +9,8 @@ declare module 'next-auth' {
       plan?: string;
       medicoId?: string;
       tenantId?: string;
+      impersonating?: boolean;
+      impersonatedBy?: string;
     } & DefaultSession['user'];
   }
 
@@ -27,5 +29,7 @@ declare module 'next-auth/jwt' {
     plan?: string;
     medicoId?: string;
     tenantId?: string;
+    impersonating?: boolean;
+    impersonatedBy?: string;
   }
 }
