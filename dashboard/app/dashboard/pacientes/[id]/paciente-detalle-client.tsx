@@ -1,19 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { playDelete } from '@/lib/sound';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ArrowLeft,
   Phone,
   Mail,
   Calendar,
-  Clock,
   FileText,
   Syringe,
   Activity,
@@ -29,7 +20,6 @@ import {
   FilePlus2,
   Trash2,
   Save,
-  RotateCcw,
   Download,
   Stethoscope,
   Brain,
@@ -43,12 +33,32 @@ import {
   FileSignature,
   Upload,
 } from 'lucide-react';
-import { formatPhone, getInitials, formatDate, getTurnoColor, getTurnoLabel } from '@/lib/utils';
-import { toast } from '@/components/ui/use-toast';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { EditarPacienteModal } from '@/components/modals/editar-paciente-modal';
+import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
+import { DocumentosPaciente } from '@/components/pacientes/documentos-paciente-tab';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/components/ui/use-toast';
+import { playDelete } from '@/lib/sound';
+import { formatPhone, getInitials, formatDate, getTurnoColor, getTurnoLabel } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { DocumentosPaciente } from '@/components/pacientes/documentos-paciente-tab';
 import { Cie10Search } from '@/components/ui/cie10-search';
 import {
   DropdownMenu,
@@ -64,18 +74,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
-import { EditarPacienteModal } from '@/components/modals/editar-paciente-modal';
+import { descargarReceta, enviarRecetaWhatsApp, imprimirReceta } from '@/lib/receta-pdf';
+import { mapEstadoDisplay, ESTADO_DISPLAY_LABELS } from '@/lib/receta-utils';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -210,6 +210,18 @@ function getHistorialIcon(tipo: string) {
 
 // ─── Component ─────────────────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.paciente
+ * @param root0.turnos
+ * @param root0.recetas
+ * @param root0.historial
+ * @param root0.ultimaConversacion
+ * @param root0.stats
+ * @param root0.bajaSolicitadaAt
+ * @param root0.bajaConfirmada
+ */
 export function PacienteDetalleClient({
   paciente,
   turnos,
@@ -229,6 +241,7 @@ export function PacienteDetalleClient({
   const [dosis, setDosis] = useState('');
   const [frecuencia, setFrecuencia] = useState('');
   const [indicaciones, setIndicaciones] = useState('');
+  const [deleteRecetaId, setDeleteRecetaId] = useState<string | null>(null);
 
   // ─── Historial state ──────────────────────────────
   const [historialList, setHistorialList] = useState(historial);
@@ -642,6 +655,52 @@ export function PacienteDetalleClient({
     }
   };
 
+  const handleRenovarReceta = async (r: RecetaRow) => {
+    try {
+      const res = await fetch(`/api/recetas/${r.id}/renovar`, { method: 'POST' });
+      if (!res.ok) throw new Error();
+      const { data } = await res.json();
+      setRecetasList((prev) => [
+        {
+          id: data.id,
+          medicamento: data.medicamento,
+          dosis: data.dosis,
+          frecuencia: data.frecuencia,
+          duracion: data.duracion,
+          indicaciones: data.indicaciones,
+          estado: data.estado,
+          fechaInicio: data.fechaInicio,
+          fechaFin: data.fechaFin,
+          medicoNombre: r.medicoNombre,
+        },
+        ...prev.map((x) => (x.id === r.id ? { ...x, estado: 'historial' } : x)),
+      ]);
+      toast({ title: 'Receta renovada', description: `${data.medicamento}` });
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'No se pudo renovar la receta',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteReceta = async () => {
+    if (!deleteRecetaId) return;
+    try {
+      const res = await fetch(`/api/recetas/${deleteRecetaId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      setRecetasList((prev) =>
+        prev.map((x) => (x.id === deleteRecetaId ? { ...x, estado: 'historial' } : x)),
+      );
+      playDelete();
+      toast({ title: 'Receta movida a historial' });
+      setDeleteRecetaId(null);
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo mover la receta', variant: 'destructive' });
+    }
+  };
+
   // ─── Historial CRUD handlers ──────────────────────
 
   const handleCreateHistorial = async () => {
@@ -744,7 +803,7 @@ export function PacienteDetalleClient({
         body: JSON.stringify({ notasMedicas: notasEdit }),
       });
       if (!res.ok) throw new Error();
-      paciente.notasMedicas = notasEdit;
+      router.refresh();
       toast({ title: 'Notas actualizadas' });
       setEditandoNotas(false);
     } catch {
@@ -764,7 +823,7 @@ export function PacienteDetalleClient({
         body: JSON.stringify({ alergias: alergiasEdit || null }),
       });
       if (!res.ok) throw new Error();
-      paciente.alergias = alergiasEdit || null;
+      router.refresh();
       toast({ title: 'Alergias actualizadas' });
       setEditandoAlergias(false);
     } catch {
@@ -784,7 +843,7 @@ export function PacienteDetalleClient({
         body: JSON.stringify({ medicacionCronica: medicacionEdit || null }),
       });
       if (!res.ok) throw new Error();
-      paciente.medicacionCronica = medicacionEdit || null;
+      router.refresh();
       toast({ title: 'Medicación actualizada' });
       setEditandoMedicacion(false);
     } catch {
@@ -796,9 +855,11 @@ export function PacienteDetalleClient({
     }
   };
 
-  const edad = paciente.fechaNacimiento
-    ? Math.floor((Date.now() - new Date(paciente.fechaNacimiento).getTime()) / 31557600000)
-    : null;
+  const [edad] = useState<number | null>(() =>
+    paciente.fechaNacimiento
+      ? Math.floor((Date.now() - new Date(paciente.fechaNacimiento).getTime()) / 31557600000)
+      : null,
+  );
 
   return (
     <div className="space-y-6 animate-in pb-8">
@@ -913,10 +974,13 @@ export function PacienteDetalleClient({
                           otro: 'Otro',
                         };
                         const base = prevMap[paciente.prevision] || paciente.prevision;
-                        const tramo = paciente.tramoFonasa ? ` · Tramo ${paciente.tramoFonasa}` : '';
-                        const isapre = paciente.prevision === 'isapre' && paciente.isapreNombre
-                          ? ` · ${paciente.isapreNombre}`
+                        const tramo = paciente.tramoFonasa
+                          ? ` · Tramo ${paciente.tramoFonasa}`
                           : '';
+                        const isapre =
+                          paciente.prevision === 'isapre' && paciente.isapreNombre
+                            ? ` · ${paciente.isapreNombre}`
+                            : '';
                         return `${base}${tramo}${isapre}`;
                       })()
                     : paciente.sistemaSalud
@@ -1350,36 +1414,87 @@ export function PacienteDetalleClient({
             </Card>
           ) : (
             <div className="space-y-2">
-              {recetasList.map((r) => (
-                <Card key={r.id} className="hoverable:hover:bg-muted/30 transition-colors">
-                  <CardContent className="p-4 flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Syringe className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{r.medicamento}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {r.dosis} · {r.duracion || r.frecuencia}
-                        {r.medicoNombre && ` · ${r.medicoNombre}`}
-                      </p>
-                      {r.indicaciones && (
-                        <p className="text-xs text-muted-foreground/70 mt-0.5 italic">
-                          {r.indicaciones}
+              {recetasList.map((r) => {
+                const estDisplay = mapEstadoDisplay(r.estado, r.fechaFin);
+                const recetaLike = {
+                  id: r.id,
+                  paciente: `${paciente.nombre} ${paciente.apellido}`,
+                  medicamento: r.medicamento,
+                  dosis: r.dosis,
+                  duracion: r.duracion || r.frecuencia,
+                  vence: r.fechaFin || r.fechaInicio,
+                  indicaciones: r.indicaciones ?? undefined,
+                };
+                return (
+                  <Card key={r.id} className="hoverable:hover:bg-muted/30 transition-colors">
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Syringe className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{r.medicamento}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {r.dosis} · {r.duracion || r.frecuencia}
+                          {r.medicoNombre && ` · ${r.medicoNombre}`}
                         </p>
-                      )}
-                    </div>
-                    <div className="text-right text-xs">
-                      <Badge className={getEstadoRecetaColor(r.estado)}>{r.estado}</Badge>
-                      {r.fechaInicio && (
-                        <p className="text-muted-foreground mt-1">
-                          {formatDate(r.fechaInicio, 'dd/MM/yy')}
-                          {r.fechaFin && ` - ${formatDate(r.fechaFin, 'dd/MM/yy')}`}
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        {r.indicaciones && (
+                          <p className="text-xs text-muted-foreground/70 mt-0.5 italic">
+                            {r.indicaciones}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-right text-xs">
+                        <Badge className={getEstadoRecetaColor(estDisplay)}>
+                          {ESTADO_DISPLAY_LABELS[estDisplay]}
+                        </Badge>
+                        {r.fechaInicio && (
+                          <p className="text-muted-foreground mt-1">
+                            {formatDate(r.fechaInicio, 'dd/MM/yy')}
+                            {r.fechaFin && ` - ${formatDate(r.fechaFin, 'dd/MM/yy')}`}
+                          </p>
+                        )}
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            aria-label={`Acciones de ${r.medicamento}`}
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => void descargarReceta(recetaLike)}>
+                            <Download className="h-4 w-4 mr-2" /> Descargar PDF
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => void imprimirReceta(recetaLike)}>
+                            <Printer className="h-4 w-4 mr-2" /> Imprimir
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => void enviarRecetaWhatsApp(recetaLike)}>
+                            <MessageSquare className="h-4 w-4 mr-2" /> Enviar por WhatsApp
+                          </DropdownMenuItem>
+                          {estDisplay !== 'historial' && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => void handleRenovarReceta(r)}>
+                                <RefreshCw className="h-4 w-4 mr-2" /> Renovar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => setDeleteRecetaId(r.id)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" /> Mover a historial
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </TabsContent>
@@ -2515,12 +2630,36 @@ export function PacienteDetalleClient({
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* ─── Delete Confirmation (receta) ───── */}
+      <AlertDialog
+        open={!!deleteRecetaId}
+        onOpenChange={(open) => !open && setDeleteRecetaId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Mover receta a historial?</AlertDialogTitle>
+            <AlertDialogDescription>
+              La receta dejará de estar activa y pasará a tu historial de recetas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteReceta}
+              className="bg-destructive text-destructive-foreground"
+            >
+              Mover a historial
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* ─── Editar Paciente Modal ──────────────── */}
       <EditarPacienteModal
         open={editPacienteOpen}
         onOpenChange={setEditPacienteOpen}
         paciente={paciente}
-        onSaved={(updated) => {
+        onSaved={() => {
           // Actualizar paciente localmente + recargar página para refrescar todo
           window.location.reload();
         }}

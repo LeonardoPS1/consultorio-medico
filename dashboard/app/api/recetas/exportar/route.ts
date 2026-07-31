@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import type { EstadoReceta } from '@/lib/receta-utils';
 import { recetasService } from '@/lib/services/recetas';
 
 /**
- * GET /api/recetas/exportar?formato=excel|pdf&estado=activa
+ * GET /api/recetas/exportar?formato=excel|pdf&estado=activa|vencida|historial&pacienteId=uuid
  *
  * Exporta recetas en formato Excel (.xlsx) o PDF (HTML imprimible).
  * Requiere autenticación.
+ * @param request
  */
 export async function GET(request: NextRequest) {
   try {
@@ -21,10 +23,16 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const formato = searchParams.get('formato') || 'excel';
-    const estado = searchParams.get('estado') || undefined;
+    const rawEstado = searchParams.get('estado');
+    const estado: EstadoReceta | undefined =
+      rawEstado === 'activa' || rawEstado === 'vencida' || rawEstado === 'historial'
+        ? rawEstado
+        : undefined;
+    const pacienteId = searchParams.get('pacienteId') || undefined;
 
     const data = await recetasService.getForExport({
       estado,
+      pacienteId,
       medicoId: isMedico ? sessionMedicoId : null,
     });
 

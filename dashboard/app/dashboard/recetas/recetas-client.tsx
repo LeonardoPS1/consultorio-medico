@@ -1,10 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { PageAnimation } from '@/components/dashboard/page-animation';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { playDelete } from '@/lib/sound';
 import {
   Plus,
   Syringe,
@@ -17,20 +12,14 @@ import {
   MoreHorizontal,
   FileSpreadsheet,
   FileDown,
-  QrCode,
   Trash2,
+  X,
+  Loader2,
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { formatDate } from '@/lib/utils';
-import { escapeHtml } from '@/lib/html-utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCallback, useState } from 'react';
+import { PageAnimation } from '@/components/dashboard/page-animation';
 import { NuevaRecetaModal } from '@/components/modals/nueva-receta-modal';
-import { toast } from '@/components/ui/use-toast';
+import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +30,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/components/ui/use-toast';
+import { descargarReceta, enviarRecetaWhatsApp, imprimirReceta } from '@/lib/receta-pdf';
+import { playDelete } from '@/lib/sound';
+import { formatDate } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -61,335 +64,58 @@ interface RecetasClientProps {
   initialRecetas: Receta[];
 }
 
-// ─── Helpers ──────────────────────────────────────────────
-
-function descargarReceta(receta: Receta) {
-  fetch('/api/organization')
-    .then((r) => r.json())
-    .then(async (resp) => {
-      const org = resp.data || {};
-      await generarPDFReceta(receta, org);
-    })
-    .catch(() => generarPDFReceta(receta, {}));
-}
-
-async function generarPDFReceta(receta: Receta, org: Record<string, string>) {
-  // Generar QR code de verificacion con firma digital
-  let qrDataUrl = '';
-  try {
-    const QRCode = await import('qrcode');
-    const baseUrl =
-      typeof window !== 'undefined'
-        ? `${window.location.protocol}//${window.location.host}`
-        : 'https://med.aicorebots.com';
-    const verificationUrl = `${baseUrl}/verificar-receta/${receta.id}`;
-    qrDataUrl = await QRCode.toDataURL(verificationUrl, {
-      width: 120,
-      margin: 2,
-      color: { dark: '#1a1a1a', light: '#ffffff' },
-    });
-  } catch {
-    // QR fallback: sin QR si la lib no carga
-  }
-  const nombreOrg = org.nombre || 'Consultorio Médico';
-  const direccion = org.direccion || '';
-  const ciudad = org.ciudad || '';
-  const telefono = org.telefono || '';
-  const email = org.email || '';
-  const logoUrl = org.logoUrl || '';
-  const colorPrimario = org.colorPrimario || '#2563eb';
-
-  const hoy = formatDate(new Date().toISOString(), "dd 'de' MMMM 'de' yyyy");
-  const vence = formatDate(receta.vence, "dd 'de' MMMM 'de' yyyy");
-
-  const html = generarHTMLRecetaCompleta({
-    nombreOrg,
-    direccion,
-    ciudad,
-    telefono,
-    email,
-    logoUrl,
-    colorPrimario,
-    hoy,
-    vence,
-    receta,
-    qrDataUrl,
-  });
-
-  const ventana = window.open('', '_blank');
-  if (!ventana) {
-    toast({
-      title: '❌ Error',
-      description: 'Permití ventanas emergentes para abrir la receta',
-      variant: 'destructive',
-    });
-    return;
-  }
-  ventana.document.write(html);
-  ventana.document.close();
-  toast({
-    title: '📄 Receta generada',
-    description: `${receta.medicamento} - ${receta.paciente}`,
-  });
-}
-
-function enviarRecetaWhatsApp(receta: Receta) {
-  fetch('/api/organization')
-    .then((r) => r.json())
-    .then((resp) => {
-      const org = resp.data || {};
-      const nombreOrg = org.nombre || 'Consultorio Médico';
-      const texto = encodeURIComponent(
-        `📋 *RECETA MÉDICA*%0A%0A` +
-          `Paciente: ${receta.paciente}%0A` +
-          `Medicamento: ${receta.medicamento}%0A` +
-          `Dosis: ${receta.dosis}%0A` +
-          `Duración: ${receta.duracion}%0A` +
-          (receta.indicaciones ? `Indicaciones: ${receta.indicaciones}%0A` : '') +
-          `%0AVence: ${formatDate(receta.vence, 'dd/MM/yyyy')}%0A%0A` +
-          `Enviado desde ${nombreOrg}`,
-      );
-      window.open(`https://wa.me/?text=${texto}`, '_blank');
-      toast({
-        title: '📱 Abriendo WhatsApp',
-        description: 'Se abrirá una ventana para enviar la receta',
-      });
-    })
-    .catch(() => {
-      const texto = encodeURIComponent(
-        `📋 *RECETA MÉDICA*%0A%0A` +
-          `Paciente: ${receta.paciente}%0A` +
-          `Medicamento: ${receta.medicamento}%0A` +
-          `Dosis: ${receta.dosis}%0A` +
-          `Duración: ${receta.duracion}%0A` +
-          (receta.indicaciones ? `Indicaciones: ${receta.indicaciones}%0A` : '') +
-          `%0AVence: ${formatDate(receta.vence, 'dd/MM/yyyy')}%0A%0A` +
-          `Enviado desde Consultorio Médico`,
-      );
-      window.open(`https://wa.me/?text=${texto}`, '_blank');
-      toast({
-        title: '📱 Abriendo WhatsApp',
-        description: 'Se abrirá una ventana para enviar la receta',
-      });
-    });
-}
-
-async function imprimirReceta(receta: Receta) {
-  fetch('/api/organization')
-    .then((r) => r.json())
-    .then(async (resp) => {
-      const org = resp.data || {};
-      let qrDataUrl = '';
-      try {
-        const QRCode = await import('qrcode');
-        const baseUrl =
-          typeof window !== 'undefined'
-            ? `${window.location.protocol}//${window.location.host}`
-            : 'https://med.aicorebots.com';
-        qrDataUrl = await QRCode.toDataURL(`${baseUrl}/verificar-receta/${receta.id}`, {
-          width: 120,
-          margin: 2,
-          color: { dark: '#1a1a1a', light: '#ffffff' },
-        });
-      } catch {}
-      const html = generarHTMLRecetaCompletaConBoton({ ...org, receta, qrDataUrl } as any);
-      const ventana = window.open('', '_blank');
-      if (ventana) {
-        ventana.document.write(html);
-        ventana.document.close();
-      }
-    })
-    .catch(async () => {
-      let qrDataUrl = '';
-      try {
-        const QRCode = await import('qrcode');
-        const baseUrl =
-          typeof window !== 'undefined'
-            ? `${window.location.protocol}//${window.location.host}`
-            : 'https://med.aicorebots.com';
-        qrDataUrl = await QRCode.toDataURL(`${baseUrl}/verificar-receta/${receta.id}`, {
-          width: 120,
-          margin: 2,
-          color: { dark: '#1a1a1a', light: '#ffffff' },
-        });
-      } catch {}
-      const html = generarHTMLRecetaCompletaConBoton({ receta, qrDataUrl } as any);
-      const ventana = window.open('', '_blank');
-      if (ventana) {
-        ventana.document.write(html);
-        ventana.document.close();
-      }
-    });
-}
-
-function generarHTMLRecetaCompletaConBoton(params: {
-  nombreOrg?: string;
-  direccion?: string;
-  ciudad?: string;
-  telefono?: string;
-  email?: string;
-  logoUrl?: string;
-  colorPrimario?: string;
-  hoy?: string;
-  vence?: string;
-  receta: Receta;
-  qrDataUrl?: string;
-}) {
-  const nombreOrg = params.nombreOrg || 'Consultorio Medico';
-  const hoy = params.hoy || formatDate(new Date().toISOString(), "dd 'de' MMMM 'de' yyyy");
-  const vence = params.vence || formatDate(params.receta.vence, "dd 'de' MMMM 'de' yyyy");
-  const colorPrimario = params.colorPrimario || '#2563eb';
-
-  const base = generarHTMLRecetaCompleta({
-    nombreOrg,
-    direccion: params.direccion || '',
-    ciudad: params.ciudad || '',
-    telefono: params.telefono || '',
-    email: params.email || '',
-    logoUrl: params.logoUrl || '',
-    colorPrimario,
-    hoy,
-    vence,
-    receta: params.receta,
-    qrDataUrl: params.qrDataUrl,
-  });
-  return base.replace(
-    '</body>',
-    `<div class="no-print" style="text-align:center;margin-top:30px;padding-top:20px;border-top:2px dashed #ddd">
-    <button onclick="window.print()" style="padding:10px 30px;background:${colorPrimario};color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">🖨️ Imprimir / Guardar PDF</button>
-    <p style="font-size:12px;color:#888;margin-top:8px">Selecciona "Guardar como PDF" en el dialogo de impresion</p>
-  </div>
-</body>`,
-  );
-}
-
-function generarHTMLRecetaCompleta(params: {
-  nombreOrg: string;
-  direccion: string;
-  ciudad: string;
-  telefono: string;
-  email: string;
-  logoUrl: string;
-  colorPrimario: string;
-  hoy: string;
-  vence: string;
-  receta: Receta;
-  qrDataUrl?: string;
-}) {
-  const {
-    nombreOrg,
-    direccion,
-    ciudad,
-    telefono,
-    email,
-    logoUrl,
-    colorPrimario,
-    hoy,
-    vence,
-    receta,
-    qrDataUrl,
-  } = params;
-
-  // Escapar todos los valores que vienen del usuario/DB (XSS prevention)
-  const safe = {
-    paciente: escapeHtml(receta.paciente),
-    medicamento: escapeHtml(receta.medicamento),
-    dosis: escapeHtml(receta.dosis),
-    duracion: escapeHtml(receta.duracion),
-    indicaciones: receta.indicaciones ? escapeHtml(receta.indicaciones) : null,
-    nombreOrg: escapeHtml(nombreOrg),
-    direccion: escapeHtml(direccion),
-    ciudad: escapeHtml(ciudad),
-    telefono: escapeHtml(telefono),
-    email: escapeHtml(email),
-    logoUrl: logoUrl ? escapeHtml(logoUrl) : '',
-    qrDataUrl: qrDataUrl ? escapeHtml(qrDataUrl) : null,
-  };
-
-  return `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Receta - ${safe.paciente}</title>
-<style>
-  @page { margin: 20mm 25mm; size: A4; }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Georgia', 'Times New Roman', serif; color: #1a1a1a; line-height: 1.6; }
-  .header { display: flex; align-items: center; gap: 20px; padding-bottom: 20px; border-bottom: 3px solid ${colorPrimario}; margin-bottom: 30px; }
-  .header-logo { width: 70px; height: 70px; border-radius: 12px; overflow: hidden; flex-shrink: 0; background: ${colorPrimario}; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; font-weight: bold; }
-  .header-logo img { width: 100%; height: 100%; object-fit: cover; }
-  .header-info h1 { font-size: 20px; color: ${colorPrimario}; margin-bottom: 2px; }
-  .header-info p { font-size: 12px; color: #666; }
-  .titulo-documento { text-align: center; font-size: 16px; text-transform: uppercase; letter-spacing: 4px; color: #333; margin-bottom: 30px; padding-bottom: 10px; border-bottom: 1px solid #ddd; }
-  .receta-content { background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 30px; margin-bottom: 30px; }
-  .paciente-info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 30px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px dashed #ddd; }
-  .paciente-info .label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-  .paciente-info .value { font-size: 15px; font-weight: 600; color: #1a1a1a; }
-  .prescripcion { margin-bottom: 20px; }
-  .prescripcion h3 { font-size: 13px; color: ${colorPrimario}; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
-  .prescripcion-item { background: white; border-left: 4px solid ${colorPrimario}; padding: 15px 20px; border-radius: 0 8px 8px 0; }
-  .prescripcion-item .medicamento { font-size: 18px; font-weight: 700; color: #1a1a1a; }
-  .prescripcion-item .detalle { font-size: 13px; color: #555; margin-top: 5px; }
-  .prescripcion-item .indicaciones { font-size: 13px; color: #666; margin-top: 8px; font-style: italic; }
-  .fechas { display: flex; gap: 40px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e5e5; }
-  .fechas .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-  .fechas .value { font-size: 14px; font-weight: 600; margin-top: 2px; }
-  .firma-area { margin-top: 50px; display: flex; justify-content: space-between; align-items: end; }
-  .firma { text-align: center; min-width: 250px; }
-  .firma-line { border-top: 2px solid #333; width: 250px; margin-bottom: 5px; }
-  .firma-label { font-size: 11px; color: #666; }
-  .footer { margin-top: 40px; padding-top: 15px; border-top: 1px solid #ddd; text-align: center; font-size: 10px; color: #999; }
-  .footer strong { color: #666; }
-</style>
-</head>
-<body>
-  <div class="header">
-    <div class="header-logo">${safe.logoUrl ? `<img src="${safe.logoUrl}" alt="Logo">` : safe.nombreOrg.charAt(0).toUpperCase()}</div>
-    <div class="header-info">
-      <h1>${safe.nombreOrg}</h1>
-      <p>${[safe.direccion, safe.ciudad].filter(Boolean).join(', ')}</p>
-      <p>${[safe.telefono, safe.email].filter(Boolean).join(' | ')}</p>
-    </div>
-  </div>
-  <div class="titulo-documento">Receta Médica</div>
-  <div class="receta-content">
-    <div class="paciente-info">
-      <div><div class="label">Paciente</div><div class="value">${safe.paciente}</div></div>
-      <div><div class="label">Fecha de emisión</div><div class="value">${hoy}</div></div>
-    </div>
-    <div class="prescripcion">
-      <h3>Prescripción</h3>
-      <div class="prescripcion-item">
-        <div class="medicamento">${safe.medicamento}</div>
-        <div class="detalle"><strong>Dosis:</strong> ${safe.dosis} &nbsp;·&nbsp; <strong>Duración:</strong> ${safe.duracion}</div>
-        ${safe.indicaciones ? `<div class="indicaciones">📋 ${safe.indicaciones}</div>` : ''}
-      </div>
-    </div>
-    <div class="fechas">
-      <div><div class="label">Emisión</div><div class="value">${hoy}</div></div>
-      <div><div class="label">Válida hasta</div><div class="value">${vence}</div></div>
-    </div>
-  </div>
-  <div class="firma-area">
-    <div class="qr-container">
-      ${safe.qrDataUrl ? `<img src="${safe.qrDataUrl}" alt="QR Verificacion" style="width:80px;height:80px;" /><p style="font-size:8px;color:#999;text-align:center;margin-top:3px;">Verificar autenticidad</p>` : '<p style="font-size:9px;color:#ccc;">QR no disponible</p>'}
-    </div>
-    <div></div>
-    <div class="firma">
-      <div class="firma-line"></div>
-      <div class="firma-label">${safe.nombreOrg}</div>
-    </div>
-  </div>
-  <div class="footer"><strong>${safe.nombreOrg}</strong> &nbsp;·&nbsp; Documento generado electrónicamente el ${hoy}</div>
-</body>
-</html>`;
-}
-
 // ─── Component ─────────────────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.initialRecetas
+ */
 export function RecetasClient({ initialRecetas }: RecetasClientProps) {
   const [recetas, setRecetas] = useState<Receta[]>(initialRecetas);
   const [showNewReceta, setShowNewReceta] = useState(false);
+  const [pacienteFiltro, setPacienteFiltro] = useState<{ id: string; nombre: string } | null>(null);
+  const [filterLoading, setFilterLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const cargarRecetas = useCallback(async (pacienteId?: string) => {
+    setFilterLoading(true);
+    try {
+      const url = pacienteId ? `/api/recetas?pacienteId=${pacienteId}` : '/api/recetas';
+      const res = await fetch(url);
+      if (res.ok) {
+        const json = await res.json();
+        setRecetas(json.data ?? []);
+      }
+    } catch {
+      // Error de red: se mantiene la lista actual
+    } finally {
+      setFilterLoading(false);
+    }
+  }, []);
+
+  const handlePacienteChange = useCallback(
+    (pacienteId: string, pacienteNombre: string) => {
+      if (pacienteId) {
+        setPacienteFiltro({ id: pacienteId, nombre: pacienteNombre });
+        void cargarRecetas(pacienteId);
+      } else {
+        setPacienteFiltro(null);
+        void cargarRecetas();
+      }
+    },
+    [cargarRecetas],
+  );
+
+  const recetasVisibles = recetas.filter((r) => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      r.paciente.toLowerCase().includes(q) ||
+      r.medicamento.toLowerCase().includes(q) ||
+      (r.indicaciones ?? '').toLowerCase().includes(q)
+    );
+  });
 
   const handleNuevaReceta = async (data: {
     pacienteId: string;
@@ -452,39 +178,43 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
 
   const handleRenovar = async (receta: Receta) => {
     try {
-      const res = await fetch(`/api/recetas/${receta.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'activa' }),
-      });
+      const res = await fetch(`/api/recetas/${receta.id}/renovar`, { method: 'POST' });
 
       if (!res.ok) {
+        const err = await res.json().catch(() => null);
         toast({
           title: 'Error',
-          description: 'No se pudo renovar la receta',
+          description: err?.error || 'No se pudo renovar la receta',
           variant: 'destructive',
         });
         return;
       }
 
       const json = await res.json();
-      const updated = json.data;
-      const nuevaVence = new Date();
-      nuevaVence.setDate(nuevaVence.getDate() + 30);
-
-      const renovada: Receta = {
-        ...receta,
-        id: String(Date.now()),
+      const renovada = json.data;
+      const nuevaReceta: Receta = {
+        id: renovada.id,
+        paciente: receta.paciente,
+        medicamento: renovada.medicamento,
+        dosis: renovada.dosis,
+        duracion: renovada.duracion || receta.duracion,
         estado: 'activa',
-        fechaCreacion: new Date().toISOString().split('T')[0],
-        vence: nuevaVence.toISOString().split('T')[0],
+        vence:
+          renovada.fechaFin || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
         renovable: true,
+        fechaCreacion: new Date().toISOString().split('T')[0],
+        indicaciones: renovada.indicaciones || receta.indicaciones,
       };
 
-      setRecetas((prev) => [renovada, ...prev]);
+      setRecetas((prev) => [
+        nuevaReceta,
+        ...prev.map((r) =>
+          r.id === receta.id ? { ...r, estado: 'historial' as const, renovable: false } : r,
+        ),
+      ]);
       toast({
         title: '🔄 Receta renovada',
-        description: `${receta.medicamento} para ${receta.paciente} - Vence ${formatDate(renovada.vence, 'dd/MM/yyyy')}`,
+        description: `${receta.medicamento} para ${receta.paciente} - Vence ${formatDate(nuevaReceta.vence, 'dd/MM/yyyy')}`,
       });
     } catch {
       toast({
@@ -699,6 +429,42 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
 
   return (
     <PageAnimation>
+      {/* Filtros */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
+        <PacienteSearchCombobox
+          value={pacienteFiltro?.id}
+          onChange={handlePacienteChange}
+          size="sm"
+          placeholder="Filtrar por paciente..."
+          onLoadingChange={setFilterLoading}
+        />
+        {pacienteFiltro && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/60 rounded-full px-3 py-1">
+            <span>
+              Filtrando: <strong className="text-foreground">{pacienteFiltro.nombre}</strong>
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5"
+              aria-label="Limpiar filtro de paciente"
+              onClick={() => handlePacienteChange('', '')}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+        <Input
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Buscar medicamento o paciente..."
+          className="h-8 text-xs sm:max-w-[220px]"
+        />
+        {filterLoading && (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
+        )}
+      </div>
+
       {/* Tabs */}
       <Tabs defaultValue="activas">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -740,7 +506,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         <TabsContent value="activas" className="mt-4">
           <Card>
             <CardContent className="p-0">
-              {recetas.filter((r) => r.estado === 'activa').length === 0 ? (
+              {recetasVisibles.filter((r) => r.estado === 'activa').length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <Syringe className="h-12 w-12 text-muted-foreground/30 mb-4" />
                   <p className="text-lg font-medium text-muted-foreground">Sin recetas activas</p>
@@ -766,7 +532,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         <TabsContent value="vencidas" className="mt-4">
           <Card>
             <CardContent className="p-0">
-              {recetas.filter((r) => r.estado === 'vencida').length === 0 ? (
+              {recetasVisibles.filter((r) => r.estado === 'vencida').length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <AlertCircle className="h-12 w-12 text-muted-foreground/30 mb-4" />
                   <p className="text-lg font-medium text-muted-foreground">Sin recetas vencidas</p>
@@ -786,7 +552,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         <TabsContent value="historial" className="mt-4">
           <Card>
             <CardContent className="p-0">
-              {recetas.filter((r) => r.estado === 'historial').length === 0 ? (
+              {recetasVisibles.filter((r) => r.estado === 'historial').length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-48">
                   <FileText className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">

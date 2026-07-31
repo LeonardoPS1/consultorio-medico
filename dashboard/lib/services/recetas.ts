@@ -1,12 +1,16 @@
-import { db } from '@/lib/db';
-import { safeWarn } from '@/lib/logger';
-import { recetas, pacientes, medicos, recetaEstadoEnum } from '@/drizzle/schema';
-import { eq, and, sql, count, desc } from 'drizzle-orm';
 import { createHash, randomUUID } from 'crypto';
+import { eq, and, or, inArray, isNull, gte, lt, count, desc } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
+import { recetas, pacientes, medicos, recetaEstadoEnum } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { escapeHtml } from '@/lib/html-utils';
+import { safeWarn } from '@/lib/logger';
+import { mapEstadoDisplay, ESTADO_DISPLAY_LABELS, getHoyISO } from '@/lib/receta-utils';
+import type { EstadoReceta } from '@/lib/receta-utils';
+
+export type { EstadoReceta } from '@/lib/receta-utils';
 
 // ─── Tipos ─────────────────────────────────────────────────
-
-export type EstadoReceta = 'activa' | 'vencida' | 'historial';
 
 export interface CreateRecetaInput {
   pacienteId: string;
@@ -56,7 +60,52 @@ export interface RecetaListResult {
 
 // ─── Constantes ─────────────────────────────────────────────
 
-import { escapeHtml } from '@/lib/html-utils';
+/** Estados de la BD considerados "activos" (vigentes). */
+type EstadoRecetaDb = (typeof recetaEstadoEnum.enumValues)[number];
+
+const ESTADOS_ACTIVOS_DB: EstadoRecetaDb[] = ['borrador', 'emitida', 'entregada'];
+const ESTADOS_HISTORIAL_DB: EstadoRecetaDb[] = ['anulada', 'renovada', 'historial'];
+
+/**
+ * Mapea un estado de visualización de vuelta al enum de la BD.
+ * @param estado
+ */
+function estadoDisplayToDb(estado: EstadoReceta): EstadoRecetaDb {
+  if (estado === 'historial') return 'historial';
+  if (estado === 'vencida') return 'expirada';
+  return 'emitida';
+}
+
+/**
+ * Construye el filtro SQL para un estado de visualización
+ * (sin casteos a enum: usa los valores reales de receta_estado).
+ * @param scope
+ * @param estadoFiltro
+ */
+function buildEstadoWhere(scope: SQL | undefined, estadoFiltro?: EstadoReceta): SQL | undefined {
+  if (!estadoFiltro) return scope;
+  const hoy = getHoyISO();
+
+  if (estadoFiltro === 'activa') {
+    return and(
+      scope,
+      inArray(recetas.estado, ESTADOS_ACTIVOS_DB),
+      or(isNull(recetas.fechaFin), gte(recetas.fechaFin, hoy)),
+    );
+  }
+
+  if (estadoFiltro === 'vencida') {
+    return and(
+      scope,
+      or(
+        eq(recetas.estado, 'expirada'),
+        and(inArray(recetas.estado, ESTADOS_ACTIVOS_DB), lt(recetas.fechaFin, hoy)),
+      ),
+    );
+  }
+
+  return and(scope, inArray(recetas.estado, ESTADOS_HISTORIAL_DB));
+}
 
 function getRecetaSecret(): string {
   const s = process.env.RECETA_HASH_SECRET;
@@ -75,6 +124,12 @@ function getRecetaSecret(): string {
 /**
  * Genera un hash SHA-256 único para la receta.
  * Se usa como firma digital verificable vía QR.
+ * @param params
+ * @param params.id
+ * @param params.pacienteId
+ * @param params.medicamento
+ * @param params.dosis
+ * @param params.fechaInicio
  */
 export function generarHashVerificacion(params: {
   id: string;
@@ -96,6 +151,13 @@ export function generarHashVerificacion(params: {
 
 /**
  * Verifica que el hash de una receta sea válido.
+ * @param receta
+ * @param receta.id
+ * @param receta.pacienteId
+ * @param receta.medicamento
+ * @param receta.dosis
+ * @param receta.fechaInicio
+ * @param receta.hashVerificacion
  */
 export function verificarHash(receta: {
   id: string;
@@ -127,21 +189,29 @@ export function verificarHash(receta: {
 
 /**
  * Lista recetas con filtros y estadísticas.
+ * @param params
+ * @param params.estado Estado de visualización ('activa'|'vencida'|'historial').
+ * @param params.limit
+ * @param params.offset
+ * @param params.medicoId
+ * @param params.pacienteId Filtra por paciente (opcional).
  */
 export async function listarRecetas(params: {
-  estado?: string;
+  estado?: EstadoReceta;
   limit?: number;
   offset?: number;
   medicoId?: string | null;
+  pacienteId?: string | null;
 }): Promise<RecetaListResult> {
-  const { estado, limit = 100, offset = 0, medicoId } = params;
+  const { estado, limit = 100, offset = 0, medicoId, pacienteId } = params;
 
-  const scope = medicoId ? eq(recetas.medicoId, medicoId) : undefined;
+  const scope = and(
+    medicoId ? eq(recetas.medicoId, medicoId) : undefined,
+    pacienteId ? eq(recetas.pacienteId, pacienteId) : undefined,
+  );
 
-  const whereBase = (estadoFiltro?: string) =>
-    and(estadoFiltro ? eq(recetas.estado, sql`${estadoFiltro}::receta_estado`) : undefined, scope);
-
-  const whereList = and(estado ? eq(recetas.estado, sql`${estado}::receta_estado`) : undefined, scope);
+  const whereBase = (estadoFiltro?: EstadoReceta) => buildEstadoWhere(scope, estadoFiltro);
+  const whereList = whereBase(estado);
 
   const [activas, vencidas, historial, total] = await Promise.all([
     db.select({ count: count() }).from(recetas).where(whereBase('activa')),
@@ -164,7 +234,6 @@ export async function listarRecetas(params: {
       indicaciones: recetas.indicaciones,
       fechaInicio: recetas.fechaInicio,
       fechaFin: recetas.fechaFin,
-      renovable: sql<boolean>`${recetas.recetaAnteriorId} IS NOT NULL`,
       createdAt: recetas.createdAt,
       hashVerificacion: recetas.hashVerificacion,
     })
@@ -175,20 +244,23 @@ export async function listarRecetas(params: {
     .limit(limit)
     .offset(offset);
 
-  const data: RecetaItem[] = lista.map((r) => ({
-    id: r.id,
-    pacienteId: r.pacienteId,
-    paciente: `${r.pacienteNombre || ''} ${r.pacienteApellido || ''}`.trim() || 'Paciente',
-    medicamento: r.medicamento,
-    dosis: r.dosis,
-    duracion: r.duracion || r.frecuencia,
-    estado: r.estado as EstadoReceta,
-    indicaciones: r.indicaciones || undefined,
-    vence: r.fechaFin || r.fechaInicio,
-    fechaCreacion: r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : '',
-    renovable: r.renovable,
-    hashVerificacion: r.hashVerificacion,
-  }));
+  const data: RecetaItem[] = lista.map((r) => {
+    const estado = mapEstadoDisplay(r.estado, r.fechaFin);
+    return {
+      id: r.id,
+      pacienteId: r.pacienteId,
+      paciente: `${r.pacienteNombre || ''} ${r.pacienteApellido || ''}`.trim() || 'Paciente',
+      medicamento: r.medicamento,
+      dosis: r.dosis,
+      duracion: r.duracion || r.frecuencia,
+      estado,
+      indicaciones: r.indicaciones || undefined,
+      vence: r.fechaFin || r.fechaInicio,
+      fechaCreacion: r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : '',
+      renovable: estado !== 'historial',
+      hashVerificacion: r.hashVerificacion,
+    };
+  });
 
   return {
     data,
@@ -201,6 +273,7 @@ export async function listarRecetas(params: {
 
 /**
  * Obtiene una receta por ID (con datos completos).
+ * @param id
  */
 export async function obtenerReceta(id: string) {
   const [receta] = await db
@@ -240,13 +313,14 @@ export async function obtenerReceta(id: string) {
 
 /**
  * Crea una nueva receta con hash de verificación.
+ * @param input
  */
 export async function crearReceta(input: CreateRecetaInput) {
   if (!input.medicoId) {
     throw new Error('Se requiere un médico para crear la receta');
   }
 
-  const fechaInicio = new Date().toISOString().split('T')[0];
+  const fechaInicio = getHoyISO();
   const fechaFin = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
 
   // Generar UUID antes de insertar para calcular el hash en la misma operación
@@ -283,7 +357,67 @@ export async function crearReceta(input: CreateRecetaInput) {
 }
 
 /**
+ * Renueva una receta: marca la anterior como 'renovada'
+ * y crea una nueva con la misma prescripción y +30 días.
+ * @param id
+ * @param medicoId
+ */
+export async function renovarReceta(id: string, medicoId?: string | null) {
+  const actual = await obtenerReceta(id);
+  if (!actual) {
+    throw new Error('Receta no encontrada');
+  }
+  if (['anulada', 'renovada', 'historial'].includes(actual.estado)) {
+    throw new Error(`No se puede renovar una receta en estado "${actual.estado}"`);
+  }
+
+  const fechaInicio = getHoyISO();
+  const fechaFin = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+  const nuevaId = randomUUID();
+
+  const hash = generarHashVerificacion({
+    id: nuevaId,
+    pacienteId: actual.pacienteId,
+    medicamento: actual.medicamento,
+    dosis: actual.dosis,
+    fechaInicio,
+  });
+
+  const [nueva] = await db.transaction(async (tx) => {
+    await tx
+      .update(recetas)
+      .set({ estado: 'renovada', updatedAt: new Date() })
+      .where(eq(recetas.id, id));
+
+    return tx
+      .insert(recetas)
+      .values({
+        pacienteId: actual.pacienteId,
+        medicoId: medicoId ?? actual.medicoId,
+        turnoId: actual.turnoId,
+        medicamento: actual.medicamento,
+        presentacion: actual.presentacion,
+        dosis: actual.dosis,
+        frecuencia: actual.frecuencia,
+        duracion: actual.duracion,
+        cantidadTotal: actual.cantidadTotal,
+        indicaciones: actual.indicaciones,
+        fechaInicio,
+        fechaFin,
+        estado: recetaEstadoEnum.enumValues[1], // 'emitida'
+        recetaAnteriorId: actual.id,
+        hashVerificacion: hash,
+      })
+      .returning();
+  });
+
+  return nueva;
+}
+
+/**
  * Actualiza una receta (regenera hash si cambian datos sensibles).
+ * @param id
+ * @param input
  */
 export async function actualizarReceta(id: string, input: UpdateRecetaInput) {
   const camposSensibles = ['medicamento', 'dosis', 'pacienteId', 'fechaInicio'];
@@ -294,9 +428,14 @@ export async function actualizarReceta(id: string, input: UpdateRecetaInput) {
     updatedAt: new Date(),
   };
 
-  // Si se renueva, actualizar fechas
+  // Mapear estado de visualización al enum real de la BD
+  if (input.estado) {
+    updateData.estado = estadoDisplayToDb(input.estado);
+  }
+
+  // Si se "reactiva", renovar fechas
   if (input.estado === 'activa') {
-    updateData.fechaInicio = new Date().toISOString().split('T')[0];
+    updateData.fechaInicio = getHoyISO();
     updateData.fechaFin = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
   }
 
@@ -348,15 +487,22 @@ export interface RecetaExportRow {
 
 /**
  * Prepara datos planos para exportación.
+ * @param params
+ * @param params.estado
+ * @param params.medicoId
+ * @param params.pacienteId
  */
 export async function getRecetasForExport(params: {
-  estado?: string;
+  estado?: EstadoReceta;
   medicoId?: string | null;
+  pacienteId?: string | null;
 }): Promise<RecetaExportRow[]> {
-  const { estado, medicoId } = params;
+  const { estado, medicoId, pacienteId } = params;
 
-  const scope = medicoId ? eq(recetas.medicoId, medicoId) : undefined;
-  const whereEstado = estado ? eq(recetas.estado, sql`${estado}::receta_estado`) : undefined;
+  const scope = and(
+    medicoId ? eq(recetas.medicoId, medicoId) : undefined,
+    pacienteId ? eq(recetas.pacienteId, pacienteId) : undefined,
+  );
 
   const rows = await db
     .select({
@@ -378,7 +524,7 @@ export async function getRecetasForExport(params: {
     })
     .from(recetas)
     .leftJoin(pacientes, eq(recetas.pacienteId, pacientes.id))
-    .where(and(whereEstado, scope))
+    .where(buildEstadoWhere(scope, estado))
     .orderBy(desc(recetas.createdAt));
 
   return rows.map((r) => ({
@@ -390,7 +536,7 @@ export async function getRecetasForExport(params: {
     Duracion: r.duracion || '—',
     Cantidad: r.cantidadTotal || '—',
     Indicaciones: r.indicaciones || '—',
-    Estado: r.estado,
+    Estado: ESTADO_DISPLAY_LABELS[mapEstadoDisplay(r.estado, r.fechaFin)],
     'Fecha Inicio': r.fechaInicio,
     'Fecha Fin': r.fechaFin || '—',
     'Fecha Creación': r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : '—',
@@ -400,6 +546,7 @@ export async function getRecetasForExport(params: {
 
 /**
  * Genera buffer Excel (.xlsx) desde datos exportables.
+ * @param data
  */
 export function generarExcelRecetas(data: RecetaExportRow[]): Buffer {
   // Usamos require para evitar problemas de tipos con xlsx
@@ -423,6 +570,8 @@ export function generarExcelRecetas(data: RecetaExportRow[]): Buffer {
 
 /**
  * Genera HTML formateado para exportación PDF (imprimible).
+ * @param data
+ * @param titulo
  */
 export function generarHTMLRecetasPDF(data: RecetaExportRow[], titulo?: string): string {
   const nombreOrg = process.env.ORGANIZATION_NAME || 'Consultorio Médico';
@@ -505,6 +654,24 @@ export function generarHTMLRecetasPDF(data: RecetaExportRow[], titulo?: string):
 /**
  * Genera datos de pacientes para exportación.
  */
+interface PacienteExportSource {
+  nombre: string;
+  apellido: string;
+  telefono?: string | null;
+  email?: string | null;
+  obraSocial?: string | null;
+  tags?: string[] | null;
+  ultimoTurno?: string | Date | null;
+  totalTurnos?: number | null;
+}
+
+/**
+ *
+ * @param params
+ * @param params.search
+ * @param params.medicoId
+ * @param params.sucursalId
+ */
 export async function getPacientesForExport(params: {
   search?: string;
   medicoId?: string | null;
@@ -512,9 +679,15 @@ export async function getPacientesForExport(params: {
 }) {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { pacientesService } = require('./pacientes');
-  const result = await pacientesService.list(params.search, 10000, 0, params.sucursalId, params.medicoId);
+  const result = await pacientesService.list(
+    params.search,
+    10000,
+    0,
+    params.sucursalId,
+    params.medicoId,
+  );
 
-  return result.data.map((p: any) => ({
+  return result.data.map((p: PacienteExportSource) => ({
     Nombre: `${p.nombre} ${p.apellido}`,
     Teléfono: p.telefono || '—',
     Email: p.email || '—',
@@ -529,6 +702,7 @@ export const recetasService = {
   listar: listarRecetas,
   obtener: obtenerReceta,
   crear: crearReceta,
+  renovar: renovarReceta,
   actualizar: actualizarReceta,
   generarHash: generarHashVerificacion,
   verificarHash,

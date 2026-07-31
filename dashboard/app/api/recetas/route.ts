@@ -1,18 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
-import { recetasService } from '@/lib/services/recetas';
-import { apiHandler, created, notFound } from '@/lib/api-handler';
-import { parseBody, parseQuery, createRecetaSchema } from '@/lib/validations';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { pacientes, medicos } from '@/drizzle/schema';
+import { apiHandler, created, notFound } from '@/lib/api-handler';
+import { auth } from '@/lib/auth';
 import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
+import { db } from '@/lib/db';
+import { recetasService } from '@/lib/services/recetas';
+import { parseBody, parseQuery, createRecetaSchema } from '@/lib/validations';
 
 const recetasQuerySchema = z.object({
-  estado: z.string().optional(),
+  estado: z.enum(['activa', 'vencida', 'historial']).optional(),
   limit: z.coerce.number().optional().default(100),
   offset: z.coerce.number().optional().default(0),
+  pacienteId: z.string().uuid().optional(),
 });
 
 export const GET = apiHandler(async (request: NextRequest) => {
@@ -21,12 +22,13 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const sessionRol = session?.user?.role;
   const isMedico = sessionRol === 'medico' && !!sessionMedicoId;
 
-  const { estado, limit, offset } = parseQuery(request, recetasQuerySchema);
+  const { estado, limit, offset, pacienteId } = parseQuery(request, recetasQuerySchema);
 
   const result = await recetasService.listar({
     estado,
     limit,
     offset,
+    pacienteId: pacienteId ?? null,
     medicoId: isMedico ? sessionMedicoId : null,
   });
 
