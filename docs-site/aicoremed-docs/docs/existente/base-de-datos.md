@@ -4,7 +4,7 @@
 
 50+ tablas, 5 vistas, 80+ índices, triggers de auditoría automáticos.
 
-> **Última actualización:** 31/07/2026 · 53 migraciones aplicadas.
+> **Última actualización:** 31/07/2026 · 54 migraciones aplicadas.
 
 ### Diagrama de Relaciones
 
@@ -74,6 +74,7 @@ Las migraciones son **acumulativas** y deben ejecutarse en orden:
 | 051 | `0051_rls_more_tables.sql` | RLS en 10 tablas adicionales: `portal_config`, `web_vitals_metrics`, `derivaciones`, `webhook_configs`, `ordenes_estudio`, `documentos_medicos`, `paquetes_portal`, `consentimiento_compartir`, `blacklist`, `consentimientos` |
 | 052 | `0052_derivaciones_missing_columns.sql` | Columnas faltantes en `derivaciones` |
 | 053 | `0053_impersonacion.sql` | Tabla `impersonation_tokens` (impersonación operator→tenant) |
+| 054 | `0054_fix_historial_tipo_check.sql` | Corrige CHECK `historial_medico_tipo_check` en `historial_medico` (admite `otro`, `encuesta` y valores del enum actual) |
 
 ```bash
 # Ejecutar todas las migraciones (en orden)

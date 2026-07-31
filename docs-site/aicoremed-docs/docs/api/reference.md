@@ -37,6 +37,8 @@ autogenerado reemplace esta sección.
 | `POST` | `/api/internal/scores/actualizar` | Actualizar scores no-show (job nocturno WF-12) | `x-internal-key` |
 | `POST` | `/api/internal/suscripciones-vencidas` | Cron nocturno: downgrade de suscripciones en `past_due` vencidas | `x-internal-key` |
 | `POST` | `/api/privacidad/anonimizar` | Anonimización post-retención (WF-09) | `x-webhook-secret` |
+| `POST` | `/api/novedades/generar` | Generar entradas de novedades desde commits (WF-11) | Admin o `x-internal-key` |
+| `GET` | `/api/portal/recetas/{id}` | PDF de receta del portal del paciente | Sesión portal |
 | `GET` | `/verificar-receta/{id}` | Verificación pública de receta (firma QR SHA-256) | Pública |
 | `POST` | `/api/deploy/dokploy` | Proxy interno de despliegue (GHA → Dokploy API) | `x-internal-key` |
 

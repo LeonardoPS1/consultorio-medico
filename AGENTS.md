@@ -678,6 +678,10 @@ consultorio-medico/
 | **Sprint: Onboarding mejoras** | Auto-redirect a `/dashboard/onboarding` tras registro express (antes iba a suscripción). Nuevo paso `configuracion_whatsapp` con detección de env vars. | 24/07 |
 | **Sprint: MercadoPago billing robustness** | Idempotencia en memoria (Map TTL 5 min). Grace period 7 días (estado `past_due` en vez de `cancelled` inmediato). Endpoint interno `POST /api/internal/suscripciones-vencidas` para cron nocturno (downgrade → free). | 24/07 |
 | **DR Infrastructure + Recuperación** | restore-pg/volumes/full.sh, recover.sh, Makefile targets, Ops Console recovery page, WF-14, check-backups.sh, off-site rclone, GPG key mgmt, CI/CD health check, backup-n8n-workflows.sh, WF-13 drill reminder. | 28/07 |
+| **Documentos: aprobación/rechazo + OCR robusto** | PATCH /api/documentos/[id] con validación rol admin/medico, medicoId opcional; service revisadoPor/historial.medicoId null; botón descarga en dashboard y portal; vision-ocr con ALL_URLS y modelo Gemma3; route uploads ?download=1 + mime pdf. Commit `ecb797d` | 31/07 |
+| **Recetas: listado + filtro + acciones ficha** | Fix 500 por cast enum → buildEstadoWhere sin cast; lib/receta-utils.ts + lib/receta-pdf.ts; filtro por paciente en UI; renovar/mover a historial/PDF desde ficha. Commit `b0cf4f8` | 31/07 |
+| **Migración 0054: CHECK historial_medico_tipo** | Corrige constraint para admitir 'otro', 'encuesta' y valores del enum actual. Aplicado en prod via docker exec psql. Commit `a1dedb4` | 31/07 |
+| **Recetas: vista previa click + fix filtro historial** | RecetaPreviewDialog (dashboard y portal) con iframe HTML + botones WhatsApp/Imprimir/Descargar; tabs controlados + cargarRecetas con estado del tab activo; generarHtmlReceta en lib/receta-pdf.ts. Commit `af0e9b5` | 31/07 |
 
 ### 🟡 Prioridad Media
 

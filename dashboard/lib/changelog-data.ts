@@ -10,8 +10,22 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 28/07/2026 — v1.28.0 DR Infrastructure y Recuperación Automatizada
+// Actualizado: 31/07/2026 — v1.29.0 Recetas con Vista Previa y Correcciones
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.29.0',
+    date: '31/07/2026',
+    title: 'Recetas con Vista Previa, Documentos y Correcciones',
+    items: [
+      'Vista previa de receta al hacer click: HTML generado en tiempo real (dashboard y portal del paciente) con botones WhatsApp, Imprimir y Descargar',
+      'Corrección del filtro por paciente en el historial de recetas: ahora consulta el backend con el estado del tab activo (activas/vencidas/historial)',
+      'Sección Recetas: filtro por paciente con buscador, acciones de renovar, mover a historial y descarga PDF desde la ficha del paciente',
+      'Documentos del paciente: aprobar/rechazar desde el dashboard ahora actualiza el estado correctamente (ya no queda "pendiente de revisión")',
+      'Botón de descarga del documento original agregado en el dashboard y en el portal del paciente',
+      'OCR robusto: conexión a Ollama con múltiples URLs y modelo Gemma3 por defecto (antes llava no instalado) con detección de formato de imagen',
+      'Migración 0054: CHECK constraint de historial_medico.tipo ampliado para admitir "otro", "encuesta" y valores del enum actual',
+    ],
+  },
   {
     version: '1.28.0',
     date: '28/07/2026',

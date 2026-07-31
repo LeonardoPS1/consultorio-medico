@@ -5,13 +5,22 @@
 ```
 Routes (app/dashboard/recetas/)
   ├── page.tsx              → Server component (stats)
-  ├── recetas-client.tsx    → Tabs (activas/vencidas/historial) + CRUD
+  ├── recetas-client.tsx    → Tabs (activas/vencidas/historial) + CRUD + vista previa
   └── loading.tsx           → Skeleton
 
+Components (components/recetas/)
+  └── receta-preview-dialog.tsx → Dialog con iframe del HTML de la receta (dashboard y portal)
+
+Lib (lib/)
+  ├── receta-pdf.ts         → generarHtmlReceta(), descargarReceta, enviarRecetaWhatsApp, imprimirReceta
+  ├── receta-utils.ts       → mapEstadoDisplay(), ESTADOS_ACTIVOS/HISTORIAL
+  └── services/recetas.ts   → Service principal (listar/crear/renovar/actualizar/exportar)
+
 API (app/api/recetas/)
-  ├── route.ts              → GET (list) / POST (create)
+  ├── route.ts              → GET (list, acepta estado + pacienteId) / POST (create)
   ├── [id]/route.ts         → GET / PATCH / DELETE
-  └── exportar/route.ts     → GET (excel/pdf)
+  ├── [id]/renovar/route.ts → POST (renovación en transacción)
+  └── exportar/route.ts     → GET (excel/pdf, acepta estado + pacienteId)
 
 API (app/api/)
   ├── verificar-receta/[id]/route.ts  → GET (verificación QR pública)
@@ -19,7 +28,7 @@ API (app/api/)
       ├── route.ts                    → GET (portal list)
       └── [id]/route.ts               → GET (portal PDF)
 
-Service: lib/services/recetas.ts (539 líneas)
+Service: lib/services/recetas.ts
 ```
 
 ## Schema (drizzle/medical.ts)
@@ -103,10 +112,20 @@ El hash se regenera si cambian campos sensibles: `medicamento`, `dosis`, `pacien
 ## Reglas de Negocio
 
 - **Vigencia**: 30 días por defecto desde `fechaInicio`
-- **Renovación**: PATCH con `{ estado: 'activa' }` → actualiza fechas (+30 días)
+- **Renovación**: POST `/api/recetas/[id]/renovar` → transacción (marca la anterior `renovada`/`historial`, crea nueva con `recetaAnteriorId` y +30 días)
 - **Eliminación**: soft-delete a estado `historial`
 - **Hash regeneración**: automática en update si cambian campos sensibles
 - **Scoping**: médicos solo ven/modifican sus recetas; admins todas
+- **Filtro historial**: GET `/api/recetas?estado=...&pacienteId=...` filtra por estado del tab y paciente (server-side, no cae fuera del limit 100)
+
+## Vista Previa
+
+Al hacer click en una receta (dashboard y portal) se abre `RecetaPreviewDialog`:
+
+- Genera el HTML completo de la receta (organización, logo, prescripción, QR, firma) en tiempo real con `generarHtmlReceta()` de `lib/receta-pdf.ts`
+- Muestra el documento en un iframe (`sandbox="allow-same-origin"`)
+- Botones: **WhatsApp** (envía PDF), **Imprimir** y **Descargar**
+- Montaje condicional con `key` por receta: estado fresco en cada apertura
 
 ## Feature Gating
 
@@ -119,19 +138,29 @@ El hash se regenera si cambian campos sensibles: `medicamento`, `dosis`, `pacien
 
 - **WhatsApp**: `wa.me` desde dashboard; WF-06 envía PDF vía Twilio
 - **n8n WF-06**: solicitud → Ollama extrae datos → busca receta activa → genera PDF → envía WhatsApp
-- **Portal paciente**: listado + PDF imprimible con QR
+- **Portal paciente**: listado + vista previa al click + PDF imprimible con QR
 - **Asistente IA**: detecta recetas por vencer como alerta proactiva
 
 ## Service (lib/services/recetas.ts)
 
 | Función | Descripción |
 |---------|-------------|
-| `listar()` | Lista con filtros + stats (activas/vencidas/historial) |
+| `listar()` | Lista con filtros (estado/pacienteId/medicoId) + stats (activas/vencidas/historial) |
 | `obtener()` | Receta con joins a paciente/médico |
 | `crear()` | Crea con hash SHA-256, vigencia 30 días |
 | `actualizar()` | Actualiza, regenera hash si cambios sensibles |
+| `renovar()` | Renovación transaccional (anterior → renovada, nueva con +30 días) |
 | `generarHash()` | SHA-256 con payload + secret |
 | `verificarHash()` | Compara hash almacenado vs recalculado |
 | `getForExport()` | Datos planos para exportación |
 | `generarExcel()` | Buffer .xlsx con librería xlsx |
 | `generarHTMLPDF()` | HTML imprimible A4 |
+
+## Utils (lib/receta-utils.ts)
+
+| Util | Descripción |
+|------|-------------|
+| `mapEstadoDisplay(estado, fechaFin)` | Convierte estado DB → lógico (activa/vencida/historial) |
+| `ESTADOS_ACTIVOS` | borrador, emitida, entregada |
+| `ESTADOS_HISTORIAL` | anulada, renovada, historial |
+| `ESTADO_DISPLAY_LABELS` | Labels UI para los 3 estados lógicos |
