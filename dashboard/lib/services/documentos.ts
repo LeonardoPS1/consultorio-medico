@@ -1,10 +1,10 @@
-import { db } from '@/lib/db';
-import { documentosMedicos, historialMedico } from '@/drizzle/medical';
+import { eq, and, desc, isNull } from 'drizzle-orm';
 import { pacientes } from '@/drizzle/core';
-import { eq, and, desc, isNull, asc, lte } from 'drizzle-orm';
-import { extraerTextoImagen, extraerLaboratorio, extraerReceta } from '@/lib/vision-ocr';
-import { unlinkSync, existsSync } from 'fs';
+import { documentosMedicos, historialMedico } from '@/drizzle/medical';
+import { db } from '@/lib/db';
+import { crearNotificacion } from '@/lib/services/portal-notificaciones';
 import { getUploadDir } from '@/lib/upload-dir';
+import { extraerTextoImagen, extraerLaboratorio, extraerReceta } from '@/lib/vision-ocr';
 
 export interface DocumentoInput {
   pacienteId: string;
@@ -122,7 +122,7 @@ export const documentosService = {
       eq(documentosMedicos.estadoRevision, 'pendiente'),
       eq(documentosMedicos.tenantId, tenantId),
     ];
-    if (medicoId) conditions.push(eq(documentosMedicos.revisadoPor, medicoId));
+    if (medicoId) conditions.push(isNull(documentosMedicos.revisadoPor));
 
     return db
       .select({
@@ -179,7 +179,9 @@ export const documentosService = {
           tipo: 'otro',
           titulo: doc.tipo === 'laboratorio' ? 'Examen de laboratorio' : `Documento: ${doc.tipo}`,
           descripcion: datosStr,
-          archivos: [{ url: doc.archivoUrl, tipo: doc.tipo, datos: doc.datosExtraidos }] as unknown as JSON,
+          archivos: [
+            { url: doc.archivoUrl, tipo: doc.tipo, datos: doc.datosExtraidos },
+          ] as unknown as JSON,
           visibleParaPaciente: true,
         })
         .returning({ id: historialMedico.id });
@@ -194,14 +196,18 @@ export const documentosService = {
           updatedAt: new Date(),
         })
         .where(eq(documentosMedicos.id, input.notaId));
-    } else if (input.accion === 'rechazar') {
-      const archivoPath = doc.archivoUrl.replace('/api/uploads/', '');
-      const uploadDir = process.env.UPLOAD_DIR || '.data/uploads';
-      const fullPath = `${uploadDir}/${archivoPath}`;
-      if (existsSync(fullPath)) {
-        try { unlinkSync(fullPath); } catch { /* ignore */ }
-      }
 
+      try {
+        await crearNotificacion(doc.pacienteId, {
+          titulo: 'Documento aprobado',
+          descripcion: 'Tu documento fue aprobado por el médico e incorporado a tu historial.',
+          tipo: 'sistema',
+          href: '/portal/documentos',
+        });
+      } catch {
+        /* la notificación no debe interrumpir la revisión */
+      }
+    } else if (input.accion === 'rechazar') {
       const metadataAtual = (doc.metadata as Record<string, unknown>) || {};
       await db
         .update(documentosMedicos)
@@ -213,6 +219,21 @@ export const documentosService = {
           updatedAt: new Date(),
         })
         .where(eq(documentosMedicos.id, input.notaId));
+
+      try {
+        await crearNotificacion(doc.pacienteId, {
+          titulo: 'Documento rechazado',
+          descripcion: `Tu documento fue rechazado y requiere que lo reenvíes. ${
+            input.motivoRechazo
+              ? `Motivo: ${input.motivoRechazo}`
+              : 'Contacta a tu médico para más información.'
+          }`,
+          tipo: 'sistema',
+          href: '/portal/documentos',
+        });
+      } catch {
+        /* la notificación no debe interrumpir la revisión */
+      }
     } else if (input.accion === 'editar' && input.datosEditados) {
       await db
         .update(documentosMedicos)

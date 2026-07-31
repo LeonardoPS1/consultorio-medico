@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Upload,
   FileText,
@@ -16,8 +15,9 @@ import {
   Save,
   ChevronDown,
 } from 'lucide-react';
-import { PortalCard } from '@/components/portal/portal-card';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { PortalBadge } from '@/components/portal/portal-badge';
+import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 import { Button } from '@/components/ui/button';
 
@@ -32,23 +32,46 @@ interface DocumentoMedico {
   estadoRevision: string;
   createdAt: string;
   filename?: string;
+  metadata?: Record<string, unknown>;
 }
 
 function formatDate(date: string): string {
   const d = new Date(date);
-  return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString('es-CL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 function getEstadoBadge(estado: string) {
   switch (estado) {
     case 'completada':
-      return <PortalBadge variant="warning" className="flex items-center gap-1"><Scan className="h-3 w-3" /> Extraído — revisa</PortalBadge>;
+      return (
+        <PortalBadge variant="warning" className="flex items-center gap-1">
+          <Scan className="h-3 w-3" /> Extraído — revisa
+        </PortalBadge>
+      );
     case 'confirmado':
-      return <PortalBadge variant="success" className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Confirmado</PortalBadge>;
+      return (
+        <PortalBadge variant="success" className="flex items-center gap-1">
+          <CheckCircle2 className="h-3 w-3" /> Confirmado
+        </PortalBadge>
+      );
     case 'pendiente':
-      return <PortalBadge variant="warning" className="flex items-center gap-1"><Clock className="h-3 w-3" /> Pendiente</PortalBadge>;
+      return (
+        <PortalBadge variant="warning" className="flex items-center gap-1">
+          <Clock className="h-3 w-3" /> Pendiente
+        </PortalBadge>
+      );
     case 'fallida':
-      return <PortalBadge variant="destructive" className="flex items-center gap-1"><XCircle className="h-3 w-3" /> Falló OCR</PortalBadge>;
+      return (
+        <PortalBadge variant="destructive" className="flex items-center gap-1">
+          <XCircle className="h-3 w-3" /> Falló OCR
+        </PortalBadge>
+      );
     default:
       return <span className="text-xs text-portal-muted-fg">{estado}</span>;
   }
@@ -57,16 +80,31 @@ function getEstadoBadge(estado: string) {
 function getRevisionBadge(estado: string) {
   switch (estado) {
     case 'pendiente':
-      return <PortalBadge variant="warning" className="flex items-center gap-1"><Clock className="h-3 w-3" /> Pendiente revisión médica</PortalBadge>;
+      return (
+        <PortalBadge variant="warning" className="flex items-center gap-1">
+          <Clock className="h-3 w-3" /> Pendiente revisión médica
+        </PortalBadge>
+      );
     case 'aprobado':
-      return <PortalBadge variant="success" className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Aprobado — en historial</PortalBadge>;
+      return (
+        <PortalBadge variant="success" className="flex items-center gap-1">
+          <CheckCircle2 className="h-3 w-3" /> Aprobado — en historial
+        </PortalBadge>
+      );
     case 'rechazado':
-      return <PortalBadge variant="destructive" className="flex items-center gap-1"><XCircle className="h-3 w-3" /> Rechazado</PortalBadge>;
+      return (
+        <PortalBadge variant="destructive" className="flex items-center gap-1">
+          <XCircle className="h-3 w-3" /> Rechazado
+        </PortalBadge>
+      );
     default:
       return null;
   }
 }
 
+/**
+ *
+ */
 export default function PortalDocumentosPage() {
   const [docs, setDocs] = useState<DocumentoMedico[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,7 +137,9 @@ export default function PortalDocumentosPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
 
   async function handleUpload(file: File) {
     if (!selectedTipo) {
@@ -148,9 +188,14 @@ export default function PortalDocumentosPage() {
           setProcessingId(null);
           setDocs((prev) => prev.map((d) => (d.id === id ? updated : d)));
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }, 2000);
-    setTimeout(() => { clearInterval(interval); setProcessingId(null); }, 60000);
+    setTimeout(() => {
+      clearInterval(interval);
+      setProcessingId(null);
+    }, 60000);
   }
 
   async function handleConfirm(id: string) {
@@ -160,7 +205,9 @@ export default function PortalDocumentosPage() {
       body: JSON.stringify({ accion: 'confirmar' }),
     });
     if (res.ok) {
-      setConfirmMessage('Datos confirmados. El médico los revisará para incorporarlos a tu historial.');
+      setConfirmMessage(
+        'Datos confirmados. El médico los revisará para incorporarlos a tu historial.',
+      );
       setTimeout(() => setConfirmMessage(null), 5000);
       cargar();
     }
@@ -224,7 +271,9 @@ export default function PortalDocumentosPage() {
             className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-portal-border-light bg-white/50 dark:bg-black/20 text-sm text-portal-fg"
           >
             <span className={selectedTipo ? '' : 'text-portal-muted-fg'}>
-              {selectedTipo ? TIPOS_DOCUMENTO.find((t) => t.value === selectedTipo)?.label : 'Seleccioná el tipo...'}
+              {selectedTipo
+                ? TIPOS_DOCUMENTO.find((t) => t.value === selectedTipo)?.label
+                : 'Seleccioná el tipo...'}
             </span>
             <ChevronDown className="h-4 w-4 text-portal-muted-fg" />
           </button>
@@ -233,9 +282,14 @@ export default function PortalDocumentosPage() {
               {TIPOS_DOCUMENTO.map((t) => (
                 <button
                   key={t.value}
-                  onClick={() => { setSelectedTipo(t.value); setShowTipoPicker(false); }}
+                  onClick={() => {
+                    setSelectedTipo(t.value);
+                    setShowTipoPicker(false);
+                  }}
                   className={`w-full text-left px-4 py-2.5 text-sm hover:bg-portal-muted/50 transition-colors ${
-                    selectedTipo === t.value ? 'bg-portal-primary/10 text-portal-primary font-medium' : 'text-portal-fg'
+                    selectedTipo === t.value
+                      ? 'bg-portal-primary/10 text-portal-primary font-medium'
+                      : 'text-portal-fg'
                   }`}
                 >
                   {t.label}
@@ -248,7 +302,9 @@ export default function PortalDocumentosPage() {
 
       <PortalCard
         className={`mb-6 transition-opacity ${selectedTipo ? 'cursor-pointer hover:opacity-80' : 'opacity-50'}`}
-        onClick={() => { if (selectedTipo) fileRef.current?.click(); }}
+        onClick={() => {
+          if (selectedTipo) fileRef.current?.click();
+        }}
       >
         <div className="flex flex-col items-center py-6 gap-2">
           {uploading ? (
@@ -306,7 +362,10 @@ export default function PortalDocumentosPage() {
                   {doc.extraccionEstado === 'fallida' && (
                     <div className="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
                       <p className="font-medium mb-1">Documento guardado</p>
-                      <p>No se pudieron extraer los datos automáticamente. El médico lo revisará manualmente para incorporarlo a tu historial.</p>
+                      <p>
+                        No se pudieron extraer los datos automáticamente. El médico lo revisará
+                        manualmente para incorporarlo a tu historial.
+                      </p>
                     </div>
                   )}
 
@@ -324,14 +383,18 @@ export default function PortalDocumentosPage() {
                             <Button size="sm" onClick={() => handleEditSave(doc.id)}>
                               <Save className="h-3 w-3 mr-1" /> Guardar
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>Cancelar</Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
+                              Cancelar
+                            </Button>
                           </div>
                         </div>
                       ) : (
                         <>
                           {Object.entries(doc.datosExtraidos).map(([key, val]) => (
                             <p key={key} className="text-sm text-portal-fg">
-                              <span className="font-medium capitalize text-portal-muted-fg">{key}: </span>
+                              <span className="font-medium capitalize text-portal-muted-fg">
+                                {key}:{' '}
+                              </span>
                               {String(val ?? '—')}
                             </p>
                           ))}
@@ -352,7 +415,9 @@ export default function PortalDocumentosPage() {
                     <div className="mt-3 p-3 rounded-xl bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 space-y-1">
                       {Object.entries(doc.datosExtraidos).map(([key, val]) => (
                         <p key={key} className="text-sm text-portal-fg">
-                          <span className="font-medium capitalize text-portal-muted-fg">{key}: </span>
+                          <span className="font-medium capitalize text-portal-muted-fg">
+                            {key}:{' '}
+                          </span>
                           {String(val ?? '—')}
                         </p>
                       ))}
@@ -360,6 +425,18 @@ export default function PortalDocumentosPage() {
                         <CheckCircle2 className="h-3 w-3 inline mr-1" />
                         Confirmado — pendiente de revisión médica
                       </p>
+                    </div>
+                  )}
+
+                  {doc.estadoRevision === 'rechazado' && (
+                    <div className="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
+                      <p className="font-medium mb-1">Documento rechazado</p>
+                      <p>Tu documento fue rechazado por el médico y requiere que lo reenvíes.</p>
+                      {doc.metadata && (doc.metadata as Record<string, unknown>)?.motivoRechazo ? (
+                        <p className="mt-1">
+                          Motivo: {String((doc.metadata as Record<string, unknown>).motivoRechazo)}
+                        </p>
+                      ) : null}
                     </div>
                   )}
                 </div>

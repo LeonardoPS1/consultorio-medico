@@ -1,9 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   FileText,
   CheckCircle2,
@@ -18,6 +14,10 @@ import {
   Loader2,
   BookOpen,
 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
 
 interface DocumentoMedico {
@@ -41,19 +41,28 @@ function getEstadoBadge(estado: string) {
     case 'completada':
     case 'confirmado':
       return (
-        <Badge variant="outline" className="border-green-300 text-green-700 bg-green-50 dark:border-green-700 dark:text-green-400 dark:bg-green-950/30">
+        <Badge
+          variant="outline"
+          className="border-green-300 text-green-700 bg-green-50 dark:border-green-700 dark:text-green-400 dark:bg-green-950/30"
+        >
           <CheckCircle2 className="h-3 w-3 mr-1" /> OCR Ok
         </Badge>
       );
     case 'pendiente':
       return (
-        <Badge variant="outline" className="border-yellow-300 text-yellow-700 bg-yellow-50 dark:border-yellow-700 dark:text-yellow-400 dark:bg-yellow-950/30">
+        <Badge
+          variant="outline"
+          className="border-yellow-300 text-yellow-700 bg-yellow-50 dark:border-yellow-700 dark:text-yellow-400 dark:bg-yellow-950/30"
+        >
           <Clock className="h-3 w-3 mr-1" /> Pendiente
         </Badge>
       );
     case 'fallida':
       return (
-        <Badge variant="outline" className="border-red-300 text-red-700 bg-red-50 dark:border-red-700 dark:text-red-400 dark:bg-red-950/30">
+        <Badge
+          variant="outline"
+          className="border-red-300 text-red-700 bg-red-50 dark:border-red-700 dark:text-red-400 dark:bg-red-950/30"
+        >
           <XCircle className="h-3 w-3 mr-1" /> OCR fallido
         </Badge>
       );
@@ -65,13 +74,29 @@ function getEstadoBadge(estado: string) {
 function getRevisionBadge(estado: string) {
   switch (estado) {
     case 'pendiente':
-      return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"><Clock className="h-3 w-3 mr-1" /> Pendiente revisión</Badge>;
+      return (
+        <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+          <Clock className="h-3 w-3 mr-1" /> Pendiente revisión
+        </Badge>
+      );
     case 'aprobado':
-      return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"><CheckCircle2 className="h-3 w-3 mr-1" /> Aprobado</Badge>;
+      return (
+        <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+          <CheckCircle2 className="h-3 w-3 mr-1" /> Aprobado
+        </Badge>
+      );
     case 'rechazado':
-      return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Rechazado</Badge>;
+      return (
+        <Badge variant="destructive">
+          <XCircle className="h-3 w-3 mr-1" /> Rechazado
+        </Badge>
+      );
     case 'editado':
-      return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"><Edit className="h-3 w-3 mr-1" /> Editado</Badge>;
+      return (
+        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+          <Edit className="h-3 w-3 mr-1" /> Editado
+        </Badge>
+      );
     default:
       return null;
   }
@@ -79,8 +104,10 @@ function getRevisionBadge(estado: string) {
 
 function getTipoIcon(tipo: string) {
   switch (tipo) {
-    case 'laboratorio': return Search;
-    default: return FileText;
+    case 'laboratorio':
+      return Search;
+    default:
+      return FileText;
   }
 }
 
@@ -88,6 +115,11 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ');
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.pacienteId
+ */
 export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
   const [docs, setDocs] = useState<DocumentoMedico[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,11 +136,19 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
         const data = await res.json();
         setDocs(Array.isArray(data) ? data : []);
       }
-    } catch { /* ignore */ }
-    finally { setLoading(false); }
+    } catch {
+      /* ignore */
+    } finally {
+      setLoading(false);
+    }
   }, [pacienteId]);
 
-  useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      cargar();
+    }, 0);
+    return () => clearTimeout(t);
+  }, [cargar]);
 
   async function handleAprobar(id: string) {
     setActionId(id);
@@ -119,8 +159,11 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
         body: JSON.stringify({ accion: 'aprobar' }),
       });
       cargar();
-    } catch { /* ignore */ }
-    finally { setActionId(null); }
+    } catch {
+      /* ignore */
+    } finally {
+      setActionId(null);
+    }
   }
 
   async function handleRechazar(id: string) {
@@ -133,8 +176,9 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
         body: JSON.stringify({ accion: 'rechazar', motivoRechazo: motivo }),
       });
       cargar();
-    } catch { /* ignore */ }
-    finally {
+    } catch {
+      /* ignore */
+    } finally {
       setActionId(null);
       setReasonId(null);
       setReasonText('');
@@ -188,7 +232,7 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
     <div className="space-y-2">
       {docs.map((doc) => {
         const TipoIcon = getTipoIcon(doc.tipo);
-        const isPendingReview = doc.extraccionEstado === 'confirmado' && doc.estadoRevision === 'pendiente';
+        const isPendingReview = doc.estadoRevision === 'pendiente';
         return (
           <Card key={doc.id}>
             <CardContent className="p-4">
@@ -199,7 +243,9 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <h4 className="font-medium text-sm truncate">{doc.filename || capitalize(doc.tipo)}</h4>
+                      <h4 className="font-medium text-sm truncate">
+                        {doc.filename || capitalize(doc.tipo)}
+                      </h4>
                       {getEstadoBadge(doc.extraccionEstado)}
                       {getRevisionBadge(doc.estadoRevision)}
                     </div>
@@ -216,7 +262,9 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
                       <div className="mt-2 p-3 rounded-lg bg-muted/30 text-xs space-y-0.5">
                         {Object.entries(doc.datosExtraidos).map(([key, val]) => (
                           <p key={key}>
-                            <span className="font-medium capitalize text-muted-foreground">{key}: </span>
+                            <span className="font-medium capitalize text-muted-foreground">
+                              {key}:{' '}
+                            </span>
                             {String(val ?? '—')}
                           </p>
                         ))}
@@ -240,7 +288,9 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
                       </details>
                     )}
 
-                    {doc.estadoRevision === 'rechazado' && doc.metadata && (doc.metadata as Record<string, unknown>)?.motivoRechazo ? (
+                    {doc.estadoRevision === 'rechazado' &&
+                    doc.metadata &&
+                    (doc.metadata as Record<string, unknown>)?.motivoRechazo ? (
                       <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                         <XCircle className="h-3 w-3 inline mr-1" />
                         Motivo: {String((doc.metadata as Record<string, unknown>).motivoRechazo)}
@@ -270,7 +320,11 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
                         onClick={() => handleAprobar(doc.id)}
                         title="Aprobar"
                       >
-                        {actionId === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
+                        {actionId === doc.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <ThumbsUp className="h-4 w-4" />
+                        )}
                       </Button>
 
                       {reasonId === doc.id ? (
@@ -282,10 +336,19 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
                             value={reasonText}
                             onChange={(e) => setReasonText(e.target.value)}
                             autoFocus
-                            onBlur={() => setTimeout(() => { setReasonId(null); setReasonText(''); }, 200)}
+                            onBlur={() =>
+                              setTimeout(() => {
+                                setReasonId(null);
+                                setReasonText('');
+                              }, 200)
+                            }
                           />
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600"
-                            onClick={() => handleRechazar(doc.id)}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-600"
+                            onClick={() => handleRechazar(doc.id)}
+                          >
                             <CheckCircle2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -296,7 +359,7 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
                           className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-950/30"
                           disabled={actionId === doc.id}
                           onClick={() => setReasonId(doc.id)}
-                          title="Rechazar"
+                          title="Rechazar / solicitar reenvío"
                         >
                           <ThumbsDown className="h-4 w-4" />
                         </Button>
@@ -320,12 +383,25 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
 
                   {doc.estadoRevision === 'aprobado' && doc.historialId && (
                     <>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" title="Ver en historial" asChild>
-                        <a href={`/dashboard/pacientes/${doc.pacienteId || pacienteId}?tab=historial`} target="_blank" rel="noreferrer">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-green-600"
+                        title="Ver en historial"
+                        asChild
+                      >
+                        <a
+                          href={`/dashboard/pacientes/${doc.pacienteId || pacienteId}?tab=historial`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
                           <BookOpen className="h-4 w-4" />
                         </a>
                       </Button>
-                      <Badge variant="secondary" className="text-xs bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300"
+                      >
                         En historial
                       </Badge>
                     </>
@@ -342,15 +418,30 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
                     onChange={(e) => setEditForm(e.target.value)}
                   />
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={() => handleEditSave(doc.id)} disabled={actionId === doc.id}>
-                      {actionId === doc.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                    <Button
+                      size="sm"
+                      onClick={() => handleEditSave(doc.id)}
+                      disabled={actionId === doc.id}
+                    >
+                      {actionId === doc.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      ) : null}
                       Guardar edición
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => { setEditingId(null); setEditForm(''); }}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingId(null);
+                        setEditForm('');
+                      }}
+                    >
                       Cancelar
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Edita el JSON con los datos extraídos. Los cambios se guardarán al aprobar.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Edita el JSON con los datos extraídos. Los cambios se guardarán al aprobar.
+                  </p>
                 </div>
               )}
             </CardContent>
