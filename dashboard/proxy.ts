@@ -102,16 +102,45 @@ function detectTenant(hostname: string): string {
 }
 
 // ─── Proxy principal ──────────────────────────────────────
+/**
+ *
+ * @param request
+ */
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ─── 1. Detectar tenant, requestId y pasar a la request ──
   const hostname = request.headers.get('host') || 'localhost';
-  const tenantId = detectTenant(hostname);
   const requestId = generateRequestId();
   const requestHeaders = new Headers(request.headers);
+
+  // ─── 1b. Dominios dedicados al portal del paciente ──────
+  // Ej: consultorio.aicorebots.com debe mostrar el Portal del Paciente (/portal),
+  // no la landing de marketing ni el login del dashboard.
+  const PORTAL_DOMAINS = new Set(
+    (process.env.PORTAL_DOMAINS || 'consultorio.aicorebots.com')
+      .split(',')
+      .map((d) => d.trim().toLowerCase())
+      .filter(Boolean),
+  );
+
+  const isPortalDomain = PORTAL_DOMAINS.has(hostname.toLowerCase());
+  // El subdominio del dominio portal (ej: 'consultorio') no es un tenant real:
+  // resolver siempre al tenant por defecto para mantener branding/config consistentes.
+  const tenantId = isPortalDomain ? '00000000-0000-0000-0000-000000000000' : detectTenant(hostname);
+
   requestHeaders.set('x-tenant-id', tenantId);
   requestHeaders.set('x-request-id', requestId);
+
+  if (isPortalDomain) {
+    const isPortalPath =
+      pathname === '/portal' || pathname.startsWith('/portal/') || pathname.startsWith('/api/');
+    if (!isPortalPath) {
+      const portalUrl = new URL('/portal', request.url);
+      portalUrl.search = request.nextUrl.search;
+      return NextResponse.redirect(portalUrl, 308);
+    }
+  }
 
   const response = NextResponse.next({
     request: { headers: requestHeaders },
@@ -144,9 +173,13 @@ export function proxy(request: NextRequest) {
   // Centralizado aquí con next.config.js como fallback
   const cspBase =
     "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' wss://livekit.aicorebots.com https://livekit.aicorebots.com https://api.mercadopago.com https://api.twilio.com https://api.whatsapp.com https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self'; media-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; report-uri /api/csp-report";
-  const csp = process.env.NODE_ENV === 'development'
-    ? cspBase.replace("script-src 'self' 'unsafe-inline'", "script-src 'self' 'unsafe-inline' 'unsafe-eval'")
-    : cspBase;
+  const csp =
+    process.env.NODE_ENV === 'development'
+      ? cspBase.replace(
+          "script-src 'self' 'unsafe-inline'",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        )
+      : cspBase;
   response.headers.set('Content-Security-Policy', csp);
 
   // ─── 2. Rate limiting específico por ruta ──────────────
