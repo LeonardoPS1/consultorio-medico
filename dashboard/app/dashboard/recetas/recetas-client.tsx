@@ -20,6 +20,7 @@ import { useCallback, useState } from 'react';
 import { PageAnimation } from '@/components/dashboard/page-animation';
 import { NuevaRecetaModal } from '@/components/modals/nueva-receta-modal';
 import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
+import { RecetaPreviewDialog } from '@/components/recetas/receta-preview-dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,7 +42,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/components/ui/use-toast';
-import { descargarReceta, enviarRecetaWhatsApp, imprimirReceta } from '@/lib/receta-pdf';
+import {
+  descargarReceta,
+  enviarRecetaWhatsApp,
+  imprimirReceta,
+  type RecetaLike,
+} from '@/lib/receta-pdf';
 import { playDelete } from '@/lib/sound';
 import { formatDate } from '@/lib/utils';
 
@@ -77,11 +83,17 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
   const [pacienteFiltro, setPacienteFiltro] = useState<{ id: string; nombre: string } | null>(null);
   const [filterLoading, setFilterLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [tabActivo, setTabActivo] = useState<'activas' | 'vencidas' | 'historial'>('activas');
+  const [previewReceta, setPreviewReceta] = useState<RecetaLike | null>(null);
 
-  const cargarRecetas = useCallback(async (pacienteId?: string) => {
+  const cargarRecetas = useCallback(async (pacienteId?: string, estado?: string) => {
     setFilterLoading(true);
     try {
-      const url = pacienteId ? `/api/recetas?pacienteId=${pacienteId}` : '/api/recetas';
+      const params = new URLSearchParams();
+      if (pacienteId) params.set('pacienteId', pacienteId);
+      if (estado) params.set('estado', estado);
+      const qs = params.toString();
+      const url = `/api/recetas${qs ? `?${qs}` : ''}`;
       const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
@@ -98,13 +110,22 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
     (pacienteId: string, pacienteNombre: string) => {
       if (pacienteId) {
         setPacienteFiltro({ id: pacienteId, nombre: pacienteNombre });
-        void cargarRecetas(pacienteId);
+        void cargarRecetas(pacienteId, tabActivo);
       } else {
         setPacienteFiltro(null);
-        void cargarRecetas();
+        void cargarRecetas(undefined, tabActivo);
       }
     },
-    [cargarRecetas],
+    [cargarRecetas, tabActivo],
+  );
+
+  const handleTabChange = useCallback(
+    (tab: string) => {
+      const nuevoTab = tab as 'activas' | 'vencidas' | 'historial';
+      setTabActivo(nuevoTab);
+      void cargarRecetas(pacienteFiltro?.id, nuevoTab);
+    },
+    [cargarRecetas, pacienteFiltro?.id],
   );
 
   const recetasVisibles = recetas.filter((r) => {
@@ -149,23 +170,10 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
       }
 
       const json = await res.json();
-      const created = json.data;
-      const newReceta: Receta = {
-        id: created.id,
-        paciente: data.pacienteNombre,
-        medicamento: created.medicamento,
-        dosis: created.dosis,
-        duracion: created.duracion || 'Según indicación',
-        estado: 'activa',
-        vence: created.fechaFin || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
-        renovable: true,
-        fechaCreacion: new Date().toISOString().split('T')[0],
-        indicaciones: created.indicaciones,
-      };
-      setRecetas((prev) => [newReceta, ...prev]);
+      void cargarRecetas(pacienteFiltro?.id, tabActivo);
       toast({
         title: 'Receta creada',
-        description: `${created.medicamento} para ${data.pacienteNombre}`,
+        description: `${json.data.medicamento} para ${data.pacienteNombre}`,
       });
     } catch {
       toast({
@@ -191,30 +199,13 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
       }
 
       const json = await res.json();
-      const renovada = json.data;
-      const nuevaReceta: Receta = {
-        id: renovada.id,
-        paciente: receta.paciente,
-        medicamento: renovada.medicamento,
-        dosis: renovada.dosis,
-        duracion: renovada.duracion || receta.duracion,
-        estado: 'activa',
-        vence:
-          renovada.fechaFin || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
-        renovable: true,
-        fechaCreacion: new Date().toISOString().split('T')[0],
-        indicaciones: renovada.indicaciones || receta.indicaciones,
-      };
-
-      setRecetas((prev) => [
-        nuevaReceta,
-        ...prev.map((r) =>
-          r.id === receta.id ? { ...r, estado: 'historial' as const, renovable: false } : r,
-        ),
-      ]);
+      void cargarRecetas(pacienteFiltro?.id, tabActivo);
       toast({
         title: '🔄 Receta renovada',
-        description: `${receta.medicamento} para ${receta.paciente} - Vence ${formatDate(nuevaReceta.vence, 'dd/MM/yyyy')}`,
+        description: `${json.data.medicamento} para ${receta.paciente} - Vence ${formatDate(
+          json.data.fechaFin || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+          'dd/MM/yyyy',
+        )}`,
       });
     } catch {
       toast({
@@ -261,7 +252,18 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
     return (
       <div
         key={receta.id}
-        className="flex items-center gap-4 p-4 hoverable:hover:bg-muted/50 transition-colors"
+        onClick={() =>
+          setPreviewReceta({
+            id: receta.id,
+            paciente: receta.paciente,
+            medicamento: receta.medicamento,
+            dosis: receta.dosis,
+            duracion: receta.duracion,
+            vence: receta.vence,
+            indicaciones: receta.indicaciones,
+          })
+        }
+        className="flex items-center gap-4 p-4 hoverable:hover:bg-muted/50 transition-colors cursor-pointer"
       >
         <div
           className={`h-10 w-10 rounded-xl flex items-center justify-center ${
@@ -466,7 +468,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="activas">
+      <Tabs value={tabActivo} onValueChange={handleTabChange}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <TabsList className="overflow-x-auto">
             <TabsTrigger value="activas">Activas</TabsTrigger>
@@ -604,6 +606,15 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Vista previa de receta */}
+      {previewReceta && (
+        <RecetaPreviewDialog
+          key={previewReceta.id}
+          receta={previewReceta}
+          onClose={() => setPreviewReceta(null)}
+        />
+      )}
     </PageAnimation>
   );
 }

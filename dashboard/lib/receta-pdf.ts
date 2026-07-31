@@ -70,11 +70,12 @@ export async function descargarReceta(receta: RecetaLike) {
 }
 
 /**
- * Genera el HTML imprimible de la receta con QR de verificación.
+ * Genera el HTML completo de la receta (con QR y datos de la organización).
+ * Reutilizable para vista previa, impresión y descarga.
  * @param receta
  * @param org
  */
-export async function generarPDFReceta(receta: RecetaLike, org: OrganizacionInfo = {}) {
+export async function generarHtmlReceta(receta: RecetaLike, org: OrganizacionInfo = {}) {
   const qrDataUrl = await generarQrDataUrl(receta.id);
   const nombreOrg = org.nombre || 'Consultorio Médico';
   const colorPrimario = org.colorPrimario || '#2563eb';
@@ -82,7 +83,7 @@ export async function generarPDFReceta(receta: RecetaLike, org: OrganizacionInfo
   const hoy = formatDate(new Date().toISOString(), "dd 'de' MMMM 'de' yyyy");
   const vence = formatDate(receta.vence, "dd 'de' MMMM 'de' yyyy");
 
-  const html = generarHTMLRecetaCompleta({
+  return generarHTMLRecetaCompleta({
     nombreOrg,
     direccion: org.direccion || '',
     ciudad: org.ciudad || '',
@@ -95,6 +96,15 @@ export async function generarPDFReceta(receta: RecetaLike, org: OrganizacionInfo
     receta,
     qrDataUrl,
   });
+}
+
+/**
+ * Genera el HTML imprimible de la receta con QR de verificación.
+ * @param receta
+ * @param org
+ */
+export async function generarPDFReceta(receta: RecetaLike, org: OrganizacionInfo = {}) {
+  const html = await generarHtmlReceta(receta, org);
 
   const ventana = window.open('', '_blank');
   if (!ventana) {

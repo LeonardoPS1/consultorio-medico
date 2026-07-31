@@ -3,29 +3,18 @@
  * Server component con DB directo (no self-fetch).
  */
 
-import { getPortalSession } from '@/lib/portal-auth';
-import { redirect } from 'next/navigation';
-import { db } from '@/lib/db';
-import { recetas, medicos } from '@/drizzle/schema';
 import { eq, desc, sql } from 'drizzle-orm';
+import { redirect } from 'next/navigation';
+import { recetas, medicos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { getPortalSession } from '@/lib/portal-auth';
 import PortalRecetasClient from './portal-recetas-client';
 
 export const dynamic = 'force-dynamic';
 
-interface Receta {
-  id: string;
-  estado: string;
-  medicamento: string;
-  dosis: string;
-  frecuencia: string;
-  duracion: string;
-  indicaciones: string;
-  fechaInicio: string;
-  fechaFin: string;
-  medicoNombre: string;
-  medicoEspecialidad: string;
-}
-
+/**
+ *
+ */
 export default async function PortalRecetasPage() {
   const session = await getPortalSession();
   if (!session) redirect('/portal');
@@ -49,5 +38,7 @@ export default async function PortalRecetasPage() {
     .where(eq(recetas.pacienteId, session.pacienteId))
     .orderBy(desc(recetas.createdAt));
 
-  return <PortalRecetasClient recetas={recetasData} />;
+  const pacienteNombre = `${session.nombre} ${session.apellido}`.trim();
+
+  return <PortalRecetasClient recetas={recetasData} pacienteNombre={pacienteNombre} />;
 }
