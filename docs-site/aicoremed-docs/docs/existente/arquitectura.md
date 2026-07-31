@@ -29,7 +29,10 @@ graph TD
         WF4[WF-04: Correo Inteligente]
         WF5[WF-05: Resumen Diario]
         WF6[WF-06: Recetas]
+        WF9[WF-09: Anonimización]
         WF12[WF-12: Scoring No-Show]
+        WF13[WF-13: Drill DR]
+        WF14[WF-14: Recuperación]
     end
 
     N8N --> OLLAMA["🧠 IA Local (Ollama + Gemma3)"]
@@ -250,23 +253,59 @@ graph TD
     PLANES --> CONFIGUI["Config → Suscripción (UI)"]
 ```
 
+### 8. Portal de Pacientes — Dominio dedicado
+
+El dominio `consultorio.aicorebots.com` sirve directamente el **portal del paciente**
+(no la landing de marketing). La redirección se implementa en `proxy.ts`:
+
+```mermaid
+graph LR
+    REQ["Consultorio.aicorebots.com/*"] --> PROXY["proxy.ts"]
+    PROXY --> CHECK{"¿Es portal domain?"}
+    CHECK -->|Sí| TENANT["tenantId = default (0000...0000)"]
+    CHECK -->|No| NORMAL["Flujo normal con detectTenant(hostname)"]
+    TENANT --> PATH{"¿Path /portal o /api?"}
+    PATH -->|No| REDIR["308 → /portal"]
+    PATH -->|Sí| PASSTHROUGH["Pasa al portal"]
+```
+
+- **Config:** env `PORTAL_DOMAINS` (default `consultorio.aicorebots.com`), evaluado en `dashboard/proxy.ts`.
+- **Comportamiento:** cualquier ruta distinta de `/portal` o `/api/*` recibe un `308 Permanent Redirect` a `/portal` preservando search params.
+- El portal usa magic link por WhatsApp (JWT 24h), ver `modulos/portal-pacientes.md`.
+
+### 9. Ops Console (AicoreOps)
+
+Consola de operaciones de la plataforma en `ops.aicorebots.com`, en el segundo workspace
+del monorepo (`ops-console/`, app independiente). Permite a operadores:
+
+- Gestionar tenants, operadores, sesiones y passkeys.
+- **Recuperación y backups per-tenant** (crear, listar, verificar, eliminar, restaurar).
+- **Impersonación de usuarios** ("Entrar Como") con TOTP + proxy de sesión.
+- Auditoría de la plataforma (`platform_audit_log`).
+
+Usa su propia DB (`consultorio_medico`, schema `platform`) y servicios (tablas
+`platform_tenants`, `platform_operators`, `platform_audit_log`, `impersonation_tokens`).
+La sesión se maneja con cookie propia firmada (HS256, `AUTH_SECRET`).
+
 ## Stack Tecnológico
 
 | Capa | Tecnología | Versión |
 |------|-----------|---------|
-| **Frontend** | Next.js (App Router) | 14.2+ |
+| **Frontend** | Next.js (App Router) + React | 16.2 + React 19 |
 | **UI** | shadcn/ui + Radix UI + Tailwind CSS | - |
 | **Calendario** | FullCalendar | 6.1+ |
 | **Gráficos** | Recharts | 2.12+ |
 | **ORM** | Drizzle ORM | 0.31+ |
-| **Base de Datos** | PostgreSQL | 15+ |
-| **Automatización** | n8n (self-hosted) | Última |
-| **IA Local** | Ollama + Gemma3 | - |
+| **Base de Datos** | PostgreSQL | 16 |
+| **Automatización** | n8n (self-hosted) | 2.19.x |
+| **IA Local** | Ollama + Gemma3/Mistral | - |
 | **Analítica** | Metabase (self-hosted) | 0.52.x |
-| **Mensajería** | Twilio (WhatsApp, SMS) | - |
-| **Autenticación** | NextAuth v5 + bcrypt | - |
+| **Mensajería** | Twilio (WhatsApp, SMS) + Chatwoot + Evolution API | - |
+| **Autenticación** | NextAuth v5 + bcrypt + 2FA TOTP | - |
 | **Pagos** | MercadoPago SDK | 2.12+ |
-| **Despliegue** | Dokploy (VPS) | - |
+| **Video** | LiveKit (self-hosted) | - |
+| **Despliegue** | Docker Swarm + Dokploy + GitHub Actions | - |
+| **Monorepo** | pnpm workspaces (`dashboard` + `ops-console`) | 11.18.0 |
 
 ## Decisiones de Arquitectura
 
@@ -345,3 +384,6 @@ En lugar de una tabla separada, se agregaron columnas `reset_token` y `reset_tok
 - Mínimo privilegio PostgreSQL (REVOKE CREATE post-migración)
 - Variables de entorno para todas las credenciales
 - Tokens de recuperación con expiración (1 hora) y un solo uso
+- **Impersonación** ("Entrar Como") con token firmado HS256 (`impersonation_tokens`), TOTP
+  de operador y banner visual + endpoint `/api/auth/impersonate/exit`
+- Portal de pacientes aislado en dominio dedicado con cookie `portal_session` httpOnly

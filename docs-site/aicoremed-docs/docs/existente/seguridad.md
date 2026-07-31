@@ -1,6 +1,6 @@
 # 🔒 Seguridad — AicoreMed
 
-> **Última actualización:** 03/06/2026
+> **Última actualización:** 31/07/2026
 > **Estado:** 0 críticos / 0 altos / 0 medios / 0 bajos (auditoría completa)
 
 ---
@@ -111,9 +111,32 @@ Todas las rutas POST/PUT/PATCH usan Zod para validar inputs:
 |---------|----------|------------|-----------|
 | **Twilio** | `POST /api/webhooks/twilio` | HMAC-SHA256 via SDK | Mensajes WhatsApp entrantes |
 | **Twilio Status** | `POST /api/webhooks/twilio` | HMAC-SHA256 via SDK | Status de mensajes enviados |
+| **Chatwoot** | `POST /api/webhooks/chatwoot` | `x-chatwoot-signature` HMAC-SHA256 | Eventos de Chatwoot (canal de soporte) |
 | **MercadoPago** | `POST /api/pagos/webhook` | HMAC-SHA256 + timingSafeEqual | Subscripciones y pagos |
 | **n8n Consultorio** | `POST /webhook/consultorio-inbound` | `x-webhook-secret` | Comunicación dashboard → n8n |
 | **n8n Anonimización** | `POST /api/privacidad/anonimizar` | `x-webhook-secret` | Limpieza post-retención |
+| **n8n Recuperación** | `POST /webhook/recuperar` | `x-webhook-secret` | Recuperación vía n8n (WF-14) |
+
+---
+
+## Impersonación ("Entrar Como")
+
+Sistema de soporte para que un **operador de la Ops Console** pueda actuar como un usuario del dashboard (debugging de incidencias) sin conocer su password.
+
+### Flujo
+1. El operador autenticado (2FA TOTP) abre `ops.aicorebots.com` → tenant → **Entrar Como**.
+2. `POST /api/auth/impersonate/start` (ops-console) verifica TOTP y hace proxy al dashboard.
+3. El dashboard crea un token en la tabla `impersonation_tokens` (migración 0053) y envía el link por email (`lib/services/email.ts`, nodemailer) o lo muestra si SMTP no está configurado.
+4. El link `/api/auth/impersonate?token=...` valida el token (HS256, caducidad), fija la cookie de sesión de impersonación y redirige al dashboard.
+5. El banner ámbar `impersonation-banner.tsx` avisa que la sesión está en modo soporte. `proxy.ts` valida la cookie en cada request.
+6. Salir: `/api/auth/impersonate/exit` limpia la cookie.
+
+### Protecciones
+- Token de un solo uso (`usado = true`), caducidad `expires_at`, firmado HS256 con `AUTH_SECRET`
+- Requiere 2FA TOTP del operador para iniciar
+- Registro en `platform_audit_log` (ops-console) de cada impersonación
+- Cookie httpOnly + banner visible durante toda la sesión
+- El endpoint de inicio (`POST /api/internal/impersonate`) está restringido a red interna/operadores
 
 ---
 
@@ -141,9 +164,11 @@ ANTI-JAILBREAK:
 ## Base de Datos
 
 ### Multi-Tenant
-- `tenantId` presente en 22+ tablas
+- `tenantId` presente en **50+ tablas**
 - Aislado por proxy que inyecta `x-tenant-id` header
 - Cada query filtra por `tenantId`
+- **RLS (Row-Level Security)**: 19 tablas protegidas con policies (`set_tenant_context` + `current_tenant_id()`), migraciones 0027 y 0051. Ver [RLS Multi-Tenant](rls-multi-tenant.md)
+- Las tablas del schema `platform` de la Ops Console (platform_tenants, platform_operators, platform_audit_log) están **fuera** del alcance RLS (gestión cross-tenant)
 
 ### Soft Delete
 | Tabla | Columna |
@@ -175,15 +200,17 @@ ANTI-JAILBREAK:
 ```
 Port 22 (SSH)        → Allow
 Port 443 (HTTPS)     → Allow (via Traefik)
-Port 5432 (PostgreSQL) → DENY externo (solo localhost)
+Port 5432 (PostgreSQL) → ALLOW solo redes Docker (172.17/18/19.0.0/16, 10.0.1.0/24) · DENY externo
+Port 11434 (Ollama)  → ALLOW solo redes Docker · DENY externo
 Port 5678 (n8n)      → Allow (via Traefik auth)
 ```
 
 ### PostgreSQL
-- Puerto **5432** directo (PgBouncer nunca implementado)
-- Acceso interno via `172.18.0.1:5432` (docker_gwbridge)
-- Usuario `dashboard_user` con permisos limitados
-- Backup diario encriptado a las 3:00 AM (WF-07)
+- Puerto **5432** bind a `0.0.0.0` para que Docker Swarm lo alcance vía docker_gwbridge (`172.18.0.1:5432`)
+- PgBouncer disponible en el stack de producción
+- Usuario `dashboard_user` con permisos limitados; superuser solo para migraciones/backups (`docker exec psql -U <superuser>`)
+- Backup diario encriptado a las 3:00 AM (WF-07) + backup de volúmenes 3:15 AM (backup-agent)
+- Backup **per-tenant** disponible vía Ops Console (`/api/recuperacion/*`)
 
 ---
 
@@ -247,3 +274,14 @@ Hallazgos corregidos en sesiones previas:
 - **XSS en recetas HTML** → `escapeHtml()` en templates
 - **UUID validation** → Zod `.uuid()` en API v1
 - **Twilio ErrorMessage** → `escapeHtml()` en status callback
+
+### 12/07/2026 — Auditoría Post-Fase 4 y Fase 5
+**Resultado: 0 críticos / 0 altos / 0 medios / 0 bajos**
+
+### 28/07/2026 — Auditoría DR + Recovery
+**Resultado: 0 críticos / 0 altos / 0 medios / 0 bajos**
+
+- Revisión de scripts de backup/restauración (GPG, `docker exec` + superuser)
+- Verificación de que las claves GPG privadas no viven en el repositorio
+- 3 vías de recuperación (SSH/Makefile, Ops Console, n8n WF-14) auditadas
+- Impersonación ("Entrar Como") auditada: token de un solo uso, 2FA TOTP requerido, logging en `platform_audit_log`

@@ -119,6 +119,31 @@ Components (components/portal/)
 - Test sessions (`esPrueba`) bypassan el gate
 - Sin acceso → redirect a `/portal?sin-acceso=1`
 
+## Acceso por Dominio Dedicado
+
+El portal se sirve desde el subdominio dedicado **https://consultorio.aicorebots.com** (el dominio raíz `med.aicorebots.com` sigue siendo el dashboard de administración).
+
+| Propiedad | Valor |
+|-----------|-------|
+| Dominio | `consultorio.aicorebots.com` |
+| Redirección | Raíz y cualquier ruta no-portal → `308 /portal` (preserva query params) |
+| Configuración | Env `PORTAL_DOMAINS` (default `consultorio.aicorebots.com`) |
+| Lógica | `dashboard/proxy.ts` → `isPortalDomain` |
+| Tenant forzado | `00000000-0000-0000-0000-000000000000` (default, para headers/logging) |
+
+```
+Flow (mermaid)
+consultorio.aicorebots.com → proxy.ts → isPortalDomain? (PORTAL_DOMAINS)
+  ├── path = /portal | /portal/* | /api/* → pasa normal
+  └── cualquier otra ruta → 308 redirect a /portal
+```
+
+1. El request llega a `consultorio.aicorebots.com`.
+2. `proxy.ts` detecta `isPortalDomain` comparando el hostname contra `PORTAL_DOMAINS`.
+3. Fuerza `tenantId` al default para headers/logging (las queries del portal usan RLS por sesión JWT, no por header).
+4. Si la ruta no es `/portal`, `/portal/...` ni `/api/...` → `308` redirect a `/portal`.
+5. `/api/portal/*` y el resto de la API siguen funcionando bajo el mismo dominio.
+
 ## Diseño
 
 - Sistema de diseño propio scoped bajo `.portal-layout`

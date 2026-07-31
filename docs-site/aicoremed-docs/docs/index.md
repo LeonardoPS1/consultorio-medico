@@ -27,6 +27,14 @@ debe cambiar en el mismo PR — no hay "documentación aparte" que se desactuali
   Autenticación, 2FA, rate limiting, HMAC, sanitización IA.
   [→ Ver seguridad](existente/seguridad.md)
 
+- **:material-robot: Workflows n8n**
+  Los 14 workflows de automatización (WhatsApp, turnos, backups, DR).
+  [→ Ver workflows](existente/workflows-n8n.md)
+
+- **:material-server-network: Disaster Recovery**
+  Backups, restauración, drill y 3 vías de recuperación.
+  [→ Ver DR](existente/disaster-recovery.md)
+
 </div>
 
 ## Qué es AicoreMed
@@ -37,8 +45,12 @@ AicoreMed es un SaaS multi-tenant para clínicas y médicos independientes en Ch
 - **Dashboard de gestión clínica** — turnos, pacientes, recetas, reportes, facturación.
 - **Automatización conversacional** — un agente de IA (n8n + Ollama) que atiende WhatsApp
   y email, agenda turnos, responde consultas y hace triaje de urgencias.
-- **Portal de pacientes** — acceso propio vía magic link por WhatsApp.
+- **Portal de pacientes** — acceso propio vía magic link por WhatsApp, disponible en un
+  dominio dedicado: `consultorio.aicorebots.com`.
 - **Telemedicina integrada** — videoconsultas vía LiveKit.
+- **Soporte conversacional** — canal de soporte vía Chatwoot + Evolution API.
+- **Ops Console** — consola de operaciones (tenants, operadores, impersonación, backups
+  per-tenant) en `ops.aicorebots.com`.
 - **Infraestructura 100% self-hosted** — sin intermediarios SaaS de terceros, corre
   íntegramente en la VPS propia sobre Docker.
 
@@ -46,15 +58,17 @@ AicoreMed es un SaaS multi-tenant para clínicas y médicos independientes en Ch
 
 | Capa | Tecnología |
 |---|---|
-| Frontend | Next.js (App Router), TypeScript, shadcn/ui, Tailwind, TanStack Query |
-| Backend | API Routes, Drizzle ORM, Zod |
-| Base de datos | PostgreSQL |
-| Automatización | n8n (self-hosted) |
+| Frontend | Next.js 16 (App Router), React 19, TypeScript, shadcn/ui, Tailwind, TanStack Query |
+| Backend | API Routes, Drizzle ORM 0.31, Zod |
+| Base de datos | PostgreSQL 16 (+ PgBouncer) |
+| Automatización | n8n 2.19 (self-hosted, 14 workflows) |
 | IA conversacional | Ollama + Gemma3 (local, sin llamadas externas) |
-| Mensajería | Twilio (WhatsApp / SMS) |
+| Mensajería | Twilio (WhatsApp / SMS) + Chatwoot + Evolution API |
 | Video | LiveKit |
-| Pagos | MercadoPago |
-| Infraestructura | Docker Swarm + Traefik |
+| Pagos | MercadoPago (CLP) |
+| Infraestructura | Docker Swarm + Traefik + Dokploy + GitHub Actions → ghcr.io |
+| Analítica | Metabase (self-hosted) |
+| Operaciones | Ops Console (AicoreOps) — `ops.aicorebots.com` |
 
 Detalle completo, versiones exactas y diagramas: [Arquitectura →](existente/arquitectura.md)
 

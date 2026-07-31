@@ -1,5 +1,19 @@
 # Disaster Recovery & Backup
 
+> **Última actualización:** 31/07/2026 · Recuperación en 3 vías (SSH/Makefile, Ops Console, n8n WF-14).
+
+## Vías de Recuperación
+
+| # | Vía | Cómo | Cuándo usarla |
+|---|-----|------|---------------|
+| 1 | **SSH + Makefile** | `make recover` (o `make recover-force`) en el VPS | Acceso directo al servidor |
+| 2 | **Ops Console** | `ops.aicorebots.com` → Recuperación → Iniciar Recuperación | Sin acceso SSH, solo UI |
+| 3 | **n8n WF-14** | Disparo manual del workflow `workflow-14-recuperacion.json` | Orquestación desde n8n |
+
+`make recover` auto-detecta el último backup disponible y restaura PG + volúmenes. `make recover-force` omite la confirmación. `make recover-status` lista backups disponibles.
+
+---
+
 ## Respaldo de Base de Datos
 
 ### Automático (WF-07)
@@ -32,6 +46,8 @@ pg_dump -h postgres -U dashboard_user -d consultorio_medico --format=custom --co
 
 ### Restauración
 
+> **Importante:** la clave privada GPG `admin@consultorio.com` **debe existir en el VPS** para poder desencriptar backups. Si falta, ejecutar `bash scripts/setup-gpg.sh` para generar el par y luego crear backups nuevos.
+
 ```bash
 # 1. Desencriptar (si está encriptado con GPG)
 gpg --decrypt backup_20260722_030000.sql.gz.gpg > backup.sql.gz
@@ -39,12 +55,11 @@ gpg --decrypt backup_20260722_030000.sql.gz.gpg > backup.sql.gz
 # 2. Descomprimir
 gunzip backup.sql.gz
 
-# 3. Restaurar a PostgreSQL
-pg_restore -h postgres -U dashboard_user -d consultorio_medico --clean --if-exists backup.sql
-
-# 4. O desde SQL plano
-psql -h postgres -U dashboard_user -d consultorio_medico < backup.sql
+# 3. Restaurar a PostgreSQL (via docker exec + superuser)
+docker exec -i $(docker ps -q -f name=postgres) psql -U <superuser> -d consultorio_medico < backup.sql
 ```
+
+> `restore-pg.sh` ejecuta la restauración vía `docker exec` con el usuario superuser (mismo patrón que `backup-encriptado.sh`). Requiere `sudo -n` passwordless configurado en el VPS.
 
 ---
 
@@ -290,14 +305,14 @@ La columna **RTO real (volúmenes)** mide el tiempo de desencriptar + extraer + 
 
 ### Cadencia de drills
 
-Se propone ejecutar este drill **cada 3 meses** (trimestral). Idealmente:
+Se propone ejecutar este drill **cada 3 meses** (trimestral):
 
-1. **Trimestral sincronizado** con el calendario del equipo (ej: primer viernes de cada trimestre a las 10:00 AM)
-2. **Notificación automática** vía un workflow n8n (propuesta: WF-13 "Recordatorio Drill DR") que:
-   - Se dispara el primer día de cada trimestre
-   - Envía un mensaje al médico/admin por WhatsApp recordando ejecutar el drill
+1. **Trimestral sincronizado** con el calendario del equipo (ej: primer día de cada trimestre)
+2. **Notificación automática** vía el workflow n8n **WF-13 "Recordatorio Drill DR"** (ya implementado) que:
+   - Se dispara el primer día de cada trimestre (cron trimestral)
+   - Envía un mensaje al médico/admin por WhatsApp recordando ejecutar el drill (`make recover-drill`)
    - Incluye el enlace a esta documentación
-3. **Registro obligatorio** en disaster-recovery.md (actualizar "Último drill ejecutado") después de cada drill
+3. **Registro obligatorio** en esta página (actualizar "Último drill ejecutado") después de cada drill
 
 ---
 
@@ -323,7 +338,7 @@ Script para restaurar PostgreSQL desde backup GPG encriptado.
 
 **Características:**
 - Desencriptado automático con GPG
-- Restaura con `pg_restore --clean --if-exists`
+- Restaura vía `docker exec` + superuser (patrón de `backup-encriptado.sh`)
 - Modo drill en container PostgreSQL aislado (puerto 5433)
 - Verificación post-restauración
 - Limpieza automática de archivos temporales
@@ -364,6 +379,40 @@ Orquestador de restauración completa del sistema (BD + volúmenes).
 - Orquesta PG + volúmenes en orden correcto
 - Modo drill para testing sin afectar producción
 - Checklist de verificación post-restauración
+
+### recover.sh + Makefile
+
+`scripts/recover.sh` es el orquestador de recuperación de alto nivel, accesible vía Makefile:
+
+```bash
+make recover            # Recuperación completa (auto-detecta último backup, pide confirmación)
+make recover-force      # Recuperación sin confirmación
+make recover-drill      # Drill en containers aislados
+make recover-pg         # Solo PostgreSQL
+make recover-vols       # Solo volúmenes
+make recover-status     # Lista backups disponibles
+make backup-infra       # Backup de infraestructura (compose, scripts, workflows)
+make backup-now         # Backup manual inmediato
+make backup-n8n         # Backup de workflows n8n
+```
+
+---
+
+## Backup y Restauración Per-Tenant
+
+Para recuperar **un solo tenant** (organización) sin restaurar toda la base de datos:
+
+| Operación | Script/API | Descripción |
+|-----------|-----------|-------------|
+| Crear backup | `scripts/backup-tenant.sh <tenantId>` o `POST /api/recuperacion/crear-backup` | `docker exec psql \copy ... TO STDOUT CSV HEADER`, tabla por tabla, con echo por tabla |
+| Listar | `GET /api/recuperacion?tenantId=` | Lista backups disponibles del tenant |
+| Restaurar | `scripts/restore-tenant.sh` | Restaura CSV del tenant |
+| Verificar | `GET /api/recuperacion/verify` | Verifica integridad del backup |
+| Eliminar | `scripts/delete-backup.sh` o `DELETE /api/recuperacion/delete` | Elimina un backup del tenant |
+
+**API (Ops Console):** `/api/recuperacion/crear-backup`, `/api/recuperacion/delete`, `/api/recuperacion/trigger`, `/api/recuperacion/verify`. La UI está en `ops.aicorebots.com` → Recuperación.
+
+**Nota:** `POST /api/recuperacion/trigger` ejecuta `recover.sh --force` vía SSH directamente (no depende de la API key de n8n).
 
 ---
 
@@ -504,13 +553,24 @@ gpg --armor --export-secret-keys admin@consultorio.com > /tmp/backup-gpg-private
 gpg --import backup-gpg-private.key
 ```
 
+### Si la clave no existe en el VPS
+
+Si `gpg --decrypt` falla porque no hay clave privada en el keyring del VPS (error exit code 2), generar un par nuevo y recrear backups:
+
+```bash
+bash scripts/setup-gpg.sh          # Genera par GPG (si no existe ya)
+bash scripts/backup-encriptado.sh  # Crear backups frescos con la clave actual
+```
+
 ---
 
 ## Notas
 
-- La clave GPG `admin@consultorio.com` debe estar disponible en el sistema para desencriptar backups.
+- La clave GPG `admin@consultorio.com` **debe existir en el VPS** para poder desencriptar backups (setup-gpg.sh la genera).
+- `restore-pg.sh` y la recuperación usan `docker exec` + superuser y requieren `sudo -n` passwordless.
 - Los backups de volúmenes se almacenan en el volumen Docker `backup_agent_data` montado en `/backup/` del contenedor backup-agent.
 - Los backups de PostgreSQL se almacenan en `/var/backups/consultorio/` dentro del contenedor n8n (path montado desde el host).
 - `ollama_data` y `redis_data` no se respaldan automáticamente — ver sección "Recuperación de volúmenes reproducibles" para comandos de regeneración.
 - **Off-site backup disponible** vía rclone en ambos scripts de backup. Configurar `RCLONE_REMOTE` para activar.
+- **Backup per-tenant:** `backup-tenant.sh` / `restore-tenant.sh` para recuperación selectiva de un tenant vía Ops Console o scripts.
 - **RTO real:** monitorear con `scripts/check-backups.sh` (recomendado: cron cada hora).

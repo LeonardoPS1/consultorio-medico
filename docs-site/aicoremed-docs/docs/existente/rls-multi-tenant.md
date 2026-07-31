@@ -35,6 +35,8 @@ Cuando `current_tenant_id()` es `NULL` (no se ha llamado a `set_tenant_context`)
 
 ## Tablas con RLS
 
+> **Última actualización:** 31/07/2026
+
 ### Migración 0027 (inicial — 9 tablas)
 
 | Tabla | tenant_id | FK a tenants |
@@ -63,6 +65,13 @@ Cuando `current_tenant_id()` es `NULL` (no se ha llamado a `set_tenant_context`)
 | `consentimiento_compartir` | `uuid` default `0000...` |
 | `blacklist` | `uuid` default `0000...` |
 | `consentimientos` | `uuid` default `0000...` |
+
+### Excluidas intencionalmente
+
+| Tabla | Razón |
+|-------|-------|
+| `impersonation_tokens` (0053) | Debe ser accesible entre tenants: el operador de soporte crea el token y el usuario destino lo consume |
+| `platform_tenants`, `platform_operators`, `platform_audit_log` (schema `platform`) | Ops Console cross-tenant, gestiona todos los tenants — RLS rompería el aislamiento administrativo |
 
 ## Flujo de Aplicación
 

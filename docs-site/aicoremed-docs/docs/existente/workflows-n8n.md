@@ -1,7 +1,7 @@
 # 🔄 Workflows n8n — AicoreMed
 
-> **12 workflows activos** · Automatización inteligente del consultorio
-> **Última actualización:** 21/07/2026
+> **14 workflows activos** · Automatización inteligente del consultorio
+> **Última actualización:** 31/07/2026
 
 ---
 
@@ -18,10 +18,13 @@
 9. [WF-07: Backup Automático Encriptado](#wf-07-backup-automatico-encriptado)
 10. [WF-08: Google Calendar Sync](#wf-08-google-calendar-sync)
 11. [WF-09: Anonimización Post-Retención](#wf-09-anonimizacion-post-retencion)
-12. [WF-11: Novedades desde Commits](#wf-11-novedades-desde-commits)
-13. [WF-12: Actualizar Scores No-Show](#wf-12-actualizar-scores-no-show)
-14. [Deploy de Workflows](#deploy-de-workflows)
-15. [Buenas Prácticas](#buenas-practicas)
+12. [WF-10: Expiración Waitlist](#wf-10-expiracion-waitlist)
+13. [WF-11: Novedades desde Commits](#wf-11-novedades-desde-commits)
+14. [WF-12: Actualizar Scores No-Show](#wf-12-actualizar-scores-no-show)
+15. [WF-13: Recordatorio Drill DR](#wf-13-recordatorio-drill-dr)
+16. [WF-14: Recuperación vía n8n](#wf-14-recuperacion-via-n8n)
+17. [Deploy de Workflows](#deploy-de-workflows)
+18. [Buenas Prácticas](#buenas-practicas)
 
 ---
 
@@ -41,7 +44,9 @@ n8n-workflows/
 │   ├── workflow-09-anonimizar.json
 │   ├── workflow-10-expiracion-waitlist.json
 │   ├── workflow-11-novedades.json    # Novedades desde Commits
-│   └── workflow-12-scores-no-show.json  # Scoring No-Show Nocturno
+│   ├── workflow-12-scores-no-show.json  # Scoring No-Show Nocturno
+│   ├── workflow-13-drill-dr.json     # Recordatorio Drill DR
+│   └── workflow-14-recuperacion.json # Recuperación vía n8n
 │
 └── archive/                          # Versiones legacy y diseños
 ```
@@ -52,7 +57,7 @@ n8n-workflows/
 
 | # | Nombre | Trigger | Nodos | Ollama | Twilio | PG | GCal | IMAP |
 |   |--------|---------|-------|--------|--------|----|------|------|
-| **01** | WhatsApp Inbound + Triaje IA | Webhook | 23 | ✅ 2 Agents (Triaje+Agenda) | ✅ | ✅ | ❌ | ❌ |
+| **01** | WhatsApp Inbound + Triaje IA | Webhook | 31 | ✅ 3 Agents (Triaje+Agenda+Clínico) | ✅ | ✅ | ❌ | ❌ |
 | **02** | Gestión de Turnos | Webhook | 9 | ✅ 2 nodos | ✅ | ✅ | ✅ | ❌ |
 | **03** | Recordatorios Automáticos | Cron (c/hora) | 12 | ❌ | ✅ | ✅ | ❌ | ❌ |
 | **04** | Correo Inteligente | IMAP (5 min) | 10 | ✅ Agent | ✅ | ✅ | ❌ | ✅ |
@@ -64,6 +69,8 @@ n8n-workflows/
 | **10** | Expiración Waitlist | Cron (diario) | — | ❌ | ✅ | ✅ | ❌ | ❌ |
 | **11** | Novedades desde Commits | Webhook (GH) | 5 | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **12** | Scoring No-Show Nocturno | Cron (3:30 AM) | 3 | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **13** | Recordatorio Drill DR | Cron (trimestral) | — | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **14** | Recuperación vía n8n | Webhook (manual) | — | ❌ | ❌ | ✅ | ❌ | ❌ |
 
 ---
 
@@ -89,32 +96,31 @@ Twilio → Webhook (x-webhook-secret validado) →
   │ TRIAGE AGENT (clasifica + responde)  │
   │   • Saludo / info general / urgencia → responde directo (sin handoff)
   │   • Crear/cancelar/modificar turno  → HANDOFF → AGENDA AGENT
-  │   • Recetas / consultas clínicas    → HANDOFF → CLÍNICO (Fase 2)
+  │   • Recetas / consultas clínicas    → HANDOFF → CLÍNICO AGENT
   └─────────────────┬────────────────────┘
                     │
-              ┌─────┴─────┐
-              │           │
-          HANDOFF      SIN HANDOFF
-              │           │
-              ▼           ▼
-  ┌─────────────────┐
-  │ AGENDA AGENT    │    ──→ Merger → Parsear → Twilio → Log
-  │ (turnos)        │
-  │ temp=0.3        │
-  │ memoria         │
-  │ compartida      │
-  └─────────────────┘
+              ┌─────┴─────────┐
+              │               │
+          HANDOFF         SIN HANDOFF
+              │               │
+        ┌─────┴─────┐         │
+        ▼           ▼         ▼
+  ┌────────────┐ ┌────────────┐
+  │ AGENDA     │ │ CLÍNICO    │ ──→ Merger → Parsear → Twilio → Log
+  │ AGENT      │ │ AGENT      │
+  │ (turnos)   │ │ (recetas)  │
+  └────────────┘ └────────────┘
 ```
 
 ### Configuración IA
 
-| Parámetro | Triaje Agent | Agenda Agent |
-|-----------|-------------|--------------|
-| Modelo | `gemma3` | `gemma3` |
-| Base URL | `http://ollama:11434` | `http://ollama:11434` |
-| Temperatura | 0.3 | 0.3 |
-| Prompt | ~20 líneas (saludo + clasificación) | ~15 líneas (solo turnos) |
-| Chat Memory | Postgres (sessionKey=phone) | Postgres (sessionKey=phone misma instancia) |
+| Parámetro | Triaje Agent | Agenda Agent | Clínico Agent |
+|-----------|-------------|--------------|---------------|
+| Modelo | `gemma3` | `gemma3` | `gemma3` |
+| Base URL | `http://ollama:11434` | `http://ollama:11434` | `http://ollama:11434` |
+| Temperatura | 0.3 | 0.3 | 0.3 |
+| Prompt | ~20 líneas (saludo + clasificación) | ~15 líneas (solo turnos) | ~15 líneas (solo recetas + consultas clínicas) |
+| Chat Memory | Postgres (sessionKey=phone) | Postgres (misma) | Postgres (misma) |
 
 ### Memoria Compartida
 Ambos sub-agentes usan el mismo `sessionKey` (número de teléfono) en Postgres
@@ -144,7 +150,7 @@ cambios en la base de datos usando el mismo formato establecido:
 ###FIN###
 ```
 
-### Nodos (23 en total)
+### Nodos (31 en total)
 1. Webhook ← Twilio WhatsApp
 2. Validar Mensaje (IF)
 3. Extraer Datos (Set)
@@ -157,21 +163,26 @@ cambios en la base de datos usando el mismo formato establecido:
 10. **Triaje Agent** (AI Agent)
 11. Extraer Output Triaje (Set)
 12. Parsear Handoff (Code)
-13. Hay Handoff? (IF)
+13. Destino Handoff? (IF) — enruta a `agenda` o `clinico`
 14. Preparar Prompt Agenda (Code)
 15. Ollama - Agenda (Chat Model)
 16. Postgres Memory - Agenda
 17. **Agenda Agent** (AI Agent)
 18. Extraer Output Agenda (Set)
-19. Merger (Merge)
-20. Parsear y Preparar (Code)
-21. Twilio - Enviar WhatsApp (HTTP)
-22. Hay Accion? (IF)
-23. PG nodes (Registrar, Guardar, Log)
+19. Preparar Prompt Clínico (Code)
+20. Ollama - Clínico (Chat Model)
+21. Postgres Memory - Clínico
+22. **Clínico Agent** (AI Agent)
+23. Extraer Output Clínico (Set)
+24. Merger (Merge)
+25. Parsear y Preparar (Code)
+26. Twilio - Enviar WhatsApp (HTTP)
+27. Hay Accion? (IF)
+28. PG nodes (Registrar, Guardar, Log)
 
 ### Logging
-Cada respuesta incluye `subAgente` (`"triaje"` | `"agenda"` | `"clinico"` en
-Fase 2) registrado en `workflow_logs.nivel` para trazabilidad.
+Cada respuesta incluye `subAgente` (`"triaje"` | `"agenda"` | `"clinico"`) registrado en
+`workflow_logs.nivel` para trazabilidad.
 
 ### Seguridad
 - Webhook autenticado con `x-webhook-secret`
@@ -365,6 +376,29 @@ Cron → POST a /api/privacidad/anonimizar (con x-webhook-secret) →
 
 ---
 
+## WF-10: Expiración Waitlist
+
+### Propósito
+Revisa diariamente las ofertas de waitlist (`lista_espera`) que expiraron y las marca como
+`expirada`, notificando a los pacientes si corresponde.
+
+### Trigger
+**Cron** → Diario
+
+### Flujo
+```
+Cron diario → Busca ofertas pendientes con TTL vencido (default 24h) →
+  → Cambia estado pendiente → expirada en PostgreSQL →
+  → Notifica al paciente vía WhatsApp si corresponde →
+  → Loggea resultado en workflow_logs
+```
+
+### Integración con Dashboard
+- Ofertas de waitlist se crean con TTL configurable.
+- Reasignación manual de ofertas: `POST /api/waitlist/reasignar`.
+
+---
+
 ## WF-11: Novedades desde Commits
 
 ### Propósito
@@ -415,6 +449,53 @@ WF-03 (Recordatorios Automáticos) fue modificado para incluir un tercer bloque 
 | 1 (nuevo) | 48h | Solo pacientes con `risk_nivel = alto` o `crítico` |
 | 2 (original) | 24h | Todos los pacientes con turno próximo |
 | 3 (original) | 1h | Todos los pacientes con turno próximo |
+
+---
+
+## WF-13: Recordatorio Drill DR
+
+### Propósito
+Recordatorio trimestral para ejecutar el drill de disaster recovery y mantener validado
+el procedimiento de recuperación.
+
+### Trigger
+**Cron** → Primer día de cada trimestre
+
+### Flujo
+```
+Cron (1er día del trimestre) → Envía WhatsApp al médico/admin recordando:
+  → Ejecutar make recover-drill
+  → Registrar RTO real en disaster-recovery.md
+```
+
+### Referencia
+Procedimiento completo del drill en [Disaster Recovery](disaster-recovery.md).
+
+---
+
+## WF-14: Recuperación vía n8n
+
+### Propósito
+Tercera vía de recuperación (junto a SSH/Makefile y Ops Console UI): dispara la
+restauración completa desde n8n.
+
+### Trigger
+**Webhook** → `POST /webhook/recuperar` (manual desde n8n UI)
+
+### Flujo
+```
+Webhook → Ejecuta bash recover.sh --force en el VPS →
+  → Restaura último backup PG (docker exec + superuser) →
+  → Restaura volúmenes (n8n_data, metabase_data, recordings) →
+  → Verifica integridad y loggea en workflow_logs
+```
+
+### Vías de recuperación disponibles
+| Vía | Acceso | Comando |
+|-----|--------|---------|
+| 1. SSH / Makefile | `make recover` / `make recover-force` / `make recover-drill` | VPS |
+| 2. Ops Console UI | ops.aicorebots.com → Recuperación | Web |
+| 3. n8n (WF-14) | n8n UI → WF-14 → Execute | Web |
 
 ---
 

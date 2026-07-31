@@ -2,7 +2,9 @@
 
 ## Esquema General
 
-26+ tablas, 5 vistas, 45+ índices, triggers de auditoría automáticos.
+50+ tablas, 5 vistas, 80+ índices, triggers de auditoría automáticos.
+
+> **Última actualización:** 31/07/2026 · 53 migraciones aplicadas.
 
 ### Diagrama de Relaciones
 
@@ -66,13 +68,21 @@ Las migraciones son **acumulativas** y deben ejecutarse en orden:
 | 045 | `045_white_labeling.sql` | Columnas `dominio_custom`, `color_secundario`, `config_regional` en `tenants` |
 | 046 | `046_regional_config.sql` | Tablas `regiones`, `comunas`, columna `region_id`, `comuna_id` en pacientes |
 | 047 | `047_scoring.sql` | Columnas `risk_score`, `risk_nivel`, `recordatorio_48h_enviado` en `turnos` |
+| 048 | `0048_transcripcion_soap.sql` | Pipeline de transcripción por IA: columnas `ia_generated`, `created_by_ia`, `estado_revision`, `audio_url`, `transcripcion_texto` en `notas_soap` + config en `config_ia` |
+| 049 | `0049_documentos_medicos.sql` | Tabla `documentos_medicos` (adjuntos clínicos) |
+| 050 | `0050_webhooks.sql` | Tablas `webhook_configs` y `webhook_logs` (webhooks salientes por tenant) |
+| 051 | `0051_rls_more_tables.sql` | RLS en 10 tablas adicionales: `portal_config`, `web_vitals_metrics`, `derivaciones`, `webhook_configs`, `ordenes_estudio`, `documentos_medicos`, `paquetes_portal`, `consentimiento_compartir`, `blacklist`, `consentimientos` |
+| 052 | `0052_derivaciones_missing_columns.sql` | Columnas faltantes en `derivaciones` |
+| 053 | `0053_impersonacion.sql` | Tabla `impersonation_tokens` (impersonación operator→tenant) |
 
 ```bash
-# Ejecutar todas las migraciones
-for f in database/migrations/0*.sql; do
+# Ejecutar todas las migraciones (en orden)
+for f in dashboard/drizzle/migrations/0*.sql; do
   psql -U postgres -d consultorio_medico -f "$f"
 done
 ```
+
+Las migraciones viven en `dashboard/drizzle/migrations/` (monorepo), no en `database/migrations/`.
 
 ## Tablas
 
@@ -217,7 +227,7 @@ Suscripciones a planes de MercadoPago.
 | `id` | UUID PK | Identificador único |
 | `organizacion_id` | UUID | ID del tenant/organización |
 | `plan` | VARCHAR(50) | `free`, `starter`, `professional`, `premium`, `enterprise` |
-| `estado` | VARCHAR(50) | `free`, `pending`, `approved`, `cancelled` |
+| `estado` | VARCHAR(50) | `free`, `pending`, `approved`, `past_due`, `cancelled` |
 | `mercadopago_preference_id` | VARCHAR(255) | ID de preferencia en MP |
 | `mercadopago_payment_id` | VARCHAR(255) | ID de pago en MP |
 | `mercadopago_merchant_order_id` | VARCHAR(255) | ID de orden en MP |
@@ -239,6 +249,49 @@ Suscripciones a planes de MercadoPago.
 | `ia_logs` | Consultas a Ollama (latencia, tokens, prompt) |
 | `audit_log` | Acciones de usuarios en el dashboard |
 | `novedades` | Changelog de versiones con título, items (JSONB), tipo y fecha |
+
+### 006+ - Tablas Recientes (047–053)
+
+| Tabla | Propósito |
+|-------|-----------|
+| `notas_soap` | Notas SOAP con columnas de transcripción IA: `ia_generated`, `estado_revision`, `audio_url`, `transcripcion_texto` |
+| `documentos_medicos` | Adjuntos clínicos (PDFs, imágenes) con RLS por tenant |
+| `webhook_configs` | Configuración de webhooks salientes: evento, URL, secret HMAC-SHA256, `activo`, `ultimo_estado` |
+| `webhook_logs` | Historial de entregas: `status_code`, `respuesta`, `duracion_ms`, `intentos`, `error` |
+| `ordenes_estudio` | Órdenes de estudios con RLS por tenant |
+| `portal_config` | Configuración del portal paciente por tenant |
+| `paquetes_portal` | Paquetes de consultas del portal |
+| `consentimiento_compartir` | Consentimientos granulares de derivaciones cross-tenant |
+| `convenios_intercambio` | Convenios administrativos de intercambio entre organizaciones |
+| `blacklist` | Números bloqueados por tenant |
+| `consentimientos` | Registro de consentimientos con RLS |
+| `impersonation_tokens` | Tokens de impersonación operator→tenant: `tenant_id`, `usuario_id`, `creado_por_operator_*`, `token`, `usado`, `expires_at` |
+| `web_vitals_metrics` | Métricas Core Web Vitals del frontend |
+| `platform_tenants`, `platform_operators`, `platform_audit_log` | Esquema `platform` de Ops Console (tablas fuera de RLS) |
+
+#### `webhook_configs`
+
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `tenant_id` | UUID FK → tenants | Tenant dueño |
+| `evento` | VARCHAR(50) | Tipo de evento: `turno.*`, `paciente.*`, `receta.*`, `derivacion.*`, `pago.completado` |
+| `url` | TEXT | URL destino |
+| `secret` | VARCHAR(64) | Secreto para firma HMAC-SHA256 |
+| `activo` | BOOLEAN | Habilita/deshabilita el envío |
+| `ultimo_estado` | VARCHAR(20) | `pendiente`, `entregado`, `fallido` |
+
+#### `impersonation_tokens`
+
+Tokens de un solo uso que permiten a un operador de Ops Console ingresar como administrador de un tenant.
+
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `tenant_id` | UUID FK → tenants | Tenant destino |
+| `usuario_id` | UUID FK → usuarios | Usuario admin objetivo |
+| `creado_por_operator_id` / `creado_por_operator_email` | VARCHAR | Operador que la creó (auditoría) |
+| `token` | VARCHAR(64) UNIQUE | Token de un solo uso |
+| `usado` | BOOLEAN | Si ya fue consumido |
+| `expires_at` | TIMESTAMPTZ | Expiración (corta) |
 
 ## Vistas Optimizadas
 
