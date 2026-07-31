@@ -522,7 +522,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
                 </div>
               ) : (
                 <div className="divide-y">
-                  {recetas
+                  {recetasVisibles
                     .filter((r) => r.estado === 'activa')
                     .map((r) => renderRecetaCard(r, 'activa'))}
                 </div>
@@ -542,7 +542,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
                 </div>
               ) : (
                 <div className="divide-y">
-                  {recetas
+                  {recetasVisibles
                     .filter((r) => r.estado === 'vencida')
                     .map((r) => renderRecetaCard(r, 'vencida'))}
                 </div>
@@ -566,7 +566,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
                 </div>
               ) : (
                 <div className="divide-y">
-                  {recetas
+                  {recetasVisibles
                     .filter((r) => r.estado === 'historial')
                     .map((r) => renderRecetaCard(r, 'historial'))}
                 </div>
