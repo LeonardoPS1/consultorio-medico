@@ -471,8 +471,8 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
       <Tabs value={tabActivo} onValueChange={handleTabChange}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <TabsList className="overflow-x-auto">
-            <TabsTrigger value="activas">Activas</TabsTrigger>
-            <TabsTrigger value="vencidas">Vencidas</TabsTrigger>
+            <TabsTrigger value="activa">Activas</TabsTrigger>
+            <TabsTrigger value="vencida">Vencidas</TabsTrigger>
             <TabsTrigger value="historial">Historial</TabsTrigger>
           </TabsList>
           <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-auto">
@@ -505,7 +505,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
           </div>
         </div>
 
-        <TabsContent value="activas" className="mt-4">
+        <TabsContent value="activa" className="mt-4">
           <Card>
             <CardContent className="p-0">
               {recetasVisibles.filter((r) => r.estado === 'activa').length === 0 ? (
@@ -531,7 +531,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="vencidas" className="mt-4">
+        <TabsContent value="vencida" className="mt-4">
           <Card>
             <CardContent className="p-0">
               {recetasVisibles.filter((r) => r.estado === 'vencida').length === 0 ? (
