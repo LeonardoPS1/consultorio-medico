@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
+import { readFile } from 'fs/promises';
 import path from 'path';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getPortalSession } from '@/lib/portal-auth';
 import { getUploadDir } from '@/lib/upload-dir';
@@ -9,21 +9,28 @@ import { getUploadDir } from '@/lib/upload-dir';
 /**
  * Sirve archivos subidos (imágenes) desde .data/uploads/
  * Acepta tanto sesión de dashboard (NextAuth) como sesión de portal (portal_session cookie)
+ * @param request
+ * @param root0
+ * @param root0.params
  */
-export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ slug: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ slug: string }> },
+) {
   const { slug } = await paramsPromise;
   try {
     // Intentar autenticación de dashboard primero
     const dashboardSession = await auth();
-    
+
     // Si no hay sesión de dashboard, intentar sesión de portal
     const portalSession = dashboardSession?.user?.id ? null : await getPortalSession();
-    
+
     if (!dashboardSession?.user?.id && !portalSession?.pacienteId) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     const filename = slug;
+    const download = request.nextUrl.searchParams.get('download') === '1';
 
     // Validar que el nombre no intente salir del directorio (path traversal)
     if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
@@ -47,15 +54,19 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
       webp: 'image/webp',
       gif: 'image/gif',
       svg: 'image/svg+xml',
+      pdf: 'application/pdf',
     };
     const contentType = contentTypeMap[ext || ''] || 'application/octet-stream';
 
-    return new NextResponse(buffer, {
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=31536000, immutable',
-      },
-    });
+    const headers: Record<string, string> = {
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    };
+    if (download) {
+      headers['Content-Disposition'] = `attachment; filename="${filename}"`;
+    }
+
+    return new NextResponse(buffer, { headers });
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Error desconocido';
     console.error('[Upload/Serve] Error:', msg);

@@ -14,6 +14,7 @@ import {
   Eye,
   Save,
   ChevronDown,
+  Download,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { PortalBadge } from '@/components/portal/portal-badge';
@@ -449,6 +450,13 @@ export default function PortalDocumentosPage() {
                   title="Ver original"
                 >
                   <Eye className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => window.open(`${doc.archivoUrl}?download=1`, '_blank')}
+                  className="p-2 rounded-lg hover:bg-portal-muted/50 text-portal-muted-fg transition-colors"
+                  title="Descargar"
+                >
+                  <Download className="h-4 w-4" />
                 </button>
 
                 {doc.extraccionEstado === 'completada' && doc.estadoRevision === 'pendiente' && (

@@ -13,6 +13,7 @@ import {
   Search,
   Loader2,
   BookOpen,
+  Download,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -128,6 +129,7 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
   const [editForm, setEditForm] = useState('');
   const [reasonId, setReasonId] = useState<string | null>(null);
   const [reasonText, setReasonText] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
     try {
@@ -152,15 +154,21 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
 
   async function handleAprobar(id: string) {
     setActionId(id);
+    setError(null);
     try {
-      await fetch(`/api/documentos/${id}`, {
+      const res = await fetch(`/api/documentos/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accion: 'aprobar' }),
       });
-      cargar();
+      if (res.ok) {
+        cargar();
+      } else {
+        const data = await res.json().catch(() => null);
+        setError(data?.error || 'No se pudo aprobar el documento. Intenta nuevamente.');
+      }
     } catch {
-      /* ignore */
+      setError('Error de conexión al aprobar el documento.');
     } finally {
       setActionId(null);
     }
@@ -169,15 +177,21 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
   async function handleRechazar(id: string) {
     const motivo = reasonText || 'Documento rechazado por el médico';
     setActionId(id);
+    setError(null);
     try {
-      await fetch(`/api/documentos/${id}`, {
+      const res = await fetch(`/api/documentos/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accion: 'rechazar', motivoRechazo: motivo }),
       });
-      cargar();
+      if (res.ok) {
+        cargar();
+      } else {
+        const data = await res.json().catch(() => null);
+        setError(data?.error || 'No se pudo rechazar el documento. Intenta nuevamente.');
+      }
     } catch {
-      /* ignore */
+      setError('Error de conexión al rechazar el documento.');
     } finally {
       setActionId(null);
       setReasonId(null);
@@ -189,12 +203,18 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
     try {
       const parsed = JSON.parse(editForm);
       setActionId(id);
-      await fetch(`/api/documentos/${id}`, {
+      setError(null);
+      const res = await fetch(`/api/documentos/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accion: 'editar', datosEditados: parsed }),
       });
-      cargar();
+      if (res.ok) {
+        cargar();
+      } else {
+        const data = await res.json().catch(() => null);
+        setError(data?.error || 'No se pudo guardar la edición. Intenta nuevamente.');
+      }
     } catch {
       alert('JSON inválido. Verifica el formato.');
     } finally {
@@ -230,6 +250,18 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
 
   return (
     <div className="space-y-2">
+      {error && (
+        <div className="p-3 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 text-xs text-red-700 dark:text-red-300 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div className="flex-1">{error}</div>
+          <button
+            className="text-red-500 hover:text-red-700 dark:hover:text-red-300 font-medium"
+            onClick={() => setError(null)}
+          >
+            Cerrar
+          </button>
+        </div>
+      )}
       {docs.map((doc) => {
         const TipoIcon = getTipoIcon(doc.tipo);
         const isPendingReview = doc.estadoRevision === 'pendiente';
@@ -308,6 +340,15 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
                     title="Ver original"
                   >
                     <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => window.open(`${doc.archivoUrl}?download=1`, '_blank')}
+                    title="Descargar"
+                  >
+                    <Download className="h-4 w-4" />
                   </Button>
 
                   {isPendingReview && (

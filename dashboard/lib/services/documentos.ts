@@ -18,7 +18,7 @@ export interface RevisionInput {
   notaId: string;
   accion: 'aprobar' | 'rechazar' | 'editar';
   datosEditados?: Record<string, unknown>;
-  medicoId: string;
+  medicoId?: string;
   turnoId?: string;
   motivoRechazo?: string;
 }
@@ -49,26 +49,52 @@ export const documentosService = {
 
     if (!doc) throw new Error('Documento no encontrado');
 
-    let imageBase64 = doc.archivoUrl;
+    let imageBase64: string | null = null;
+    let mimeType = 'image/jpeg';
+
     if (typeof window === 'undefined' && doc.archivoUrl) {
       const fs = await import('fs');
       const pathModule = await import('path');
-      // Extract filename from URL and combine with actual upload directory
       const filename = pathModule.basename(doc.archivoUrl);
       const uploadDir = await getUploadDir();
       const filePath = pathModule.join(uploadDir, filename);
+
+      const ext = pathModule.extname(filename).toLowerCase();
+      if (ext === '.png') mimeType = 'image/png';
+      else if (ext === '.webp') mimeType = 'image/webp';
+      else if (ext === '.gif') mimeType = 'image/gif';
+      else if (ext === '.svg') mimeType = 'image/svg+xml';
+      else if (ext === '.pdf') mimeType = 'application/pdf';
+      else mimeType = 'image/jpeg';
+
       if (fs.existsSync(filePath)) {
         imageBase64 = fs.readFileSync(filePath).toString('base64');
       }
     }
 
+    if (!imageBase64) {
+      await db
+        .update(documentosMedicos)
+        .set({
+          extraccionEstado: 'fallida',
+          confianzaExtraccion: 0,
+          updatedAt: new Date(),
+        })
+        .where(eq(documentosMedicos.id, documentoId));
+      return db
+        .select()
+        .from(documentosMedicos)
+        .where(eq(documentosMedicos.id, documentoId))
+        .then((r) => r[0]);
+    }
+
     let resultado;
     if (doc.tipo === 'laboratorio') {
-      resultado = await extraerLaboratorio(imageBase64);
+      resultado = await extraerLaboratorio(imageBase64, mimeType);
     } else if (doc.tipo === 'receta') {
-      resultado = await extraerReceta(imageBase64);
+      resultado = await extraerReceta(imageBase64, mimeType);
     } else {
-      resultado = await extraerTextoImagen(imageBase64, doc.tipo || 'estudio');
+      resultado = await extraerTextoImagen(imageBase64, doc.tipo || 'estudio', mimeType);
     }
 
     if (resultado && (resultado.confianza ?? 0) >= 30) {
@@ -174,7 +200,7 @@ export const documentosService = {
         .insert(historialMedico)
         .values({
           pacienteId: doc.pacienteId,
-          medicoId: input.medicoId,
+          medicoId: input.medicoId || null,
           turnoId: input.turnoId || null,
           tipo: 'otro',
           titulo: doc.tipo === 'laboratorio' ? 'Examen de laboratorio' : `Documento: ${doc.tipo}`,
@@ -190,7 +216,7 @@ export const documentosService = {
         .update(documentosMedicos)
         .set({
           estadoRevision: 'aprobado',
-          revisadoPor: input.medicoId,
+          revisadoPor: input.medicoId || null,
           revisadoAt: new Date(),
           historialId: historial?.id || null,
           updatedAt: new Date(),
@@ -213,7 +239,7 @@ export const documentosService = {
         .update(documentosMedicos)
         .set({
           estadoRevision: 'rechazado',
-          revisadoPor: input.medicoId,
+          revisadoPor: input.medicoId || null,
           revisadoAt: new Date(),
           metadata: { ...metadataAtual, motivoRechazo: input.motivoRechazo || '' },
           updatedAt: new Date(),
@@ -240,7 +266,7 @@ export const documentosService = {
         .set({
           estadoRevision: 'editado',
           datosExtraidos: input.datosEditados as unknown as Record<string, unknown>,
-          revisadoPor: input.medicoId,
+          revisadoPor: input.medicoId || null,
           revisadoAt: new Date(),
           updatedAt: new Date(),
         })

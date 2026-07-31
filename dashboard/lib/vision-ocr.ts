@@ -1,5 +1,6 @@
-const OLLAMA_URL = process.env.OLLAMA_URL || 'http://ollama:11434';
-const VISION_MODEL = process.env.VISION_MODEL || 'llava';
+import { safeLog, safeWarn, safeError } from './logger';
+
+const VISION_MODEL = process.env.VISION_MODEL || 'gemma3';
 
 export interface OcrResult {
   textoExtraido: string;
@@ -7,46 +8,118 @@ export interface OcrResult {
   confianza: number;
 }
 
-async function callVisionModel(prompt: string, imageBase64: string): Promise<OcrResult | null> {
-  try {
-    const res = await fetch(`${OLLAMA_URL}/v1/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: VISION_MODEL,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: prompt },
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
-            ],
-          },
-        ],
-        temperature: 0.1,
-        max_tokens: 2000,
-        stream: false,
-      }),
-      signal: AbortSignal.timeout(60_000),
-    });
+// Misma estrategia de URLs que lib/ollama.ts (el dashboard NO resuelve `ollama:11434`
+// en Docker Swarm; la URL correcta es 172.18.0.1:11434 por docker_gwbridge).
+const ALL_URLS = [
+  'http://host.docker.internal:11434',
+  'http://172.18.0.1:11434',
+  'http://172.17.0.1:11434',
+  'http://172.19.0.1:11434',
+  'http://ollama:11434',
+  'http://localhost:11434',
+];
 
-    if (!res.ok) return null;
+function getUrls(): string[] {
+  const configured = process.env.OLLAMA_BASE_URL || process.env.OLLAMA_URL;
+  if (!configured) return ALL_URLS;
 
-    const data = await res.json();
-    const content = data.choices?.[0]?.message?.content || '';
-    const parsed = JSON.parse(content);
-
-    return {
-      textoExtraido: parsed.texto_extraido || '',
-      datosEstructurados: (parsed.datos || {}) as Record<string, unknown>,
-      confianza: typeof parsed.confianza === 'number' ? parsed.confianza : 0,
-    };
-  } catch {
-    return null;
+  const urls = [configured];
+  for (const fb of ALL_URLS) {
+    if (fb !== configured && !urls.includes(fb)) urls.push(fb);
   }
+  return urls;
 }
 
-export async function extraerTextoImagen(imageBase64: string, tipoDocumento: string): Promise<OcrResult | null> {
+async function callVisionModel(
+  prompt: string,
+  imageBase64: string,
+  mimeType = 'image/jpeg',
+): Promise<OcrResult | null> {
+  if (mimeType === 'application/pdf') {
+    safeWarn('[Vision-OCR] PDF no soportado por el modelo de visión. Se requiere revisión manual.');
+    return null;
+  }
+
+  const urls = getUrls();
+  const timeoutMs = 60_000;
+
+  for (const baseUrl of urls) {
+    const t0 = Date.now();
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: VISION_MODEL,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: prompt },
+                { type: 'image_url', image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+              ],
+            },
+          ],
+          temperature: 0.1,
+          max_tokens: 2000,
+          stream: false,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+      if (!res.ok) {
+        safeWarn(`[Vision-OCR] ${baseUrl} → HTTP ${res.status} en ${elapsed}s`);
+        continue;
+      }
+
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content || '';
+      const cleaned = content
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/\s*```$/i, '')
+        .trim();
+
+      let parsed: Record<string, unknown>;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch {
+        safeWarn(`[Vision-OCR] ${baseUrl} → respuesta no es JSON válido en ${elapsed}s`);
+        continue;
+      }
+
+      safeLog(`[Vision-OCR] OK desde ${baseUrl} en ${elapsed}s (modelo ${VISION_MODEL})`);
+      return {
+        textoExtraido: (parsed.texto_extraido as string) || '',
+        datosEstructurados: (parsed.datos || {}) as Record<string, unknown>,
+        confianza: typeof parsed.confianza === 'number' ? parsed.confianza : 0,
+      };
+    } catch (err) {
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+      const msg = err instanceof Error ? err.message : String(err);
+      safeWarn(`[Vision-OCR] ${baseUrl} → ${msg} en ${elapsed}s`);
+    }
+  }
+
+  safeError('[Vision-OCR] Todas las URLs de Ollama fallaron');
+  return null;
+}
+
+/**
+ *
+ * @param imageBase64
+ * @param tipoDocumento
+ * @param mimeType
+ */
+export async function extraerTextoImagen(
+  imageBase64: string,
+  tipoDocumento: string,
+  mimeType = 'image/jpeg',
+): Promise<OcrResult | null> {
   const prompt = `Analizá esta imagen de un documento médico (${tipoDocumento}).
 Extraé la información relevante en formato JSON.
 
@@ -65,10 +138,18 @@ Formato:
   "tipo_documento": "${tipoDocumento}"
 }`;
 
-  return callVisionModel(prompt, imageBase64);
+  return callVisionModel(prompt, imageBase64, mimeType);
 }
 
-export async function extraerLaboratorio(imageBase64: string): Promise<OcrResult | null> {
+/**
+ *
+ * @param imageBase64
+ * @param mimeType
+ */
+export async function extraerLaboratorio(
+  imageBase64: string,
+  mimeType = 'image/jpeg',
+): Promise<OcrResult | null> {
   const prompt = `Analizá esta imagen de un examen de laboratorio clínico.
 Extraé TODOS los datos estructurados en formato JSON.
 
@@ -107,10 +188,18 @@ Formato:
   "confianza": 0-100
 }`;
 
-  return callVisionModel(prompt, imageBase64);
+  return callVisionModel(prompt, imageBase64, mimeType);
 }
 
-export async function extraerReceta(imageBase64: string): Promise<OcrResult | null> {
+/**
+ *
+ * @param imageBase64
+ * @param mimeType
+ */
+export async function extraerReceta(
+  imageBase64: string,
+  mimeType = 'image/jpeg',
+): Promise<OcrResult | null> {
   const prompt = `Analizá esta imagen de una receta médica.
 Extraé los datos estructurados en formato JSON.
 
@@ -122,7 +211,7 @@ CAMPOS A EXTRAER:
 5. "via_administracion": vía (oral, tópica, intravenosa, etc.)
 6. "fecha_receta": fecha de la receta en formato ISO
 7. "medico": nombre del médico prescriptor
-4. "indicaciones_adicionales": cualquier instrucción extra (ej: tomar con alimentos)
+8. "indicaciones_adicionales": cualquier instrucción extra (ej: tomar con alimentos)
 9. "texto_extraido": el texto completo visible
 
 REGLAS:
@@ -144,5 +233,5 @@ Formato:
   "confianza": 0-100
 }`;
 
-  return callVisionModel(prompt, imageBase64);
+  return callVisionModel(prompt, imageBase64, mimeType);
 }
