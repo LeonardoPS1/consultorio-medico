@@ -1,0 +1,261 @@
+{
+  "name": "WF-15: Alertas Programadas",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": 5,
+          "unit": "minutes"
+        }
+      },
+      "id": "1",
+      "name": "Cron cada 5 min",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://ops.aicorebots.com/api/alertas/check",
+        "method": "POST",
+        "options": {
+          "headers": {
+            "parameters": [
+              {
+                "name": "x-internal-key",
+                "value": "={{$credentials.webhookSecret}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "timeout": 30000
+        },
+        "jsonParameters": true,
+        "bodyParametersJson": "{}"
+      },
+      "id": "2",
+      "name": "POST /api/alertas/check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 300],
+      "credentials": {
+        "httpHeaderAuth": "Ops Console Internal"
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.data?.triggered > 0}}",
+              "operation": "true"
+            }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "¿Hay alertas disparadas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $json.data?.results || [];\nconst summary = results.map(r => `\n🔔 ${r.alertName}${r.tenantNombre ? ` (${r.tenantNombre})` : ''}\n   Canales: ${r.notificationsSent.map(n => `${n.channel}: ${n.success ? '✅' : '❌'}`).join(', ')}`).join('\\n');\n\nreturn [{ json: { message: `⚡ Alertas disparadas: ${results.length}${summary}` } }];"
+      },
+      "id": "4",
+      "name": "Formatear resumen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 200]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$credentials.telegramChatId}}",
+        "text": "={{$json.message}}",
+        "parseMode": "HTML",
+        "options": {}
+      },
+      "id": "5",
+      "name": "Enviar a Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1250, 100],
+      "credentials": {
+        "telegramApi": "Telegram Bot"
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$credentials.smtpFrom}}",
+        "toEmail": "={{$credentials.smtpTo}}",
+        "subject": "⚡ Alertas AicoreOps - {{new Date().toLocaleString('es-CL')}}",
+        "text": "={{$json.message}}",
+        "options": {}
+      },
+      "id": "6",
+      "name": "Enviar Email",
+      "type": "n8n-nodes-base.sendEmail",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "credentials": {
+        "smtp": "SMTP Alertas"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $json.data?.results || [];\nconst logs = results.map(r => ({\n  alertName: r.alertName,\n  tenantNombre: r.tenantNombre,\n  notificationsSent: r.notificationsSent,\n  timestamp: new Date().toISOString(),\n}));\nreturn [{ json: { logs } }];"
+      },
+      "id": "7",
+      "name": "Preparar logs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 400]
+    },
+    {
+      "parameters": {
+        "table": "workflow_logs",
+        "options": {
+          "columns": {
+            "workflow_id": "WF-15",
+            "execution_id": "={{$execution.id}}",
+            "status": "success",
+            "details": "={{JSON.stringify($json.logs)}"
+          }
+        }
+      },
+      "id": "8",
+      "name": "Log en PostgreSQL",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.1,
+      "position": [1250, 400],
+      "credentials": {
+        "postgres": "Consultorio - PostgreSQL"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { message: 'Verificación completada: ' + $json.data?.checked + ' chequeos, ' + $json.data?.triggered + ' alertas disparadas' } }];"
+      },
+      "id": "9",
+      "name": "Log sin alertas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 500]
+    },
+    {
+      "parameters": {
+        "table": "workflow_logs",
+        "options": {
+          "columns": {
+            "workflow_id": "WF-15",
+            "execution_id": "={{$execution.id}}",
+            "status": "success",
+            "details": "={{$json.message}}"
+          }
+        }
+      },
+      "id": "10",
+      "name": "Log en PostgreSQL (sin alertas)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.1,
+      "position": [1250, 500],
+      "credentials": {
+        "postgres": "Consultorio - PostgreSQL"
+      }
+    }
+  ],
+  "connections": {
+    "Cron cada 5 min": {
+      "main": [
+        [
+          {
+            "node": "POST /api/alertas/check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /api/alertas/check": {
+      "main": [
+        [
+          {
+            "node": "¿Hay alertas disparadas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay alertas disparadas?": {
+      "main": [
+        [
+          {
+            "node": "Formatear resumen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log sin alertas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear resumen": {
+      "main": [
+        [
+          {
+            "node": "Enviar a Telegram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enviar Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Preparar logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar logs": {
+      "main": [
+        [
+          {
+            "node": "Log en PostgreSQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log sin alertas": {
+      "main": [
+        [
+          {
+            "node": "Log en PostgreSQL (sin alertas)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "WF-15"
+}

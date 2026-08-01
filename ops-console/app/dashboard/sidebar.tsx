@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/infra-health', label: 'Infraestructura', icon: '🖥' },
   { href: '/dashboard/sentry', label: 'Errores', icon: '⚠' },
   { href: '/dashboard/incidentes', label: 'Incidentes', icon: '🛠' },
+  { href: '/dashboard/alertas', label: 'Alertas', icon: '🔔' },
   { href: '/dashboard/recuperacion', label: 'Recuperación', icon: '🚀' },
 ]
 
