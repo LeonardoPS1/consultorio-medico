@@ -1,11 +1,19 @@
 import { logger } from '@/lib/logger'
 
-export type NotificationChannel = 'telegram' | 'chatwoot' | 'webhook'
+export type NotificationChannel = 'telegram' | 'email' | 'chatwoot' | 'webhook'
 
 export interface NotificationConfig {
   telegram?: {
     botToken: string
     chatId: string
+  }
+  email?: {
+    smtpHost: string
+    smtpPort: number
+    smtpUser: string
+    smtpPass: string
+    from: string
+    to: string[]
   }
   chatwoot?: {
     apiUrl: string
@@ -65,6 +73,62 @@ export async function sendTelegramNotification(
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Error desconocido'
     logger.warn('[notifications] Telegram error:', { error: msg })
+    return { success: false, response: msg }
+  }
+}
+
+export async function sendEmailNotification(
+  config: NotificationConfig['email'],
+  alert: AlertNotification
+): Promise<{ success: boolean; response?: string }> {
+  if (!config?.smtpHost || !config?.smtpUser || !config?.smtpPass || !config?.from || !config?.to?.length) {
+    return { success: false, response: 'Email no configurado (faltan parámetros SMTP)' }
+  }
+
+  try {
+    const nodemailer = await import('nodemailer').then(m => m.default)
+
+    const transporter = nodemailer.createTransport({
+      host: config.smtpHost,
+      port: config.smtpPort || 587,
+      secure: config.smtpPort === 465,
+      auth: {
+        user: config.smtpUser,
+        pass: config.smtpPass,
+      },
+    })
+
+    const subject = `${alert.severity === 'critical' ? '🔴 CRÍTICO' : '🟡 ADVERTENCIA'}: ${alert.displayName}`
+    const html = `
+      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: ${alert.severity === 'critical' ? '#dc2626' : '#f59e0b'}; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 18px;">${alert.displayName}</h1>
+          ${alert.tenantNombre ? `<p style="margin: 8px 0 0;">Tenant: ${alert.tenantNombre}</p>` : ''}
+        </div>
+        <div style="background: #f9fafb; padding: 20px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+          <p style="margin: 0 0 16px; white-space: pre-wrap;">${alert.message}</p>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr><td style="padding: 8px; font-weight: bold;">Valor actual:</td><td style="padding: 8px;">${alert.triggerValue}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Umbral:</td><td style="padding: 8px;">${alert.thresholdValue}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Severidad:</td><td style="padding: 8px;">${alert.severity.toUpperCase()}</td></tr>
+          </table>
+          ${alert.details ? `<pre style="background: #f3f4f6; padding: 12px; border-radius: 4px; font-size: 12px; overflow: auto; margin-top: 16px;">${JSON.stringify(alert.details, null, 2)}</pre>` : ''}
+        </div>
+        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 16px;">Sistema de Alertas AicoreOps</p>
+      </div>
+    `
+
+    const info = await transporter.sendMail({
+      from: config.from,
+      to: config.to.join(', '),
+      subject,
+      html,
+    })
+
+    return { success: true, response: `Message ID: ${info.messageId}` }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Error desconocido'
+    logger.warn('[notifications] Email error:', { error: msg })
     return { success: false, response: msg }
   }
 }
@@ -177,6 +241,9 @@ export async function sendAlertNotification(
       case 'telegram':
         result = await sendTelegramNotification(channelConfigs.telegram, alert)
         break
+      case 'email':
+        result = await sendEmailNotification(channelConfigs.email, alert)
+        break
       case 'chatwoot':
         result = await sendChatwootNotification(channelConfigs.chatwoot, alert)
         break
@@ -197,6 +264,16 @@ export function getNotificationConfigFromEnv(): NotificationConfig {
   return {
     telegram: process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID
       ? { botToken: process.env.TELEGRAM_BOT_TOKEN, chatId: process.env.TELEGRAM_CHAT_ID }
+      : undefined,
+    email: process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_FROM
+      ? {
+          smtpHost: process.env.SMTP_HOST,
+          smtpPort: parseInt(process.env.SMTP_PORT || '587'),
+          smtpUser: process.env.SMTP_USER,
+          smtpPass: process.env.SMTP_PASS,
+          from: process.env.SMTP_FROM,
+          to: (process.env.SMTP_TO || process.env.SMTP_FROM).split(',').map(s => s.trim()),
+        }
       : undefined,
     chatwoot: process.env.CHATWOOT_API_URL && process.env.CHATWOOT_API_TOKEN && process.env.CHATWOOT_ACCOUNT_ID && process.env.CHATWOOT_INBOX_ID
       ? {

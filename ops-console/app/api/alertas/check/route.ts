@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
       const channelConfig = (config.channelConfig as Record<string, unknown>) || {}
       const mergedConfig: NotificationConfig = {
         telegram: (channelConfig.telegram as NotificationConfig['telegram']) || globalNotificationConfig.telegram,
+        email: (channelConfig.email as NotificationConfig['email']) || globalNotificationConfig.email,
         chatwoot: (channelConfig.chatwoot as NotificationConfig['chatwoot']) || globalNotificationConfig.chatwoot,
         webhook: (channelConfig.webhook as NotificationConfig['webhook']) || globalNotificationConfig.webhook,
       }

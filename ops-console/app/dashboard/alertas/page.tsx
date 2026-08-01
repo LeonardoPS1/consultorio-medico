@@ -18,6 +18,7 @@ import {
   ExternalLink,
   RefreshCw,
   Send,
+  Zap,
 } from 'lucide-react'
 
 interface AlertConfig {
@@ -49,6 +50,7 @@ interface AlertHistory {
 
 const CHANNEL_OPTIONS = [
   { value: 'telegram', label: 'Telegram', icon: Send },
+  { value: 'email', label: 'Email', icon: Zap },
   { value: 'chatwoot', label: 'Chatwoot', icon: AlertTriangle },
   { value: 'webhook', label: 'Webhook personalizado', icon: ExternalLink },
 ] as const
