@@ -2,7 +2,14 @@ import { NextRequest } from 'next/server'
 import { getDb } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 import { logAudit } from '@/lib/audit'
-import { ok, serverError, unauthorized, notFound } from '@/lib/api-handler'
+import { ok, error, serverError, unauthorized, notFound } from '@/lib/api-handler'
+
+const PLANES = ['free', 'starter', 'professional', 'business', 'enterprise'] as const
+type Plan = (typeof PLANES)[number]
+
+function isPlan(value: unknown): value is Plan {
+  return typeof value === 'string' && (PLANES as readonly string[]).includes(value)
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -65,6 +72,107 @@ export async function GET(
     })
 
     return ok({ ...tenant, audit_7d: (recentAudit as unknown as any[])[0]?.count || 0 })
+  } catch (err) {
+    return serverError(err)
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const operatorId = request.headers.get('x-operator-id')
+    const operatorEmail = request.headers.get('x-operator-email')
+    const operatorNombre = request.headers.get('x-operator-nombre')
+    if (!operatorId || !operatorEmail) return unauthorized()
+
+    const { id } = await params
+    const db = getDb()
+
+    const body = await request.json().catch(() => null)
+    if (!body || typeof body !== 'object') return error('Body inválido', 400)
+
+    const { activo, plan, dominioCustom, colores, configRegional } = body as Record<string, unknown>
+
+    if (activo !== undefined && typeof activo !== 'boolean') {
+      return error('activo debe ser un booleano', 400)
+    }
+    if (plan !== undefined && !isPlan(plan)) {
+      return error(`plan inválido. Permitidos: ${PLANES.join(', ')}`, 400)
+    }
+    if (dominioCustom !== undefined && typeof dominioCustom !== 'string') {
+      return error('dominioCustom debe ser un string', 400)
+    }
+    if (colores !== undefined && (typeof colores !== 'object' || colores === null)) {
+      return error('colores debe ser un objeto', 400)
+    }
+    if (
+      configRegional !== undefined &&
+      (typeof configRegional !== 'object' || configRegional === null)
+    ) {
+      return error('configRegional debe ser un objeto', 400)
+    }
+
+    const [tenantResult] = await db.execute(sql`
+      SELECT id, nombre, colores FROM public.tenants WHERE id = ${id}
+    `)
+    if (!tenantResult) return notFound('Tenant no encontrado')
+    const tenant = tenantResult as Record<string, unknown>
+
+    // Merge de colores con los actuales
+    let coloresFinal: Record<string, unknown> | undefined
+    if (colores !== undefined) {
+      const actuales =
+        tenant.colores && typeof tenant.colores === 'object'
+          ? (tenant.colores as Record<string, unknown>)
+          : {}
+      coloresFinal = { ...actuales, ...(colores as Record<string, unknown>) }
+    }
+
+    const sets: ReturnType<typeof sql>[] = []
+    if (activo !== undefined) sets.push(sql`activo = ${activo}`)
+    if (dominioCustom !== undefined) sets.push(sql`dominio_custom = ${dominioCustom || null}`)
+    if (coloresFinal) sets.push(sql`colores = ${JSON.stringify(coloresFinal)}::jsonb`)
+    if (configRegional !== undefined)
+      sets.push(sql`config_regional = ${JSON.stringify(configRegional)}::jsonb`)
+
+    if (sets.length > 0) {
+      await db.execute(sql`
+        UPDATE public.tenants
+        SET ${sql.join(sets, sql`, `)}, updated_at = now()
+        WHERE id = ${id}
+      `)
+    }
+
+    // Cambio de plan → suscripción vigente + usuarios del tenant
+    if (plan !== undefined) {
+      await db.execute(sql`
+        UPDATE public.suscripciones
+        SET plan = ${plan}
+        WHERE organizacion_id = ${id}
+          AND id = (SELECT s2.id FROM public.suscripciones s2
+                    WHERE s2.organizacion_id = ${id}
+                    ORDER BY s2.created_at DESC LIMIT 1)
+      `)
+      await db.execute(sql`
+        UPDATE public.usuarios SET plan = ${plan} WHERE tenant_id = ${id}
+      `)
+    }
+
+    const camposActualizados = Object.keys(body)
+    logAudit({
+      operatorId,
+      operatorEmail,
+      accion: 'tenant.update',
+      tenantAfectado: tenant.nombre as string,
+      recurso: `tenant:${id}`,
+      motivo: `Actualización de tenant por ${operatorNombre || operatorEmail}`,
+      ipAddress: request.headers.get('x-forwarded-for') || undefined,
+      detalles: { campos: camposActualizados },
+    })
+
+    return ok({ ok: true, id, camposActualizados })
   } catch (err) {
     return serverError(err)
   }

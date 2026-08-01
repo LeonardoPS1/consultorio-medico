@@ -9,7 +9,8 @@ interface Props {
 
 export function ImpersonateButton({ tenantId, tenantName }: Props) {
   const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [directLoading, setDirectLoading] = useState(false)
+  const [emailLoading, setEmailLoading] = useState(false)
   const [result, setResult] = useState<{
     ok: boolean
     message?: string
@@ -19,8 +20,42 @@ export function ImpersonateButton({ tenantId, tenantName }: Props) {
     emailSent?: boolean
   } | null>(null)
 
-  async function handleStart() {
-    setLoading(true)
+  async function handleDirect() {
+    setDirectLoading(true)
+    setResult(null)
+    try {
+      const res = await fetch('/api/auth/impersonate/direct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId }),
+      })
+      const data = await res.json()
+      if (res.ok && data.impersonateLink) {
+        window.open(data.impersonateLink, '_blank', 'noopener,noreferrer')
+        setResult({
+          ok: true,
+          adminNombre: data.adminNombre,
+          adminEmail: data.adminEmail,
+          impersonateLink: data.impersonateLink,
+          message: `Sesión iniciada como ${data.adminNombre} (${data.adminEmail}). Link de uso único, expira en 1 hora.`,
+        })
+      } else if (res.status === 403 && data.error === 'TOTP_REQUIRED') {
+        setResult({
+          ok: false,
+          message: 'Se requiere verificar el TOTP de tu cuenta antes de entrar sin aprobación.',
+        })
+      } else {
+        setResult({ ok: false, message: data.error || 'Error al iniciar impersonación directa' })
+      }
+    } catch {
+      setResult({ ok: false, message: 'Error de conexión' })
+    } finally {
+      setDirectLoading(false)
+    }
+  }
+
+  async function handleEmail() {
+    setEmailLoading(true)
     setResult(null)
     try {
       const res = await fetch('/api/auth/impersonate/start', {
@@ -46,7 +81,7 @@ export function ImpersonateButton({ tenantId, tenantName }: Props) {
     } catch {
       setResult({ ok: false, message: 'Error de conexión' })
     } finally {
-      setLoading(false)
+      setEmailLoading(false)
     }
   }
 
@@ -69,10 +104,9 @@ export function ImpersonateButton({ tenantId, tenantName }: Props) {
             className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-bold mb-2">Entrar como administrador</h2>
+            <h2 className="text-lg font-bold mb-1">Entrar como administrador</h2>
             <p className="text-sm text-[var(--text-secondary)] mb-4">
-              Se enviará un email al administrador de <strong>{tenantName}</strong>
-              {' '}con un enlace para acceder a su panel.
+              <strong>{tenantName}</strong> — elegí cómo querés acceder al panel.
             </p>
 
             {result ? (
@@ -80,7 +114,7 @@ export function ImpersonateButton({ tenantId, tenantName }: Props) {
                 {result.ok ? (
                   <div>
                     <p className="font-semibold mb-1">
-                      {result.emailSent ? '✅ Email enviado' : '🔗 Link generado'}
+                      {result.emailSent ? '✅ Email enviado' : '✅ Sesión iniciada'}
                     </p>
                     <p>Destino: {result.adminNombre} ({result.adminEmail})</p>
                     {result.impersonateLink ? (
@@ -94,8 +128,9 @@ export function ImpersonateButton({ tenantId, tenantName }: Props) {
                           {result.impersonateLink}
                         </a>
                         <p className="text-xs mt-1 text-amber-500">
-                          Sin SMTP configurado — compartí este link con el administrador.
-                          Expira en 1 hora, uso único.
+                          {result.emailSent
+                            ? 'Compartí este link con el administrador. Expira en 1 hora, uso único.'
+                            : 'Expira en 1 hora, uso único.'}
                         </p>
                       </div>
                     ) : (
@@ -109,19 +144,20 @@ export function ImpersonateButton({ tenantId, tenantName }: Props) {
                 )}
               </div>
             ) : (
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
                 <button
-                  onClick={handleStart}
-                  disabled={loading}
-                  className="flex-1 px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
+                  onClick={handleDirect}
+                  disabled={directLoading || emailLoading}
+                  className="w-full px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
                 >
-                  {loading ? 'Enviando...' : 'Enviar email de acceso'}
+                  {directLoading ? 'Abriendo sesión...' : '⚡ Entrar ahora (sin aprobación)'}
                 </button>
                 <button
-                  onClick={() => { setOpen(false); setResult(null) }}
-                  className="px-4 py-2 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+                  onClick={handleEmail}
+                  disabled={directLoading || emailLoading}
+                  className="w-full px-4 py-2 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] disabled:opacity-50"
                 >
-                  Cancelar
+                  {emailLoading ? 'Enviando...' : 'Enviar email de acceso al admin'}
                 </button>
               </div>
             )}

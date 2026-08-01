@@ -106,7 +106,7 @@ function detectTenant(hostname: string): string {
  *
  * @param request
  */
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ─── 1. Detectar tenant, requestId y pasar a la request ──
@@ -127,7 +127,32 @@ export function proxy(request: NextRequest) {
   const isPortalDomain = PORTAL_DOMAINS.has(hostname.toLowerCase());
   // El subdominio del dominio portal (ej: 'consultorio') no es un tenant real:
   // resolver siempre al tenant por defecto para mantener branding/config consistentes.
-  const tenantId = isPortalDomain ? '00000000-0000-0000-0000-000000000000' : detectTenant(hostname);
+  let tenantId = isPortalDomain ? '00000000-0000-0000-0000-000000000000' : detectTenant(hostname);
+
+  // ─── 1c. Override de tenant por sesión de impersonación ──
+  // Si hay cookie de impersonación válida, el tenant es el impersonado
+  // (el operador entra desde el dominio raíz, sin subdominio del tenant).
+  const impCookieName =
+    process.env.NODE_ENV === 'production'
+      ? '__Secure-impersonation.session'
+      : 'impersonation.session';
+  const impCookie = request.cookies.get(impCookieName);
+  if (impCookie?.value) {
+    try {
+      const { jwtVerify } = await import('jose');
+      const { payload } = await jwtVerify(
+        impCookie.value,
+        new TextEncoder().encode(process.env.AUTH_SECRET || ''),
+        { algorithms: ['HS256'] },
+      );
+      const data = payload as { impersonating?: boolean; tenantId?: string };
+      if (data.impersonating && data.tenantId) {
+        tenantId = data.tenantId;
+      }
+    } catch {
+      // Cookie inválida → ignorar override
+    }
+  }
 
   requestHeaders.set('x-tenant-id', tenantId);
   requestHeaders.set('x-request-id', requestId);

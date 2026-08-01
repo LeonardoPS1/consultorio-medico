@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { usuarios, impersonationTokens } from '@/drizzle/schema';
-import { eq, and } from 'drizzle-orm';
+import { crearTokenImpersonacion } from '@/lib/impersonacion';
 import { safeLog, safeWarn } from '@/lib/logger';
 import { sendEmail } from '@/lib/services/email';
-import crypto from 'crypto';
 
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY;
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   const authHeader = request.headers.get('x-internal-key');
   if (!INTERNAL_API_KEY || authHeader !== INTERNAL_API_KEY) {
@@ -19,46 +20,25 @@ export async function POST(request: Request) {
     const { tenantId, operatorId, operatorEmail } = body;
 
     if (!tenantId || !operatorId || !operatorEmail) {
-      return NextResponse.json({ error: 'Faltan campos requeridos: tenantId, operatorId, operatorEmail' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Faltan campos requeridos: tenantId, operatorId, operatorEmail' },
+        { status: 400 },
+      );
     }
 
-    // Buscar admin activo del tenant
-    const [admin] = await db
-      .select({ id: usuarios.id, email: usuarios.email, nombre: usuarios.nombre, plan: usuarios.plan })
-      .from(usuarios)
-      .where(
-        and(
-          eq(usuarios.tenantId, tenantId),
-          eq(usuarios.rol, 'admin'),
-          eq(usuarios.activo, true),
-        ),
-      )
-      .limit(1);
+    const tokenInfo = await crearTokenImpersonacion({ tenantId, operatorId, operatorEmail });
 
-    if (!admin) {
+    if (!tokenInfo) {
       safeWarn(`[Impersionate] No se encontró admin activo para tenant ${tenantId}`);
-      return NextResponse.json({ error: 'No se encontró un administrador activo para este tenant' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'No se encontró un administrador activo para este tenant' },
+        { status: 404 },
+      );
     }
 
-    // Generar token criptográfico + registro en DB
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+    const { admin, impersonateLink, expiresAt } = tokenInfo;
 
-    await db.insert(impersonationTokens).values({
-      id: crypto.randomUUID(),
-      tenantId,
-      usuarioId: admin.id,
-      creadoPorOperatorId: operatorId,
-      creadoPorOperatorEmail: operatorEmail,
-      token,
-      usado: false,
-      expiresAt,
-    });
-
-    // Enviar email al admin
-    const baseUrl = process.env.NEXTAUTH_URL || 'https://med.aicorebots.com';
-    const impersonateLink = `${baseUrl}/api/auth/impersonate?token=${token}`;
-
+    // Enviar email al admin (aprobación explícita del acceso)
     const emailSent = await sendEmail({
       to: admin.email,
       subject: 'Acceso de soporte solicitado — AicoreMed',
@@ -83,7 +63,9 @@ export async function POST(request: Request) {
       `,
     });
 
-    safeLog(`[Impersionate] Token creado para tenant ${tenantId}, admin ${admin.email}, email enviado: ${emailSent}`);
+    safeLog(
+      `[Impersionate] Token creado para tenant ${tenantId}, admin ${admin.email}, email enviado: ${emailSent}`,
+    );
 
     return NextResponse.json({
       ok: true,

@@ -3,10 +3,14 @@ import { db } from '@/lib/db';
 import { setTenantContext } from '@/lib/rls';
 import { sql } from 'drizzle-orm';
 
+const hasDb = Boolean(process.env.DATABASE_URL);
+
 let tenantA: string | null = null;
 let tenantB: string | null = null;
 
-describe('RLS Multi-Tenant', () => {
+// Test de integración: requiere PostgreSQL real. Sin DATABASE_URL (ej: hook de
+// lint-staged sin entorno), se saltea completo en lugar de fallar.
+describe.skipIf(!hasDb)('RLS Multi-Tenant', () => {
   beforeAll(async () => {
     await db.execute(sql`SELECT set_config('app.current_tenant_id', '', true)`);
     const tenants = await db.execute<{ id: string }>(
@@ -80,9 +84,15 @@ describe('RLS Multi-Tenant', () => {
 
   describe('Tablas 0051 — RLS policies', () => {
     const tablas = [
-      'portal_config', 'web_vitals_metrics', 'derivaciones',
-      'webhook_configs', 'ordenes_estudio', 'documentos_medicos',
-      'paquetes_portal', 'consentimiento_compartir', 'blacklist',
+      'portal_config',
+      'web_vitals_metrics',
+      'derivaciones',
+      'webhook_configs',
+      'ordenes_estudio',
+      'documentos_medicos',
+      'paquetes_portal',
+      'consentimiento_compartir',
+      'blacklist',
       'consentimientos',
     ];
 

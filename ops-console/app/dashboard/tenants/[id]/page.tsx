@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm'
 import { getSessionFromCookie } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import { ImpersonateButton } from './impersonate-button'
+import { TenantManager } from './tenant-manager'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +29,7 @@ export default async function TenantDetailPage({
       t.activo,
       t.created_at,
       t.dominio_custom,
+      t.colores,
       (SELECT plan FROM public.suscripciones s WHERE s.organizacion_id = t.id ORDER BY s.created_at DESC LIMIT 1) AS plan,
       (SELECT COUNT(*)::int FROM public.usuarios u WHERE u.tenant_id = t.id) AS usuario_count,
       (SELECT COUNT(*)::int FROM public.pacientes p LEFT JOIN public.sucursales s ON s.id = p.sucursal_id WHERE (s.tenant_id = t.id) OR (p.sucursal_id IS NULL AND t.id = ${DEFAULT_TENANT_ID})) AS paciente_count,
@@ -99,6 +101,18 @@ export default async function TenantDetailPage({
           <InfoRow label="Auditoría (7d)" value={String(t.audit_7d || 0)} />
         </InfoCard>
       </div>
+
+      <TenantManager
+        tenantId={id}
+        tenantName={t.nombre as string}
+        activo={Boolean(t.activo)}
+        plan={String(t.plan || 'free')}
+        colores={
+          t.colores && typeof t.colores === 'object'
+            ? (t.colores as { primary?: string; secondary?: string })
+            : undefined
+        }
+      />
     </div>
   )
 }
