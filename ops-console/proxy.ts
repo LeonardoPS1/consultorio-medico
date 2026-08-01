@@ -10,7 +10,6 @@ const PUBLIC_PATHS = [
   '/api/auth/totp/setup',
   '/api/auth/totp/verify',
   '/api/auth/session',
-  '/api/auth/impersonate/start',
   '/api/health',
   '/login',
   '/setup',
@@ -24,6 +23,7 @@ const CROSS_TENANT_PATHS = [
   '/api/audit',
   '/api/busqueda',
   '/api/overrides',
+  '/api/auth/impersonate/direct',
 ]
 
 const RATE_LIMIT_WINDOW = 60_000

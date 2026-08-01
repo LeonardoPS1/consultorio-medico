@@ -27,14 +27,20 @@ export interface TokenImpersonacion {
  * @param params.tenantId
  * @param params.operatorId
  * @param params.operatorEmail
+ * @param params.motivo - Motivo obligatorio de la impersonación
  * @returns Los datos del admin, el link de acceso y la expiración; o null si no hay admin activo.
  */
 export async function crearTokenImpersonacion(params: {
   tenantId: string;
   operatorId: string;
   operatorEmail: string;
+  motivo: string;
 }): Promise<TokenImpersonacion | null> {
-  const { tenantId, operatorId, operatorEmail } = params;
+  const { tenantId, operatorId, operatorEmail, motivo } = params;
+
+  if (!motivo || motivo.trim().length === 0) {
+    throw new Error('El motivo es obligatorio para crear un token de impersonación');
+  }
 
   const [admin] = await db
     .select({
@@ -60,6 +66,7 @@ export async function crearTokenImpersonacion(params: {
     usuarioId: admin.id,
     creadoPorOperatorId: operatorId,
     creadoPorOperatorEmail: operatorEmail,
+    motivo: motivo.trim(),
     token,
     usado: false,
     expiresAt,

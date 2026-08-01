@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
+import { logAudit } from '@/lib/audit'
 
 const DASHBOARD_URL = process.env.DASHBOARD_URL || 'https://med.aicorebots.com'
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY
@@ -16,10 +17,18 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { tenantId } = body
+    const { tenantId, motivo } = body
 
     if (!tenantId) {
       return NextResponse.json({ error: 'Falta tenantId' }, { status: 400 })
+    }
+
+    if (!motivo || typeof motivo !== 'string' || motivo.trim().length === 0) {
+      return NextResponse.json({ error: 'El motivo es obligatorio' }, { status: 400 })
+    }
+
+    if (motivo.length > 500) {
+      return NextResponse.json({ error: 'El motivo no puede exceder 500 caracteres' }, { status: 400 })
     }
 
     // Verificar TOTP del operador si tiene 2FA habilitado
@@ -28,13 +37,23 @@ export async function POST(request: Request) {
 
     const [operator] = await db.execute(sql`
       SELECT totp_verified FROM platform.platform_operators
-      WHERE id = ${session.sub} AND totp_enabled = true
+      WHERE id = ${session.sub}
     `)
 
     const operatorRow = operator as Record<string, unknown> | undefined
-    const requiresTotp = operatorRow?.totp_verified === false
+    // Requiere TOTP si: no existe el operador, o totp_verified es false, o es null
+    const requiresTotp = !operatorRow || operatorRow?.totp_verified === false || operatorRow?.totp_verified === null
 
     if (requiresTotp) {
+      await logAudit({
+        operatorId: session.sub,
+        operatorEmail: session.email,
+        accion: 'impersonate.failed',
+        tenantAfectado: tenantId,
+        recurso: undefined,
+        motivo: motivo.trim(),
+        detalles: { error: 'TOTP_REQUIRED', viaDirecta: true },
+      })
       return NextResponse.json({
         error: 'TOTP_REQUIRED',
         message: 'Se requiere verificación TOTP para entrar sin aprobación',
@@ -52,14 +71,34 @@ export async function POST(request: Request) {
         tenantId,
         operatorId: session.sub,
         operatorEmail: session.email,
+        motivo: motivo.trim(),
       }),
     })
 
     const data = await response.json()
 
     if (!response.ok) {
+      await logAudit({
+        operatorId: session.sub,
+        operatorEmail: session.email,
+        accion: 'impersonate.failed',
+        tenantAfectado: tenantId,
+        recurso: undefined,
+        motivo: motivo.trim(),
+        detalles: { error: data.error || 'Error desconocido', viaDirecta: true },
+      })
       return NextResponse.json({ error: data.error || 'Error al crear token de impersonación directa' }, { status: response.status })
     }
+
+    await logAudit({
+      operatorId: session.sub,
+      operatorEmail: session.email,
+      accion: 'impersonate.direct',
+      tenantAfectado: tenantId,
+      recurso: data.adminEmail,
+      motivo: motivo.trim(),
+      detalles: { expiresAt: data.expiresAt, viaDirecta: true },
+    })
 
     return NextResponse.json({
       ok: true,

@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { tenantId, operatorId, operatorEmail } = body;
+    const { tenantId, operatorId, operatorEmail, motivo } = body;
 
     if (!tenantId || !operatorId || !operatorEmail) {
       return NextResponse.json(
@@ -27,7 +27,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const tokenInfo = await crearTokenImpersonacion({ tenantId, operatorId, operatorEmail });
+    if (!motivo || typeof motivo !== 'string' || motivo.trim().length === 0) {
+      return NextResponse.json({ error: 'El motivo es obligatorio' }, { status: 400 });
+    }
+
+    const tokenInfo = await crearTokenImpersonacion({ tenantId, operatorId, operatorEmail, motivo: motivo.trim() });
 
     if (!tokenInfo) {
       return NextResponse.json(

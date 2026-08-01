@@ -130,6 +130,7 @@ export const impersonationTokens = pgTable(
       .references(() => usuarios.id),
     creadoPorOperatorId: varchar('creado_por_operator_id', { length: 255 }).notNull(),
     creadoPorOperatorEmail: varchar('creado_por_operator_email', { length: 255 }).notNull(),
+    motivo: text('motivo').notNull().default(''),
     token: varchar('token', { length: 64 }).notNull().unique(),
     usado: boolean('usado').notNull().default(false),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),

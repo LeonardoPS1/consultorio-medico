@@ -20,9 +20,42 @@
 }
 
 @layer base {
+  html {
+    color-scheme: dark;
+  }
+
   body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  /* Ensure select dropdowns work well in dark mode */
+  select {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--border);
+  }
+
+  select option {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+  }
+
+  select:focus {
+    outline: none;
+    ring: 1px solid var(--accent);
+  }
+
+  /* Input elements also need dark mode support */
+  input, textarea {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--border);
+  }
+
+  input:focus, textarea:focus {
+    outline: none;
+    ring: 1px solid var(--accent);
   }
 }
