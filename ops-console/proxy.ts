@@ -22,6 +22,8 @@ const PUBLIC_PATHS = [
 const CROSS_TENANT_PATHS = [
   '/api/tenants',
   '/api/audit',
+  '/api/busqueda',
+  '/api/overrides',
 ]
 
 const RATE_LIMIT_WINDOW = 60_000
