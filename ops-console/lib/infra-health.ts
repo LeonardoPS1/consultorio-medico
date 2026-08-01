@@ -98,9 +98,11 @@ export async function checkPostgres(): Promise<ServiceHealth> {
 
 export async function checkRedis(): Promise<ServiceHealth> {
   return checkService('redis', 'Redis', async () => {
+    const url = process.env.REDIS_URL;
+    if (!url) throw new Error('Redis no configurado (REDIS_URL ausente)');
     const { getRedis } = await import('@/lib/redis');
     const redis = await getRedis();
-    if (!redis) throw new Error('Redis no configurado (REDIS_URL ausente)');
+    if (!redis) throw new Error(`Redis inalcanzable en ${url} (revisar red/firewall)`);
     await redis.ping();
     return true;
   }, {
