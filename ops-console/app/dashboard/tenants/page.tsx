@@ -19,7 +19,7 @@ export default async function TenantsPage() {
       t.activo,
       t.created_at,
       (SELECT COUNT(*)::int FROM public.usuarios u WHERE u.tenant_id = t.id) AS usuario_count,
-      (SELECT COUNT(*)::int FROM public.pacientes p WHERE p.tenant_id = t.id) AS paciente_count,
+      (SELECT COUNT(*)::int FROM public.pacientes p JOIN public.sucursales s ON s.id = p.sucursal_id WHERE s.tenant_id = t.id) AS paciente_count,
       (SELECT COUNT(*)::int FROM public.turnos tu JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE s.tenant_id = t.id) AS turno_count,
       (SELECT MAX(tu.fecha_hora) FROM public.turnos tu JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE s.tenant_id = t.id) AS ultimo_turno
     FROM public.tenants t

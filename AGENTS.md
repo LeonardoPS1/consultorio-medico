@@ -61,7 +61,7 @@
   - `projects/consultorio-medico.md` — Contexto del proyecto
   - `session-log.md` — Historial de sesiones
   - `audit-consultorio-medico.md` — Auditoría técnica detallada
-- **Skills cargadas**: 17 skills disponibles (ver sección Skills).
+- **Skills cargadas**: 18 skills disponibles (ver sección Skills).
 - **Antes de `compress`**: Siempre ejecutar `/handoff` + actualizar memorias.
 - **Al iniciar sesión**: Cargar contexto del proyecto + session-log + audit block.
 
@@ -85,6 +85,7 @@
 | **frontend-patterns** | Patrones React/Next.js, state, performance |
 | **graphify** | Knowledge graph del codebase, queries, path/explain |
 | **n8n-cli** | Interactuar con n8n CLI, workflows, credenciales |
+| **saas-multi-tenant** | Multi-tenancy: RLS PostgreSQL, tenant-scoped queries, aislamiento shared-schema |
 
 ---
 
@@ -824,6 +825,7 @@ Ubicadas en `.opencode/skills/`. Se cargan con `skill` tool.
 | **frontend-patterns** | `.opencode/skills/frontend-patterns/SKILL.md` | Patrones React/Next.js, state, performance |
 | **graphify** | `.opencode/skills/graphify/SKILL.md` | Knowledge graph del codebase, queries, path/explain |
 | **n8n-cli** | `.opencode/skills/n8n-cli/SKILL.md` | Interactuar con n8n CLI, workflows, credenciales |
+| **saas-multi-tenant** | `.opencode/skills/saas-multi-tenant/SKILL.md` | Multi-tenancy: RLS PostgreSQL, tenant-scoped queries, aislamiento shared-schema |
 
 ### Plugins OpenCode Instalados (12)
 - `opencode-agent-memory` — Memoria persistente entre sesiones

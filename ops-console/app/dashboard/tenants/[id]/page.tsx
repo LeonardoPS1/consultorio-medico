@@ -25,14 +25,14 @@ export default async function TenantDetailPage({
       t.subdomain,
       t.activo,
       t.created_at,
-      t.plan,
       t.dominio_custom,
+      (SELECT plan FROM public.suscripciones s WHERE s.organizacion_id = t.id ORDER BY s.created_at DESC LIMIT 1) AS plan,
       (SELECT COUNT(*)::int FROM public.usuarios u WHERE u.tenant_id = t.id) AS usuario_count,
-      (SELECT COUNT(*)::int FROM public.pacientes p WHERE p.tenant_id = t.id) AS paciente_count,
+      (SELECT COUNT(*)::int FROM public.pacientes p JOIN public.sucursales s ON s.id = p.sucursal_id WHERE s.tenant_id = t.id) AS paciente_count,
       (SELECT COUNT(*)::int FROM public.turnos tu JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE s.tenant_id = t.id) AS turno_count,
-      (SELECT COUNT(*)::int FROM public.recetas r WHERE r.tenant_id = t.id) AS receta_count,
+      (SELECT COUNT(*)::int FROM public.recetas r JOIN public.pacientes p ON p.id = r.paciente_id JOIN public.sucursales s ON s.id = p.sucursal_id WHERE s.tenant_id = t.id) AS receta_count,
       (SELECT MAX(tu.fecha_hora) FROM public.turnos tu JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE s.tenant_id = t.id) AS ultimo_turno,
-      (SELECT MAX(r.created_at) FROM public.recetas r WHERE r.tenant_id = t.id) AS ultima_receta
+      (SELECT MAX(r.created_at) FROM public.recetas r JOIN public.pacientes p ON p.id = r.paciente_id JOIN public.sucursales s ON s.id = p.sucursal_id WHERE s.tenant_id = t.id) AS ultima_receta
     FROM public.tenants t
     WHERE t.id = ${id}
   `)
