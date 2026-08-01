@@ -1,8 +1,9 @@
 import type { Event } from '@sentry/nextjs';
-import { getRequestContext } from '@/lib/request-context';
 import { safeLog, safeWarn, safeError } from '@/lib/logger';
+import { getRequestContext } from '@/lib/request-context';
 
 const TAG_PREFIX = 'aicoremed';
+const TAG_SERVICIO = 'dashboard';
 
 interface CaptureOptions {
   tags?: Record<string, string>;
@@ -12,6 +13,9 @@ interface CaptureOptions {
 
 let enabled = false;
 
+/**
+ *
+ */
 export function initGlitchtip(): void {
   const dsn = process.env.GLITCHTIP_DSN;
   if (!dsn) {
@@ -63,9 +67,17 @@ function getSentry(): any {
   }
 }
 
+/**
+ *
+ * @param error
+ * @param options
+ */
 export function captureError(error: unknown, options?: CaptureOptions): void {
   if (!enabled) {
-    safeError('[GlitchTip] Error no reportado (GlitchTip deshabilitado):', error instanceof Error ? error.message : error);
+    safeError(
+      '[GlitchTip] Error no reportado (GlitchTip deshabilitado):',
+      error instanceof Error ? error.message : error,
+    );
     return;
   }
 
@@ -76,28 +88,40 @@ export function captureError(error: unknown, options?: CaptureOptions): void {
     const context = getRequestContext();
     const tags: Record<string, string> = {
       [TAG_PREFIX]: 'true',
+      servicio: TAG_SERVICIO,
       ...(options?.tags ?? {}),
     };
     if (context?.tenantId) tags.tenantId = context.tenantId;
     if (context?.requestId) tags.requestId = context.requestId;
 
-    Sentry.withScope((scope: { setTags: (t: Record<string, string>) => void; setLevel: (l: string) => void; setUser: (u: { id: string }) => void }) => {
-      scope.setTags(tags);
-      if (options?.level) scope.setLevel(options.level);
-      if (options?.userId) scope.setUser({ id: options.userId });
-      else if (context?.userId) scope.setUser({ id: context.userId });
+    Sentry.withScope(
+      (scope: {
+        setTags: (t: Record<string, string>) => void;
+        setLevel: (l: string) => void;
+        setUser: (u: { id: string }) => void;
+      }) => {
+        scope.setTags(tags);
+        if (options?.level) scope.setLevel(options.level);
+        if (options?.userId) scope.setUser({ id: options.userId });
+        else if (context?.userId) scope.setUser({ id: context.userId });
 
-      if (error instanceof Error) {
-        Sentry.captureException(error);
-      } else {
-        Sentry.captureMessage(String(error), options?.level ?? 'error');
-      }
-    });
+        if (error instanceof Error) {
+          Sentry.captureException(error);
+        } else {
+          Sentry.captureMessage(String(error), options?.level ?? 'error');
+        }
+      },
+    );
   } catch (e) {
     safeWarn('[GlitchTip] Error al reportar:', e instanceof Error ? e.message : e);
   }
 }
 
+/**
+ *
+ * @param message
+ * @param options
+ */
 export function captureMessage(message: string, options?: CaptureOptions): void {
   captureError(new Error(message), options);
 }

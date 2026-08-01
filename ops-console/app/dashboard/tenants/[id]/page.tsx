@@ -53,7 +53,10 @@ export default async function TenantDetailPage({
     // Ignore if table/column doesn't exist
   }
 
-  const t = { ...(tenantResult as Record<string, unknown>), audit_7d: audit7d }
+  const t = {
+    ...(tenantResult as Record<string, unknown>),
+    audit_7d: audit7d,
+  } as Record<string, unknown> & { audit_7d: number }
 
   return (
     <div className="space-y-6">

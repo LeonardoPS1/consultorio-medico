@@ -1,27 +1,27 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { AlertTriangle, CheckCircle, XCircle, AlertCircle, Loader2, ExternalLink } from 'lucide-react'
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { RefreshCw, AlertTriangle, CheckCircle, XCircle, AlertCircle, ExternalLink, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface ServiceHealth {
-  name: string
-  displayName: string
-  status: 'up' | 'degraded' | 'down'
-  latencyMs: number
-  lastCheck: string
-  lastOk: string | null
-  message?: string
-  url?: string
-  critical: boolean
-  category: string
+  name: string;
+  displayName: string;
+  status: 'up' | 'degraded' | 'down';
+  latencyMs: number;
+  lastCheck: string;
+  lastOk: string | null;
+  message?: string;
+  url?: string;
+  critical: boolean;
+  category: string;
 }
 
 interface InfraHealthSummary {
-  globalStatus: 'healthy' | 'degraded' | 'critical'
-  services: ServiceHealth[]
-  criticalDown: ServiceHealth[]
-  timestamp: string
+  globalStatus: 'healthy' | 'degraded' | 'critical';
+  services: ServiceHealth[];
+  criticalDown: ServiceHealth[];
+  timestamp: string;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -31,7 +31,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   ai: 'IA Local',
   communication: 'Comunicación',
   realtime: 'Tiempo Real',
-}
+};
 
 const CATEGORY_COLORS: Record<string, string> = {
   database: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
@@ -40,50 +40,50 @@ const CATEGORY_COLORS: Record<string, string> = {
   ai: 'bg-green-500/10 text-green-400 border-green-500/20',
   communication: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
   realtime: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-}
+};
 
 function formatLatency(ms: number): string {
-  if (ms < 1000) return `${ms}ms`
-  return `${(ms / 1000).toFixed(1)}s`
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(1)}s`;
 }
 
 function formatTimeAgo(isoString: string): string {
-  const date = new Date(isoString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffSec = Math.floor(diffMs / 1000)
-  const diffMin = Math.floor(diffSec / 60)
-  const diffHour = Math.floor(diffMin / 60)
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
 
-  if (diffSec < 60) return 'hace unos segs'
-  if (diffMin < 60) return `hace ${diffMin}m`
-  if (diffHour < 24) return `hace ${diffHour}h`
-  return date.toLocaleDateString('es-CL')
+  if (diffSec < 60) return 'hace unos segs';
+  if (diffMin < 60) return `hace ${diffMin}m`;
+  if (diffHour < 24) return `hace ${diffHour}h`;
+  return date.toLocaleDateString('es-CL');
 }
 
 function getMinutesSinceLastOk(lastOk: string | null): number | null {
-  if (!lastOk) return null
-  const lastOkTime = new Date(lastOk).getTime()
-  const now = Date.now()
-  return Math.floor((now - lastOkTime) / 60000)
+  if (!lastOk) return null;
+  const lastOkTime = new Date(lastOk).getTime();
+  const now = Date.now();
+  return Math.floor((now - lastOkTime) / 60000);
 }
 
 function StatusBadge({ status, critical, minutesDown }: { status: ServiceHealth['status']; critical: boolean; minutesDown: number | null }) {
-  const baseClasses = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium'
+  const baseClasses = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium';
 
   if (status === 'up') {
     return (
       <span className={`${baseClasses} bg-green-500/10 text-green-400 border border-green-500/20`}>
         <CheckCircle className="w-3 h-3" /> Operativo
       </span>
-    )
+    );
   }
   if (status === 'degraded') {
     return (
       <span className={`${baseClasses} bg-yellow-500/10 text-yellow-400 border border-yellow-500/20`}>
         <AlertTriangle className="w-3 h-3" /> Degradado
       </span>
-    )
+    );
   }
   return (
     <span className={`${baseClasses} bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse`}>
@@ -94,21 +94,29 @@ function StatusBadge({ status, critical, minutesDown }: { status: ServiceHealth[
         <>Caído</>
       )}
     </span>
-  )
+  );
 }
 
-function ServiceCard({ service }: { service: ServiceHealth }) {
-  const minutesDown = getMinutesSinceLastOk(service.lastOk)
-  const isDownLong = service.status === 'down' && service.critical && minutesDown !== null && minutesDown > 5
+function ServiceCard({ service, onToggleDetails }: { service: ServiceHealth; onToggleDetails: (name: string) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const minutesDown = getMinutesSinceLastOk(service.lastOk);
+  const isDownLong = service.status === 'down' && service.critical && minutesDown !== null && minutesDown > 5;
 
   const statusColors = {
     up: 'border-l-green-500 bg-green-500/5',
     degraded: 'border-l-yellow-500 bg-yellow-500/5',
     down: 'border-l-red-500 bg-red-500/5',
-  }
+  };
+
+  const categoryLabel = CATEGORY_LABELS[service.category] || service.category;
+  const categoryColor = CATEGORY_COLORS[service.category] || 'bg-gray-500/10 text-gray-400 border-gray-500/20 px-2 py-0.5 rounded text-xs font-medium';
 
   return (
-    <div className={`p-4 rounded-xl border transition-all duration-200 ${statusColors[service.status]} ${isDownLong ? 'ring-2 ring-red-500/30' : ''}`}>
+    <div
+      className={`group relative p-4 rounded-xl border transition-all duration-200 ${
+        statusColors[service.status]
+      } ${isDownLong ? 'ring-2 ring-red-500/30' : ''}`}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
@@ -118,9 +126,7 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
                 <AlertTriangle className="w-3 h-3" /> Crítico
               </span>
             )}
-            <span className={CATEGORY_COLORS[service.category] || 'bg-gray-500/10 text-gray-400 border-gray-500/20 px-2 py-0.5 rounded text-xs font-medium'}>
-              {CATEGORY_LABELS[service.category] || service.category}
-            </span>
+            <span className={categoryColor}>{categoryLabel}</span>
           </div>
 
           <div className="mt-3 flex items-center gap-4 flex-wrap text-sm">
@@ -152,71 +158,96 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
               <ExternalLink className="w-4 h-4" />
             </a>
           )}
+          <button
+            onClick={() => {
+              setExpanded(!expanded);
+              onToggleDetails(service.name);
+            }}
+            className="p-2 rounded-lg hover:bg-[var(--bg-hover)] text-[var(--text-muted)] transition-colors"
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Ocultar detalles' : 'Ver detalles'}
+          >
+            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
         </div>
       </div>
+
+      {expanded && (
+        <div className="mt-4 pt-4 border-t border-[var(--border)] animate-in slide-in-from-top-2 duration-200">
+          <dl className="grid grid-cols-2 gap-2 text-sm">
+            <dt className="text-[var(--text-muted)]">Nombre interno</dt>
+            <dd className="font-mono text-[var(--text-secondary)]">{service.name}</dd>
+            <dt className="text-[var(--text-muted)]">Categoría</dt>
+            <dd>{CATEGORY_LABELS[service.category] || service.category}</dd>
+            <dt className="text-[var(--text-muted)]">Crítico para flota</dt>
+            <dd>{service.critical ? 'Sí' : 'No'}</dd>
+            <dt className="text-[var(--text-muted)]">Latencia</dt>
+            <dd className="font-mono">{formatLatency(service.latencyMs)}</dd>
+            <dt className="text-[var(--text-muted)]">Último check</dt>
+            <dd>{new Date(service.lastCheck).toLocaleString('es-CL')}</dd>
+            <dt className="text-[var(--text-muted)]">Último OK</dt>
+            <dd>{service.lastOk ? new Date(service.lastOk).toLocaleString('es-CL') : 'Nunca'}</dd>
+            {service.url && (
+              <>
+                <dt className="text-[var(--text-muted)]">Panel</dt>
+                <dd>
+                  <a href={service.url} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline text-sm">
+                    {service.url}
+                  </a>
+                </dd>
+              </>
+            )}
+          </dl>
+        </div>
+      )}
     </div>
-  )
+  );
 }
 
-export default function HealthPage() {
-  const [health, setHealth] = useState<InfraHealthSummary | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [refreshing, setRefreshing] = useState(false)
-  const [autoRefresh, setAutoRefresh] = useState(true)
+export default function InfraHealthPage() {
+  const [health, setHealth] = useState<InfraHealthSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set());
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
   const fetchHealth = async () => {
     try {
-      setError(null)
-      const res = await fetch('/api/infra-health', { cache: 'no-store' })
-      const data = await res.json()
-      setHealth(data)
+      setError(null);
+      const res = await fetch('/api/infra-health', { cache: 'no-store' });
+      const data = await res.json();
+      setHealth(data);
     } catch (err) {
-      setError('Error al cargar estado de infraestructura')
-      console.error(err)
+      setError('Error al cargar estado de infraestructura');
+      console.error(err);
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchHealth()
+    fetchHealth();
     const interval = setInterval(() => {
-      if (autoRefresh) fetchHealth()
-    }, 30000)
-    return () => clearInterval(interval)
-  }, [autoRefresh])
+      if (autoRefresh) fetchHealth();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [autoRefresh]);
 
-  const statusColors = {
-    healthy: 'bg-green-500/10 text-green-400 border-green-500/20',
-    degraded: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-    critical: 'bg-red-500/10 text-red-400 border-red-500/20',
-  }
-
-  const statusLabels = {
-    healthy: 'Saludable',
-    degraded: 'Degradado',
-    critical: 'Crítico',
-  }
-
-  const statusIcons = {
-    healthy: CheckCircle,
-    degraded: AlertTriangle,
-    critical: AlertCircle,
-  }
-
-  const GlobalStatusIcon = statusIcons[health?.globalStatus || 'healthy']
+  const toggleDetails = (name: string) => {
+    setExpandedServices(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  };
 
   if (loading && !health) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold">Estado del sistema</h1>
-            <p className="text-sm text-[var(--text-secondary)] mt-1">Verificando estado de infraestructura...</p>
-          </div>
-          <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" />
+        <div>
+          <h1 className="text-xl font-bold">Salud de Infraestructura</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">Monitoreo en tiempo real de servicios críticos</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[...Array(7)].map((_, i) => (
@@ -227,7 +258,7 @@ export default function HealthPage() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (!health) {
@@ -240,18 +271,35 @@ export default function HealthPage() {
           Reintentar
         </button>
       </div>
-    )
+    );
   }
 
-  const upCount = health.services.filter(s => s.status === 'up').length
-  const totalCount = health.services.length
+  const statusColors = {
+    healthy: 'bg-green-500/10 text-green-400 border-green-500/20',
+    degraded: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+    critical: 'bg-red-500/10 text-red-400 border-red-500/20',
+  };
+
+  const statusLabels = {
+    healthy: 'Saludable',
+    degraded: 'Degradado',
+    critical: 'Crítico',
+  };
+
+  const statusIcons = {
+    healthy: CheckCircle,
+    degraded: AlertTriangle,
+    critical: AlertCircle,
+  };
+
+  const GlobalStatusIcon = statusIcons[health.globalStatus];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold">Estado del sistema</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">Monitoreo de salud de infraestructura en ops.aicorebots.com</p>
+          <h1 className="text-xl font-bold">Salud de Infraestructura</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">Monitoreo en tiempo real de servicios críticos de la plataforma</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${statusColors[health.globalStatus]}`}>
@@ -269,10 +317,10 @@ export default function HealthPage() {
           </label>
           <button
             onClick={fetchHealth}
-            disabled={refreshing}
+            disabled={loading}
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-50"
           >
-            <Loader2 className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <Loader2 className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Actualizar
           </button>
         </div>
@@ -288,53 +336,29 @@ export default function HealthPage() {
                 {health.criticalDown.map(s => s.displayName).join(', ')} {'llevan más de 5 min sin responder.'}
               </p>
               <p className="text-xs text-red-300/70 mt-2">
-                Última actualización: {new Date(health.timestamp).toLocaleString('es-CL')} ·{' '}
-                <Link href="/dashboard/infra-health" className="underline hover:no-underline">Ver detalles →</Link>
+                Última actualización: {new Date(health.timestamp).toLocaleString('es-CL')}
               </p>
             </div>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className={`bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 ${health.globalStatus === 'critical' ? 'ring-2 ring-red-500/30' : ''}`}>
-          <div className="flex items-center gap-2 mb-1">
-            <GlobalStatusIcon className={`w-4 h-4 ${health.globalStatus === 'healthy' ? 'text-green-400' : health.globalStatus === 'degraded' ? 'text-yellow-400' : 'text-red-400'}`} />
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Estado Global</p>
-          </div>
-          <p className="text-lg font-bold mt-1">{statusLabels[health.globalStatus]}</p>
-          <p className="text-xs text-[var(--text-muted)] mt-1">{upCount} / {totalCount} servicios UP</p>
-        </div>
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-block w-2 h-2 rounded-full bg-green-400" />
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Servicios UP</p>
-          </div>
-          <p className="text-lg font-bold mt-1">{upCount}</p>
-          <p className="text-xs text-[var(--text-muted)] mt-1">De {totalCount} totales</p>
-        </div>
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-block w-2 h-2 rounded-full bg-red-400" />
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Críticos Caídos</p>
-          </div>
-          <p className="text-lg font-bold mt-1 text-red-400">{health.criticalDown.length}</p>
-          <p className="text-xs text-[var(--text-muted)] mt-1">{health.criticalDown.length > 0 ? 'Ver banner superior' : 'Todos operativos'}</p>
-        </div>
-      </div>
-
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {health.services.map(service => (
-          <ServiceCard key={service.name} service={service} />
+          <ServiceCard
+            key={service.name}
+            service={service}
+            onToggleDetails={toggleDetails}
+          />
         ))}
       </div>
 
       <div className="pt-4 border-t border-[var(--border)] text-xs text-[var(--text-muted)] flex items-center justify-between">
         <span>Última actualización: {new Date(health.timestamp).toLocaleString('es-CL')}</span>
-        <Link href="/dashboard/infra-health" className="text-[var(--accent)] hover:underline text-sm">
-          Ver página completa de infraestructura →
+        <Link href="/dashboard" className="text-[var(--accent)] hover:underline text-sm">
+          ← Volver al Fleet Overview
         </Link>
       </div>
     </div>
-  )
+  );
 }

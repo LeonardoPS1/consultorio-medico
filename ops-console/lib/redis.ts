@@ -1,0 +1,87 @@
+import { logger } from '@/lib/logger';
+
+let _redis: Redis | null = null;
+let _enabled = false;
+
+interface Redis {
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string, mode?: string, ttl?: number): Promise<'OK' | null>;
+  setex(key: string, ttl: number, value: string): Promise<'OK' | null>;
+  incr(key: string): Promise<number>;
+  expire(key: string, ttl: number): Promise<number>;
+  ttl(key: string): Promise<number>;
+  del(...keys: string[]): Promise<number>;
+  keys(pattern: string): Promise<string[]>;
+  ping(): Promise<string>;
+  quit(): Promise<'OK'>;
+  connect(): Promise<void>;
+  on(event: string, handler: (...args: unknown[]) => void): void;
+  status: string;
+}
+
+function createClient(): Redis | null {
+  const url = process.env.REDIS_URL;
+  if (!url) {
+    logger.info('[Redis] REDIS_URL no configurado — deshabilitado');
+    return null;
+  }
+
+  try {
+    const IORedis = require('ioredis');
+    const client = new IORedis(url, {
+      maxRetriesPerRequest: 3,
+      retryStrategy(times: number) {
+        if (times > 5) return null;
+        return Math.min(times * 200, 2000);
+      },
+      lazyConnect: true,
+      enableOfflineQueue: false,
+    });
+
+    client.on('error', (err: Error) => {
+      logger.warn('[Redis] Error de conexión:', { error: err.message });
+    });
+
+    client.on('connect', () => {
+      logger.info('[Redis] Conectado');
+    });
+
+    client.on('close', () => {
+      logger.warn('[Redis] Conexión cerrada');
+    });
+
+    return client;
+  } catch (e) {
+    logger.warn('[Redis] Error al crear cliente:', { error: e instanceof Error ? e.message : e });
+    return null;
+  }
+}
+
+export async function getRedis(): Promise<Redis | null> {
+  if (!_redis) {
+    _redis = createClient();
+  }
+  if (_redis && !_enabled && _redis.status !== 'ready' && _redis.status !== 'connecting') {
+    try {
+      await _redis.connect();
+      _enabled = true;
+      logger.info('[Redis] Cliente listo');
+    } catch {
+      logger.warn('[Redis] No se pudo conectar, usando fallback');
+      _enabled = false;
+    }
+  }
+  return _enabled ? _redis : null;
+}
+
+export async function redisHealthCheck(): Promise<{ ok: boolean; latencyMs: number }> {
+  const start = Date.now();
+  try {
+    const r = await getRedis();
+    if (!r) return { ok: false, latencyMs: Date.now() - start };
+    await r.ping();
+    return { ok: true, latencyMs: Date.now() - start };
+  } catch {
+    return { ok: false, latencyMs: Date.now() - start };
+  }
+}
