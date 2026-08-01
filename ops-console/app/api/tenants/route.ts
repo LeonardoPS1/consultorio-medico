@@ -17,6 +17,8 @@ export async function GET(request: Request) {
 
     const db = getDb()
 
+    const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000'
+
     const tenants = await db.execute(sql`
       SELECT
         t.id,
@@ -25,9 +27,9 @@ export async function GET(request: Request) {
         t.activo,
         t.created_at,
         (SELECT COUNT(*) FROM public.usuarios u WHERE u.tenant_id = t.id) AS usuario_count,
-        (SELECT COUNT(*) FROM public.pacientes p JOIN public.sucursales s ON s.id = p.sucursal_id WHERE s.tenant_id = t.id) AS paciente_count,
-        (SELECT COUNT(*) FROM public.turnos tu JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE s.tenant_id = t.id) AS turno_count,
-        (SELECT MAX(tu.fecha_hora) FROM public.turnos tu JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE s.tenant_id = t.id) AS ultimo_turno
+        (SELECT COUNT(*) FROM public.pacientes p LEFT JOIN public.sucursales s ON s.id = p.sucursal_id WHERE (s.tenant_id = t.id) OR (p.sucursal_id IS NULL AND t.id = ${DEFAULT_TENANT_ID})) AS paciente_count,
+        (SELECT COUNT(*) FROM public.turnos tu LEFT JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE (s.tenant_id = t.id) OR (tu.sucursal_id IS NULL AND t.id = ${DEFAULT_TENANT_ID})) AS turno_count,
+        (SELECT MAX(tu.fecha_hora) FROM public.turnos tu LEFT JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE (s.tenant_id = t.id) OR (tu.sucursal_id IS NULL AND t.id = ${DEFAULT_TENANT_ID})) AS ultimo_turno
       FROM public.tenants t
       ORDER BY t.nombre
     `)

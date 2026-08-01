@@ -17,6 +17,8 @@ export default async function TenantDetailPage({
   const { id } = await params
   const db = getDb()
 
+  const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000'
+
   // Fetch main tenant data first
   const [tenantResult] = await db.execute(sql`
     SELECT
@@ -28,11 +30,11 @@ export default async function TenantDetailPage({
       t.dominio_custom,
       (SELECT plan FROM public.suscripciones s WHERE s.organizacion_id = t.id ORDER BY s.created_at DESC LIMIT 1) AS plan,
       (SELECT COUNT(*)::int FROM public.usuarios u WHERE u.tenant_id = t.id) AS usuario_count,
-      (SELECT COUNT(*)::int FROM public.pacientes p JOIN public.sucursales s ON s.id = p.sucursal_id WHERE s.tenant_id = t.id) AS paciente_count,
-      (SELECT COUNT(*)::int FROM public.turnos tu JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE s.tenant_id = t.id) AS turno_count,
-      (SELECT COUNT(*)::int FROM public.recetas r JOIN public.pacientes p ON p.id = r.paciente_id JOIN public.sucursales s ON s.id = p.sucursal_id WHERE s.tenant_id = t.id) AS receta_count,
-      (SELECT MAX(tu.fecha_hora) FROM public.turnos tu JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE s.tenant_id = t.id) AS ultimo_turno,
-      (SELECT MAX(r.created_at) FROM public.recetas r JOIN public.pacientes p ON p.id = r.paciente_id JOIN public.sucursales s ON s.id = p.sucursal_id WHERE s.tenant_id = t.id) AS ultima_receta
+      (SELECT COUNT(*)::int FROM public.pacientes p LEFT JOIN public.sucursales s ON s.id = p.sucursal_id WHERE (s.tenant_id = t.id) OR (p.sucursal_id IS NULL AND t.id = ${DEFAULT_TENANT_ID})) AS paciente_count,
+      (SELECT COUNT(*)::int FROM public.turnos tu LEFT JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE (s.tenant_id = t.id) OR (tu.sucursal_id IS NULL AND t.id = ${DEFAULT_TENANT_ID})) AS turno_count,
+      (SELECT COUNT(*)::int FROM public.recetas r JOIN public.pacientes p ON p.id = r.paciente_id LEFT JOIN public.sucursales s ON s.id = p.sucursal_id WHERE (s.tenant_id = t.id) OR (p.sucursal_id IS NULL AND t.id = ${DEFAULT_TENANT_ID})) AS receta_count,
+      (SELECT MAX(tu.fecha_hora) FROM public.turnos tu LEFT JOIN public.sucursales s ON s.id = tu.sucursal_id WHERE (s.tenant_id = t.id) OR (tu.sucursal_id IS NULL AND t.id = ${DEFAULT_TENANT_ID})) AS ultimo_turno,
+      (SELECT MAX(r.created_at) FROM public.recetas r JOIN public.pacientes p ON p.id = r.paciente_id LEFT JOIN public.sucursales s ON s.id = p.sucursal_id WHERE (s.tenant_id = t.id) OR (p.sucursal_id IS NULL AND t.id = ${DEFAULT_TENANT_ID})) AS ultima_receta
     FROM public.tenants t
     WHERE t.id = ${id}
   `)
