@@ -52,12 +52,16 @@ autogenerado reemplace esta sección.
 | `GET` | `/api/recuperacion/verify` | Verificar integridad de un backup | Operador |
 | `DELETE` | `/api/recuperacion/delete` | Eliminar un backup | Operador |
 | `POST` | `/api/auth/impersonate/start` | Iniciar impersonación "Entrar Como" (TOTP + proxy) | Operador + 2FA |
+| `POST` | `/api/auth/impersonate/direct` | Entrar sin aprobación por email (TOTP + proxy) | Operador + 2FA |
+| `POST` | `/api/auth/impersonate/revoke` | Revocar todas las sesiones de impersonación activas de un tenant (TOTP + proxy) | Operador + 2FA |
 
 ### Dashboard — Impersonación
 
 | Método | Ruta | Descripción | Auth |
 |---|---|---|---|
 | `POST` | `/api/internal/impersonate` | Crear token de impersonación + enviar link por email | Red interna/operador |
+| `POST` | `/api/internal/impersonate/direct` | Crear token sin aprobación (via directa) | Red interna/operador |
+| `POST` | `/api/internal/impersonate/revoke` | Marcar `session_revoked_at` en sesiones activas del tenant | Red interna/operador |
 | `GET` | `/api/auth/impersonate` | Validar token y fijar sesión de impersonación | Token HS256 |
 | `POST` | `/api/auth/impersonate/exit` | Salir del modo impersonación | Sesión |
 

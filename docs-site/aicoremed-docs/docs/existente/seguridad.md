@@ -125,18 +125,21 @@ Sistema de soporte para que un **operador de la Ops Console** pueda actuar como 
 
 ### Flujo
 1. El operador autenticado (2FA TOTP) abre `ops.aicorebots.com` → tenant → **Entrar Como**.
-2. `POST /api/auth/impersonate/start` (ops-console) verifica TOTP y hace proxy al dashboard.
-3. El dashboard crea un token en la tabla `impersonation_tokens` (migración 0053) y envía el link por email (`lib/services/email.ts`, nodemailer) o lo muestra si SMTP no está configurado.
-4. El link `/api/auth/impersonate?token=...` valida el token (HS256, caducidad), fija la cookie de sesión de impersonación y redirige al dashboard.
+2. `POST /api/auth/impersonate/start` (ops-console) verifica TOTP, valida el motivo (mín. 10 caracteres) y hace proxy al dashboard.
+3. El dashboard crea un token en la tabla `impersonation_tokens` (migración 0053 + 0055) con el `motivo` y envía el link por email (`lib/services/email.ts`, nodemailer) o lo muestra si SMTP no está configurado.
+4. El link `/api/auth/impersonate?token=...` valida el token (HS256, caducidad), fija la cookie de sesión de impersonación y redirige al dashboard. Al consumirlo, se genera un `jti` (JWT ID) que queda registrado en `impersonation_tokens.session_jti` y se inyecta en el JWT de la cookie (`createImpersonationToken` usa `.setJti()`).
 5. El banner ámbar `impersonation-banner.tsx` avisa que la sesión está en modo soporte. `proxy.ts` valida la cookie en cada request.
 6. Salir: `/api/auth/impersonate/exit` limpia la cookie.
+7. **Revocar sesión activa**: el operador puede revocar todas las sesiones de impersonación activas del tenant desde `ops.aicorebots.com` → tenant → **Revocar sesiones** (botón `RevokeImpersonationButton`). `POST /api/auth/impersonate/revoke` (ops-console, TOTP + motivo) → proxy → `POST /api/internal/impersonate/revoke` (dashboard, `x-internal-key`) marca `session_revoked_at` en los tokens activos. La verificación de revocación se aplica en `getImpersonationSession()` del dashboard (cubre `requireAuth`, `withTenantScope` y el layout), de modo que la sesión deja de ser válida en el siguiente request.
 
 ### Protecciones
 - Token de un solo uso (`usado = true`), caducidad `expires_at`, firmado HS256 con `AUTH_SECRET`
-- Requiere 2FA TOTP del operador para iniciar
-- Registro en `platform_audit_log` (ops-console) de cada impersonación
+- Motivo obligatorio (mín. 10 caracteres) validado en ops-console (`validateMotivo`) y en dashboard (`impersonacion.ts`, `MOTIVO_MIN_LENGTH = 10`)
+- Requiere 2FA TOTP del operador para iniciar y para revocar
+- Registro en `platform_audit_log` (ops-console) de cada impersonación y revocación (`impersonate.start`, `impersonate.direct`, `impersonate.revoke`, y fallos `impersonate.*.failed` con `TOTP_REQUIRED`/error)
 - Cookie httpOnly + banner visible durante toda la sesión
 - El endpoint de inicio (`POST /api/internal/impersonate`) está restringido a red interna/operadores
+- Revocación inmediata por `jti`: cada request autenticado verifica que `session_jti` no tenga `session_revoked_at`
 
 ---
 
@@ -285,3 +288,12 @@ Hallazgos corregidos en sesiones previas:
 - Verificación de que las claves GPG privadas no viven en el repositorio
 - 3 vías de recuperación (SSH/Makefile, Ops Console, n8n WF-14) auditadas
 - Impersonación ("Entrar Como") auditada: token de un solo uso, 2FA TOTP requerido, logging en `platform_audit_log`
+
+### 01/08/2026 — Hardening Ops Console (impersonación + overrides)
+**Resultado: 0 críticos / 0 altos / 0 medios / 0 bajos**
+
+- **Tests de overrides**: 33 tests para los 4 endpoints de override de Ops Console (gracia, mp-reintentar, evolution-reiniciar, suscripcion-activar) + TOTP + validation
+- **Motivo obligatorio (mín. 10 caracteres)**: validado en 4 puntos — ops-console `validateMotivo` (start/direct) y dashboard `impersonacion.ts`/`internal/impersonate` (+direct)
+- **Revocación de sesión de impersonación activa**: migración 0056 (`session_jti`, `session_revoked_at`), `jti` en JWT (`createImpersonationToken` → `.setJti()`), verificación en `getImpersonationSession()` (cubre requireAuth/withTenantScope/layout), endpoints `POST /api/auth/impersonate/revoke` (ops-console) y `POST /api/internal/impersonate/revoke` (dashboard), UI `RevokeImpersonationButton`
+- **Logs de fallo en overrides**: los 4 endpoints ahora registran `override.*.failed` en `platform_audit_log` con el mensaje de error real (envuelto en try/catch para no alterar la respuesta original)
+- 66 tests pasando, builds dashboard + ops-console con 0 errores TS

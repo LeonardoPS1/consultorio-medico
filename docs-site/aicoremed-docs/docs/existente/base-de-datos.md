@@ -75,6 +75,8 @@ Las migraciones son **acumulativas** y deben ejecutarse en orden:
 | 052 | `0052_derivaciones_missing_columns.sql` | Columnas faltantes en `derivaciones` |
 | 053 | `0053_impersonacion.sql` | Tabla `impersonation_tokens` (impersonación operator→tenant) |
 | 054 | `0054_fix_historial_tipo_check.sql` | Corrige CHECK `historial_medico_tipo_check` en `historial_medico` (admite `otro`, `encuesta` y valores del enum actual) |
+| 055 | `0055_add_motivo_impersonation.sql` | Columna `motivo` en `impersonation_tokens` (justificación obligatoria, mín. 10 caracteres) |
+| 056 | `0056_revocar_impersonacion.sql` | Columnas `session_jti` y `session_revoked_at` en `impersonation_tokens` (revocación de sesión de impersonación activa) |
 
 ```bash
 # Ejecutar todas las migraciones (en orden)
@@ -290,9 +292,13 @@ Tokens de un solo uso que permiten a un operador de Ops Console ingresar como ad
 | `tenant_id` | UUID FK → tenants | Tenant destino |
 | `usuario_id` | UUID FK → usuarios | Usuario admin objetivo |
 | `creado_por_operator_id` / `creado_por_operator_email` | VARCHAR | Operador que la creó (auditoría) |
+| `motivo` | TEXT | Justificación de la impersonación (obligatoria, mín. 10 caracteres) |
 | `token` | VARCHAR(64) UNIQUE | Token de un solo uso |
 | `usado` | BOOLEAN | Si ya fue consumido |
 | `expires_at` | TIMESTAMPTZ | Expiración (corta) |
+| `used_at` | TIMESTAMPTZ | Cuándo se consumió el token |
+| `session_jti` | VARCHAR(64) | `jti` (JWT ID) de la cookie de sesión generada al consumir el token |
+| `session_revoked_at` | TIMESTAMPTZ | Cuándo se revocó la sesión de impersonación (revocación manual) |
 
 ## Vistas Optimizadas
 

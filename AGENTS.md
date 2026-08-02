@@ -683,6 +683,8 @@ consultorio-medico/
 | **Recetas: listado + filtro + acciones ficha** | Fix 500 por cast enum → buildEstadoWhere sin cast; lib/receta-utils.ts + lib/receta-pdf.ts; filtro por paciente en UI; renovar/mover a historial/PDF desde ficha. Commit `b0cf4f8` | 31/07 |
 | **Migración 0054: CHECK historial_medico_tipo** | Corrige constraint para admitir 'otro', 'encuesta' y valores del enum actual. Aplicado en prod via docker exec psql. Commit `a1dedb4` | 31/07 |
 | **Recetas: vista previa click + fix filtro historial** | RecetaPreviewDialog (dashboard y portal) con iframe HTML + botones WhatsApp/Imprimir/Descargar; tabs controlados + cargarRecetas con estado del tab activo; generarHtmlReceta en lib/receta-pdf.ts. Commit `af0e9b5` | 31/07 |
+| **Hardening Ops Console: impersonación** | Tests overrides (33), motivo mín. 10 chars en 4 puntos (ops-console `validateMotivo` + dashboard `impersonacion.ts`), revocación de sesión activa: migración 0056 (`session_jti`/`session_revoked_at`), `jti` en JWT (`.setJti()`), verificación en `getImpersonationSession()`, endpoints `/api/auth/impersonate/revoke` + `/api/internal/impersonate/revoke`, UI `RevokeImpersonationButton`. Commits `164d7d3`, `b59127a` | 01/08 |
+| **Hardening Ops Console: logs de fallo en overrides** | Los 4 endpoints de override (gracia, mp-reintentar, evolution-reiniciar, suscripcion-activar) registran `override.*.failed` en `platform_audit_log` con el error real (envuelto en try/catch); tests actualizados para exigir el comportamiento. Commit `a2dceee` | 01/08 |
 
 ### 🟡 Prioridad Media
 

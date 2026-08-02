@@ -280,7 +280,7 @@ del monorepo (`ops-console/`, app independiente). Permite a operadores:
 
 - Gestionar tenants, operadores, sesiones y passkeys.
 - **Recuperación y backups per-tenant** (crear, listar, verificar, eliminar, restaurar).
-- **Impersonación de usuarios** ("Entrar Como") con TOTP + proxy de sesión.
+- **Impersonación de usuarios** ("Entrar Como") con TOTP + proxy de sesión, y **revocación** de sesiones activas por `jti`.
 - Auditoría de la plataforma (`platform_audit_log`).
 
 Usa su propia DB (`consultorio_medico`, schema `platform`) y servicios (tablas
@@ -384,6 +384,7 @@ En lugar de una tabla separada, se agregaron columnas `reset_token` y `reset_tok
 - Mínimo privilegio PostgreSQL (REVOKE CREATE post-migración)
 - Variables de entorno para todas las credenciales
 - Tokens de recuperación con expiración (1 hora) y un solo uso
-- **Impersonación** ("Entrar Como") con token firmado HS256 (`impersonation_tokens`), TOTP
-  de operador y banner visual + endpoint `/api/auth/impersonate/exit`
+- **Impersonación** ("Entrar Como") con token firmado HS256 (`impersonation_tokens`), motivo
+  obligatorio (mín. 10 caracteres), TOTP de operador, banner visual, revocación por `jti`
+  (`session_revoked_at`) y endpoint `/api/auth/impersonate/exit`
 - Portal de pacientes aislado en dominio dedicado con cookie `portal_session` httpOnly
