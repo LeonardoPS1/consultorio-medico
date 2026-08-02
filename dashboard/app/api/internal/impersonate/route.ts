@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { crearTokenImpersonacion } from '@/lib/impersonacion';
+import { crearTokenImpersonacion, MOTIVO_MIN_LENGTH, MOTIVO_MAX_LENGTH } from '@/lib/impersonacion';
 import { safeLog, safeWarn } from '@/lib/logger';
 import { sendEmail } from '@/lib/services/email';
 
@@ -28,6 +28,20 @@ export async function POST(request: Request) {
 
     if (!motivo || typeof motivo !== 'string' || motivo.trim().length === 0) {
       return NextResponse.json({ error: 'El motivo es obligatorio' }, { status: 400 });
+    }
+
+    if (motivo.trim().length < MOTIVO_MIN_LENGTH) {
+      return NextResponse.json(
+        { error: `El motivo debe tener al menos ${MOTIVO_MIN_LENGTH} caracteres` },
+        { status: 400 },
+      );
+    }
+
+    if (motivo.trim().length > MOTIVO_MAX_LENGTH) {
+      return NextResponse.json(
+        { error: `El motivo no puede exceder ${MOTIVO_MAX_LENGTH} caracteres` },
+        { status: 400 },
+      );
     }
 
     const tokenInfo = await crearTokenImpersonacion({ tenantId, operatorId, operatorEmail, motivo: motivo.trim() });

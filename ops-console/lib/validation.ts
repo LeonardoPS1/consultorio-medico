@@ -16,6 +16,18 @@ function validateTotpCode(code: unknown): string | null {
   return null
 }
 
+export const MOTIVO_MIN_LENGTH = 10
+export const MOTIVO_MAX_LENGTH = 500
+
+export function validateMotivo(motivo: unknown): string | null {
+  if (typeof motivo !== 'string') return 'El campo motivo es obligatorio'
+  const trimmed = motivo.trim()
+  if (trimmed.length === 0) return 'El motivo es obligatorio'
+  if (trimmed.length < MOTIVO_MIN_LENGTH) return `El motivo debe tener al menos ${MOTIVO_MIN_LENGTH} caracteres`
+  if (trimmed.length > MOTIVO_MAX_LENGTH) return `El motivo no puede exceder ${MOTIVO_MAX_LENGTH} caracteres`
+  return null
+}
+
 interface SafeParseOk<T> {
   success: true
   data: T

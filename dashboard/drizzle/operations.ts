@@ -135,12 +135,15 @@ export const impersonationTokens = pgTable(
     usado: boolean('usado').notNull().default(false),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     usedAt: timestamp('used_at', { withTimezone: true }),
+    sessionJti: varchar('session_jti', { length: 64 }),
+    sessionRevokedAt: timestamp('session_revoked_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => ({
     idxImpToken: index('idx_impersonation_tokens_token').on(table.token),
     idxImpTenant: index('idx_impersonation_tokens_tenant').on(table.tenantId),
+    idxImpSessionJti: index('idx_impersonation_tokens_session_jti').on(table.sessionJti),
   }),
 );
 

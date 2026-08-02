@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
 import { logAudit } from '@/lib/audit'
+import { validateMotivo } from '@/lib/validation'
 
 const DASHBOARD_URL = process.env.DASHBOARD_URL || 'https://med.aicorebots.com'
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY
@@ -23,12 +24,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Falta tenantId' }, { status: 400 })
     }
 
-    if (!motivo || typeof motivo !== 'string' || motivo.trim().length === 0) {
-      return NextResponse.json({ error: 'El motivo es obligatorio' }, { status: 400 })
-    }
-
-    if (motivo.length > 500) {
-      return NextResponse.json({ error: 'El motivo no puede exceder 500 caracteres' }, { status: 400 })
+    const error = validateMotivo(motivo)
+    if (error) {
+      return NextResponse.json({ error }, { status: 400 })
     }
 
     // Verificar TOTP del operador si tiene 2FA habilitado

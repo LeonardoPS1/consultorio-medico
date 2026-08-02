@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm'
 import { getSessionFromCookie } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import { ImpersonateButton } from './impersonate-button'
+import { RevokeImpersonationButton } from './revoke-impersonation-button'
 import { TenantManager } from './tenant-manager'
 
 export const dynamic = 'force-dynamic'
@@ -76,7 +77,10 @@ export default async function TenantDetailPage({
             Plan: {String(t.plan || 'free')}
           </p>
         </div>
-        <ImpersonateButton tenantId={id} tenantName={t.nombre as string} />
+        <div className="flex items-center gap-4">
+          <ImpersonateButton tenantId={id} tenantName={t.nombre as string} />
+          <RevokeImpersonationButton tenantId={id} tenantName={t.nombre as string} />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

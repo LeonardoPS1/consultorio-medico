@@ -27,6 +27,10 @@ export function ImpersonateButton({ tenantId, tenantName }: Props) {
       setMotivoError('El motivo es obligatorio')
       return false
     }
+    if (motivo.trim().length < 10) {
+      setMotivoError('El motivo debe tener al menos 10 caracteres')
+      return false
+    }
     if (motivo.length > 500) {
       setMotivoError('El motivo no puede exceder 500 caracteres')
       return false
@@ -175,14 +179,14 @@ export function ImpersonateButton({ tenantId, tenantName }: Props) {
 
                 <button
                   onClick={handleDirect}
-                  disabled={directLoading || emailLoading || !motivo.trim()}
+                  disabled={directLoading || emailLoading || !motivo.trim() || motivo.trim().length < 10}
                   className="w-full px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
                 >
                   {directLoading ? 'Abriendo sesión...' : '⚡ Entrar ahora (sin aprobación)'}
                 </button>
                 <button
                   onClick={handleEmail}
-                  disabled={directLoading || emailLoading || !motivo.trim()}
+                  disabled={directLoading || emailLoading || !motivo.trim() || motivo.trim().length < 10}
                   className="w-full px-4 py-2 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] disabled:opacity-50"
                 >
                   {emailLoading ? 'Enviando...' : 'Enviar email de acceso al admin'}

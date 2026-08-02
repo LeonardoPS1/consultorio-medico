@@ -28,10 +28,11 @@ export async function GET(request: Request) {
       return new Response('Token expirado', { status: 410 });
     }
 
-    // Marcar token como usado
+    // Marcar token como usado y guardar el jti de la sesión (para poder revocarla)
+    const sessionJti = crypto.randomUUID();
     await db
       .update(impersonationTokens)
-      .set({ usado: true, usedAt: new Date(), updatedAt: new Date() })
+      .set({ usado: true, usedAt: new Date(), updatedAt: new Date(), sessionJti })
       .where(eq(impersonationTokens.id, record.id));
 
     // Buscar datos del usuario
@@ -55,6 +56,7 @@ export async function GET(request: Request) {
       tenantId: user.tenantId || '00000000-0000-0000-0000-000000000000',
       impersonating: true,
       impersonatedBy: record.creadoPorOperatorEmail,
+      jti: sessionJti,
     });
 
     // Redirect al dashboard

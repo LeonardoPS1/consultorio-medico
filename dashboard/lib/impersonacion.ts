@@ -8,6 +8,10 @@ import { eq, and } from 'drizzle-orm';
 import { usuarios, impersonationTokens } from '@/drizzle/schema';
 import { db } from '@/lib/db';
 
+// MOTIVO_MIN_LENGTH debe mantenerse en sync con ops-console/lib/validation.ts
+export const MOTIVO_MIN_LENGTH = 10
+export const MOTIVO_MAX_LENGTH = 500
+
 export interface AdminImpersonado {
   id: string;
   email: string;
@@ -39,7 +43,11 @@ export async function crearTokenImpersonacion(params: {
   const { tenantId, operatorId, operatorEmail, motivo } = params;
 
   if (!motivo || motivo.trim().length === 0) {
-    throw new Error('El motivo es obligatorio para crear un token de impersonación');
+    throw new Error('El motivo es obligatorio para crear un token de impersonación')
+  }
+
+  if (motivo.trim().length < MOTIVO_MIN_LENGTH) {
+    throw new Error(`El motivo debe tener al menos ${MOTIVO_MIN_LENGTH} caracteres`)
   }
 
   const [admin] = await db

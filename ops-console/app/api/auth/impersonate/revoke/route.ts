@@ -46,31 +46,26 @@ export async function POST(request: Request) {
       await logAudit({
         operatorId: session.sub,
         operatorEmail: session.email,
-        accion: 'impersonate.failed',
+        accion: 'impersonate.revoke.failed',
         tenantAfectado: tenantId,
         recurso: undefined,
         motivo: motivo.trim(),
-        detalles: { error: 'TOTP_REQUIRED', viaDirecta: true },
+        detalles: { error: 'TOTP_REQUIRED' },
       })
       return NextResponse.json({
         error: 'TOTP_REQUIRED',
-        message: 'Se requiere verificación TOTP para entrar sin aprobación',
+        message: 'Se requiere verificación TOTP para revocar sesiones de impersonación',
       }, { status: 403 })
     }
 
-    // Llamar al dashboard para crear el token directo (sin email de aprobación)
-    const response = await fetch(`${DASHBOARD_URL}/api/internal/impersonate/direct`, {
+    // Llamar al dashboard para revocar las sesiones activas del tenant
+    const response = await fetch(`${DASHBOARD_URL}/api/internal/impersonate/revoke`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-internal-key': INTERNAL_API_KEY,
       },
-      body: JSON.stringify({
-        tenantId,
-        operatorId: session.sub,
-        operatorEmail: session.email,
-        motivo: motivo.trim(),
-      }),
+      body: JSON.stringify({ tenantId }),
     })
 
     const data = await response.json()
@@ -79,31 +74,28 @@ export async function POST(request: Request) {
       await logAudit({
         operatorId: session.sub,
         operatorEmail: session.email,
-        accion: 'impersonate.failed',
+        accion: 'impersonate.revoke.failed',
         tenantAfectado: tenantId,
         recurso: undefined,
         motivo: motivo.trim(),
-        detalles: { error: data.error || 'Error desconocido', viaDirecta: true },
+        detalles: { error: data.error || 'Error desconocido' },
       })
-      return NextResponse.json({ error: data.error || 'Error al crear token de impersonación directa' }, { status: response.status })
+      return NextResponse.json({ error: data.error || 'Error al revocar sesiones' }, { status: response.status })
     }
 
     await logAudit({
       operatorId: session.sub,
       operatorEmail: session.email,
-      accion: 'impersonate.direct',
+      accion: 'impersonate.revoke',
       tenantAfectado: tenantId,
-      recurso: data.adminEmail,
+      recurso: `sesiones:${data.revocadas ?? 0}`,
       motivo: motivo.trim(),
-      detalles: { expiresAt: data.expiresAt, viaDirecta: true },
+      detalles: { revocadas: data.revocadas ?? 0 },
     })
 
     return NextResponse.json({
       ok: true,
-      adminEmail: data.adminEmail,
-      adminNombre: data.adminNombre,
-      impersonateLink: data.impersonateLink,
-      expiresAt: data.expiresAt,
+      revocadas: data.revocadas ?? 0,
     })
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 })

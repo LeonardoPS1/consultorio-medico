@@ -1,5 +1,8 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { eq } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { impersonationTokens } from '@/drizzle/schema';
 
 export interface ImpersonationSession {
   sub: string;
@@ -10,6 +13,7 @@ export interface ImpersonationSession {
   tenantId: string;
   impersonating: true;
   impersonatedBy: string;
+  jti?: string;
 }
 
 const COOKIE_NAME_PROD = '__Secure-impersonation.session';
@@ -28,12 +32,27 @@ function getCookieName(): string {
 
 export async function createImpersonationToken(session: ImpersonationSession): Promise<string> {
   const secret = getSecret();
-  const token = await new SignJWT({ ...session })
+  const { jti, ...claims } = session;
+  const builder = new SignJWT(claims)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime(`${SESSION_HOURS}h`)
-    .sign(secret);
+    .setExpirationTime(`${SESSION_HOURS}h`);
+  if (jti) builder.setJti(jti);
+  const token = await builder.sign(secret);
   return token;
+}
+
+export async function isImpersonationSessionRevoked(jti: string): Promise<boolean> {
+  try {
+    const [row] = await db
+      .select({ sessionRevokedAt: impersonationTokens.sessionRevokedAt })
+      .from(impersonationTokens)
+      .where(eq(impersonationTokens.sessionJti, jti))
+      .limit(1);
+    return !!row?.sessionRevokedAt;
+  } catch {
+    return false;
+  }
 }
 
 export async function verifyImpersonationToken(token: string): Promise<ImpersonationSession | null> {
@@ -68,6 +87,11 @@ export async function getImpersonationSession(): Promise<ImpersonationSession | 
     if (!cookie?.value) return null;
     const data = await verifyImpersonationToken(cookie.value);
     if (!data) {
+      cookieStore.delete(getCookieName());
+      return null;
+    }
+    // Revoque de sesión: si el JWT trae jti y la sesión fue revocada, invalidar
+    if (data.jti && (await isImpersonationSessionRevoked(data.jti))) {
       cookieStore.delete(getCookieName());
       return null;
     }

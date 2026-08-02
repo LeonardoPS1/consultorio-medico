@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { loginBeginSchema, totpVerifySchema } from '../lib/validation'
+import { loginBeginSchema, totpVerifySchema, validateMotivo } from '../lib/validation'
 
 describe('loginBeginSchema', () => {
   it('accepts valid email', () => {
@@ -42,5 +42,41 @@ describe('totpVerifySchema', () => {
   it('rejects missing token', () => {
     const result = totpVerifySchema.safeParse({ email: 'test@example.com' })
     expect(result.success).toBe(false)
+  })
+})
+
+describe('validateMotivo', () => {
+  it('rejects empty motivo', () => {
+    expect(validateMotivo('')).toBe('El motivo es obligatorio')
+    expect(validateMotivo('   ')).toBe('El motivo es obligatorio')
+  })
+
+  it('rejects non-string motivo', () => {
+    expect(validateMotivo(123)).toBe('El campo motivo es obligatorio')
+    expect(validateMotivo(undefined)).toBe('El campo motivo es obligatorio')
+  })
+
+  it('rejects motivo shorter than 10 chars', () => {
+    const result = validateMotivo('soporte')
+    expect(result).toBe('El motivo debe tener al menos 10 caracteres')
+  })
+
+  it('rejects motivo with 10 chars after trimming whitespace', () => {
+    const result = validateMotivo('   soporte   ')
+    expect(result).toBe('El motivo debe tener al menos 10 caracteres')
+  })
+
+  it('accepts motivo with exactly 10 chars', () => {
+    expect(validateMotivo('abcdefghij')).toBeNull()
+  })
+
+  it('rejects motivo longer than 500 chars', () => {
+    const long = 'a'.repeat(501)
+    expect(validateMotivo(long)).toBe('El motivo no puede exceder 500 caracteres')
+  })
+
+  it('accepts valid motivo of 500 chars', () => {
+    const long = 'a'.repeat(500)
+    expect(validateMotivo(long)).toBeNull()
   })
 })

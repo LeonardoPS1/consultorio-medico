@@ -1,5 +1,6 @@
 import { getDb } from '@/lib/db'
 import { sql } from 'drizzle-orm'
+import { validateMotivo } from '@/lib/validation'
 
 export const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000'
 
@@ -22,12 +23,8 @@ export function getOperatorFromHeaders(request: Request): OverrideOperator | nul
   }
 }
 
-export function validateMotivo(motivo: unknown): string | null {
-  if (typeof motivo !== 'string') return 'El campo motivo es obligatorio'
-  const trimmed = motivo.trim()
-  if (trimmed.length < 5) return 'El motivo debe tener al menos 5 caracteres'
-  return null
-}
+// Re-export validateMotivo from validation.ts
+export { validateMotivo }
 
 export async function getTenantById(tenantId: string) {
   const db = getDb()
