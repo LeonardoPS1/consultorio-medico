@@ -244,6 +244,33 @@ export type Consentimiento = InferSelectModel<typeof consentimientos>;
 export type NewConsentimiento = InferInsertModel<typeof consentimientos>;
 
 // ============================================================
+// SOLICITUDES DE DATOS (Ley 19.628)
+// ============================================================
+export const solicitudesDatos = pgTable(
+  'solicitudes_datos',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    pacienteId: uuid('paciente_id')
+      .notNull()
+      .references(() => pacientes.id),
+    tipo: varchar('tipo', { length: 20 }).notNull(), // 'exportacion' | 'eliminacion'
+    estado: varchar('estado', { length: 20 }).notNull().default('pendiente'), // 'pendiente' | 'procesada'
+    tenantId: uuid('tenant_id').default('00000000-0000-0000-0000-000000000000'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    idxSolicitudesDatosPaciente: index('idx_solicitudes_datos_paciente').on(table.pacienteId),
+    idxSolicitudesDatosTipo: index('idx_solicitudes_datos_tipo').on(table.tipo),
+    idxSolicitudesDatosTenant: index('idx_solicitudes_datos_tenant').on(table.tenantId),
+    idxSolicitudesDatosEstado: index('idx_solicitudes_datos_estado').on(table.estado),
+  }),
+);
+
+export type SolicitudDato = InferSelectModel<typeof solicitudesDatos>;
+export type NewSolicitudDato = InferInsertModel<typeof solicitudesDatos>;
+
+// ============================================================
 // RELACIONES
 // ============================================================
 export const auditoriaAccesosRelations = relations(auditoriaAccesos, ({ one }) => ({

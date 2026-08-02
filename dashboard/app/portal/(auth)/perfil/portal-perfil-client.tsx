@@ -7,7 +7,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Phone, Shield, Save, MapPin, Heart } from 'lucide-react';
+import {
+  User,
+  Phone,
+  Shield,
+  Save,
+  MapPin,
+  Heart,
+  Download,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { ISAPRES_CHILENAS } from '@/lib/isapres';
 import { PushNotificationToggle } from '@/components/portal/PushNotificationToggle';
 import { PortalCard } from '@/components/portal/portal-card';
@@ -86,6 +96,48 @@ export default function PortalPerfilClient({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [showEliminarModal, setShowEliminarModal] = useState(false);
+  const [solicitarLoading, setSolicitarLoading] = useState(false);
+  const [solicitarResult, setSolicitarResult] = useState<
+    { ok: boolean; message: string } | null
+  >(null);
+
+  const handleDescargarDatos = () => {
+    window.location.href = '/api/portal/mis-datos/exportar';
+  };
+
+  const handleSolicitarEliminacion = async () => {
+    setSolicitarLoading(true);
+    setSolicitarResult(null);
+    try {
+      const res = await fetch('/api/portal/mis-datos/solicitar-eliminacion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.ok) {
+        setSolicitarResult({
+          ok: true,
+          message:
+            'Tu solicitud fue registrada. La revisará el equipo de la clínica — no se eliminan datos automáticamente.',
+        });
+        setShowEliminarModal(false);
+      } else {
+        setSolicitarResult({
+          ok: false,
+          message: data?.error || 'No se pudo registrar la solicitud.',
+        });
+      }
+    } catch {
+      setSolicitarResult({
+        ok: false,
+        message: 'Error de conexión. Intentá de nuevo.',
+      });
+    } finally {
+      setSolicitarLoading(false);
+    }
+  };
 
   useEffect(() => {
     setLoadingRegiones(true);
@@ -477,6 +529,105 @@ export default function PortalPerfilClient({
           </div>
         </form>
       </PortalCard>
+
+      {/* Tus datos — exportación y solicitud de eliminación */}
+      <PortalCard padding="md" className="mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Shield className="h-5 w-5 text-portal-muted-fg/60" />
+          <h2 className="text-lg font-semibold text-portal-fg">
+            Tus datos
+          </h2>
+        </div>
+        <p className="text-sm text-portal-muted-fg/80 mb-5">
+          Tenés derecho a solicitar una copia de tus datos personales o su
+          eliminación, según la Ley 19.628 (protección de datos personales).
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <PortalButton variant="secondary" onClick={handleDescargarDatos}>
+            <Download className="h-4 w-4" /> Descargar mis datos
+          </PortalButton>
+          <PortalButton
+            variant="ghost"
+            onClick={() => {
+              setSolicitarResult(null);
+              setShowEliminarModal(true);
+            }}
+            className="text-portal-destructive"
+          >
+            <Trash2 className="h-4 w-4" /> Solicitar eliminación de mis datos
+          </PortalButton>
+        </div>
+      </PortalCard>
+
+      {/* Modal de confirmación — solicitud de eliminación */}
+      {showEliminarModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          onClick={() => setShowEliminarModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl p-6 shadow-2xl"
+            style={{
+              background: 'var(--portal-bg-alt)',
+              border: '1px solid hsl(var(--portal-border-light))',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5 text-portal-destructive" />
+                <h3 className="text-lg font-semibold text-portal-fg">
+                  Solicitar eliminación de datos
+                </h3>
+              </div>
+              <button
+                type="button"
+                aria-label="Cerrar"
+                onClick={() => setShowEliminarModal(false)}
+                className="rounded-full p-1 text-portal-muted-fg/60 hover:bg-portal-muted"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="text-sm text-portal-fg/80 mb-2">
+              Al solicitar la eliminación, el equipo de la clínica revisará
+              tu solicitud de forma manual. La eliminación no es automática
+              ni inmediata.
+            </p>
+            <p className="text-sm text-portal-fg/80 mb-5">
+              La solicitud quedará registrada y recibirás una respuesta por
+              el canal de contacto que tengas activo.
+            </p>
+            {solicitarResult && (
+              <div
+                className={`mb-4 rounded-xl px-4 py-3 text-sm ${
+                  solicitarResult.ok
+                    ? 'text-portal-primary bg-portal-primary/10'
+                    : 'text-portal-destructive bg-portal-destructive/10'
+                }`}
+              >
+                {solicitarResult.message}
+              </div>
+            )}
+            <div className="flex gap-3 justify-end">
+              <PortalButton
+                variant="ghost"
+                onClick={() => setShowEliminarModal(false)}
+              >
+                Cancelar
+              </PortalButton>
+              <PortalButton
+                onClick={handleSolicitarEliminacion}
+                loading={solicitarLoading}
+                className="bg-portal-destructive hover:bg-portal-destructive/90 shadow-none"
+              >
+                <Trash2 className="h-4 w-4" /> Confirmar solicitud
+              </PortalButton>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
