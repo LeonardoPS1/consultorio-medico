@@ -179,14 +179,14 @@ export function ImpersonateButton({ tenantId, tenantName }: Props) {
 
                 <button
                   onClick={handleDirect}
-                  disabled={directLoading || emailLoading || !motivo.trim() || motivo.trim().length < 10}
+                  disabled={directLoading || emailLoading}
                   className="w-full px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
                 >
                   {directLoading ? 'Abriendo sesión...' : '⚡ Entrar ahora (sin aprobación)'}
                 </button>
                 <button
                   onClick={handleEmail}
-                  disabled={directLoading || emailLoading || !motivo.trim() || motivo.trim().length < 10}
+                  disabled={directLoading || emailLoading}
                   className="w-full px-4 py-2 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] disabled:opacity-50"
                 >
                   {emailLoading ? 'Enviando...' : 'Enviar email de acceso al admin'}

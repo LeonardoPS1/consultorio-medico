@@ -120,7 +120,7 @@ export function RevokeImpersonationButton({ tenantId, tenantName }: Props) {
 
                 <button
                   onClick={handleRevoke}
-                  disabled={loading || !motivo.trim() || motivo.trim().length < 10}
+                  disabled={loading}
                   className="w-full px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 disabled:opacity-50"
                 >
                   {loading ? 'Revocando...' : '⛔ Revocar sesiones activas'}
