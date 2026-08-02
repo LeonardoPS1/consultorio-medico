@@ -302,6 +302,11 @@ API + Chatwoot + n8n), **Plataforma** (PostgreSQL + Redis) y **Videoconsultas**
 sirve por `GET /api/status/public`. **No expone nombres técnicos de servicios, IPs ni
 versiones** (Ollama queda excluido por diseño).
 
+El subdominio `status.aicorebots.com` está creado en Dokploy (mismo app del dashboard,
+domainId `E7ibry4YPEJuZPOPRV49t`) y `proxy.ts` reescribe por host (`STATUS_DOMAINS` env,
+default `status.aicorebots.com`): la raíz del dominio sirve directamente `/status`, y las
+rutas `/status` y `/api/*` pasan sin cambios.
+
 ## Stack Tecnológico
 
 | Capa | Tecnología | Versión |
