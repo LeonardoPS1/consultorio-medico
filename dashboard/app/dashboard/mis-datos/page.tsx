@@ -37,7 +37,7 @@ async function getInitialData(): Promise<{
   try {
     const session = await auth();
     const role = session?.user?.role;
-    const view = role === 'admin' || role === 'medico';
+    const view = role === 'admin' || role === 'medico' || role === 'secretaria' || role === 'recepcionista';
 
     if (!view) {
       return { data: [], canView: false };

@@ -35,7 +35,7 @@ export const dynamic = 'force-dynamic';
 
 async function getInitialData(): Promise<WebhooksApiResponse | null> {
   try {
-    const res = await fetch('http://localhost:3000/api/webhooks/logs?limit=50&offset=0', {
+    const res = await fetch('/api/webhooks/logs?limit=50&offset=0', {
       cache: 'no-store',
     });
     if (!res.ok) return null;

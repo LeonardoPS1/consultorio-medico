@@ -35,6 +35,22 @@ export const GET = apiHandler(async (request: NextRequest) => {
     .from(webhookLogs)
     .where(whereConfigs);
 
+  // Get counts by status
+  const statusCounts = await db
+    .select({
+      status: webhookLogs.statusCode,
+      count: count(),
+    })
+    .from(webhookLogs)
+    .where(whereConfigs)
+    .groupBy(webhookLogs.statusCode);
+
+  const porEstado: Record<string, number> = {};
+  for (const row of statusCounts) {
+    const status = row.status?.toString() || 'unknown';
+    porEstado[status] = Number(row.count);
+  }
+
   const logs = await db
     .select()
     .from(webhookLogs)
@@ -43,5 +59,5 @@ export const GET = apiHandler(async (request: NextRequest) => {
     .limit(limit)
     .offset(offset);
 
-  return ok({ data: logs, total: Number(total) });
+  return ok({ data: logs, total: Number(total), porEstado });
 });

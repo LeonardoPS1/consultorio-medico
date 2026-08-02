@@ -69,7 +69,16 @@ export type FeatureId =
   | 'fhir-export'
   | 'consentimiento-compartir'
   | 'convenios-intercambio'
-  | 'soporte';
+  | 'soporte'
+  | 'solicitudes-datos'
+  | 'white-labeling'
+  | 'configuracion-regional'
+  | 'fonasa-isapres'
+  | 'disaster-recovery'
+  | 'status-publico'
+  | 'impersonation-hardening'
+  | 'incidentes-ops'
+  | 'crear-clinica';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -132,6 +141,15 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'consentimiento-compartir': 'professional',
   'convenios-intercambio': 'enterprise',
   soporte: 'starter',
+  'solicitudes-datos': 'starter',
+  'white-labeling': 'enterprise',
+  'configuracion-regional': 'enterprise',
+  'fonasa-isapres': 'enterprise',
+  'disaster-recovery': 'enterprise',
+  'status-publico': 'premium',
+  'impersonation-hardening': 'enterprise',
+  'incidentes-ops': 'enterprise',
+  'crear-clinica': 'enterprise',
 };
 
 // ============================================================

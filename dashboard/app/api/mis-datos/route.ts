@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 export const GET = apiHandler(async () => {
   const session = await requireAuth();
-  if (session.user.role !== 'admin' && session.user.role !== 'medico') {
+  if (session.user.role !== 'admin' && session.user.role !== 'medico' && session.user.role !== 'secretaria' && session.user.role !== 'recepcionista') {
     fail('No autorizado', 403);
   }
   const tenantId = session.user.tenantId || DEFAULT_TENANT_ID;
@@ -43,7 +43,7 @@ export const GET = apiHandler(async () => {
 
 export const PATCH = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();
-  if (session.user.role !== 'admin' && session.user.role !== 'medico') {
+  if (session.user.role !== 'admin' && session.user.role !== 'medico' && session.user.role !== 'secretaria' && session.user.role !== 'recepcionista') {
     fail('No autorizado', 403);
   }
   const tenantId = session.user.tenantId || DEFAULT_TENANT_ID;

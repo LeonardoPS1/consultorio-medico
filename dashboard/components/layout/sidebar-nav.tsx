@@ -69,7 +69,7 @@ const navItems: NavItem[] = [
   { title: 'Derivaciones', href: '/dashboard/derivaciones', icon: ArrowRightLeft, feature: 'derivaciones' },
   { title: 'Lista Negra', href: '/dashboard/blacklist', icon: Ban, feature: 'blacklist' },
   { title: 'Consentimientos', href: '/dashboard/consentimientos', icon: FileSignature, feature: 'consentimiento-informado' },
-  { title: 'Solicitudes de Datos', href: '/dashboard/mis-datos', icon: ShieldCheck },
+  { title: 'Solicitudes de Datos', href: '/dashboard/mis-datos', icon: ShieldCheck, feature: 'solicitudes-datos' },
   { title: 'Notificaciones', href: '/dashboard/notificaciones', icon: Bell },
   { title: 'Ajustes', href: '/dashboard/configuracion', icon: Sliders },
   { title: 'Novedades', href: '/dashboard/novedades', icon: Newspaper },
