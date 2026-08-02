@@ -30,11 +30,19 @@ const SEMAFORO: Record<EstadoCategoria['estado'], { label: string; dot: string; 
   },
 };
 
-export default function StatusPage() {
+/**
+ * Status page component - displays real-time service status
+ * @returns JSX.Element
+ */
+export default function StatusPage(): React.ReactElement {
   const [categorias, setCategorias] = useState<EstadoCategoria[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const cargar = useCallback(async () => {
+  /**
+   * Fetches status data from API
+   * @returns Promise<void>
+   */
+  const cargar = useCallback(async (): Promise<void> => {
     try {
       const res = await fetch('/api/status/public', { cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -47,7 +55,9 @@ export default function StatusPage() {
   }, []);
 
   useEffect(() => {
+    // Initial load
     cargar();
+    // Refresh every 60 seconds
     const interval = setInterval(cargar, 60_000);
     return () => clearInterval(interval);
   }, [cargar]);
@@ -60,7 +70,7 @@ export default function StatusPage() {
         </div>
         <header className="mb-10 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-2xl">
-            <span aria-hidden>🩺</span>
+            <span aria-hidden>📊</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Estado del servicio</h1>
           <p className="mt-2 text-muted-foreground">
@@ -107,7 +117,7 @@ export default function StatusPage() {
         )}
 
         <footer className="mt-12 border-t border-border/40 pt-6 text-center text-xs text-muted-foreground">
-          AiCoreMed · Sistema de gestión para consultorios médicos ·{' '}
+          AiCoreMed · Página de estado público ·{' '}
           <a href="https://med.aicorebots.com" className="text-primary underline-offset-4 hover:underline">
             med.aicorebots.com
           </a>
