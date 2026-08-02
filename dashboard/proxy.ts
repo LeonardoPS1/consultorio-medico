@@ -125,9 +125,21 @@ export async function proxy(request: NextRequest) {
   );
 
   const isPortalDomain = PORTAL_DOMAINS.has(hostname.toLowerCase());
+
+  // ─── 1c. Dominio dedicado a la página pública de estado ──
+  // Ej: status.aicorebots.com debe mostrar la página pública /status,
+  // no la landing de marketing ni el login del dashboard.
+  const STATUS_DOMAINS = new Set(
+    (process.env.STATUS_DOMAINS || 'status.aicorebots.com')
+      .split(',')
+      .map((d) => d.trim().toLowerCase())
+      .filter(Boolean),
+  );
+  const isStatusDomain = STATUS_DOMAINS.has(hostname.toLowerCase());
+
   // El subdominio del dominio portal (ej: 'consultorio') no es un tenant real:
   // resolver siempre al tenant por defecto para mantener branding/config consistentes.
-  let tenantId = isPortalDomain ? '00000000-0000-0000-0000-000000000000' : detectTenant(hostname);
+  let tenantId = isPortalDomain || isStatusDomain ? '00000000-0000-0000-0000-000000000000' : detectTenant(hostname);
 
   // ─── 1c. Override de tenant por sesión de impersonación ──
   // Si hay cookie de impersonación válida, el tenant es el impersonado
@@ -165,6 +177,13 @@ export async function proxy(request: NextRequest) {
       portalUrl.search = request.nextUrl.search;
       return NextResponse.redirect(portalUrl, 308);
     }
+  }
+
+  // ─── 1d. Dominio de estado público: servir /status en la raíz ──
+  // status.aicorebots.com/ debe mostrar la página de estado (no la landing).
+  // Las rutas /status, /api/* y los assets se dejan pasar intactos.
+  if (isStatusDomain && pathname !== '/status' && !pathname.startsWith('/status/') && !pathname.startsWith('/api/')) {
+    return NextResponse.rewrite(new URL('/status', request.url));
   }
 
   const response = NextResponse.next({
