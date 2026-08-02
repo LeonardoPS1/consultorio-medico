@@ -42,11 +42,19 @@ export default async function TenantsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold">Tenants</h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">
-          {tenantsList.length} organización{tenantsList.length !== 1 ? 'es' : ''} registrada{tenantsList.length !== 1 ? 's' : ''}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold">Tenants</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            {tenantsList.length} organización{tenantsList.length !== 1 ? 'es' : ''} registrada{tenantsList.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <Link
+          href="/dashboard/tenants/nuevo"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] rounded-lg transition-colors"
+        >
+          + Nueva clínica
+        </Link>
       </div>
 
       <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl overflow-hidden">

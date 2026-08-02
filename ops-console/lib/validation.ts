@@ -94,3 +94,18 @@ export const totpSetupSchema: AuthSchemas<{ email: string }> = {
 export const totpVerifySchema: AuthSchemas<{ email: string; token: string }> = {
   safeParse: safeParse([emailRule('email'), totpCodeRule('token')]),
 }
+
+export const crearTenantSchema: AuthSchemas<{
+  nombre: string
+  subdomain: string
+  adminEmail: string
+  adminNombre: string
+}> = {
+  safeParse: safeParse([
+    requiredRule('nombre', 'Nombre de la clínica'),
+    requiredRule('subdomain', 'Subdominio'),
+    requiredRule('adminEmail', 'Email del administrador'),
+    requiredRule('adminNombre', 'Nombre del administrador'),
+    emailRule('adminEmail'),
+  ]),
+}

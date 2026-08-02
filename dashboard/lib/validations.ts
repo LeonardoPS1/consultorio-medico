@@ -385,6 +385,17 @@ export const createTenantSchema = z.object({
     .regex(/^[a-z0-9-]+$/, 'Solo letras, números y guiones'),
 });
 
+export const createTenantInternalSchema = z.object({
+  nombre: z.string().min(1, 'Nombre es obligatorio'),
+  subdomain: z
+    .string()
+    .min(1, 'Subdominio es obligatorio')
+    .regex(/^[a-z0-9-]+$/, 'Solo letras, números y guiones'),
+  plan: z.enum(['free', 'starter', 'professional', 'premium', 'enterprise']).default('free'),
+  adminEmail: z.string().email('Email del administrador inválido'),
+  adminNombre: z.string().min(1, 'Nombre del administrador es obligatorio'),
+});
+
 // ─── Portal Auth ─────────────────────────────────────────
 
 const PORTAL_PHONE_REGEX = /^\+?[1-9]\d{6,14}$/;

@@ -4,7 +4,8 @@ import { requireAuth } from '@/lib/api-auth';
 import { parseBody, createTenantSchema } from '@/lib/validations';
 import { db } from '@/lib/db';
 import { tenants } from '@/drizzle/schema';
-import { eq, desc } from 'drizzle-orm';
+import { crearTenant } from '@/lib/services/tenant';
+import { desc } from 'drizzle-orm';
 
 // GET /api/admin/tenants - Listar todos los tenants
 export const GET = apiHandler(async () => {
@@ -32,18 +33,14 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
   const body = await parseBody(request, createTenantSchema);
 
-  const existing = await db
-    .select({ id: tenants.id })
-    .from(tenants)
-    .where(eq(tenants.subdomain, body.subdomain))
-    .limit(1);
-
-  if (existing.length > 0) conflict('El subdominio ya está en uso');
-
-  await db.insert(tenants).values({
-    nombre: body.nombre.trim(),
-    subdomain: body.subdomain.trim(),
-  });
+  try {
+    await crearTenant({ nombre: body.nombre, subdomain: body.subdomain });
+  } catch (e) {
+    if (e instanceof Error && e.message === 'El subdominio ya está en uso') {
+      conflict('El subdominio ya está en uso');
+    }
+    throw e;
+  }
 
   return created({ ok: true });
 });

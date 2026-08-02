@@ -1,6 +1,8 @@
 import { db } from '@/lib/db';
-import { tenants } from '@/drizzle/schema';
+import { tenants, usuarios } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { hash } from 'bcryptjs';
+import crypto from 'crypto';
 
 export interface TenantBranding {
   nombre: string;
@@ -85,3 +87,79 @@ export async function getTenantRegional(tenantId?: string): Promise<TenantRegion
 }
 
 export { defaultBranding, defaultRegional };
+
+// ─── Creación de tenants ─────────────────────────────────
+
+export interface CrearTenantResult {
+  tenantId: string;
+  subdomain: string;
+}
+
+/**
+ * Crea un tenant nuevo (con verificación de subdominio único).
+ * Lanza un Error con el mensaje si el subdominio ya está en uso.
+ */
+export async function crearTenant(input: {
+  nombre: string;
+  subdomain: string;
+}): Promise<CrearTenantResult> {
+  const subdomain = input.subdomain.trim();
+  const existing = await db
+    .select({ id: tenants.id })
+    .from(tenants)
+    .where(eq(tenants.subdomain, subdomain))
+    .limit(1);
+  if (existing.length > 0) {
+    throw new Error('El subdominio ya está en uso');
+  }
+
+  const tenantId = crypto.randomUUID();
+  await db.insert(tenants).values({
+    id: tenantId,
+    nombre: input.nombre.trim(),
+    subdomain,
+    logoUrl: '/aicoremed_dark_1200.svg',
+    colores: { primary: '#2563eb' },
+    activo: true,
+  });
+
+  return { tenantId, subdomain };
+}
+
+/**
+ * Crea un tenant nuevo con su primer usuario administrador.
+ * Devuelve el tenantId, subdomain y la contraseña temporal generada
+ * para que el caller pueda enviarla al admin por email.
+ */
+export async function crearTenantConAdmin(input: {
+  nombre: string;
+  subdomain: string;
+  plan?: string;
+  adminEmail: string;
+  adminNombre: string;
+}): Promise<CrearTenantResult & { adminEmail: string; adminNombre: string; passwordTemporal: string }> {
+  const { tenantId, subdomain } = await crearTenant({
+    nombre: input.nombre,
+    subdomain: input.subdomain,
+  });
+
+  const plan = input.plan || 'free';
+  const adminEmail = input.adminEmail.toLowerCase().trim();
+  const adminNombre = input.adminNombre.trim();
+
+  const passwordTemporal = crypto.randomBytes(12).toString('base64url');
+  const passwordHash = await hash(passwordTemporal, 10);
+
+  await db.insert(usuarios).values({
+    id: crypto.randomUUID(),
+    email: adminEmail,
+    passwordHash,
+    nombre: adminNombre,
+    rol: 'admin',
+    activo: true,
+    tenantId,
+    plan,
+  });
+
+  return { tenantId, subdomain, adminEmail, adminNombre, passwordTemporal };
+}
