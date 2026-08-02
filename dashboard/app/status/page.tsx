@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { PortalThemeToggle } from '@/components/portal/theme-toggle';
 
 interface EstadoCategoria {
   categoria: string;
@@ -53,7 +54,10 @@ export default function StatusPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto w-full max-w-3xl px-6 py-16">
+      <div className="relative mx-auto w-full max-w-3xl px-6 py-16">
+        <div className="absolute right-6 top-6">
+          <PortalThemeToggle />
+        </div>
         <header className="mb-10 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-2xl">
             <span aria-hidden>🩺</span>
