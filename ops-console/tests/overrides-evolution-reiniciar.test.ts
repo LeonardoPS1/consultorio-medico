@@ -219,7 +219,7 @@ describe('Override Evolution Reiniciar endpoint', () => {
       }))
     })
 
-    it('excepción de red en Evolution API: propaga error (logAudit no se llama en catch)', async () => {
+    it('excepción de red en Evolution API: propaga error Y registra logAudit con accion override.evolution.reiniciar.failed', async () => {
       setEvolutionEnv('test-key')
       mockGetOperator.mockReturnValue({
         operatorId: 'operator-1',
@@ -236,8 +236,14 @@ describe('Override Evolution Reiniciar endpoint', () => {
       const response = await POST(request)
 
       expect(response.status).toBe(500)
-      // The current code catches the error and returns serverError, logAudit is NOT called on network exception
-      expect(mockLogAudit).toHaveBeenCalledTimes(0)
+      expect(mockLogAudit).toHaveBeenCalledTimes(1)
+      expect(mockLogAudit).toHaveBeenCalledWith(expect.objectContaining({
+        accion: 'override.evolution.reiniciar.failed',
+        tenantAfectado: 'tenant-123',
+        operatorId: 'operator-1',
+        operatorEmail: 'operator@test.com',
+        detalles: expect.objectContaining({ error: 'Network error' }),
+      }))
     })
   })
 })

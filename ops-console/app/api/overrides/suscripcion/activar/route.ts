@@ -13,15 +13,18 @@ import {
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
+  let operator: ReturnType<typeof getOperatorFromHeaders> | null = null
+  let tenantId: string | null = null
   try {
-    const operator = getOperatorFromHeaders(request)
+    operator = getOperatorFromHeaders(request)
     if (!operator) return unauthorized()
 
     const body = await request.json().catch(() => null)
     if (!body || typeof body !== 'object') return error('Body inválido', 400)
 
-    const { tenantId, motivo } = body as Record<string, unknown>
-    if (!tenantId || typeof tenantId !== 'string') return error('tenantId es obligatorio', 400)
+    const { tenantId: tid, motivo } = body as Record<string, unknown>
+    tenantId = typeof tid === 'string' ? tid : null
+    if (!tenantId) return error('tenantId es obligatorio', 400)
     const motivoError = validateMotivo(motivo)
     if (motivoError) return error(motivoError, 400)
 
@@ -100,6 +103,18 @@ export async function POST(request: NextRequest) {
       usuariosActualizados,
     })
   } catch (err) {
+    try {
+      await logAudit({
+        operatorId: operator?.operatorId ?? 'desconocido',
+        operatorEmail: operator?.operatorEmail ?? 'desconocido',
+        accion: 'override.suscripcion.activar.failed',
+        tenantAfectado: tenantId ?? 'desconocido',
+        motivo: null,
+        detalles: { error: err instanceof Error ? err.message : String(err) },
+      })
+    } catch (logErr) {
+      console.error('[ops-audit] No se pudo registrar el intento fallido de override.suscripcion.activar', logErr)
+    }
     return serverError(err)
   }
 }

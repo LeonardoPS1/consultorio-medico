@@ -13,7 +13,7 @@ export interface AuditEntry {
   accion: string
   tenantAfectado?: string
   recurso?: string
-  motivo?: string
+  motivo?: string | null
   ipAddress?: string
   detalles?: Record<string, unknown>
 }

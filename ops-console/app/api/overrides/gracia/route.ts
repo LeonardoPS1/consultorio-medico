@@ -48,15 +48,18 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  let operator: ReturnType<typeof getOperatorFromHeaders> | null = null
+  let tenantId: string | null = null
   try {
-    const operator = getOperatorFromHeaders(request)
+    operator = getOperatorFromHeaders(request)
     if (!operator) return unauthorized()
 
     const body = await request.json().catch(() => null)
     if (!body || typeof body !== 'object') return error('Body inválido', 400)
 
-    const { tenantId, dias, motivo } = body as Record<string, unknown>
-    if (!tenantId || typeof tenantId !== 'string') return error('tenantId es obligatorio', 400)
+    const { tenantId: tid, dias, motivo } = body as Record<string, unknown>
+    tenantId = typeof tid === 'string' ? tid : null
+    if (!tenantId) return error('tenantId es obligatorio', 400)
     if (typeof dias !== 'number' || !Number.isInteger(dias) || dias < 1 || dias > 30) {
       return error('dias debe ser un entero entre 1 y 30', 400)
     }
@@ -107,6 +110,18 @@ export async function POST(request: NextRequest) {
 
     return ok({ ok: true, antes, despues })
   } catch (err) {
+    try {
+      await logAudit({
+        operatorId: operator?.operatorId ?? 'desconocido',
+        operatorEmail: operator?.operatorEmail ?? 'desconocido',
+        accion: 'override.gracia.failed',
+        tenantAfectado: tenantId ?? 'desconocido',
+        motivo: null,
+        detalles: { error: err instanceof Error ? err.message : String(err) },
+      })
+    } catch (logErr) {
+      console.error('[ops-audit] No se pudo registrar el intento fallido de override.gracia', logErr)
+    }
     return serverError(err)
   }
 }

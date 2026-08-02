@@ -198,7 +198,7 @@ describe('Override MP Reintentar endpoint', () => {
       }))
     })
 
-    it('fallo en llamada externa al dashboard: propaga error Y registra logAudit con accion override.mp.reintentar (fallido)', async () => {
+    it('fallo en llamada externa al dashboard: propaga error Y registra logAudit con accion override.mp.reintentar.failed', async () => {
       mockGetOperator.mockReturnValue({
         operatorId: 'operator-1',
         operatorEmail: 'operator@test.com',
@@ -223,13 +223,17 @@ describe('Override MP Reintentar endpoint', () => {
       const response = await POST(request)
 
       expect(response.status).toBe(500)
-      // Note: current implementation does NOT log audit on dashboard failure
-      // It goes to error() helper which doesn't call logAudit
-      // This test documents the current behavior
-      expect(mockLogAudit).toHaveBeenCalledTimes(0)
+      expect(mockLogAudit).toHaveBeenCalledTimes(1)
+      expect(mockLogAudit).toHaveBeenCalledWith(expect.objectContaining({
+        accion: 'override.mp.reintentar.failed',
+        tenantAfectado: 'tenant-123',
+        operatorId: 'operator-1',
+        operatorEmail: 'operator@test.com',
+        detalles: expect.objectContaining({ error: 'Internal server error' }),
+      }))
     })
 
-    it('excepción de red en llamada externa: propaga error', async () => {
+    it('excepción de red en llamada externa: propaga error Y registra logAudit con accion override.mp.reintentar.failed', async () => {
       mockGetOperator.mockReturnValue({
         operatorId: 'operator-1',
         operatorEmail: 'operator@test.com',
@@ -250,8 +254,14 @@ describe('Override MP Reintentar endpoint', () => {
       const response = await POST(request)
 
       expect(response.status).toBe(500)
-      // The current code catches the error and returns serverError, doesn't log audit
-      expect(mockLogAudit).toHaveBeenCalledTimes(0)
+      expect(mockLogAudit).toHaveBeenCalledTimes(1)
+      expect(mockLogAudit).toHaveBeenCalledWith(expect.objectContaining({
+        accion: 'override.mp.reintentar.failed',
+        tenantAfectado: 'tenant-123',
+        operatorId: 'operator-1',
+        operatorEmail: 'operator@test.com',
+        detalles: expect.objectContaining({ error: 'Network error' }),
+      }))
     })
   })
 

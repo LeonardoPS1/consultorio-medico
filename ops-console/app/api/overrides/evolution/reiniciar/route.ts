@@ -13,15 +13,18 @@ const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || 'http://evolution:808
 const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY
 
 export async function POST(request: NextRequest) {
+  let operator: ReturnType<typeof getOperatorFromHeaders> | null = null
+  let tenantId: string | null = null
   try {
-    const operator = getOperatorFromHeaders(request)
+    operator = getOperatorFromHeaders(request)
     if (!operator) return unauthorized()
 
     const body = await request.json().catch(() => null)
     if (!body || typeof body !== 'object') return error('Body inválido', 400)
 
-    const { tenantId, motivo } = body as Record<string, unknown>
-    if (!tenantId || typeof tenantId !== 'string') return error('tenantId es obligatorio', 400)
+    const { tenantId: tid, motivo } = body as Record<string, unknown>
+    tenantId = typeof tid === 'string' ? tid : null
+    if (!tenantId) return error('tenantId es obligatorio', 400)
     const motivoError = validateMotivo(motivo)
     if (motivoError) return error(motivoError, 400)
 
@@ -84,6 +87,18 @@ export async function POST(request: NextRequest) {
 
     return ok({ ok: true, instancia: instanceName, respuesta: responseBody })
   } catch (err) {
+    try {
+      await logAudit({
+        operatorId: operator?.operatorId ?? 'desconocido',
+        operatorEmail: operator?.operatorEmail ?? 'desconocido',
+        accion: 'override.evolution.reiniciar.failed',
+        tenantAfectado: tenantId ?? 'desconocido',
+        motivo: null,
+        detalles: { error: err instanceof Error ? err.message : String(err) },
+      })
+    } catch (logErr) {
+      console.error('[ops-audit] No se pudo registrar el intento fallido de override.evolution.reiniciar', logErr)
+    }
     return serverError(err)
   }
 }

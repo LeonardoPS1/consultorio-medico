@@ -176,7 +176,7 @@ describe('Override Suscripción Activar endpoint', () => {
       }))
     })
 
-    it('fallo en DB: logAudit NO se llama (se llama DESPUÉS de las operaciones DB)', async () => {
+    it('fallo en DB: se registra el intento fallido en logAudit con accion override.suscripcion.activar.failed', async () => {
       mockGetOperator.mockReturnValue({
         operatorId: 'operator-1',
         operatorEmail: 'operator@test.com',
@@ -199,8 +199,14 @@ describe('Override Suscripción Activar endpoint', () => {
       const response = await POST(request)
 
       expect(response.status).toBe(500)
-      // logAudit se llama DESPUÉS de las operaciones DB en este endpoint
-      expect(mockLogAudit).toHaveBeenCalledTimes(0)
+      expect(mockLogAudit).toHaveBeenCalledTimes(1)
+      expect(mockLogAudit).toHaveBeenCalledWith(expect.objectContaining({
+        accion: 'override.suscripcion.activar.failed',
+        tenantAfectado: 'tenant-123',
+        operatorId: 'operator-1',
+        operatorEmail: 'operator@test.com',
+        detalles: expect.objectContaining({ error: 'DB connection failed' }),
+      }))
     })
   })
 })
