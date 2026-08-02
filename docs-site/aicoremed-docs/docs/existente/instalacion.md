@@ -402,6 +402,7 @@ lógica vive en `dashboard/proxy.ts`.
 - **Portal paciente**: https://consultorio.aicorebots.com
 - **n8n**: https://n8n.aicorebots.com
 - **Ops Console**: https://ops.aicorebots.com
+- **Estado del servicio**: https://status.aicorebots.com (público, sin auth)
 - **Docs**: https://docs.aicorebots.com
 - **Web**: https://aicorebots.com
 - **Email**: contacto@aicorebots.com

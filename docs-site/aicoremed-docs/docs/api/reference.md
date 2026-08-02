@@ -41,6 +41,8 @@ autogenerado reemplace esta sección.
 | `GET` | `/api/portal/recetas/{id}` | PDF de receta del portal del paciente | Sesión portal |
 | `GET` | `/verificar-receta/{id}` | Verificación pública de receta (firma QR SHA-256) | Pública |
 | `POST` | `/api/deploy/dokploy` | Proxy interno de despliegue (GHA → Dokploy API) | `x-internal-key` |
+| `GET` | `/api/status/public` | Estado público de la plataforma (3 categorías, semáforo; sin nombres técnicos ni IPs) | Pública |
+| `GET` | `/status` | Página pública de estado (`status.aicorebots.com`) | Pública |
 
 ### Ops Console (ops.aicorebots.com)
 

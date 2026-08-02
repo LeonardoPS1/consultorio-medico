@@ -51,6 +51,8 @@ AicoreMed es un SaaS multi-tenant para clínicas y médicos independientes en Ch
 - **Soporte conversacional** — canal de soporte vía Chatwoot + Evolution API.
 - **Ops Console** — consola de operaciones (tenants, operadores, impersonación, backups
   per-tenant) en `ops.aicorebots.com`.
+- **Página de estado pública** — estado en tiempo real de la plataforma (semáforo
+  Mensajería/Plataforma/Videoconsultas) en `status.aicorebots.com`.
 - **Infraestructura 100% self-hosted** — sin intermediarios SaaS de terceros, corre
   íntegramente en la VPS propia sobre Docker.
 

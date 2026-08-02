@@ -685,6 +685,8 @@ consultorio-medico/
 | **Recetas: vista previa click + fix filtro historial** | RecetaPreviewDialog (dashboard y portal) con iframe HTML + botones WhatsApp/Imprimir/Descargar; tabs controlados + cargarRecetas con estado del tab activo; generarHtmlReceta en lib/receta-pdf.ts. Commit `af0e9b5` | 31/07 |
 | **Hardening Ops Console: impersonación** | Tests overrides (33), motivo mín. 10 chars en 4 puntos (ops-console `validateMotivo` + dashboard `impersonacion.ts`), revocación de sesión activa: migración 0056 (`session_jti`/`session_revoked_at`), `jti` en JWT (`.setJti()`), verificación en `getImpersonationSession()`, endpoints `/api/auth/impersonate/revoke` + `/api/internal/impersonate/revoke`, UI `RevokeImpersonationButton`. Commits `164d7d3`, `b59127a` | 01/08 |
 | **Hardening Ops Console: logs de fallo en overrides** | Los 4 endpoints de override (gracia, mp-reintentar, evolution-reiniciar, suscripcion-activar) registran `override.*.failed` en `platform_audit_log` con el error real (envuelto en try/catch); tests actualizados para exigir el comportamiento. Commit `a2dceee` | 01/08 |
+| **Crear clínica desde ops-console** | Endpoint interno `POST /api/internal/tenants` (dashboard, `x-internal-key`, reusa `crearTenantConAdmin` en `lib/services/tenant.ts`), formulario `/dashboard/tenants/nuevo` + `/api/tenants/crear` (ops-console, `logAudit tenant.create`), botón "+ Nueva clínica" en Fleet. 74 tests pass. Commit `f7620b6` | 01/08 |
+| **Página pública de estado** | `status.aicorebots.com` (pendiente dominio Dokploy). `dashboard/lib/status-publico.ts` (3 categorías públicas Mensajería/Plataforma/Videoconsultas, sin nombres técnicos, cache 60s) + `GET /api/status/public` + página `/status` con semáforo. | 01/08 |
 
 ### 🟡 Prioridad Media
 

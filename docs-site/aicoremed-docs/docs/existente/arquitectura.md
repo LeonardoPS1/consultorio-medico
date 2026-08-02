@@ -287,6 +287,16 @@ Usa su propia DB (`consultorio_medico`, schema `platform`) y servicios (tablas
 `platform_tenants`, `platform_operators`, `platform_audit_log`, `impersonation_tokens`).
 La sesión se maneja con cookie propia firmada (HS256, `AUTH_SECRET`).
 
+### 10. Página pública de estado
+
+Página pública en `status.aicorebots.com` (ruta `/status` del dashboard, sin auth) que
+expone el estado de la plataforma en 3 categorías genéricas — **Mensajería** (Evolution
+API + Chatwoot + n8n), **Plataforma** (PostgreSQL + Redis) y **Videoconsultas**
+(LiveKit) — con semáforo verde/amarillo/rojo y última actualización. La lógica vive en
+`dashboard/lib/status-publico.ts` (checks simplificados, cache en memoria de 60s) y se
+sirve por `GET /api/status/public`. **No expone nombres técnicos de servicios, IPs ni
+versiones** (Ollama queda excluido por diseño).
+
 ## Stack Tecnológico
 
 | Capa | Tecnología | Versión |
