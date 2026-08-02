@@ -89,6 +89,14 @@ export const alertsHistory = platform.table('alerts_history', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+// ─── 7. Intentos de Login (rate limiting) ───────────────────────────────────
+export const loginAttempts = platform.table('login_attempts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  identifier: varchar('identifier', { length: 255 }).notNull(),
+  exitoso: boolean('exitoso').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
 // ─── Tipos exportados ──────────────────────────────────────────────────────
 export type PlatformOperator = typeof platformOperators.$inferSelect
 export type NewPlatformOperator = typeof platformOperators.$inferInsert
@@ -102,3 +110,5 @@ export type AlertConfig = typeof alertsConfig.$inferSelect
 export type NewAlertConfig = typeof alertsConfig.$inferInsert
 export type AlertHistory = typeof alertsHistory.$inferSelect
 export type NewAlertHistory = typeof alertsHistory.$inferInsert
+export type LoginAttempt = typeof loginAttempts.$inferSelect
+export type NewLoginAttempt = typeof loginAttempts.$inferInsert

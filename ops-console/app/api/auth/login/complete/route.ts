@@ -1,12 +1,15 @@
 import { eq } from 'drizzle-orm'
 import { getDb } from '@/lib/db'
-import { platformOperators, platformPasskeys, platformSessions } from '@/drizzle/schema'
+import { platformOperators, platformPasskeys, platformSessions, loginAttempts } from '@/drizzle/schema'
 import { verifyLogin } from '@/lib/webauthn'
 import { createSessionToken, setSessionCookie } from '@/lib/auth'
 import { loginCompleteSchema } from '@/lib/validation'
+import { ok, error, serverError, unauthorized } from '@/lib/api-handler'
+import { recordLoginAttempt, checkLoginRateLimit } from '@/lib/rate-limit'
+import { logAudit } from '@/lib/audit'
+import { NextResponse } from 'next/server'
 
 type AuthenticatorTransport = 'ble' | 'internal' | 'nfc' | 'usb' | 'hybrid'
-import { ok, error, serverError, unauthorized } from '@/lib/api-handler'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,6 +47,8 @@ export async function POST(request: Request) {
     }
 
     if (!operator || !operator.activo) {
+      // Registrar intento fallido
+      await recordLoginAttempt(email, false)
       return unauthorized()
     }
 
@@ -54,6 +59,8 @@ export async function POST(request: Request) {
 
     const passkey = passkeysRaw.find(pk => pk.credentialId === (credential as { id: string }).id)
     if (!passkey) {
+      // Registrar intento fallido
+      await recordLoginAttempt(email, false)
       return error('Passkey no encontrado', 404)
     }
 
@@ -67,6 +74,8 @@ export async function POST(request: Request) {
     const verification = await verifyLogin(credential, challenge, credentialData)
 
     if (!verification.verified) {
+      // Registrar intento fallido
+      await recordLoginAttempt(email, false)
       return error('Verificación del passkey falló', 400)
     }
 
@@ -81,12 +90,17 @@ export async function POST(request: Request) {
     }
 
     if (operator.totpVerified) {
+      // Registrar intento exitoso (passkey verificado, pero TOTP pendiente)
+      await recordLoginAttempt(email, true)
       return ok({
         passkeyVerified: true,
         requiresTotp: true,
         partialToken: credential.id,
       })
     }
+
+    // Login completo exitoso
+    await recordLoginAttempt(email, true)
 
     const session = await createSessionToken({
       id: operator.id,
@@ -118,6 +132,15 @@ export async function POST(request: Request) {
       },
     })
   } catch (err) {
+    // En caso de error interno, registrar intento fallido si tenemos email
+    try {
+      const body = await request.json()
+      if (body?.email) {
+        await recordLoginAttempt(body.email, false)
+      }
+    } catch {
+      // Ignorar errores de parsing
+    }
     return serverError(err)
   }
 }

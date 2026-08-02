@@ -4,6 +4,8 @@ import { platformOperators, platformPasskeys } from '@/drizzle/schema'
 import { generateLogin, type PasskeyCredential } from '@/lib/webauthn'
 import { loginBeginSchema } from '@/lib/validation'
 import { ok, error, serverError, unauthorized } from '@/lib/api-handler'
+import { checkLoginRateLimit } from '@/lib/rate-limit'
+import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +17,19 @@ export async function POST(request: Request) {
       return error(parsed.error.errors[0].message, 400)
     }
     const { email } = parsed.data
+
+    // Rate limiting check
+    const rateLimit = await checkLoginRateLimit(email)
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Demasiados intentos fallidos. Intente nuevamente más tarde.',
+          retryAfterSeconds: rateLimit.retryAfterSeconds 
+        },
+        { status: 429 }
+      )
+    }
 
     const db = getDb()
 
