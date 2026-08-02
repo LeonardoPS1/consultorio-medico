@@ -687,6 +687,7 @@ consultorio-medico/
 | **Hardening Ops Console: logs de fallo en overrides** | Los 4 endpoints de override (gracia, mp-reintentar, evolution-reiniciar, suscripcion-activar) registran `override.*.failed` en `platform_audit_log` con el error real (envuelto en try/catch); tests actualizados para exigir el comportamiento. Commit `a2dceee` | 01/08 |
 | **Crear clínica desde ops-console** | Endpoint interno `POST /api/internal/tenants` (dashboard, `x-internal-key`, reusa `crearTenantConAdmin` en `lib/services/tenant.ts`), formulario `/dashboard/tenants/nuevo` + `/api/tenants/crear` (ops-console, `logAudit tenant.create`), botón "+ Nueva clínica" en Fleet. 74 tests pass. Commit `f7620b6` | 01/08 |
 | **Página pública de estado** | `status.aicorebots.com` (pendiente dominio Dokploy). `dashboard/lib/status-publico.ts` (3 categorías públicas Mensajería/Plataforma/Videoconsultas, sin nombres técnicos, cache 60s) + `GET /api/status/public` + página `/status` con semáforo. | 01/08 |
+| **Mis datos (Ley 19.628)** | Portal: `GET /api/portal/mis-datos/exportar` (JSON self-service solo del paciente autenticado) + `POST /api/portal/mis-datos/solicitar-eliminacion` (revisión manual, email al admin del tenant, sin borrado automático). Admin/medico: `/dashboard/mis-datos` + `GET/PATCH /api/mis-datos`. Tabla `solicitudes_datos`, migración 0057. Commit `4a364fd` | 01/08 |
 
 ### 🟡 Prioridad Media
 

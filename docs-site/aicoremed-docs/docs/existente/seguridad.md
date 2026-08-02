@@ -235,6 +235,32 @@ Port 5678 (n8n)      → Allow (via Traefik auth)
 
 ---
 
+## Protección de Datos del Paciente (Ley 19.628)
+
+El portal del paciente implementa el derecho de acceso y cancelación de datos personales
+(tabla `solicitudes_datos`, migración 0057):
+
+### Exportación de datos (self-service, inmediata)
+
+- **`GET /api/portal/mis-datos/exportar`** — autenticado con la cookie `portal_session`.
+- Devuelve un JSON descargable `mis-datos-<fecha>.json` con **solo los datos del paciente
+  autenticado**: datos de contacto, turnos, recetas y metadatos de documentos (sin
+  archivos ni texto OCR).
+- El filtrado se hace por `session.pacienteId`, por lo que nunca expone datos de otro paciente.
+- Se registra una solicitud `tipo=exportacion` con estado `procesada`.
+
+### Solicitud de eliminación (revisión manual)
+
+- **`POST /api/portal/mis-datos/solicitar-eliminacion`** — valida origen CSRF, autentica
+  con `portal_session` y registra una solicitud `tipo=eliminacion` con estado `pendiente`.
+- **No borra datos automáticamente.** Se envía un email al admin del tenant (buscado en
+  `usuarios` con `rol='admin'` y `activo=true`) para que revise la solicitud.
+- El admin/medico ve las solicitudes pendientes en **`/dashboard/mis-datos`** y las marca
+  como procesadas (`PATCH /api/mis-datos`), ejecutando la eliminación conforme a la
+  normativa vigente.
+
+---
+
 ## Buenas Prácticas
 
 ### Para Developers

@@ -46,7 +46,8 @@ AicoreMed es un SaaS multi-tenant para clínicas y médicos independientes en Ch
 - **Automatización conversacional** — un agente de IA (n8n + Ollama) que atiende WhatsApp
   y email, agenda turnos, responde consultas y hace triaje de urgencias.
 - **Portal de pacientes** — acceso propio vía magic link por WhatsApp, disponible en un
-  dominio dedicado: `consultorio.aicorebots.com`.
+  dominio dedicado: `consultorio.aicorebots.com`. Incluye autogestión de datos personales
+  (exportación y solicitud de eliminación, Ley 19.628).
 - **Telemedicina integrada** — videoconsultas vía LiveKit.
 - **Soporte conversacional** — canal de soporte vía Chatwoot + Evolution API.
 - **Ops Console** — consola de operaciones (tenants, operadores, impersonación, backups

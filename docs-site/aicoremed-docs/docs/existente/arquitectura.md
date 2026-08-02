@@ -272,6 +272,11 @@ graph LR
 - **Config:** env `PORTAL_DOMAINS` (default `consultorio.aicorebots.com`), evaluado en `dashboard/proxy.ts`.
 - **Comportamiento:** cualquier ruta distinta de `/portal` o `/api/*` recibe un `308 Permanent Redirect` a `/portal` preservando search params.
 - El portal usa magic link por WhatsApp (JWT 24h), ver `modulos/portal-pacientes.md`.
+- **Autogestión de datos (Ley 19.628):** el portal expone `GET /api/portal/mis-datos/exportar`
+  (descarga inmediata del JSON del paciente autenticado) y
+  `POST /api/portal/mis-datos/solicitar-eliminacion` (solicitud de eliminación con revisión
+  manual). El admin/medico gestiona las solicitudes desde `/dashboard/mis-datos`
+  (tabla `solicitudes_datos`, migración 0057).
 
 ### 9. Ops Console (AicoreOps)
 

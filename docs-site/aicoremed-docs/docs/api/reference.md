@@ -43,6 +43,10 @@ autogenerado reemplace esta sección.
 | `POST` | `/api/deploy/dokploy` | Proxy interno de despliegue (GHA → Dokploy API) | `x-internal-key` |
 | `GET` | `/api/status/public` | Estado público de la plataforma (3 categorías, semáforo; sin nombres técnicos ni IPs) | Pública |
 | `GET` | `/status` | Página pública de estado (`status.aicorebots.com`) | Pública |
+| `GET` | `/api/portal/mis-datos/exportar` | Descarga JSON `mis-datos-<fecha>.json` con los datos del paciente autenticado (Ley 19.628) | Sesión portal |
+| `POST` | `/api/portal/mis-datos/solicitar-eliminacion` | Registra solicitud de eliminación de datos (estado `pendiente`) y notifica al admin del tenant | Sesión portal |
+| `GET` | `/api/mis-datos` | Lista solicitudes de eliminación pendientes del tenant (admin/medico) | Sesión dashboard |
+| `PATCH` | `/api/mis-datos` | Marca una solicitud de eliminación como `procesada` (admin/medico, no borra datos) | Sesión dashboard |
 
 ### Ops Console (ops.aicorebots.com)
 

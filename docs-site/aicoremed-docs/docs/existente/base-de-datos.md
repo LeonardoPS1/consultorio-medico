@@ -77,6 +77,7 @@ Las migraciones son **acumulativas** y deben ejecutarse en orden:
 | 054 | `0054_fix_historial_tipo_check.sql` | Corrige CHECK `historial_medico_tipo_check` en `historial_medico` (admite `otro`, `encuesta` y valores del enum actual) |
 | 055 | `0055_add_motivo_impersonation.sql` | Columna `motivo` en `impersonation_tokens` (justificación obligatoria, mín. 10 caracteres) |
 | 056 | `0056_revocar_impersonacion.sql` | Columnas `session_jti` y `session_revoked_at` en `impersonation_tokens` (revocación de sesión de impersonación activa) |
+| 057 | `0057_solicitudes_datos.sql` | Tabla `solicitudes_datos` (exportación y solicitud de eliminación de datos, Ley 19.628) |
 
 ```bash
 # Ejecutar todas las migraciones (en orden)
@@ -269,6 +270,7 @@ Suscripciones a planes de MercadoPago.
 | `blacklist` | Números bloqueados por tenant |
 | `consentimientos` | Registro de consentimientos con RLS |
 | `impersonation_tokens` | Tokens de impersonación operator→tenant: `tenant_id`, `usuario_id`, `creado_por_operator_*`, `token`, `usado`, `expires_at` |
+| `solicitudes_datos` | Solicitudes de exportación / eliminación de datos de pacientes (Ley 19.628): `paciente_id`, `tipo` (exportacion/eliminacion), `estado`, `tenant_id` |
 | `web_vitals_metrics` | Métricas Core Web Vitals del frontend |
 | `platform_tenants`, `platform_operators`, `platform_audit_log` | Esquema `platform` de Ops Console (tablas fuera de RLS) |
 
@@ -299,6 +301,18 @@ Tokens de un solo uso que permiten a un operador de Ops Console ingresar como ad
 | `used_at` | TIMESTAMPTZ | Cuándo se consumió el token |
 | `session_jti` | VARCHAR(64) | `jti` (JWT ID) de la cookie de sesión generada al consumir el token |
 | `session_revoked_at` | TIMESTAMPTZ | Cuándo se revocó la sesión de impersonación (revocación manual) |
+
+#### `solicitudes_datos`
+
+Registra las solicitudes de exportación y eliminación de datos personales de pacientes (Ley 19.628). La eliminación **no es automática**: el admin/medico del tenant la revisa manualmente y la marca como procesada.
+
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `paciente_id` | UUID FK → pacientes | Paciente que realizó la solicitud (portal) |
+| `tipo` | VARCHAR(20) | `exportacion` (self-service inmediato) o `eliminacion` (revisión manual) |
+| `estado` | VARCHAR(20) DEFAULT `pendiente` | `pendiente` o `procesada`; las exportaciones se registran directo como `procesada` |
+| `tenant_id` | UUID DEFAULT `00000000-...` | Tenant dueño (scoping RLS) |
+| `created_at` / `updated_at` | TIMESTAMPTZ | Auditoría de la solicitud |
 
 ## Vistas Optimizadas
 
