@@ -2,7 +2,7 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 24/07/2026
+**Última actualización:** 03/08/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
@@ -688,6 +688,11 @@ consultorio-medico/
 | **Crear clínica desde ops-console** | Endpoint interno `POST /api/internal/tenants` (dashboard, `x-internal-key`, reusa `crearTenantConAdmin` en `lib/services/tenant.ts`), formulario `/dashboard/tenants/nuevo` + `/api/tenants/crear` (ops-console, `logAudit tenant.create`), botón "+ Nueva clínica" en Fleet. 74 tests pass. Commit `f7620b6` | 01/08 |
 | **Página pública de estado** | `status.aicorebots.com` operativo (dominio creado en Dokploy vía API, domainId `E7ibry4YPEJuZPOPRV49t`, Let's Encrypt + DNS OK). `dashboard/lib/status-publico.ts` (3 categorías públicas Mensajería/Plataforma/Videoconsultas, sin nombres técnicos, cache 60s) + `GET /api/status/public` + página `/status` con semáforo. `proxy.ts` reescribe por host (`STATUS_DOMAINS` env, default `status.aicorebots.com`) → raíz sirve `/status`. Commit `b77032a`. | 01/08 |
 | **Mis datos (Ley 19.628)** | Portal: `GET /api/portal/mis-datos/exportar` (JSON self-service solo del paciente autenticado) + `POST /api/portal/mis-datos/solicitar-eliminacion` (revisión manual, email al admin del tenant, sin borrado automático). Admin/medico: `/dashboard/mis-datos` + `GET/PATCH /api/mis-datos`. Tabla `solicitudes_datos`, migración 0057. Commit `4a364fd` | 01/08 |
+| **Sistema de alertas** | `platform.alerts_config` + `alerts_history` (migración 0001 ops), `lib/alerts.ts` (4 checks cross-tenant), `lib/notifications.ts` (Telegram/Chatwoot/Webhook/Email), API `/api/alertas/{config,config/[id],check,history}`, página `/dashboard/alertas`, WF-15 cron 5min. Commits `60445b6`, `847a80f` | 01/08 |
+| **Incidentes en ops-console** | Búsqueda cross-tenant `GET /api/busqueda` (logAudit `busqueda.global`), overrides con confirmación+audit (gracia, activar suscripción, reprocesar MP, reiniciar Evolution), dashboard `POST /api/internal/pagos/reprocesar`, UI `/dashboard/incidentes`. Commit `cf2fbe8` | 01/08 |
+| **Fix login ops-console** | Commit `0c8ef83` (rate limiting) nunca aplicó migración 0002 (`platform.login_attempts`) → login 500 `relation does not exist`. Aplicada manual en prod vía docker cp + psql -f. Bugs: `db.execute` con objeto Date → `toISOString()`, cast `created_at`, fail-open try/catch. Force update Swarm (Dokploy :latest no actualiza). Verificado: login/begin 401 (antes 500). Commit `6dcd227` | 02/08 |
+| **Fix webhooks logs** | `webhooks-client.tsx` chequeaba `data.success` pero `/api/webhooks/logs` usa `ok()` (body sin `success`) → 'Error al cargar logs' en filtros/auto-refresh. Fix: `res.ok` + `data.data`. Commit `8be80d2` | 03/08 |
+| **Fix api-keys** | Spinner infinito: el useEffect IIFE no llamaba `setLoading(false)` → fix. Eliminación de keys revocadas: botón con `disabled={!key.activa}` + DELETE solo soft-revoke → `deleteApiKey()` (borrado físico tenant-scoped) + botón habilitado. Commits `1ba369a`, `771d10d` | 03/08 |
 
 ### 🟡 Prioridad Media
 

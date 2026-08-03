@@ -1,10 +1,5 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Rocket,
   Calendar,
@@ -27,13 +22,19 @@ import {
   Upload,
   Gauge,
   Shield,
+  ShieldCheck,
   Mic,
   Scan,
   LifeBuoy,
 } from 'lucide-react';
-import type { AyudaSeccion } from '@/lib/ayuda-content';
 import Link from 'next/link';
+import { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import type { AyudaSeccion } from '@/lib/ayuda-content';
 
 interface AyudaClientProps {
   sections: AyudaSeccion[];
@@ -58,11 +59,18 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Upload,
   Gauge,
   Shield,
+  ShieldCheck,
   Mic,
   Scan,
   LifeBuoy,
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.sections
+ * @param root0.iconMap
+ */
 export function AyudaClient({ sections, iconMap: _iconMap }: AyudaClientProps) {
   const [busqueda, setBusqueda] = useState('');
   const [seccionActiva, setSeccionActiva] = useState<string | null>(null);

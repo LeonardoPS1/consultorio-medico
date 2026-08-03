@@ -200,7 +200,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         pregunta: '¿Cómo registro la previsión de salud de un paciente?',
-        respuesta: 'Al crear o editar un paciente, encontrás la sección "Previsión". Seleccioná el tipo (FONASA, ISAPRE, Particular, PRAIS, Otro). Si es FONASA, elegí el tramo (A/B/C/D). Si es ISAPRE, seleccioná la ISAPRE de la lista y opcionalmente el número de afiliado. El badge de previsión se muestra automáticamente en la ficha del paciente.',
+        respuesta:
+          'Al crear o editar un paciente, encontrás la sección "Previsión". Seleccioná el tipo (FONASA, ISAPRE, Particular, PRAIS, Otro). Si es FONASA, elegí el tramo (A/B/C/D). Si es ISAPRE, seleccioná la ISAPRE de la lista y opcionalmente el número de afiliado. El badge de previsión se muestra automáticamente en la ficha del paciente.',
       },
     ],
   },
@@ -367,7 +368,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         pregunta: '¿Puedo derivar un paciente a un médico de otra organización?',
-        respuesta: 'Sí. Si existe un convenio de intercambio entre organizaciones, podés derivar pacientes a especialistas de otras instituciones. El paciente debe firmar un consentimiento de intercambio de datos, donde se especifica el alcance (historial completo, solo recetas, solo turnos o solo diagnósticos) y la fecha de expiración. Las derivaciones cross-tenant requieren planes Enterprise.',
+        respuesta:
+          'Sí. Si existe un convenio de intercambio entre organizaciones, podés derivar pacientes a especialistas de otras instituciones. El paciente debe firmar un consentimiento de intercambio de datos, donde se especifica el alcance (historial completo, solo recetas, solo turnos o solo diagnósticos) y la fecha de expiración. Las derivaciones cross-tenant requieren planes Enterprise.',
       },
     ],
   },
@@ -578,7 +580,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
   {
     id: 'reportes',
     titulo: 'Reportes y Estadísticas',
-    descripcion: 'Visualizá el rendimiento del consultorio con gráficos, métricas y análisis ejecutivo',
+    descripcion:
+      'Visualizá el rendimiento del consultorio con gráficos, métricas y análisis ejecutivo',
     icono: 'BarChart3',
     pasos: [
       {
@@ -748,7 +751,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Autenticación 2FA',
-        descripcion: 'Activá autenticación de dos factores para proteger tu cuenta de administrador.',
+        descripcion:
+          'Activá autenticación de dos factores para proteger tu cuenta de administrador.',
         tips: [
           'Disponible en plan Professional o superior',
           'Usá Google Authenticator, Authy o cualquier app compatible con TOTP',
@@ -1092,7 +1096,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     pasos: [
       {
         titulo: 'Cómo funciona el scoring',
-        descripcion: 'Cada paciente tiene un puntaje de 0 a 100 que predice su probabilidad de inasistencia.',
+        descripcion:
+          'Cada paciente tiene un puntaje de 0 a 100 que predice su probabilidad de inasistencia.',
         tips: [
           'Disponible en plan Starter o superior',
           'Algoritmo ponderado: no-shows x40, cancelaciones x25, confirmaciones x20, recordatorios x10, asistencia x5',
@@ -1228,7 +1233,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Modos del asistente',
-        descripcion: 'Configurá el comportamiento del asistente desde el panel de ajustes (engranaje).',
+        descripcion:
+          'Configurá el comportamiento del asistente desde el panel de ajustes (engranaje).',
         tips: [
           'Silencioso: solo responde cuando le preguntás, sin sugerencias automáticas',
           'Sugerente: muestra 3 cards con sugerencias contextuales sin interrumpir',
@@ -1248,8 +1254,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Historial de conversaciones',
-        descripcion:
-          'Todas las conversaciones con el asistente se guardan automáticamente.',
+        descripcion: 'Todas las conversaciones con el asistente se guardan automáticamente.',
         tips: [
           'Cada sesión se guarda con fecha y hora',
           'Podés volver a consultar conversaciones anteriores',
@@ -1403,7 +1408,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     pasos: [
       {
         titulo: 'Iniciar el onboarding',
-        descripcion: 'Al ingresar por primera vez, el sistema te guía con un asistente de configuración.',
+        descripcion:
+          'Al ingresar por primera vez, el sistema te guía con un asistente de configuración.',
         tips: [
           'Completá los pasos en orden para una configuración óptima',
           'Podés saltar pasos y completarlos después desde Ajustes',
@@ -1456,7 +1462,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     pasos: [
       {
         titulo: 'Acceder a notificaciones',
-        descripcion: 'Hacé clic en la campana (🔔) en el header o andá a la página de Notificaciones.',
+        descripcion:
+          'Hacé clic en la campana (🔔) en el header o andá a la página de Notificaciones.',
         tips: [
           'El badge en la campana muestra la cantidad de notificaciones no leídas',
           'Las notificaciones se organizan por fecha y prioridad',
@@ -1517,7 +1524,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     pasos: [
       {
         titulo: 'Ver novedades',
-        descripcion: 'La página de Novedades muestra un timeline con todos los cambios del sistema.',
+        descripcion:
+          'La página de Novedades muestra un timeline con todos los cambios del sistema.',
         tips: [
           'Cada entrada muestra versión, fecha, tipo y descripción del cambio',
           'Los cambios se agrupan en: nuevas funcionalidades, mejoras y correcciones',
@@ -1623,7 +1631,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     pasos: [
       {
         titulo: 'Ver logs de webhooks',
-        descripcion: 'La página de Webhooks muestra un registro de todas las solicitudes entrantes.',
+        descripcion:
+          'La página de Webhooks muestra un registro de todas las solicitudes entrantes.',
         tips: [
           'Cada entrada muestra método, ruta, estado HTTP y timestamp',
           'Los errores se destacan en rojo para identificación rápida',
@@ -1773,7 +1782,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     pasos: [
       {
         titulo: 'Proxy de Seguridad (Next.js 16+)',
-        descripcion: 'El proxy reemplaza al middleware tradicional de Next.js. Se encarga de la seguridad y autenticación de todas las peticiones.',
+        descripcion:
+          'El proxy reemplaza al middleware tradicional de Next.js. Se encarga de la seguridad y autenticación de todas las peticiones.',
         tips: [
           'Migrado de middleware.ts a proxy.ts en julio 2026',
           'Inyecta headers de seguridad: CSP, HSTS, COOP, COEP, CORP',
@@ -1784,7 +1794,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'WF-01: WhatsApp Multi-Agente',
-        descripcion: 'El workflow de WhatsApp usa 2 agentes de IA especializados con handoff conversacional.',
+        descripcion:
+          'El workflow de WhatsApp usa 2 agentes de IA especializados con handoff conversacional.',
         tips: [
           'Triaje Agent: saluda, responde info general, clasifica intención y decide si deriva',
           'Agenda Agent: crea, cancela, modifica y consulta turnos',
@@ -1807,18 +1818,21 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Qué pasa si el Triaje Agent no entiende la intención?',
-        respuesta: 'Responde un mensaje amigable pidiendo clarificación. Si el paciente insiste con algo que no puede manejar, deriva al médico vía notificación.',
+        respuesta:
+          'Responde un mensaje amigable pidiendo clarificación. Si el paciente insiste con algo que no puede manejar, deriva al médico vía notificación.',
       },
       {
         pregunta: '¿Los agentes recuerdan conversaciones anteriores?',
-        respuesta: 'Sí. La memoria conversacional se guarda en PostgreSQL (n8n_chat_histories) asociada al número de WhatsApp del paciente. La ventana de contexto es de 10 mensajes.',
+        respuesta:
+          'Sí. La memoria conversacional se guarda en PostgreSQL (n8n_chat_histories) asociada al número de WhatsApp del paciente. La ventana de contexto es de 10 mensajes.',
       },
     ],
   },
   {
     id: 'transcripcion-soap',
     titulo: 'Transcripción Automática y SOAP por IA',
-    descripcion: 'Grabación de videoconsultas, transcripción automática con Whisper y generación de notas SOAP con IA',
+    descripcion:
+      'Grabación de videoconsultas, transcripción automática con Whisper y generación de notas SOAP con IA',
     icono: 'Mic',
     pasos: [
       {
@@ -1832,7 +1846,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Consentimiento del paciente',
-        descripcion: 'Al agendar una teleconsulta con transcripción activa, el paciente ve una pantalla de consentimiento antes de entrar a la sala.',
+        descripcion:
+          'Al agendar una teleconsulta con transcripción activa, el paciente ve una pantalla de consentimiento antes de entrar a la sala.',
         tips: [
           'Si acepta → se inicia la grabación automática (Egress de LiveKit)',
           'Si no acepta → entra a la videollamada sin grabación',
@@ -1842,7 +1857,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Pipeline post-consulta',
-        descripcion: 'Cuando termina la videoconsulta, el sistema procesa el audio automáticamente.',
+        descripcion:
+          'Cuando termina la videoconsulta, el sistema procesa el audio automáticamente.',
         tips: [
           'LiveKit Egress guarda el audio grabado',
           'Whisper.cpp transcribe el audio a texto',
@@ -1866,27 +1882,32 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Dónde se procesa el audio? ¿Se envía a servidores externos?',
-        respuesta: 'No. Todo el procesamiento es 100% local en tu VPS: Whisper.cpp corre en Docker, Ollama con Gemma3 también. Ningún dato sale del servidor.',
+        respuesta:
+          'No. Todo el procesamiento es 100% local en tu VPS: Whisper.cpp corre en Docker, Ollama con Gemma3 también. Ningún dato sale del servidor.',
       },
       {
         pregunta: '¿Qué modelo de Whisper se usa?',
-        respuesta: 'Whisper.cpp con modelo "small" (~500MB). Corre eficientemente en CPU y tiene buena precisión para español.',
+        respuesta:
+          'Whisper.cpp con modelo "small" (~500MB). Corre eficientemente en CPU y tiene buena precisión para español.',
       },
       {
         pregunta: '¿Qué pasa con el audio después de la transcripción?',
-        respuesta: 'Se elimina automáticamente cuando el médico aprueba o rechaza la nota. Si no revisa en 48 horas, el sistema elimina el audio pero conserva la transcripción textual.',
+        respuesta:
+          'Se elimina automáticamente cuando el médico aprueba o rechaza la nota. Si no revisa en 48 horas, el sistema elimina el audio pero conserva la transcripción textual.',
       },
     ],
   },
   {
     id: 'documentos-ocr',
     titulo: 'Documentos Médicos con OCR',
-    descripcion: 'Subí documentos desde el portal del paciente, extraé datos automáticamente con IA especializada y revisalos en el dashboard',
+    descripcion:
+      'Subí documentos desde el portal del paciente, extraé datos automáticamente con IA especializada y revisalos en el dashboard',
     icono: 'Scan',
     pasos: [
       {
         titulo: 'Paciente sube documento',
-        descripcion: 'Desde el Portal del Paciente, se puede subir una foto o PDF de cualquier documento médico.',
+        descripcion:
+          'Desde el Portal del Paciente, se puede subir una foto o PDF de cualquier documento médico.',
         tips: [
           'Formatos aceptados: JPG, PNG, PDF',
           'Tamaño máximo: 20MB',
@@ -1897,7 +1918,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'OCR especializado por tipo de documento',
-        descripcion: 'Ollama llava usa prompts específicos según el tipo de documento para extraer datos estructurados precisos.',
+        descripcion:
+          'Ollama llava usa prompts específicos según el tipo de documento para extraer datos estructurados precisos.',
         tips: [
           'Modelo llava (~4GB) corre 100% local en el VPS',
           'Laboratorio: extrae tipo de examen, fecha, laboratorio, valores con nombre/unidad/rango/flags',
@@ -1919,7 +1941,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: 'Revisión médica en Dashboard',
-        descripcion: 'El médico revisa los documentos desde la ficha del paciente con opciones de Aprobar, Rechazar o Editar.',
+        descripcion:
+          'El médico revisa los documentos desde la ficha del paciente con opciones de Aprobar, Rechazar o Editar.',
         tips: [
           'Accedé al tab "Documentos" en la ficha del paciente',
           'Estado pendiente: documentos sin revisar (requieren acción)',
@@ -1933,27 +1956,32 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿El OCR es preciso con fotos de mala calidad?',
-        respuesta: 'Depende de la calidad de la imagen. Fotos bien iluminadas y enfocadas tienen alta precisión. Si el OCR falla o tiene baja confianza, el documento se marca para revisión manual del médico.',
+        respuesta:
+          'Depende de la calidad de la imagen. Fotos bien iluminadas y enfocadas tienen alta precisión. Si el OCR falla o tiene baja confianza, el documento se marca para revisión manual del médico.',
       },
       {
         pregunta: '¿Qué modelo de IA se usa para el OCR?',
-        respuesta: 'Ollama llava, un modelo de visión-lenguaje que corre 100% local en tu VPS. No se envía ninguna imagen a servidores externos.',
+        respuesta:
+          'Ollama llava, un modelo de visión-lenguaje que corre 100% local en tu VPS. No se envía ninguna imagen a servidores externos.',
       },
       {
         pregunta: '¿Los documentos aprobados quedan en el historial?',
-        respuesta: 'Sí. Cuando el médico aprueba un documento, los datos extraídos se guardan como una entrada estructurada en el historial médico del paciente, visible tanto en el dashboard como en el portal.',
+        respuesta:
+          'Sí. Cuando el médico aprueba un documento, los datos extraídos se guardan como una entrada estructurada en el historial médico del paciente, visible tanto en el dashboard como en el portal.',
       },
     ],
   },
   {
     id: 'fhir-export',
     titulo: 'Exportación FHIR-lite',
-    descripcion: 'Exportá el historial clínico de pacientes en formato FHIR R4 simplificado para interoperabilidad',
+    descripcion:
+      'Exportá el historial clínico de pacientes en formato FHIR R4 simplificado para interoperabilidad',
     icono: 'FileDown',
     pasos: [
       {
         titulo: 'Verificar consentimiento',
-        descripcion: 'Antes de exportar, el paciente debe tener consentimiento firmado para exportación de datos.',
+        descripcion:
+          'Antes de exportar, el paciente debe tener consentimiento firmado para exportación de datos.',
         tips: [
           'Revisá los consentimientos del paciente en su ficha',
           'Se requiere consentimiento "datos" o "consentimientoEmail" firmado',
@@ -1993,27 +2021,32 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Es compatible con HL7 FHIR oficial?',
-        respuesta: 'Es FHIR-lite: usa el formato y estructura de FHIR R4 pero no está certificado por HL7. Es útil para interoperabilidad básica con otros sistemas que soporten FHIR.',
+        respuesta:
+          'Es FHIR-lite: usa el formato y estructura de FHIR R4 pero no está certificado por HL7. Es útil para interoperabilidad básica con otros sistemas que soporten FHIR.',
       },
       {
         pregunta: '¿Qué datos del paciente se exportan?',
-        respuesta: 'Datos demográficos, turnos (encounters), diagnósticos (conditions) y recetas (medication requests). No incluye documentos adjuntos, conversaciones ni datos de facturación.',
+        respuesta:
+          'Datos demográficos, turnos (encounters), diagnósticos (conditions) y recetas (medication requests). No incluye documentos adjuntos, conversaciones ni datos de facturación.',
       },
       {
         pregunta: '¿Se necesita consentimiento del paciente?',
-        respuesta: 'Sí. El paciente debe haber firmado un consentimiento de exportación de datos. Si no está firmado, el endpoint devuelve 403 Forbidden.',
+        respuesta:
+          'Sí. El paciente debe haber firmado un consentimiento de exportación de datos. Si no está firmado, el endpoint devuelve 403 Forbidden.',
       },
     ],
   },
   {
     id: 'integraciones',
     titulo: 'Integraciones y Webhooks',
-    descripcion: 'Configuración de webhooks salientes para conectar AicoreMed con tus sistemas externos',
+    descripcion:
+      'Configuración de webhooks salientes para conectar AicoreMed con tus sistemas externos',
     icono: 'Webhook',
     pasos: [
       {
         titulo: '1. Crear un webhook',
-        descripcion: 'En Configuración → Integraciones, hacé clic en "Agregar Webhook". Seleccioná el evento (turno creado, paciente actualizado, etc.) y la URL donde recibirás las notificaciones.',
+        descripcion:
+          'En Configuración → Integraciones, hacé clic en "Agregar Webhook". Seleccioná el evento (turno creado, paciente actualizado, etc.) y la URL donde recibirás las notificaciones.',
         tips: [
           'La URL debe ser HTTPS (no HTTP)',
           'Los eventos disponibles son: turno.creado, turno.actualizado, turno.cancelado, paciente.creado, paciente.actualizado, receta.creada, derivacion.creada, pago.completado',
@@ -2022,7 +2055,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: '2. Verificar la firma HMAC',
-        descripcion: 'Cada webhook incluye headers de verificación: X-Webhook-Signature (sha256=<hmac>), X-Webhook-Timestamp y X-Webhook-Event. Tu sistema debe verificar la firma con el secreto usando HMAC-SHA256.',
+        descripcion:
+          'Cada webhook incluye headers de verificación: X-Webhook-Signature (sha256=<hmac>), X-Webhook-Timestamp y X-Webhook-Event. Tu sistema debe verificar la firma con el secreto usando HMAC-SHA256.',
         tips: [
           'El payload se firma como JSON.stringify(body)',
           'Usá timingSafeEqual para comparación segura',
@@ -2031,7 +2065,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
       {
         titulo: '3. Monitorear entregas',
-        descripcion: 'Cada webhook tiene logs de delivery visibles en la misma interfaz. Podés ver status code, tiempo de respuesta, número de intentos y errores.',
+        descripcion:
+          'Cada webhook tiene logs de delivery visibles en la misma interfaz. Podés ver status code, tiempo de respuesta, número de intentos y errores.',
         tips: [
           '3 reintentos automáticos con backoff exponencial (1s, 2s, 4s)',
           'Si fallan todos los reintentos, el webhook se marca con estado "error"',
@@ -2043,23 +2078,27 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     preguntas: [
       {
         pregunta: '¿Los webhooks funcionan en cualquier plan?',
-        respuesta: 'Los webhooks salientes están disponibles en planes Professional y superiores. En Starter podés recibir webhooks entrantes desde n8n, pero no configurar webhooks salientes.',
+        respuesta:
+          'Los webhooks salientes están disponibles en planes Professional y superiores. En Starter podés recibir webhooks entrantes desde n8n, pero no configurar webhooks salientes.',
       },
       {
         pregunta: '¿Puedo tener múltiples webhooks para el mismo evento?',
-        respuesta: 'Sí. Podés crear varios webhooks para el mismo evento, cada uno con una URL y secreto diferente. Todos recibirán el payload cuando el evento ocurra.',
+        respuesta:
+          'Sí. Podés crear varios webhooks para el mismo evento, cada uno con una URL y secreto diferente. Todos recibirán el payload cuando el evento ocurra.',
       },
     ],
   },
   {
     id: 'soporte',
     titulo: 'Soporte y Feedback',
-    descripcion: 'Canal de comunicación para reportar problemas, sugerencias y obtener ayuda técnica',
+    descripcion:
+      'Canal de comunicación para reportar problemas, sugerencias y obtener ayuda técnica',
     icono: 'LifeBuoy',
     pasos: [
       {
         titulo: 'Enviar un mensaje de soporte',
-        descripcion: 'Desde la página de Soporte, completá el formulario con tu consulta o problema.',
+        descripcion:
+          'Desde la página de Soporte, completá el formulario con tu consulta o problema.',
         tips: [
           'Incluí el máximo detalle posible para una respuesta más rápida',
           'Si es un error técnico, mencioná qué estabas haciendo cuando ocurrió',
@@ -2139,12 +2178,76 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       },
     ],
   },
+  {
+    id: 'solicitudes-datos',
+    titulo: 'Solicitudes de Datos (Ley 19.628)',
+    descripcion:
+      'Revisión de solicitudes de exportación o eliminación de datos que hacen los pacientes desde el portal',
+    icono: 'ShieldCheck',
+    pasos: [
+      {
+        titulo: '¿Qué es esta funcionalidad?',
+        descripcion:
+          'Cumple la Ley 19.628 (protección de la vida privada y datos personales). Cuando un paciente solicita exportar sus datos o pide la eliminación de su información desde el Portal del Paciente, la solicitud queda registrada y aparece acá para que la revises.',
+        tips: [
+          'Existe en el menú lateral como "Solicitudes de Datos"',
+          'Solo la ven usuarios admin, médico, secretaria y recepcionista',
+          'No borra nada automáticamente: solo registra y da seguimiento',
+        ],
+      },
+      {
+        titulo: 'Revisar una solicitud',
+        descripcion:
+          'Entrá a Solicitudes de Datos. Cada tarjeta muestra el paciente, tipo de solicitud (exportación o eliminación), fecha y estado.',
+        tips: [
+          'Estado "Pendiente" (ámbar): falta procesar',
+          'Estado "Procesada" (verde): ya se resolvió',
+          'Las solicitudes pendientes se cargan desde el portal del paciente automáticamente',
+        ],
+        enlace: { href: '/dashboard/mis-datos', label: 'Ir a Solicitudes de Datos' },
+      },
+      {
+        titulo: 'Marcar como procesada',
+        descripcion:
+          'Cuando hayas completado la acción solicitada por el paciente (por ejemplo, exportar sus datos o tramitar su baja), usá el botón "Marcar como procesada" de la tarjeta.',
+        tips: [
+          'Procesar una solicitud de eliminación no borra la información por sí sola',
+          'La eliminación de datos se gestiona según tus procedimientos internos',
+          'Queda un registro histórico de la fecha de procesamiento',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Cómo puede un paciente solicitar sus datos?',
+        respuesta:
+          'Desde el Portal del Paciente, en la sección "Mis datos" (Tus datos). Ahí puede exportar su información en un archivo JSON o solicitar la eliminación de sus datos, que requiere revisión manual del consultorio.',
+      },
+      {
+        pregunta: '¿La solicitud de eliminación borra los datos automáticamente?',
+        respuesta:
+          'No. La solicitud se registra para que el admin o médico la revise manualmente y la marque como procesada. La eliminación física se gestiona según los procedimientos del consultorio y la normativa vigente (Ley 19.628).',
+      },
+      {
+        pregunta: '¿Qué diferencia hay entre exportación y eliminación?',
+        respuesta:
+          'La exportación entrega al paciente una copia de sus datos en JSON. La eliminación registra el pedido del paciente de borrar su información. Ambas quedan listadas en esta página para su seguimiento.',
+      },
+    ],
+  },
 ];
 
+/**
+ *
+ * @param id
+ */
 export function getSeccionAyuda(id: string): AyudaSeccion | undefined {
   return SECCIONES_AYUDA.find((s) => s.id === id);
 }
 
+/**
+ *
+ */
 export function getAyudaSidebarLinks() {
   return SECCIONES_AYUDA.map((s) => ({
     id: s.id,

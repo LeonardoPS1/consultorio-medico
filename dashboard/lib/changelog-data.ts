@@ -10,8 +10,37 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 31/07/2026 — v1.29.0 Recetas con Vista Previa y Correcciones
+// Actualizado: 03/08/2026 — v1.31.0 Fixes de Webhooks y API Keys
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.31.0',
+    date: '03/08/2026',
+    title: 'Correcciones en Webhooks y API Keys',
+    items: [
+      'Webhooks: corregido el error "al cargar logs" al usar filtros, búsqueda o el auto-refresh — ahora la lista de mensajes se muestra correctamente',
+      'API Keys: corregido el spinner infinito que impedía ver las claves existentes',
+      'API Keys: ahora se pueden eliminar definitivamente las claves revocadas (antes el botón estaba deshabilitado y la fila nunca se borraba)',
+      'Feature toggles: los ajustes de sistema ahora operan por tenant y no sobre el tenant por defecto',
+      'Nuevos feature toggles disponibles en Sistema: Solicitudes de Datos, White-labeling, Configuración Regional, FONASA/ISAPREs, Disaster Recovery, Impersonation Hardening, Incidentes Ops y Crear Clínica',
+      'Ops Console: corregido el error de inicio de sesión causado por la tabla de rate-limiting inexistente (migración aplicada en producción)',
+    ],
+  },
+  {
+    version: '1.30.0',
+    date: '01/08/2026',
+    title: 'Mis Datos (Ley 19.628), Estado del Servicio y Alertas',
+    items: [
+      'Portal del paciente: nueva sección "Mis datos" donde cada paciente puede exportar sus datos en JSON (Ley 19.628) y solicitar la eliminación de su información',
+      'Solicitudes de datos: vista en el dashboard (Solicitudes de Datos) donde el admin/médico revisa manualmente cada solicitud de eliminación y la marca como procesada (no borra nada automáticamente)',
+      'Página pública de estado en status.aicorebots.com: semáforo de disponibilidad de Mensajería, Plataforma y Videoconsultas con caché de 60s',
+      'Sistema de alertas: 4 verificaciones automáticas (cumpleaños, ausentismo, pacientes críticos, score) con notificaciones por Telegram, Chatwoot, Webhook o Email y workflow n8n WF-15 cada 5 minutos',
+      'Ops Console: búsqueda global de pacientes y datos entre tenants, con registro de auditoría',
+      'Ops Console: overrides de emergencia (gracia, reprocesar pagos, reiniciar Evolution, activar suscripción) con confirmación, motivo obligatorio y registro en auditoría',
+      'Ops Console: creación de nuevas clínicas (tenants) desde el panel, con formulario y auditoría',
+      'Hardening de impersonación: motivo mínimo de 10 caracteres y revocación de la sesión activa del operador (jti en JWT, migración 0056)',
+      'Logs de fallo en overrides: los errores reales se registran en platform_audit_log con prefijo override.*.failed',
+    ],
+  },
   {
     version: '1.29.0',
     date: '31/07/2026',
