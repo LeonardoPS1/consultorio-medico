@@ -124,7 +124,7 @@ PACIENTES
 Twilio WhatsApp / IMAP Email
   │
   ▼
-n8n (11 Workflows)
+n8n (12 Workflows)
   │  ├── WF-01: WhatsApp Inbound + Triaje IA
   │  ├── WF-02: Gestión de Turnos
   │  ├── WF-03: Recordatorios Automáticos
@@ -618,6 +618,7 @@ consultorio-medico/
 
 | Feature | Descripción | Fecha |
 |---------|-------------|-------|
+| **Predicción de demanda por franja horaria + Benchmark anónimo** | Nueva pestaña "Ocupación" (mapa de calor día×franja, 12 semanas, rojo/amarillo/verde) + pestaña "Benchmark" (no-show/ocupación/NPS vs. promedio anónimo de clínicas similares, umbral anti-identificación ≥5 tenants, professional+). WF-16 nocturno. Migración ops `platform.benchmark_snapshot`. Feature `ocupacion-franjas` + `reportes-avanzados`. | 03/08 |
 | **Reportes con datos reales** | API `/api/reportes` con queries DB reales (4 tabs con charts: ingresos, turnos, pacientes, recetas) | 31/05 |
 | **Notas SOAP** | Evolución clínica estructurada (S/O/A/P) con CIE-10, migration 0018, API CRUD, UI en ficha paciente | 31/05 |
 | **Certificados médicos con QR** | Hash SHA-256, verificación pública, HTML PDF, migration 0019 | 31/05 |
@@ -689,6 +690,7 @@ consultorio-medico/
 | **Página pública de estado** | `status.aicorebots.com` operativo (dominio creado en Dokploy vía API, domainId `E7ibry4YPEJuZPOPRV49t`, Let's Encrypt + DNS OK). `dashboard/lib/status-publico.ts` (3 categorías públicas Mensajería/Plataforma/Videoconsultas, sin nombres técnicos, cache 60s) + `GET /api/status/public` + página `/status` con semáforo. `proxy.ts` reescribe por host (`STATUS_DOMAINS` env, default `status.aicorebots.com`) → raíz sirve `/status`. Commit `b77032a`. | 01/08 |
 | **Mis datos (Ley 19.628)** | Portal: `GET /api/portal/mis-datos/exportar` (JSON self-service solo del paciente autenticado) + `POST /api/portal/mis-datos/solicitar-eliminacion` (revisión manual, email al admin del tenant, sin borrado automático). Admin/medico: `/dashboard/mis-datos` + `GET/PATCH /api/mis-datos`. Tabla `solicitudes_datos`, migración 0057. Commit `4a364fd` | 01/08 |
 | **Sistema de alertas** | `platform.alerts_config` + `alerts_history` (migración 0001 ops), `lib/alerts.ts` (4 checks cross-tenant), `lib/notifications.ts` (Telegram/Chatwoot/Webhook/Email), API `/api/alertas/{config,config/[id],check,history}`, página `/dashboard/alertas`, WF-15 cron 5min. Commits `60445b6`, `847a80f` | 01/08 |
+| **Predicción de demanda + Benchmark anónimo** | Service `ocupacion-franjas.ts` (ocupación normalizada al pico histórico por día, on-demand), GET `/api/reportes/ocupacion` + tab "Ocupación" en reportes; `ops-console/lib/benchmark.ts` (cross-tenant, buckets anti-identificación ≥5), GET/POST `/api/internal/benchmark` + GET `/api/reportes/benchmark` + tab "Benchmark"; migración ops `0003_benchmark_snapshot`; WF-16 cron nocturno. Tests `benchmark.test.ts` 6/6 pass | 03/08 |
 | **Incidentes en ops-console** | Búsqueda cross-tenant `GET /api/busqueda` (logAudit `busqueda.global`), overrides con confirmación+audit (gracia, activar suscripción, reprocesar MP, reiniciar Evolution), dashboard `POST /api/internal/pagos/reprocesar`, UI `/dashboard/incidentes`. Commit `cf2fbe8` | 01/08 |
 | **Fix login ops-console** | Commit `0c8ef83` (rate limiting) nunca aplicó migración 0002 (`platform.login_attempts`) → login 500 `relation does not exist`. Aplicada manual en prod vía docker cp + psql -f. Bugs: `db.execute` con objeto Date → `toISOString()`, cast `created_at`, fail-open try/catch. Force update Swarm (Dokploy :latest no actualiza). Verificado: login/begin 401 (antes 500). Commit `6dcd227` | 02/08 |
 | **Fix webhooks logs** | `webhooks-client.tsx` chequeaba `data.success` pero `/api/webhooks/logs` usa `ok()` (body sin `success`) → 'Error al cargar logs' en filtros/auto-refresh. Fix: `res.ok` + `data.data`. Commit `8be80d2` | 03/08 |

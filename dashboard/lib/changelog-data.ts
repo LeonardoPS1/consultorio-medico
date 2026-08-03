@@ -10,8 +10,20 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 03/08/2026 — v1.31.0 Fixes de Webhooks y API Keys
+// Actualizado: 03/08/2026 — v1.32.0 Predicción de demanda + Benchmark anónimo
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.32.0',
+    date: '03/08/2026',
+    title: 'Predicción de demanda por franja horaria + Benchmark anónimo',
+    items: [
+      'Reportes: nueva pestaña "Ocupación" con mapa de calor semanal (día × franja horaria) que muestra franjas sub-utilizadas (rojo/amarillo) y saturadas (verde), normalizadas al pico histórico del mismo día (últimas 12 semanas). Útil para ajustar dotación de personal o promocionar horarios flojos. Feature ocupacion-franjas (Professional).',
+      'Reportes: nueva pestaña "Benchmark" que compara tu clínica (no-show rate, ocupación, NPS) contra el promedio anónimo de clínicas similares (misma escala de pacientes). Los promedios solo se muestran si un bucket tiene >= 5 clínicas para proteger la privacidad (anti-identificación). Disponible Professional+.',
+      'Job nocturno WF-16: análisis de ocupación por franja + recálculo de benchmark anónimo cada madrugada (03:35).',
+      'Ops Console: nuevo endpoint interno /api/internal/benchmark + migración platform.benchmark_snapshot; cálculo cross-tenant con OPS_DATABASE_URL (bypass RLS) y bucketing por tamaño (pequeña 0-99 / mediana 100-499 / grande 500-1499 / muy grande 1500+).',
+      'Feature flags nuevas: ocupacion-franjas (Professional).',
+    ],
+  },
   {
     version: '1.31.0',
     date: '03/08/2026',

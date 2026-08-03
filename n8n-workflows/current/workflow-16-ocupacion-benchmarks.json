@@ -1,0 +1,218 @@
+{
+  "name": "16 - Análisis de ocupación y benchmark anónimo",
+  "nodes": [
+    {
+      "id": "cron-trigger",
+      "name": "Cron - Diario 03:35",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyDay",
+              "hour": 3,
+              "minute": 35
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-ocupacion",
+      "name": "HTTP - Calcular ocupación",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://med.aicorebots.com/api/internal/ocupacion/calcular",
+        "authentication": "none",
+        "options": {
+          "timeout": 30000
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "x-internal-key": "={{ $env.INTERNAL_API_KEY }}"
+        },
+        "jsonParameters": true,
+        "parameters": {}
+      }
+    },
+    {
+      "id": "if-ocupacion",
+      "name": "¿Ocupación éxito?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [750, 200],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.mensaje }}",
+              "operation": "contains",
+              "value2": "analizada"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "log-ocupacion-success",
+      "name": "PG - Log Ocupación Éxito",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1000, 150],
+      "credentials": {
+        "postgres": {
+          "id": "fersBxOXicK7tW99",
+          "name": "Consultorio - postgres"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, execution_id, workflow_name, nivel, mensaje, metadata) VALUES ('workflow-16', $1, '16 - Análisis de ocupación y benchmark anónimo', 'info', $2, $3);",
+        "additionalFields": {
+          "queryParams": "={{ [$json.executionId, $json.mensaje, JSON.stringify($json) ] }}"
+        }
+      }
+    },
+    {
+      "id": "log-ocupacion-error",
+      "name": "PG - Log Ocupación Error",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1000, 300],
+      "credentials": {
+        "postgres": {
+          "id": "fersBxOXicK7tW99",
+          "name": "Consultorio - postgres"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, execution_id, workflow_name, nivel, mensaje, metadata) VALUES ('workflow-16', $1, '16 - Análisis de ocupación y benchmark anónimo', 'error', $2, $3);",
+        "additionalFields": {
+          "queryParams": "={{ [$json.executionId, 'Error calculando ocupación: ' + ($json.error?.message || $json.mensaje || 'Error desconocido'), JSON.stringify($json) ] }}"
+        }
+      }
+    },
+    {
+      "id": "http-benchmark",
+      "name": "HTTP - Recalcular Benchmark",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 450],
+      "parameters": {
+        "method": "POST",
+        "url": "https://ops.aicorebots.com/api/internal/benchmark",
+        "authentication": "none",
+        "options": {
+          "timeout": 60000
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "x-internal-key": "={{ $env.INTERNAL_API_KEY }}"
+        },
+        "jsonParameters": true,
+        "parameters": {}
+      }
+    },
+    {
+      "id": "if-benchmark",
+      "name": "¿Benchmark éxito?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [750, 450],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.mensaje }}",
+              "operation": "contains",
+              "value2": "recalculado"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "log-benchmark-success",
+      "name": "PG - Log Benchmark Éxito",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1000, 400],
+      "credentials": {
+        "postgres": {
+          "id": "fersBxOXicK7tW99",
+          "name": "Consultorio - postgres"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, execution_id, workflow_name, nivel, mensaje, metadata) VALUES ('workflow-16', $1, '16 - Análisis de ocupación y benchmark anónimo', 'info', $2, $3);",
+        "additionalFields": {
+          "queryParams": "={{ [$json.executionId, $json.mensaje, JSON.stringify($json) ] }}"
+        }
+      }
+    },
+    {
+      "id": "log-benchmark-error",
+      "name": "PG - Log Benchmark Error",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1000, 550],
+      "credentials": {
+        "postgres": {
+          "id": "fersBxOXicK7tW99",
+          "name": "Consultorio - postgres"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_logs (workflow_id, execution_id, workflow_name, nivel, mensaje, metadata) VALUES ('workflow-16', $1, '16 - Análisis de ocupación y benchmark anónimo', 'error', $2, $3);",
+        "additionalFields": {
+          "queryParams": "={{ [$json.executionId, 'Error recalculando benchmark: ' + ($json.error?.message || 'Error desconocido'), JSON.stringify($json) ] }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cron - Diario 03:35": {
+      "main": [
+        [
+          { "node": "HTTP - Calcular ocupación", "type": "main", "index": 0 },
+          { "node": "HTTP - Recalcular Benchmark", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "HTTP - Calcular ocupación": {
+      "main": [
+        [{ "node": "¿Ocupación éxito?", "type": "main", "index": 0 }]
+      ]
+    },
+    "¿Ocupación éxito?": {
+      "main": [
+        [{ "node": "PG - Log Ocupación Éxito", "type": "main", "index": 0 }],
+        [{ "node": "PG - Log Ocupación Error", "type": "main", "index": 0 }]
+      ]
+    },
+    "HTTP - Recalcular Benchmark": {
+      "main": [
+        [{ "node": "¿Benchmark éxito?", "type": "main", "index": 0 }]
+      ]
+    },
+    "¿Benchmark éxito?": {
+      "main": [
+        [{ "node": "PG - Log Benchmark Éxito", "type": "main", "index": 0 }],
+        [{ "node": "PG - Log Benchmark Error", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["ocupacion", "benchmark", "cron"],
+  "active": false
+}

@@ -1,13 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, memo } from 'react';
-import dynamic from 'next/dynamic';
-import { motion } from 'motion/react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { toast } from '@/components/ui/use-toast';
 import {
   TrendingUp,
   TrendingDown,
@@ -22,17 +14,29 @@ import {
   Award,
   DollarSign,
   AlertTriangle,
+  Flame,
 } from 'lucide-react';
+import { motion } from 'motion/react';
+import dynamic from 'next/dynamic';
+import { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { PageHeader } from '@/components/page-header';
+import type { BenchComparativaResponse } from '@/components/reportes/benchmark-comparativa';
+import type { ComparativaData } from '@/components/reportes/comparativa-mensual';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/components/ui/use-toast';
+import { useCanAccess } from '@/lib/features';
 import { generarHTMLReporte } from '@/lib/reportes-export-html';
+import type { OcupacionReporte } from '@/lib/services/ocupacion-franjas';
 import type { ReporteApiResponse, Periodo, IconMap } from './types';
-import type { ComparativaData } from '@/components/reportes/comparativa-mensual';
 
 const TurnosChart = dynamic(() => import('@/components/charts/turnos-chart'), {
   ssr: false,
@@ -65,6 +69,16 @@ const ConversionFunnel = dynamic(() => import('@/components/reportes/conversion-
 const EjecutivoTrendChart = dynamic(() => import('@/components/charts/ejecutivo-trend-chart'), {
   ssr: false,
   loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" />,
+});
+
+const HeatmapFranjas = dynamic(() => import('@/components/reportes/heatmap-franjas'), {
+  ssr: false,
+  loading: () => <div className="h-64 animate-pulse rounded-lg bg-muted" />,
+});
+
+const BenchmarkComparativa = dynamic(() => import('@/components/reportes/benchmark-comparativa'), {
+  ssr: false,
+  loading: () => <div className="h-64 animate-pulse rounded-lg bg-muted" />,
 });
 
 const iconNames: IconMap = {
@@ -250,13 +264,24 @@ interface Props {
   isAdvancedReports: boolean;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.initialData
+ * @param root0.isAdvancedReports
+ */
 export function ReportesClient({ initialData, isAdvancedReports }: Props) {
+  const canVerOcupacion = useCanAccess('ocupacion-franjas');
   const [periodo, setPeriodo] = useState<Periodo>('mes');
   const [fetchKey, setFetchKey] = useState(0);
   const [data, setData] = useState<ReporteApiResponse | null>(initialData);
   const [loading, setLoading] = useState(!initialData);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ocupacionData, setOcupacionData] = useState<OcupacionReporte | null>(null);
+  const [ocupacionLoading, setOcupacionLoading] = useState(canVerOcupacion);
+  const [benchmarkData, setBenchmarkData] = useState<BenchComparativaResponse | null>(null);
+  const [benchmarkLoading, setBenchmarkLoading] = useState(isAdvancedReports);
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -284,6 +309,44 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
       }
     };
     fetchReportes();
+
+    // Fetch mapa de ocupación (on-demand) — solo si el plan lo permite
+    if (canVerOcupacion && !ocupacionData) {
+      (async () => {
+        try {
+          const res = await fetch('/api/reportes/ocupacion?demo=true', { cache: 'no-store' });
+          if (!res.ok) throw new Error(`Error ${res.status}`);
+          const json = await res.json();
+          if (isMounted.current) setOcupacionData(json);
+        } catch {
+          if (isMounted.current) setOcupacionData(null);
+        } finally {
+          if (isMounted.current) setOcupacionLoading(false);
+        }
+      })();
+    }
+
+    // Fetch benchmark anónimo (solo advanced)
+    if (isAdvancedReports && !benchmarkData) {
+      (async () => {
+        try {
+          const res = await fetch('/api/reportes/benchmark', { cache: 'no-store' });
+          if (res.status === 403) {
+            if (isMounted.current) setBenchmarkData(null);
+          } else if (!res.ok) {
+            throw new Error(`Error ${res.status}`);
+          } else {
+            const json = (await res.json()) as BenchComparativaResponse;
+            if (isMounted.current) setBenchmarkData(json);
+          }
+        } catch {
+          if (isMounted.current) setBenchmarkData(null);
+        } finally {
+          if (isMounted.current) setBenchmarkLoading(false);
+        }
+      })();
+    }
+
     return () => { isMounted.current = false; };
   }, [periodo, fetchKey]);
 
@@ -375,9 +438,15 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
           <TabsTrigger value="turnos" className="px-2 sm:px-3"><Calendar className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Turnos</span></TabsTrigger>
           <TabsTrigger value="pacientes" className="px-2 sm:px-3"><Activity className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Pacientes</span></TabsTrigger>
           <TabsTrigger value="whatsapp" className="px-2 sm:px-3"><MessageSquare className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">WhatsApp</span></TabsTrigger>
-          <TabsTrigger value="comparativa" className="px-2 sm:px-3"><TrendingUp className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Comparativa</span></TabsTrigger>
-          <TabsTrigger value="ejecutivo" className="px-2 sm:px-3"><Award className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Ejecutivo</span></TabsTrigger>
-        </TabsList>
+           <TabsTrigger value="comparativa" className="px-2 sm:px-3"><TrendingUp className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Comparativa</span></TabsTrigger>
+           {canVerOcupacion && (
+             <TabsTrigger value="ocupacion" className="px-2 sm:px-3"><Flame className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Ocupación</span></TabsTrigger>
+           )}
+            <TabsTrigger value="ejecutivo" className="px-2 sm:px-3"><Award className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Ejecutivo</span></TabsTrigger>
+            {isAdvancedReports && (
+              <TabsTrigger value="benchmark" className="px-2 sm:px-3"><TrendingUp className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Benchmark</span></TabsTrigger>
+            )}
+         </TabsList>
 
         <TabGeneral data={data} />
 
@@ -435,13 +504,38 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
               <ComparativaMensual data={(data._comparativa || {}) as ComparativaData} periodo={periodo} />
             </CardContent>
           </Card>
-          {isAdvancedReports && data.prediccion && data.prediccion.length > 0 && (
-            <Card>
-              <CardHeader><CardTitle className="text-lg">Comparativa vs Predicción</CardTitle></CardHeader>
-              <CardContent><PrediccionDemanda data={data.prediccion || []} /></CardContent>
-            </Card>
-          )}
-        </TabsContent>
+         {isAdvancedReports && data.prediccion && data.prediccion.length > 0 && (
+             <Card>
+               <CardHeader><CardTitle className="text-lg">Comparativa vs Predicción</CardTitle></CardHeader>
+               <CardContent><PrediccionDemanda data={data.prediccion || []} /></CardContent>
+             </Card>
+           )}
+         </TabsContent>
+
+         {canVerOcupacion && (
+           <TabsContent value="ocupacion" className="mt-4 space-y-4">
+             <Card>
+               <CardHeader>
+                 <div className="flex items-center justify-between">
+                   <CardTitle className="text-lg">
+                     Mapa de calor de ocupación por franja horaria (últimas {ocupacionData?.semanas ?? 12} semanas)
+                   </CardTitle>
+                   {ocupacionData?._demo && (
+                     <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-800">⚡ Demo</Badge>
+                   )}
+                 </div>
+                 <p className="text-xs text-muted-foreground">
+                   {ocupacionData
+                     ? `${ocupacionData.totalTurnos} turnos analizados · Las celdas más saturadas (verde) indican picos de demanda.`
+                     : 'Sin datos de ocupación disponibles.'}
+                 </p>
+               </CardHeader>
+               <CardContent>
+                 <HeatmapFranjas data={ocupacionData} loading={ocupacionLoading} />
+               </CardContent>
+             </Card>
+           </TabsContent>
+         )}
 
         {data.ejecutivo && (
           <TabsContent value="ejecutivo" className="mt-4 space-y-4">
@@ -498,6 +592,16 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
                 <CardContent><ConversionFunnel data={data.conversionLeads} /></CardContent>
               </Card>
             )}
+          </TabsContent>
+        )}
+
+        {isAdvancedReports && (
+          <TabsContent value="benchmark" className="mt-4 space-y-4">
+            <BenchmarkComparativa
+              data={benchmarkData}
+              loading={benchmarkLoading}
+              isAdvancedReports={isAdvancedReports}
+            />
           </TabsContent>
         )}
       </Tabs>

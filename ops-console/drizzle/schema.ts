@@ -97,7 +97,21 @@ export const loginAttempts = platform.table('login_attempts', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+// ─── 8. Benchmark Anónimo entre Clínicas ─────────────────────────────────────
+export const benchmarkSnapshot = platform.table('benchmark_snapshot', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  bucketLabel: varchar('bucket_label', { length: 50 }).notNull(),
+  bucketRange: varchar('bucket_range', { length: 50 }).notNull(),
+  tenantCount: integer('tenant_count').notNull(),
+  avgNoShow: integer('avg_no_show'),
+  avgOcupacion: integer('avg_ocupacion'),
+  avgNps: integer('avg_nps'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
 // ─── Tipos exportados ──────────────────────────────────────────────────────
+export type BenchmarkSnapshot = typeof benchmarkSnapshot.$inferSelect
+export type NewBenchmarkSnapshot = typeof benchmarkSnapshot.$inferInsert
 export type PlatformOperator = typeof platformOperators.$inferSelect
 export type NewPlatformOperator = typeof platformOperators.$inferInsert
 export type PlatformPasskey = typeof platformPasskeys.$inferSelect

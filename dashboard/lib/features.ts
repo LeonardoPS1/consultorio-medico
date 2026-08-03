@@ -5,9 +5,9 @@
  * La fuente de verdad de los planes está en lib/planes.ts.
  */
 
+import { useSession } from 'next-auth/react';
 import type { PlanId } from '@/lib/planes';
 import { PLANES } from '@/lib/planes';
-import { useSession } from 'next-auth/react';
 
 // ============================================================
 // IDs de features — todas las funcionalidades del sistema
@@ -53,8 +53,9 @@ export type FeatureId =
   | 'blacklist'
   | 'consentimiento-informado'
   | 'telemedicina'
-  | 'onboarding'
-  | 'scoring-pacientes'
+   | 'onboarding'
+   | 'ocupacion-franjas'
+   | 'scoring-pacientes'
   | 'historial'
   | 'web-vitals'
   | 'portal-analytics'
@@ -100,6 +101,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'scoring-pacientes': 'starter',
   pwa: 'free',
   onboarding: 'free',
+  'ocupacion-franjas': 'professional',
   'certificados-qr': 'professional',
   'reportes-avanzados': 'professional',
   'ia-assistant': 'professional',
@@ -167,7 +169,8 @@ const PLAN_ORDER: Record<PlanId, number> = {
 
 /**
  * Verifica si un plan tiene acceso a una funcionalidad.
- *
+ * @param plan
+ * @param feature
  * @example canAccess('professional', 'turnos') → true
  * @example canAccess('starter', 'ia-assistant') → false
  */
@@ -182,6 +185,7 @@ export function canAccess(plan: PlanId | string | undefined, feature: FeatureId)
 
 /**
  * Dado un plan, devuelve la lista de features disponibles.
+ * @param plan
  */
 export function getAvailableFeatures(plan: PlanId): FeatureId[] {
   return (Object.keys(FEATURE_PLAN) as FeatureId[]).filter((f) => canAccess(plan, f));
@@ -190,6 +194,7 @@ export function getAvailableFeatures(plan: PlanId): FeatureId[] {
 /**
  * Devuelve el nombre del plan requerido para una feature.
  * Ej: getFeatureRequiredPlan('integraciones') → 'Premium'
+ * @param feature
  */
 export function getFeatureRequiredPlan(feature: FeatureId): string {
   const planId = FEATURE_PLAN[feature];
@@ -203,7 +208,6 @@ export function getFeatureRequiredPlan(feature: FeatureId): string {
 /**
  * Verifica si un feature está habilitado a nivel tenant.
  * Combina plan gating + tenant toggles.
- *
  * @param plan - Plan del usuario
  * @param feature - Feature a verificar
  * @param disabledFeatures - Set de features deshabilitados a nivel tenant (opcional)
@@ -235,7 +239,6 @@ export function canAccessWithToggles(
  * 2. Plan gating: si el plan del usuario NO alcanza → denegado
  * 3. Tenant toggle: si está deshabilitado → denegado
  * 4. Por defecto → concedido
- *
  * @param plan - Plan del usuario
  * @param feature - Feature a verificar
  * @param disabledFeatures - Set de features deshabilitados a nivel tenant
@@ -265,6 +268,7 @@ export function canAccessWithUserOverrides(
  *
  * Los features que no aparecen en el record se consideran habilitados
  * (por defecto, todo lo que el plan permite está activo).
+ * @param featuresEnabled
  */
 export function getDisabledFeatures(
   featuresEnabled: Record<string, boolean> | null | undefined,
@@ -287,6 +291,7 @@ export function getDisabledFeatures(
 /**
  * Hook para components client. Usa la sesión de NextAuth.
  * Si no hay sesión o no tiene plan, asume 'free'.
+ * @param feature
  */
 export function useCanAccess(feature: FeatureId): boolean {
   const { data: session } = useSession();
