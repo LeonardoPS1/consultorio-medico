@@ -11,15 +11,6 @@
  * 5. API Keys — Keys para API pública
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
 import {
   Save,
   Loader2,
@@ -31,14 +22,22 @@ import {
   Lock,
   Users,
   Search,
-  ChevronDown,
 } from 'lucide-react';
-import IntegracionesDashboard from '@/components/configuracion/integraciones-dashboard';
-import CredencialesTab from '@/components/configuracion/credenciales-tab';
+import { useState, useEffect, useRef } from 'react';
 import ApiKeysTab from '@/components/configuracion/api-keys-tab';
+import CredencialesTab from '@/components/configuracion/credenciales-tab';
+import IntegracionesDashboard from '@/components/configuracion/integraciones-dashboard';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/components/ui/use-toast';
 import { useFeatureFlags } from '@/lib/feature-flags-context';
 import type { FeatureId } from '@/lib/features';
-import { FEATURE_PLAN, getFeatureRequiredPlan } from '@/lib/features';
+import { getFeatureRequiredPlan } from '@/lib/features';
 
 // ─── Features toggleables ────────────────────────────────────
 
@@ -158,6 +157,12 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
     id: 'soporte',
     label: 'Soporte y Feedback',
     description: 'Canal de soporte para pacientes con envío a Chatwoot o WhatsApp',
+    category: 'modulos',
+  },
+  {
+    id: 'solicitudes-datos',
+    label: 'Solicitudes de Datos',
+    description: 'Gestión de solicitudes ARCO de pacientes (Ley 19.628)',
     category: 'modulos',
   },
 
@@ -324,6 +329,48 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
     description: 'Configuración inicial guiada con asistente IA',
     category: 'avanzado',
   },
+  {
+    id: 'white-labeling',
+    label: 'White-labeling',
+    description: 'Personalización de dominio y colores por tenant',
+    category: 'avanzado',
+  },
+  {
+    id: 'configuracion-regional',
+    label: 'Configuración Regional',
+    description: 'Moneda, país y configuración regional por tenant',
+    category: 'avanzado',
+  },
+  {
+    id: 'fonasa-isapres',
+    label: 'Previsión FONASA/ISAPRE',
+    description: 'Tramos FONASA y aranceles de referencia de ISAPREs chilenas',
+    category: 'avanzado',
+  },
+  {
+    id: 'disaster-recovery',
+    label: 'Recuperación ante Desastres',
+    description: 'Scripts y procedimientos de restauración de respaldos',
+    category: 'avanzado',
+  },
+  {
+    id: 'impersonation-hardening',
+    label: 'Impersonación Segura',
+    description: 'Hardening de impersonación con motivo obligatorio y revocación',
+    category: 'avanzado',
+  },
+  {
+    id: 'incidentes-ops',
+    label: 'Incidentes Ops',
+    description: 'Gestión de incidentes y overrides de operaciones',
+    category: 'avanzado',
+  },
+  {
+    id: 'crear-clinica',
+    label: 'Crear Clínica',
+    description: 'Creación de nuevas clínicas desde el panel de operaciones',
+    category: 'avanzado',
+  },
 
   // ─── Sistema ────────────────────────────────────────────
   {
@@ -386,6 +433,12 @@ const TOGGLEABLE_FEATURES: ToggleFeature[] = [
     description: 'Sistema de caché con invalidación selectiva para mejor performance',
     category: 'sistema',
   },
+  {
+    id: 'status-publico',
+    label: 'Página de Estado',
+    description: 'Página pública de estado del servicio en status.aicorebots.com',
+    category: 'sistema',
+  },
 ];
 
 // ─── Props ───────────────────────────────────────────────────
@@ -395,6 +448,12 @@ interface SistemaTabProps {
   section?: 'toggles' | 'ia' | 'integraciones' | 'credenciales' | 'apikeys' | 'privacidad';
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.isAdmin
+ * @param root0.section
+ */
 export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
   const { toast } = useToast();
   const { refresh: refreshFeatureFlags } = useFeatureFlags();
@@ -486,14 +545,11 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
 
   // Fetch users on mount
   useEffect(() => {
-    setUsersLoading(true);
     fetch('/api/admin/users')
       .then((r) => r.json())
       .then((data) => {
-        const list = data.data?.users ?? data.users ?? [];
-        setUsers(
-          list.map((u: any) => ({ id: u.id, email: u.email, nombre: u.nombre, plan: u.plan })),
-        );
+        const list: UserOption[] = data.data?.users ?? data.users ?? [];
+        setUsers(list.map((u) => ({ id: u.id, email: u.email, nombre: u.nombre, plan: u.plan })));
       })
       .catch(() => {})
       .finally(() => setUsersLoading(false));
@@ -520,12 +576,8 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
 
   // Cargar overrides de usuario cuando se selecciona un usuario
   useEffect(() => {
-    if (!selectedUserId) {
-      setUserOverrides({});
-      return;
-    }
+    if (!selectedUserId) return;
 
-    setLoadingUserOverrides(true);
     fetch(`/api/admin/users/${selectedUserId}/feature-overrides`)
       .then((r) => r.json())
       .then((data) => {
@@ -733,6 +785,8 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
                           className="w-full px-3 py-2 text-sm text-left hover:bg-accent flex items-center justify-between"
                           onClick={() => {
                             setSelectedUserId(u.id);
+                            setUserOverrides({});
+                            setLoadingUserOverrides(true);
                             setUserSearch('');
                             setUserDropdownOpen(false);
                           }}

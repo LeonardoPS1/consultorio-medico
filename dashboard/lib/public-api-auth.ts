@@ -8,11 +8,11 @@
  * Ejemplo: amk_8a3f9b2c1d0e4f5a6b7c8d9e
  */
 
+import crypto from 'crypto';
+import { eq, and, sql } from 'drizzle-orm';
+import { apiKeys } from '@/drizzle/schema';
 import { db } from '@/lib/db';
 import { safeError } from '@/lib/logger';
-import { apiKeys } from '@/drizzle/schema';
-import { eq, and, sql } from 'drizzle-orm';
-import crypto from 'crypto';
 import {
   API_SCOPES,
   type ApiScope,
@@ -67,6 +67,7 @@ function hashKey(key: string): string {
  * Acepta:
  *   - Authorization: Bearer amk_xxx
  *   - x-api-key: amk_xxx
+ * @param request
  */
 export function extractApiKey(request: Request): string | null {
   const authHeader = request.headers.get('authorization');
@@ -87,6 +88,7 @@ export function extractApiKey(request: Request): string | null {
 /**
  * Valida una API key contra la DB.
  * Verifica: existe el hash, está activa, no expiró.
+ * @param key
  */
 export async function validateApiKey(key: string): Promise<ApiKeyValidation> {
   if (!key || !key.startsWith(KEY_PREFIX)) {
@@ -141,6 +143,8 @@ export async function validateApiKey(key: string): Promise<ApiKeyValidation> {
 
 /**
  * Verifica si una API key tiene un scope específico.
+ * @param apiKeyData
+ * @param requiredScope
  */
 export function hasScope(apiKeyData: ApiKeyData, requiredScope: ApiScope): boolean {
   return apiKeyData.scopes.includes(requiredScope) || apiKeyData.scopes.includes('*');
@@ -164,6 +168,7 @@ export interface CreateApiKeyResult {
 /**
  * Crea una nueva API key en la DB.
  * Devuelve la key completa (única vez).
+ * @param input
  */
 export async function createApiKey(input: CreateApiKeyInput): Promise<CreateApiKeyResult> {
   const generated = generateApiKey();
@@ -201,6 +206,7 @@ export interface ApiKeyListItem {
 /**
  * Lista las API keys de un tenant.
  * NUNCA devuelve el key_hash (solo el key_prefix).
+ * @param tenantId
  */
 export async function listApiKeys(tenantId: string): Promise<ApiKeyListItem[]> {
   const result = await db
@@ -223,6 +229,16 @@ export async function listApiKeys(tenantId: string): Promise<ApiKeyListItem[]> {
 
 // ─── Revocar API key ─────────────────────────────────────────
 
-export async function revokeApiKey(keyId: string): Promise<void> {
-  await db.update(apiKeys).set({ activa: false }).where(eq(apiKeys.id, keyId));
+/**
+ *
+ * @param keyId
+ * @param tenantId
+ */
+export async function revokeApiKey(keyId: string, tenantId?: string): Promise<void> {
+  await db
+    .update(apiKeys)
+    .set({ activa: false })
+    .where(
+      tenantId ? and(eq(apiKeys.id, keyId), eq(apiKeys.tenantId, tenantId)) : eq(apiKeys.id, keyId),
+    );
 }

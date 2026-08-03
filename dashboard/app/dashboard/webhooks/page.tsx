@@ -1,29 +1,13 @@
-import { WebhooksClient } from './webhooks-client';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent } from '@/components/ui/card';
+import { getMensajes } from '@/lib/data-store';
+import { WebhooksClient } from './webhooks-client';
 
 // ─── Types ────────────────────────────────────────────────
 
-interface MensajeLog {
-  id: string;
-  conversacionId: string;
-  rol: string;
-  contenido: string;
-  tipo: string;
-  twilioSid?: string;
-  twilioStatus?: string;
-  n8nExecutionId?: string;
-  createdAt: string;
-  pacienteNombre: string;
-  pacienteApellido: string;
-  pacienteTelefono: string;
-  conversacionEstado: string;
-  conversacionCanal: string;
-}
-
 interface WebhooksApiResponse {
   success: boolean;
-  data: MensajeLog[];
+  data: Awaited<ReturnType<typeof getMensajes>>['mensajes'];
   total: number;
   porEstado: Record<string, number>;
 }
@@ -35,11 +19,13 @@ export const dynamic = 'force-dynamic';
 
 async function getInitialData(): Promise<WebhooksApiResponse | null> {
   try {
-    const res = await fetch('/api/webhooks/logs?limit=50&offset=0', {
-      cache: 'no-store',
-    });
-    if (!res.ok) return null;
-    return res.json();
+    const result = await getMensajes({ limit: 50, offset: 0 });
+    return {
+      success: true,
+      data: result.mensajes,
+      total: result.total,
+      porEstado: result.porEstado,
+    };
   } catch {
     return null;
   }
@@ -89,6 +75,9 @@ function KpiCards({ total, porEstado }: { total: number; porEstado: Record<strin
 
 // ─── Page ──────────────────────────────────────────────────
 
+/**
+ *
+ */
 export default async function WebhooksLogsPage() {
   const initialData = await getInitialData();
 

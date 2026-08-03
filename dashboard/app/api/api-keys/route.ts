@@ -29,27 +29,40 @@ async function getSession() {
   const session = await auth();
   if (!session?.user?.id) return null;
   return session as {
-    user: { id: string; role: string; plan: string; name: string; email: string };
+    user: {
+      id: string;
+      role: string;
+      plan: string;
+      name: string;
+      email: string;
+      tenantId?: string;
+    };
   };
 }
 
 // ─── GET: Listar API keys ────────────────────────────────────
 
+/**
+ *
+ */
 export async function GET() {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  // Obtener tenantId del header (inyectado por proxy)
-  // Usar el del usuario como fallback
-  const keys = await listApiKeys('00000000-0000-0000-0000-000000000000');
+  const tenantId = session.user.tenantId ?? '00000000-0000-0000-0000-000000000000';
+  const keys = await listApiKeys(tenantId);
 
   return NextResponse.json({ apiKeys: keys });
 }
 
 // ─── POST: Crear API key ─────────────────────────────────────
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: NextRequest) {
   const session = await getSession();
   if (!session) {
@@ -72,6 +85,7 @@ export async function POST(request: NextRequest) {
       scopes: parsed.scopes,
       createdBy: session.user.id,
       expiresAt,
+      tenantId: session.user.tenantId,
     });
 
     // Devolver la key completa (única vez)
@@ -86,13 +100,17 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 },
     );
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'Error al crear API key' }, { status: 500 });
   }
 }
 
 // ─── DELETE: Revocar API key ─────────────────────────────────
 
+/**
+ *
+ * @param request
+ */
 export async function DELETE(request: NextRequest) {
   const session = await getSession();
   if (!session) {
@@ -107,9 +125,9 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    await revokeApiKey(keyId);
+    await revokeApiKey(keyId, session.user.tenantId);
     return NextResponse.json({ success: true });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'Error al revocar key' }, { status: 500 });
   }
 }

@@ -9,17 +9,15 @@
  * incluyendo features guardados con true (habilitados).
  */
 
-import { NextRequest } from 'next/server';
-import { apiHandler, success, fail } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { db } from '@/lib/db';
-import { tenants } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { FEATURE_PLAN } from '@/lib/features';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
-
-const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
+import { tenants } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, fail } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { FEATURE_PLAN } from '@/lib/features';
+import { parseBody } from '@/lib/validations';
 
 const ALL_FEATURES = Object.keys(FEATURE_PLAN);
 
@@ -28,11 +26,13 @@ const ALL_FEATURES = Object.keys(FEATURE_PLAN);
 export const GET = apiHandler(async () => {
   const session = await requireAuth();
   if (session.user.role !== 'admin') fail('No autorizado', 403);
+  const tenantId = (session.user as { tenantId?: string }).tenantId;
+  if (!tenantId) fail('Tenant no encontrado', 400);
 
   const [tenant] = await db
     .select({ featuresEnabled: tenants.featuresEnabled })
     .from(tenants)
-    .where(eq(tenants.id, DEFAULT_TENANT_ID))
+    .where(eq(tenants.id, tenantId))
     .limit(1);
 
   const saved = (tenant?.featuresEnabled || {}) as Record<string, boolean>;
@@ -49,13 +49,15 @@ export const GET = apiHandler(async () => {
 export const PATCH = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();
   if (session.user.role !== 'admin') fail('No autorizado', 403);
+  const tenantId = (session.user as { tenantId?: string }).tenantId;
+  if (!tenantId) fail('Tenant no encontrado', 400);
 
   const body = await parseBody(request, z.record(z.string(), z.boolean()));
 
   const [tenant] = await db
     .select({ featuresEnabled: tenants.featuresEnabled })
     .from(tenants)
-    .where(eq(tenants.id, DEFAULT_TENANT_ID))
+    .where(eq(tenants.id, tenantId))
     .limit(1);
 
   const current = (tenant?.featuresEnabled || {}) as Record<string, boolean>;
@@ -65,10 +67,7 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
     merged[key] = value;
   }
 
-  await db
-    .update(tenants)
-    .set({ featuresEnabled: merged })
-    .where(eq(tenants.id, DEFAULT_TENANT_ID));
+  await db.update(tenants).set({ featuresEnabled: merged }).where(eq(tenants.id, tenantId));
 
   return success({
     features: merged,
