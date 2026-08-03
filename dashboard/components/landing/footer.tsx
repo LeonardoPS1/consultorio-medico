@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { ShieldCheck, Lock, Server } from 'lucide-react';
+import Link from 'next/link';
 import { FooterColumn } from '@/components/landing/landing-footer-column';
 import { ScrollToTop } from '@/components/landing/scroll-to-top';
 import { Logo } from '@/components/layout/logo';
@@ -24,6 +24,7 @@ const footerLinks: Record<
       { label: 'Iniciar sesión', href: '/login' },
       { label: 'Solicitar demo', href: '#contact' },
       { label: 'Privacidad', href: '/privacidad' },
+      { label: 'Cumplimiento', href: '/cumplimiento' },
       { label: 'Términos', href: '/terminos' },
     ],
   },
@@ -37,6 +38,9 @@ const footerLinks: Record<
   },
 };
 
+/**
+ *
+ */
 export function Footer() {
   return (
     <footer className="relative border-t bg-gradient-to-b from-background to-muted/30">
@@ -56,10 +60,13 @@ export function Footer() {
               <Server className="h-3.5 w-3.5 text-primary" />
               <span>Infraestructura propia en Chile</span>
             </span>
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-              <span>Cumplimiento Ley 19.628 — Protección de datos</span>
-            </span>
+            <Link
+              href="/cumplimiento"
+              className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 transition-colors hover:bg-emerald-500/20"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Cumplimiento Ley 19.628
+            </Link>
           </div>
         </div>
       </div>

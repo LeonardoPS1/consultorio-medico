@@ -1,10 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { motion } from 'motion/react';
-import { cn } from '@/lib/utils';
 import {
   Calendar,
   MessageSquare,
@@ -24,8 +19,14 @@ import {
   LogOut,
   X,
   Upload,
+  ShieldCheck,
 } from 'lucide-react';
+import { motion } from 'motion/react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 
 // ─── Navigation Data ────────────────────────────────────────
 const primaryNav = [
@@ -64,6 +65,7 @@ const secondaryGroups: SecondaryGroup[] = [
     items: [
       { href: '/portal/paquetes', label: 'Paquetes', icon: Package },
       { href: '/portal/perfil', label: 'Perfil', icon: User },
+      { href: '/portal/privacidad', label: 'Privacidad y accesos', icon: ShieldCheck },
     ],
   },
 ];
@@ -172,9 +174,11 @@ function SecondaryItem({
 }
 
 // ─── Component ──────────────────────────────────────────────
+/**
+ *
+ */
 export default function PortalNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -186,14 +190,29 @@ export default function PortalNav() {
         const data = await res.json();
         setUnreadCount(data.count ?? 0);
       }
-    } catch { /* silently fail */ }
+    } catch {
+      /* silently fail */
+    }
   }, []);
 
   useEffect(() => {
-    setMounted(true);
-    fetchCount();
+    const t = window.setTimeout(() => setMounted(true), 0);
+    void (async () => {
+      try {
+        const res = await fetch('/api/portal/notificaciones?count=true');
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadCount(data.count ?? 0);
+        }
+      } catch {
+        /* silently fail */
+      }
+    })();
     const interval = setInterval(fetchCount, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      window.clearTimeout(t);
+      clearInterval(interval);
+    };
   }, [fetchCount]);
 
   const isActive = (href: string) => {
@@ -202,11 +221,11 @@ export default function PortalNav() {
     return pathname.startsWith(href);
   };
 
-  const isSheetOpen = (href: string) => {
+  const isSheetOpen = (_href: string) => {
     if (!pathname) return false;
-    const allSecondary = secondaryGroups.flatMap((g) => g.items).concat(
-      { href: '/portal/notificaciones', label: '', icon: Bell },
-    );
+    const allSecondary = secondaryGroups
+      .flatMap((g) => g.items)
+      .concat({ href: '/portal/notificaciones', label: '', icon: Bell });
     return allSecondary.some((i) => {
       if (i.href === '/portal/dashboard') return pathname === i.href;
       return pathname.startsWith(i.href);
@@ -261,12 +280,7 @@ export default function PortalNav() {
             ))}
 
             {/* ── Más button ── */}
-            <motion.div
-              variants={itemVariants}
-              initial="idle"
-              whileHover="hover"
-              whileTap="tap"
-            >
+            <motion.div variants={itemVariants} initial="idle" whileHover="hover" whileTap="tap">
               <button
                 onClick={() => setSheetOpen(true)}
                 className={cn(
@@ -298,7 +312,9 @@ export default function PortalNav() {
                 <span
                   className={cn(
                     'relative z-[1] text-[10px] font-medium leading-tight whitespace-nowrap',
-                    sheetActive ? 'text-portal-primary font-semibold' : 'text-portal-muted-fg/60 font-medium',
+                    sheetActive
+                      ? 'text-portal-primary font-semibold'
+                      : 'text-portal-muted-fg/60 font-medium',
                   )}
                 >
                   Más
@@ -320,7 +336,8 @@ export default function PortalNav() {
             WebkitBackdropFilter: 'blur(24px)',
           }}
         >
-          <div className="sticky top-0 z-10 flex items-center justify-between px-5 pt-4 pb-2 border-b border-portal-border-light"
+          <div
+            className="sticky top-0 z-10 flex items-center justify-between px-5 pt-4 pb-2 border-b border-portal-border-light"
             style={{
               background: 'var(--portal-glass-bg)',
               backdropFilter: 'blur(24px)',
@@ -374,10 +391,14 @@ export default function PortalNav() {
                     : 'text-portal-muted-fg/70 hover:bg-portal-muted/40 hover:text-portal-fg',
                 )}
               >
-                <div className={cn(
-                  'flex items-center justify-center w-8 h-8 rounded-lg relative',
-                  pathname === '/portal/notificaciones' ? 'bg-portal-primary/15' : 'bg-portal-muted/50',
-                )}>
+                <div
+                  className={cn(
+                    'flex items-center justify-center w-8 h-8 rounded-lg relative',
+                    pathname === '/portal/notificaciones'
+                      ? 'bg-portal-primary/15'
+                      : 'bg-portal-muted/50',
+                  )}
+                >
                   <Bell className="h-4 w-4" />
                   {hasUnread && (
                     <span className="absolute -top-1 -right-1 text-[9px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 shadow-sm bg-portal-destructive text-white">

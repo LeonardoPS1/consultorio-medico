@@ -1,5 +1,5 @@
+import { eq, and, sql, desc } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import {
   pacientes,
   turnos,
@@ -8,19 +8,26 @@ import {
   historialMedico,
   notasSoap,
   conversaciones,
-  mensajes,
 } from '@/drizzle/schema';
-import { eq, and, sql, desc } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
 import { verifyPacienteAccess } from '@/lib/api-auth';
+import { logAudit } from '@/lib/audit-log';
+import { auth } from '@/lib/auth';
+import { getImpersonationSession } from '@/lib/auth-impersonation';
+import { db } from '@/lib/db';
 
 /**
  * GET /api/pacientes/[id]/detalle
  *
  * Devuelve la ficha completa del paciente: datos, turnos, recetas,
  * historial médico, y últimas conversaciones.
+ * @param _request
+ * @param root0
+ * @param root0.params
  */
-export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+) {
   const { id } = await paramsPromise;
   try {
     const session = await auth();
@@ -33,6 +40,28 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
     await verifyPacienteAccess(id, sessionMedicoId, sessionRol);
 
     const pacienteId = id;
+
+    // ─── Auditoría de acceso a la ficha ─────────────────
+    // Registra quién consultó la ficha del paciente. Si la sesión es una
+    // impersonación de ops-console, se registra como soporte genérico sin
+    // exponer el email/identidad del operador interno.
+    const impSession = await getImpersonationSession();
+    void logAudit({
+      tenantId: (session.user as { tenantId?: string } | null)?.tenantId,
+      usuarioId: impSession ? undefined : session.user?.id,
+      usuarioEmail: impSession ? undefined : (session.user?.email ?? undefined),
+      usuarioNombre: impSession
+        ? 'Soporte técnico de AicoreMed'
+        : session.user?.name || session.user?.email || undefined,
+      accion: 'view',
+      entidad: 'paciente',
+      entidadId: pacienteId,
+      detalle: impSession
+        ? 'Consulta de ficha del paciente por soporte técnico'
+        : 'Consulta de ficha del paciente',
+      ip: _request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || undefined,
+      userAgent: _request.headers.get('user-agent') || undefined,
+    });
 
     // ─── Datos del paciente ──────────────────────────
     // Incluimos también deletedAt para saber si ya está dado de baja
