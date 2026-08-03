@@ -2,8 +2,8 @@
 
 import { Flame } from 'lucide-react';
 import { useMemo } from 'react';
-import type { OcupacionReporte } from '@/lib/services/ocupacion-franjas';
-import { construirGrillaOcupacion } from '@/lib/services/ocupacion-franjas';
+import type { OcupacionReporte } from '@/lib/services/ocupacion-grilla';
+import { construirGrillaOcupacion } from '@/lib/services/ocupacion-grilla';
 import { cn } from '@/lib/utils';
 
 interface HeatmapFranjasProps {

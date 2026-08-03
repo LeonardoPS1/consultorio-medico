@@ -13,7 +13,7 @@
 // filtran los turnos por sucursalId. turnos NO tiene RLS.
 // ============================================================
 
-import { gte, isNull, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { turnos, sucursales } from '@/drizzle/schema';
 import { db } from '@/lib/db';
 import { getTenantId } from '@/lib/request-context';

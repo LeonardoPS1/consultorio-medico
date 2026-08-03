@@ -143,7 +143,9 @@ const StatCard = memo(function StatCard({
       <Card className="relative overflow-hidden">
         <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${gradient}`} />
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+            <Icon className="h-4 w-4" />{title}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{value}</div>
