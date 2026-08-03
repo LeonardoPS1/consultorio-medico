@@ -16,8 +16,8 @@ const DIAS_LABEL = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sába
 const DIAS_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 /** Ventana horaria a mostrar */
-const HORA_MIN = 8;
-const HORA_MAX = 20;
+  const HORA_MIN = 8;
+  const HORA_MAX = 20;
 
 /**
  * Color de una celda según ocupación 0-1:
@@ -95,73 +95,81 @@ export function HeatmapFranjas({ data, loading }: HeatmapFranjasProps) {
 
   return (
     <div className="overflow-x-auto">
-      <div className="inline-block min-w-[520px]">
+      <div className="min-w-[450px]">
         {/* Header de horas */}
         <div className="grid grid-cols-[60px_repeat(13,_1fr)] gap-1">
           <div className="text-xs font-medium text-muted-foreground" />
           {horas.map((h) => (
-            <div key={h} className="text-center text-xs font-medium text-muted-foreground">
+            <div key={h} className="text-center text-xs font-medium text-muted-foreground w-[28px]">
               {h.toString().padStart(2, '0')}:00
             </div>
           ))}
         </div>
 
         {/* Filas de días */}
-        {DIAS_ORDER.map((dia) => {
-          const nombreDia = DIAS_LABEL[dia === 0 ? 6 : dia - 1];
-          const activo = data.totalPorDia?.[dia]?.total ?? 0;
-          return (
-            <div key={dia} className="grid grid-cols-[60px_repeat(13,_1fr)] gap-1">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground w-6 text-right">{nombreDia}</span>
-                <span className="text-xs text-muted-foreground/60">{activo} turnos</span>
+{DIAS_ORDER.map((dia) => {
+            const nombreDia = DIAS_LABEL[dia === 0 ? 6 : dia - 1];
+            const activo = data.totalPorDia?.[dia]?.total ?? 0;
+            return (
+              <div key={dia} className="grid grid-cols-[60px_repeat(13_28px)] gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-muted-foreground w-10 text-right truncate">{nombreDia}</span>
+                  <span className="text-xs text-muted-foreground/60 whitespace-nowrap">{activo} turnos</span>
+                </div>
+                {horas.map((h) => {
+                  const valor = grilla[dia]?.[h] ?? 0;
+                  const total = data.franjas.find((f) => f.dia === dia && f.hora === h)?.total ?? 0;
+                  return (
+                    <div
+                      key={`${dia}-${h}`}
+                      className={cn(
+                        'w-[28px] h-[28px] rounded-md border transition-[filter] hover:brightness-110 flex items-center justify-center',
+                        colorOcupacion(valor),
+                        colorBorde(valor),
+                      )}
+                      title={leyendaCelda(valor) + (total > 0 ? ` · ${total} turnos` : '')}
+                    >
+                      {total > 0 && (
+                        <span className="text-[9px] font-medium text-foreground/90">{total}</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              {horas.map((h) => {
-                const valor = grilla[dia]?.[h] ?? 0;
-                const total = data.franjas.find((f) => f.dia === dia && f.hora === h)?.total ?? 0;
-                return (
-                  <div
-                    key={`${dia}-${h}`}
-                    className={cn(
-                      'aspect-square rounded-md border transition-[filter] hover:brightness-110',
-                      colorOcupacion(valor),
-                      colorBorde(valor),
-                    )}
-                    title={leyendaCelda(valor) + (total > 0 ? ` · ${total} turnos` : '')}
-                  >
-                    {total > 0 && (
-                      <div
-                        className="h-full w-full flex items-center justify-center"
-                        style={{ opacity: 0.5 + valor * 0.5 }}
-                      >
-                        <span className="text-[8px] font-medium text-foreground/80">{total}</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
 
       {/* Leyenda de colores */}
-      <div className="mt-4 flex items-center gap-3 flex-wrap text-[10px] text-muted-foreground">
-        <span className="font-medium text-xs">Leyenda:</span>
-        <div className="flex items-center gap-1">
-          <div className="h-3 w-3 rounded bg-slate-200 dark:bg-slate-700" /> Sin datos
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="h-3 w-3 rounded bg-amber-300" /> Sub-utilizada
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="h-3 w-3 rounded bg-orange-400" /> Media
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="h-3 w-3 rounded bg-red-400" /> Alta
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="h-3 w-3 rounded bg-emerald-400" /> Saturada
+      <div className="mt-6 p-4 bg-muted/30 rounded-lg border">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+          <span className="font-medium">Escala:</span>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded border bg-slate-200 dark:bg-slate-700" />
+              <span>Sin datos</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded border bg-amber-200 dark:bg-amber-900/50" />
+              <span>Sub-utilizada (0-35%)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded border bg-orange-300 dark:bg-orange-900/50" />
+              <span>Modesto (35-55%)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded border bg-red-300 dark:bg-red-900/50" />
+              <span>Media (55-75%)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded border bg-red-400 dark:bg-red-800/60" />
+              <span>Alta (75-90%)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded border bg-emerald-400 dark:bg-emerald-800/60" />
+              <span>Saturada (90-100%)</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
