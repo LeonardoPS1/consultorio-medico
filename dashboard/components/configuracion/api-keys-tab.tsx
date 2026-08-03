@@ -7,14 +7,11 @@
  * Solo visible para planes Professional+.
  */
 
+import { Plus, Key, Trash2, Copy, Eye, EyeOff, Clock, ShieldCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -23,17 +20,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Plus,
-  Key,
-  Trash2,
-  Copy,
-  Eye,
-  EyeOff,
-  Clock,
-  ExternalLink,
-  ShieldCheck,
-} from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/components/ui/use-toast';
 import { API_SCOPES } from '@/lib/public-api-types';
 import { playCopy, playDelete } from '@/lib/sound';
 
@@ -55,6 +44,9 @@ interface NewKeyResult {
   scopes: string[];
 }
 
+/**
+ *
+ */
 export default function ApiKeysTab() {
   const [keys, setKeys] = useState<ApiKeyItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +56,6 @@ export default function ApiKeysTab() {
 
   // Cargar keys
   const loadKeys = async () => {
-    setLoading(true);
     try {
       const res = await fetch('/api/api-keys');
       const data = await res.json();
@@ -77,7 +68,16 @@ export default function ApiKeysTab() {
   };
 
   useEffect(() => {
-    loadKeys();
+    let mounted = true;
+    void (async () => {
+      const res = await fetch('/api/api-keys');
+      if (!mounted) return;
+      const data = await res.json();
+      if (data.apiKeys) setKeys(data.apiKeys);
+    })();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Formatear fecha relativa
@@ -103,16 +103,22 @@ export default function ApiKeysTab() {
     }
   };
 
-  // Revocar key — elimina de la lista inmediatamente
+  // Eliminar key — borra de la lista y de la DB inmediatamente
   const revokeKey = async (id: string) => {
-    if (!confirm('¿Revocar esta API key? Dejará de funcionar inmediatamente.')) return;
+    if (
+      !confirm(
+        '¿Eliminar esta API key definitivamente? Dejará de funcionar y se borrará del sistema.',
+      )
+    )
+      return;
     try {
-      await fetch(`/api/api-keys?id=${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/api-keys?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('DELETE failed');
       setKeys((prev) => prev.filter((k) => k.id !== id));
       playDelete();
-      toast({ title: 'API key revocada y eliminada' });
+      toast({ title: 'API key eliminada' });
     } catch {
-      toast({ title: 'Error al revocar', variant: 'destructive' });
+      toast({ title: 'Error al eliminar', variant: 'destructive' });
     }
   };
 
@@ -207,10 +213,9 @@ export default function ApiKeysTab() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      aria-label="Revocar API key"
+                      aria-label="Eliminar API key"
                       className="h-8 w-8 text-destructive"
                       onClick={() => revokeKey(key.id)}
-                      disabled={!key.activa}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -264,9 +269,11 @@ export default function ApiKeysTab() {
                     if (createdKey) {
                       setRevealedKeys((prev) => {
                         const next = new Set(prev);
-                        next.has(createdKey.id)
-                          ? next.delete(createdKey.id)
-                          : next.add(createdKey.id);
+                        if (next.has(createdKey.id)) {
+                          next.delete(createdKey.id);
+                        } else {
+                          next.add(createdKey.id);
+                        }
                         return next;
                       });
                     }
@@ -328,7 +335,11 @@ function CreateApiKeyModal({
   const toggleScope = (scope: string) => {
     setSelectedScopes((prev) => {
       const next = new Set(prev);
-      next.has(scope) ? next.delete(scope) : next.add(scope);
+      if (next.has(scope)) {
+        next.delete(scope);
+      } else {
+        next.add(scope);
+      }
       return next;
     });
   };

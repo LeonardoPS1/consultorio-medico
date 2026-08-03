@@ -242,3 +242,19 @@ export async function revokeApiKey(keyId: string, tenantId?: string): Promise<vo
       tenantId ? and(eq(apiKeys.id, keyId), eq(apiKeys.tenantId, tenantId)) : eq(apiKeys.id, keyId),
     );
 }
+
+// ─── Eliminar API key (borrado físico) ───────────────────────
+
+/**
+ * Elimina definitivamente una API key de la tabla.
+ * Solo dentro del tenant indicado para evitar cross-tenant deletes.
+ * @param keyId
+ * @param tenantId
+ */
+export async function deleteApiKey(keyId: string, tenantId?: string): Promise<void> {
+  await db
+    .delete(apiKeys)
+    .where(
+      tenantId ? and(eq(apiKeys.id, keyId), eq(apiKeys.tenantId, tenantId)) : eq(apiKeys.id, keyId),
+    );
+}

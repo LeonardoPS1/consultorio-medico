@@ -11,7 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/lib/auth';
-import { createApiKey, listApiKeys, revokeApiKey, API_SCOPES } from '@/lib/public-api-auth';
+import { createApiKey, listApiKeys, deleteApiKey, API_SCOPES } from '@/lib/public-api-auth';
 
 const VALID_SCOPES = Object.values(API_SCOPES);
 
@@ -105,10 +105,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// ─── DELETE: Revocar API key ─────────────────────────────────
+// ─── DELETE: Eliminar API key ───────────────────────────────
 
 /**
- *
+ * Elimina definitivamente una API key del tenant.
+ * Reemplaza el soft-revoke (activa=false) por borrado físico,
+ * para que las keys revocadas no queden para siempre en la lista.
  * @param request
  */
 export async function DELETE(request: NextRequest) {
@@ -125,9 +127,9 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    await revokeApiKey(keyId, session.user.tenantId);
+    await deleteApiKey(keyId, session.user.tenantId);
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: 'Error al revocar key' }, { status: 500 });
+    return NextResponse.json({ error: 'Error al eliminar key' }, { status: 500 });
   }
 }
