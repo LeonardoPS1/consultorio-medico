@@ -74,6 +74,8 @@ export default function ApiKeysTab() {
       if (!mounted) return;
       const data = await res.json();
       if (data.apiKeys) setKeys(data.apiKeys);
+      if (!mounted) return;
+      setLoading(false);
     })();
     return () => {
       mounted = false;
@@ -109,8 +111,9 @@ export default function ApiKeysTab() {
       !confirm(
         '¿Eliminar esta API key definitivamente? Dejará de funcionar y se borrará del sistema.',
       )
-    )
+    ) {
       return;
+    }
     try {
       const res = await fetch(`/api/api-keys?id=${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('DELETE failed');
