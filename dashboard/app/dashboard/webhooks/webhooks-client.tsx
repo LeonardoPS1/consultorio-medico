@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -91,11 +90,16 @@ function StatusBadge({ status }: { status?: string }) {
 
 // ─── WebhooksClient ───────────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.initialMensajes
+ * @param root0.initialTotal
+ */
 export function WebhooksClient({ initialMensajes, initialTotal }: WebhooksClientProps) {
   const router = useRouter();
   const [mensajes, setMensajes] = useState<MensajeLog[]>(initialMensajes);
   const [total, setTotal] = useState(initialTotal);
-  const [porEstado, setPorEstado] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -113,15 +117,21 @@ export function WebhooksClient({ initialMensajes, initialTotal }: WebhooksClient
       if (searchFilter) params.set('search', searchFilter);
 
       const res = await fetch(`/api/webhooks/logs?${params.toString()}`);
-      const data = await res.json();
 
-      if (!data.success) {
-        throw new Error(data.error || 'Error al cargar logs');
+      if (!res.ok) {
+        let mensaje = 'Error al cargar logs';
+        try {
+          const errData = await res.json();
+          if (errData.error) mensaje = errData.error;
+        } catch {
+          // respuesta sin JSON
+        }
+        throw new Error(mensaje);
       }
 
+      const data = await res.json();
       setMensajes(data.data || []);
       setTotal(data.total || 0);
-      setPorEstado(data.porEstado || {});
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -170,11 +180,7 @@ export function WebhooksClient({ initialMensajes, initialTotal }: WebhooksClient
           className="flex-1 min-w-[200px]"
         />
 
-        <Button
-          onClick={fetchLogs}
-          disabled={loading}
-          variant="secondary"
-        >
+        <Button onClick={fetchLogs} disabled={loading} variant="secondary">
           {loading ? 'Cargando...' : 'Actualizar'}
         </Button>
       </div>
