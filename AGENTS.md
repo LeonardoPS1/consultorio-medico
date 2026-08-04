@@ -2,7 +2,7 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 03/08/2026
+**Última actualización:** 04/08/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
@@ -124,7 +124,7 @@ PACIENTES
 Twilio WhatsApp / IMAP Email
   │
   ▼
-n8n (12 Workflows)
+n8n (16 Workflows)
   │  ├── WF-01: WhatsApp Inbound + Triaje IA
   │  ├── WF-02: Gestión de Turnos
   │  ├── WF-03: Recordatorios Automáticos
@@ -478,10 +478,92 @@ consultorio-medico/
 3. IF verifica si se generaron entradas (mensaje contiene "generaron")
 4. `Novedades generadas` → OK (noOp)
 5. `Sin commits nuevos` → skip (noOp)
-
 **✅ Completado:** Webhook de GitHub configurado y enviando pushes a `https://med.aicorebots.com/webhook/novedades-generar`.
 
 ---
+
+### WF-12: Scoring No-Show Nocturno
+
+| Propiedad | Valor |
+|-----------|-------|
+| **Archivo** | `n8n-workflows/current/workflow-12-scores-no-show.json` |
+| **Trigger** | Cron (3:30 AM) |
+| **Estado** | ✅ **ACTIVO** |
+| **Nodos** | Cron + httpRequest (actualiza `risk_score` de turnos próximos) |
+
+**Flujo:**
+1. Cron nocturno dispara a las 3:30 AM
+2. Actualiza `risk_score` para turnos próximos (probabilidad de inasistencia)
+3. Marca turnos alto/crítico para priorizar recordatorios
+
+---
+
+### WF-13: Drill de Recuperación
+
+| Propiedad | Valor |
+|-----------|-------|
+| **Archivo** | `n8n-workflows/current/workflow-13-drill-dr.json` |
+| **Trigger** | Cron (reminder) |
+| **Estado** | ✅ **ACTIVO** |
+| **Nodos** | Cron → reminder de drill DR (user reminder como trigger) |
+
+**Flujo:**
+1. Cron recuerda ejecutar el drill de recuperación
+2. Dispara `make recover-drill` en contenedores aislados
+
+---
+
+### WF-14: Recuperación Automática
+
+| Propiedad | Valor |
+|-----------|-------|
+| **Archivo** | `n8n-workflows/current/workflow-14-recuperacion.json` |
+| **Trigger** | Webhook → `POST /webhook/recuperacion-request` |
+| **Estado** | ✅ **ACTIVO** |
+| **Nodos** | Webhook → trigger de recuperación (SSH) |
+
+**Flujo:**
+1. Webhook recibe solicitud de recuperación
+2. Ejecuta `make recover` / `make recover-force` en el VPS
+3. Auto-deteta y restaura el último backup
+
+---
+
+### WF-15: Alertas del Sistema
+
+| Propiedad | Valor |
+|-----------|-------|
+| **Archivo** | `n8n-workflows/current/workflow-15-alertas.json` |
+| **Trigger** | Cron (cada 5 min) |
+| **Estado** | ✅ **ACTIVO** |
+| **Nodos** | Cron → POST checks de alertas |
+
+**Flujo:**
+1. Cron dispara cada 5 minutos
+2. POST a `/api/alertas/check` (dashboard) — 4 checks cross-tenant (down, error rate, etc.)
+3. Notifica por Telegram/Chatwoot/Webhook/Email según config de alertas
+
+---
+
+### WF-16: Ocupación + Benchmark Nocturno
+
+| Propiedad | Valor |
+|-----------|-------|
+| **Archivo** | `n8n-workflows/current/workflow-16-ocupacion-benchmarks.json` |
+| **Trigger** | Cron (nocturno) |
+| **Estado** | ⏳ **REQUIERE ACTIVAR** |
+| **Nodos** | Cron → POST `/api/internal/benchmark` (ops-console) |
+
+**Flujo:**
+1. Cron nocturno dispara
+2. `POST /api/internal/benchmark` al ops-console (vía `http://ops-console-23kboo:3002`, header `x-internal-key`) para recalcular snapshots del benchmark anónimo
+3. Espera respuesta `{success, mensaje: 'Benchmark recalculado: X buckets...', bucketCount, tenantCountTotal, calculatedAt}` — n8n chequea `$json.mensaje contains 'recalculado'`
+4. Inserta snapshots en `platform.benchmark_snapshot` (limpia viejos)
+
+**Nota:** el endpoint valida solo `x-internal-key` (POST) y está excluido del proxy de sesión vía `/api/internal` en `PUBLIC_PATHS`. Requiere `N8N_API_KEY` configurado en n8n para operar (pendiente según auditoría).
+
+---
+
 
 ### Matriz Resumen de Agentes
 
@@ -498,6 +580,11 @@ consultorio-medico/
 | **WF-09** | Anonimización Post-Retención | Cron | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
 | **WF-10** | Expiración Waitlist | Cron | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **WF-11** | Novedades desde Commits | Webhook | ❌ | ❌ | ❌ | ❌ | ❌ | `/novedades-generar` |
+| **WF-12** | Scoring No-Show Nocturno | Cron (3:30 AM) | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **WF-13** | Drill de Recuperación | Cron (reminder) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **WF-14** | Recuperación Automática | Webhook | ❌ | ❌ | ❌ | ❌ | ❌ | `/recuperacion-request` |
+| **WF-15** | Alertas del Sistema | Cron (5 min) | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **WF-16** | Ocupación + Benchmark Nocturno | Cron (nocturno) | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
 
 ---
 
@@ -571,7 +658,7 @@ consultorio-medico/
 | API | `http://172.18.0.1:5678` (interno, sin Cloudflare) |
 | API Key | JWT |
 | Versión | 2.19.5 |
-| Workflows activos | 10 |
+| Workflows activos | 16 |
 | Webhook auth | `x-webhook-secret` |
 | Credenciales | PostgreSQL, Twilio (Basic Auth + API), Ollama |
 
@@ -695,6 +782,8 @@ consultorio-medico/
 | **Fix login ops-console** | Commit `0c8ef83` (rate limiting) nunca aplicó migración 0002 (`platform.login_attempts`) → login 500 `relation does not exist`. Aplicada manual en prod vía docker cp + psql -f. Bugs: `db.execute` con objeto Date → `toISOString()`, cast `created_at`, fail-open try/catch. Force update Swarm (Dokploy :latest no actualiza). Verificado: login/begin 401 (antes 500). Commit `6dcd227` | 02/08 |
 | **Fix webhooks logs** | `webhooks-client.tsx` chequeaba `data.success` pero `/api/webhooks/logs` usa `ok()` (body sin `success`) → 'Error al cargar logs' en filtros/auto-refresh. Fix: `res.ok` + `data.data`. Commit `8be80d2` | 03/08 |
 | **Fix api-keys** | Spinner infinito: el useEffect IIFE no llamaba `setLoading(false)` → fix. Eliminación de keys revocadas: botón con `disabled={!key.activa}` + DELETE solo soft-revoke → `deleteApiKey()` (borrado físico tenant-scoped) + botón habilitado. Commits `1ba369a`, `771d10d` | 03/08 |
+| **Rediseño tab Ocupación (mobile-first)** | `heatmap-franjas.tsx` reescrito completo: elimina el heatmap 7×13 con 8 colores arcoíris (incomprensible, scroll horizontal) → vista mobile-first con barras horizontales full-width: 2 insight cards (hora pico de la semana, día con más demanda), selector de día (Lun→Dom con total de turnos), barras de demanda por hora (13 filas 08:00-20:00 con % + total), 4 niveles semánticos de intensidad (Baja=emerald / Media=amber / Alta=orange / Saturada=rose, bar+text+dot por nivel), card demanda semanal, leyenda "¿Cómo leer". Reportes-client simplificado: solo `<HeatmapFranjas>` (sin 4 StatCards). `useReducedMotion` + stagger animations. Commit `f7fd87f` | 04/08 |
+| **Fix 401 global ops-console** | CAUSA RAÍZ: `ops-console/proxy.ts` (middleware Next 16) exigía cookie `__Secure-ops.session` para TODA ruta `/api/*` no listada en `PUBLIC_PATHS`, bloqueando `/api/internal/benchmark` ANTES del handler (que ya valida `x-internal-key`). Fix: agregado `'/api/internal'` a `PUBLIC_PATHS`. Además el dashboard usaba `https://ops.aicorebots.com` (403 Cloudflare) → fallback cambiado a `http://ops-console-23kboo:3002` (DNS interno Swarm). Post-fix apareció 500 `42P18` (could not determine data type of parameter $1): 4 queries de `getComparativaTenant()` en `ops-console/lib/benchmark.ts` sin cast `::uuid` → añadido cast. Commits `1146d38`, `4ee9ba3` | 04/08 |
 
 ### 🟡 Prioridad Media
 
