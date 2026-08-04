@@ -15,7 +15,6 @@ import {
 import { relations, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 import {
   notificacionTipoEnum,
-  novedadTipoEnum,
 } from './enums';
 import {
   ConfigPrivacidad,
@@ -60,6 +59,8 @@ export const tenants = pgTable('tenants', {
   subdomain: varchar('subdomain', { length: 100 }).unique().notNull(),
   logoUrl: text('logo_url').default('/aicoremed_dark_1200.svg'),
   dominioCustom: varchar('dominio_custom', { length: 255 }),
+  dominioVerificado: boolean('dominio_verificado').notNull().default(false),
+  dominioVerificacionToken: varchar('dominio_verificacion_token', { length: 64 }),
   colores: jsonb('colores').default({ primary: '#2563eb', secondary: '#059669' }),
   activo: boolean('activo').notNull().default(true),
   featuresEnabled: jsonb('features_enabled').default({} as Record<string, boolean>),

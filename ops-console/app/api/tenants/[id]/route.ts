@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 import { logAudit } from '@/lib/audit'
 import { ok, error, serverError, unauthorized, notFound } from '@/lib/api-handler'
+import crypto from 'crypto'
 
 const PLANES = ['free', 'starter', 'professional', 'business', 'enterprise'] as const
 type Plan = (typeof PLANES)[number]
@@ -37,6 +38,8 @@ export async function GET(
         t.created_at,
         t.updated_at,
         t.dominio_custom,
+        t.dominio_verificado,
+        t.dominio_verificacion_token,
         t.colores,
         t.config_regional,
         (SELECT plan FROM public.suscripciones s WHERE s.organizacion_id = t.id ORDER BY s.created_at DESC LIMIT 1) AS plan,
@@ -132,7 +135,19 @@ export async function PATCH(
 
     const sets: ReturnType<typeof sql>[] = []
     if (activo !== undefined) sets.push(sql`activo = ${activo}`)
-    if (dominioCustom !== undefined) sets.push(sql`dominio_custom = ${dominioCustom || null}`)
+    if (dominioCustom !== undefined) {
+      if (dominioCustom) {
+        const token =
+          `aicore-verify=${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`
+        sets.push(sql`dominio_custom = ${dominioCustom}`)
+        sets.push(sql`dominio_verificacion_token = ${token}`)
+        sets.push(sql`dominio_verificado = false`)
+      } else {
+        sets.push(sql`dominio_custom = NULL`)
+        sets.push(sql`dominio_verificacion_token = NULL`)
+        sets.push(sql`dominio_verificado = false`)
+      }
+    }
     if (coloresFinal) sets.push(sql`colores = ${JSON.stringify(coloresFinal)}::jsonb`)
     if (configRegional !== undefined)
       sets.push(sql`config_regional = ${JSON.stringify(configRegional)}::jsonb`)

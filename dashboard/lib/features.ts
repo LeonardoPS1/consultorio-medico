@@ -79,7 +79,8 @@ export type FeatureId =
   | 'status-publico'
   | 'impersonation-hardening'
   | 'incidentes-ops'
-  | 'crear-clinica';
+  | 'crear-clinica'
+  | 'dominio-custom';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -131,6 +132,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'web-vitals': 'premium',
   'portal-analytics': 'premium',
   'data-cache': 'premium',
+  'dominio-custom': 'premium',
   'multi-sucursal': 'enterprise',
   'carga-masiva': 'enterprise',
   'command-palette': 'professional',

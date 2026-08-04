@@ -76,29 +76,15 @@ function hasSessionCookie(request: NextRequest): boolean {
   return !!request.cookies.get(impCookie);
 }
 
-// ─── Helper: detectar tenant por subdominio ─────────────
-function detectTenant(hostname: string): string {
-  // localhost, 127.0.0.1, o IP → tenant por defecto
-  if (
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    /^\d+\.\d+\.\d+\.\d+$/.test(hostname)
-  ) {
-    return '00000000-0000-0000-0000-000000000000';
-  }
+// ─── Helper: resolver tenant por host (subdominio o dominio custom) ──
+let _resolveTenantByHost: ((hostname: string) => Promise<string>) | null = null;
 
-  // Extraer subdominio (ej: demo.aicoremed.com → 'demo')
-  const parts = hostname.split('.');
-  if (parts.length >= 3) {
-    const subdomain = parts[0];
-    // Ignorar 'www'
-    if (subdomain !== 'www' && subdomain !== 'app') {
-      return subdomain;
-    }
+async function resolveTenant(hostname: string): Promise<string> {
+  if (!_resolveTenantByHost) {
+    const mod = await import('@/lib/services/tenant');
+    _resolveTenantByHost = mod.resolveTenantByHost;
   }
-
-  // Sin subdominio → tenant por defecto
-  return '00000000-0000-0000-0000-000000000000';
+  return _resolveTenantByHost(hostname);
 }
 
 // ─── Proxy principal ──────────────────────────────────────
@@ -139,7 +125,7 @@ export async function proxy(request: NextRequest) {
 
   // El subdominio del dominio portal (ej: 'consultorio') no es un tenant real:
   // resolver siempre al tenant por defecto para mantener branding/config consistentes.
-  let tenantId = isPortalDomain || isStatusDomain ? '00000000-0000-0000-0000-000000000000' : detectTenant(hostname);
+  let tenantId = isPortalDomain || isStatusDomain ? '00000000-0000-0000-0000-000000000000' : await resolveTenant(hostname);
 
   // ─── 1c. Override de tenant por sesión de impersonación ──
   // Si hay cookie de impersonación válida, el tenant es el impersonado

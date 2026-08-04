@@ -138,6 +138,7 @@ export const PLANES: Record<PlanId, PlanInfo> = {
       'Caché inteligente con Redis para máximo rendimiento',
       'Sincronización Google Calendar en tiempo real',
       'Página pública de estado del servicio',
+      'Dominio personalizado (white-label)',
     ],
     cta: 'Suscribirse',
   },

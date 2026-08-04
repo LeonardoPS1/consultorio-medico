@@ -1,0 +1,236 @@
+{
+  "name": "17 - Verificación Dominios Custom",
+  "nodes": [
+    {
+      "id": "cron-dominios",
+      "name": "Cron - Cada 15 min",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 400],
+      "parameters": {
+        "rule": {
+          "interval": 15,
+          "unit": "minutes"
+        }
+      }
+    },
+    {
+      "id": "pg-select-dominios",
+      "name": "PG - Dominios no verificados",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [500, 400],
+      "credentials": {
+        "postgres": {
+          "id": "fersBxOXicK7tW99",
+          "name": "Consultorio - postgres"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, nombre, dominio_custom, dominio_verificacion_token FROM tenants WHERE dominio_custom IS NOT NULL AND dominio_verificado = false AND activo = true"
+      }
+    },
+    {
+      "id": "split-batches",
+      "name": "Split en batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [750, 400],
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      }
+    },
+    {
+      "id": "http-dns-check",
+      "name": "HTTP - DNS TXT lookup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1000, 400],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://cloudflare-dns.com/dns-query?name=_aicore-verify.{{ $json.dominio_custom }}&type=TXT",
+        "authentication": "none",
+        "options": {
+          "timeout": 10000
+        },
+        "headers": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/dns-json"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "if-txt-match",
+      "name": "¿TXT válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1250, 400],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.Answer ? ($json.Answer[0] ? ($json.Answer[0].data || '') : '') : '' }}",
+              "operation": "contains",
+              "value2": "={{ $json.dominio_verificacion_token || '' }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "pg-update-verificado",
+      "name": "PG - Marcar verificado",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1500, 300],
+      "credentials": {
+        "postgres": {
+          "id": "fersBxOXicK7tW99",
+          "name": "Consultorio - postgres"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE tenants SET dominio_verificado = true, updated_at = NOW() WHERE id = $1",
+        "additionalFields": {
+          "queryParams": "={{ [$json.id] }}"
+        }
+      }
+    },
+    {
+      "id": "http-notificar",
+      "name": "HTTP - Notificar dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1750, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://med.aicorebots.com/api/internal/dominios/verificar",
+        "authentication": "none",
+        "options": {
+          "timeout": 15000
+        },
+        "headers": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-internal-key",
+              "value": "={{ $env.INTERNAL_API_KEY }}"
+            }
+          ]
+        },
+        "jsonParameters": true,
+        "parameters": {
+          "id": "tenantId",
+          "value": "={{ $json.id }}"
+        },
+        "additionalParameters": {
+          "id": "dominio",
+          "value": "={{ $json.dominio_custom }}"
+        }
+      }
+    },
+    {
+      "id": "noop-skip",
+      "name": "Skip (sin verificar)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1500, 500],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Cron - Cada 15 min": {
+      "main": [
+        [
+          {
+            "node": "PG - Dominios no verificados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG - Dominios no verificados": {
+      "main": [
+        [
+          {
+            "node": "Split en batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split en batches": {
+      "main": [
+        [
+          {
+            "node": "HTTP - DNS TXT lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - DNS TXT lookup": {
+      "main": [
+        [
+          {
+            "node": "¿TXT válido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿TXT válido?": {
+      "main": [
+        [
+          {
+            "node": "PG - Marcar verificado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skip (sin verificar)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG - Marcar verificado": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Notificar dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    "dominios",
+    "cron",
+    "white-label",
+    "verificacion"
+  ],
+  "active": false
+}

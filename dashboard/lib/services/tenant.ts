@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { tenants, usuarios } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { hash } from 'bcryptjs';
 import crypto from 'crypto';
 
@@ -87,6 +87,88 @@ export async function getTenantRegional(tenantId?: string): Promise<TenantRegion
 }
 
 export { defaultBranding, defaultRegional };
+
+// ─── Resolución de tenant por host ──────────────────────
+
+const RESOLVE_CACHE_TTL_MS = 60_000;
+const tenantCache = new Map<string, { tenantId: string; ts: number }>();
+
+const IGNORE_SUBDOMAINS = new Set(['www', 'app', 'status', 'consultorio']);
+
+/**
+ * Resuelve el tenantId real (UUID) a partir del hostname de la request.
+ *
+ * Orden de búsqueda:
+ * 1. Dominio custom verificado (ej: portal.clinicadelcliente.cl → tenants.dominioCustom)
+ * 2. Subdominio estándar (ej: demo.aicorebots.com → tenants.subdomain = 'demo')
+ * 3. Fallback: DEFAULT_TENANT_ID (00000000-0000-0000-0000-000000000000)
+ *
+ * Cache en memoria con TTL de 60s para evitar queries repetidas por request.
+ */
+export async function resolveTenantByHost(hostname: string): Promise<string> {
+  const host = hostname.toLowerCase().trim();
+
+  // Cache hit
+  const cached = tenantCache.get(host);
+  if (cached && Date.now() - cached.ts < RESOLVE_CACHE_TTL_MS) {
+    return cached.tenantId;
+  }
+
+  const cacheSet = (tenantId: string) => {
+    tenantCache.set(host, { tenantId, ts: Date.now() });
+    return tenantId;
+  };
+
+  try {
+    // 1. Buscar por dominio custom verificado
+    const customRows = await db
+      .select({ id: tenants.id })
+      .from(tenants)
+      .where(
+        and(
+          eq(tenants.dominioCustom, host),
+          eq(tenants.dominioVerificado, true),
+          eq(tenants.activo, true),
+        ),
+      )
+      .limit(1);
+    if (customRows[0]) return cacheSet(customRows[0].id);
+
+    // 2. Buscar por subdominio (ej: demo.med.aicorebots.com → subdomain = 'demo')
+    const parts = host.split('.');
+    if (parts.length >= 3) {
+      const subdomain = parts[0];
+      if (!IGNORE_SUBDOMAINS.has(subdomain)) {
+        const subRows = await db
+          .select({ id: tenants.id })
+          .from(tenants)
+          .where(and(eq(tenants.subdomain, subdomain), eq(tenants.activo, true)))
+          .limit(1);
+        if (subRows[0]) return cacheSet(subRows[0].id);
+      }
+    }
+  } catch {
+    // DB no disponible → usar cache o fallback
+  }
+
+  // 3. Fallback: tenant por defecto
+  return cacheSet(DEFAULT_TENANT_ID);
+}
+
+/** Limpia la cache de resolución para un hostname específico */
+export function invalidateTenantCache(hostname: string): void {
+  tenantCache.delete(hostname.toLowerCase().trim());
+}
+
+// Limpiar entradas viejas de cache cada 5 minutos
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    tenantCache.forEach((entry, key) => {
+      if (now - entry.ts > RESOLVE_CACHE_TTL_MS * 2) tenantCache.delete(key);
+    });
+  }, 5 * 60_000);
+}
 
 // ─── Creación de tenants ─────────────────────────────────
 
