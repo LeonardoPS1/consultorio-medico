@@ -10,7 +10,7 @@ import { canAccess } from '@/lib/features';
 
 export const dynamic = 'force-dynamic';
 
-const OPS_URL = process.env.OPS_CONSOLE_URL || 'https://ops.aicorebots.com';
+const OPS_URL = process.env.OPS_CONSOLE_URL || 'http://ops-console-23kboo:3002';
 const VENTANA_DIAS = 90;
 
 interface BenchComparativaResponse {

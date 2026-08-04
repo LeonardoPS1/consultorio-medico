@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   '/api/auth/totp/verify',
   '/api/auth/session',
   '/api/health',
+  '/api/internal',
   '/login',
   '/setup',
   '/_next/static',
