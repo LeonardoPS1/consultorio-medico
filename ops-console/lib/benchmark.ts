@@ -294,7 +294,7 @@ export async function getComparativaTenant(tenantId: string): Promise<TenantComp
         COUNT(*) AS total_turnos
       FROM public.turnos t
       WHERE t.sucursal_id IN (
-        SELECT id FROM public.sucursales WHERE tenant_id = ${tenantId}
+        SELECT id FROM public.sucursales WHERE tenant_id = ${tenantId}::uuid
       )
       AND t.fecha_hora >= NOW() - INTERVAL '${VENTANA_DIAS} days'
       AND t.deleted_at IS NULL
@@ -303,7 +303,7 @@ export async function getComparativaTenant(tenantId: string): Promise<TenantComp
       SELECT COUNT(*) AS pacientes_activos
       FROM public.pacientes p
       WHERE p.sucursal_id IN (
-        SELECT id FROM public.sucursales WHERE tenant_id = ${tenantId}
+        SELECT id FROM public.sucursales WHERE tenant_id = ${tenantId}::uuid
       )
       AND p.deleted_at IS NULL
     ),
@@ -319,11 +319,11 @@ export async function getComparativaTenant(tenantId: string): Promise<TenantComp
         AND EXISTS (
           SELECT 1 FROM public.pacientes p
           WHERE p.id = hm.paciente_id
-          AND p.sucursal_id IN (SELECT id FROM public.sucursales WHERE tenant_id = ${tenantId})
+          AND p.sucursal_id IN (SELECT id FROM public.sucursales WHERE tenant_id = ${tenantId}::uuid)
         )
       ) e
     ),
-    t_t AS (SELECT id, nombre FROM public.tenants WHERE id = ${tenantId})
+    t_t AS (SELECT id, nombre FROM public.tenants WHERE id = ${tenantId}::uuid)
     SELECT
       t_t.id AS tenant_id,
       t_t.nombre AS tenant_nombre,
