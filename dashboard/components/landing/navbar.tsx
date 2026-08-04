@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
-import { Menu, X, ChevronRight, MessageCircle } from 'lucide-react';
+import { Menu, X, ChevronRight, MessageCircle, Calculator } from 'lucide-react';
 import { RegistroExpressModal } from '@/components/landing/registro-modal';
 import { Logo } from '@/components/layout/logo';
 
@@ -63,6 +63,13 @@ className={`fixed top-0 left-0 right-0 z-50 transition-[background,box-shadow] d
           ))}
           <div className="w-px h-5 bg-border mx-2" />
           <Link
+            href="/calculadora"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200"
+          >
+            <Calculator className="h-3.5 w-3.5" />
+            Calculadora
+          </Link>
+          <Link
             href="/login"
             className="px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200"
           >
@@ -115,6 +122,17 @@ className={`fixed top-0 left-0 right-0 z-50 transition-[background,box-shadow] d
                 </motion.button>
               ))}
               <div className="border-t my-3" />
+              <Link
+                href="/calculadora"
+                className="flex items-center justify-between rounded-lg px-4 py-3 text-sm hover:bg-muted active:bg-muted/80 transition-colors min-h-[48px]"
+                onClick={() => setMobileMenu(false)}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <Calculator className="h-4 w-4 text-muted-foreground/60" />
+                  Calculadora de ausentismo
+                </span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
+              </Link>
               <Link
                 href="/login"
                 className="flex items-center justify-between rounded-lg px-4 py-3 text-sm hover:bg-muted active:bg-muted/80 transition-colors min-h-[48px]"

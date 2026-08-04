@@ -14,6 +14,7 @@ const footerLinks: Record<
       { label: 'Funcionalidades', href: '#features' },
       { label: 'Especialidades', href: '#specialties' },
       { label: 'Precios', href: '#pricing' },
+      { label: 'Calculadora de ausentismo', href: '/calculadora' },
       { label: 'FAQ', href: '#faq' },
     ],
   },
