@@ -1,6 +1,6 @@
 import {
   pgSchema, pgTable, uuid, varchar, boolean, timestamp,
-  text, bigint, jsonb, inet, integer, json,
+  text, bigint, jsonb, inet, integer, json, numeric,
 } from 'drizzle-orm/pg-core'
 
 // ─── Schema `platform` aislado del schema `public` de los tenants ──────────
@@ -103,9 +103,9 @@ export const benchmarkSnapshot = platform.table('benchmark_snapshot', {
   bucketLabel: varchar('bucket_label', { length: 50 }).notNull(),
   bucketRange: varchar('bucket_range', { length: 50 }).notNull(),
   tenantCount: integer('tenant_count').notNull(),
-  avgNoShow: integer('avg_no_show'),
-  avgOcupacion: integer('avg_ocupacion'),
-  avgNps: integer('avg_nps'),
+  avgNoShow: numeric('avg_no_show', { precision: 5, scale: 2 }),
+  avgOcupacion: numeric('avg_ocupacion', { precision: 5, scale: 2 }),
+  avgNps: numeric('avg_nps', { precision: 6, scale: 2 }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 

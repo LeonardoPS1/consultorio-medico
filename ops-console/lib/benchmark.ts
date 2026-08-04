@@ -235,43 +235,50 @@ export async function recalcularBenchmark(): Promise<BenchmarkCalculado> {
       bucketLabel: bucket.bucketLabel,
       bucketRange: bInfo.range,
       tenantCount: bucket.tenantCount,
-      avgNoShow: bucket.avgNoShow,
-      avgOcupacion: bucket.avgOcupacion,
-      avgNps: bucket.avgNps,
+      avgNoShow: String(bucket.avgNoShow),
+      avgOcupacion: String(bucket.avgOcupacion),
+      avgNps: bucket.avgNps != null ? String(bucket.avgNps) : null,
     })
   }
+
+  // Limpiar snapshots de runs anteriores (conservar solo el último run para
+  // evitar crecimiento sin límite de la tabla)
+  await db
+    .delete(benchmarkSnapshot)
+    .where(sql`${benchmarkSnapshot.createdAt} <> (SELECT MAX(${benchmarkSnapshot.createdAt}) FROM ${benchmarkSnapshot})`)
 
   return calculado
 }
 
-/** Devuelve el snapshot más reciente con buckets válidos (>= 5) */
+/** Devuelve el snapshot más reciente con TODOS los buckets de ese run */
 export async function getBenchmarkActivo(): Promise<BenchmarkCalculado> {
   const db = getDb()
   const rows = await db
     .select()
     .from(benchmarkSnapshot)
+    .where(
+      sql`${benchmarkSnapshot.createdAt} = (SELECT MAX(${benchmarkSnapshot.createdAt}) FROM ${benchmarkSnapshot})`,
+    )
     .orderBy(desc(benchmarkSnapshot.createdAt))
-    .limit(1)
 
   if (rows.length === 0) {
     // Sin snapshots persistidos: calcular on-demand
     return recalcularBenchmark()
   }
 
-  const snapShot = rows[0]
-  const bucket: BenchmarkBucket = {
+  const buckets: BenchmarkBucket[] = rows.map((snapShot) => ({
     bucketLabel: snapShot.bucketLabel,
     bucketRange: snapShot.bucketRange,
     tenantCount: snapShot.tenantCount,
     avgNoShow: Number(snapShot.avgNoShow ?? 0),
     avgOcupacion: Number(snapShot.avgOcupacion ?? 0),
     avgNps: snapShot.avgNps != null ? Number(snapShot.avgNps) : null,
-  }
+  }))
 
   return {
-    buckets: [bucket],
-    tenantCountTotal: bucket.tenantCount,
-    calculatedAt: snapShot.createdAt?.toISOString() ?? new Date().toISOString(),
+    buckets,
+    tenantCountTotal: buckets.reduce((acc, b) => acc + b.tenantCount, 0),
+    calculatedAt: rows[0]?.createdAt?.toISOString() ?? new Date().toISOString(),
   }
 }
 
