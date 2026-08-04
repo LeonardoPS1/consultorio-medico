@@ -108,7 +108,7 @@ export async function calcularMetricasTenants(): Promise<BenchmarkTenantMetric[]
         COUNT(*) AS total_turnos
       FROM public.turnos t
       JOIN public.sucursales s ON s.id = t.sucursal_id
-      WHERE t.fecha_hora >= NOW() - INTERVAL '${VENTANA_DIAS} days'
+      WHERE t.fecha_hora >= NOW() - make_interval(days => ${VENTANA_DIAS})
         AND t.deleted_at IS NULL
       GROUP BY s.tenant_id
     ),
@@ -296,7 +296,7 @@ export async function getComparativaTenant(tenantId: string): Promise<TenantComp
       WHERE t.sucursal_id IN (
         SELECT id FROM public.sucursales WHERE tenant_id = ${tenantId}::uuid
       )
-      AND t.fecha_hora >= NOW() - INTERVAL '${VENTANA_DIAS} days'
+      AND t.fecha_hora >= NOW() - make_interval(days => ${VENTANA_DIAS})
       AND t.deleted_at IS NULL
     ),
     pac_t AS (
