@@ -28,6 +28,8 @@ export interface BenchComparativaResponse {
   minimoCumplido: boolean;
   umbralTenants: number;
   _fuente: 'real' | 'demo';
+  /** true si no se pudo consultar el servicio de benchmark (ops-console caído) */
+  _opsError?: boolean;
 }
 
 interface Props {
@@ -98,6 +100,27 @@ export function BenchmarkComparativa({ data, loading, isAdvancedReports }: Props
   }
 
   const prom = data.promedioBucket;
+
+  if (data._opsError && prom == null) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Benchmark anónimo entre clínicas"
+          description="Comparás tu clínica contra el promedio de clínicas similares (misma escala de pacientes). Datos agregados y anónimos."
+        />
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-10">
+            <ShieldCheck className="h-10 w-10 text-amber-500 mb-3" />
+            <p className="text-sm font-medium mb-1">El servicio de benchmark está temporalmente no disponible.</p>
+            <p className="text-xs text-muted-foreground">
+              No pudimos consultar el promedio anónimo de clínicas similares. Volvé a intentar en unos minutos
+              — tus métricas siguen disponibles y sin costo.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -99,6 +99,15 @@ const coloresIntencion = [
   'from-slate-500 to-slate-600',
 ];
 
+const DIAS_LABEL = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+function picoLabel(reporte: OcupacionReporte): string {
+  if (!reporte.franjas.length) return '—';
+  const pico = reporte.franjas.reduce((max, f) => (f.ocupacion > max.ocupacion ? f : max), reporte.franjas[0]);
+  const dia = DIAS_LABEL[pico.dia === 0 ? 6 : pico.dia - 1];
+  return `${dia} ${pico.hora.toString().padStart(2, '0')}:00`;
+}
+
 const KpiCard = memo(function KpiCard({
   titulo, valor, cambio, up, icon,
 }: {
@@ -282,6 +291,7 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [ocupacionData, setOcupacionData] = useState<OcupacionReporte | null>(null);
   const [ocupacionLoading, setOcupacionLoading] = useState(canVerOcupacion);
+  const [ocupacionDemo, setOcupacionDemo] = useState(true);
   const [benchmarkData, setBenchmarkData] = useState<BenchComparativaResponse | null>(null);
   const [benchmarkLoading, setBenchmarkLoading] = useState(isAdvancedReports);
   const isMounted = useRef(true);
@@ -312,22 +322,6 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
     };
     fetchReportes();
 
-    // Fetch mapa de ocupación (on-demand) — solo si el plan lo permite
-    if (canVerOcupacion && !ocupacionData) {
-      (async () => {
-        try {
-          const res = await fetch('/api/reportes/ocupacion?demo=true', { cache: 'no-store' });
-          if (!res.ok) throw new Error(`Error ${res.status}`);
-          const json = await res.json();
-          if (isMounted.current) setOcupacionData(json);
-        } catch {
-          if (isMounted.current) setOcupacionData(null);
-        } finally {
-          if (isMounted.current) setOcupacionLoading(false);
-        }
-      })();
-    }
-
     // Fetch benchmark anónimo (solo advanced)
     if (isAdvancedReports && !benchmarkData) {
       (async () => {
@@ -351,6 +345,26 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
 
     return () => { isMounted.current = false; };
   }, [periodo, fetchKey]);
+
+  // Fetch mapa de ocupación (on-demand) — refetch al alternar demo/real
+  useEffect(() => {
+    if (!canVerOcupacion) return;
+    let cancelled = false;
+    setOcupacionLoading(true);
+    (async () => {
+      try {
+        const res = await fetch(`/api/reportes/ocupacion?demo=${ocupacionDemo ? 'true' : 'false'}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        const json = await res.json();
+        if (!cancelled) setOcupacionData(json);
+      } catch {
+        if (!cancelled) setOcupacionData(null);
+      } finally {
+        if (!cancelled) setOcupacionLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [canVerOcupacion, ocupacionDemo, fetchKey]);
 
   const reintentar = useCallback(() => setFetchKey((k) => k + 1), []);
 
@@ -515,20 +529,45 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
          </TabsContent>
 
          {canVerOcupacion && (
-           <TabsContent value="ocupacion" className="mt-4 space-y-4">
+           <TabsContent value="ocupacion" className="mt-4 space-y-6">
+             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+               <div>
+                 <h3 className="text-lg font-semibold flex items-center gap-2">
+                   <Flame className="h-5 w-5 text-primary" /> Mapa de calor de ocupación
+                 </h3>
+                 <p className="text-xs text-muted-foreground">
+                   Demanda histórica por día y franja horaria (últimas {ocupacionData?.semanas ?? 12} semanas).
+                 </p>
+               </div>
+               <div className="flex items-center gap-2">
+                 {ocupacionData?._demo && (
+                   <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-800">⚡ Demo</Badge>
+                 )}
+                 <div className="flex items-center rounded-lg border p-1">
+                   <Button variant={!ocupacionDemo ? 'secondary' : 'ghost'} size="sm" onClick={() => setOcupacionDemo(false)}>Reales</Button>
+                   <Button variant={ocupacionDemo ? 'secondary' : 'ghost'} size="sm" onClick={() => setOcupacionDemo(true)}>Demo</Button>
+                 </div>
+               </div>
+             </div>
+
+             <motion.div
+               className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+               initial="hidden"
+               animate="visible"
+               variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+             >
+               <StatCard title="Turnos analizados" value={ocupacionData ? ocupacionData.totalTurnos.toLocaleString('es-CL') : '—'} subtitle="Ventana analizada" gradient="from-blue-400 to-blue-600" icon={Calendar} />
+               <StatCard title="Franjas con actividad" value={ocupacionData ? String(ocupacionData.franjas.length) : '—'} subtitle="día × hora" gradient="from-emerald-400 to-emerald-600" icon={Activity} />
+               <StatCard title="Pico de demanda" value={ocupacionData ? picoLabel(ocupacionData) : '—'} subtitle="Franja más solicitada" gradient="from-amber-400 to-amber-600" icon={TrendingUp} />
+               <StatCard title="Franjas saturadas" value={ocupacionData ? String(ocupacionData.franjas.filter((f) => f.ocupacion >= 0.9).length) : '—'} subtitle="≥ 90% de su máximo" gradient="from-red-400 to-red-600" icon={Flame} />
+             </motion.div>
+
              <Card>
                <CardHeader>
-                 <div className="flex items-center justify-between">
-                   <CardTitle className="text-lg">
-                     Mapa de calor de ocupación por franja horaria (últimas {ocupacionData?.semanas ?? 12} semanas)
-                   </CardTitle>
-                   {ocupacionData?._demo && (
-                     <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-800">⚡ Demo</Badge>
-                   )}
-                 </div>
+                 <CardTitle className="text-lg">Ocupación por franja horaria</CardTitle>
                  <p className="text-xs text-muted-foreground">
                    {ocupacionData
-                     ? `${ocupacionData.totalTurnos} turnos analizados · Las celdas más saturadas (verde) indican picos de demanda.`
+                     ? `${ocupacionData.totalTurnos} turnos analizados · Cada celda indica qué tan llena estuvo esa franja respecto a su máximo histórico. Verde = disponible, rojo = saturado.`
                      : 'Sin datos de ocupación disponibles.'}
                  </p>
                </CardHeader>

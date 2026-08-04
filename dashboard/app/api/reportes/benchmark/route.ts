@@ -29,6 +29,8 @@ interface BenchComparativaResponse {
   minimoCumplido: boolean;
   umbralTenants: number;
   _fuente: 'real' | 'demo';
+  /** true si no se pudo consultar el servicio de benchmark (ops-console caído) */
+  _opsError?: boolean;
 }
 
 /**
@@ -113,6 +115,7 @@ export const GET = apiHandler(async (_request: NextRequest) => {
   // ─── Consultar benchmark anónimo al ops-console ──────────────
   let promedioBucket: BenchmarkBucket | null = null;
   let minimoCumplido = false;
+  let opsError = false;
 
   try {
     const res = await fetch(`${OPS_URL}/api/internal/benchmark?tenantId=${tenantId}`, {
@@ -129,10 +132,13 @@ export const GET = apiHandler(async (_request: NextRequest) => {
       const buckets = raw.buckets ?? raw.data?.buckets ?? [];
       promedioBucket = buckets.find((b) => b.bucketLabel === bucket.label) ?? null;
       minimoCumplido = promedioBucket !== null;
+    } else {
+      opsError = true;
     }
   } catch {
     minimoCumplido = false;
     promedioBucket = null;
+    opsError = true;
   }
 
   return ok<BenchComparativaResponse>({
@@ -153,6 +159,7 @@ export const GET = apiHandler(async (_request: NextRequest) => {
     minimoCumplido,
     umbralTenants: 5,
     _fuente: 'real',
+    _opsError: opsError || undefined,
   });
 });
 
