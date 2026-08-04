@@ -1,9 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import type { Session } from 'next-auth';
 import {
   LayoutDashboard,
   Calendar,
@@ -37,12 +33,17 @@ import {
   Video,
   Smartphone,
   Settings,
+  PlugZap,
 } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import type { Session } from 'next-auth';
+import { N8nStatusIndicator } from '@/components/layout/n8n-status-indicator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useFeatureFlags } from '@/lib/feature-flags-context';
 import type { FeatureId } from '@/lib/features';
 import { canAccess, getFeatureRequiredPlan } from '@/lib/features';
-import { useFeatureFlags } from '@/lib/feature-flags-context';
-import { Skeleton } from '@/components/ui/skeleton';
-import { N8nStatusIndicator } from '@/components/layout/n8n-status-indicator';
+import { cn } from '@/lib/utils';
 
 interface NavItem {
   title: string;
@@ -54,25 +55,66 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: 'Panel Principal', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'Configuración Inicial', href: '/dashboard/onboarding', icon: Rocket, feature: 'onboarding' },
+  {
+    title: 'Configuración Inicial',
+    href: '/dashboard/onboarding',
+    icon: Rocket,
+    feature: 'onboarding',
+  },
   { title: 'Atención', href: '/dashboard/atencion', icon: Activity, feature: 'atencion' },
   { title: 'Telemedicina', href: '/dashboard/telemedicina', icon: Video, feature: 'telemedicina' },
   { title: 'Turnos', href: '/dashboard/turnos', icon: Calendar, feature: 'turnos' },
   { title: 'Pacientes', href: '/dashboard/pacientes', icon: Users, feature: 'pacientes' },
-  { title: 'Conversaciones', href: '/dashboard/conversaciones', icon: MessageSquare, feature: 'conversaciones' },
+  {
+    title: 'Conversaciones',
+    href: '/dashboard/conversaciones',
+    icon: MessageSquare,
+    feature: 'conversaciones',
+  },
   { title: 'Historial', href: '/dashboard/historial', icon: FileText, feature: 'historial' },
   { title: 'Recetas', href: '/dashboard/recetas', icon: Syringe, feature: 'recetas' },
   { title: 'Reportes', href: '/dashboard/reportes', icon: BarChart3, feature: 'reportes' },
-  { title: 'Compliance', href: '/dashboard/compliance', icon: ClipboardCheck, feature: 'compliance' },
+  {
+    title: 'Compliance',
+    href: '/dashboard/compliance',
+    icon: ClipboardCheck,
+    feature: 'compliance',
+  },
   { title: 'Encuestas', href: '/dashboard/encuestas', icon: Star, feature: 'encuestas' },
-  { title: 'Lista de Espera', href: '/dashboard/lista-espera', icon: ListChecks, feature: 'lista-espera' },
-  { title: 'Derivaciones', href: '/dashboard/derivaciones', icon: ArrowRightLeft, feature: 'derivaciones' },
+  {
+    title: 'Lista de Espera',
+    href: '/dashboard/lista-espera',
+    icon: ListChecks,
+    feature: 'lista-espera',
+  },
+  {
+    title: 'Derivaciones',
+    href: '/dashboard/derivaciones',
+    icon: ArrowRightLeft,
+    feature: 'derivaciones',
+  },
   { title: 'Lista Negra', href: '/dashboard/blacklist', icon: Ban, feature: 'blacklist' },
-  { title: 'Consentimientos', href: '/dashboard/consentimientos', icon: FileSignature, feature: 'consentimiento-informado' },
-  { title: 'Solicitudes de Datos', href: '/dashboard/mis-datos', icon: ShieldCheck, feature: 'solicitudes-datos' },
+  {
+    title: 'Consentimientos',
+    href: '/dashboard/consentimientos',
+    icon: FileSignature,
+    feature: 'consentimiento-informado',
+  },
+  {
+    title: 'Solicitudes de Datos',
+    href: '/dashboard/mis-datos',
+    icon: ShieldCheck,
+    feature: 'solicitudes-datos',
+  },
   { title: 'Notificaciones', href: '/dashboard/notificaciones', icon: Bell },
   { title: 'Ajustes', href: '/dashboard/configuracion', icon: Sliders },
   { title: 'Novedades', href: '/dashboard/novedades', icon: Newspaper },
+  {
+    title: 'Integraciones',
+    href: '/dashboard/integraciones',
+    icon: PlugZap,
+    feature: 'integraciones',
+  },
   { title: 'Soporte', href: '/dashboard/soporte', icon: LifeBuoy, feature: 'soporte' },
   { title: 'Ayuda', href: '/dashboard/ayuda', icon: BookOpen },
   { title: 'Acerca de', href: '/dashboard/acerca', icon: Info },
@@ -88,7 +130,15 @@ interface NavItemLinkProps {
   onboardingPending?: boolean;
 }
 
-function NavItemLink({ item, collapsed, isActive, hasAccess, requiredPlan, closeMobile, onboardingPending }: NavItemLinkProps) {
+function NavItemLink({
+  item,
+  collapsed,
+  isActive,
+  hasAccess,
+  requiredPlan,
+  closeMobile,
+  onboardingPending,
+}: NavItemLinkProps) {
   if (!hasAccess) {
     return (
       <Link
@@ -180,17 +230,18 @@ function AdminLink({ href, icon: Icon, label, collapsed, closeMobile, pathname }
   );
 }
 
-const adminLinks: { href: string; icon: React.ElementType; label: string; customIcon?: boolean }[] = [
-  { href: '/dashboard/admin/sistema', icon: Settings, label: 'Sistema' },
-  { href: '/dashboard/admin/tenants', icon: Building2, label: 'Tenants' },
-  { href: '/dashboard/admin/sucursales', icon: Store, label: 'Sucursales' },
-  { href: '/dashboard/admin/auditoria', icon: ScrollText, label: 'Auditoría' },
-  { href: '/dashboard/admin/backups', icon: HardDrive, label: 'Backups' },
-  { href: '/dashboard/admin/n8n', icon: Network, label: 'n8n', customIcon: true },
-  { href: '/dashboard/admin/rendimiento', icon: BarChart3, label: 'Rendimiento' },
-  { href: '/dashboard/admin/portal-analytics', icon: Smartphone, label: 'Portal Analytics' },
-  { href: '/dashboard/webhooks', icon: Webhook, label: 'Webhooks' },
-];
+const adminLinks: { href: string; icon: React.ElementType; label: string; customIcon?: boolean }[] =
+  [
+    { href: '/dashboard/admin/sistema', icon: Settings, label: 'Sistema' },
+    { href: '/dashboard/admin/tenants', icon: Building2, label: 'Tenants' },
+    { href: '/dashboard/admin/sucursales', icon: Store, label: 'Sucursales' },
+    { href: '/dashboard/admin/auditoria', icon: ScrollText, label: 'Auditoría' },
+    { href: '/dashboard/admin/backups', icon: HardDrive, label: 'Backups' },
+    { href: '/dashboard/admin/n8n', icon: Network, label: 'n8n', customIcon: true },
+    { href: '/dashboard/admin/rendimiento', icon: BarChart3, label: 'Rendimiento' },
+    { href: '/dashboard/admin/portal-analytics', icon: Smartphone, label: 'Portal Analytics' },
+    { href: '/dashboard/webhooks', icon: Webhook, label: 'Webhooks' },
+  ];
 
 function AdminSection({
   collapsed,
@@ -216,7 +267,7 @@ function AdminSection({
             onClick={closeMobile}
             className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
-              (pathname === link.href || pathname.startsWith(link.href + '/'))
+              pathname === link.href || pathname.startsWith(link.href + '/')
                 ? 'nav-active-indicator bg-sidebar-accent text-white'
                 : 'text-sidebar-foreground/70 nav-item-hover hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
             )}
@@ -255,7 +306,22 @@ interface SidebarNavProps {
   onboardingPending: boolean;
 }
 
-export function SidebarNav({ collapsed, closeMobile, status, session, onboardingPending }: SidebarNavProps) {
+/**
+ *
+ * @param root0
+ * @param root0.collapsed
+ * @param root0.closeMobile
+ * @param root0.status
+ * @param root0.session
+ * @param root0.onboardingPending
+ */
+export function SidebarNav({
+  collapsed,
+  closeMobile,
+  status,
+  session,
+  onboardingPending,
+}: SidebarNavProps) {
   const pathname = usePathname() ?? '';
   const { isFeatureEnabled } = useFeatureFlags();
 

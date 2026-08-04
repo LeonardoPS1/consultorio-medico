@@ -1,15 +1,24 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { pacientes } from '@/drizzle/schema';
 import { eq, isNull, and } from 'drizzle-orm';
+import { pacientes } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { API_SCOPES } from '@/lib/public-api-auth';
+import {
+  publicApiHandler,
+  jsonResponse,
+  errorResponse,
+  type AuthenticatedRequest,
+} from '@/lib/public-api-handler';
 
-export const dynamic = 'force-dynamic';
-
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> },
+async function handler(
+  request: AuthenticatedRequest,
+  context?: { params: Record<string, string> },
 ) {
-  const { id } = await params;
+  const id = context?.params?.id;
+
+  if (!id) {
+    return errorResponse('ID de paciente requerido', 400);
+  }
+
   const [paciente] = await db
     .select({
       id: pacientes.id,
@@ -23,8 +32,14 @@ export async function GET(
     .limit(1);
 
   if (!paciente) {
-    return NextResponse.json({ error: 'Paciente no encontrado' }, { status: 404 });
+    return errorResponse('Paciente no encontrado', 404);
   }
 
-  return NextResponse.json(paciente);
+  return jsonResponse(paciente);
 }
+
+export const GET = publicApiHandler(handler, {
+  scopes: [API_SCOPES.PACIENTES_READ],
+});
+
+export { OPTIONS } from '@/lib/public-api-handler';

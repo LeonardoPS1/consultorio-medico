@@ -1,20 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { eq, and, gte, lt, isNull } from 'drizzle-orm';
+import { turnos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { API_SCOPES } from '@/lib/public-api-auth';
+import {
+  publicApiHandler,
+  jsonResponse,
+  errorResponse,
+  type AuthenticatedRequest,
+} from '@/lib/public-api-handler';
+import { createTurnoSchema } from '@/lib/validations';
 
-export const dynamic = 'force-dynamic';
-
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { pacienteId, medicoId, fecha, hora, motivo, tipo } = body;
-
-  if (!pacienteId || !medicoId || !fecha || !hora) {
-    return NextResponse.json({ error: 'Faltan campos obligatorios: pacienteId, medicoId, fecha, hora' }, { status: 400 });
+async function handler(request: AuthenticatedRequest) {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return errorResponse('Body JSON inválido', 400);
   }
 
-  const fechaHora = new Date(`${fecha}T${hora}:00`);
+  const parsed = createTurnoSchema.safeParse(body);
+  if (!parsed.success) {
+    const messages = parsed.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ');
+    return errorResponse(`Datos inválidos: ${messages}`, 400);
+  }
 
-  const { db } = await import('@/lib/db');
-  const { turnos } = await import('@/drizzle/schema');
-  const { eq, and, gte, lt, isNull } = await import('drizzle-orm');
+  const { pacienteId, medicoId, fecha, hora, motivo, tipoConsulta } = parsed.data;
+  const fechaHora = new Date(`${fecha}T${hora}:00`);
 
   const conflicto = await db
     .select({ id: turnos.id })
@@ -30,12 +41,12 @@ export async function POST(request: NextRequest) {
     .limit(1);
 
   if (conflicto.length > 0) {
-    return NextResponse.json({ error: 'El horario no está disponible' }, { status: 409 });
+    return errorResponse('El horario no está disponible', 409);
   }
 
-  const turnoTipo = tipo === 'telemedicina' ? 'telemedicina' : 'consulta';
+  const turnoTipo = tipoConsulta === 'telemedicina' ? 'telemedicina' : 'consulta';
 
-  const turno = await db
+  const [turno] = await db
     .insert(turnos)
     .values({
       pacienteId,
@@ -48,5 +59,11 @@ export async function POST(request: NextRequest) {
     })
     .returning();
 
-  return NextResponse.json(turno[0], { status: 201 });
+  return jsonResponse(turno, 201);
 }
+
+export const POST = publicApiHandler(handler, {
+  scopes: [API_SCOPES.TURNOS_WRITE],
+});
+
+export { OPTIONS } from '@/lib/public-api-handler';

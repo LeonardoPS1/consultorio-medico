@@ -1,13 +1,24 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { servicios } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { API_SCOPES } from '@/lib/public-api-auth';
+import { publicApiHandler, jsonResponse } from '@/lib/public-api-handler';
 
-export const dynamic = 'force-dynamic';
-
-export async function GET() {
+async function handler() {
   const result = await db
-    .select({ id: servicios.id, nombre: servicios.nombre, duracionMinutos: servicios.duracionMinutos, precio: servicios.precio })
+    .select({
+      id: servicios.id,
+      nombre: servicios.nombre,
+      descripcion: servicios.descripcion,
+      duracionMinutos: servicios.duracionMinutos,
+      precio: servicios.precio,
+    })
     .from(servicios);
 
-  return NextResponse.json(result);
+  return jsonResponse(result);
 }
+
+export const GET = publicApiHandler(handler, {
+  scopes: [API_SCOPES.SERVICIOS_READ],
+});
+
+export { OPTIONS } from '@/lib/public-api-handler';

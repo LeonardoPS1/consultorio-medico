@@ -1,23 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { eq, and, gte, lt, isNull } from 'drizzle-orm';
 import { turnos, horariosAtencion } from '@/drizzle/schema';
-import { eq, and, gte, lt, isNull, sql } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { API_SCOPES } from '@/lib/public-api-auth';
+import {
+  publicApiHandler,
+  jsonResponse,
+  errorResponse,
+  type AuthenticatedRequest,
+} from '@/lib/public-api-handler';
 
-export const dynamic = 'force-dynamic';
-
-export async function GET(request: NextRequest) {
+async function handler(request: AuthenticatedRequest) {
   const fecha = request.nextUrl.searchParams.get('fecha');
-  const sucursalId = request.nextUrl.searchParams.get('sucursalId');
 
   if (!fecha) {
-    return NextResponse.json({ error: 'fecha es obligatoria' }, { status: 400 });
+    return errorResponse('fecha es obligatoria', 400);
   }
 
-  const targetDate = new Date(fecha + 'T00:00:00');
+  const targetDate = new Date(`${fecha}T00:00:00`);
   const dayOfWeek = targetDate.getDay();
-
-  const horariosFiltro = [eq(horariosAtencion.dia, String(dayOfWeek)), eq(horariosAtencion.activo, true)];
-  if (sucursalId) horariosFiltro.push(eq(horariosAtencion.sucursalId, sucursalId));
 
   const slots = await db
     .select({
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       tipo: horariosAtencion.tipo,
     })
     .from(horariosAtencion)
-    .where(and(...horariosFiltro));
+    .where(and(eq(horariosAtencion.dia, String(dayOfWeek)), eq(horariosAtencion.activo, true)));
 
   const occupied = await db
     .select({ fechaHora: turnos.fechaHora })
@@ -61,5 +61,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json(disponibles);
+  return jsonResponse(disponibles);
 }
+
+export const GET = publicApiHandler(handler, {
+  scopes: [API_SCOPES.TURNOS_READ],
+});
+
+export { OPTIONS } from '@/lib/public-api-handler';
