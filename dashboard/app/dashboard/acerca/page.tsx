@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'AiCoreMed';
-const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '1.26.0';
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '1.35.0';
 const TENANT_NAME = process.env.NEXT_PUBLIC_TENANT_NAME || 'Consultorio';
 
 const features = [
@@ -24,7 +24,8 @@ const features = [
   },
   {
     title: 'WhatsApp inteligente',
-    description: 'Tus pacientes se comunican por WhatsApp con un asistente IA que entiende y responde.',
+    description:
+      'Tus pacientes se comunican por WhatsApp con un asistente IA que entiende y responde.',
   },
   {
     title: 'Reportes y analytics',
@@ -40,6 +41,9 @@ const features = [
   },
 ];
 
+/**
+ *
+ */
 export default async function AcercaPage() {
   return (
     <div className="space-y-10 max-w-3xl mx-auto pb-12">
@@ -72,8 +76,7 @@ export default async function AcercaPage() {
       {/* Descripción */}
       <div className="border rounded-lg p-6 bg-card text-center">
         <p className="text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
-          {APP_NAME} es un sistema integral de gestión para consultorios médicos,
-          desarrollado por{' '}
+          {APP_NAME} es un sistema integral de gestión para consultorios médicos, desarrollado por{' '}
           <a
             href="https://aicorebots.com"
             target="_blank"
@@ -82,9 +85,8 @@ export default async function AcercaPage() {
           >
             Aicore
           </a>
-          . Combina automatización inteligente, inteligencia artificial local y
-          comunicación por WhatsApp para simplificar la administración diaria de tu
-          consultorio.
+          . Combina automatización inteligente, inteligencia artificial local y comunicación por
+          WhatsApp para simplificar la administración diaria de tu consultorio.
         </p>
       </div>
 
@@ -95,14 +97,9 @@ export default async function AcercaPage() {
         </h3>
         <div className="grid gap-3 sm:grid-cols-2">
           {features.map((f) => (
-            <div
-              key={f.title}
-              className="border rounded-lg p-4 bg-card space-y-1"
-            >
+            <div key={f.title} className="border rounded-lg p-4 bg-card space-y-1">
               <p className="font-medium text-sm">{f.title}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {f.description}
-              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{f.description}</p>
             </div>
           ))}
         </div>

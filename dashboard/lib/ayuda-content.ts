@@ -2046,7 +2046,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       {
         titulo: '1. Crear un webhook',
         descripcion:
-          'En Configuración → Integraciones, hacé clic en "Agregar Webhook". Seleccioná el evento (turno creado, paciente actualizado, etc.) y la URL donde recibirás las notificaciones.',
+          'En el Hub de Integraciones → pestaña Webhooks, hacé clic en "Agregar Webhook". Seleccioná el evento (turno creado, paciente actualizado, etc.) y la URL donde recibirás las notificaciones.',
         tips: [
           'La URL debe ser HTTPS (no HTTP)',
           'Los eventos disponibles son: turno.creado, turno.actualizado, turno.cancelado, paciente.creado, paciente.actualizado, receta.creada, derivacion.creada, pago.completado',
@@ -2140,7 +2140,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         titulo: 'Versión del sistema',
         descripcion: 'La página Acerca de muestra la versión actual del dashboard.',
         tips: [
-          'La versión sigue el formato semántico (ej: v1.16.0)',
+          'La versión sigue el formato semántico (ej: v1.35.0)',
           'Incluye fecha de último despliegue',
           'Muestra el número de funcionalidades activas actualmente',
           'Podés ver el hash del commit actual para referencia técnica',

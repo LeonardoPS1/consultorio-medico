@@ -10,8 +10,46 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 03/08/2026 — v1.32.0 Predicción de demanda + Benchmark anónimo
+// Actualizado: 04/08/2026 — v1.35.0 White-Label + Hub de Integraciones + OpenAPI
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.35.0',
+    date: '04/08/2026',
+    title: 'White-Label: Dominio personalizado para tu clínica',
+    items: [
+      'Nuevo: resolución de tenant por dominio custom. Las clínicas pueden usar su propio dominio (ej: portal.miclinica.cl) en vez de un subdominio de med.aicorebots.com. Migración 0058 con columnas dominio_verificado y dominio_verificacion_token.',
+      'Verificación de dominio vía DNS TXT: el sistema genera un token aicore-verify={uuid} que se debe configurar como registro TXT en el DNS del dominio. n8n WF-17 verifica automáticamente cada 15 minutos vía DNS-over-HTTPS (Cloudflare).',
+      "Al verificar, Dokploy recibe el dominio automáticamente y genera certificado Let's Encrypt (HTTPS). Notificación a los admins del tenant cuando se completa.",
+      'API interna POST /api/internal/dominios/verificar para completar el ciclo de verificación. Invalida caché de resolución de tenant (60s TTL).',
+      'Feature gate dominio-custom (Premium). El proxy.ts usa resolveTenantByHost() async con caché Map en memoria (busca dominioCustom verificado → subdominio → fallback DEFAULT_TENANT_ID).',
+      'Ops Console: al setear dominioCustom, auto-genera token de verificación y resetea dominio_verificado. GET retorna columnas nuevas.',
+    ],
+  },
+  {
+    version: '1.34.0',
+    date: '04/08/2026',
+    title: 'Hub único de Integraciones + Mercado de integraciones',
+    items: [
+      'Nuevo Hub de Integraciones en /dashboard/integraciones con 3 pestañas: Catálogo (13 integraciones con estado Conectado/Próximamente), Webhooks salientes (CRUD con HMAC y logs de entrega), y Conexiones (estado de credenciales, solo admin).',
+      'Unificadas las 3 superficies de "Integraciones" que existían (nav, Configuración, Admin/Sistema) en un solo punto de acceso. El tab de Configuración ahora tiene 7 pestañas (se eliminó Integraciones con redirect automático al hub).',
+      'Mercado de integraciones: 8 conectadas (Twilio, Google Calendar, MercadoPago, Ollama, n8n, Evolution API, Chatwoot, Metabase) + 5 roadmap (Dentalink, Medilink, Doctoralia, Laboratorios, Farmacias).',
+      'Webhooks salientes movidos de Premium a Profesional. Corrección de consistencia en planes.ts y features.ts.',
+      'Label del tab admin renombrado de "Integraciones" a "Conexiones". Onboarding actualizado para apuntar al hub.',
+      'Fix lint: estado derivado en tabs (sin setState-in-effect), imports sin uso eliminados, tests de onboarding actualizados a 7 pasos.',
+    ],
+  },
+  {
+    version: '1.33.0',
+    date: '04/08/2026',
+    title: 'OpenAPI 3.1 + Scalar UI + hardening de API v1',
+    items: [
+      'Especificación OpenAPI 3.1 generada automáticamente con @asteasolutions/zod-to-openapi + swagger-cli. Disponible en GET /api/openapi.json.',
+      'Documentación interactiva con Scalar UI en /api-docs (CDN, sin dependencia de build). Reemplaza Swagger UI tradicional.',
+      'Hardening de 6 endpoints públicos v1 con publicApiHandler: validación de x-api-key (prefijo amk_), scopes granulares (turnos:read, pacientes:read, recetas:read), rate limiting y auditoría.',
+      'Autenticación de API keys con SHA-256 hash + prefix matching (8 chars visibles). Tests 6/6.',
+      'Librería lib/api-docs.ts refactorizada con OpenAPIRegistry + OpenApiGeneratorV31 para definiciones tipadas.',
+    ],
+  },
   {
     version: '1.32.0',
     date: '03/08/2026',

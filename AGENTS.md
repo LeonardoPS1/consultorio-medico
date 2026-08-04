@@ -4,6 +4,7 @@
 
 **Última actualización:** 04/08/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
+**Versión actual:** 1.35.0
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
 **Repositorio:** `main` → https://github.com/LeonardoPS1/consultorio-medico
@@ -478,7 +479,7 @@ consultorio-medico/
 3. IF verifica si se generaron entradas (mensaje contiene "generaron")
 4. `Novedades generadas` → OK (noOp)
 5. `Sin commits nuevos` → skip (noOp)
-**✅ Completado:** Webhook de GitHub configurado y enviando pushes a `https://med.aicorebots.com/webhook/novedades-generar`.
+**✅ Completado:** Webhook de GitHub configurado y enviando pushes a `https://med.aicorebots.com/webhook/novedades-generar`. Route handler agregado en `dashboard/app/webhook/novedades-generar/route.ts` que forwardea a n8n internamente.
 
 ---
 
@@ -564,6 +565,33 @@ consultorio-medico/
 
 ---
 
+### WF-17: Verificación de Dominios Custom
+
+| Propiedad | Valor |
+|-----------|-------|
+| **Archivo** | `n8n-workflows/current/workflow-17-verificacion-dominios.json` |
+| **Trigger** | Cron (cada 15 min) |
+| **Estado** | ✅ **NUEVO** |
+| **Nodos** | 8 (cron, postgres×2, splitInBatches, httpRequest, IF, httpRequest, noOp) |
+
+**Flujo:**
+1. Cron cada 15 minutos
+2. PG: SELECT tenants con dominio_custom no verificado + dominio_verificacion_token
+3. SplitInBatches (batch 5)
+4. HTTP GET a `https://cloudflare-dns.com/dns-query?name=_aicore-verify.{dominio}&type=TXT` (DNS-over-HTTPS)
+5. IF: `Answer[0].data` contiene `dominio_verificacion_token`
+6. PG UPDATE: SET dominio_verificado = true
+7. HTTP POST a `https://med.aicorebots.com/api/internal/dominios/verificar` con `x-internal-key` (notifica admins + Dokploy auto-domain)
+8. Rama false: noOp (reintenta próximo ciclo)
+
+**Integración con Dashboard:**
+- Migración 0058 agrega columnas `dominio_verificado` y `dominio_verificacion_token` a tenants
+- `resolveTenantByHost()` busca por dominioCustom verificado → subdominio → fallback DEFAULT_TENANT_ID
+- API `POST /api/internal/dominios/verificar` marca verificado + notifica + Dokploy auto-domain
+- Ops Console: PATCH /api/tenants/[id] genera token al setear dominioCustom
+
+---
+
 
 ### Matriz Resumen de Agentes
 
@@ -585,6 +613,7 @@ consultorio-medico/
 | **WF-14** | Recuperación Automática | Webhook | ❌ | ❌ | ❌ | ❌ | ❌ | `/recuperacion-request` |
 | **WF-15** | Alertas del Sistema | Cron (5 min) | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
 | **WF-16** | Ocupación + Benchmark Nocturno | Cron (nocturno) | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **WF-17** | Verificación de Dominios Custom | Cron (15 min) | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
 
 ---
 
@@ -784,6 +813,9 @@ consultorio-medico/
 | **Fix api-keys** | Spinner infinito: el useEffect IIFE no llamaba `setLoading(false)` → fix. Eliminación de keys revocadas: botón con `disabled={!key.activa}` + DELETE solo soft-revoke → `deleteApiKey()` (borrado físico tenant-scoped) + botón habilitado. Commits `1ba369a`, `771d10d` | 03/08 |
 | **Rediseño tab Ocupación (mobile-first)** | `heatmap-franjas.tsx` reescrito completo: elimina el heatmap 7×13 con 8 colores arcoíris (incomprensible, scroll horizontal) → vista mobile-first con barras horizontales full-width: 2 insight cards (hora pico de la semana, día con más demanda), selector de día (Lun→Dom con total de turnos), barras de demanda por hora (13 filas 08:00-20:00 con % + total), 4 niveles semánticos de intensidad (Baja=emerald / Media=amber / Alta=orange / Saturada=rose, bar+text+dot por nivel), card demanda semanal, leyenda "¿Cómo leer". Reportes-client simplificado: solo `<HeatmapFranjas>` (sin 4 StatCards). `useReducedMotion` + stagger animations. Commit `f7fd87f` | 04/08 |
 | **Fix 401 global ops-console** | CAUSA RAÍZ: `ops-console/proxy.ts` (middleware Next 16) exigía cookie `__Secure-ops.session` para TODA ruta `/api/*` no listada en `PUBLIC_PATHS`, bloqueando `/api/internal/benchmark` ANTES del handler (que ya valida `x-internal-key`). Fix: agregado `'/api/internal'` a `PUBLIC_PATHS`. Además el dashboard usaba `https://ops.aicorebots.com` (403 Cloudflare) → fallback cambiado a `http://ops-console-23kboo:3002` (DNS interno Swarm). Post-fix apareció 500 `42P18` (could not determine data type of parameter $1): 4 queries de `getComparativaTenant()` en `ops-console/lib/benchmark.ts` sin cast `::uuid` → añadido cast. Commits `1146d38`, `4ee9ba3` | 04/08 |
+| **OpenAPI 3.1 + Scalar UI + hardening v1** | Especificación OpenAPI 3.1 via `@asteasolutions/zod-to-openapi` + `swagger-cli`. `lib/api-docs.ts` con `OpenAPIRegistry` + `OpenApiGeneratorV31`. `GET /api/openapi.json` + `/api-docs` Scalar CDN. 6 endpoints v1 con `publicApiHandler` (x-api-key, scopes, rate limiting, auditoría). Autenticación SHA-256 + prefix matching. Tests 6/6. `lib/integrations-catalog.ts` con 13 integraciones. Commit `810db12` | 04/08 |
+| **Hub único de Integraciones** | Consolidación de 3 superficies "Integraciones" en `/dashboard/integraciones` con 3 tabs (Catálogo / Webhooks salientes / Conexiones). Webhooks salientes movidos Premium→Profesional. Label admin "Integraciones"→"Conexiones". Onboarding actualizado. Patrón estado derivado para tabs. Commit `e726540` | 04/08 |
+| **White-Label: Dominio Custom + WF-17** | Resolución de tenant por dominio custom: migración 0058, `resolveTenantByHost()` con cache Map 60s, `proxy.ts` async. Verificación DNS TXT automática vía n8n WF-17 (cada 15 min, DNS-over-HTTPS). API `POST /api/internal/dominios/verificar` con Dokploy auto-domain. Ops Console genera token al setear dominioCustom. Feature gate `dominio-custom` (Premium). Commit `7beb92e` | 04/08 |
 
 ### 🟡 Prioridad Media
 
