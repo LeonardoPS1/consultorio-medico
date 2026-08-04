@@ -107,6 +107,7 @@ export const PLANES: Record<PlanId, PlanInfo> = {
       'Renovación automática de recetas por IA',
       'Exportación FHIR-lite de historial clínico',
       'API Pública para integraciones externas',
+      'Webhooks salientes configurables con HMAC',
       'Cumplimiento normativo (Dashboard compliance con ARCO)',
       'Hasta 10 profesionales con agendas independientes',
     ],
@@ -136,7 +137,6 @@ export const PLANES: Record<PlanId, PlanInfo> = {
       'Analytics del portal del paciente',
       'Caché inteligente con Redis para máximo rendimiento',
       'Sincronización Google Calendar en tiempo real',
-      'Webhooks salientes configurables con HMAC',
       'Página pública de estado del servicio',
     ],
     cta: 'Suscribirse',
@@ -194,6 +194,11 @@ const PLAN_HIERARCHY: Record<PlanId, number> = {
   enterprise: 4,
 };
 
+/**
+ *
+ * @param current
+ * @param required
+ */
 export function hasPlanOrAbove(current: PlanId, required: PlanId): boolean {
   return PLAN_HIERARCHY[current] >= PLAN_HIERARCHY[required];
 }

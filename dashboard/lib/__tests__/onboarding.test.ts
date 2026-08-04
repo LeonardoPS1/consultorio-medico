@@ -38,8 +38,8 @@ describe('onboarding feature gating', () => {
 // ─── Onboarding Steps ────────────────────────────────────────
 
 describe('ONBOARDING_STEPS', () => {
-  it('tiene exactamente 6 pasos', () => {
-    expect(ONBOARDING_STEPS.length).toBe(6);
+  it('tiene exactamente 7 pasos', () => {
+    expect(ONBOARDING_STEPS.length).toBe(7);
   });
 
   it('todos los pasos tienen los campos requeridos', () => {
@@ -62,8 +62,16 @@ describe('ONBOARDING_STEPS', () => {
     expect(uniqueIds.size).toBe(ids.length);
   });
 
-  it('los pasos están en orden lógico: plan → perfil → medico → horarios → paciente → notificaciones', () => {
-    const expectedOrder = ['plan', 'perfil', 'medico', 'horarios', 'paciente', 'notificaciones'];
+  it('los pasos están en orden lógico: plan → perfil → medico → horarios → paciente → notificaciones → whatsapp', () => {
+    const expectedOrder = [
+      'plan',
+      'perfil',
+      'medico',
+      'horarios',
+      'paciente',
+      'notificaciones',
+      'configuracion_whatsapp',
+    ];
     const actualOrder = ONBOARDING_STEPS.map((s) => s.id);
     expect(actualOrder).toEqual(expectedOrder);
   });

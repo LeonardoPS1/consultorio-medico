@@ -53,9 +53,9 @@ export type FeatureId =
   | 'blacklist'
   | 'consentimiento-informado'
   | 'telemedicina'
-   | 'onboarding'
-   | 'ocupacion-franjas'
-   | 'scoring-pacientes'
+  | 'onboarding'
+  | 'ocupacion-franjas'
+  | 'scoring-pacientes'
   | 'historial'
   | 'web-vitals'
   | 'portal-analytics'
@@ -193,7 +193,7 @@ export function getAvailableFeatures(plan: PlanId): FeatureId[] {
 
 /**
  * Devuelve el nombre del plan requerido para una feature.
- * Ej: getFeatureRequiredPlan('integraciones') → 'Premium'
+ * Ej: getFeatureRequiredPlan('integraciones') → 'Profesional'
  * @param feature
  */
 export function getFeatureRequiredPlan(feature: FeatureId): string {

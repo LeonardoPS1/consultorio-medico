@@ -14,10 +14,17 @@ import {
   Globe,
   FlaskConical,
   Pill,
-  ArrowRight,
+  PlugZap,
+  Webhook,
+  Radio,
 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+import IntegracionesDashboard from '@/components/configuracion/integraciones-dashboard';
+import { WebhooksTab } from '@/components/configuracion/webhooks-tab';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { IntegracionCatalog } from '@/lib/integrations-catalog';
 import { INTEGRACIONES_CATALOG } from '@/lib/integrations-catalog';
 
@@ -36,6 +43,10 @@ const ICON_MAP: Record<string, React.ElementType> = {
   flask: FlaskConical,
   pill: Pill,
 };
+
+interface IntegracionesClientProps {
+  isAdmin: boolean;
+}
 
 function IntegracionCard({ item }: { item: IntegracionCatalog }) {
   const Icon = ICON_MAP[item.iconKey] || Globe;
@@ -78,22 +89,12 @@ function IntegracionCard({ item }: { item: IntegracionCatalog }) {
   );
 }
 
-/**
- *
- */
-export function IntegracionesClient() {
+function CatalogoTab() {
   const connected = INTEGRACIONES_CATALOG.filter((i) => i.status === 'connected');
   const roadmap = INTEGRACIONES_CATALOG.filter((i) => i.status === 'roadmap');
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Integraciones</h1>
-        <p className="text-muted-foreground">
-          Conectá AicoreMed con servicios externos, APIs y sistemas de terceros.
-        </p>
-      </div>
-
+    <div className="space-y-6">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <div className="h-3 w-3 rounded-full bg-emerald-500" />
@@ -130,14 +131,82 @@ export function IntegracionesClient() {
           </div>
         </section>
       )}
+    </div>
+  );
+}
 
-      <div className="mt-4 flex items-center gap-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-        <ArrowRight className="h-4 w-4" />
-        Gestioná tus API keys y webhooks en{' '}
-        <a href="/dashboard/configuracion?tab=integraciones" className="font-medium underline">
-          Configuración &rarr; Integraciones
-        </a>
+/**
+ *
+ * @param root0
+ * @param root0.isAdmin
+ */
+export function IntegracionesClient({ isAdmin }: IntegracionesClientProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-96">
+          <div className="skeleton h-8 w-48" />
+        </div>
+      }
+    >
+      <IntegracionesContent isAdmin={isAdmin} />
+    </Suspense>
+  );
+}
+
+function IntegracionesContent({ isAdmin }: IntegracionesClientProps) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const activeTab = searchParams?.get('tab') || 'catalogo';
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('tab', value);
+    router.replace(`/dashboard/integraciones?${params.toString()}`, { scroll: false });
+  };
+
+  return (
+    <div className="flex flex-1 flex-col gap-6 p-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Integraciones</h1>
+        <p className="text-muted-foreground">
+          Conectá AicoreMed con servicios externos, gestioná webhooks y controlá el estado de tus
+          conexiones.
+        </p>
       </div>
+
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList className="overflow-x-auto flex-nowrap w-full gap-1">
+          <TabsTrigger value="catalogo" className="px-2 sm:px-3 shrink-0">
+            <PlugZap className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Catálogo</span>
+          </TabsTrigger>
+          <TabsTrigger value="webhooks" className="px-2 sm:px-3 shrink-0">
+            <Webhook className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Webhooks salientes</span>
+          </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="conexiones" className="px-2 sm:px-3 shrink-0">
+              <Radio className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Conexiones</span>
+            </TabsTrigger>
+          )}
+        </TabsList>
+
+        <TabsContent value="catalogo" className="mt-6">
+          <CatalogoTab />
+        </TabsContent>
+
+        <TabsContent value="webhooks" className="mt-6">
+          <WebhooksTab />
+        </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="conexiones" className="mt-6">
+            <IntegracionesDashboard isAdmin={isAdmin} />
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 }

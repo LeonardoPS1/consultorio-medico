@@ -1,21 +1,22 @@
 'use client';
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { Bot, CreditCard, Globe, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { canAccess } from '@/lib/features';
+import { useState, useEffect, useMemo, Suspense } from 'react';
+import { ConfigEquipo } from '@/components/config/config-equipo';
+import { ConfigHorarios } from '@/components/config/config-horarios';
+import { ConfigNotificaciones } from '@/components/config/config-notificaciones';
+import { PerfilOrganizacion } from '@/components/config/config-perfil';
+import { ConfigPlantillas } from '@/components/config/config-plantillas';
+import { ConfigRegional } from '@/components/config/config-regional';
 import { MedicosSection } from '@/components/config/medicos-section';
+import { ChangePasswordForm } from '@/components/configuracion/change-password-form';
+import Setup2FA from '@/components/configuracion/setup-2fa';
+import SuscripcionTab from '@/components/configuracion/suscripcion-tab';
+import { PageHeader } from '@/components/page-header';
 import { useSound } from '@/components/sound-provider';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { toast } from '@/components/ui/use-toast';
-import { Bot, CreditCard, Globe, Sparkles } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -34,17 +38,12 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import Setup2FA from '@/components/configuracion/setup-2fa';
-import SuscripcionTab from '@/components/configuracion/suscripcion-tab';
-import { ChangePasswordForm } from '@/components/configuracion/change-password-form';
-import { PageHeader } from '@/components/page-header';
-import { PerfilOrganizacion } from '@/components/config/config-perfil';
-import { ConfigHorarios } from '@/components/config/config-horarios';
-import { ConfigPlantillas } from '@/components/config/config-plantillas';
-import { ConfigNotificaciones } from '@/components/config/config-notificaciones';
-import { ConfigEquipo } from '@/components/config/config-equipo';
-import { ConfigRegional } from '@/components/config/config-regional';
-import { WebhooksTab } from '@/components/configuracion/webhooks-tab';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/components/ui/use-toast';
+import { canAccess } from '@/lib/features';
 
 // ============================================================
 // Tipos
@@ -89,6 +88,9 @@ interface NotifData {
 // Componente principal
 // ============================================================
 
+/**
+ *
+ */
 export function ConfiguracionClient() {
   return (
     <Suspense
@@ -106,9 +108,7 @@ export function ConfiguracionClient() {
 function ConfigContent() {
   const searchParams = useSearchParams();
   const { data: session } = useSession();
-  const userRole = session?.user?.role;
   const userPlan = session?.user?.plan ?? 'free';
-  const isAdmin = userRole === 'admin';
   const tabFromUrl = searchParams?.get('tab') || 'perfil';
   const [plantillas, setPlantillas] = useState<PlantillaWhatsApp[]>([]);
   const [showPlantillaModal, setShowPlantillaModal] = useState(false);
@@ -116,12 +116,11 @@ function ConfigContent() {
   const [previewPlantilla, setPreviewPlantilla] = useState<PlantillaWhatsApp | null>(null);
   const [deletingPlantilla, setDeletingPlantilla] = useState<PlantillaWhatsApp | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [activeTab, setActiveTab] = useState(tabFromUrl);
+  const activeTab = tabFromUrl;
   const { enabled: soundEnabled, toggle: toggleSound } = useSound();
   const router = useRouter();
 
   const handleTabChange = (value: string) => {
-    setActiveTab(value);
     const params = new URLSearchParams(searchParams?.toString() || '');
     params.set('tab', value);
     router.replace(`/dashboard/configuracion?${params.toString()}`, { scroll: false });
@@ -136,13 +135,12 @@ function ConfigContent() {
     plantillas: true,
   });
 
-  // Sincronizar tabs con la URL
+  // Redirigir links viejos que apuntaban al tab "Integraciones" (ahora hub en /dashboard/integraciones)
   useEffect(() => {
-    const urlTab = searchParams?.get('tab');
-    if (urlTab && urlTab !== activeTab) {
-      setActiveTab(urlTab);
+    if (tabFromUrl === 'integraciones') {
+      router.replace('/dashboard/integraciones?tab=webhooks', { scroll: false });
     }
-  }, [searchParams, activeTab]);
+  }, [tabFromUrl, router]);
 
   // Cargar datos desde APIs
   useEffect(() => {
@@ -231,11 +229,6 @@ function ConfigContent() {
           {canAccess(userPlan, 'equipo') && (
             <TabsTrigger value="equipo" className="px-2 sm:px-3 shrink-0">
               Equipo
-            </TabsTrigger>
-          )}
-          {canAccess(userPlan, 'integraciones') && (
-            <TabsTrigger value="integraciones" className="px-2 sm:px-3 shrink-0">
-              Integraciones
             </TabsTrigger>
           )}
         </TabsList>
@@ -347,13 +340,16 @@ function ConfigContent() {
 
             <AlertDialog
               open={!!deletingPlantilla}
-              onOpenChange={(open) => { if (!open) setDeletingPlantilla(null); }}
+              onOpenChange={(open) => {
+                if (!open) setDeletingPlantilla(null);
+              }}
             >
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>¿Eliminar plantilla?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esta acción no se puede deshacer. Se eliminará la plantilla "{deletingPlantilla?.nombre}".
+                    Esta acción no se puede deshacer. Se eliminará la plantilla "
+                    {deletingPlantilla?.nombre}".
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -366,9 +362,7 @@ function ConfigContent() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ id: deletingPlantilla.id }),
                       });
-                      setPlantillas((prev) =>
-                        prev.filter((p) => p.id !== deletingPlantilla.id),
-                      );
+                      setPlantillas((prev) => prev.filter((p) => p.id !== deletingPlantilla.id));
                       toast({ title: 'Plantilla eliminada' });
                       setDeletingPlantilla(null);
                     }}
@@ -408,13 +402,6 @@ function ConfigContent() {
             <div className="mt-4">
               <MedicosSection plan={userPlan} />
             </div>
-          </TabsContent>
-        )}
-
-        {/* ======== INTEGRACIONES ======== */}
-        {canAccess(userPlan, 'integraciones') && (
-          <TabsContent value="integraciones" className="mt-4">
-            <WebhooksTab />
           </TabsContent>
         )}
       </Tabs>
@@ -575,6 +562,7 @@ function PreviewPlantillaModal({
     for (const v of plantilla.variables) {
       initial[v] = sample[v] || `[${v}]`;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reseteo de formulario al cambiar plantilla (patrón documentado de React)
     setDatosEdit(initial);
   }, [plantilla]);
 

@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { canAccess, canAccessWithUserOverrides, type FeatureId } from '@/lib/features';
+import { useEffect } from 'react';
 import { useUserOverrides } from '@/lib/feature-flags-context';
+import { canAccess, type FeatureId } from '@/lib/features';
 
 /**
  * Mapa de rutas del dashboard a features requeridas.
@@ -19,12 +19,13 @@ const ROUTE_FEATURE_MAP: Record<string, FeatureId> = {
   '/dashboard/reportes': 'reportes',
   '/dashboard/encuestas': 'encuestas',
   '/dashboard/lista-espera': 'lista-espera',
+  '/dashboard/integraciones': 'integraciones',
   '/dashboard/onboarding': 'onboarding',
   '/dashboard/admin/tenants': 'multi-sucursal',
   '/dashboard/admin/auditoria': 'auditoria',
   '/dashboard/admin/sucursales': 'multi-sucursal',
   '/dashboard/admin/backups': 'backup-encriptado',
-  '/dashboard/admin/n8n': 'n8n-monitor',
+  '/dashboard/admin/n8n': 'integraciones',
   '/dashboard/webhooks': 'webhooks-log',
   '/dashboard/blacklist': 'blacklist',
   '/dashboard/consentimientos': 'consentimiento-informado',
@@ -33,7 +34,10 @@ const ROUTE_FEATURE_MAP: Record<string, FeatureId> = {
   '/videollamada': 'telemedicina',
 };
 
-/** Rutas hijas que heredan el feature de la ruta padre */
+/**
+ * Rutas hijas que heredan el feature de la ruta padre
+ * @param pathname
+ */
 function getRequiredFeature(pathname: string): FeatureId | null {
   if (ROUTE_FEATURE_MAP[pathname]) return ROUTE_FEATURE_MAP[pathname];
   for (const [route, feature] of Object.entries(ROUTE_FEATURE_MAP)) {
@@ -42,6 +46,11 @@ function getRequiredFeature(pathname: string): FeatureId | null {
   return null;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function GatedContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();

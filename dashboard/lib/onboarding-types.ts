@@ -118,7 +118,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     description:
       'Verifica que el canal de WhatsApp esté conectado y funcionando para que tus pacientes reciban recordatorios y puedan comunicarse.',
     icon: 'MessageCircle',
-    actionLink: '/dashboard/configuracion?tab=integraciones',
+    actionLink: '/dashboard/integraciones?tab=webhooks',
     actionLabel: 'Ir a integraciones',
   },
 ];

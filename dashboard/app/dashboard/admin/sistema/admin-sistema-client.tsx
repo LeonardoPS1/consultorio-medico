@@ -1,20 +1,20 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Brain, Link, Shield, Key, Lock, Users, Globe } from 'lucide-react';
-import SistemaTab from '@/components/configuracion/sistema-tab';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
 import AdminUsuariosTab from '@/components/admin/admin-usuarios-tab';
 import ConveniosTab from '@/components/configuracion/convenios-tab';
+import SistemaTab from '@/components/configuracion/sistema-tab';
 import { PageHeader } from '@/components/page-header';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const SYSTEM_TABS = [
   { id: 'toggles', label: 'Feature Toggles', icon: Settings },
   { id: 'ia', label: 'Asistente IA', icon: Brain },
   { id: 'usuarios', label: 'Usuarios', icon: Users },
-  { id: 'integraciones', label: 'Integraciones', icon: Link },
+  { id: 'integraciones', label: 'Conexiones', icon: Link },
   { id: 'credenciales', label: 'Credenciales', icon: Shield },
   { id: 'apikeys', label: 'API Keys', icon: Key },
   { id: 'privacidad', label: 'Privacidad', icon: Lock },
@@ -31,9 +31,7 @@ function SistemaContent() {
 
   const tabFromUrl = searchParams?.get('tab');
   const [tab, setTab] = useState<TabId>(
-    tabFromUrl && VALID_TABS.includes(tabFromUrl as TabId)
-      ? (tabFromUrl as TabId)
-      : DEFAULT_TAB,
+    tabFromUrl && VALID_TABS.includes(tabFromUrl as TabId) ? (tabFromUrl as TabId) : DEFAULT_TAB,
   );
 
   useEffect(() => {
@@ -79,6 +77,9 @@ function SistemaContent() {
   );
 }
 
+/**
+ *
+ */
 export function AdminSistemaClient() {
   return (
     <Suspense

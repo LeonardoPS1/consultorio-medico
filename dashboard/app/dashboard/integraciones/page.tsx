@@ -20,5 +20,7 @@ export default async function IntegracionesPage() {
     redirect('/dashboard');
   }
 
-  return <IntegracionesClient />;
+  const isAdmin = session.user?.role === 'admin';
+
+  return <IntegracionesClient isAdmin={isAdmin} />;
 }
