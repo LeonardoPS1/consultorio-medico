@@ -81,6 +81,7 @@ export async function POST(request: Request) {
     })
 
     if (!res.ok || !res.data) {
+      const errorReal = res.data?.error || res.error || 'Error desconocido'
       await logAudit({
         operatorId: session.sub,
         operatorEmail: session.email,
@@ -88,10 +89,10 @@ export async function POST(request: Request) {
         tenantAfectado: tenantId,
         recurso: undefined,
         motivo: motivo.trim(),
-        detalles: { error: res.error || 'Error desconocido', viaDirecta: true },
+        detalles: { error: errorReal, viaDirecta: true },
       })
       return NextResponse.json(
-        { error: res.error || 'Error al crear token de impersonación directa' },
+        { error: errorReal },
         { status: res.status || 500 },
       )
     }
