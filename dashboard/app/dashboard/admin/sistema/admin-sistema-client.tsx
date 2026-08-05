@@ -1,6 +1,6 @@
 'use client';
 
-import { Settings, Brain, Link, Shield, Key, Lock, Users, Globe } from 'lucide-react';
+import { Settings, Brain, Shield, Key, Lock, Users, Globe } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useState, useEffect } from 'react';
 import AdminUsuariosTab from '@/components/admin/admin-usuarios-tab';
@@ -14,7 +14,6 @@ const SYSTEM_TABS = [
   { id: 'toggles', label: 'Feature Toggles', icon: Settings },
   { id: 'ia', label: 'Asistente IA', icon: Brain },
   { id: 'usuarios', label: 'Usuarios', icon: Users },
-  { id: 'integraciones', label: 'Conexiones', icon: Link },
   { id: 'credenciales', label: 'Credenciales', icon: Shield },
   { id: 'apikeys', label: 'API Keys', icon: Key },
   { id: 'privacidad', label: 'Privacidad', icon: Lock },
