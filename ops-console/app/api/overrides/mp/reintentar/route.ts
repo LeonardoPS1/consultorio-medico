@@ -9,10 +9,11 @@ import {
   getTenantById,
   getCurrentSuscripcion,
 } from '@/lib/overrides'
+import { getDashboardUrl } from '@/lib/dashboard-fetch'
 
 export const dynamic = 'force-dynamic'
 
-const DASHBOARD_URL = process.env.DASHBOARD_URL || 'https://med.aicorebots.com'
+const DASHBOARD_URL = getDashboardUrl()
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY
 
 // Lista los pagos MercadoPago conocidos del tenant (para elegir cuál reprocesar)

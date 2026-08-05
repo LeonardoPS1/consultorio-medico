@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
 import { logAudit } from '@/lib/audit'
 import { validateMotivo } from '@/lib/validation'
-import { dashboardFetch } from '@/lib/dashboard-fetch'
+import { dashboardFetch, getDashboardUrl } from '@/lib/dashboard-fetch'
 
-const DASHBOARD_URL = process.env.DASHBOARD_URL || 'https://med.aicorebots.com'
+const DASHBOARD_URL = getDashboardUrl()
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY
 
 export async function POST(request: Request) {

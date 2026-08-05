@@ -1,3 +1,20 @@
+/**
+ * Resuelve la URL base del dashboard para llamadas server-to-server.
+ *
+ * Orden de prioridad:
+ *  1. DASHBOARD_INTERNAL_URL (URL interna Swarm, recomendada en producción — evita Cloudflare)
+ *  2. DASHBOARD_URL (URL pública; útil en dev/tests)
+ *  3. http://med-dashboard:3000 (DNS interno Swarm por defecto)
+ *
+ * Usar URL interna evita que Cloudflare devuelva HTML 403/404 en vez de JSON,
+ * que rompía los parseos de response.json() con "Unexpected token '<'".
+ */
+export function getDashboardUrl(): string {
+  if (process.env.DASHBOARD_INTERNAL_URL) return process.env.DASHBOARD_INTERNAL_URL
+  if (process.env.DASHBOARD_URL) return process.env.DASHBOARD_URL
+  return 'http://med-dashboard:3000'
+}
+
 interface DashboardResponse<T> {
   ok: boolean
   status: number

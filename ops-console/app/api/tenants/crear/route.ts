@@ -2,8 +2,9 @@ import { NextRequest } from 'next/server'
 import { logAudit } from '@/lib/audit'
 import { ok, error, serverError, unauthorized } from '@/lib/api-handler'
 import { crearTenantSchema } from '@/lib/validation'
+import { getDashboardUrl } from '@/lib/dashboard-fetch'
 
-const DASHBOARD_URL = process.env.DASHBOARD_URL || 'https://med.aicorebots.com'
+const DASHBOARD_URL = getDashboardUrl()
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY
 
 const PLANES = ['free', 'starter', 'professional', 'premium', 'enterprise'] as const
