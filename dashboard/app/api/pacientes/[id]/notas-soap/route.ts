@@ -45,6 +45,7 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
         plan: notasSoap.plan,
         cie10Codigo: notasSoap.cie10Codigo,
         cie10Descripcion: notasSoap.cie10Descripcion,
+        cie10Sugerido: notasSoap.cie10Sugerido,
         derivarA: notasSoap.derivarA,
         requiereControl: notasSoap.requiereControl,
         controlEnDias: notasSoap.controlEnDias,
@@ -118,6 +119,7 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
         plan: body.plan || null,
         cie10Codigo: body.cie10Codigo || null,
         cie10Descripcion: body.cie10Descripcion || null,
+        cie10Sugerido: body.cie10Sugerido ?? null,
         derivarA: body.derivarA || null,
         requiereControl: body.requiereControl ?? false,
         controlEnDias: body.controlEnDias || null,
@@ -174,6 +176,7 @@ export async function PATCH(request: NextRequest, { params: paramsPromise }: { p
     if (body.plan !== undefined) updateData.plan = body.plan;
     if (body.cie10Codigo !== undefined) updateData.cie10Codigo = body.cie10Codigo;
     if (body.cie10Descripcion !== undefined) updateData.cie10Descripcion = body.cie10Descripcion;
+    if (body.cie10Sugerido !== undefined) updateData.cie10Sugerido = body.cie10Sugerido;
     if (body.derivarA !== undefined) updateData.derivarA = body.derivarA;
     if (body.requiereControl !== undefined) updateData.requiereControl = body.requiereControl;
     if (body.controlEnDias !== undefined) updateData.controlEnDias = body.controlEnDias;

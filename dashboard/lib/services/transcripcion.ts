@@ -3,6 +3,7 @@ import { safeError, safeLog } from '@/lib/logger';
 import { notasSoap, turnos, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql, isNull } from 'drizzle-orm';
 import { env } from 'node:process';
+import { sugerirCie10 } from '@/lib/ai-clinical';
 
 const WHISPER_URL = env.WHISPER_URL || 'http://whisper:8000';
 const OLLAMA_URL = env.OLLAMA_URL || 'http://ollama:11434';
@@ -153,7 +154,20 @@ export const transcripcionService = {
         return fallback?.id || null;
       }
 
-      // 3. Guardar nota SOAP
+      // 3. Sugerir códigos CIE-10 (T1: opcional, no bloqueante, fail-open)
+      let cie10Sugerido: unknown[] | null = null;
+      try {
+        const sugerencias = await sugerirCie10(soap.assessment || '', {
+          subjetivo: soap.subjetivo || '',
+        });
+        if (sugerencias.length > 0) {
+          cie10Sugerido = sugerencias.map((s) => ({ codigo: s.codigo, descripcion: s.descripcion }));
+        }
+      } catch (err) {
+        safeError('[Transcripcion] Sugerencia CIE-10 omitida (fail-open):', err);
+      }
+
+      // 4. Guardar nota SOAP
       const [nota] = await db
         .insert(notasSoap)
         .values({
@@ -171,6 +185,7 @@ export const transcripcionService = {
           plan: soap.plan || null,
           cie10Codigo: soap.cie10Codigo || null,
           cie10Descripcion: soap.cie10Descripcion || null,
+          cie10Sugerido,
         })
         .returning();
 

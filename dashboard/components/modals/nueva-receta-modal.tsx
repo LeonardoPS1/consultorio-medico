@@ -13,8 +13,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, Loader2, Check, ChevronDown } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Search, Loader2, Check, ChevronDown, ShieldAlert, AlertTriangle } from 'lucide-react';
 import { formatPhone } from '@/lib/utils';
+import { useCanAccess } from '@/lib/features';
+import type { AlertaClinica } from '@/lib/farmaco-interacciones';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -35,6 +47,7 @@ interface NuevaRecetaModalProps {
     dosis: string;
     duracion: string;
     indicaciones: string;
+    confirmadoAlerta?: boolean;
   }) => void;
 }
 
@@ -51,6 +64,19 @@ export function NuevaRecetaModal({ open, onOpenChange, onSubmit }: NuevaRecetaMo
   const [duracion, setDuracion] = useState('');
   const [indicaciones, setIndicaciones] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const hayAlertas = useCanAccess('alertas-interacciones');
+  const [alertas, setAlertas] = useState<AlertaClinica[]>([]);
+  const [alertaDialogOpen, setAlertaDialogOpen] = useState(false);
+  const [verificando, setVerificando] = useState(false);
+  const [pendingData, setPendingData] = useState<{
+    pacienteId: string;
+    pacienteNombre: string;
+    medicamento: string;
+    dosis: string;
+    duracion: string;
+    indicaciones: string;
+  } | null>(null);
 
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -118,23 +144,67 @@ export function NuevaRecetaModal({ open, onOpenChange, onSubmit }: NuevaRecetaMo
 
   // ─── Submit ──────────────────────────────────────────────
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const doSubmit = (confirmadoAlerta?: boolean) => {
+    if (!selectedPaciente) return;
+    onSubmit?.({
+      pacienteId: selectedPaciente.id,
+      pacienteNombre: `${selectedPaciente.nombre} ${selectedPaciente.apellido}`,
+      medicamento: medicamento.trim(),
+      dosis: dosis.trim(),
+      duracion: duracion.trim(),
+      indicaciones: indicaciones.trim(),
+      confirmadoAlerta,
+    });
+    setLoading(false);
+    setAlertas([]);
+    setPendingData(null);
+    onOpenChange(false);
+  };
+
+  const verificarAlertas = async (): Promise<boolean> => {
+    if (!selectedPaciente || !medicamento.trim()) return true;
+    if (!hayAlertas) return true; // feature no habilitada en el plan
+    setVerificando(true);
+    try {
+      const url = `/api/recetas/verificar?pacienteId=${encodeURIComponent(
+        selectedPaciente.id,
+      )}&medicamento=${encodeURIComponent(medicamento.trim())}`;
+      const res = await fetch(url);
+      if (!res.ok) return true; // fail-open: si el check falla, no bloquear
+      const json = await res.json();
+      const lista: AlertaClinica[] = Array.isArray(json.alertas) ? json.alertas : [];
+      if (lista.length > 0) {
+        setAlertas(lista);
+        setPendingData({
+          pacienteId: selectedPaciente.id,
+          pacienteNombre: `${selectedPaciente.nombre} ${selectedPaciente.apellido}`,
+          medicamento: medicamento.trim(),
+          dosis: dosis.trim(),
+          duracion: duracion.trim(),
+          indicaciones: indicaciones.trim(),
+        });
+        setAlertaDialogOpen(true);
+        return false;
+      }
+      return true;
+    } catch {
+      return true; // fail-open
+    } finally {
+      setVerificando(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPaciente || !medicamento.trim() || !dosis.trim()) return;
     setLoading(true);
+    const puedeContinuar = await verificarAlertas();
+    if (!puedeContinuar) {
+      setLoading(false); // queda abierta la alerta, esperando confirmación
+      return;
+    }
     // Pequeño timeout para mostrar estado de carga
-    setTimeout(() => {
-      onSubmit?.({
-        pacienteId: selectedPaciente.id,
-        pacienteNombre: `${selectedPaciente.nombre} ${selectedPaciente.apellido}`,
-        medicamento: medicamento.trim(),
-        dosis: dosis.trim(),
-        duracion: duracion.trim(),
-        indicaciones: indicaciones.trim(),
-      });
-      setLoading(false);
-      onOpenChange(false);
-    }, 300);
+    setTimeout(() => doSubmit(undefined), 300);
   };
 
   // ─── Seleccionar paciente ────────────────────────────────
@@ -156,8 +226,9 @@ export function NuevaRecetaModal({ open, onOpenChange, onSubmit }: NuevaRecetaMo
   // ─── Render ──────────────────────────────────────────────
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Nueva Receta</DialogTitle>
           <DialogDescription>Prescribí un nuevo medicamento para un paciente</DialogDescription>
@@ -293,13 +364,74 @@ export function NuevaRecetaModal({ open, onOpenChange, onSubmit }: NuevaRecetaMo
             </Button>
             <Button
               type="submit"
-              disabled={loading || !selectedPaciente || !medicamento.trim() || !dosis.trim()}
+              disabled={loading || verificando || !selectedPaciente || !medicamento.trim() || !dosis.trim()}
             >
-              {loading ? 'Creando...' : 'Crear Receta'}
+              {verificando ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" /> Verificando...
+                </>
+              ) : loading ? (
+                'Creando...'
+              ) : hayAlertas ? (
+                <>
+                  <ShieldAlert className="h-4 w-4 mr-1" /> Crear Receta
+                </>
+              ) : (
+                'Crear Receta'
+              )}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  );
-}
+
+    {/* Alerta bloqueante: alergia/interacción detectada (T3) */}
+    <AlertDialog open={alertaDialogOpen} onOpenChange={setAlertaDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            Alerta clínica: revísela antes de prescribir
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            Se detectaron {alertas.length} advertencia{alertas.length === 1 ? '' : 's'} para{' '}
+            <strong>{pendingData?.medicamento}</strong>. Esto es una alerta de IA de apoyo, no un
+            diagnóstico automático: la decisión final es suya.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <div className="space-y-2 max-h-[40vh] overflow-y-auto">
+          {alertas.map((a, i) => (
+            <div
+              key={i}
+              className={`rounded-md border p-2 text-sm ${
+                a.riesgo === 'alta'
+                  ? 'border-red-200 bg-red-50 text-red-800 dark:bg-red-950/30'
+                  : 'border-amber-200 bg-amber-50 text-amber-800 dark:bg-amber-950/30'
+              }`}
+            >
+              <div className="font-medium">
+                {a.tipo === 'alergia' ? 'Alergia' : 'Interacción'} {a.con ? `· ${a.con}` : ''}
+              </div>
+              <div className="text-xs mt-0.5">{a.mensaje}</div>
+            </div>
+          ))}
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              setAlertaDialogOpen(false);
+              setLoading(true);
+              setTimeout(() => doSubmit(true), 300);
+            }}
+          >
+            Aceptar y continuar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+</AlertDialogContent>
+        </AlertDialog>
+      </>
+    );
+  }

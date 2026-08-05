@@ -80,7 +80,10 @@ export type FeatureId =
   | 'impersonation-hardening'
   | 'incidentes-ops'
   | 'crear-clinica'
-  | 'dominio-custom';
+  | 'dominio-custom'
+  | 'cie10-sugerido'
+  | 'resumen-longitudinal'
+  | 'alertas-interacciones';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -154,6 +157,9 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'impersonation-hardening': 'enterprise',
   'incidentes-ops': 'enterprise',
   'crear-clinica': 'enterprise',
+  'cie10-sugerido': 'professional',
+  'resumen-longitudinal': 'starter',
+  'alertas-interacciones': 'professional',
 };
 
 // ============================================================

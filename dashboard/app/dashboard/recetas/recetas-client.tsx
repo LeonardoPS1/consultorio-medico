@@ -145,6 +145,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
     dosis: string;
     duracion: string;
     indicaciones: string;
+    confirmadoAlerta?: boolean;
   }) => {
     try {
       const res = await fetch('/api/recetas', {
@@ -156,6 +157,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
           dosis: data.dosis,
           duracion: data.duracion,
           indicaciones: data.indicaciones,
+          confirmadoAlerta: data.confirmadoAlerta ?? false,
         }),
       });
 

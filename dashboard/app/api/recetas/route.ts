@@ -8,6 +8,7 @@ import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
 import { db } from '@/lib/db';
 import { recetasService } from '@/lib/services/recetas';
 import { parseBody, parseQuery, createRecetaSchema } from '@/lib/validations';
+import { logAudit } from '@/lib/audit-log';
 
 const recetasQuerySchema = z.object({
   estado: z.enum(['activa', 'vencida', 'historial']).optional(),
@@ -38,6 +39,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
 const recetaBodySchema = createRecetaSchema.extend({
   presentacion: z.string().optional().nullable(),
   cantidadTotal: z.string().optional().nullable(),
+  confirmadoAlerta: z.boolean().optional().default(false),
 });
 
 export const POST = apiHandler(async (request: NextRequest) => {
@@ -94,6 +96,24 @@ export const POST = apiHandler(async (request: NextRequest) => {
     cantidadTotal,
     medicoId: medicoFinal,
   });
+
+  // T3: trazabilidad clínica cuando el médico confirma pese a alerta activa
+  if (body.confirmadoAlerta) {
+    const session = await auth();
+    try {
+      await logAudit({
+        accion: 'alerta_receta_confirmada',
+        entidad: 'receta',
+        entidadId: nueva.id,
+        detalle: `Receta "${medicamento}" creada pese a alerta clínica (alergia/interacción) confirmada explícitamente por el médico para el paciente ${pacienteId}`,
+        usuarioId: session?.user?.id,
+        usuarioEmail: session?.user?.email ?? undefined,
+        usuarioNombre: session?.user?.name ?? undefined,
+      });
+    } catch {
+      // el audit no debe romper la creación
+    }
+  }
 
   revalidate([CACHE_TAGS.RECETAS, CACHE_TAGS.DASHBOARD_STATS]);
   return created(nueva);

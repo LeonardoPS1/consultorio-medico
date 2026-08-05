@@ -36,7 +36,8 @@ export type AccionAudit =
   | 'edit'
   | 'delete'
   | 'export'
-  | 'config';
+  | 'config'
+  | 'alerta_receta_confirmada';
 export type EntidadAudit =
   | 'paciente'
   | 'turno'

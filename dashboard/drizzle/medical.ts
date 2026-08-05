@@ -85,6 +85,7 @@ export const notasSoap = pgTable(
     plan: text('plan'),
     cie10Codigo: varchar('cie10_codigo', { length: 10 }),
     cie10Descripcion: text('cie10_descripcion'),
+    cie10Sugerido: jsonb('cie10_sugerido'),
     derivarA: varchar('derivar_a', { length: 255 }),
     requiereControl: boolean('requiere_control').default(false),
     controlEnDias: integer('control_en_dias'),
@@ -101,6 +102,23 @@ export const notasSoap = pgTable(
     idxNotasSoapMedicoId: index('idx_notas_soap_medico_id').on(table.medicoId),
     idxNotasSoapTurnoId: index('idx_notas_soap_turno_id').on(table.turnoId),
     idxNotasSoapEstadoRevision: index('idx_notas_soap_estado_revision').on(table.estadoRevision),
+  }),
+);
+
+// ============================================================
+// RESÚMENES LONGITUDINALES (IA)
+// ============================================================
+export const resumenesPaciente = pgTable(
+  'resumenes_paciente',
+  {
+    pacienteId: uuid('paciente_id')
+      .primaryKey()
+      .references(() => pacientes.id, { onDelete: 'cascade' }),
+    contenido: text('contenido').notNull(),
+    generadoEn: timestamp('generado_en', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    idxResumenPacienteId: index('idx_resumenes_paciente_paciente_id').on(table.pacienteId),
   }),
 );
 

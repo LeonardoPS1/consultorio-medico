@@ -32,9 +32,10 @@ import {
   Ban,
   FileSignature,
   Upload,
+  Sparkles,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { EditarPacienteModal } from '@/components/modals/editar-paciente-modal';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
 import { DocumentosPaciente } from '@/components/pacientes/documentos-paciente-tab';
@@ -152,6 +153,7 @@ interface NotaSoapRow {
   plan: string | null;
   cie10Codigo: string | null;
   cie10Descripcion: string | null;
+  cie10Sugerido?: Array<{ codigo: string; descripcion: string }> | null;
   derivarA: string | null;
   requiereControl: boolean;
   controlEnDias: number | null;
@@ -264,6 +266,9 @@ export function PacienteDetalleClient({
   const [editSoapDialog, setEditSoapDialog] = useState<NotaSoapRow | null>(null);
   const [deleteSoapId, setDeleteSoapId] = useState<string | null>(null);
   const [savingSoap, setSavingSoap] = useState(false);
+  const [resumen, setResumen] = useState<{ contenido: string; generadoEn: string | null } | null>(null);
+  const [resumenLoading, setResumenLoading] = useState(false);
+  const [resumenLoaded, setResumenLoaded] = useState(false);
   const [soapForm, setSoapForm] = useState({
     subjetivo: '',
     objetivo: '',
@@ -426,6 +431,46 @@ export function PacienteDetalleClient({
       setDeleteSoapId(null);
     } catch {
       toast({ title: 'Error', description: 'No se pudo eliminar', variant: 'destructive' });
+    }
+  };
+
+  const cargarResumen = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/pacientes/${paciente.id}/resumen`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.contenido) {
+        setResumen({ contenido: data.contenido, generadoEn: data.generadoEn || null });
+        setResumenLoaded(true);
+      }
+    } catch {
+      // silencioso — no bloquea
+    }
+  }, [paciente.id]);
+
+  useEffect(() => {
+    if (notasSoapList.length >= 2 && !resumenLoaded) {
+      void cargarResumen();
+    }
+  }, [notasSoapList.length, resumenLoaded, cargarResumen]);
+
+  const handleGenerarResumen = async () => {
+    setResumenLoading(true);
+    try {
+      const res = await fetch(`/api/pacientes/${paciente.id}/resumen`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'error');
+      setResumen({ contenido: data.contenido, generadoEn: data.generadoEn || null });
+      setResumenLoaded(true);
+      toast({ title: 'Resumen generado' });
+    } catch {
+      toast({
+        title: 'No se pudo generar el resumen',
+        description: 'Asistente de IA no disponible. Intente nuevamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setResumenLoading(false);
     }
   };
 
@@ -1682,6 +1727,40 @@ export function PacienteDetalleClient({
             )}
           </div>
 
+          {/* Resumen longitudinal generado por IA (T2) */}
+          {notasSoapList.length >= 2 && (
+            <Card className="mb-3 border-primary/30 bg-gradient-to-br from-blue-50/60 to-purple-50/40 dark:from-blue-950/20 dark:to-purple-950/20">
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold">
+                    <Sparkles className="h-3.5 w-3.5 text-purple-500" />
+                    Resumen longitudinal del paciente
+                    {resumen && (
+                      <span className="text-[10px] font-normal text-muted-foreground">
+                        · Generado el {resumen.generadoEn ? new Date(resumen.generadoEn).toLocaleDateString('es-CL') : ''}
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerarResumen}
+                    disabled={resumenLoading}
+                  >
+                    <RefreshCw className={`h-3 w-3 mr-1 ${resumenLoading ? 'animate-spin' : ''}`} />
+                    {resumen ? 'Regenerar resumen' : 'Generar resumen'}
+                  </Button>
+                </div>
+                <p
+                  className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line"
+                  title="Resumen generado por IA a partir de las últimas consultas. No reemplaza la evaluación clínica del médico."
+                >
+                  {resumen?.contenido ?? 'El resumen se genera con IA a partir de las últimas notas SOAP, recetas vigentes y alergias registradas.'}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Form nueva nota SOAP */}
           {showNewSoap && (
             <Card className="border-dashed border-primary/40 mb-3">
@@ -1953,6 +2032,17 @@ export function PacienteDetalleClient({
                           {n.cie10Codigo}
                           {n.cie10Descripcion && ` — ${n.cie10Descripcion}`}
                         </Badge>
+                      )}
+                      {n.cie10Sugerido && n.cie10Sugerido.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setEditSoapDialog(n)}
+                          className="inline-flex items-center gap-1 rounded-full border border-dashed border-blue-300 bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700 hover:bg-blue-100 cursor-pointer"
+                          title="Sugerencia de IA — el diagnóstico final es responsabilidad del médico. Clic para editar la nota."
+                        >
+                          <Sparkles className="h-2.5 w-2.5" />
+                          IA sugiere: {n.cie10Sugerido.map((s) => s.codigo).join(', ')}
+                        </button>
                       )}
                       {n.derivarA && (
                         <Badge variant="secondary" className="text-[10px]">
@@ -2325,6 +2415,38 @@ export function PacienteDetalleClient({
                     onChange={(v) => setEditSoapDialog({ ...editSoapDialog, cie10Codigo: v })}
                     placeholder="Buscar CIE-10..."
                   />
+                  {editSoapDialog.cie10Sugerido && editSoapDialog.cie10Sugerido.length > 0 && (
+                    <div className="pt-1">
+                      <div
+                        className="flex items-center gap-1 text-[10px] text-muted-foreground"
+                        title="Sugerencia de IA — el diagnóstico final es responsabilidad del médico"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        Sugerido por IA (hacé clic para usar):
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {editSoapDialog.cie10Sugerido.map((s) => (
+                          <button
+                            key={s.codigo}
+                            type="button"
+                            onClick={() =>
+                              setEditSoapDialog({
+                                ...editSoapDialog,
+                                cie10Codigo: s.codigo,
+                                cie10Descripcion: s.descripcion,
+                              })
+                            }
+                            className="inline-flex items-center gap-1 rounded-full border border-dashed border-blue-300 bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700 hover:bg-blue-100 cursor-pointer"
+                            title="Sugerencia de IA — el diagnóstico final es responsabilidad del médico"
+                          >
+                            <Sparkles className="h-2.5 w-2.5" />
+                            {s.codigo}
+                            {s.descripcion ? ` — ${s.descripcion}` : ''}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Descripción</Label>
