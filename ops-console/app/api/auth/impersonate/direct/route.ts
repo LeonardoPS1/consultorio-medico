@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
 import { logAudit } from '@/lib/audit'
 import { validateMotivo } from '@/lib/validation'
+import { dashboardFetch } from '@/lib/dashboard-fetch'
 
 const DASHBOARD_URL = process.env.DASHBOARD_URL || 'https://med.aicorebots.com'
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY
@@ -59,7 +60,13 @@ export async function POST(request: Request) {
     }
 
     // Llamar al dashboard para crear el token directo (sin email de aprobación)
-    const response = await fetch(`${DASHBOARD_URL}/api/internal/impersonate/direct`, {
+    const res = await dashboardFetch<{
+      error?: string
+      adminEmail?: string
+      adminNombre?: string
+      impersonateLink?: string
+      expiresAt?: string
+    }>(`${DASHBOARD_URL}/api/internal/impersonate/direct`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -73,9 +80,7 @@ export async function POST(request: Request) {
       }),
     })
 
-    const data = await response.json()
-
-    if (!response.ok) {
+    if (!res.ok || !res.data) {
       await logAudit({
         operatorId: session.sub,
         operatorEmail: session.email,
@@ -83,10 +88,15 @@ export async function POST(request: Request) {
         tenantAfectado: tenantId,
         recurso: undefined,
         motivo: motivo.trim(),
-        detalles: { error: data.error || 'Error desconocido', viaDirecta: true },
+        detalles: { error: res.error || 'Error desconocido', viaDirecta: true },
       })
-      return NextResponse.json({ error: data.error || 'Error al crear token de impersonación directa' }, { status: response.status })
+      return NextResponse.json(
+        { error: res.error || 'Error al crear token de impersonación directa' },
+        { status: res.status || 500 },
+      )
     }
+
+    const data = res.data
 
     await logAudit({
       operatorId: session.sub,

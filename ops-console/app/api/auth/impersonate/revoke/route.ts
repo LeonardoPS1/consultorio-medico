@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
 import { logAudit } from '@/lib/audit'
 import { validateMotivo } from '@/lib/validation'
+import { dashboardFetch } from '@/lib/dashboard-fetch'
 
 const DASHBOARD_URL = process.env.DASHBOARD_URL || 'https://med.aicorebots.com'
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY
@@ -59,7 +60,10 @@ export async function POST(request: Request) {
     }
 
     // Llamar al dashboard para revocar las sesiones activas del tenant
-    const response = await fetch(`${DASHBOARD_URL}/api/internal/impersonate/revoke`, {
+    const res = await dashboardFetch<{
+      error?: string
+      revocadas?: number
+    }>(`${DASHBOARD_URL}/api/internal/impersonate/revoke`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -68,9 +72,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({ tenantId }),
     })
 
-    const data = await response.json()
-
-    if (!response.ok) {
+    if (!res.ok || !res.data) {
       await logAudit({
         operatorId: session.sub,
         operatorEmail: session.email,
@@ -78,10 +80,15 @@ export async function POST(request: Request) {
         tenantAfectado: tenantId,
         recurso: undefined,
         motivo: motivo.trim(),
-        detalles: { error: data.error || 'Error desconocido' },
+        detalles: { error: res.error || 'Error desconocido' },
       })
-      return NextResponse.json({ error: data.error || 'Error al revocar sesiones' }, { status: response.status })
+      return NextResponse.json(
+        { error: res.error || 'Error al revocar sesiones' },
+        { status: res.status || 500 },
+      )
     }
+
+    const data = res.data
 
     await logAudit({
       operatorId: session.sub,
