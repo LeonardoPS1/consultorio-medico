@@ -7,7 +7,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { getOnboardingState } from '@/lib/onboarding';
 import { OnboardingClient } from './onboarding-client';
 import type { OnboardingState } from '@/lib/onboarding-types';
@@ -20,7 +20,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
   const isForceRestart = searchParams?.reiniciar === 'true';
   const verProgreso = searchParams?.['ver-progreso'] === 'true';
 
-  const session = await auth();
+  const session = await getEffectiveSession();
   let state: OnboardingState | null = null;
 
   try {

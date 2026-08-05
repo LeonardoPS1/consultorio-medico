@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { redirect } from 'next/navigation';
 import { canAccess } from '@/lib/features';
 import { ComplianceClient } from './compliance-client';
@@ -45,7 +45,7 @@ async function fetchArcData(): Promise<{ solicitudes: SolicitudARCO[]; paginacio
 }
 
 export default async function CompliancePage() {
-  const session = await auth();
+  const session = await getEffectiveSession();
   if (!session) redirect('/login');
 
   const plan = session.user?.plan ?? 'free';

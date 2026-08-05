@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { getDashboardStats } from '@/lib/services/dashboard-stats';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -74,7 +74,7 @@ export const dynamic = 'force-dynamic';
 
 async function getDashboardData(sucursalId?: string): Promise<DashboardData | null> {
   try {
-    const session = await auth();
+    const session = await getEffectiveSession();
     const isMedico = session?.user?.role === 'medico' && !!session?.user?.medicoId;
     return getDashboardStats({
       medicoId: session?.user?.medicoId ?? undefined,

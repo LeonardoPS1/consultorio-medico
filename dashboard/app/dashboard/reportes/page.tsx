@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { redirect } from 'next/navigation';
 import { canAccess } from '@/lib/features';
 import { ReportesClient } from './reportes-client';
@@ -21,7 +21,7 @@ async function fetchReportes(periodo: Periodo): Promise<ReporteApiResponse | nul
 }
 
 export default async function ReportesPage() {
-  const session = await auth();
+  const session = await getEffectiveSession();
   if (!session) redirect('/login');
 
   const plan = session.user?.plan ?? 'free';

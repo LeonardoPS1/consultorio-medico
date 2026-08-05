@@ -7,7 +7,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { canAccess } from '@/lib/features';
 import { derivacionesService } from '@/lib/services/derivaciones';
 import { DerivacionesClient } from './derivaciones-client';
@@ -59,7 +59,7 @@ async function getInitialData(): Promise<{
   canView: boolean;
 }> {
   try {
-    const session = await auth();
+    const session = await getEffectiveSession();
     const userPlan = session?.user?.plan ?? 'free';
     const isAdmin = session?.user?.role === 'admin';
     const view = isAdmin || canAccess(userPlan, 'derivaciones');

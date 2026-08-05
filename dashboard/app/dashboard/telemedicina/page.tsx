@@ -7,7 +7,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { turnosService } from '@/lib/services/turnos';
 import { TelemedicinaClient } from './telemedicina-client';
 
@@ -30,7 +30,7 @@ export interface TurnoVirtual {
 
 async function getVirtualTurnos(): Promise<TurnoVirtual[]> {
   try {
-    const session = await auth();
+    const session = await getEffectiveSession();
     const medicoIdFilter = session?.user?.role === 'medico' ? session?.user?.medicoId : undefined;
 
     const result = await turnosService.list(

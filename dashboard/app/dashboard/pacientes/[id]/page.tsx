@@ -12,7 +12,7 @@ import {
 } from '@/drizzle/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { withTenantScope } from '@/lib/rls';
 
 // ─── Types ────────────────────────────────────────────────
@@ -95,7 +95,7 @@ export const dynamic = 'force-dynamic';
 
 async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
   try {
-    const session = await auth();
+    const session = await getEffectiveSession();
     if (!session?.user?.id) return null;
 
     await withTenantScope();

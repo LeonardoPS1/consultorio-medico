@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { redirect } from 'next/navigation';
 import { blacklistService } from '@/lib/services/blacklist';
 import { canAccess } from '@/lib/features';
@@ -7,7 +7,7 @@ import { BlacklistClient } from './blacklist-client';
 export const dynamic = 'force-dynamic';
 
 export default async function BlacklistPage() {
-  const session = await auth();
+  const session = await getEffectiveSession();
   if (!session) redirect('/login');
 
   const plan = session.user?.plan ?? 'free';

@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { tenants } from '@/drizzle/schema';
@@ -8,7 +8,7 @@ import { TenantsClient } from './tenants-client';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminTenantsPage() {
-  const session = await auth();
+  const session = await getEffectiveSession();
   if (!session || session.user.role !== 'admin') redirect('/dashboard');
 
   const rows = await db

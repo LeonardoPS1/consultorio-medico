@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { conversaciones, pacientes } from '@/drizzle/schema';
@@ -8,7 +8,7 @@ import { ConversacionesClient } from './conversaciones-client';
 export const dynamic = 'force-dynamic';
 
 export default async function ConversacionesPage() {
-  const session = await auth();
+  const session = await getEffectiveSession();
   if (!session) redirect('/login');
 
   const rows = await db

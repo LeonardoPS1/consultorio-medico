@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { canAccess } from '@/lib/features';
 import { IntegracionesClient } from './integraciones-client';
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
  *
  */
 export default async function IntegracionesPage() {
-  const session = await auth();
+  const session = await getEffectiveSession();
   if (!session) redirect('/login');
 
   const plan = session.user?.plan ?? 'free';

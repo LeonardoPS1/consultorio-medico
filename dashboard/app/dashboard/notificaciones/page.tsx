@@ -7,7 +7,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { notificacionesService } from '@/lib/services/notificaciones';
 import { NotificacionesClient } from './notificaciones-client';
 
@@ -28,7 +28,7 @@ async function getNotificaciones(): Promise<{
   noLeidas: number;
 }> {
   try {
-    const session = await auth();
+    const session = await getEffectiveSession();
     if (!session?.user?.id) {
       return { notificaciones: [], total: 0, noLeidas: 0 };
     }

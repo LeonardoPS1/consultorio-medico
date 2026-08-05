@@ -7,7 +7,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { db } from '@/lib/db';
 import { pacientes, solicitudesDatos } from '@/drizzle/schema';
 import { and, desc, eq, isNull } from 'drizzle-orm';
@@ -35,7 +35,7 @@ async function getInitialData(): Promise<{
   canView: boolean;
 }> {
   try {
-    const session = await auth();
+    const session = await getEffectiveSession();
     const role = session?.user?.role;
     const view = role === 'admin' || role === 'medico' || role === 'secretaria' || role === 'recepcionista';
 

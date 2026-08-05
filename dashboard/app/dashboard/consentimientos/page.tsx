@@ -7,7 +7,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { canAccess } from '@/lib/features';
 import { consentimientosService } from '@/lib/services/consentimientos';
 import { ConsentimientosClient } from './consentimientos-client';
@@ -46,7 +46,7 @@ async function getInitialData(): Promise<{
   canView: boolean;
 }> {
   try {
-    const session = await auth();
+    const session = await getEffectiveSession();
     const userPlan = session?.user?.plan ?? 'free';
     const isAdmin = session?.user?.role === 'admin';
     const view = isAdmin || canAccess(userPlan, 'consentimiento-informado');
