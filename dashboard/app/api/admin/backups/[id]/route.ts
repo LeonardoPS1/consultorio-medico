@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import fs from 'fs';
 import path from 'path';
 
@@ -27,7 +27,7 @@ function findBackupFile(id: string): string | null {
 export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
   try {
-    const session = await auth();
+    const session = await getEffectiveSession();
     if (!session?.user?.id || session?.user?.role !== 'admin') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
@@ -60,7 +60,7 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
 export async function DELETE(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
   try {
-    const session = await auth();
+    const session = await getEffectiveSession();
     if (!session?.user?.id || session?.user?.role !== 'admin') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }

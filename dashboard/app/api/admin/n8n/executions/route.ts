@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { fetchExecutions } from '@/lib/services/n8n-monitor';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
+  const session = await getEffectiveSession();
   if (!session?.user || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }

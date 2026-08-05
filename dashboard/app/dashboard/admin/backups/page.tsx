@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 import { redirect } from 'next/navigation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -36,7 +36,7 @@ function formatSize(bytes: number): string {
 }
 
 export default function AdminBackupsPage() {
-  const { data: session } = useSession();
+  const { data: session } = useEffectiveSession();
 
   if (session?.user?.role !== 'admin') {
     redirect('/dashboard');

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { db } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 
@@ -22,7 +22,7 @@ async function ensureDir() {
 
 export async function GET() {
   try {
-    const session = await auth();
+    const session = await getEffectiveSession();
     if (!session?.user?.id || session?.user?.role !== 'admin') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
@@ -69,7 +69,7 @@ export async function GET() {
 
 export async function POST() {
   try {
-    const session = await auth();
+    const session = await getEffectiveSession();
     if (!session?.user?.id || session?.user?.role !== 'admin') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }

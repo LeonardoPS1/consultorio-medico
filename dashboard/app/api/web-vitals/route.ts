@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { webVitalsMetrics } from '@/drizzle/schema';
 import { apiHandler, success, fail } from '@/lib/api-handler';
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { and, gte, desc, sql, count, avg, min, max, lte, lt, like, not, isNull, or } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
@@ -70,7 +70,7 @@ const METRIC_LABELS: Record<string, string> = {
 // ─── GET ───────────────────────────────────────────────────
 
 export const GET = apiHandler(async (request: NextRequest) => {
-  const session = await auth();
+  const session = await getEffectiveSession();
   if (!session || session.user.role !== 'admin') {
     fail('No autorizado', 403);
   }
@@ -364,7 +364,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
   let medicoId: string | undefined;
   try {
-    const session = await auth();
+    const session = await getEffectiveSession();
     medicoId = session?.user?.medicoId ?? undefined;
   } catch { }
 
