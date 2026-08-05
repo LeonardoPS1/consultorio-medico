@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -27,6 +27,7 @@ import { useLayoutConfig } from '@/lib/layout-config';
 import { useOrganization } from '@/lib/hooks/use-organization';
 import { useSound } from '@/components/sound-provider';
 import { useAsistenteIA } from '@/lib/hooks/use-asistente-ia';
+import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +42,7 @@ import {
 // ============================================================
 
 export function Header() {
-  const { data: session } = useSession();
+  const { data: session } = useEffectiveSession();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { sucursalId: activeSucursalId, sucursales, setSucursalId, hasMultiple } = useSucursal();

@@ -37,12 +37,12 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { Session } from 'next-auth';
 import { N8nStatusIndicator } from '@/components/layout/n8n-status-indicator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFeatureFlags } from '@/lib/feature-flags-context';
 import type { FeatureId } from '@/lib/features';
 import { canAccess, getFeatureRequiredPlan } from '@/lib/features';
+import type { EffectiveSession } from '@/lib/hooks/use-effective-session';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -302,7 +302,7 @@ interface SidebarNavProps {
   collapsed: boolean;
   closeMobile: () => void;
   status: 'loading' | 'authenticated' | 'unauthenticated';
-  session: Session | null;
+  session: EffectiveSession | null;
   onboardingPending: boolean;
 }
 

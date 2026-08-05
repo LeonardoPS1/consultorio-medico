@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { canAccess } from '@/lib/features';
-import { useSession } from 'next-auth/react';
+import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -66,7 +66,7 @@ interface Props {
 }
 
 export function BlacklistClient({ initialData, initialTotal, initialStats }: Props) {
-  const { data: session } = useSession();
+  const { data: session } = useEffectiveSession();
   const userPlan = session?.user?.plan ?? 'free';
   const canView = canAccess(userPlan, 'blacklist');
 

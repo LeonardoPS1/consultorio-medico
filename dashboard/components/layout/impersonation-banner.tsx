@@ -1,20 +1,15 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
 import { ShieldAlert, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 
 export function ImpersonationBanner() {
-  const { data: session } = useSession();
+  const { data: session } = useEffectiveSession();
 
-  // Intentar detectar impersonación desde session o desde atributo HTML
-  const isImpersonating = session?.user?.impersonating ||
-    (typeof document !== 'undefined' &&
-      document.documentElement.getAttribute('data-impersonating') === 'true');
+  const isImpersonating = session?.user?.impersonating === true;
 
-  const impersonatedBy = session?.user?.impersonatedBy ||
-    (typeof document !== 'undefined' &&
-      document.documentElement.getAttribute('data-impersonated-by') || '');
+  const impersonatedBy = session?.user?.impersonatedBy || '';
 
   if (!isImpersonating) return null;
 

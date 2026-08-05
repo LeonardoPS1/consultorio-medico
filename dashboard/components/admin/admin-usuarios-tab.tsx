@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +36,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { FEATURE_PLAN, getFeatureRequiredPlan } from '@/lib/features';
+import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 
 interface Usuario {
   id: string;
@@ -80,7 +80,7 @@ function RolBadge({ rol }: { rol: string }) {
 }
 
 export default function AdminUsuariosTab() {
-  const { data: session } = useSession();
+  const { data: session } = useEffectiveSession();
   const sessionUserId = session?.user?.id;
   const [users, setUsers] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);

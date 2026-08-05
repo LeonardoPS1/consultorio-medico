@@ -1,10 +1,10 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 import { useUserOverrides } from '@/lib/feature-flags-context';
 import { canAccess, type FeatureId } from '@/lib/features';
+import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 
 /**
  * Mapa de rutas del dashboard a features requeridas.
@@ -54,7 +54,7 @@ function getRequiredFeature(pathname: string): FeatureId | null {
 export function GatedContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status } = useEffectiveSession();
   const { overrides: userOverrides } = useUserOverrides();
 
   // Derivar blocked SIEMPRE, incluso durante loading (evita que el # de hooks cambie)

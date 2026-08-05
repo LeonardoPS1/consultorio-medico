@@ -21,11 +21,11 @@ import {
   useEffect,
   type ReactNode,
 } from 'react';
-import { useSession } from 'next-auth/react';
-import { usePathname } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { usePathname } from 'next/navigation';
 import { canAccess } from '@/lib/features';
 import type { ModoAsistente, Sugerencia, MensajeChat, AlertaProactiva } from '@/lib/ia/asistente-prompts';
+import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 
 // ============================================================
 // Tipos
@@ -116,7 +116,7 @@ const AsistenteContext = createContext<AsistenteContextType | null>(null);
 // ============================================================
 
 export function AsistenteProvider({ children }: { children: ReactNode }) {
-  const { data: session } = useSession();
+  const { data: session } = useEffectiveSession();
   const pathname = usePathname();
   const queryClient = useQueryClient();
 

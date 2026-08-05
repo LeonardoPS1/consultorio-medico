@@ -18,6 +18,7 @@ import { auth } from '@/lib/auth';
 import { getImpersonationSession } from '@/lib/auth-impersonation';
 import { redirect } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ImpersonationProvider } from '@/components/impersonation-provider';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [session, impSession] = await Promise.all([
@@ -30,43 +31,45 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <ClientThemeProvider>
-      <SidebarProvider>
-      <LayoutConfigProvider>
-      <PatientPanelProvider>
-        <AsistenteProvider>
-        <DashboardLayoutClient>
-        <div
-          className="flex h-screen overflow-hidden bg-background"
-          {...(impSession ? {
-            'data-impersonating': 'true',
-            'data-impersonated-by': impSession.impersonatedBy,
-            'data-impersonated-user': impSession.name,
-          } : {})}
-        >
-          <div className="ambient-bg" />
-          <Sidebar />
-          <div className="flex flex-1 flex-col overflow-hidden relative z-[1]">
-            <ImpersonationBanner />
-            <Header />
-            <CommandPalette />
-            <PatientPanel />
-            <MainContent>
-              <Suspense fallback={<MainSkeleton />}>
-                <PageTransition>
-                  <GatedContent>{children}</GatedContent>
-                </PageTransition>
-              </Suspense>
-            </MainContent>
+    <ImpersonationProvider session={impSession}>
+      <ClientThemeProvider>
+        <SidebarProvider>
+        <LayoutConfigProvider>
+        <PatientPanelProvider>
+          <AsistenteProvider>
+          <DashboardLayoutClient>
+          <div
+            className="flex h-screen overflow-hidden bg-background"
+            {...(impSession ? {
+              'data-impersonating': 'true',
+              'data-impersonated-by': impSession.impersonatedBy,
+              'data-impersonated-user': impSession.name,
+            } : {})}
+          >
+            <div className="ambient-bg" />
+            <Sidebar />
+            <div className="flex flex-1 flex-col overflow-hidden relative z-[1]">
+              <ImpersonationBanner />
+              <Header />
+              <CommandPalette />
+              <PatientPanel />
+              <MainContent>
+                <Suspense fallback={<MainSkeleton />}>
+                  <PageTransition>
+                    <GatedContent>{children}</GatedContent>
+                  </PageTransition>
+                </Suspense>
+              </MainContent>
+            </div>
           </div>
-        </div>
-        <AsistenteFlotante />
-        </DashboardLayoutClient>
-        </AsistenteProvider>
-      </PatientPanelProvider>
-      </LayoutConfigProvider>
-      </SidebarProvider>
-    </ClientThemeProvider>
+          <AsistenteFlotante />
+          </DashboardLayoutClient>
+          </AsistenteProvider>
+        </PatientPanelProvider>
+        </LayoutConfigProvider>
+        </SidebarProvider>
+      </ClientThemeProvider>
+    </ImpersonationProvider>
   );
 }
 

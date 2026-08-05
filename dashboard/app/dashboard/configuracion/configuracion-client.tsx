@@ -3,8 +3,8 @@
 import { Bot, CreditCard, Globe, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 import { ConfigEquipo } from '@/components/config/config-equipo';
 import { ConfigHorarios } from '@/components/config/config-horarios';
 import { ConfigNotificaciones } from '@/components/config/config-notificaciones';
@@ -107,7 +107,7 @@ export function ConfiguracionClient() {
 
 function ConfigContent() {
   const searchParams = useSearchParams();
-  const { data: session } = useSession();
+  const { data: session } = useEffectiveSession();
   const userPlan = session?.user?.plan ?? 'free';
   const tabFromUrl = searchParams?.get('tab') || 'perfil';
   const [plantillas, setPlantillas] = useState<PlantillaWhatsApp[]>([]);

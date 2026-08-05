@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { canAccess, type FeatureId } from '@/lib/features';
 import { useFeatureFlags } from '@/lib/feature-flags-context';
 import {
@@ -23,6 +22,7 @@ import {
 } from '@/components/ui/command';
 import { Skeleton } from '@/components/ui/skeleton';
 import { isMac } from '@/lib/utils';
+import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 
 // ============================================================
 // Command Palette Component
@@ -32,7 +32,7 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session } = useEffectiveSession();
   const { isFeatureEnabled } = useFeatureFlags();
   const { results: searchResults, isLoading: searchLoading, search } = useCommandSearch();
 
