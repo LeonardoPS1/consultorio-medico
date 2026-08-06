@@ -46,7 +46,18 @@ export async function dashboardFetch<T = Record<string, unknown>>(
     }
   }
 
-  const text = await raw.text()
+  let text: string
+  try {
+    text = await raw.text()
+  } catch (cause) {
+    const detalle = cause instanceof Error ? cause.message : String(cause)
+    return {
+      ok: false,
+      status: raw.status,
+      data: null,
+      error: `No se pudo leer la respuesta del dashboard (status ${raw.status}): ${detalle}`,
+    }
+  }
 
   if (!text) {
     return { ok: raw.ok, status: raw.status, data: null }
@@ -62,9 +73,9 @@ export async function dashboardFetch<T = Record<string, unknown>>(
     }
   }
 
+  let data: T | null
   try {
-    const data = JSON.parse(text) as T
-    return { ok: raw.ok, status: raw.status, data }
+    data = JSON.parse(text) as T
   } catch {
     return {
       ok: false,
@@ -72,5 +83,13 @@ export async function dashboardFetch<T = Record<string, unknown>>(
       data: null,
       error: `El dashboard devolvió una respuesta inválida (status ${raw.status}).`,
     }
+  }
+
+  const ingestError = (data as { error?: string } | null)?.error
+  return {
+    ok: raw.ok,
+    status: raw.status,
+    data,
+    error: ingestError ?? undefined,
   }
 }

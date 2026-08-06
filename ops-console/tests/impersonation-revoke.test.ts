@@ -151,7 +151,7 @@ describe('Impersonate Revoke endpoint', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
-        json: vi.fn().mockResolvedValue({ ok: true, revocadas: 2 }),
+        text: vi.fn().mockResolvedValue(JSON.stringify({ ok: true, revocadas: 2 })),
       })
 
       const { POST } = await import('@/app/api/auth/impersonate/revoke/route')
@@ -189,7 +189,7 @@ describe('Impersonate Revoke endpoint', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
-        json: vi.fn().mockResolvedValue({ ok: true, revocadas: 0 }),
+        text: vi.fn().mockResolvedValue(JSON.stringify({ ok: true, revocadas: 0 })),
       })
 
       const { POST } = await import('@/app/api/auth/impersonate/revoke/route')
@@ -213,7 +213,7 @@ describe('Impersonate Revoke endpoint', () => {
       mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
-        json: vi.fn().mockResolvedValue({ error: 'Error interno' }),
+        text: vi.fn().mockResolvedValue(JSON.stringify({ error: 'Error interno' })),
       })
 
       const { POST } = await import('@/app/api/auth/impersonate/revoke/route')

@@ -299,18 +299,17 @@ className={`h-full rounded-full transition-[width] ${
               </>
             )}
           </div>
-{isAdmin && (
-             <Button
-               size="sm"
-               onClick={() => {
-                 console.log('[IntegracionesDashboard] Click: Ir a Credenciales, navigating...');
-                 router.push('/dashboard/admin/sistema?tab=credenciales');
-               }}
-             >
-               <Key className="h-4 w-4 mr-1" />
-               Ir a Credenciales
-             </Button>
-           )}
+          {isAdmin && (
+            <Button
+              size="sm"
+              onClick={() => {
+                router.push('/dashboard/admin/sistema?tab=credenciales');
+              }}
+            >
+              <Key className="h-4 w-4 mr-1" />
+              Ir a Credenciales
+            </Button>
+          )}
         </CardContent>
       </Card>
 
