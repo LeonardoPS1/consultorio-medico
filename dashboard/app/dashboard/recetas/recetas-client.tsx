@@ -16,7 +16,7 @@ import {
   X,
   Loader2,
 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { PageAnimation } from '@/components/dashboard/page-animation';
 import { NuevaRecetaModal } from '@/components/modals/nueva-receta-modal';
 import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
@@ -105,6 +105,15 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
       setFilterLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (initialRecetas.length === 0) {
+      const t = window.setTimeout(() => {
+        void cargarRecetas();
+      }, 0);
+      return () => window.clearTimeout(t);
+    }
+  }, [initialRecetas.length, cargarRecetas]);
 
   const handlePacienteChange = useCallback(
     (pacienteId: string, pacienteNombre: string) => {
