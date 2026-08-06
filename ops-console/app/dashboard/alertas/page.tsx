@@ -134,7 +134,7 @@ export default function AlertasPage() {
     try {
       const res = await fetch('/api/alertas/config', { cache: 'no-store' })
       const json = await res.json()
-      if (json?.success) setConfigs(json.data)
+      if (json?.success) setConfigs(Array.isArray(json.data) ? json.data : [])
       else setError(json?.error || 'Error al cargar configuraciones')
     } catch {
       setError('Error de conexión al cargar configuraciones')
@@ -146,7 +146,7 @@ export default function AlertasPage() {
     try {
       const res = await fetch('/api/alertas/history?limit=100', { cache: 'no-store' })
       const json = await res.json()
-      if (json?.success) setHistory(json.data)
+      if (json?.success) setHistory(Array.isArray(json.data) ? json.data : [])
     } catch {
       // History is optional
     } finally {
@@ -359,10 +359,10 @@ export default function AlertasPage() {
                         <span>Ventana: <span className="font-mono text-[var(--text-secondary)]">{config.threshold_window_minutes} min</span></span>
                         <span>Canales: </span>
                         <div className="flex items-center gap-1">
-                          {config.notification_channels.map(ch => (
+                          {(config.notification_channels ?? []).map(ch => (
                             <ChannelBadge key={ch} channel={ch} />
                           ))}
-                          {config.notification_channels.length === 0 && (
+                          {(config.notification_channels ?? []).length === 0 && (
                             <span className="text-[var(--text-muted)] italic">Sin canales</span>
                           )}
                         </div>
@@ -427,7 +427,7 @@ export default function AlertasPage() {
                         <span>Valor: <span className="font-mono text-[var(--text-secondary)]">{item.trigger_value}</span> / Umbral: <span className="font-mono text-[var(--text-secondary)]">{item.threshold_value}</span></span>
                         <span>Notificaciones: </span>
                         <div className="flex items-center gap-1">
-                          {item.notifications_sent.map((n, i) => (
+                          {(item.notifications_sent ?? []).map((n, i) => (
                             <span key={i} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
                               n.success
                                 ? 'bg-green-500/10 text-green-400 border border-green-500/20'
