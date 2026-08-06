@@ -13,7 +13,7 @@ WORKDIR /app
 ARG CACHEBUST=16
 RUN echo "Cache bust: $CACHEBUST"
 
-RUN corepack enable && corepack prepare pnpm@11.14.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.20.0 --activate
 
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     --mount=type=cache,target=/root/.npm \
@@ -49,7 +49,7 @@ ENV NODE_ENV=production
 ENV NEXT_PUBLIC_GIT_COMMIT=$GIT_COMMIT
 ENV NEXT_PUBLIC_BUILD_TIME=$BUILD_TIME
 
-RUN corepack enable && corepack prepare pnpm@11.14.0 --activate && pnpm build
+RUN corepack enable && corepack prepare pnpm@11.20.0 --activate && pnpm build
 
 # ─── Stage 3: Runner (producción) ────────────────────────────────────────────
 FROM node:22-alpine AS runner

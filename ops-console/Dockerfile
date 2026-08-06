@@ -14,7 +14,7 @@ RUN echo "Cache bust: $CACHEBUST"
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-RUN npm install -g pnpm@11.14.0
+RUN corepack enable && corepack prepare pnpm@11.20.0 --activate
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY ops-console/package.json ./ops-console/package.json
