@@ -2,7 +2,7 @@
 // Versión determinada por sw-version.js (auto-generado en cada build)
 // Estrategia: Cache first para assets con hash, Network first para API/navegación
 // Offline: fallback a página offline.html
-// __SW_BUILD__: v28553b59
+// __SW_BUILD__: v06515a9b
 
 importScripts('/sw-version.js');
 
@@ -132,7 +132,9 @@ async function cacheFirst(request) {
 
 async function networkFirst(request) {
   try {
-    const response = await fetch(request);
+    // cache: 'no-store' evita que el HTTP cache del navegador sirva
+    // respuestas GET stale (la causa de listas vacías al reingresar)
+    const response = await fetch(request, { cache: 'no-store' });
     if (response.ok && request.method === 'GET') {
       const cache = await caches.open(API_CACHE);
       const cacheKey = request.clone();
@@ -157,6 +159,14 @@ async function networkFirst(request) {
       }
     }
     return new Response('Sin conexión', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+  }
+}
+
+async function networkOnly(request) {
+  try {
+    return await fetch(request, { cache: 'no-store' });
+  } catch {
+    return new Response('', { status: 503 });
   }
 }
 
@@ -203,6 +213,14 @@ self.addEventListener('fetch', (event) => {
         // API calls → network first (con fallback)
         if (url.pathname.startsWith('/api/')) {
           return networkFirst(request);
+        }
+
+        // RSC payloads (navegación client-side) → siempre red, nunca cache.
+        // Contienen datos por sesión/tenant: servirlos desde cache produce
+        // listas vacías o datos de otro usuario al reingresar a una página.
+        const isRSC = request.headers.get('rsc') === '1' || url.searchParams.has('_rsc');
+        if (isRSC) {
+          return networkOnly(request);
         }
 
         // Assets Next.js con hash (chunks, JS, CSS) → cache first
