@@ -139,10 +139,14 @@ export async function checkOllama(): Promise<ServiceHealth> {
   });
 }
 
+function toHttpUrl(url: string): string {
+  return url.replace(/^wss:\/\//, 'https://').replace(/^ws:\/\//, 'http://').replace(/\/+$/, '');
+}
+
 export async function checkChatwoot(): Promise<ServiceHealth> {
   return checkService('chatwoot', 'Chatwoot', async () => {
-    const chatwootUrl = process.env.CHATWOOT_URL || 'http://chatwoot:3000';
-    const res = await fetch(`${chatwootUrl}/api/v1/health`);
+    const chatwootHost = process.env.CHATWOOT_URL || 'https://chatwoot.aicorebots.com';
+    const res = await fetch(`${toHttpUrl(chatwootHost)}/`);
     return res.ok;
   }, {
     critical: false,
@@ -154,8 +158,8 @@ export async function checkChatwoot(): Promise<ServiceHealth> {
 
 export async function checkEvolutionApi(): Promise<ServiceHealth> {
   return checkService('evolution', 'Evolution API', async () => {
-    const evolutionUrl = process.env.EVOLUTION_API_URL || 'http://evolution:8080';
-    const res = await fetch(`${evolutionUrl}/health`);
+    const evolutionHost = process.env.EVOLUTION_API_URL || 'https://evolution.aicorebots.com';
+    const res = await fetch(`${toHttpUrl(evolutionHost)}/`);
     return res.ok;
   }, {
     critical: false,
@@ -167,8 +171,8 @@ export async function checkEvolutionApi(): Promise<ServiceHealth> {
 
 export async function checkLiveKit(): Promise<ServiceHealth> {
   return checkService('livekit', 'LiveKit', async () => {
-    const livekitUrl = process.env.LIVEKIT_URL || 'http://livekit:7880';
-    const res = await fetch(`${livekitUrl}/health`);
+    const livekitHost = process.env.LIVEKIT_URL || 'https://livekit.aicorebots.com';
+    const res = await fetch(`${toHttpUrl(livekitHost)}/`);
     return res.ok;
   }, {
     critical: false,
