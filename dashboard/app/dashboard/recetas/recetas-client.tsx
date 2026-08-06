@@ -83,7 +83,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
   const [pacienteFiltro, setPacienteFiltro] = useState<{ id: string; nombre: string } | null>(null);
   const [filterLoading, setFilterLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [tabActivo, setTabActivo] = useState<'activas' | 'vencidas' | 'historial'>('activas');
+  const [tabActivo, setTabActivo] = useState<'activa' | 'vencida' | 'historial'>('activa');
   const [previewReceta, setPreviewReceta] = useState<RecetaLike | null>(null);
 
   const cargarRecetas = useCallback(async (pacienteId?: string, estado?: string) => {
@@ -121,7 +121,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
 
   const handleTabChange = useCallback(
     (tab: string) => {
-      const nuevoTab = tab as 'activas' | 'vencidas' | 'historial';
+      const nuevoTab = tab as 'activa' | 'vencida' | 'historial';
       setTabActivo(nuevoTab);
       void cargarRecetas(pacienteFiltro?.id, nuevoTab);
     },
