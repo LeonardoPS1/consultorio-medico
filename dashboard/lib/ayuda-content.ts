@@ -2089,6 +2089,57 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
     ],
   },
   {
+    id: 'ia-clinica',
+    titulo: 'IA Clínica',
+    descripcion:
+      'Asistencia de inteligencia artificial local: sugerencia CIE-10, resumen longitudinal y alertas de interacciones farmacológicas',
+    icono: 'Sparkles',
+    pasos: [
+      {
+        titulo: '1. Sugerencia de diagnóstico CIE-10',
+        descripcion:
+          'Al transcribir una consulta, el sistema usa IA local (Ollama) para sugerir el código CIE-10 más probable. La sugerencia aparece como chip "IA sugiere" en el editor SOAP y en el pie de la ficha del paciente.',
+        tips: [
+          'La sugerencia es solo una ayuda: el código final siempre la valida el médico',
+          'Disponible en plan Professional (feature cie10-sugerido)',
+          'Requerís Ollama corriendo en el servidor para la inferencia',
+        ],
+      },
+      {
+        titulo: '2. Resumen Longitudinal del paciente',
+        descripcion:
+          'Generá un resumen clínico consolidado (últimas notas, alergias y recetas activas) en un solo clic. El resultado se guarda en la tabla resumenes_paciente y queda disponible en el tab SOAP.',
+        tips: [
+          'Disponible en plan Starter (feature resumen-longitudinal)',
+          'Requiere al menos 2 notas SOAP para habilitarse',
+          'Podés regenerar el resumen cuando quieras actualizarlo',
+        ],
+      },
+      {
+        titulo: '3. Alertas de interacciones farmacológicas',
+        descripcion:
+          'Al emitir una receta, el sistema verifica el medicamento contra el historial activo del paciente con ~20 interacciones relevantes (FDA/BNF/Medscape). Si detecta una, se muestra un AlertDialog "Aceptar y continuar" antes de emitir.',
+        tips: [
+          'Disponible en plan Professional (feature alertas-interacciones)',
+          'La interacción se registra en auditoría al confirmarla',
+          'Interacciones clasificadas por severidad (alta/media/baja)',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿La IA clínica reemplaza el criterio médico?',
+        respuesta:
+          'No. La IA local (Ollama + Gemma3) asiste al profesional con sugerencias de código CIE-10, resúmenes y alertas, pero toda decisión clínica final y confirma que el profesional la aprueba.',
+      },
+      {
+        pregunta: '¿Funciona la IA Clínica sin conexión a servidores externos?',
+        respuesta:
+          'Sí. Toda la inferencia corre sobre IA local (Ollama) en tu propio servidor. No se envían datos clínicos a ningún proveedor externo.',
+      },
+    ],
+  },
+  {
     id: 'soporte',
     titulo: 'Soporte y Feedback',
     descripcion:
@@ -2140,7 +2191,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         titulo: 'Versión del sistema',
         descripcion: 'La página Acerca de muestra la versión actual del dashboard.',
         tips: [
-          'La versión sigue el formato semántico (ej: v1.35.0)',
+          'La versión sigue el formato semántico (ej: v1.36.0)',
           'Incluye fecha de último despliegue',
           'Muestra el número de funcionalidades activas actualmente',
           'Podés ver el hash del commit actual para referencia técnica',

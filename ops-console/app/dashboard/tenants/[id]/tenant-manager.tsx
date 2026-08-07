@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-const PLANES = ['free', 'starter', 'professional', 'business', 'enterprise'] as const
+const PLANES = ['free', 'starter', 'professional', 'premium', 'enterprise'] as const
 
 interface Props {
   tenantId: string

@@ -16,6 +16,6 @@ export const ordenEstudioEstadoEnum = pgEnum('orden_estudio_estado', ['pendiente
 export const consentimientoTipoEnum = pgEnum('consentimiento_tipo', ['tratamiento', 'cirugia', 'anestesia', 'datos', 'fotografia', 'investigacion', 'otro']);
 export const consentimientoEstadoEnum = pgEnum('consentimiento_estado', ['pendiente', 'firmado', 'rechazado', 'revocado']);
 export const novedadTipoEnum = pgEnum('novedad_tipo', ['feature', 'fix', 'security', 'docs', 'refactor', 'chore']);
-export const usuarioPlanEnum = pgEnum('usuario_plan', ['free', 'starter', 'professional', 'business', 'enterprise']);
+export const usuarioPlanEnum = pgEnum('usuario_plan', ['free', 'starter', 'professional', 'premium', 'enterprise']);
 export const horarioTipoEnum = pgEnum('horario_tipo', ['corrido', 'partido']);
 export const tenenciaEnum = pgEnum('tenencia', ['propia', 'alquilada', 'comodato']);

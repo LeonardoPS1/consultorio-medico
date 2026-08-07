@@ -59,6 +59,7 @@ nav:
       - Scoring y Compliance: modulos/scoring-compliance.md
       - Derivaciones: modulos/derivaciones.md
       - Integraciones y Webhooks: modulos/integraciones.md
+      - IA Clínica: modulos/ia-clinica.md
   - API Reference:
       - v1: api/reference.md
   - Decisiones de Arquitectura (ADRs):

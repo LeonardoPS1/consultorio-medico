@@ -4,7 +4,7 @@
 
 **Última actualización:** 04/08/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
-**Versión actual:** 1.35.0
+**Versión actual:** 1.36.0
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
 **Repositorio:** `main` → https://github.com/LeonardoPS1/consultorio-medico
@@ -816,6 +816,7 @@ consultorio-medico/
 | **OpenAPI 3.1 + Scalar UI + hardening v1** | Especificación OpenAPI 3.1 via `@asteasolutions/zod-to-openapi` + `swagger-cli`. `lib/api-docs.ts` con `OpenAPIRegistry` + `OpenApiGeneratorV31`. `GET /api/openapi.json` + `/api-docs` Scalar CDN. 6 endpoints v1 con `publicApiHandler` (x-api-key, scopes, rate limiting, auditoría). Autenticación SHA-256 + prefix matching. Tests 6/6. `lib/integrations-catalog.ts` con 13 integraciones. Commit `810db12` | 04/08 |
 | **Hub único de Integraciones** | Consolidación de 3 superficies "Integraciones" en `/dashboard/integraciones` con 3 tabs (Catálogo / Webhooks salientes / Conexiones). Webhooks salientes movidos Premium→Profesional. Label admin "Integraciones"→"Conexiones". Onboarding actualizado. Patrón estado derivado para tabs. Commit `e726540` | 04/08 |
 | **White-Label: Dominio Custom + WF-17** | Resolución de tenant por dominio custom: migración 0058, `resolveTenantByHost()` con cache Map 60s, `proxy.ts` async. Verificación DNS TXT automática vía n8n WF-17 (cada 15 min, DNS-over-HTTPS). API `POST /api/internal/dominios/verificar` con Dokploy auto-domain. Ops Console genera token al setear dominioCustom. Feature gate `dominio-custom` (Premium). Commit `7beb92e` | 04/08 |
+| **IA Clínica (CIE-10 sugerido + Resumen + Alertas)** | Migración 0059 (`notas_soap.cie10_sugerido` jsonb + tabla `resumenes_paciente`). `lib/ai-clinical.ts` (sugerirCie10, generarResumenLongitudinal) + `lib/farmaco-interacciones.ts` (~20 interacciones FDA/BNF/Medscape). API `/api/pacientes/[id]/resumen` + `/api/recetas/verificar` (AlertDialog "Aceptar y continuar"). Features: `cie10-sugerido` (Professional), `resumen-longitudinal` (Starter), `alertas-interacciones` (Professional). Commit `c509c16` | 05/08 |
 
 ### 🟡 Prioridad Media
 

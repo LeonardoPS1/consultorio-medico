@@ -1,7 +1,7 @@
 # 🔄 Workflows n8n — AicoreMed
 
-> **14 workflows activos** · Automatización inteligente del consultorio
-> **Última actualización:** 31/07/2026
+> **17 workflows activos** · Automatización inteligente del consultorio
+> **Última actualización:** 07/08/2026
 
 ---
 
@@ -23,8 +23,11 @@
 14. [WF-12: Actualizar Scores No-Show](#wf-12-actualizar-scores-no-show)
 15. [WF-13: Recordatorio Drill DR](#wf-13-recordatorio-drill-dr)
 16. [WF-14: Recuperación vía n8n](#wf-14-recuperacion-via-n8n)
-17. [Deploy de Workflows](#deploy-de-workflows)
-18. [Buenas Prácticas](#buenas-practicas)
+17. [WF-15: Alertas del Sistema](#wf-15-alertas-del-sistema)
+18. [WF-16: Ocupación + Benchmark Nocturno](#wf-16-ocupacion-benchmark-nocturno)
+19. [WF-17: Verificación de Dominios Custom](#wf-17-verificacion-de-dominios-custom)
+20. [Deploy de Workflows](#deploy-de-workflows)
+21. [Buenas Prácticas](#buenas-practicas)
 
 ---
 
@@ -46,7 +49,10 @@ n8n-workflows/
 │   ├── workflow-11-novedades.json    # Novedades desde Commits
 │   ├── workflow-12-scores-no-show.json  # Scoring No-Show Nocturno
 │   ├── workflow-13-drill-dr.json     # Recordatorio Drill DR
-│   └── workflow-14-recuperacion.json # Recuperación vía n8n
+│   ├── workflow-14-recuperacion.json # Recuperación vía n8n
+│   ├── workflow-15-alertas.json      # Alertas del Sistema (5 min)
+│   ├── workflow-16-ocupacion-benchmarks.json  # Ocupación + Benchmark Nocturno
+│   └── workflow-17-verificacion-dominios.json # Verificación DNS de dominios custom
 │
 └── archive/                          # Versiones legacy y diseños
 ```
@@ -71,6 +77,9 @@ n8n-workflows/
 | **12** | Scoring No-Show Nocturno | Cron (3:30 AM) | 3 | ❌ | ❌ | ✅ | ❌ | ❌ |
 | **13** | Recordatorio Drill DR | Cron (trimestral) | — | ❌ | ✅ | ❌ | ❌ | ❌ |
 | **14** | Recuperación vía n8n | Webhook (manual) | — | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **15** | Alertas del Sistema | Cron (5 min) | — | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **16** | Ocupación + Benchmark Nocturno | Cron (nocturno) | — | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **17** | Verificación de Dominios Custom | Cron (15 min) | 8 | ❌ | ❌ | ✅ | ❌ | ❌ |
 
 ---
 
@@ -496,6 +505,83 @@ Webhook → Ejecuta bash recover.sh --force en el VPS →
 | 1. SSH / Makefile | `make recover` / `make recover-force` / `make recover-drill` | VPS |
 | 2. Ops Console UI | ops.aicorebots.com → Recuperación | Web |
 | 3. n8n (WF-14) | n8n UI → WF-14 → Execute | Web |
+
+---
+
+## WF-15: Alertas del Sistema
+
+### Propósito
+Ejecuta las verificaciones automáticas de salud del sistema (checks cross-tenant) y
+notifica según la configuración de alertas de cada tenant.
+
+### Trigger
+**Cron** → cada 5 minutos
+
+### Flujo
+```
+Cron → POST /api/alertas/check →
+  → 4 checks cross-tenant (down, error rate, etc.) →
+  → Notifica por Telegram / Chatwoot / Webhook / Email según config →
+  → Registra en alerts_history
+```
+
+### Integración con Dashboard
+- Config en `platform.alerts_config` + historial en `platform.alerts_history` (migración 0001 ops)
+- 4 detectores: clínica caída, tasa de error, encolamiento y disponibilidad
+- Canales: Telegram, Chatwoot, Webhook, Email (nodemailer)
+- Página `/dashboard/alertas` para gestión
+
+---
+
+## WF-16: Ocupación + Benchmark Nocturno
+
+### Propósito
+Recalcula los snapshots del benchmark anónimo cross-tenant cada madrugada para
+alimentar las pestañas "Ocupación" y "Benchmark" de Reportes.
+
+### Trigger
+**Cron** → nocturno (madrugada)
+
+### Flujo
+```
+Cron → POST /api/internal/benchmark (ops-console, header x-internal-key) →
+  → Recalcula buckets del benchmark anónimo →
+  → Espera respuesta { success, mensaje: "Benchmark recalculado: X buckets..." } →
+  → Inserta snapshots en platform.benchmark_snapshot (limpia viejos)
+```
+
+### Integración con Dashboard
+- Endpoint interno `POST /api/internal/benchmark` (validación solo `x-internal-key`, excluido del proxy de sesión vía `/api/internal` en `PUBLIC_PATHS`)
+- Migración ops `0003_benchmark_snapshot`
+- Buckets anti-identificación: ≥5 tenants por bucket para publicar promedio
+- Requiere `N8N_API_KEY` configurado en n8n
+
+---
+
+## WF-17: Verificación de Dominios Custom
+
+### Propósito
+Verifica automáticamente los registros DNS TXT de los dominios custom de los tenants
+(white-label) y completa el ciclo de verificación cuando el token coincide.
+
+### Trigger
+**Cron** → cada 15 minutos
+
+### Flujo
+```
+Cron → PG: SELECT tenants con dominio_custom no verificado + token →
+  → SplitInBatches (batch 5) →
+  → HTTP GET cloudflare-dns.com/dns-query?name=_aicore-verify.{dominio}&type=TXT (DNS-over-HTTPS) →
+  → IF: ¿Answer[0].data contiene dominio_verificacion_token? →
+  → Sí → PG UPDATE dominio_verificado = true → POST /api/internal/dominios/verificar (notifica admins + Dokploy auto-domain)
+  → No → noOp (reintenta próximo ciclo)
+```
+
+### Integración con Dashboard
+- Migración 0058: columnas `dominio_verificado` y `dominio_verificacion_token` en tenants
+- `resolveTenantByHost()` busca por dominioCustom verificado → subdominio → fallback `DEFAULT_TENANT_ID`
+- API `POST /api/internal/dominios/verificar` marca verificado + notifica + Dokploy auto-domain
+- Ops Console: PATCH /api/tenants/[id] genera token al setear dominioCustom
 
 ---
 

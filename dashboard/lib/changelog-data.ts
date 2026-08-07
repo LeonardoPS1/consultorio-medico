@@ -10,8 +10,20 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 04/08/2026 — v1.35.0 White-Label + Hub de Integraciones + OpenAPI
+// Actualizado: 07/08/2026 — v1.36.0 IA Clínica (CIE-10 sugerido + Resumen + Alertas de interacciones)
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.36.0',
+    date: '07/08/2026',
+    title: 'IA Clínica: CIE-10 sugerido, Resumen Longitudinal y Alertas de Interacciones',
+    items: [
+      'Sugerencia de diagnóstico CIE-10 por IA: al transcribir una consulta, el sistema usa IA local (Ollama) para sugerir el código CIE-10 más probable, que aparece como chip "IA sugiere" en el editor SOAP y en el pie de la ficha. Feature cie10-sugerido (Professional).',
+      'Resumen Longitudinal del paciente: genera un resumen clínico consolidado (últimas notas, alergias y recetas activas) en un solo clic, con persistencia en resumenes_paciente. Disponible en el tab SOAP de la ficha del paciente. Feature resumen-longitudinal (Starter).',
+      'Alertas de interacciones farmacológicas: base de ~20 interacciones relevantes (FDA/BNF/Medscape). Al emitir una receta se verifica contra el historial activo del paciente y se muestra un AlertDialog "Aceptar y continuar" antes de emitir. Feature alertas-interacciones (Professional).',
+      'Migración 0059: columnas cie10_sugerido (jsonb) en notas_soap y tabla resumenes_paciente.',
+      'Recetas: corregido el bug recurrente de listas vacías al navegar o filtrar — la columna estado es varchar con valores legacy (activa/vencida) y se normalizó el vocabulario de filtros (activas, vencidas e historial) para que coincida con el dato real en producción.',
+    ],
+  },
   {
     version: '1.35.0',
     date: '04/08/2026',

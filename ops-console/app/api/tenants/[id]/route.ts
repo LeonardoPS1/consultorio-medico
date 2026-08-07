@@ -5,7 +5,7 @@ import { logAudit } from '@/lib/audit'
 import { ok, error, serverError, unauthorized, notFound } from '@/lib/api-handler'
 import crypto from 'crypto'
 
-const PLANES = ['free', 'starter', 'professional', 'business', 'enterprise'] as const
+const PLANES = ['free', 'starter', 'professional', 'premium', 'enterprise'] as const
 type Plan = (typeof PLANES)[number]
 
 function isPlan(value: unknown): value is Plan {

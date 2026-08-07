@@ -78,6 +78,8 @@ Las migraciones son **acumulativas** y deben ejecutarse en orden:
 | 055 | `0055_add_motivo_impersonation.sql` | Columna `motivo` en `impersonation_tokens` (justificación obligatoria, mín. 10 caracteres) |
 | 056 | `0056_revocar_impersonacion.sql` | Columnas `session_jti` y `session_revoked_at` en `impersonation_tokens` (revocación de sesión de impersonación activa) |
 | 057 | `0057_solicitudes_datos.sql` | Tabla `solicitudes_datos` (exportación y solicitud de eliminación de datos, Ley 19.628) |
+| 058 | `0058_dominios_custom.sql` | Columnas `dominio_verificado` y `dominio_verificacion_token` en `tenants` (white-label domains custom) |
+| 059 | `0059_ia_clinica.sql` | Columna `cie10_sugerido` (jsonb) en `notas_soap` + tabla `resumenes_paciente` (IA Clínica) |
 
 ```bash
 # Ejecutar todas las migraciones (en orden)

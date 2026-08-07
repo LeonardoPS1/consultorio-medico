@@ -28,8 +28,12 @@ debe cambiar en el mismo PR — no hay "documentación aparte" que se desactuali
   [→ Ver seguridad](existente/seguridad.md)
 
 - **:material-robot: Workflows n8n**
-  Los 14 workflows de automatización (WhatsApp, turnos, backups, DR).
+  Los 17 workflows de automatización (WhatsApp, turnos, backups, DR).
   [→ Ver workflows](existente/workflows-n8n.md)
+
+- **:material-brain: IA Clínica**
+  CIE-10 sugerido, resumen longitudinal y alertas de interacciones farmacológicas.
+  [→ Ver IA Clínica](modulos/ia-clinica.md)
 
 - **:material-server-network: Disaster Recovery**
   Backups, restauración, drill y 3 vías de recuperación.
@@ -64,7 +68,7 @@ AicoreMed es un SaaS multi-tenant para clínicas y médicos independientes en Ch
 | Frontend | Next.js 16 (App Router), React 19, TypeScript, shadcn/ui, Tailwind, TanStack Query |
 | Backend | API Routes, Drizzle ORM 0.31, Zod |
 | Base de datos | PostgreSQL 16 (+ PgBouncer) |
-| Automatización | n8n 2.19 (self-hosted, 14 workflows) |
+| Automatización | n8n 2.19 (self-hosted, 17 workflows) |
 | IA conversacional | Ollama + Gemma3 (local, sin llamadas externas) |
 | Mensajería | Twilio (WhatsApp / SMS) + Chatwoot + Evolution API |
 | Video | LiveKit |
