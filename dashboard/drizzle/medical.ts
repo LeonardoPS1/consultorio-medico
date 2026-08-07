@@ -1,3 +1,4 @@
+import { relations, sql, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 import {
   pgTable,
   uuid,
@@ -11,15 +12,13 @@ import {
   index,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
-import { relations, sql, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
+import { pacientes, medicos, turnos } from './core';
 import {
   historialTipoEnum,
-  recetaEstadoEnum,
   recetaTipoEnum,
   ordenEstudioTipoEnum,
   ordenEstudioEstadoEnum,
 } from './enums';
-import { pacientes, medicos, turnos } from './core';
 
 // ============================================================
 // PACIENTE EVENTOS (historial de contacto)
@@ -136,7 +135,7 @@ export const recetas = pgTable(
       .notNull()
       .references(() => medicos.id),
     turnoId: uuid('turno_id').references(() => turnos.id),
-    estado: recetaEstadoEnum('estado').notNull().default('emitida'),
+    estado: text('estado').notNull().default('emitida'),
     tipo: recetaTipoEnum('tipo').notNull().default('simple'),
     medicamento: varchar('medicamento', { length: 255 }).notNull(),
     presentacion: varchar('presentacion', { length: 255 }),
@@ -152,7 +151,7 @@ export const recetas = pgTable(
     requiereAutorizacion: boolean('requiere_autorizacion').default(false),
     autorizacionObraSocial: boolean('autorizacion_obra_social').default(false),
     hashVerificacion: varchar('hash_verificacion', { length: 64 }),
-    recetaAnteriorId: uuid('receta_anterior_id').references((): any => recetas.id),
+    recetaAnteriorId: uuid('receta_anterior_id').references((): AnyPgColumn => recetas.id),
     pdfGenerado: boolean('pdf_generado').default(false),
     pdfUrl: text('pdf_url'),
     whatsappEnviado: boolean('whatsapp_enviado').default(false),

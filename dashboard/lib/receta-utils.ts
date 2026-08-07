@@ -6,8 +6,13 @@
 
 export type EstadoReceta = 'activa' | 'vencida' | 'historial';
 
-/** Estados de la BD considerados "activos" (vigentes). */
-export const ESTADOS_ACTIVOS = ['borrador', 'emitida', 'entregada'] as const;
+/**
+ * Estados de la BD considerados "activos" (vigentes).
+ * Incluye el valor legacy `'activa'` que aún persiste en filas históricas
+ * (la columna `estado` en producción era `varchar`, no pgInt) para que el
+ * filtrado funcione con datos reales y con el vocabulario nuevo del enum.
+ */
+export const ESTADOS_ACTIVOS = ['borrador', 'emitida', 'entregada', 'activa'] as const;
 
 /** Estados de la BD considerados "historial" (terminales). */
 export const ESTADOS_HISTORIAL = ['anulada', 'renovada', 'historial'] as const;
@@ -24,7 +29,7 @@ export function getHoyISO(): string {
  * @param fechaFin
  */
 export function mapEstadoDisplay(estado: string, fechaFin: string | null): EstadoReceta {
-  if (estado === 'expirada') return 'vencida';
+  if (estado === 'expirada' || estado === 'vencida') return 'vencida';
   if ((ESTADOS_HISTORIAL as readonly string[]).includes(estado)) return 'historial';
   if (fechaFin && fechaFin < getHoyISO()) return 'vencida';
   return 'activa';

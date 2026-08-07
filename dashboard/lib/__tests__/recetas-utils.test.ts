@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generarHashVerificacion, verificarHash } from '@/lib/services/recetas';
+import { mapEstadoDisplay, ESTADOS_ACTIVOS, ESTADO_DISPLAY_LABELS } from '@/lib/receta-utils';
 
 const recetaBase = {
   id: 'abc-123',
@@ -74,5 +75,63 @@ describe('generarHashVerificacion — secreto en test', () => {
   it('usa el fallback de desarrollo cuando no hay RECETA_HASH_SECRET', () => {
     const hash = generarHashVerificacion(recetaBase);
     expect(hash).toMatch(/^[a-f0-9]{64}$/);
+  });
+});
+
+describe('mapEstadoDisplay — vocabulario legacy (varchar prod)', () => {
+  const hoy = new Date().toISOString().split('T')[0];
+  const ayer = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const manana = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+  it('estado legacy "activa" con fecha_fin futura → activa', () => {
+    expect(mapEstadoDisplay('activa', manana)).toBe('activa');
+  });
+
+  it('estado legacy "activa" con fecha_fin nula → activa', () => {
+    expect(mapEstadoDisplay('activa', null)).toBe('activa');
+  });
+
+  it('estado legacy "activa" con fecha_fin pasada → vencida', () => {
+    expect(mapEstadoDisplay('activa', ayer)).toBe('vencida');
+  });
+
+  it('estado legacy "vencida" → vencida (independiente de fecha)', () => {
+    expect(mapEstadoDisplay('vencida', manana)).toBe('vencida');
+  });
+
+  it('estado "expirada" → vencida', () => {
+    expect(mapEstadoDisplay('expirada', null)).toBe('vencida');
+  });
+
+  it('estado "historial" → historial aunque tenga fecha pasada', () => {
+    expect(mapEstadoDisplay('historial', ayer)).toBe('historial');
+  });
+
+  it('estado enum "emitida" con fecha_fin futura → activa', () => {
+    expect(mapEstadoDisplay('emitida', manana)).toBe('activa');
+  });
+
+  it('estado enum "emitida" con fecha_fin pasada → vencida', () => {
+    expect(mapEstadoDisplay('emitida', ayer)).toBe('vencida');
+  });
+});
+
+describe('ESTADOS_ACTIVOS — incluye legacy y enum', () => {
+  it('contiene "activa" (dato legacy de prod varchar)', () => {
+    expect(ESTADOS_ACTIVOS).toContain('activa');
+  });
+
+  it('sigue conteniendo los estados nuevos del enum', () => {
+    expect(ESTADOS_ACTIVOS).toEqual(expect.arrayContaining(['borrador', 'emitida', 'entregada']));
+  });
+});
+
+describe('ESTADO_DISPLAY_LABELS', () => {
+  it('tiene etiquetas para los tres estados visuales', () => {
+    expect(ESTADO_DISPLAY_LABELS).toEqual({
+      activa: 'Activa',
+      vencida: 'Vencida',
+      historial: 'Historial',
+    });
   });
 });

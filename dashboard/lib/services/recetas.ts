@@ -61,9 +61,9 @@ export interface RecetaListResult {
 // ─── Constantes ─────────────────────────────────────────────
 
 /** Estados de la BD considerados "activos" (vigentes). */
-type EstadoRecetaDb = (typeof recetaEstadoEnum.enumValues)[number];
+type EstadoRecetaDb = (typeof recetaEstadoEnum.enumValues)[number] | 'activa' | 'vencida';
 
-const ESTADOS_ACTIVOS_DB: EstadoRecetaDb[] = ['borrador', 'emitida', 'entregada'];
+const ESTADOS_ACTIVOS_DB: EstadoRecetaDb[] = ['borrador', 'emitida', 'entregada', 'activa'];
 const ESTADOS_HISTORIAL_DB: EstadoRecetaDb[] = ['anulada', 'renovada', 'historial'];
 
 /**
@@ -99,6 +99,7 @@ function buildEstadoWhere(scope: SQL | undefined, estadoFiltro?: EstadoReceta): 
       scope,
       or(
         eq(recetas.estado, 'expirada'),
+        eq(recetas.estado, 'vencida'),
         and(inArray(recetas.estado, ESTADOS_ACTIVOS_DB), lt(recetas.fechaFin, hoy)),
       ),
     );

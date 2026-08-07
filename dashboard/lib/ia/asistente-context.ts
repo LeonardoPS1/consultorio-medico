@@ -11,14 +11,21 @@
  * 3. Como último recurso, hace consultas a nivel tenant sin filtrar por médico
  */
 
-import { db } from '@/lib/db';
-import { turnos, pacientes, recetas, medicos, conversaciones, turnoEstadoEnum, recetaEstadoEnum } from '@/drizzle/schema';
 import { eq, and, gte, lte, count, isNull, isNotNull, or } from 'drizzle-orm';
+import {
+  turnos,
+  pacientes,
+  recetas,
+  medicos,
+  conversaciones,
+  turnoEstadoEnum,
+  recetaEstadoEnum,
+} from '@/drizzle/schema';
+import { db } from '@/lib/db';
 
 /**
  * Consulta datos reales del consultorio y los devuelve como texto
  * formateado para incluir en el system prompt.
- *
  * @param usuarioId - ID del usuario autenticado (session.user.id)
  * @param _ruta - Ruta actual del dashboard (reservado para contexto futuro)
  * @param incluirAnomalias - Si debe incluir un bloque extra de anomalías detectadas (modo activo)
@@ -32,12 +39,7 @@ export async function buildContextoDB(
   try {
     const now = new Date();
     const today = now.toISOString().split('T')[0];
-    const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0];
-    const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0];
+    const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     // ─── 1. Resolver médico (rápido, query individual) ─────
     let medico = await db
@@ -169,7 +171,11 @@ export async function buildContextoDB(
         .where(
           and(
             filtroMedicoRecetas,
-            or(eq(recetas.estado, recetaEstadoEnum.enumValues[1]), eq(recetas.estado, recetaEstadoEnum.enumValues[0])), // 'emitida' or 'borrador'
+            or(
+              eq(recetas.estado, recetaEstadoEnum.enumValues[1]),
+              eq(recetas.estado, recetaEstadoEnum.enumValues[0]), // 'emitida' or 'borrador'
+              eq(recetas.estado, 'activa'), // legacy varchar
+            ),
           ),
         )
         .limit(10)
@@ -196,7 +202,10 @@ export async function buildContextoDB(
         .where(
           and(
             filtroMedicoRecetas,
-            eq(recetas.estado, recetaEstadoEnum.enumValues[1]), // 'emitida'
+            or(
+              eq(recetas.estado, recetaEstadoEnum.enumValues[1]), // 'emitida'
+              eq(recetas.estado, 'activa'), // legacy varchar
+            ),
             isNotNull(recetas.fechaFin),
             gte(recetas.fechaFin, today),
             lte(recetas.fechaFin, nextWeek),
@@ -239,14 +248,15 @@ export async function buildContextoDB(
             .then((r) => r[0]?.total ?? 0)
             .catch(() => 0)
         : Promise.resolve(0),
-
     ]);
 
     // ─── 3. Construir texto formateado ─────────────────────
     const partes: string[] = [];
 
     // Encabezado con médico
-    partes.push(`📋 DATOS DEL CONSULTORIO — ${now.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`);
+    partes.push(
+      `📋 DATOS DEL CONSULTORIO — ${now.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`,
+    );
     if (medico?.nombre) {
       partes.push(`👨‍⚕️ Médico: ${medico.nombre}`);
     }
@@ -256,13 +266,22 @@ export async function buildContextoDB(
       partes.push(`\n📅 PRÓXIMOS TURNOS (${today} al ${nextWeek}):`);
       for (const t of turnosProximos) {
         const fecha = t.fechaHora
-          ? new Date(t.fechaHora).toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short' })
+          ? new Date(t.fechaHora).toLocaleDateString('es-CL', {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+            })
           : '?';
         const hora = t.fechaHora
-          ? new Date(t.fechaHora).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
+          ? new Date(t.fechaHora).toLocaleTimeString('es-CL', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })
           : '?';
         const paciente = [t.pacienteNombre, t.pacienteApellido].filter(Boolean).join(' ');
-        partes.push(`  • ${fecha} ${hora} — ${paciente} [${t.estado || 'pendiente'}]${t.motivo ? `: "${t.motivo}"` : ''}`);
+        partes.push(
+          `  • ${fecha} ${hora} — ${paciente} [${t.estado || 'pendiente'}]${t.motivo ? `: "${t.motivo}"` : ''}`,
+        );
       }
     } else {
       partes.push(`\n📅 No hay turnos programados del ${today} al ${nextWeek}.`);
@@ -294,11 +313,18 @@ export async function buildContextoDB(
       const anomalias: string[] = [];
 
       if (typeof anomaliaTurnosHoySinConf === 'number' && anomaliaTurnosHoySinConf > 0) {
-        anomalias.push(`⚠️ ${anomaliaTurnosHoySinConf} turno${anomaliaTurnosHoySinConf !== 1 ? 's' : ''} de HOY sin confirmar — revisar antes de la atención`);
+        anomalias.push(
+          `⚠️ ${anomaliaTurnosHoySinConf} turno${anomaliaTurnosHoySinConf !== 1 ? 's' : ''} de HOY sin confirmar — revisar antes de la atención`,
+        );
       }
 
-      if (typeof anomaliaMensajesSinRespDetalle === 'number' && anomaliaMensajesSinRespDetalle > 3) {
-        anomalias.push(`📩 ${anomaliaMensajesSinRespDetalle} mensajes de pacientes sin responder — hay conversaciones esperando`);
+      if (
+        typeof anomaliaMensajesSinRespDetalle === 'number' &&
+        anomaliaMensajesSinRespDetalle > 3
+      ) {
+        anomalias.push(
+          `📩 ${anomaliaMensajesSinRespDetalle} mensajes de pacientes sin responder — hay conversaciones esperando`,
+        );
       }
 
       if (anomalias.length > 0) {
