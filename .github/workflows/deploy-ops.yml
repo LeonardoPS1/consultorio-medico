@@ -6,6 +6,7 @@ on:
     paths:
       - 'ops-console/**'
       - '.github/workflows/deploy-ops.yml'
+  workflow_dispatch:
 
 jobs:
   build-and-push:
