@@ -23,17 +23,17 @@ import {
 
 interface AlertConfig {
   id: string
-  alert_name: string
-  display_name: string
+  alertName: string
+  displayName: string
   description: string | null
-  threshold_value: number
-  threshold_window_minutes: number
-  notification_channels: string[]
-  channel_config: Record<string, unknown>
-  is_active: boolean
-  last_triggered_at: string | null
-  created_at: string
-  updated_at: string
+  thresholdValue: number
+  thresholdWindowMinutes: number
+  notificationChannels: string[]
+  channelConfig: Record<string, unknown>
+  isActive: boolean
+  lastTriggeredAt: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 interface AlertHistory {
@@ -120,14 +120,14 @@ export default function AlertasPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
-    alert_name: '',
-    display_name: '',
+    alertName: '',
+    displayName: '',
     description: '',
-    threshold_value: 1,
-    threshold_window_minutes: 60,
-    notification_channels: [] as string[],
-    channel_config: {} as Record<string, unknown>,
-    is_active: true,
+    thresholdValue: 1,
+    thresholdWindowMinutes: 60,
+    notificationChannels: [] as string[],
+    channelConfig: {} as Record<string, unknown>,
+    isActive: true,
   })
 
   const fetchConfigs = useCallback(async () => {
@@ -186,28 +186,28 @@ export default function AlertasPage() {
 
   const resetForm = () => {
     setFormData({
-      alert_name: '',
-      display_name: '',
+      alertName: '',
+      displayName: '',
       description: '',
-      threshold_value: 1,
-      threshold_window_minutes: 60,
-      notification_channels: [],
-      channel_config: {},
-      is_active: true,
+      thresholdValue: 1,
+      thresholdWindowMinutes: 60,
+      notificationChannels: [],
+      channelConfig: {},
+      isActive: true,
     })
   }
 
   const handleEdit = (config: AlertConfig) => {
     setEditingId(config.id)
     setFormData({
-      alert_name: config.alert_name,
-      display_name: config.display_name,
+      alertName: config.alertName,
+      displayName: config.displayName,
       description: config.description || '',
-      threshold_value: config.threshold_value,
-      threshold_window_minutes: config.threshold_window_minutes,
-      notification_channels: config.notification_channels,
-      channel_config: config.channel_config,
-      is_active: config.is_active,
+      thresholdValue: config.thresholdValue,
+      thresholdWindowMinutes: config.thresholdWindowMinutes,
+      notificationChannels: config.notificationChannels,
+      channelConfig: config.channelConfig,
+      isActive: config.isActive,
     })
     setShowForm(true)
   }
@@ -229,7 +229,7 @@ export default function AlertasPage() {
       const res = await fetch(`/api/alertas/config/${config.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !config.is_active }),
+        body: JSON.stringify({ isActive: !config.isActive }),
       })
       const json = await res.json()
       if (!json?.success) throw new Error(json?.error || 'Error al actualizar')
@@ -256,11 +256,11 @@ export default function AlertasPage() {
   }
 
   const toggleChannel = (channel: string) => {
-    const channels = [...formData.notification_channels]
+    const channels = [...formData.notificationChannels]
     const idx = channels.indexOf(channel)
     if (idx >= 0) channels.splice(idx, 1)
     else channels.push(channel)
-    setFormData(prev => ({ ...prev, notification_channels: channels }))
+    setFormData(prev => ({ ...prev, notificationChannels: channels }))
   }
 
   if (loading) {
@@ -347,42 +347,42 @@ export default function AlertasPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 flex-wrap">
-                        <h3 className="font-semibold text-[var(--text-primary)] truncate">{config.display_name}</h3>
-                        <span className="text-xs text-[var(--text-muted)] font-mono">{config.alert_name}</span>
-                        <StatusBadge active={config.is_active} />
+                        <h3 className="font-semibold text-[var(--text-primary)] truncate">{config.displayName}</h3>
+                        <span className="text-xs text-[var(--text-muted)] font-mono">{config.alertName}</span>
+                        <StatusBadge active={config.isActive} />
                       </div>
                       {config.description && (
                         <p className="mt-1 text-sm text-[var(--text-secondary)]">{config.description}</p>
                       )}
                       <div className="mt-2 flex items-center gap-3 flex-wrap text-xs text-[var(--text-muted)]">
-                        <span>Umbral: <span className="font-mono text-[var(--text-secondary)]">{config.threshold_value}</span></span>
-                        <span>Ventana: <span className="font-mono text-[var(--text-secondary)]">{config.threshold_window_minutes} min</span></span>
+                        <span>Umbral: <span className="font-mono text-[var(--text-secondary)]">{config.thresholdValue}</span></span>
+                        <span>Ventana: <span className="font-mono text-[var(--text-secondary)]">{config.thresholdWindowMinutes} min</span></span>
                         <span>Canales: </span>
                         <div className="flex items-center gap-1">
-                          {(config.notification_channels ?? []).map(ch => (
+                          {(config.notificationChannels ?? []).map(ch => (
                             <ChannelBadge key={ch} channel={ch} />
                           ))}
-                          {(config.notification_channels ?? []).length === 0 && (
+                          {(config.notificationChannels ?? []).length === 0 && (
                             <span className="text-[var(--text-muted)] italic">Sin canales</span>
                           )}
                         </div>
                       </div>
                       <div className="mt-1 flex items-center gap-3 text-xs text-[var(--text-muted)]">
-                        <span>Última ejecución: <span className="font-mono">{formatTimeAgo(config.last_triggered_at)}</span></span>
-                        <span>Creada: <span className="font-mono">{formatTimeAgo(config.created_at)}</span></span>
+                        <span>Última ejecución: <span className="font-mono">{formatTimeAgo(config.lastTriggeredAt)}</span></span>
+                        <span>Creada: <span className="font-mono">{formatTimeAgo(config.createdAt)}</span></span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => handleToggle(config)}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                          config.is_active
+                          config.isActive
                             ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20'
                             : 'bg-gray-500/10 text-gray-400 border border-gray-500/20 hover:bg-gray-500/20'
                         }`}
                       >
-                        {config.is_active ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                        {config.is_active ? 'Desactivar' : 'Activar'}
+                        {config.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                        {config.isActive ? 'Desactivar' : 'Activar'}
                       </button>
                       <button onClick={() => handleEdit(config)} className="p-2 rounded-lg hover:bg-[var(--bg-hover)] text-[var(--text-muted)] transition-colors" title="Editar">
                         <Edit className="w-4 h-4" />
@@ -468,8 +468,8 @@ export default function AlertasPage() {
                   <label className="block text-sm font-medium mb-1">Nombre interno *</label>
                   <input
                     type="text"
-                    value={formData.alert_name}
-                    onChange={e => setFormData(prev => ({ ...prev, alert_name: e.target.value }))}
+                    value={formData.alertName}
+                    onChange={e => setFormData(prev => ({ ...prev, alertName: e.target.value }))}
                     placeholder="payment_failure"
                     disabled={!!editingId}
                     className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] disabled:opacity-50"
@@ -481,8 +481,8 @@ export default function AlertasPage() {
                   <label className="block text-sm font-medium mb-1">Nombre visible *</label>
                   <input
                     type="text"
-                    value={formData.display_name}
-                    onChange={e => setFormData(prev => ({ ...prev, display_name: e.target.value }))}
+                    value={formData.displayName}
+                    onChange={e => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
                     placeholder="Pagos Fallidos"
                     className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
                     required
@@ -506,8 +506,8 @@ export default function AlertasPage() {
                   <input
                     type="number"
                     min="1"
-                    value={formData.threshold_value}
-                    onChange={e => setFormData(prev => ({ ...prev, threshold_value: parseInt(e.target.value) || 1 }))}
+                    value={formData.thresholdValue}
+                    onChange={e => setFormData(prev => ({ ...prev, thresholdValue: parseInt(e.target.value) || 1 }))}
                     className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
                     required
                   />
@@ -517,8 +517,8 @@ export default function AlertasPage() {
                   <input
                     type="number"
                     min="1"
-                    value={formData.threshold_window_minutes}
-                    onChange={e => setFormData(prev => ({ ...prev, threshold_window_minutes: parseInt(e.target.value) || 60 }))}
+                    value={formData.thresholdWindowMinutes}
+                    onChange={e => setFormData(prev => ({ ...prev, thresholdWindowMinutes: parseInt(e.target.value) || 60 }))}
                     className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
                     required
                   />
@@ -534,7 +534,7 @@ export default function AlertasPage() {
                       key={value}
                       onClick={() => toggleChannel(value)}
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors ${
-                        formData.notification_channels.includes(value)
+                        formData.notificationChannels.includes(value)
                           ? 'bg-[var(--accent)] text-[var(--accent-foreground)] border-[var(--accent)]'
                           : 'bg-[var(--bg)] text-[var(--text-secondary)] border-[var(--border)] hover:bg-[var(--bg-hover)]'
                       }`}
@@ -544,7 +544,7 @@ export default function AlertasPage() {
                     </button>
                   ))}
                 </div>
-                {formData.notification_channels.length === 0 && (
+                {formData.notificationChannels.length === 0 && (
                   <p className="text-xs text-[var(--text-muted)] mt-1">Selecciona al menos un canal para recibir notificaciones</p>
                 )}
               </div>
@@ -553,8 +553,8 @@ export default function AlertasPage() {
                 <label className="inline-flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={formData.is_active}
-                    onChange={e => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                    checked={formData.isActive}
+                    onChange={e => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
                     className="rounded border-[var(--border)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
                   />
                   <span className="text-sm">Activa al crear</span>
