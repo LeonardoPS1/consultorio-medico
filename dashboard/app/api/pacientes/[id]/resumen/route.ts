@@ -1,17 +1,19 @@
+import { eq, desc, and, inArray, or, gte, isNull } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { notasSoap, pacientes, recetas, resumenesPaciente, recetaEstadoEnum } from '@/drizzle/schema';
-import { eq, desc, and, sql, or, gte, isNull } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
-import { verifyPacienteAccess } from '@/lib/api-auth';
+import { notasSoap, pacientes, recetas, resumenesPaciente } from '@/drizzle/schema';
 import { generarResumenLongitudinal } from '@/lib/ai-clinical';
+import { verifyPacienteAccess } from '@/lib/api-auth';
+import { auth } from '@/lib/auth';
+import { db } from '@/lib/db';
 import { safeError, safeLog } from '@/lib/logger';
-import { getHoyISO } from '@/lib/receta-utils';
+import { getHoyISO, ESTADOS_ACTIVOS } from '@/lib/receta-utils';
 
 const MAX_NOTAS = 5;
 
 /**
  * Auth + acceso al paciente (mismo patrón que notas-soap)
+ * @param request
+ * @param pacienteId
  */
 async function requireAuth(request: NextRequest, pacienteId: string) {
   const session = await auth();
@@ -29,6 +31,9 @@ async function requireAuth(request: NextRequest, pacienteId: string) {
 /**
  * GET /api/pacientes/[id]/resumen
  * Devuelve el resumen longitudinal cacheado (si existe).
+ * @param request
+ * @param root0
+ * @param root0.params
  */
 export async function GET(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
@@ -56,6 +61,9 @@ export async function GET(request: NextRequest, { params: paramsPromise }: { par
  * POST /api/pacientes/[id]/resumen
  * Genera (o regenera) el resumen longitudinal con IA y lo cachea.
  * Fail-open: si la IA falla responde 502 con mensaje claro, sin tocar el cache.
+ * @param request
+ * @param root0
+ * @param root0.params
  */
 export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
@@ -85,14 +93,13 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
       .limit(MAX_NOTAS);
 
     const hoy = getHoyISO();
-    const estadosActivos = [recetaEstadoEnum.enumValues[0], recetaEstadoEnum.enumValues[1], recetaEstadoEnum.enumValues[2]] as const;
     const recetasVigentes = await db
       .select({ medicamento: recetas.medicamento })
       .from(recetas)
       .where(
         and(
           eq(recetas.pacienteId, id),
-          sql`${recetas.estado} IN (${estadosActivos[0]}::receta_estado, ${estadosActivos[1]}::receta_estado, ${estadosActivos[2]}::receta_estado)`,
+          inArray(recetas.estado, [...ESTADOS_ACTIVOS]),
           or(isNull(recetas.fechaFin), gte(recetas.fechaFin, hoy)),
         ),
       );

@@ -1,14 +1,14 @@
+import { eq, and, inArray, or, gte, isNull } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, and, sql, or, gte, isNull } from 'drizzle-orm';
 import { z } from 'zod';
-import { pacientes, recetas, recetaEstadoEnum } from '@/drizzle/schema';
+import { pacientes, recetas } from '@/drizzle/schema';
+import { verifyPacienteAccess } from '@/lib/api-auth';
 import { apiHandler } from '@/lib/api-handler';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { verifyPacienteAccess } from '@/lib/api-auth';
 import { verificarReceta } from '@/lib/farmaco-interacciones';
 import { canAccess } from '@/lib/features';
-import { getHoyISO } from '@/lib/receta-utils';
+import { getHoyISO, ESTADOS_ACTIVOS } from '@/lib/receta-utils';
 
 const verificarSchema = z.object({
   pacienteId: z.string().uuid(),
@@ -46,14 +46,15 @@ export const GET = apiHandler(async (request: NextRequest) => {
   }
 
   const hoy = getHoyISO();
-  const estadosActivos = [recetaEstadoEnum.enumValues[0], recetaEstadoEnum.enumValues[1], recetaEstadoEnum.enumValues[2]] as const;
   const activas = await db
-    .select({ medicamento: recetas.medicamento })
+    .select({
+      medicamento: recetas.medicamento,
+    })
     .from(recetas)
     .where(
       and(
         eq(recetas.pacienteId, parsed.pacienteId),
-        sql`${recetas.estado} IN (${estadosActivos[0]}::receta_estado, ${estadosActivos[1]}::receta_estado, ${estadosActivos[2]}::receta_estado)`,
+        inArray(recetas.estado, [...ESTADOS_ACTIVOS]),
         or(isNull(recetas.fechaFin), gte(recetas.fechaFin, hoy)),
       ),
     );
