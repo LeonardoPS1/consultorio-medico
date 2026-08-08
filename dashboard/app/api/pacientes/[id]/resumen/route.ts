@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { safeError, safeLog } from '@/lib/logger';
 import { getHoyISO, ESTADOS_ACTIVOS } from '@/lib/receta-utils';
+import { canAccess } from '@/lib/features';
 
 const MAX_NOTAS = 5;
 
@@ -37,8 +38,13 @@ async function requireAuth(request: NextRequest, pacienteId: string) {
  */
 export async function GET(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
-  const { error } = await requireAuth(request, id);
+  const { session, error } = await requireAuth(request, id);
   if (error) return error;
+
+  const plan = (session?.user as { plan?: string } | undefined)?.plan;
+  if (!canAccess(plan, 'resumen-longitudinal')) {
+    return NextResponse.json({ contenido: null, generadoEn: null });
+  }
 
   try {
     const [cache] = await db
@@ -69,6 +75,14 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
   const { id } = await paramsPromise;
   const { session, error } = await requireAuth(request, id);
   if (error) return error;
+
+  const plan = (session?.user as { plan?: string } | undefined)?.plan;
+  if (!canAccess(plan, 'resumen-longitudinal')) {
+    return NextResponse.json(
+      { error: 'El resumen longitudinal requiere el plan Starter o superior. Actualizá tu plan para usarlo.' },
+      { status: 403 },
+    );
+  }
 
   try {
     const [paciente] = await db

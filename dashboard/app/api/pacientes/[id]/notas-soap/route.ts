@@ -4,6 +4,8 @@ import { notasSoap, medicos } from '@/drizzle/schema';
 import { eq, desc, and, sql } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { verifyPacienteAccess } from '@/lib/api-auth';
+import { sugerirCie10 } from '@/lib/ai-clinical';
+import { canAccess } from '@/lib/features';
 
 /**
  * Helper de auth para GET/PATCH/DELETE de notas SOAP
@@ -107,6 +109,22 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
 
     const body = await request.json();
 
+    const plan = (session.user as { plan?: string } | undefined)?.plan;
+    const assessment = typeof body.assessment === 'string' ? body.assessment.trim() : '';
+    let cie10Sugerido = body.cie10Sugerido ?? null;
+
+    if (assessment && canAccess(plan, 'cie10-sugerido')) {
+      try {
+        const sugerencias = await sugerirCie10(assessment, {
+          subjetivo: typeof body.subjetivo === 'string' ? body.subjetivo : undefined,
+        });
+        if (sugerencias.length > 0) cie10Sugerido = sugerencias;
+      } catch {
+        // fail-open: si la IA no responde, se conserva lo enviado por el cliente
+        cie10Sugerido = body.cie10Sugerido ?? null;
+      }
+    }
+
     const [nota] = await db
       .insert(notasSoap)
       .values({
@@ -119,7 +137,7 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
         plan: body.plan || null,
         cie10Codigo: body.cie10Codigo || null,
         cie10Descripcion: body.cie10Descripcion || null,
-        cie10Sugerido: body.cie10Sugerido ?? null,
+        cie10Sugerido,
         derivarA: body.derivarA || null,
         requiereControl: body.requiereControl ?? false,
         controlEnDias: body.controlEnDias || null,
@@ -143,8 +161,9 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
  */
 export async function PATCH(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
-  const { error } = await requireAuthForNotasSoap(request, { id });
-  if (error) return error;
+  const authResult = await requireAuthForNotasSoap(request, { id });
+  if (authResult.error) return authResult.error;
+  const session = authResult.session;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -177,6 +196,24 @@ export async function PATCH(request: NextRequest, { params: paramsPromise }: { p
     if (body.cie10Codigo !== undefined) updateData.cie10Codigo = body.cie10Codigo;
     if (body.cie10Descripcion !== undefined) updateData.cie10Descripcion = body.cie10Descripcion;
     if (body.cie10Sugerido !== undefined) updateData.cie10Sugerido = body.cie10Sugerido;
+
+    if (body.assessment !== undefined && typeof body.assessment === 'string' && body.assessment.trim()) {
+      const plan = (session?.user as { plan?: string } | undefined)?.plan;
+      if (canAccess(plan, 'cie10-sugerido')) {
+        try {
+          const sugerencias = await sugerirCie10(body.assessment.trim(), {
+            subjetivo: typeof body.subjetivo === 'string' ? body.subjetivo : undefined,
+          });
+          if (sugerencias.length > 0) {
+            updateData.cie10Sugerido = sugerencias;
+          } else {
+            updateData.cie10Sugerido = [];
+          }
+        } catch {
+          // fail-open
+        }
+      }
+    }
     if (body.derivarA !== undefined) updateData.derivarA = body.derivarA;
     if (body.requiereControl !== undefined) updateData.requiereControl = body.requiereControl;
     if (body.controlEnDias !== undefined) updateData.controlEnDias = body.controlEnDias;

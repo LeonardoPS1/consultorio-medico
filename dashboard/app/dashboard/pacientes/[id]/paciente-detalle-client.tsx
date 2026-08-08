@@ -33,6 +33,7 @@ import {
   FileSignature,
   Upload,
   Sparkles,
+  AlertTriangle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
@@ -77,6 +78,8 @@ import {
 } from '@/components/ui/dialog';
 import { descargarReceta, enviarRecetaWhatsApp, imprimirReceta } from '@/lib/receta-pdf';
 import { mapEstadoDisplay, ESTADO_DISPLAY_LABELS } from '@/lib/receta-utils';
+import { useCanAccess } from '@/lib/features';
+import type { AlertaClinica } from '@/lib/farmaco-interacciones';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -244,6 +247,19 @@ export function PacienteDetalleClient({
   const [frecuencia, setFrecuencia] = useState('');
   const [indicaciones, setIndicaciones] = useState('');
   const [deleteRecetaId, setDeleteRecetaId] = useState<string | null>(null);
+
+  // ─── Feature gates ────────────────────────────────
+  const puedeResumen = useCanAccess('resumen-longitudinal');
+  const puedeAlertas = useCanAccess('alertas-interacciones');
+  const [alertasClinicas, setAlertasClinicas] = useState<AlertaClinica[]>([]);
+  const [alertaDialogOpen, setAlertaDialogOpen] = useState(false);
+  const [pendingReceta, setPendingReceta] = useState<{
+    medicamento: string;
+    dosis: string;
+    frecuencia?: string;
+    indicaciones?: string;
+  } | null>(null);
+  const [verificandoAlertas, setVerificandoAlertas] = useState(false);
 
   // ─── Historial state ──────────────────────────────
   const [historialList, setHistorialList] = useState(historial);
@@ -655,7 +671,7 @@ export function PacienteDetalleClient({
     }
   };
 
-  const handleCreateReceta = async () => {
+  const doSubmitReceta = async () => {
     if (!medicamento.trim() || !dosis.trim()) return;
     setSavingReceta(true);
     try {
@@ -697,6 +713,43 @@ export function PacienteDetalleClient({
       toast({ title: 'Error', description: 'No se pudo crear la receta', variant: 'destructive' });
     } finally {
       setSavingReceta(false);
+    }
+  };
+
+  const handleCreateReceta = async () => {
+    if (!medicamento.trim() || !dosis.trim()) return;
+    if (!puedeAlertas) {
+      await doSubmitReceta();
+      return;
+    }
+    setVerificandoAlertas(true);
+    try {
+      const url = `/api/recetas/verificar?pacienteId=${encodeURIComponent(
+        paciente.id
+      )}&medicamento=${encodeURIComponent(medicamento.trim())}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        await doSubmitReceta();
+        return;
+      }
+      const json = await res.json();
+      const lista = Array.isArray(json.alertas) ? json.alertas : [];
+      if (lista.length > 0) {
+        setAlertasClinicas(lista);
+        setPendingReceta({
+          medicamento: medicamento.trim(),
+          dosis: dosis.trim(),
+          frecuencia: frecuencia.trim() || undefined,
+          indicaciones: indicaciones.trim() || undefined,
+        });
+        setAlertaDialogOpen(true);
+        return;
+      }
+      await doSubmitReceta();
+    } catch {
+      await doSubmitReceta();
+    } finally {
+      setVerificandoAlertas(false);
     }
   };
 
@@ -1441,9 +1494,9 @@ export function PacienteDetalleClient({
                     size="sm"
                     className="h-7 text-xs"
                     onClick={handleCreateReceta}
-                    disabled={savingReceta || !medicamento.trim() || !dosis.trim()}
+                    disabled={savingReceta || verificandoAlertas || !medicamento.trim() || !dosis.trim()}
                   >
-                    {savingReceta ? 'Creando...' : 'Crear Receta'}
+                    {savingReceta || verificandoAlertas ? 'Verificando...' : 'Crear Receta'}
                   </Button>
                 </div>
               </CardContent>
@@ -1727,8 +1780,8 @@ export function PacienteDetalleClient({
             )}
           </div>
 
-          {/* Resumen longitudinal generado por IA (T2) */}
-          {notasSoapList.length >= 2 && (
+          {/* Resumen longitudinal generado por IA */}
+          {puedeResumen && notasSoapList.length >= 2 && (
             <Card className="mb-3 border-primary/30 bg-gradient-to-br from-blue-50/60 to-purple-50/40 dark:from-blue-950/20 dark:to-purple-950/20">
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -2843,6 +2896,53 @@ export function PacienteDetalleClient({
           }
         }}
       />
+
+      <AlertDialog open={alertaDialogOpen} onOpenChange={setAlertaDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Alerta clínica: revísela antes de prescribir
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Se detectaron {alertasClinicas.length} advertencia
+              {alertasClinicas.length !== 1 ? 's' : ''} para{' '}
+              <span className="font-medium text-foreground">{pendingReceta?.medicamento}</span>. ¿Desea
+              continuar con la prescripción?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            {alertasClinicas.map((alerta, idx) => (
+              <div
+                key={idx}
+                className={`rounded-lg border p-3 text-sm ${
+                  alerta.riesgo === 'alta'
+                    ? 'border-red-200 bg-red-50 text-red-800'
+                    : 'border-amber-200 bg-amber-50 text-amber-800'
+                }`}
+              >
+                <p className="font-medium">
+                  {alerta.tipo === 'alergia' ? 'Alergia' : 'Interacción'} con {alerta.con}
+                </p>
+                <p className="mt-0.5">{alerta.mensaje}</p>
+              </div>
+            ))}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setAlertaDialogOpen(false);
+                setAlertasClinicas([]);
+                setPendingReceta(null);
+                void doSubmitReceta();
+              }}
+            >
+              Aceptar y continuar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
