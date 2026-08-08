@@ -1,4 +1,10 @@
-import { sendMessage as sendChatwootMessage, getActiveMessagingChannel } from '@/lib/services/chatwoot';
+import {
+  sendMessage as sendChatwootMessage,
+  getActiveMessagingChannel,
+  findContactByPhone,
+  getOrCreateConversation,
+  getInboxId,
+} from '@/lib/services/chatwoot';
 import { safeLog, safeWarn, safeError } from '@/lib/logger';
 
 /**
@@ -14,7 +20,12 @@ export async function sendWhatsApp(params: {
   const channel = getActiveMessagingChannel();
 
   if (channel === 'chatwoot') {
-    return sendViaChatwoot(params);
+    const enviado = await sendViaChatwoot(params);
+    if (enviado) return true;
+
+    // Fallback: si Chatwoot no puede enviar (ej. sin contacto), usar Twilio
+    safeWarn('[WhatsApp] Chatwoot no envió — fallback a Twilio');
+    return sendViaTwilio(params);
   }
 
   return sendViaTwilio(params);
@@ -25,16 +36,31 @@ async function sendViaChatwoot(params: {
   body: string;
   conversationId?: number;
 }): Promise<boolean> {
-  const chatwootConvId = params.conversationId;
+  let chatwootConvId = params.conversationId;
 
-  if (chatwootConvId) {
-    return sendChatwootMessage(chatwootConvId, params.body, 'outgoing');
+  if (!chatwootConvId) {
+    // Sin conversationId: buscar contacto por teléfono y (re)usar su conversación
+    try {
+      const contacto = await findContactByPhone(params.to);
+      if (contacto) {
+        const inboxPacientes = getInboxId('pacientes');
+        const conv = await getOrCreateConversation(contacto.id, inboxPacientes || '1');
+        if (conv?.id) {
+          chatwootConvId = Number(conv.id);
+          safeLog(`[WhatsApp] Conversación Chatwoot ${chatwootConvId} para ${params.to}`);
+        }
+      }
+    } catch (e) {
+      safeWarn('[WhatsApp] No se pudo resolver conversación Chatwoot:', (e as Error).message);
+    }
   }
 
-  // Sin conversationId, intentamos buscar o crear conversación vía API de Chatwoot
-  // Esto requiere tener el contacto creado previamente
-  safeWarn('[WhatsApp] Chatwoot requiere conversationId para enviar mensajes');
-  return false;
+  if (!chatwootConvId) {
+    safeWarn('[WhatsApp] Chatwoot no tiene conversación para el destinatario');
+    return false;
+  }
+
+  return sendChatwootMessage(chatwootConvId, params.body, 'outgoing');
 }
 
 async function sendViaTwilio(params: {

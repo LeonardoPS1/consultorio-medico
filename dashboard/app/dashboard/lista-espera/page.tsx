@@ -39,6 +39,13 @@ export default async function ListaEsperaPage() {
   const pacientesUnicos = new Set(items.map((i) => i.pacienteId)).size;
   const medicosUnicos = new Set(items.map((i) => i.medicoId)).size;
 
+  const conOfertaPendiente = new Set(
+    (await waitlistService.listarOfertas(undefined, 'pendiente').catch(() => [])).map(
+      (o) => o.listaEsperaId,
+    ),
+  ).size;
+  const sinOfertaActiva = Math.max(total - conOfertaPendiente, 0);
+
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <PageHeader title="Lista de Espera" />
@@ -71,7 +78,7 @@ export default async function ListaEsperaPage() {
             <XCircle className="h-4 w-4" />
             Sin oferta activa
           </div>
-          <p className="text-2xl font-bold mt-1">{total}</p>
+          <p className="text-2xl font-bold mt-1">{sinOfertaActiva}</p>
         </div>
       </div>
 

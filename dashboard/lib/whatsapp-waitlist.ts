@@ -7,51 +7,26 @@
 
 import { db } from '@/lib/db';
 import { safeLog, safeWarn, safeError } from '@/lib/logger';
+import { sendWhatsApp } from '@/lib/whatsapp';
 import { turnos, pacientes, medicos, ofertasTurno, listaEspera } from '@/drizzle/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import { waitlistService } from '@/lib/services/waitlist';
 
 // ─── Helpers ──────────────────────────────────────────────
 
-async function enviarWhatsApp(telefono: string, mensaje: string): Promise<boolean> {
+/**
+ * Envía un mensaje WhatsApp usando el canal activo (Chatwoot/Evolution
+ * primero, Twilio como fallback). Si se conoce el id numérico de la
+ * conversación Chatwoot, se fuerza ese canal para que la respuesta al
+ * paciente viaje por el mismo canal por el que llegó.
+ */
+async function enviarWhatsApp(
+  telefono: string,
+  mensaje: string,
+  conversationId?: number,
+): Promise<boolean> {
   try {
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
-
-    if (!accountSid || !authToken || !fromNumber) {
-      safeWarn('[WhatsApp-Waitlist] ⚠️ Falta config Twilio');
-      return false;
-    }
-
-    const numeroLimpio = telefono.startsWith('whatsapp:') ? telefono : `whatsapp:${telefono}`;
-    const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
-    const formData = new URLSearchParams({
-      From: fromNumber,
-      To: numeroLimpio,
-      Body: mensaje,
-    });
-
-    const res = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData.toString(),
-        signal: AbortSignal.timeout(10000),
-      },
-    );
-
-    if (!res.ok) {
-      const body = await res.text();
-      safeError(`[WhatsApp-Waitlist] Error Twilio: ${res.status} ${body}`);
-      return false;
-    }
-
-    return true;
+    return await sendWhatsApp({ to: telefono, body: mensaje, conversationId });
   } catch (error) {
     safeError(
       '[WhatsApp-Waitlist] Error al enviar WhatsApp:',
@@ -198,6 +173,7 @@ export async function notificarMedicoReasignacion(turnoId: string): Promise<void
 export async function notificarConfirmacionReasignacion(
   turnoId: string,
   pacienteId: string,
+  conversationId?: number,
 ): Promise<void> {
   try {
     const [turno] = await db
@@ -223,7 +199,7 @@ export async function notificarConfirmacionReasignacion(
       `📅 ${fechaStr} a las ${horaStr} hs\n\n` +
       `Te esperamos. Gracias por confirmar.`;
 
-    await enviarWhatsApp(paciente.telefono, mensaje);
+    await enviarWhatsApp(paciente.telefono, mensaje, conversationId);
   } catch (error) {
     safeError(
       '[WhatsApp-Waitlist] Error notificarConfirmacionReasignacion:',
@@ -236,12 +212,20 @@ export async function notificarConfirmacionReasignacion(
  * Detecta si un mensaje entrante es respuesta a una oferta de turno
  * (ACEPTAR / RECHAZAR) y la procesa.
  *
+ * @param pacienteId ID del paciente que responde
+ * @param body       Texto del mensaje recibido
+ * @param telefono   Teléfono del paciente
+ * @param conversationId ID numérico de la conversación Chatwoot (opcional).
+ *                       Si viene, las confirmaciones se envían por ese mismo
+ *                       canal (Chatwoot/Evolution) en vez de elegir canal según
+ *                       el flag global. Si no viene, se usa el canal activo.
  * @returns true si el mensaje fue procesado como respuesta de waitlist
  */
 export async function handleWaitlistResponse(
   pacienteId: string,
   body: string,
   telefono: string,
+  conversationId?: number,
 ): Promise<boolean> {
   const texto = body.trim().toUpperCase();
 
@@ -273,6 +257,7 @@ export async function handleWaitlistResponse(
       await enviarWhatsApp(
         telefono,
         'No encontré una oferta de turno pendiente para ti. Si necesitas ayuda, escribí "HOLA" para hablar con un asistente.',
+        conversationId,
       );
       return true;
     }
@@ -281,19 +266,21 @@ export async function handleWaitlistResponse(
       await enviarWhatsApp(
         telefono,
         '⏰ La oferta de turno ya expiró. Si se libera otro turno, te vamos a notificar.',
+        conversationId,
       );
       return true;
     }
 
     if (esAceptar) {
       await waitlistService.aceptar(oferta.id);
-      await notificarConfirmacionReasignacion(oferta.turnoId, pacienteId);
+      await notificarConfirmacionReasignacion(oferta.turnoId, pacienteId, conversationId);
       await notificarMedicoReasignacion(oferta.turnoId);
     } else {
       await waitlistService.rechazar(oferta.id);
       await enviarWhatsApp(
         telefono,
         'Entendido, rechazamos la oferta. Si se libera otro turno, te avisaremos.',
+        conversationId,
       );
     }
 

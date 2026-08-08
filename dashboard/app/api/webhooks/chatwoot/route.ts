@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { pacientes, conversaciones, mensajes } from '@/drizzle/schema';
 import { eq, and, isNull, asc } from 'drizzle-orm';
 import { verifyWebhookSignature, sendMessage, getInboxId } from '@/lib/services/chatwoot';
+import { handleWaitlistResponse } from '@/lib/whatsapp-waitlist';
 import { safeLog, safeWarn, safeError } from '@/lib/logger';
 import { z } from 'zod';
 import { createHash } from 'crypto';
@@ -162,6 +163,25 @@ export async function POST(req: NextRequest) {
     // Detectar respuestas a recordatorios
     const upperMsg = messageContent.toUpperCase();
     if (['CONFIRMAR', 'CANCELAR'].includes(upperMsg)) {
+      return NextResponse.json({ ok: true });
+    }
+
+    // ─── Lista de espera: intercepción de respuestas ACEPTAR/RECHAZAR ───
+    // Replica la lógica determinística (sin IA) del webhook de Twilio: si un
+    // paciente responde a una oferta de turno, se procesa aquí y NO se reenvía
+    // al agente IA de n8n (WF-01).
+    const textExact = messageContent.trim().toUpperCase();
+    const esAceptarWl = textExact === 'ACEPTAR' || textExact === 'OK';
+    const esRechazarWl = textExact === 'RECHAZAR' || textExact === 'RECHAZO';
+    const esRespWaitlist = (esAceptarWl || esRechazarWl) && !!paciente;
+    // SÍ/NO simples pueden ser respuesta a recordatorio o a waitlist; el
+    // handler valida internamente si hay una oferta pendiente.
+    const esSiNoSimple = /^(SÍ|SI|NO)$/i.test(textExact);
+
+    if (esRespWaitlist || esSiNoSimple) {
+      handleWaitlistResponse(paciente.id, messageContent, rawPhone, conversation.id).catch(
+        (e) => safeError('[Chatwoot] Error handleWaitlistResponse:', (e as Error).message),
+      );
       return NextResponse.json({ ok: true });
     }
 
