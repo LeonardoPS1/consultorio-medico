@@ -2,7 +2,7 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 04/08/2026
+**Última actualización:** 08/08/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
 **Versión actual:** 1.36.0
 **Dashboard:** https://med.aicorebots.com
@@ -817,6 +817,8 @@ consultorio-medico/
 | **Hub único de Integraciones** | Consolidación de 3 superficies "Integraciones" en `/dashboard/integraciones` con 3 tabs (Catálogo / Webhooks salientes / Conexiones). Webhooks salientes movidos Premium→Profesional. Label admin "Integraciones"→"Conexiones". Onboarding actualizado. Patrón estado derivado para tabs. Commit `e726540` | 04/08 |
 | **White-Label: Dominio Custom + WF-17** | Resolución de tenant por dominio custom: migración 0058, `resolveTenantByHost()` con cache Map 60s, `proxy.ts` async. Verificación DNS TXT automática vía n8n WF-17 (cada 15 min, DNS-over-HTTPS). API `POST /api/internal/dominios/verificar` con Dokploy auto-domain. Ops Console genera token al setear dominioCustom. Feature gate `dominio-custom` (Premium). Commit `7beb92e` | 04/08 |
 | **IA Clínica (CIE-10 sugerido + Resumen + Alertas)** | Migración 0059 (`notas_soap.cie10_sugerido` jsonb + tabla `resumenes_paciente`). `lib/ai-clinical.ts` (sugerirCie10, generarResumenLongitudinal) + `lib/farmaco-interacciones.ts` (~20 interacciones FDA/BNF/Medscape). API `/api/pacientes/[id]/resumen` + `/api/recetas/verificar` (AlertDialog "Aceptar y continuar"). Features: `cie10-sugerido` (Professional), `resumen-longitudinal` (Starter), `alertas-interacciones` (Professional). Commit `c509c16` | 05/08 |
+| **IA Clínica prod + fixes ficha (ca5b5c9, 8b88bf2)** | sugerirCie10 server-side en POST/PATCH notas-soap (gate professional, aparece también en notas manuales). Gate resumen-longitudinal en GET/POST + Card oculta sin Starter. Alertas interacciones en crear receta de la ficha. Migración 0059 aplicada en prod. Fix `::receta_estado` inexistente (col varchar) → `inArray` CIE16. Commits `ca5b5c9`, `8b88bf2` | 07/08 |
+| **Waitlist + Chatwoot (1f0c2fc)** | Webhook Chatwoot (canal principal Evolution API) intercepta ACEPTAR/RECHAZAR/OK/RECHAZO/SÍ/SI/NO antes de forward a n8n → `handleWaitlistResponse` con conversationId (respuesta por el MISMO canal). `lib/whatsapp.ts` canal unificado (CANAL_MENSAJERIA default chatwoot + findContactByPhone→getOrCreateConversation auto, fallback Twilio). UI lista-espera ampliada (agregar paciente, asignar turno manual, panel ofertas con badges) + KPI corregido. Test mock `whatsapp-waitlist-response` 6/6. Commit `1f0c2fc` | 08/08 |
 
 ### 🟡 Prioridad Media
 
