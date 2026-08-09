@@ -574,6 +574,55 @@ export const waitlistService = {
   },
 
   /**
+   * Lista los turnos disponibles de un médico para ofrecer en lista de espera.
+   *
+   * Devuelve los turnos futuros del médico en estado `pendiente`, `confirmada`
+   * o `cancelada` (incluye `cancelada` para permitir reasignarlos), excluyendo
+   * los borrados. Cada turno incluye el nombre del paciente y `fecha`/`hora`
+   * formateadas en es-CL para mostrar en la UI.
+   * @param medicoId - ID del médico del que se listan los turnos.
+   * @returns Turnos disponibles formateados, ordenados por fecha ascendente.
+   */
+  async turnosDisponibles(medicoId: string) {
+    const rows = await db
+      .select({
+        id: turnos.id,
+        fechaHora: turnos.fechaHora,
+        estado: turnos.estado,
+        pacienteId: turnos.pacienteId,
+        medicoId: turnos.medicoId,
+        pacienteNombre: pacientes.nombre,
+        pacienteApellido: pacientes.apellido,
+      })
+      .from(turnos)
+      .leftJoin(pacientes, eq(turnos.pacienteId, pacientes.id))
+      .where(
+        and(
+          eq(turnos.medicoId, medicoId),
+          gte(turnos.fechaHora, new Date()),
+          inArray(turnos.estado, ['pendiente', 'confirmada', 'cancelada']),
+          sql`${turnos.deletedAt} IS NULL`,
+        ),
+      )
+      .orderBy(asc(turnos.fechaHora));
+
+    return rows.map((t) => {
+      const { fecha, hora } = formatearFechaHora(new Date(t.fechaHora));
+      return {
+        id: t.id,
+        fechaHora: t.fechaHora,
+        fecha,
+        hora,
+        estado: t.estado,
+        pacienteNombre: t.pacienteApellido
+          ? `${t.pacienteNombre} ${t.pacienteApellido}`
+          : t.pacienteNombre,
+        medicoId: t.medicoId,
+      };
+    });
+  },
+
+  /**
    * Lista ofertas de turno con datos relacionados.
    * @param listaEsperaId
    * @param estado
@@ -611,6 +660,22 @@ export const waitlistService = {
 // ============================================================
 // FRANJAS LIBRES
 // ============================================================
+
+/**
+ * Formatea fecha/hora de un turno en es-CL para mostrar en la UI.
+ * @param fecha - Fecha a formatear.
+ * @returns Objeto con `fecha` (día y mes, ej. "10 de agosto") y `hora` (HH:MM, ej. "09:00").
+ */
+export function formatearFechaHora(fecha: Date): { fecha: string; hora: string } {
+  return {
+    fecha: fecha.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' }),
+    hora: fecha.toLocaleTimeString('es-CL', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }),
+  };
+}
 
 /** Entrada de horario configurada para un día de la semana en `medicos.horarios`. */
 interface HorarioDia {
