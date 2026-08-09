@@ -7,7 +7,6 @@ import { X, Trash2, RefreshCw, UserPlus, CalendarPlus, ChevronDown, ChevronRight
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -26,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -70,13 +70,25 @@ interface OfertaTurnoItem {
   respondedAt: string | null;
 }
 
-interface TurnoCandidato {
+interface TurnoDisponible {
   id: string;
   fecha: string;
   hora: string;
-  paciente: string;
   estado: string;
+  pacienteNombre: string | null;
+  medicoId: string;
 }
+
+interface FranjaLibre {
+  fechaHora: string;
+  fecha: string;
+  hora: string;
+  duracionMinutos: number;
+}
+
+type DestinoOferta =
+  | { tipo: 'turno'; turnoId: string }
+  | { tipo: 'franja'; fechaHora: string; pacienteId: string; medicoId: string };
 
 export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem[] }) {
   const [items, setItems] = useState(initialItems);
@@ -90,11 +102,16 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
   const [notasNuevo, setNotasNuevo] = useState('');
   const [medicos, setMedicos] = useState<MedicoOption[]>([]);
 
-  // Asignar turno manual
+  // Asignar turno manual (turno ofrecido)
   const [turnoDialogFor, setTurnoDialogFor] = useState<WaitlistItem | null>(null);
-  const [turnosCancelados, setTurnosCancelados] = useState<TurnoCandidato[]>([]);
-  const [loadingTurnos, setLoadingTurnos] = useState(false);
+  const [tabTurno, setTabTurno] = useState<'turno' | 'franja'>('turno');
+  const [turnosDisponibles, setTurnosDisponibles] = useState<TurnoDisponible[]>([]);
+  const [loadingTurnosDisponibles, setLoadingTurnosDisponibles] = useState(false);
+  const [franjas, setFranjas] = useState<FranjaLibre[]>([]);
+  const [loadingFranjas, setLoadingFranjas] = useState(false);
   const [turnoSeleccionadoId, setTurnoSeleccionadoId] = useState('');
+  const [franjaSeleccionada, setFranjaSeleccionada] = useState<FranjaLibre | null>(null);
+  const [pacienteEnEsperaId, setPacienteEnEsperaId] = useState('');
   const [asignando, setAsignando] = useState(false);
 
   // Ver turnos ofrecidos
@@ -130,17 +147,31 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
     [],
   );
 
-  const cargarTurnosCancelados = useCallback(async (medicoId: string) => {
-    setLoadingTurnos(true);
-    setTurnosCancelados([]);
+  const cargarTurnosDisponibles = useCallback(async (medicoId: string) => {
+    setLoadingTurnosDisponibles(true);
+    setTurnosDisponibles([]);
     try {
-      const res = await fetch(`/api/turnos?estado=cancelada&medico=${medicoId}&limit=50`);
+      const res = await fetch(`/api/waitlist/turnos-disponibles?medicoId=${medicoId}`);
       const json = await res.json();
-      setTurnosCancelados(json.data || []);
+      setTurnosDisponibles(json.data || []);
     } catch {
-      setTurnosCancelados([]);
+      setTurnosDisponibles([]);
     } finally {
-      setLoadingTurnos(false);
+      setLoadingTurnosDisponibles(false);
+    }
+  }, []);
+
+  const cargarFranjas = useCallback(async (medicoId: string) => {
+    setLoadingFranjas(true);
+    setFranjas([]);
+    try {
+      const res = await fetch(`/api/waitlist/franjas?medicoId=${medicoId}&dias=7&limite=15`);
+      const json = await res.json();
+      setFranjas(json.data || []);
+    } catch {
+      setFranjas([]);
+    } finally {
+      setLoadingFranjas(false);
     }
   }, []);
 
@@ -174,27 +205,53 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
     }
   };
 
-  const handleAsignarTurno = async () => {
-    if (!turnoDialogFor || !turnoSeleccionadoId) {
-      toast({ title: 'Seleccioná un turno', variant: 'destructive' });
-      return;
-    }
+  const nombrePacienteEnEspera = (id: string) => {
+    const p = items.find((i) => i.id === id);
+    return p ? `${p.pacienteNombre ?? ''} ${p.pacienteApellido ?? ''}`.trim() : '';
+  };
+
+  const handleOfrecerTurno = async (destino: DestinoOferta) => {
+    if (!turnoDialogFor) return;
     setAsignando(true);
     try {
       const res = await fetch(`/api/waitlist/${turnoDialogFor.id}/oferta`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ turnoId: turnoSeleccionadoId }),
+        body: JSON.stringify(destino),
       });
-      if (!res.ok) throw new Error('Error al asignar turno');
-      toast({ title: 'Turno ofrecido creado y notificado por WhatsApp' });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        toast({
+          title: typeof json.error === 'string' ? json.error : 'No se pudo ofrecer el turno',
+          variant: 'destructive',
+        });
+        return;
+      }
+      toast({ title: 'Turno ofrecido y notificado por WhatsApp' });
       setTurnoDialogFor(null);
       setTurnoSeleccionadoId('');
+      setFranjaSeleccionada(null);
       await handleRefresh();
     } catch {
-      toast({ title: 'No se pudo ofrecer el turno (debe ser futuro, del mismo médico y sin turno ofrecido pendiente)', variant: 'destructive' });
+      toast({ title: 'No se pudo ofrecer el turno. Intente nuevamente.', variant: 'destructive' });
     } finally {
       setAsignando(false);
+    }
+  };
+
+  const confirmarOferta = async () => {
+    if (!turnoDialogFor || !pacienteEnEsperaId) return;
+    if (tabTurno === 'turno') {
+      if (!turnoSeleccionadoId) return;
+      await handleOfrecerTurno({ tipo: 'turno', turnoId: turnoSeleccionadoId });
+    } else {
+      if (!franjaSeleccionada) return;
+      await handleOfrecerTurno({
+        tipo: 'franja',
+        fechaHora: franjaSeleccionada.fechaHora,
+        pacienteId: pacienteEnEsperaId,
+        medicoId: turnoDialogFor.medicoId,
+      });
     }
   };
 
@@ -263,6 +320,8 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
         return <Badge variant="outline">{estado}</Badge>;
     }
   };
+
+  const turnoSeleccionado = turnosDisponibles.find((t) => t.id === turnoSeleccionadoId);
 
   if (items.length === 0) {
     return (
@@ -440,73 +499,199 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                     {item.estado === 'activa' ? 'Esperando' : item.estado}
                   </Badge>
 
-                  <Dialog
-                    open={turnoDialogFor?.id === item.id}
-                    onOpenChange={(open) => {
-                      if (open) {
-                        setTurnoDialogFor(item);
-                        setTurnoSeleccionadoId('');
-                        void cargarTurnosCancelados(item.medicoId);
-                      } else {
-                        setTurnoDialogFor(null);
-                      }
-                    }}
-                  >
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8"
-                        aria-label="Asignar turno manualmente"
-                      >
-                        <CalendarPlus className="h-4 w-4 mr-1" />
-                        Asignar turno
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Asignar turno (turno ofrecido)</DialogTitle>
-                        <DialogDescription>
-                          Elegí un turno cancelado para ofrecerlo a {item.pacienteNombre}{' '}
-                          {item.pacienteApellido}. Se notificará por WhatsApp con opción
-                          ACEPTAR/RECHAZAR.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-2 max-h-72 overflow-y-auto">
-                        {loadingTurnos && <p className="text-sm text-muted-foreground">Cargando turnos...</p>}
-                        {!loadingTurnos && turnosCancelados.length === 0 && (
-                          <p className="text-sm text-muted-foreground">
-                            No hay turnos cancelados para este médico.
-                          </p>
+                  {item.estado === 'activa' && (
+                    <Dialog
+                      open={turnoDialogFor?.id === item.id}
+                      onOpenChange={(open) => {
+                        if (open) {
+                          setTurnoDialogFor(item);
+                          setTabTurno('turno');
+                          setTurnoSeleccionadoId('');
+                          setFranjaSeleccionada(null);
+                          setPacienteEnEsperaId(item.id);
+                          void cargarTurnosDisponibles(item.medicoId);
+                          void cargarFranjas(item.medicoId);
+                        } else {
+                          setTurnoDialogFor(null);
+                        }
+                      }}
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8"
+                          aria-label="Asignar turno manualmente"
+                        >
+                          <CalendarPlus className="h-4 w-4 mr-1" />
+                          Asignar turno
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-lg">
+                        <DialogHeader>
+                          <DialogTitle>Asignar turno (turno ofrecido)</DialogTitle>
+                          <DialogDescription>
+                            Elegí un turno existente o una franja libre del médico para ofrecerlo al
+                            paciente en espera. Se notificará por WhatsApp con opción
+                            ACEPTAR/RECHAZAR.
+                          </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="space-y-2">
+                          <Label>Paciente en espera</Label>
+                          <Select value={pacienteEnEsperaId} onValueChange={setPacienteEnEsperaId}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar paciente en espera..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {items
+                                .filter((i) => i.medicoId === item.medicoId && i.estado === 'activa')
+                                .map((p) => (
+                                  <SelectItem key={p.id} value={p.id}>
+                                    {p.pacienteNombre} {p.pacienteApellido}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <Tabs
+                          value={tabTurno}
+                          onValueChange={(v) => setTabTurno(v as 'turno' | 'franja')}
+                        >
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="turno">Turno existente</TabsTrigger>
+                            <TabsTrigger value="franja">Franja libre</TabsTrigger>
+                          </TabsList>
+
+                          <TabsContent value="turno" className="space-y-2 max-h-72 overflow-y-auto">
+                            {loadingTurnosDisponibles && (
+                              <p className="text-sm text-muted-foreground">
+                                Cargando turnos disponibles...
+                              </p>
+                            )}
+                            {!loadingTurnosDisponibles && turnosDisponibles.length === 0 && (
+                              <p className="text-sm text-muted-foreground">
+                                No hay turnos disponibles para este médico.
+                              </p>
+                            )}
+                            {turnosDisponibles.map((t) => {
+                              const seleccionado = turnoSeleccionadoId === t.id;
+                              return (
+                                <div
+                                  key={t.id}
+                                  className={`flex items-center justify-between gap-3 rounded-lg border p-2 pl-3 transition-colors ${
+                                    seleccionado ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+                                  }`}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => setTurnoSeleccionadoId(t.id)}
+                                    className="min-w-0 flex-1 text-left"
+                                  >
+                                    <div className="font-medium">
+                                      {t.fecha} · {t.hora}
+                                    </div>
+                                    <div className="mt-0.5 flex items-center gap-2 text-sm text-muted-foreground">
+                                      <span className="truncate">{t.pacienteNombre}</span>
+                                      <Badge variant="outline" className="shrink-0">
+                                        {t.estado}
+                                      </Badge>
+                                    </div>
+                                  </button>
+                                  <Button
+                                    size="sm"
+                                    variant={seleccionado ? 'default' : 'outline'}
+                                    onClick={() => setTurnoSeleccionadoId(t.id)}
+                                  >
+                                    Ofrecer
+                                  </Button>
+                                </div>
+                              );
+                            })}
+                          </TabsContent>
+
+                          <TabsContent value="franja" className="space-y-2 max-h-72 overflow-y-auto">
+                            {loadingFranjas && (
+                              <p className="text-sm text-muted-foreground">Cargando franjas libres...</p>
+                            )}
+                            {!loadingFranjas && franjas.length === 0 && (
+                              <p className="text-sm text-muted-foreground">
+                                No hay franjas libres para este médico.
+                              </p>
+                            )}
+                            {franjas.map((f) => {
+                              const seleccionada = franjaSeleccionada?.fechaHora === f.fechaHora;
+                              return (
+                                <div
+                                  key={f.fechaHora}
+                                  className={`flex items-center justify-between gap-3 rounded-lg border p-2 pl-3 transition-colors ${
+                                    seleccionada ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+                                  }`}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => setFranjaSeleccionada(f)}
+                                    className="min-w-0 flex-1 text-left"
+                                  >
+                                    <div className="font-medium">
+                                      {f.fecha} · {f.hora}
+                                    </div>
+                                    <div className="mt-0.5 text-sm text-muted-foreground">
+                                      Duración: {f.duracionMinutos} min
+                                    </div>
+                                  </button>
+                                  <Button
+                                    size="sm"
+                                    variant={seleccionada ? 'default' : 'outline'}
+                                    onClick={() => setFranjaSeleccionada(f)}
+                                  >
+                                    Ofrecer en este horario
+                                  </Button>
+                                </div>
+                              );
+                            })}
+                          </TabsContent>
+                        </Tabs>
+
+                        {tabTurno === 'turno' && turnoSeleccionado && (
+                          <div className="rounded-lg border bg-muted/40 p-3 text-sm">
+                            <span className="text-muted-foreground">Destino: </span>
+                            <span className="font-medium">
+                              Turno de {nombrePacienteEnEspera(pacienteEnEsperaId)} ·{' '}
+                              {turnoSeleccionado.fecha} {turnoSeleccionado.hora} ·{' '}
+                              {turnoSeleccionado.estado}
+                            </span>
+                          </div>
                         )}
-                        {turnosCancelados.map((t) => (
-                          <button
-                            key={t.id}
-                            type="button"
-                            onClick={() => setTurnoSeleccionadoId(t.id)}
-                            className={`w-full text-left rounded-lg border p-3 transition-colors ${
-                              turnoSeleccionadoId === t.id
-                                ? 'border-primary bg-primary/5'
-                                : 'hover:bg-muted/50'
-                            }`}
+                        {tabTurno === 'franja' && franjaSeleccionada && (
+                          <div className="rounded-lg border bg-muted/40 p-3 text-sm">
+                            <span className="text-muted-foreground">Destino: </span>
+                            <span className="font-medium">
+                              Franja {franjaSeleccionada.fecha} {franjaSeleccionada.hora} (
+                              {franjaSeleccionada.duracionMinutos} min)
+                            </span>
+                          </div>
+                        )}
+
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setTurnoDialogFor(null)}>
+                            Cancelar
+                          </Button>
+                          <Button
+                            onClick={confirmarOferta}
+                            disabled={
+                              asignando ||
+                              !pacienteEnEsperaId ||
+                              (tabTurno === 'turno' ? !turnoSeleccionadoId : !franjaSeleccionada)
+                            }
                           >
-                            <div className="font-medium">{t.paciente}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {t.fecha} · {t.hora}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setTurnoDialogFor(null)}>
-                          Cancelar
-                        </Button>
-                        <Button onClick={handleAsignarTurno} disabled={asignando || !turnoSeleccionadoId}>
-                          {asignando ? 'Asignando...' : 'Ofrecer turno'}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                            {asignando ? 'Ofreciendo...' : 'Ofrecer turno'}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
 
                   <Button
                     variant="ghost"
