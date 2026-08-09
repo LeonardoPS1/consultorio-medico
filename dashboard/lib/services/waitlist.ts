@@ -320,11 +320,34 @@ export const waitlistService = {
     if (oferta.estado !== 'pendiente') conflict('La oferta ya fue ' + oferta.estado);
     if (new Date() > new Date(oferta.expiracion)) conflict('La oferta ha expirado');
 
+    // No aceptar si el turno ya tiene otra oferta pendiente (de otra inscripción);
+    // evita que dos pacientes acepten el mismo turno a la vez.
+    const [otraOferta] = await db
+      .select({ id: ofertasTurno.id })
+      .from(ofertasTurno)
+      .where(
+        and(
+          eq(ofertasTurno.turnoId, oferta.turnoId),
+          eq(ofertasTurno.estado, 'pendiente'),
+          not(eq(ofertasTurno.id, ofertaId)),
+        ),
+      )
+      .limit(1);
+    if (otraOferta) conflict('Ese turno ya tiene una oferta pendiente');
+
     // Obtener la inscripción para saber el paciente
     const [inscripcion] = await db
       .select({ pacienteId: listaEspera.pacienteId })
       .from(listaEspera)
       .where(eq(listaEspera.id, oferta.listaEsperaId))
+      .limit(1);
+
+    // Paciente que tenía el turno antes de la reasignación (para notificar si
+    // fue desplazado). Se lee ANTES del update para no perder el valor original.
+    const [turnoAnterior] = await db
+      .select({ pacienteId: turnos.pacienteId })
+      .from(turnos)
+      .where(eq(turnos.id, oferta.turnoId))
       .limit(1);
 
     // Reasignar el turno al nuevo paciente
@@ -349,6 +372,16 @@ export const waitlistService = {
       .update(listaEspera)
       .set({ estado: 'cumplida' })
       .where(eq(listaEspera.id, oferta.listaEsperaId));
+
+    // Si el turno pertenecía a otro paciente, notificar al desplazado
+    // (fire-and-forget; import dinámico evita el ciclo de imports con
+    // whatsapp-waitlist, que importa este servicio).
+    const pacienteAnterior = turnoAnterior?.pacienteId;
+    if (pacienteAnterior && pacienteAnterior !== inscripcion.pacienteId) {
+      void import('@/lib/whatsapp-waitlist')
+        .then((m) => m.notificarPacienteReasignado(turnoActualizado, pacienteAnterior))
+        .catch(() => undefined);
+    }
 
     return {
       oferta: { ...oferta, estado: 'aceptada' },
