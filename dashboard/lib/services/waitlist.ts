@@ -209,6 +209,22 @@ export const waitlistService = {
       .limit(1);
     if (!inscripcion) notFound('Inscripción en lista de espera no encontrada o no activa');
 
+    // Límite: máximo 1 oferta pendiente por paciente (en otra inscripción).
+    // Se valida antes de persistir nada para no dejar turnos huérfanos en Caso B.
+    const [ofertaPaciente] = await db
+      .select({ id: ofertasTurno.id })
+      .from(ofertasTurno)
+      .innerJoin(listaEspera, eq(ofertasTurno.listaEsperaId, listaEspera.id))
+      .where(
+        and(
+          eq(ofertasTurno.estado, 'pendiente'),
+          eq(listaEspera.pacienteId, inscripcion.pacienteId),
+          not(eq(ofertasTurno.listaEsperaId, listaEsperaId)),
+        ),
+      )
+      .limit(1);
+    if (ofertaPaciente) conflict('Ya existe un turno ofrecido pendiente para este paciente');
+
     let turnoId: string;
 
     if ('turnoId' in objetivo) {
@@ -268,21 +284,6 @@ export const waitlistService = {
 
       turnoId = turnoNuevo.id;
     }
-
-    // Límite: máximo 1 oferta pendiente por paciente (en otra inscripción)
-    const [ofertaPaciente] = await db
-      .select({ id: ofertasTurno.id })
-      .from(ofertasTurno)
-      .innerJoin(listaEspera, eq(ofertasTurno.listaEsperaId, listaEspera.id))
-      .where(
-        and(
-          eq(ofertasTurno.estado, 'pendiente'),
-          eq(listaEspera.pacienteId, inscripcion.pacienteId),
-          not(eq(ofertasTurno.listaEsperaId, listaEsperaId)),
-        ),
-      )
-      .limit(1);
-    if (ofertaPaciente) conflict('Ya existe un turno ofrecido pendiente para este paciente');
 
     // Calcular expiración (15 minutos desde ahora)
     const expiracion = new Date(Date.now() + TIEMPO_EXPIRACION_MINUTOS * 60 * 1000);
