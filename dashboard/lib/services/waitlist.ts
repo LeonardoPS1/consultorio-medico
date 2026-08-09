@@ -14,11 +14,30 @@
  * - Después de 3 ofertas: pausa de 24h
  */
 
+import {
+  and,
+  eq,
+  sql,
+  count,
+  desc,
+  asc,
+  lt,
+  not,
+  inArray,
+  gte,
+  lte,
+  notInArray,
+} from 'drizzle-orm';
+import {
+  listaEspera,
+  ofertasTurno,
+  turnos,
+  pacientes,
+  medicos,
+  bloqueosAgenda,
+} from '@/drizzle/schema';
+import { notFound, conflict } from '@/lib/api-handler';
 import { db } from '@/lib/db';
-import { listaEspera, ofertasTurno, turnos, pacientes, medicos } from '@/drizzle/schema';
-import { eq, and, sql, count, desc, asc, lt, not, inArray } from 'drizzle-orm';
-import { notFound, conflict, fail } from '@/lib/api-handler';
-import type { ListaEspera, OfertaTurno } from '@/drizzle/schema';
 
 const TIEMPO_EXPIRACION_MINUTOS = 15;
 const LIMITE_OFERTAS_POR_DIA = 3;
@@ -30,6 +49,10 @@ export const waitlistService = {
 
   /**
    * Agrega un paciente a la lista de espera para un médico específico.
+   * @param pacienteId
+   * @param medicoId
+   * @param notas
+   * @param sucursalId
    */
   async agregar(pacienteId: string, medicoId: string, notas?: string, sucursalId?: string) {
     // Validar que el paciente existe
@@ -77,6 +100,7 @@ export const waitlistService = {
 
   /**
    * Quita (cancela) una inscripción de la lista de espera.
+   * @param id
    */
   async quitar(id: string) {
     const [existe] = await db
@@ -95,6 +119,8 @@ export const waitlistService = {
    * Busca el mejor candidato para un turno cancelado.
    * FIFO estricto: el paciente que lleva más tiempo esperando.
    * Límite: 3 ofertas/día/paciente, luego pausa 24h.
+   * @param medicoId
+   * @param sucursalId
    */
   async buscarCandidato(medicoId: string, sucursalId?: string) {
     const candidatos = await db
@@ -143,6 +169,8 @@ export const waitlistService = {
 
   /**
    * Crea una oferta de turno para un paciente en lista de espera.
+   * @param listaEsperaId
+   * @param turnoId
    */
   async crearOferta(listaEsperaId: string, turnoId: string) {
     // Validar que la inscripción existe y está activa
@@ -187,6 +215,7 @@ export const waitlistService = {
 
   /**
    * Acepta una oferta de turno y reasigna el turno al paciente en espera.
+   * @param ofertaId
    */
   async aceptar(ofertaId: string) {
     const [oferta] = await db
@@ -242,6 +271,7 @@ export const waitlistService = {
 
   /**
    * Rechaza una oferta de turno.
+   * @param ofertaId
    */
   async rechazar(ofertaId: string) {
     const [oferta] = await db
@@ -341,6 +371,9 @@ export const waitlistService = {
 
   /**
    * Busca candidato excluyendo inscripciones específicas.
+   * @param medicoId
+   * @param excluirIds
+   * @param sucursalId
    */
   async buscarCandidatoExcluyendo(medicoId: string, excluirIds: string[], sucursalId?: string) {
     const candidatos = await db
@@ -389,6 +422,8 @@ export const waitlistService = {
 
   /**
    * Lista inscripciones en lista de espera con datos del paciente.
+   * @param medicoId
+   * @param estado
    */
   async listar(medicoId?: string, estado?: string) {
     const whereConditions = and(
@@ -420,6 +455,8 @@ export const waitlistService = {
 
   /**
    * Lista ofertas de turno con datos relacionados.
+   * @param listaEsperaId
+   * @param estado
    */
   async listarOfertas(listaEsperaId?: string, estado?: string) {
     const whereConditions = and(
@@ -450,3 +487,177 @@ export const waitlistService = {
     return items;
   },
 };
+
+// ============================================================
+// FRANJAS LIBRES
+// ============================================================
+
+/** Entrada de horario configurada para un día de la semana en `medicos.horarios`. */
+interface HorarioDia {
+  activo?: boolean;
+  inicio?: string;
+  fin?: string;
+  tipo?: string;
+  inicio2?: string | null;
+  fin2?: string | null;
+}
+
+/** Franja horaria libre (no ocupada por turno ni bloqueo de agenda). */
+export interface IFranjaLibre {
+  fechaHora: Date;
+  duracionMinutos: number;
+}
+
+const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
+
+function getDiaSemana(fecha: Date): string {
+  return DIAS[fecha.getDay()];
+}
+
+/**
+ * Calcula las próximas franjas libres de un médico.
+ *
+ * Considera los horarios configurados en `medicos.horarios` (soporta horarios
+ * partidos `tipo === 'partido'` con `inicio2/fin2`), excluye turnos existentes
+ * (estado distinto de 'cancelada'/'no_asistio') y bloqueos de agenda. Solo se
+ * devuelven franjas futuras (`fechaHora > new Date()`), ordenadas ascendente
+ * y recortadas al `limite` indicado.
+ * @param medicoId - ID del médico del que se calculan las franjas.
+ * @param opts - Opciones: `dias` (ventana en días, default 7) y `limite` (máx. de franjas, default 20).
+ * @param opts.dias
+ * @param opts.limite
+ * @returns Franjas libres futuras ordenadas ascendentemente.
+ */
+export async function proximasFranjasLibres(
+  medicoId: string,
+  opts: { dias?: number; limite?: number } = {},
+): Promise<IFranjaLibre[]> {
+  const dias = Math.max(1, opts.dias ?? 7);
+  const limite = Math.max(1, opts.limite ?? 20);
+  const ahora = new Date();
+
+  const [med] = await db
+    .select({
+      horarios: medicos.horarios,
+      duracionTurnoMinutos: medicos.duracionTurnoMinutos,
+    })
+    .from(medicos)
+    .where(and(eq(medicos.id, medicoId), sql`${medicos.deletedAt} IS NULL`))
+    .limit(1);
+  if (!med) return [];
+
+  const duracion = med.duracionTurnoMinutos || 30;
+  const horariosMedico = (med.horarios || {}) as Record<string, HorarioDia | undefined>;
+
+  // Ventana de consulta: hoy + `dias` días (filtra en DB, refinamos en memoria por día)
+  const finVentana = new Date(ahora);
+  finVentana.setDate(ahora.getDate() + dias - 1);
+  finVentana.setHours(23, 59, 59, 999);
+
+  const turnosExistentes = await db
+    .select({ fechaHora: turnos.fechaHora, duracionMinutos: turnos.duracionMinutos })
+    .from(turnos)
+    .where(
+      and(
+        eq(turnos.medicoId, medicoId),
+        gte(turnos.fechaHora, ahora),
+        lte(turnos.fechaHora, finVentana),
+        notInArray(turnos.estado, ['cancelada', 'no_asistio']),
+        sql`${turnos.deletedAt} IS NULL`,
+      ),
+    );
+
+  const bloqueos = await db
+    .select({ fechaInicio: bloqueosAgenda.fechaInicio, fechaFin: bloqueosAgenda.fechaFin })
+    .from(bloqueosAgenda)
+    .where(
+      and(
+        eq(bloqueosAgenda.medicoId, medicoId),
+        gte(bloqueosAgenda.fechaFin, ahora),
+        lte(bloqueosAgenda.fechaInicio, finVentana),
+      ),
+    );
+
+  const franjas: IFranjaLibre[] = [];
+
+  for (let i = 0; i < dias && franjas.length < limite; i++) {
+    const dia = new Date(ahora);
+    dia.setDate(ahora.getDate() + i);
+    dia.setHours(0, 0, 0, 0);
+
+    const horario = horariosMedico[getDiaSemana(dia)];
+    if (!horario?.activo) continue;
+
+    const inicioDia = dia.getTime();
+    const finDia = inicioDia + 24 * 60 * 60 * 1000;
+
+    const turnosDia = turnosExistentes.filter((t) => {
+      const ts = new Date(t.fechaHora).getTime();
+      return ts >= inicioDia && ts < finDia;
+    });
+    const bloqueosDia = bloqueos.filter((b) => {
+      const bInicio = new Date(b.fechaInicio).getTime();
+      const bFin = new Date(b.fechaFin).getTime();
+      return bInicio < finDia && bFin > inicioDia;
+    });
+
+    const intervalos =
+      horario.tipo === 'partido'
+        ? [
+            { inicio: horario.inicio || '', fin: horario.fin || '' },
+            ...(horario.inicio2 && horario.fin2
+              ? [{ inicio: horario.inicio2, fin: horario.fin2 }]
+              : []),
+          ]
+        : [{ inicio: horario.inicio || '', fin: horario.fin || '' }];
+
+    for (const intervalo of intervalos) {
+      const [hInicio, mInicio] = intervalo.inicio.split(':').map(Number);
+      const [hFin, mFin] = intervalo.fin.split(':').map(Number);
+      if (
+        Number.isNaN(hInicio) ||
+        Number.isNaN(mInicio) ||
+        Number.isNaN(hFin) ||
+        Number.isNaN(mFin)
+      ) {
+        continue;
+      }
+
+      let horaActual = new Date(dia);
+      horaActual.setHours(hInicio, mInicio, 0, 0);
+      const horaFin = new Date(dia);
+      horaFin.setHours(hFin, mFin, 0, 0);
+
+      while (
+        franjas.length < limite &&
+        horaActual.getTime() + duracion * 60_000 <= horaFin.getTime()
+      ) {
+        const slotFin = new Date(horaActual.getTime() + duracion * 60_000);
+
+        // Verificar si choca con algún bloqueo de agenda
+        const bloqueado = bloqueosDia.some(
+          (b) =>
+            horaActual.getTime() < new Date(b.fechaFin).getTime() &&
+            slotFin.getTime() > new Date(b.fechaInicio).getTime(),
+        );
+        if (!bloqueado) {
+          // Verificar si choca con algún turno existente
+          const ocupado = turnosDia.some((t) => {
+            const tInicio = new Date(t.fechaHora).getTime();
+            const tFin = tInicio + t.duracionMinutos * 60_000;
+            return horaActual.getTime() < tFin && slotFin.getTime() > tInicio;
+          });
+
+          // Solo franjas futuras
+          if (!ocupado && horaActual.getTime() > ahora.getTime()) {
+            franjas.push({ fechaHora: new Date(horaActual.getTime()), duracionMinutos: duracion });
+          }
+        }
+
+        horaActual = new Date(horaActual.getTime() + duracion * 60_000);
+      }
+    }
+  }
+
+  return franjas;
+}
