@@ -291,16 +291,16 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
           'Disponible en plan Professional o superior',
           'Se asigna al médico y especialidad deseada',
           'El sistema respeta orden FIFO (primero en llegar, primero en ser ofrecido)',
-          'Cada paciente recibe máximo 3 ofertas por día',
+          'Cada paciente recibe máximo 3 turnos ofrecidos por día',
         ],
         enlace: { href: '/dashboard/lista-espera', label: 'Ir a Lista de Espera' },
       },
       {
-        titulo: 'Ofertas automáticas',
+        titulo: 'Turnos ofrecidos automáticamente',
         descripcion:
           'Cuando se cancela un turno, el sistema busca automáticamente el primer paciente en espera.',
         tips: [
-          'El paciente recibe un WhatsApp con la oferta del turno',
+          'El paciente recibe un WhatsApp con el turno ofrecido',
           'Tiene 15 minutos para aceptar o rechazar',
           'Si acepta, el turno se asigna automáticamente',
           'Si rechaza, el sistema pasa al siguiente paciente',
@@ -311,7 +311,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
       {
         pregunta: '¿Cuánto tiempo espera un paciente en la lista?',
         respuesta:
-          'No hay límite de tiempo. Puede esperar hasta que haya una oferta disponible o hasta que el consultorio lo retire manualmente.',
+          'No hay límite de tiempo. Puede esperar hasta que haya un turno disponible o hasta que el consultorio lo retire manualmente.',
       },
     ],
   },

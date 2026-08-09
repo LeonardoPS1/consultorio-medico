@@ -97,7 +97,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
   const [turnoSeleccionadoId, setTurnoSeleccionadoId] = useState('');
   const [asignando, setAsignando] = useState(false);
 
-  // Ver ofertas
+  // Ver turnos ofrecidos
   const [ofertasAbiertas, setOfertasAbiertas] = useState<Record<string, boolean>>({});
   const [ofertasPorItem, setOfertasPorItem] = useState<Record<string, OfertaTurnoItem[]>>({});
 
@@ -187,12 +187,12 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
         body: JSON.stringify({ turnoId: turnoSeleccionadoId }),
       });
       if (!res.ok) throw new Error('Error al asignar turno');
-      toast({ title: 'Oferta creada y notificada por WhatsApp' });
+      toast({ title: 'Turno ofrecido creado y notificado por WhatsApp' });
       setTurnoDialogFor(null);
       setTurnoSeleccionadoId('');
       await handleRefresh();
     } catch {
-      toast({ title: 'No se pudo asignar el turno (debe estar cancelado y sin oferta pendiente)', variant: 'destructive' });
+      toast({ title: 'No se pudo ofrecer el turno (debe ser futuro, del mismo médico y sin turno ofrecido pendiente)', variant: 'destructive' });
     } finally {
       setAsignando(false);
     }
@@ -252,7 +252,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
   const estadoOfertaBadge = (estado: string) => {
     switch (estado) {
       case 'pendiente':
-        return <Badge className="bg-amber-500">Pendiente</Badge>;
+        return <Badge className="bg-amber-500">Pendiente de confirmación</Badge>;
       case 'aceptada':
         return <Badge className="bg-emerald-500">Aceptada</Badge>;
       case 'rechazada':
@@ -275,7 +275,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
             <h3 className="font-semibold text-lg">No hay pacientes en espera</h3>
             <p className="text-muted-foreground text-sm max-w-md">
               Agregá pacientes o esperá: cuando un turno se cancele, los pacientes en lista de espera
-              recibirán automáticamente una oferta vía WhatsApp.
+              recibirán automáticamente un turno ofrecido vía WhatsApp.
             </p>
             <div className="flex items-center gap-2">
               <Dialog open={addOpen} onOpenChange={setAddOpen}>
@@ -289,7 +289,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                   <DialogHeader>
                     <DialogTitle>Agregar paciente a lista de espera</DialogTitle>
                     <DialogDescription>
-                      El paciente recibirá una oferta cuando se cancele un turno del médico elegido.
+                      El paciente recibirá un turno ofrecido cuando se libere un turno del médico elegido.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
@@ -361,7 +361,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
               <DialogHeader>
                 <DialogTitle>Agregar paciente a lista de espera</DialogTitle>
                 <DialogDescription>
-                  El paciente recibirá una oferta por WhatsApp cuando se cancele un turno del médico.
+                  El paciente recibirá un turno ofrecido por WhatsApp cuando se libere un turno del médico.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -465,7 +465,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md">
                       <DialogHeader>
-                        <DialogTitle>Asignar turno (oferta manual)</DialogTitle>
+                        <DialogTitle>Asignar turno (turno ofrecido)</DialogTitle>
                         <DialogDescription>
                           Elegí un turno cancelado para ofrecerlo a {item.pacienteNombre}{' '}
                           {item.pacienteApellido}. Se notificará por WhatsApp con opción
@@ -502,7 +502,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                           Cancelar
                         </Button>
                         <Button onClick={handleAsignarTurno} disabled={asignando || !turnoSeleccionadoId}>
-                          {asignando ? 'Asignando...' : 'Crear oferta'}
+                          {asignando ? 'Asignando...' : 'Ofrecer turno'}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -512,7 +512,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                     variant="ghost"
                     size="sm"
                     className="h-8"
-                    aria-label="Ver ofertas"
+                    aria-label="Ver turnos ofrecidos"
                     onClick={() => toggleOfertas(item)}
                   >
                     {ofertasAbiertas[item.id] ? (
@@ -520,7 +520,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                     ) : (
                       <ChevronRight className="h-4 w-4" />
                     )}
-                    Ofertas
+                    Turnos ofrecidos
                   </Button>
 
                   <AlertDialog>
@@ -539,7 +539,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                         <AlertDialogTitle>¿Quitar paciente?</AlertDialogTitle>
                         <AlertDialogDescription>
                           {item.pacienteNombre} {item.pacienteApellido} será quitado de la lista de
-                          espera. No recibirá más ofertas de turno.
+                          espera. No recibirá más turnos ofrecidos.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -559,9 +559,9 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
               {ofertasAbiertas[item.id] && (
                 <div className="border-t bg-muted/30 px-4 py-3">
                   {!ofertasPorItem[item.id] ? (
-                    <p className="text-sm text-muted-foreground">Cargando ofertas...</p>
+                    <p className="text-sm text-muted-foreground">Cargando turnos ofrecidos...</p>
                   ) : ofertasPorItem[item.id].length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Sin ofertas registradas.</p>
+                    <p className="text-sm text-muted-foreground">Sin turnos ofrecidos registrados.</p>
                   ) : (
                     <div className="space-y-2">
                       {ofertasPorItem[item.id].map((oferta) => (
@@ -571,7 +571,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                         >
                           <div className="text-sm">
                             <span className="font-medium">
-                              Oferta {formatOfertaFecha(oferta.fechaOferta)}
+                              Turno ofrecido {formatOfertaFecha(oferta.fechaOferta)}
                             </span>
                             {oferta.respondedAt && (
                               <span className="text-muted-foreground ml-2">

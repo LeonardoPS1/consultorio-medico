@@ -76,7 +76,7 @@ export default async function ListaEsperaPage() {
         <div className="rounded-xl border bg-card p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <XCircle className="h-4 w-4" />
-            Sin oferta activa
+            Sin turno ofrecido
           </div>
           <p className="text-2xl font-bold mt-1">{sinOfertaActiva}</p>
         </div>
