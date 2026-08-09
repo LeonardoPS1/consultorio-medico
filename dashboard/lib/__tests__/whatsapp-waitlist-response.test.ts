@@ -18,8 +18,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const h = vi.hoisted(() => {
   const mocksWhatsApp = vi.fn(async (args: { to: string; body: string; conversationId?: number }) =>
-  Boolean(args.body),
-);
+    Boolean(args.body),
+  );
   const mockAceptar = vi.fn();
   const mockRechazar = vi.fn();
   const mockSafeLog = vi.fn();
@@ -33,7 +33,21 @@ const h = vi.hoisted(() => {
   const medicos = { id: 'medicos' };
   const ofertasTurno = { id: 'ofertasTurno' };
   const listaEspera = { id: 'listaEspera' };
-  return { mocksWhatsApp, mockAceptar, mockRechazar, mockSafeLog, mockSafeWarn, mockSafeError, mockSelect, rowsByTable, turnos, pacientes, medicos, ofertasTurno, listaEspera };
+  return {
+    mocksWhatsApp,
+    mockAceptar,
+    mockRechazar,
+    mockSafeLog,
+    mockSafeWarn,
+    mockSafeError,
+    mockSelect,
+    rowsByTable,
+    turnos,
+    pacientes,
+    medicos,
+    ofertasTurno,
+    listaEspera,
+  };
 });
 
 vi.mock('@/drizzle/schema', () => ({
@@ -191,14 +205,16 @@ describe('handleWaitlistResponse — flujo oferta de turno', () => {
 
   it('responde "no encontré" si no hay oferta pendiente, por el mismo canal', async () => {
     ROWS.set(ofertasTurno, []);
+    ROWS.set(pacientes, [makePaciente()]);
 
     const result = await handleWaitlistResponse('pac-1', 'ACEPTAR', '56911223344', 21);
 
     expect(result).toBe(true);
     const aviso = mocksWhatsApp.mock.calls.find((c) =>
-      String(c[0].body).includes('No encontré una oferta'),
+      String(c[0].body).includes('No encontré un turno ofrecido pendiente para vos.'),
     );
     expect(aviso).toBeDefined();
+    expect(String(aviso![0].body)).toContain('Hola Juan');
     expect(aviso![0]).toMatchObject({ to: '56911223344', conversationId: 21 });
   });
 
