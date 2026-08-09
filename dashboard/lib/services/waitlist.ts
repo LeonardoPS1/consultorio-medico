@@ -27,6 +27,7 @@ import {
   gte,
   lte,
   notInArray,
+  type InferSelectModel,
 } from 'drizzle-orm';
 import {
   listaEspera,
@@ -41,6 +42,17 @@ import { db } from '@/lib/db';
 
 const TIEMPO_EXPIRACION_MINUTOS = 15;
 const LIMITE_OFERTAS_POR_DIA = 3;
+
+/**
+ * Entrada para crear una oferta de turno: un turno existente (`turnoId`) o una
+ * franja libre propuesta (`fechaHora` + `pacienteId` + `medicoId`) para la que
+ * se crea un turno nuevo.
+ */
+export type CrearOfertaInput =
+  { turnoId: string } | { fechaHora: Date; pacienteId: string; medicoId: string };
+
+/** Oferta de turno creada (row completo de `ofertasTurno`). */
+export type OfertaCreada = InferSelectModel<typeof ofertasTurno>;
 
 export const waitlistService = {
   // ============================================================
@@ -169,34 +181,108 @@ export const waitlistService = {
 
   /**
    * Crea una oferta de turno para un paciente en lista de espera.
+   *
+   * Acepta un turno existente (`{ turnoId }`) o una franja libre propuesta
+   * (`{ fechaHora, pacienteId, medicoId }`) para la que se crea un turno nuevo.
+   * Valida inscripción activa, que el turno sea del mismo médico y esté en el
+   * futuro, que no exista otra oferta pendiente para el turno y máximo 1 oferta
+   * pendiente por paciente.
    * @param listaEsperaId
-   * @param turnoId
+   * @param input - `{ turnoId }` para ofrecer un turno existente; `{ fechaHora, pacienteId, medicoId }` para crear turno nuevo en una franja libre.
+   * @returns Oferta creada (row completo de `ofertasTurno`).
    */
-  async crearOferta(listaEsperaId: string, turnoId: string) {
+  async crearOferta(
+    listaEsperaId: string,
+    input: string | CrearOfertaInput,
+  ): Promise<OfertaCreada> {
+    const objetivo: CrearOfertaInput = typeof input === 'string' ? { turnoId: input } : input;
+
     // Validar que la inscripción existe y está activa
     const [inscripcion] = await db
-      .select({ id: listaEspera.id, pacienteId: listaEspera.pacienteId })
+      .select({
+        id: listaEspera.id,
+        pacienteId: listaEspera.pacienteId,
+        medicoId: listaEspera.medicoId,
+      })
       .from(listaEspera)
       .where(and(eq(listaEspera.id, listaEsperaId), eq(listaEspera.estado, 'activa')))
       .limit(1);
     if (!inscripcion) notFound('Inscripción en lista de espera no encontrada o no activa');
 
-    // Validar que el turno existe y está cancelado/disponible
-    const [turno] = await db
-      .select({ id: turnos.id, estado: turnos.estado })
-      .from(turnos)
-      .where(and(eq(turnos.id, turnoId), sql`${turnos.deletedAt} IS NULL`))
-      .limit(1);
-    if (!turno) notFound('Turno no encontrado');
-    if (turno.estado !== 'cancelada') conflict('El turno debe estar cancelado para ser ofrecido');
+    let turnoId: string;
 
-    // Verificar que no haya una oferta pendiente para este turno
-    const [ofertaExistente] = await db
+    if ('turnoId' in objetivo) {
+      // Caso A: ofrecer un turno existente
+      const [turno] = await db
+        .select({
+          id: turnos.id,
+          estado: turnos.estado,
+          medicoId: turnos.medicoId,
+          fechaHora: turnos.fechaHora,
+          deletedAt: turnos.deletedAt,
+        })
+        .from(turnos)
+        .where(and(eq(turnos.id, objetivo.turnoId), sql`${turnos.deletedAt} IS NULL`))
+        .limit(1);
+      if (!turno) notFound('Turno no encontrado');
+      if (turno.medicoId !== inscripcion.medicoId) {
+        conflict('El turno debe pertenecer al mismo médico del paciente en espera');
+      }
+      if (new Date(turno.fechaHora) <= new Date()) {
+        conflict('El turno debe estar programado en el futuro');
+      }
+      if (!['pendiente', 'confirmada', 'cancelada'].includes(turno.estado)) {
+        conflict('El turno no está disponible para ser ofrecido');
+      }
+
+      // Verificar que no haya otra oferta pendiente para este turno
+      const [ofertaExistente] = await db
+        .select({ id: ofertasTurno.id })
+        .from(ofertasTurno)
+        .where(
+          and(eq(ofertasTurno.turnoId, objetivo.turnoId), eq(ofertasTurno.estado, 'pendiente')),
+        )
+        .limit(1);
+      if (ofertaExistente) conflict('Ese turno ya tiene una oferta pendiente');
+
+      turnoId = objetivo.turnoId;
+    } else {
+      // Caso B: crear turno nuevo en una franja libre del médico
+      const franjas = await proximasFranjasLibres(objetivo.medicoId, { dias: 7, limite: 20 });
+      const franja = franjas.find((f) => f.fechaHora.getTime() === objetivo.fechaHora.getTime());
+      if (!franja) conflict('Franja no disponible para el médico');
+
+      // La franja ya trae duracionMinutos; se usa directamente
+      const [turnoNuevo] = await db
+        .insert(turnos)
+        .values({
+          pacienteId: objetivo.pacienteId,
+          medicoId: objetivo.medicoId,
+          fechaHora: objetivo.fechaHora,
+          duracionMinutos: franja.duracionMinutos,
+          estado: 'pendiente',
+          tipoConsulta: 'consulta',
+          fuente: 'web',
+        })
+        .returning({ id: turnos.id });
+
+      turnoId = turnoNuevo.id;
+    }
+
+    // Límite: máximo 1 oferta pendiente por paciente (en otra inscripción)
+    const [ofertaPaciente] = await db
       .select({ id: ofertasTurno.id })
       .from(ofertasTurno)
-      .where(and(eq(ofertasTurno.turnoId, turnoId), eq(ofertasTurno.estado, 'pendiente')))
+      .innerJoin(listaEspera, eq(ofertasTurno.listaEsperaId, listaEspera.id))
+      .where(
+        and(
+          eq(ofertasTurno.estado, 'pendiente'),
+          eq(listaEspera.pacienteId, inscripcion.pacienteId),
+          not(eq(ofertasTurno.listaEsperaId, listaEsperaId)),
+        ),
+      )
       .limit(1);
-    if (ofertaExistente) conflict('Ya hay una oferta pendiente para este turno');
+    if (ofertaPaciente) conflict('Ya existe un turno ofrecido pendiente para este paciente');
 
     // Calcular expiración (15 minutos desde ahora)
     const expiracion = new Date(Date.now() + TIEMPO_EXPIRACION_MINUTOS * 60 * 1000);
