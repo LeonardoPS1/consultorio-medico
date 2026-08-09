@@ -5,12 +5,12 @@
  * - Notificar al médico cuando se reasigna un turno
  */
 
+import { eq, and, sql, desc } from 'drizzle-orm';
+import { turnos, pacientes, medicos, ofertasTurno, listaEspera } from '@/drizzle/schema';
 import { db } from '@/lib/db';
 import { safeLog, safeError } from '@/lib/logger';
-import { sendWhatsApp } from '@/lib/whatsapp';
-import { turnos, pacientes, medicos, ofertasTurno, listaEspera } from '@/drizzle/schema';
-import { eq, and, sql, desc } from 'drizzle-orm';
 import { waitlistService } from '@/lib/services/waitlist';
+import { sendWhatsApp } from '@/lib/whatsapp';
 
 // ─── Helpers ──────────────────────────────────────────────
 
@@ -19,6 +19,9 @@ import { waitlistService } from '@/lib/services/waitlist';
  * primero, Twilio como fallback). Si se conoce el id numérico de la
  * conversación Chatwoot, se fuerza ese canal para que la respuesta al
  * paciente viaje por el mismo canal por el que llegó.
+ * @param telefono
+ * @param mensaje
+ * @param conversationId
  */
 async function enviarWhatsApp(
   telefono: string,
@@ -41,6 +44,9 @@ async function enviarWhatsApp(
 /**
  * Notifica al paciente que tiene un turno disponible (de una cancelación o
  * franja libre). Se envía cuando se crea una oferta automáticamente.
+ * @param ofertaId
+ * @param turnoId
+ * @param listaEsperaId
  */
 export async function notificarOfertaTurno(
   ofertaId: string,
@@ -121,6 +127,7 @@ export async function notificarOfertaTurno(
 
 /**
  * Notifica al médico que un turno cancelado fue reasignado a otro paciente.
+ * @param turnoId
  */
 export async function notificarMedicoReasignacion(turnoId: string): Promise<void> {
   try {
@@ -162,6 +169,9 @@ export async function notificarMedicoReasignacion(turnoId: string): Promise<void
 
 /**
  * Notifica al paciente que su oferta fue aceptada y el turno está confirmado.
+ * @param turnoId
+ * @param pacienteId
+ * @param conversationId
  */
 export async function notificarConfirmacionReasignacion(
   turnoId: string,
@@ -201,8 +211,10 @@ export async function notificarConfirmacionReasignacion(
 /**
  * Notifica al paciente desplazado que su turno fue reasignado a otro paciente
  * de la lista de espera.
- *
  * @param turno Turno confirmado ya reasignado ({pacienteId, fechaHora, medicoId}).
+ * @param turno.pacienteId
+ * @param turno.fechaHora
+ * @param turno.medicoId
  * @param pacienteAnteriorId ID del paciente que perdió el turno.
  * @returns true si el mensaje pudo enviarse por WhatsApp.
  */
@@ -229,8 +241,7 @@ export async function notificarPacienteReasignado(
     const fechaStr = fecha.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' });
     const horaStr = fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 
-    const mensaje =
-      `📢 Estimado ${pacienteAnterior.nombre}, tu turno con el Dr. ${medico.nombre} el ${fechaStr} a las ${horaStr} fue reasignado a otro paciente. Si necesitás otro horario, podemos agendarlo en la lista de espera.`;
+    const mensaje = `📢 Estimado ${pacienteAnterior.nombre}, tu turno con el Dr. ${medico.nombre} el ${fechaStr} a las ${horaStr} fue reasignado a otro paciente. Si necesitás otro horario, podemos agendarlo en la lista de espera.`;
 
     return await enviarWhatsApp(pacienteAnterior.telefono, mensaje);
   } catch (error) {
@@ -245,7 +256,6 @@ export async function notificarPacienteReasignado(
 /**
  * Detecta si un mensaje entrante es respuesta a una oferta de turno
  * (ACEPTAR / RECHAZAR) y la procesa.
- *
  * @param pacienteId ID del paciente que responde
  * @param body       Texto del mensaje recibido
  * @param telefono   Teléfono del paciente
@@ -295,7 +305,9 @@ export async function handleWaitlistResponse(
           .from(pacientes)
           .where(and(eq(pacientes.id, pacienteId), sql`${pacientes.deletedAt} IS NULL`))
           .limit(1);
-        if (paciente?.nombre) saludo = `Hola ${paciente.nombre}, ${saludo}`;
+        if (paciente?.nombre) {
+          saludo = `Hola ${paciente.nombre}, no encontré un turno ofrecido pendiente para vos.`;
+        }
       } catch {
         // Si el fetch del nombre falla, usamos el mensaje sin nombre.
       }

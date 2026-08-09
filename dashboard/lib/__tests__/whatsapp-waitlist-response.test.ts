@@ -211,7 +211,7 @@ describe('handleWaitlistResponse — flujo oferta de turno', () => {
 
     expect(result).toBe(true);
     const aviso = mocksWhatsApp.mock.calls.find((c) =>
-      String(c[0].body).includes('No encontré un turno ofrecido pendiente para vos.'),
+      String(c[0].body).includes('no encontré un turno ofrecido pendiente para vos.'),
     );
     expect(aviso).toBeDefined();
     expect(String(aviso![0].body)).toContain('Hola Juan');
