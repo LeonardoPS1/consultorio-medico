@@ -6,7 +6,7 @@
  */
 
 import { db } from '@/lib/db';
-import { safeLog, safeWarn, safeError } from '@/lib/logger';
+import { safeLog, safeError } from '@/lib/logger';
 import { sendWhatsApp } from '@/lib/whatsapp';
 import { turnos, pacientes, medicos, ofertasTurno, listaEspera } from '@/drizzle/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
@@ -39,8 +39,8 @@ async function enviarWhatsApp(
 // ─── Notificaciones ──────────────────────────────────────
 
 /**
- * Notifica al paciente que tiene un turno disponible (de una cancelación).
- * Se envía cuando se crea una oferta automáticamente.
+ * Notifica al paciente que tiene un turno disponible (de una cancelación o
+ * franja libre). Se envía cuando se crea una oferta automáticamente.
  */
 export async function notificarOfertaTurno(
   ofertaId: string,
@@ -94,10 +94,11 @@ export async function notificarOfertaTurno(
     const horaStr = fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 
     const mensaje =
-      `🎯 ¡Hola ${paciente.nombre}! Un turno se ha liberado para tu médico ${medico.nombre}:\n\n` +
-      `📅 ${fechaStr} a las ${horaStr} hs\n\n` +
-      `⏳ Tenés 15 minutos para aceptarlo.\n\n` +
-      `👉 Respondé "ACEPTAR" para confirmar el turno.\n` +
+      `🎯 Te ofrecemos un turno disponible con el Dr. ${medico.nombre}:\n\n` +
+      `📅 ${fechaStr}\n` +
+      `⏰ ${horaStr}\n\n` +
+      `⏳ Tenés 15 minutos para responder.\n\n` +
+      `👉 Respondé "ACEPTAR" para confirmar.\n` +
       `👉 Respondé "RECHAZAR" si no te sirve.\n\n` +
       `Si no respondés, se lo ofreceremos a otro paciente.`;
 
@@ -148,15 +149,7 @@ export async function notificarMedicoReasignacion(turnoId: string): Promise<void
       .limit(1);
     if (!paciente) return;
 
-    const fecha = turno.fechaHora instanceof Date ? turno.fechaHora : new Date(turno.fechaHora);
-    const fechaStr = fecha.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' });
-    const horaStr = fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
-
-    const mensaje =
-      `🔄 Dr. ${medico.nombre}, un turno cancelado fue reasignado:\n\n` +
-      `👤 Nuevo paciente: ${paciente.nombre} ${paciente.apellido}\n` +
-      `📅 ${fechaStr} a las ${horaStr} hs\n\n` +
-      `El paciente ya fue notificado.`;
+    const mensaje = `🔄 Dr. ${medico.nombre}, un turno cancelado fue reasignado correctamente.`;
 
     await enviarWhatsApp(medico.whatsapp, mensaje);
   } catch (error) {
@@ -194,10 +187,7 @@ export async function notificarConfirmacionReasignacion(
     const fechaStr = fecha.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' });
     const horaStr = fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 
-    const mensaje =
-      `✅ ¡Turno confirmado ${paciente.nombre}!\n\n` +
-      `📅 ${fechaStr} a las ${horaStr} hs\n\n` +
-      `Te esperamos. Gracias por confirmar.`;
+    const mensaje = `✅ Turno confirmado — ${fechaStr} a las ${horaStr}. Te esperamos.`;
 
     await enviarWhatsApp(paciente.telefono, mensaje, conversationId);
   } catch (error) {
@@ -205,6 +195,50 @@ export async function notificarConfirmacionReasignacion(
       '[WhatsApp-Waitlist] Error notificarConfirmacionReasignacion:',
       error instanceof Error ? { message: error.message } : error,
     );
+  }
+}
+
+/**
+ * Notifica al paciente desplazado que su turno fue reasignado a otro paciente
+ * de la lista de espera.
+ *
+ * @param turno Turno confirmado ya reasignado ({pacienteId, fechaHora, medicoId}).
+ * @param pacienteAnteriorId ID del paciente que perdió el turno.
+ * @returns true si el mensaje pudo enviarse por WhatsApp.
+ */
+export async function notificarPacienteReasignado(
+  turno: { pacienteId: string; fechaHora: Date; medicoId: string },
+  pacienteAnteriorId: string,
+): Promise<boolean> {
+  try {
+    const [pacienteAnterior] = await db
+      .select({ nombre: pacientes.nombre, telefono: pacientes.telefono })
+      .from(pacientes)
+      .where(and(eq(pacientes.id, pacienteAnteriorId), sql`${pacientes.deletedAt} IS NULL`))
+      .limit(1);
+    if (!pacienteAnterior || !pacienteAnterior.telefono) return false;
+
+    const [medico] = await db
+      .select({ nombre: medicos.nombre })
+      .from(medicos)
+      .where(and(eq(medicos.id, turno.medicoId), sql`${medicos.deletedAt} IS NULL`))
+      .limit(1);
+    if (!medico) return false;
+
+    const fecha = turno.fechaHora instanceof Date ? turno.fechaHora : new Date(turno.fechaHora);
+    const fechaStr = fecha.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' });
+    const horaStr = fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+
+    const mensaje =
+      `📢 Estimado ${pacienteAnterior.nombre}, tu turno con el Dr. ${medico.nombre} el ${fechaStr} a las ${horaStr} fue reasignado a otro paciente. Si necesitás otro horario, podemos agendarlo en la lista de espera.`;
+
+    return await enviarWhatsApp(pacienteAnterior.telefono, mensaje);
+  } catch (error) {
+    safeError(
+      '[WhatsApp-Waitlist] Error notificarPacienteReasignado:',
+      error instanceof Error ? { message: error.message } : error,
+    );
+    return false;
   }
 }
 
@@ -254,20 +288,23 @@ export async function handleWaitlistResponse(
 
     if (!oferta) {
       safeLog(`[WhatsApp-Waitlist] No hay oferta pendiente para paciente ${pacienteId}`);
-      await enviarWhatsApp(
-        telefono,
-        'No encontré una oferta de turno pendiente para ti. Si necesitas ayuda, escribí "HOLA" para hablar con un asistente.',
-        conversationId,
-      );
+      let saludo = 'No encontré un turno ofrecido pendiente para vos.';
+      try {
+        const [paciente] = await db
+          .select({ nombre: pacientes.nombre })
+          .from(pacientes)
+          .where(and(eq(pacientes.id, pacienteId), sql`${pacientes.deletedAt} IS NULL`))
+          .limit(1);
+        if (paciente?.nombre) saludo = `Hola ${paciente.nombre}, ${saludo}`;
+      } catch {
+        // Si el fetch del nombre falla, usamos el mensaje sin nombre.
+      }
+      await enviarWhatsApp(telefono, saludo, conversationId);
       return true;
     }
 
     if (new Date() > new Date(oferta.expiracion)) {
-      await enviarWhatsApp(
-        telefono,
-        '⏰ La oferta de turno ya expiró. Si se libera otro turno, te vamos a notificar.',
-        conversationId,
-      );
+      await enviarWhatsApp(telefono, 'Ese turno ofrecido ya expiró.', conversationId);
       return true;
     }
 
