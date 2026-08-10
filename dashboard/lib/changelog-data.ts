@@ -10,7 +10,7 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 09/08/2026 — v1.37.0 Lista de Espera v2 (turno ofrecido, reasignación y franjas libres)
+// Actualizado: 10/08/2026 — v1.37.0 Lista de Espera v2 (turno ofrecido, reasignación y franjas libres) + fixes
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: '1.37.0',
@@ -23,6 +23,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Notificación WhatsApp automática: cuando un turno queda disponible se ofrece al primer paciente en espera con confirmación en 15 minutos; si rechaza, se sigue con el siguiente.',
       'Renombrado de "oferta" a "turno ofrecido" en todo el dashboard para una terminología consistente con el paciente.',
       'Reasignación con turno existente o franja libre, con validación de disponibilidad y estados "activa", "confirmada" o "cancelada".',
+      'Estabilidad: corregidos el modal de asignación de turno (selección segura del paciente en espera y catálogos de turnos/franjas) y la carga de recetas, que ahora muestra el error real en la interfaz.',
     ],
   },
   {
