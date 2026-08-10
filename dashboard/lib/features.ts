@@ -83,7 +83,8 @@ export type FeatureId =
   | 'dominio-custom'
   | 'cie10-sugerido'
   | 'resumen-longitudinal'
-  | 'alertas-interacciones';
+  | 'alertas-interacciones'
+  | 'mensajeria-interna';
 
 // ============================================================
 // Feature map: qué plan necesitás para cada feature
@@ -160,6 +161,7 @@ export const FEATURE_PLAN: Record<FeatureId, PlanId> = {
   'cie10-sugerido': 'professional',
   'resumen-longitudinal': 'starter',
   'alertas-interacciones': 'professional',
+  'mensajeria-interna': 'starter',
 };
 
 // ============================================================

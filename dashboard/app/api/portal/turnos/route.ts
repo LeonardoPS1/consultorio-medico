@@ -9,6 +9,7 @@ import { db } from '@/lib/db';
 import { turnos, medicos, historialMedico } from '@/drizzle/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { safeError } from '@/lib/logger';
+import { HttpError } from '@/lib/api-handler';
 
 export async function GET(request: NextRequest) {
   const session = await getPortalSession();
@@ -162,6 +163,7 @@ export async function POST(request: NextRequest) {
       '[PortalBooking] Error en POST /api/portal/turnos:',
       err instanceof Error ? { message: err.message, stack: err.stack } : err,
     );
-    return NextResponse.json({ error: message }, { status: 400 });
+    const status = err instanceof HttpError ? err.status : 400;
+    return NextResponse.json({ error: message }, { status });
   }
 }

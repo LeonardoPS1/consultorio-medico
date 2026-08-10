@@ -1,286 +1,88 @@
 /**
- * Portal Chat — Página de mensajes del paciente
- * Rediseñado con portal design system tokens.
+ * Portal Mensajes — Redirección amable hacia WhatsApp.
+ *
+ * El chat web del portal se eliminó para unificar la comunicación con el
+ * paciente en una sola vía (WhatsApp). Esta página evita un 404 seco para
+ * cualquier paciente que conserve un acceso antiguo a /portal/mensajes.
+ *
+ * NOTA: las tablas `conversaciones` / `mensajes` (canal='web') quedan
+ * huérfanas intencionalmente para trazabilidad — sus datos NO se borran.
  */
 
-'use client';
-
-import { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare, Bot } from 'lucide-react';
-import { PortalButton } from '@/components/portal/portal-button';
+import Link from 'next/link';
+import { ArrowLeft, ExternalLink, MessageCircle } from 'lucide-react';
 import { PortalCard } from '@/components/portal/portal-card';
-import { PortalSkeleton } from '@/components/portal/portal-skeleton';
-import { playSend, playReceive } from '@/lib/sound';
+import { cn } from '@/lib/utils';
 
-interface Mensaje {
-  id: string;
-  rol: string;
-  contenido: string;
-  createdAt: string;
+function whatsappLink(): string | null {
+  const raw =
+    process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_PHONE_NUMBER || '';
+  const digits = raw.replace(/whatsapp:|\+|[\s\-()]/g, '');
+  if (!digits) return null;
+  return `https://wa.me/${digits}`;
 }
 
-/* ─── Reusable styles ───────────────────────────────────── */
-const headerStyle: React.CSSProperties = {
-  background: 'var(--portal-bg-alt)',
-  borderBottom: '1px solid hsl(var(--portal-border-light))',
-};
+const PRIMARY_BTN =
+  'inline-flex items-center justify-center rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer px-5 py-2.5 h-11 w-full bg-gradient-to-r from-portal-primary to-portal-accent text-white shadow-[0_4px_12px_hsl(var(--portal-primary)/0.25)] hover:shadow-[0_6px_20px_hsl(var(--portal-primary)/0.35)] active:scale-[0.97]';
 
-const inputBarStyle: React.CSSProperties = {
-  background: 'var(--portal-bg-alt)',
-  borderTop: '1px solid hsl(var(--portal-border-light))',
-};
+const GHOST_BTN =
+  'inline-flex items-center justify-center rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer px-5 py-2.5 h-11 w-full bg-transparent text-portal-muted-fg/60 hover:text-portal-fg active:scale-[0.97]';
 
-export default function PortalChatPage() {
-  const [convId, setConvId] = useState<string | null>(null);
-  const [mensajes, setMensajes] = useState<Mensaje[]>([]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState('');
-  const bottomRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    fetch('/api/portal/chat')
-      .then((r) => r.json())
-      .then((res) => {
-        if (res.data?.id) {
-          setConvId(res.data.id);
-        } else {
-          setError('No se pudo iniciar la conversación');
-        }
-      })
-      .catch(() => setError('Error de conexión'))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (!convId) return;
-    const fetchMensajes = async () => {
-      try {
-        const r = await fetch(`/api/portal/chat/${convId}/mensajes`);
-        const res = await r.json();
-        if (res.data) {
-          setMensajes((prev) => {
-            if (prev.length > 0 && res.data.length > prev.length) playReceive();
-            return res.data;
-          });
-        }
-      } catch {
-        // ignore polling errors
-      }
-    };
-    fetchMensajes();
-    const interval = setInterval(() => {
-      if (!document.hidden) fetchMensajes();
-    }, 20000);
-    return () => clearInterval(interval);
-  }, [convId]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [mensajes]);
-
-  async function sendMessage() {
-    if (!input.trim() || !convId || sending) return;
-    setSending(true);
-    playSend();
-    const content = input.trim();
-    setInput('');
-
-    const tempId = `temp-${Date.now()}`;
-    setMensajes((prev) => [
-      ...prev,
-      {
-        id: tempId,
-        rol: 'paciente',
-        contenido: content,
-        createdAt: new Date().toISOString(),
-      },
-    ]);
-
-    try {
-      const r = await fetch(`/api/portal/chat/${convId}/mensajes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contenido: content }),
-      });
-      if (r.ok) {
-        const res = await r.json();
-        setMensajes((prev) =>
-          prev.map((m) => (m.id === tempId ? res.data : m)),
-        );
-      } else {
-        setMensajes((prev) => prev.filter((m) => m.id !== tempId));
-        setInput(content);
-      }
-    } catch {
-      setMensajes((prev) => prev.filter((m) => m.id !== tempId));
-      setInput(content);
-    } finally {
-      setSending(false);
-    }
-  }
-
-  function formatTime(dateStr: string): string {
-    const d = new Date(dateStr);
-    return d.toLocaleTimeString('es-CL', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
-  if (loading) {
-    return <PortalSkeleton />;
-  }
+export default function PortalMensajesRedirectPage() {
+  const waLink = whatsappLink();
 
   return (
-    <div
-      className="flex flex-col"
-      style={{
-        height: 'calc(100vh - 12rem)',
-      }}
-    >
-      {/* Header */}
-      <div className="bg-portal-bg-alt border-b border-portal-border-light px-4 py-3">
-        <h1
-          className="text-lg font-semibold flex items-center gap-2 text-portal-fg"
-        >
-            <MessageSquare
-            className="h-5 w-5 text-portal-primary"
-          />
-          Mensajes
-        </h1>
-        <p
-          className="text-xs mt-0.5 text-portal-muted-fg"
-        >
-          Consultá con el equipo médico por este canal
-        </p>
-      </div>
-
-      {/* Messages area */}
+    <div className="flex flex-col items-center px-4 pt-10 text-center">
       <div
-        className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-portal-muted/30"
+        className="h-16 w-16 rounded-2xl flex items-center justify-center mb-5"
+        style={{
+          background:
+            'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
+        }}
       >
-        {error && (
-          <div
-            className="text-center text-sm py-8 text-portal-destructive"
-          >
-            {error}
-          </div>
-        )}
-
-        {mensajes.length === 0 && !error && (
-          <PortalCard className="text-center py-12 text-portal-muted-fg/70" padding="lg">
-            <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p className="text-sm">No hay mensajes todavía</p>
-            <p className="text-xs mt-1">
-              Escribinos tu consulta y te responderemos a la brevedad
-            </p>
-          </PortalCard>
-        )}
-
-        {mensajes.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.rol === 'paciente' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className="max-w-[80%] rounded-2xl px-4 py-2.5 text-sm"
-              style={
-                msg.rol === 'paciente'
-                  ? {
-                      background:
-                        'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
-                      color: '#fff',
-                      borderBottomRightRadius: '0.375rem',
-                    }
-                  : {
-                      background: 'var(--portal-bg-alt)',
-                      border:
-                        '1px solid hsl(var(--portal-border-light))',
-                      color: 'hsl(var(--portal-foreground) / 0.9)',
-                      borderBottomLeftRadius: '0.375rem',
-                    }
-              }
-            >
-              {msg.rol !== 'paciente' && (
-                <div
-                  className="text-[10px] font-medium uppercase tracking-wider mb-1"
-                  style={{
-                    color:
-                      msg.rol === 'asistente_ia'
-                        ? 'hsl(var(--portal-accent))'
-                        : 'hsl(var(--portal-primary))',
-                  }}
-                >
-                  {msg.rol === 'asistente_ia'
-                    ? '🤖 Asistente IA'
-                    : msg.rol === 'medico'
-                      ? '👨‍⚕️ Médico'
-                      : '📋 Secretaría'}
-                </div>
-              )}
-              <div className="whitespace-pre-wrap break-words">
-                {msg.contenido}
-              </div>
-              <div className="text-[10px] mt-1 opacity-70">
-                {formatTime(msg.createdAt)}
-                {msg.id.startsWith('temp-') && (
-                  <span className="ml-1 italic">enviando...</span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-        <div ref={bottomRef} />
+        <MessageCircle className="h-8 w-8 text-white" />
       </div>
 
-      {/* Input bar */}
-      <div className="bg-portal-bg-alt border-t border-portal-border-light px-4 py-3">
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }}
-            placeholder="Escribí tu mensaje..."
-            maxLength={1000}
-            disabled={sending || !!error}
-            className="flex-1 px-4 py-2.5 rounded-full text-sm border-0 outline-none disabled:opacity-50 bg-portal-muted text-portal-fg"
-            onFocus={(e) => {
-              e.currentTarget.style.boxShadow =
-                '0 0 0 2px hsl(var(--portal-primary) / 0.2)';
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          />
-          <PortalButton
-            onClick={sendMessage}
-            disabled={!input.trim() || sending || !!error}
-            variant="primary"
-            style={{
-              borderRadius: '9999px',
-              padding: '0.625rem',
-              height: 'auto',
-              width: '2.75rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+      <h1 className="text-xl font-semibold text-portal-fg">
+        Hablame por WhatsApp
+      </h1>
+      <p className="text-sm text-portal-muted-fg mt-2 max-w-sm">
+        A partir de ahora, todas las consultas se atienden directo por
+        WhatsApp. Es más rápido y podés adjuntar archivos.
+      </p>
+
+      <PortalCard
+        className="mt-6 w-full max-w-sm text-left"
+        padding="lg"
+      >
+        <p className="text-sm text-portal-fg">
+          👋 ¡Hola! Para comunicarte con el equipo médico, escribinos por
+          WhatsApp y te respondemos a la brevedad.
+        </p>
+      </PortalCard>
+
+      <div className="mt-8 w-full max-w-sm space-y-3">
+        {waLink ? (
+          <a
+            href={waLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={PRIMARY_BTN}
           >
-            {sending ? (
-              <span className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin block" />
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
-          </PortalButton>
-        </div>
+            Abrir WhatsApp
+            <ExternalLink className="h-4 w-4 ml-2" />
+          </a>
+        ) : (
+          <p className="text-xs text-portal-muted-fg/70 px-4">
+            El consultorio aún no configuró su número de WhatsApp. Comunicate
+            por el canal habitual hasta que esté disponible.
+          </p>
+        )}
+
+        <Link href="/portal/dashboard" className={cn(GHOST_BTN)}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Volver al inicio
+        </Link>
       </div>
     </div>
   );

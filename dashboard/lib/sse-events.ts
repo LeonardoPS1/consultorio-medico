@@ -2,7 +2,8 @@ import { safeLog, safeWarn } from '@/lib/logger';
 
 interface SSEClient {
   id: string;
-  tenantId: string;
+  tenantId?: string;
+  userId?: string;
   write(data: string): void;
   close(): void;
 }
@@ -15,9 +16,16 @@ interface SSEEvent {
 let clients: SSEClient[] = [];
 let clientIdCounter = 0;
 
-export function addClient(tenantId: string, write: (data: string) => void, close: () => void): string {
+/** Registra un cliente SSE conectado con su tenant (y opcionalmente userId para fan-out dirigido). */
+export function addClient(
+  tenantId: string,
+  write: (data: string) => void,
+  close: () => void,
+  options?: { userId?: string },
+): string {
   const id = `sse-${++clientIdCounter}`;
-  clients.push({ id, tenantId, write, close });
+  const client: SSEClient = { id, tenantId, ...(options?.userId ? { userId: options.userId } : {}), write, close };
+  clients.push(client);
 
   // Heartbeat cada 30s
   const heartbeat = setInterval(() => {
@@ -25,17 +33,13 @@ export function addClient(tenantId: string, write: (data: string) => void, close
   }, 30_000);
 
   const originalClose = close;
-    close: () => {
+  client.close = () => {
     clearInterval(heartbeat);
     originalClose();
-    clients = clients.filter((c) => c.id !== id);
-    safeLog('[SSE] Cliente desconectado:', { clientId: id });
+    removeClient(id);
   };
 
-  clients = clients.filter((c) => c.id !== id);
-  clients.push({ id, tenantId, write, close: () => { clearInterval(heartbeat); originalClose(); } });
-
-  safeLog('[SSE] Cliente conectado:', { clientId: id, tenantId });
+  safeLog('[SSE] Cliente conectado:', { clientId: id, tenantId, userId: options?.userId });
   return id;
 }
 
@@ -43,11 +47,21 @@ export function removeClient(id: string): void {
   clients = clients.filter((c) => c.id !== id);
 }
 
+/** Fan-out por tenant (reemplaza el evento original). */
 export function emitEvent(tenantId: string, event: SSEEvent): void {
+  emit((client) => client.tenantId === tenantId, event);
+}
+
+/** Fan-out dirigido a un usuario específico (mensajería interna staff). */
+export function emitEventToUser(userId: string, event: SSEEvent): void {
+  emit((client) => Boolean(client.userId && client.userId === userId), event);
+}
+
+function emit(predicate: (client: SSEClient) => boolean, event: SSEEvent): void {
   const payload = `event: ${event.type}\ndata: ${JSON.stringify(event.data)}\n\n`;
   let sent = 0;
   for (const client of clients) {
-    if (client.tenantId === tenantId) {
+    if (predicate(client)) {
       try {
         client.write(payload);
         sent++;
@@ -57,6 +71,8 @@ export function emitEvent(tenantId: string, event: SSEEvent): void {
     }
   }
   if (sent > 0) {
-    safeLog('[SSE] Evento emitido:', { type: event.type, tenantId, clients: sent });
+    safeLog('[SSE] Evento emitido:', { type: event.type, clients: sent });
   }
 }
+
+export { safeWarn };

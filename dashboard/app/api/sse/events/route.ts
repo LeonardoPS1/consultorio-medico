@@ -7,6 +7,7 @@ import { safeLog } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   const tenantId = request.headers.get('x-tenant-id') || '00000000-0000-0000-0000-000000000000';
+  const userId = request.headers.get('x-user-id') || undefined;
 
   const stream = new TransformStream();
   const writer = stream.writable.getWriter();
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     writer.close().catch(() => {});
   };
 
-  const clientId = addClient(tenantId, write, close);
+  const clientId = addClient(tenantId, write, close, userId ? { userId } : {});
 
   request.signal.addEventListener('abort', () => {
     close();

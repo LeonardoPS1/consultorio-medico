@@ -16,9 +16,11 @@ import {
   bloqueosAgenda,
   turnos,
   pacientes,
+  ofertasTurno,
 } from '@/drizzle/schema';
-import { eq, and, ne, sql, gte, lte, inArray, notInArray } from 'drizzle-orm';
+import { eq, and, ne, sql, gte, lte, inArray, notInArray, gt } from 'drizzle-orm';
 import { safeWarn, safeError } from '@/lib/logger';
+import { HttpError } from '@/lib/api-handler';
 
 // ─── Tipos públicos ──────────────────────────────────────────
 
@@ -330,28 +332,91 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
   const slotValido = slots.some((s) => s.fechaHora === input.fechaHora);
   if (!slotValido) throw new Error('El horario seleccionado no está disponible');
 
-  // 7. Crear turno (con columnas condicionales para survival sin migraciones)
+  // 7. Crear turno DENTRO de una transacción (anti-carrera de concurrencia)
+  //
+  // La protección REAL contra dobles reservas es el índice único parcial
+  // idx_turnos_medico_fecha_activo (migración 0061) sobre (medico_id,
+  // fecha_hora) WHERE deleted_at IS NULL AND estado NOT IN ('cancelada',
+  // 'no_asistio'). La transacción re-verifica disponibilidad y bloquea la
+  // reserva directa cuando hay una oferta activa de lista de espera, y si dos
+  // requests concurrentes intentan ocupar el mismo horario a la vez, uno
+  // falla por 23505 y devuelve un mensaje claro de "no disponible".
   const fechaHora = new Date(input.fechaHora);
-  const insertValues: Record<string, unknown> = {
-    pacienteId: input.pacienteId,
-    medicoId: input.medicoId,
-    fechaHora,
-    duracionMinutos: servicio.duracionMinutos || 30,
-    estado: 'pendiente',
-    tipoConsulta: 'consulta',
-    motivo: input.motivo || null,
-    fuente: 'portal',
-  };
-  if (input.sucursalId) {
-    insertValues.sucursalId = input.sucursalId;
+
+  let turno: typeof turnos.$inferSelect;
+  try {
+    turno = await db.transaction(async (tx) => {
+      // 7.a Re-verificar atómicamente que el slot siga libre.
+      const [ocupado] = await tx
+        .select({ id: turnos.id })
+        .from(turnos)
+        .where(
+          and(
+            eq(turnos.medicoId, input.medicoId),
+            eq(turnos.fechaHora, fechaHora),
+            sql`${turnos.deletedAt} IS NULL`,
+            notInArray(turnos.estado, ['cancelada', 'no_asistio']),
+            input.rescheduleTurnoId ? ne(turnos.id, input.rescheduleTurnoId) : sql`TRUE`,
+          ),
+        )
+        .limit(1);
+      if (ocupado) {
+        throw new HttpError('El horario seleccionado no está disponible', 409);
+      }
+
+      // 7.b Reconciliación con lista de espera v2: si existe una oferta ACTIVA
+      // (pendiente, no expirada) para un turno de este médico+horario, la
+      // franja está reservada para el paciente en espera y bloquea la reserva
+      // directa del booking-wizard hasta que la oferta expire o se rechace.
+      const [ofertaActiva] = await tx
+        .select({ id: ofertasTurno.id })
+        .from(ofertasTurno)
+        .innerJoin(turnos, eq(turnos.id, ofertasTurno.turnoId))
+        .where(
+          and(
+            eq(turnos.medicoId, input.medicoId),
+            eq(turnos.fechaHora, fechaHora),
+            eq(ofertasTurno.estado, 'pendiente'),
+            gt(ofertasTurno.expiracion, ahora),
+          ),
+        )
+        .limit(1);
+      if (ofertaActiva) {
+        throw new HttpError(
+          'Este horario está reservado para un paciente en lista de espera',
+          409,
+        );
+      }
+
+      const insertValues: Record<string, unknown> = {
+        pacienteId: input.pacienteId,
+        medicoId: input.medicoId,
+        fechaHora,
+        duracionMinutos: servicio.duracionMinutos || 30,
+        estado: 'pendiente',
+        tipoConsulta: 'consulta',
+        motivo: input.motivo || null,
+        fuente: 'portal',
+      };
+      if (input.sucursalId) {
+        insertValues.sucursalId = input.sucursalId;
+      }
+      if (servicio.precio != null) {
+        insertValues.precio = servicio.precio;
+      }
+      const [creado] = await tx
+        .insert(turnos)
+        .values(insertValues as any)
+        .returning();
+      return creado;
+    });
+  } catch (err) {
+    // 23505 = unique_violation del índice idx_turnos_medico_fecha_activo.
+    if (err && typeof err === 'object' && 'code' in err && (err as any).code === '23505') {
+      throw new HttpError('Este horario ya no está disponible, elegí otro', 409);
+    }
+    throw err;
   }
-  if (servicio.precio != null) {
-    insertValues.precio = servicio.precio;
-  }
-  const [turno] = await db
-    .insert(turnos)
-    .values(insertValues as any)
-    .returning();
 
   // 4. Si es un reagendamiento, cancelar el turno anterior
   let oldTurnoFecha: string | null = null;

@@ -2,7 +2,6 @@
 
 import {
   Calendar,
-  MessageSquare,
   PlusCircle,
   HeartPulse,
   MoreHorizontal,
@@ -33,7 +32,6 @@ const primaryNav = [
   { href: '/portal/dashboard', label: 'Inicio', icon: HeartPulse },
   { href: '/portal/agendar', label: 'Agendar', icon: PlusCircle },
   { href: '/portal/turnos', label: 'Turnos', icon: Calendar },
-  { href: '/portal/mensajes', label: 'Chat', icon: MessageSquare },
 ];
 
 interface SecondaryGroup {

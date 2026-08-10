@@ -1001,6 +1001,15 @@ export function PacienteDetalleClient({
                       <DropdownMenuItem onClick={() => router.push(`/dashboard/conversaciones`)}>
                         <MessageSquare className="h-4 w-4 mr-2" /> Mensaje
                       </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          router.push(
+                            `/dashboard/mensajeria-interna?contextoPacienteId=${paciente.id}`,
+                          )
+                        }
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" /> Consultar en mensajería
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setShowNuevoTurno(true)}>
                         <Calendar className="h-4 w-4 mr-2" /> Nuevo Turno
                       </DropdownMenuItem>
@@ -1126,6 +1135,15 @@ export function PacienteDetalleClient({
                 onClick={() => router.push(`/dashboard/conversaciones`)}
               >
                 <MessageSquare className="h-4 w-4 mr-2" /> Mensaje
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  router.push(`/dashboard/mensajeria-interna?contextoPacienteId=${paciente.id}`)
+                }
+              >
+                <MessageSquare className="h-4 w-4 mr-2" /> Consultar en mensajería
               </Button>
               <Button
                 size="sm"

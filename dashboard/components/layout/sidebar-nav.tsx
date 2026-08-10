@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Calendar,
@@ -34,6 +35,7 @@ import {
   Smartphone,
   Settings,
   PlugZap,
+  MessagesSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -70,6 +72,12 @@ const navItems: NavItem[] = [
     href: '/dashboard/conversaciones',
     icon: MessageSquare,
     feature: 'conversaciones',
+  },
+  {
+    title: 'Mensajería',
+    href: '/dashboard/mensajeria-interna',
+    icon: MessagesSquare,
+    feature: 'mensajeria-interna',
   },
   { title: 'Historial', href: '/dashboard/historial', icon: FileText, feature: 'historial' },
   { title: 'Recetas', href: '/dashboard/recetas', icon: Syringe, feature: 'recetas' },
@@ -324,6 +332,46 @@ export function SidebarNav({
 }: SidebarNavProps) {
   const pathname = usePathname() ?? '';
   const { isFeatureEnabled } = useFeatureFlags();
+  const [noLeidosInternos, setNoLeidosInternos] = useState(0);
+
+  // Contador de mensajes internos no leídos (polling + SSE)
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    const cargar = async () => {
+      try {
+        const res = await fetch('/api/mensajeria-interna/no-leidos');
+        if (!res.ok) return;
+        const json = await res.json();
+        setNoLeidosInternos(json.data?.count ?? 0);
+      } catch {
+        /* silencioso */
+      }
+    };
+    cargar();
+    const interval = setInterval(cargar, 60000);
+
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource('/api/sse/events');
+      eventSource.addEventListener('mensaje-interno', cargar);
+      eventSource.addEventListener('mensaje-interno-entregado', cargar);
+      eventSource.onerror = () => eventSource?.close();
+    } catch {
+      /* SSE no disponible */
+    }
+
+    return () => {
+      clearInterval(interval);
+      eventSource?.close();
+    };
+  }, [status]);
+
+  const resolveBadge = (item: NavItem): string | undefined => {
+    if (item.href === '/dashboard/mensajeria-interna' && noLeidosInternos > 0) {
+      return noLeidosInternos > 99 ? '99+' : String(noLeidosInternos);
+    }
+    return item.badge;
+  };
 
   return (
     <nav className="space-y-1 px-2" aria-label="Navegación principal">
@@ -351,7 +399,7 @@ export function SidebarNav({
             return (
               <NavItemLink
                 key={item.href}
-                item={item}
+                item={{ ...item, badge: resolveBadge(item) }}
                 collapsed={collapsed}
                 isActive={isActive}
                 hasAccess={hasAccess}

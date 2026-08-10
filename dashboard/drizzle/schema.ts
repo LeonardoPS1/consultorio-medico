@@ -8,4 +8,5 @@ export * from './operations';
 export * from './finance';
 export * from './access';
 export * from './waitlist';
+export * from './messaging';
 export * from './tenant';

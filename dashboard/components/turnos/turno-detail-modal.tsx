@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, ShieldCheck, HelpCircle } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, HelpCircle, MessagesSquare } from 'lucide-react';
 
 interface TurnoData {
   id: string;
@@ -74,6 +75,7 @@ interface TurnoDetailModalProps {
 
 export function TurnoDetailModal({ editTurno, onOpenChange, onSaveEdit }: TurnoDetailModalProps) {
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
 
   return (
     <Dialog
@@ -124,7 +126,21 @@ export function TurnoDetailModal({ editTurno, onOpenChange, onSaveEdit }: TurnoD
             </div>
           </div>
         )}
-        <DialogFooter>
+        <DialogFooter className="flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            className="mr-auto"
+            onClick={() => {
+              if (!editTurno) return;
+              onOpenChange(false);
+              router.push(
+                `/dashboard/mensajeria-interna?contextoTurnoId=${editTurno.id}&contextoPacienteId=${editTurno.pacienteId}`,
+              );
+            }}
+          >
+            <MessagesSquare className="h-4 w-4 mr-2" /> Consultar en mensajería
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
