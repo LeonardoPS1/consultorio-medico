@@ -12,15 +12,15 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const medicoId = searchParams.get('medicoId');
 
   if (!medicoId) {
-    return success({ data: [] });
+    return success([]);
   }
 
   const dias = Number(searchParams.get('dias')) || 7;
   const limite = Number(searchParams.get('limite')) || 15;
   const franjas = await proximasFranjasLibres(medicoId, { dias, limite });
 
-  return success({
-    data: franjas.map((f) => {
+  return success(
+    franjas.map((f) => {
       const { fecha, hora } = formatearFechaHora(f.fechaHora);
       return {
         fechaHora: f.fechaHora.toISOString(),
@@ -29,5 +29,5 @@ export const GET = apiHandler(async (request: NextRequest) => {
         duracionMinutos: f.duracionMinutos,
       };
     }),
-  });
+  );
 });

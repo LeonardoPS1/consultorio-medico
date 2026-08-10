@@ -12,9 +12,9 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const medicoId = searchParams.get('medicoId');
 
   if (!medicoId) {
-    return success({ data: [] });
+    return success([]);
   }
 
   const turnos = await waitlistService.turnosDisponibles(medicoId);
-  return success({ data: turnos });
+  return success(turnos);
 });
