@@ -112,6 +112,49 @@ Datos estructurados para la timeline del día.
 
 Actualización masiva de estados. Acepta `{ turnoIds: string[], estado }`.
 
+## Lista de espera / Turno ofrecido
+
+La lista de espera permite reasignar cupos liberados (turnos cancelados) a pacientes que esperaban atención. Cuando se cancela un turno, el sistema busca automáticamente al primer paciente en espera del mismo médico y le ofrece el turno por WhatsApp (confirmación en 15 minutos).
+
+### `GET /api/waitlist/turnos-disponibles`
+
+Devuelve los turnos futuros de un médico para ofrecer manualmente desde el modal "Asignar turno".
+
+**Parámetros**: `medicoId` (requerido, UUID).
+
+**Respuesta**: `{ data: [{ id, fechaHora, fecha, hora, estado, pacienteNombre, medicoId }] }`
+
+### `GET /api/waitlist/franjas`
+
+Devuelve franjas horarias libres de un médico para ofrecer un cupo sin turno existente.
+
+**Parámetros**: `medicoId` (requerido), `dias` (default 7), `limite` (default 15).
+
+**Respuesta**: `{ data: [{ fechaHora, fecha, hora, duracionMinutos }] }`
+
+### `POST /api/waitlist/[id]/oferta`
+
+Crea una oferta de turno a un paciente en espera y lo notifica por WhatsApp.
+
+**Body**:
+- `{ tipo: 'turno', turnoId }` — ofrece un turno existente.
+- `{ tipo: 'franja', fechaHora, pacienteId, medicoId }` — ofrece una franja libre.
+
+**Respuesta**: `201 created(oferta)`.
+
+### Modal "Asignar turno"
+
+Desde la lista de espera del dashboard, el botón **"Asignar turno"** abre un modal con dos pestañas:
+
+1. **Turno existente**: lista los turnos futuros del médico (cualquier estado) con botón **"Ofrecer"**.
+2. **Franja libre**: lista franjas horarias disponibles con botón **"Ofrecer en este horario"**.
+
+Un **selector de paciente** permite elegir entre los pacientes en espera del mismo médico (por defecto el de la fila actual). Hay **vista previa del destino** antes de confirmar la oferta.
+
+**Flujo**: cancelación de turno → búsqueda del primer paciente en espera (FIFO) → notificación WhatsApp → aceptar en 15 min reasigna el turno, rechazar pasa al siguiente paciente. Máximo 3 turnos ofrecidos por día (plan Professional+).
+
+**Renombrado**: la terminología de la feature pasó de "oferta" a **"turno ofrecido"** en la UI del dashboard y en los mensajes de WhatsApp, manteniendo los identificadores internos y las rutas de API intactos.
+
 ## Reglas de Negocio
 
 ### Validación de Agenda

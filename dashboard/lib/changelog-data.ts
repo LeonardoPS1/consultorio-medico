@@ -10,8 +10,21 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 07/08/2026 — v1.36.0 IA Clínica (CIE-10 sugerido + Resumen + Alertas de interacciones)
+// Actualizado: 09/08/2026 — v1.37.0 Lista de Espera v2 (turno ofrecido, reasignación y franjas libres)
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.37.0',
+    date: '09/08/2026',
+    title: 'Lista de Espera v2: turno ofrecido, reasignación y franjas libres',
+    items: [
+      'Modal "Asignar turno" con 2 pestañas para armarte una oferta desde la lista de espera: ofrecer un turno existente del médico o una franja libre de la agenda.',
+      'Selector de paciente en espera: al ofrecer un turno o franja podés elegir el paciente de la lista (mismo médico, estado activa) que recibirá la oferta por WhatsApp.',
+      'Vista previa del destino antes de confirmar: se muestra el turno/franja y el paciente antes de enviar la oferta.',
+      'Notificación WhatsApp automática: cuando un turno queda disponible se ofrece al primer paciente en espera con confirmación en 15 minutos; si rechaza, se sigue con el siguiente.',
+      'Renombrado de "oferta" a "turno ofrecido" en todo el dashboard para una terminología consistente con el paciente.',
+      'Reasignación con turno existente o franja libre, con validación de disponibilidad y estados "activa", "confirmada" o "cancelada".',
+    ],
+  },
   {
     version: '1.36.0',
     date: '07/08/2026',

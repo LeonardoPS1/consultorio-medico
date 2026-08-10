@@ -306,6 +306,19 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
           'Si rechaza, el sistema pasa al siguiente paciente',
         ],
       },
+      {
+        titulo: 'Asignar turno manualmente',
+        descripcion:
+          'Desde la lista de espera podés ofrecer un turno a un paciente en dos modalidades con el botón "Asignar turno".',
+        tips: [
+          'Pestaña "Turno existente": elegí un turno del médico y presioná "Ofrecer"',
+          'Pestaña "Franja libre": seleccioná un horario libre de la agenda y presioná "Ofrecer en este horario"',
+          'Seleccioná el paciente en espera del mismo médico que recibirá la oferta (por defecto el de la fila)',
+          'Se muestra una vista previa del destino antes de confirmar el envío por WhatsApp',
+          'Una vez enviada, el paciente tiene 15 minutos para aceptar o rechazar',
+        ],
+        enlace: { href: '/dashboard/lista-espera', label: 'Ir a Lista de Espera' },
+      },
     ],
     preguntas: [
       {

@@ -2,9 +2,9 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 08/08/2026
+**Última actualización:** 09/08/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
-**Versión actual:** 1.36.0
+**Versión actual:** 1.37.0
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
 **Repositorio:** `main` → https://github.com/LeonardoPS1/consultorio-medico
@@ -819,6 +819,7 @@ consultorio-medico/
 | **IA Clínica (CIE-10 sugerido + Resumen + Alertas)** | Migración 0059 (`notas_soap.cie10_sugerido` jsonb + tabla `resumenes_paciente`). `lib/ai-clinical.ts` (sugerirCie10, generarResumenLongitudinal) + `lib/farmaco-interacciones.ts` (~20 interacciones FDA/BNF/Medscape). API `/api/pacientes/[id]/resumen` + `/api/recetas/verificar` (AlertDialog "Aceptar y continuar"). Features: `cie10-sugerido` (Professional), `resumen-longitudinal` (Starter), `alertas-interacciones` (Professional). Commit `c509c16` | 05/08 |
 | **IA Clínica prod + fixes ficha (ca5b5c9, 8b88bf2)** | sugerirCie10 server-side en POST/PATCH notas-soap (gate professional, aparece también en notas manuales). Gate resumen-longitudinal en GET/POST + Card oculta sin Starter. Alertas interacciones en crear receta de la ficha. Migración 0059 aplicada en prod. Fix `::receta_estado` inexistente (col varchar) → `inArray` CIE16. Commits `ca5b5c9`, `8b88bf2` | 07/08 |
 | **Waitlist + Chatwoot (1f0c2fc)** | Webhook Chatwoot (canal principal Evolution API) intercepta ACEPTAR/RECHAZAR/OK/RECHAZO/SÍ/SI/NO antes de forward a n8n → `handleWaitlistResponse` con conversationId (respuesta por el MISMO canal). `lib/whatsapp.ts` canal unificado (CANAL_MENSAJERIA default chatwoot + findContactByPhone→getOrCreateConversation auto, fallback Twilio). UI lista-espera ampliada (agregar paciente, asignar turno manual, panel ofertas con badges) + KPI corregido. Test mock `whatsapp-waitlist-response` 6/6. Commit `1f0c2fc` | 08/08 |
+| **Lista de Espera v2: turno ofrecido (1f0c2fc→ff91aae)** | Modal "Asignar turno" con 2 pestañas (Turno existente / Franja libre) + selector de paciente en espera del mismo médico + vista previa de destino. `proximasFranjasLibres`, `crearOferta` ampliada (turnoId|fechaHora), `aceptar` reforzado + `notificarPacienteReasignado`. Rutas `/api/waitlist/turnos-disponibles`, `/api/waitlist/franjas`, `POST /api/waitlist/[id]/oferta`. Renombrado UI/WhatsApp "turno ofrecido" (manteniendo rutas internas intactas). 23 tests waitlist nuevos, criterios spec 5/5. Commits `ba5427d`, `eff87d8`, `ff91aae` | 09/08 |
 
 ### 🟡 Prioridad Media
 
