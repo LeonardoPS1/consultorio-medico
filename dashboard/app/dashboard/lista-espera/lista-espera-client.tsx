@@ -241,6 +241,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
 
   const confirmarOferta = async () => {
     if (!turnoDialogFor || !pacienteEnEsperaId) return;
+    const inscripcionDestino = items.find((i) => i.id === pacienteEnEsperaId);
     if (tabTurno === 'turno') {
       if (!turnoSeleccionadoId) return;
       await handleOfrecerTurno({ tipo: 'turno', turnoId: turnoSeleccionadoId });
@@ -249,7 +250,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
       await handleOfrecerTurno({
         tipo: 'franja',
         fechaHora: franjaSeleccionada.fechaHora,
-        pacienteId: pacienteEnEsperaId,
+        pacienteId: inscripcionDestino?.pacienteId ?? turnoDialogFor.pacienteId,
         medicoId: turnoDialogFor.medicoId,
       });
     }
