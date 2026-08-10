@@ -121,11 +121,11 @@ export default async function AcercaPage() {
             <span>aicorebots.com</span>
           </a>
           <a
-            href="mailto:hola@aicorebots.com"
+            href="mailto:contacto@aicorebots.com"
             className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors text-sm"
           >
             <Mail className="size-5 text-primary shrink-0" />
-            <span>hola@aicorebots.com</span>
+            <span>contacto@aicorebots.com</span>
           </a>
           <Link
             href="/dashboard/novedades"
