@@ -235,7 +235,12 @@ export async function crearConversacion(
       ),
     )
     .limit(1);
-  if (existente) return existente;
+  if (existente) {
+    return {
+      ...existente,
+      participante: { id: target.id, nombre: target.nombre, rol: target.rol },
+    };
+  }
 
   const [nueva] = await db
     .insert(conversacionesInternas)
@@ -247,7 +252,10 @@ export async function crearConversacion(
       contextoTurnoId: input.contextoTurnoId || null,
     })
     .returning();
-  return nueva;
+  return {
+    ...nueva,
+    participante: { id: target.id, nombre: target.nombre, rol: target.rol },
+  };
 }
 
 // ─── Mensajes ─────────────────────────────────────────────────
