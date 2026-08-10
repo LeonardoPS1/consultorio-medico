@@ -35,6 +35,10 @@ actualización. Si algo cambia en el producto, este sitio debe cambiar en el mis
   CIE-10 sugerido, resumen longitudinal y alertas de interacciones farmacológicas.
   [→ Ver IA Clínica](modulos/ia-clinica.md)
 
+- **:material-message-text: Mensajería Interna**
+  Chat entre médicos, secretarias y admins con menciones y contexto de pacientes.
+  [→ Ver Mensajería Interna](modulos/mensajeria-interna.md)
+
 - **:material-server-network: Disaster Recovery**
   Backups, restauración, drill y 3 vías de recuperación.
   [→ Ver DR](existente/disaster-recovery.md)

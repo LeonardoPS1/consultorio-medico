@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'AiCoreMed';
-const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '1.37.0';
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '1.38.0';
 const TENANT_NAME = process.env.NEXT_PUBLIC_TENANT_NAME || 'Consultorio';
 
 const features = [
@@ -30,6 +30,10 @@ const features = [
   {
     title: 'Reportes y analytics',
     description: 'Visualizá ingresos, turnos, pacientes y recetas con datos en tiempo real.',
+  },
+  {
+    title: 'Mensajería interna',
+    description: 'Chat entre médicos, secretarias y admins con menciones, mensajes urgentes y contexto de pacientes.',
   },
   {
     title: 'Recordatorios automáticos',

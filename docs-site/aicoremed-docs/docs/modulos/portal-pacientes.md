@@ -13,7 +13,6 @@ Route Groups
     ├── agendar/                → Booking Wizard (5 pasos)
     ├── turnos/                 → Mis turnos (cancelar, reagendar)
     ├── recetas/                → Mis recetas (PDF)
-    ├── mensajes/               → Chat con el consultorio
     ├── historial/              → Historial médico
     ├── perfil/                 → Editar datos personales
     ├── notificaciones/         → Centro de notificaciones
@@ -29,7 +28,6 @@ API (app/api/portal/)
   ├── turnos/                   → CRUD + ICS
   ├── medicos/                  → Lista + slots disponibles
   ├── recetas/                  → Lista + PDF
-  ├── chat/                     → Conversación + mensajes
   ├── perfil/                   → Actualizar datos
   ├── pagos/                    → MercadoPago preferences
   ├── paquetes/                 → Suscripciones

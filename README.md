@@ -60,7 +60,7 @@
 
 - **🤖 IA Local**: Toda la inteligencia artificial corre en tu propia infraestructura con Ollama. Sin dependencias externas, sin costos por API, sin riesgos de privacidad.
 - **📱 WhatsApp Automation**: Los pacientes pueden agendar, cancelar y consultar turnos vía WhatsApp con atención automática por IA.
-- **🏗️ Automatización n8n**: 9 workflows n8n que orquestan recordatorios, resúmenes diarios, sincronización con Google Calendar, backups encriptados y más.
+- **🏗️ Automatización n8n**: 17 workflows n8n que orquestan recordatorios, resúmenes diarios, sincronización con Google Calendar, backups encriptados y más.
 - **📹 Telemedicina integrada**: Videoconsultas en vivo con LiveKit self-hosted. Link automático por WhatsApp al agendar turnos virtuales. Sin costos por minuto ni dependencias externas.
 - **🇨🇱 Hecho para Chile**: Sistema de salud chileno completo (FONASA/Isapre), RUT, regiones/comunas, precios en CLP.
 - **🔒 Seguridad first**: HMAC en webhooks, autenticación 2FA, rate limiting, anti-jailbreak en prompts IA, multi-tenant con tenantId en 22+ tablas.
@@ -85,7 +85,7 @@
                     ┌───────▼──────────────▼─────────────────▼─────────────┐
                     │              CAPA DE AUTOMATIZACIÓN                   │
                     │  ┌──────────────────────────────────────────────┐    │
-                    │  │              n8n (10 Workflows)              │    │
+                    │  │              n8n (17 Workflows)              │    │
                     │  │  WF-01  WF-02  WF-03  WF-04  WF-05          │    │
                     │  │  WF-06  WF-07  WF-08  WF-09  WF-10         │    │
                     │  └───────────────────┬──────────────────────────┘    │
@@ -364,7 +364,7 @@ consultorio-medico/
 │   ├── livekit.yaml                     # Config del servidor (keys, TURN, Ingress)
 │   └── traefik-livekit.yml              # Routing Traefik para livekit.aicorebots.com
 │
-├── n8n-workflows/                      # ★ 10 workflows JSON
+├── n8n-workflows/                      # ★ 17 workflows JSON
 │   └── current/                        # Activos (WF-01 a WF-10)
 │
 ├── scripts/                            # Deploy, backup, utilidades

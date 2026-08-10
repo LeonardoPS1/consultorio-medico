@@ -47,6 +47,7 @@ nav:
       - Turnos y Agenda: modulos/turnos.md
       - Pacientes: modulos/pacientes.md
       - Conversaciones: modulos/conversaciones.md
+      - Mensajería Interna: modulos/mensajeria-interna.md
       - Recetas: modulos/recetas.md
       - Telemedicina: modulos/telemedicina.md
       - Portal de Pacientes: modulos/portal-pacientes.md

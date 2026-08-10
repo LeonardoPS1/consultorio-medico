@@ -10,8 +10,21 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 10/08/2026 — v1.37.0 Lista de Espera v2 (turno ofrecido, reasignación y franjas libres) + fixes
+// Actualizado: 10/08/2026 — v1.38.0 Mensajería interna + anti-concurrencia + eliminar chat portal
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.38.0',
+    date: '10/08/2026',
+    title: 'Mensajería interna, Anti-concurrencia y Portal simplificado',
+    items: [
+      'Mensajería interna entre staff: chateá con otros médicos, secretarias y admins del consultorio con menciones @nombre que notifican al mencionado y mensajes urgentes con prioridad de notificación.',
+      'Chips de contexto: vinculá conversaciones a pacientes o turnos para referenciar directamente desde la ficha del paciente o el detalle del turno.',
+      'Indicador de no leídos en la navegación principal: badge dinámico con la cantidad de mensajes pendientes.',
+      'Protección anti-concurrencia en reservas del portal: dos pacientes no pueden reservar el mismo turno al mismo tiempo. El sistema devuelve un mensaje claro "Este horario ya no está disponible, elegí otro" en vez de un error genérico.',
+      'Turnos ofrecidos de lista de espera bloquean reserva directa: si hay un paciente en espera con una oferta activa, ese turno queda protegido hasta que la oferta expire o se rechace.',
+      'Eliminación del chat web del portal del paciente: la comunicación ahora es unificada vía WhatsApp. La página /portal/mensajes redirige amablemente a WhatsApp con un botón directo.',
+    ],
+  },
   {
     version: '1.37.0',
     date: '09/08/2026',

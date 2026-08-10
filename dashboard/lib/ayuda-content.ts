@@ -2204,7 +2204,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         titulo: 'Versión del sistema',
         descripcion: 'La página Acerca de muestra la versión actual del dashboard.',
         tips: [
-          'La versión sigue el formato semántico (ej: v1.36.0)',
+          'La versión sigue el formato semántico (ej: v1.38.0)',
           'Incluye fecha de último despliegue',
           'Muestra el número de funcionalidades activas actualmente',
           'Podés ver el hash del commit actual para referencia técnica',
@@ -2239,6 +2239,71 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         pregunta: '¿Cada cuánto se actualiza la versión?',
         respuesta:
           'Las actualizaciones se despliegan automáticamente cuando hay cambios en la rama main del repositorio. El versionado semántico se actualiza según el tipo de cambios.',
+      },
+    ],
+  },
+  {
+    id: 'mensajeria-interna',
+    titulo: 'Mensajería Interna',
+    descripcion: 'Comunicación directa entre el equipo del consultorio: médicos, secretarias y administradores',
+    icono: 'MessagesSquare',
+    pasos: [
+      {
+        titulo: 'Iniciar una conversación',
+        descripcion: 'Desde la página de Mensajería Interna, hacé clic en "Nueva conversación" y seleccioná a un colega del equipo.',
+        tips: [
+          'Solo podés chatear con personas de tu mismo consultorio',
+          'Seleccionalos del desplegable que muestra todos los usuarios activos',
+          'Si ya tenés una conversación con esa persona, se reutiliza automáticamente',
+        ],
+      },
+      {
+        titulo: 'Vincular a un paciente o turno',
+        descripcion: 'Al iniciar una conversación desde la ficha de un paciente o el detalle de un turno, el contexto se vincula automáticamente.',
+        tips: [
+          'Usá el botón "Consultar en mensajería" desde la ficha del paciente',
+          'En el detalle de un turno, el botón "Consultar en mensajería" vincula el turno actual',
+          'Los chips en la conversación muestran el paciente o turno vinculado con links directos',
+        ],
+      },
+      {
+        titulo: 'Menciones @nombre',
+        descripcion: 'Escribí @ seguido del nombre de un colega para notificarle específicamente.',
+        tips: [
+          'La mención genera una notificación dirigida a esa persona',
+          'Funciona con el nombre tal como aparece en el sistema',
+          'Útil para dirigir un mensaje a alguien específico en una conversación',
+        ],
+      },
+      {
+        titulo: 'Mensajes urgentes',
+        descripcion: 'Marcá la casilla "Urgente" antes de enviar para que el mensaje tenga prioridad de notificación.',
+        tips: [
+          'Los mensajes urgentes aparecen con un borde ámbar y el label "Urgente"',
+          'La notificación push usa prioridad alta (sonido distinto)',
+          'Usalo con moderación para situaciones que requieren atención inmediata',
+        ],
+      },
+      {
+        titulo: 'Mensajes no leídos',
+        descripcion: 'El badge en la barra lateral muestra la cantidad de conversaciones con mensajes sin leer.',
+        tips: [
+          'El contador se actualiza en tiempo real vía SSE',
+          'Al abrir una conversación, los mensajes del otro participante se marcan como leídos automáticamente',
+          'Los mensajes que enviaste muestran "Visto" cuando el destinatario los lee',
+        ],
+      },
+    ],
+    preguntas: [
+      {
+        pregunta: '¿Con quién puedo chatear?',
+        respuesta:
+          'Con cualquier usuario activo de tu mismo consultorio: médicos, secretarias y administradores. No se puede chatear con usuarios de otros consultorios.',
+      },
+      {
+        pregunta: '¿Las conversaciones quedan en el historial clínico del paciente?',
+        respuesta:
+          'No. La mensajería interna es una herramienta de comunicación entre el equipo y no se vincula al historial clínico legal del paciente, incluso si la conversación tiene un paciente como contexto.',
       },
     ],
   },
