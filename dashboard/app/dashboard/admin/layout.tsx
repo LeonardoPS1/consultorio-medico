@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   if (!session || session.user.role !== 'admin') redirect('/dashboard');
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       {children}
     </div>
   );
