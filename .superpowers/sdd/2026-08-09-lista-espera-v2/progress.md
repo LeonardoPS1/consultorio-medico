@@ -19,3 +19,4 @@ Task 5: minor (deferred): formatearFechaHora sin timeZone America/Santiago + 2 g
 Task 6: complete (commits 82b86ea..8782056, review clean)
 Task 6: minor (deferred): voseo preexistente lista-espera-client (Agregá/Elegí) para Task 7; changelog-data/planes 'ofertas automáticas' out-of-scope
 Task 7: complete (commit ba5427d, review clean)
+Task 8: complete (commit eff87d8) - tsc 0, 8 tests preexistentes confirmados en base 8782056 (worktree), lint 1 preexistente, build 0, criterios aceptacion 5/5 verificados

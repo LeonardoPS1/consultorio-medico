@@ -1,8 +1,8 @@
 'use server';
 
 import { NextRequest } from 'next/server';
-import { apiHandler, success } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success } from '@/lib/api-handler';
 import { waitlistService } from '@/lib/services/waitlist';
 
 // GET /api/waitlist/candidatos?medicoId=xxx&turnoFecha=xxxx&turnoHora=xxxx
