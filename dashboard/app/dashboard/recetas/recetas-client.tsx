@@ -98,9 +98,22 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
       if (res.ok) {
         const json = await res.json();
         setRecetas(json.data ?? []);
+        return;
       }
+      const body = await res.text().catch(() => '');
+      console.error(`[recetas] GET ${url} falló:`, res.status, body);
+      toast({
+        title: 'No se pudieron cargar las recetas',
+        description: body ? `Error del servidor (${res.status})` : `Error al consultar el servidor (${res.status})`,
+        variant: 'destructive',
+      });
     } catch {
-      // Error de red: se mantiene la lista actual
+      console.error('[recetas] Error de red al cargar recetas');
+      toast({
+        title: 'No se pudieron cargar las recetas',
+        description: 'Error de red. Revisá tu conexión e intentá de nuevo.',
+        variant: 'destructive',
+      });
     } finally {
       setFilterLoading(false);
     }
