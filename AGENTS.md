@@ -4,7 +4,7 @@
 
 **Última actualización:** 10/08/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
-**Versión actual:** 1.37.0
+**Versión actual:** 1.38.0
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
 **Repositorio:** `main` → https://github.com/LeonardoPS1/consultorio-medico
@@ -821,6 +821,9 @@ consultorio-medico/
 | **Waitlist + Chatwoot (1f0c2fc)** | Webhook Chatwoot (canal principal Evolution API) intercepta ACEPTAR/RECHAZAR/OK/RECHAZO/SÍ/SI/NO antes de forward a n8n → `handleWaitlistResponse` con conversationId (respuesta por el MISMO canal). `lib/whatsapp.ts` canal unificado (CANAL_MENSAJERIA default chatwoot + findContactByPhone→getOrCreateConversation auto, fallback Twilio). UI lista-espera ampliada (agregar paciente, asignar turno manual, panel ofertas con badges) + KPI corregido. Test mock `whatsapp-waitlist-response` 6/6. Commit `1f0c2fc` | 08/08 |
 | **Lista de Espera v2: turno ofrecido (1f0c2fc→ff91aae)** | Modal "Asignar turno" con 2 pestañas (Turno existente / Franja libre) + selector de paciente en espera del mismo médico + vista previa de destino. `proximasFranjasLibres`, `crearOferta` ampliada (turnoId|fechaHora), `aceptar` reforzado + `notificarPacienteReasignado`. Rutas `/api/waitlist/turnos-disponibles`, `/api/waitlist/franjas`, `POST /api/waitlist/[id]/oferta`. Renombrado UI/WhatsApp "turno ofrecido" (manteniendo rutas internas intactas). 23 tests waitlist nuevos, criterios spec 5/5. Commits `ba5427d`, `eff87d8`, `ff91aae` | 09/08 |
 | **Fixes waitlist/recetas (30de02c, a500fd3, 286de44)** | Fix doble wrap `success({data})` en turnos-disponibles/franjas → crash "q.find is not a function" en modal. Fix franja libre 500 FK: el Select de paciente mandaba id de inscripción como `pacienteId` → `confirmarOferta` resuelve `inscripcionDestino?.pacienteId`. Fix recetas: error visible + `console.error` al fallar carga (evita fallo silencioso en tabs). tsc 0, 23 tests waitlist. Commits `30de02c`, `a500fd3`, `286de44` | 10/08 |
+| **Eliminación chat portal + redirección a WhatsApp** | Removido `/portal/mensajes` y APIs `/api/portal/chat` del paciente. Reemplazado por página de redirección amable a WhatsApp (`wa.me`). Tablas `conversaciones`/`mensajes` canal='web' quedan huérfanas intencionalmente (trazabilidad). | 10/08 |
+| **Mensajería interna staff (dashboard)** | Tablas `conversaciones_internas` + `mensajes_internos` con RLS. APIs RESTful (conversaciones CRUD, mensajes enviar/listar, staff listar, no-leídos). Menciones `@nombre` generan notificación al mencionado. Mensajes urgentes con push prioridad urgencia. SSE per-user (`sse-events.ts` extendido con `emitEventToUser`). Frontend completo: lista + conversación con chips contexto paciente/turno, botones "Consultar en mensajería" desde ficha paciente y detalle turno, badge no-leídos en sidebar-nav. Feature gate `mensajeria-interna` (Starter+). Migración 0060 aplicada en prod. Commit `2ea1287` | 10/08 |
+| **Anti-concurrencia reservas portal** | Unique partial index `idx_turnos_medico_fecha_activo` (medico_id, fecha_hora) WHERE deleted_at IS NULL AND estado NOT IN ('cancelada','no_asistio'). Transacción atómica en `crearTurnoPortal()`: recheck ocupado + reconciliación waitlist (oferta activa bloquea reserva directa hasta expirar/rechazar) + insert. Manejo error 23505 → 409 "Este horario ya no está disponible, elegí otro". Fix constraint `turnos.fuente_check` agrega 'portal'. Migración 0061 aplicada en prod. Verificado: 2 POST concurrentes → 1×201 + 1 bloqueado. Build exit 0, tsc 0. Commit `2ea1287` | 10/08 |
 
 ### 🟡 Prioridad Media
 
