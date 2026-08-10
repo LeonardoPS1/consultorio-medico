@@ -3,9 +3,9 @@
 Bienvenido a la documentación técnica de **AicoreMed**, la plataforma de gestión clínica
 multi-tenant de [Aicore Agency](https://aicorebots.com).
 
-Esta documentación vive en el repositorio (`docs/`), se versiona junto al código y se
-publica automáticamente en cada push a `main`. Si algo cambia en el producto, este sitio
-debe cambiar en el mismo PR — no hay "documentación aparte" que se desactualice.
+Esta documentación se versiona junto al código y se publica automáticamente en cada
+actualización. Si algo cambia en el producto, este sitio debe cambiar en el mismo PR — no hay
+"documentación aparte" que se desactualice.
 
 ## Empezar aquí
 

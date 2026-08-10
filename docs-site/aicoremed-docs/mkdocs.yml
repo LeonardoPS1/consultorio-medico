@@ -27,15 +27,9 @@ theme:
     - search.highlight
     - content.code.copy
     - content.tabs.link
-  icon:
-    repo: fontawesome/brands/github
 
 extra_css:
   - stylesheets/aicoremed.css
-
-repo_url: https://github.com/LeonardoPS1/consultorio-medico
-repo_name: consultorio-medico
-edit_uri: edit/main/docs/
 
 nav:
   - Inicio: index.md
@@ -60,6 +54,12 @@ nav:
       - Derivaciones: modulos/derivaciones.md
       - Integraciones y Webhooks: modulos/integraciones.md
       - IA Clínica: modulos/ia-clinica.md
+      - Historial Clínico: modulos/historial.md
+      - Reportes y Analítica: modulos/reportes.md
+      - Encuestas y Sentimiento IA: modulos/encuestas.md
+      - Lista de Espera: modulos/lista-espera.md
+      - Blacklist: modulos/blacklist.md
+      - Consentimientos: modulos/consentimientos.md
   - API Reference:
       - v1: api/reference.md
   - Decisiones de Arquitectura (ADRs):
@@ -100,8 +100,3 @@ markdown_extensions:
 plugins:
   - search:
       lang: es
-
-extra:
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/LeonardoPS1/consultorio-medico
