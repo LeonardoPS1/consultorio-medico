@@ -1,0 +1,85 @@
+Commits:
+8095dcc fix(waitlist): evitar turno hu├®rfano al rechazar oferta por l├¡mite por paciente
+
+Stat:
+ dashboard/lib/services/waitlist.ts | 31 ++++++++++++++++---------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
+
+Diff:
+diff --git a/dashboard/lib/services/waitlist.ts b/dashboard/lib/services/waitlist.ts
+index d8a03f9..d707cb0 100644
+--- a/dashboard/lib/services/waitlist.ts
++++ b/dashboard/lib/services/waitlist.ts
+@@ -202,20 +202,36 @@ export const waitlistService = {
+       .select({
+         id: listaEspera.id,
+         pacienteId: listaEspera.pacienteId,
+         medicoId: listaEspera.medicoId,
+       })
+       .from(listaEspera)
+       .where(and(eq(listaEspera.id, listaEsperaId), eq(listaEspera.estado, 'activa')))
+       .limit(1);
+     if (!inscripcion) notFound('Inscripci├│n en lista de espera no encontrada o no activa');
+ 
++    // L├¡mite: m├íximo 1 oferta pendiente por paciente (en otra inscripci├│n).
++    // Se valida antes de persistir nada para no dejar turnos hu├®rfanos en Caso B.
++    const [ofertaPaciente] = await db
++      .select({ id: ofertasTurno.id })
++      .from(ofertasTurno)
++      .innerJoin(listaEspera, eq(ofertasTurno.listaEsperaId, listaEspera.id))
++      .where(
++        and(
++          eq(ofertasTurno.estado, 'pendiente'),
++          eq(listaEspera.pacienteId, inscripcion.pacienteId),
++          not(eq(ofertasTurno.listaEsperaId, listaEsperaId)),
++        ),
++      )
++      .limit(1);
++    if (ofertaPaciente) conflict('Ya existe un turno ofrecido pendiente para este paciente');
++
+     let turnoId: string;
+ 
+     if ('turnoId' in objetivo) {
+       // Caso A: ofrecer un turno existente
+       const [turno] = await db
+         .select({
+           id: turnos.id,
+           estado: turnos.estado,
+           medicoId: turnos.medicoId,
+           fechaHora: turnos.fechaHora,
+@@ -262,35 +278,20 @@ export const waitlistService = {
+           duracionMinutos: franja.duracionMinutos,
+           estado: 'pendiente',
+           tipoConsulta: 'consulta',
+           fuente: 'web',
+         })
+         .returning({ id: turnos.id });
+ 
+       turnoId = turnoNuevo.id;
+     }
+ 
+-    // L├¡mite: m├íximo 1 oferta pendiente por paciente (en otra inscripci├│n)
+-    const [ofertaPaciente] = await db
+-      .select({ id: ofertasTurno.id })
+-      .from(ofertasTurno)
+-      .innerJoin(listaEspera, eq(ofertasTurno.listaEsperaId, listaEspera.id))
+-      .where(
+-        and(
+-          eq(ofertasTurno.estado, 'pendiente'),
+-          eq(listaEspera.pacienteId, inscripcion.pacienteId),
+-          not(eq(ofertasTurno.listaEsperaId, listaEsperaId)),
+-        ),
+-      )
+-      .limit(1);
+-    if (ofertaPaciente) conflict('Ya existe un turno ofrecido pendiente para este paciente');
+-
+     // Calcular expiraci├│n (15 minutos desde ahora)
+     const expiracion = new Date(Date.now() + TIEMPO_EXPIRACION_MINUTOS * 60 * 1000);
+ 
+     const [nueva] = await db
+       .insert(ofertasTurno)
+       .values({
+         listaEsperaId,
+         turnoId,
+         expiracion,
+       })

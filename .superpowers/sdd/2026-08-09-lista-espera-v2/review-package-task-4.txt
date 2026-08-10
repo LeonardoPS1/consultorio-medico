@@ -1,0 +1,346 @@
+cb6b27b feat(waitlist): aceptar valida turno sin otra oferta y notifica paciente reasignado
+ .../services/__tests__/waitlist-aceptar.test.ts    | 250 +++++++++++++++++++++
+ dashboard/lib/services/waitlist.ts                 |  33 +++
+ 2 files changed, 283 insertions(+)
+diff --git a/dashboard/lib/services/__tests__/waitlist-aceptar.test.ts b/dashboard/lib/services/__tests__/waitlist-aceptar.test.ts
+new file mode 100644
+index 0000000..7cc399e
+--- /dev/null
++++ b/dashboard/lib/services/__tests__/waitlist-aceptar.test.ts
+@@ -0,0 +1,250 @@
++import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
++
++/**
++ * Tests de `waitlistService.aceptar` (lib/services/waitlist.ts).
++ *
++ * Verifica el endurecimiento de `aceptar`:
++ * 1. Un turno que ya tiene otra oferta pendiente (de otra inscripci├│n) se
++ *    rechaza con `'Ese turno ya tiene una oferta pendiente'`.
++ * 2. Aceptar v├ílido (turno sin otra oferta, mismo paciente) ÔåÆ reasigna y NO
++ *    notifica al paciente desplazado (no hay desplazado).
++ * 3. Aceptar un turno que pertenec├¡a a otro paciente ÔåÆ llama
++ *    `notificarPacienteReasignado` (fire-and-forget v├¡a import din├ímico) con
++ *    el turno actualizado y el paciente anterior.
++ *
++ * Los queries de `aceptar` se simulan con una cola secuencial de respuestas
++ * (`selectQueue`), ya que `ofertasTurno` se lee dos veces (oferta y "otra
++ * oferta") y la kv de table no alcanza a distinguirlas.
++ */
++
++// ÔöÇÔöÇÔöÇ Mocks (vi.hoisted para poder usarlos en vi.mock) ÔöÇÔöÇ
++
++const h = vi.hoisted(() => {
++  const mockSelect = vi.fn();
++  const mockUpdate = vi.fn();
++  const mockNotificar = vi.fn().mockResolvedValue(true);
++
++  const selectQueue: Array<unknown[]> = [];
++  const updateRows = new Map<object, unknown[]>();
++  const updateSets: Array<{ table: object; values: Record<string, unknown> }> = [];
++
++  // Cadenas tipo drizzle (select ÔåÆ from ÔåÆ [where] ÔåÆ [orderBy] ÔåÆ limit ÔåÆ then).
++  // `then` resuelve la pr├│xima respuesta de `selectQueue` (orden del flujo).
++  mockSelect.mockImplementation(() => ({
++    from: () => {
++      const chain: any = {
++        innerJoin: () => chain,
++        leftJoin: () => chain,
++        where: () => chain,
++        orderBy: () => chain,
++        limit: () => chain,
++        then: (resolve: (value: unknown[]) => void) => resolve(selectQueue.shift() ?? []),
++      };
++      return chain;
++    },
++  }));
++
++  // Cadena tipo drizzle para update (update ÔåÆ set ÔåÆ where ÔåÆ [returning] | await).
++  // Registra los values en `updateSets`; `returning` devuelve `updateRows[table]`.
++  mockUpdate.mockImplementation((table: object) => ({
++    set: (values: Record<string, unknown>) => {
++      updateSets.push({ table, values });
++      const chain: any = {
++        where: () => chain,
++        returning: () => Promise.resolve(updateRows.get(table) ?? []),
++        then: (resolve: (value: unknown) => void) => resolve(undefined),
++      };
++      return chain;
++    },
++  }));
++
++  // Tablas de drizzle (identidad ├║nica por objeto)
++  const turnos = { id: 'turnos' };
++  const pacientes = { id: 'pacientes' };
++  const medicos = { id: 'medicos' };
++  const ofertasTurno = { id: 'ofertasTurno' };
++  const listaEspera = { id: 'listaEspera' };
++  const bloqueosAgenda = { id: 'bloqueosAgenda' };
++
++  return {
++    mockSelect,
++    mockUpdate,
++    mockNotificar,
++    selectQueue,
++    updateRows,
++    updateSets,
++    turnos,
++    pacientes,
++    medicos,
++    ofertasTurno,
++    listaEspera,
++    bloqueosAgenda,
++  };
++});
++
++vi.mock('@/drizzle/schema', () => ({
++  turnos: h.turnos,
++  pacientes: h.pacientes,
++  medicos: h.medicos,
++  ofertasTurno: h.ofertasTurno,
++  listaEspera: h.listaEspera,
++  bloqueosAgenda: h.bloqueosAgenda,
++}));
++
++vi.mock('@/lib/db', () => ({ db: { select: h.mockSelect, update: h.mockUpdate } }));
++
++vi.mock('@/lib/api-handler', () => ({
++  notFound: (m: string) => {
++    throw new Error(m);
++  },
++  conflict: (m: string) => {
++    throw new Error(m);
++  },
++}));
++
++vi.mock('@/lib/logger', () => ({
++  safeLog: vi.fn(),
++  safeWarn: vi.fn(),
++  safeError: vi.fn(),
++}));
++
++vi.mock('@/lib/whatsapp-waitlist', () => ({
++  notificarPacienteReasignado: h.mockNotificar,
++}));
++
++const { turnos, ofertasTurno, listaEspera } = h;
++const mockSelect = h.mockSelect;
++const mockUpdate = h.mockUpdate;
++const mockNotificar = h.mockNotificar;
++const selectQueue = h.selectQueue;
++const updateRows = h.updateRows;
++const updateSets = h.updateSets;
++
++// ÔöÇÔöÇÔöÇ Fixtures ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
++
++function setupAceptar(
++  overrides: {
++    otraOferta?: unknown[];
++    inscripcion?: Array<{ id: string; pacienteId: string }>;
++    turnoAnterior?: Array<{ id: string; pacienteId: string }>;
++    turnoActualizado?: Record<string, unknown>;
++  } = {},
++) {
++  const {
++    otraOferta = [],
++    inscripcion = [{ id: 'le1', pacienteId: 'pNuevo' }],
++    turnoAnterior = [{ id: 't1', pacienteId: 'pViejo' }],
++    turnoActualizado = {
++      id: 't1',
++      pacienteId: inscripcion[0]?.pacienteId ?? 'pNuevo',
++      estado: 'pendiente',
++      fechaHora: new Date('2026-08-10T09:00:00'),
++      medicoId: 'med-1',
++      updatedAt: new Date(),
++    },
++  } = overrides;
++
++  const oferta = {
++    id: 'o1',
++    estado: 'pendiente',
++    expiracion: new Date(Date.now() + 60_000),
++    listaEsperaId: 'le1',
++    turnoId: 't1',
++  };
++
++  // Orden de queries en el flujo de aceptar:
++  // 1. oferta (ofertasTurno) ÔåÆ 2. otraOferta (ofertasTurno) ÔåÆ 3. inscripcion
++  // (listaEspera) ÔåÆ 4. turnoAnterior (turnos)
++  selectQueue.push([oferta], otraOferta, inscripcion, turnoAnterior);
++  updateRows.set(turnos, [turnoActualizado]);
++
++  return { oferta };
++}
++
++import { waitlistService } from '@/lib/services/waitlist';
++
++describe('waitlistService.aceptar ÔÇö turno sin otra oferta + notificaci├│n reasignaci├│n', () => {
++  beforeEach(() => {
++    mockSelect.mockClear();
++    mockUpdate.mockClear();
++    mockNotificar.mockClear();
++    selectQueue.length = 0;
++  });
++
++  afterEach(() => {
++    vi.clearAllMocks();
++  });
++
++  it('1. turno con otra oferta pendiente ÔåÆ rechaza "Ese turno ya tiene una oferta pendiente"', async () => {
++    setupAceptar({ otraOferta: [{ id: 'o2' }] });
++
++    await expect(waitlistService.aceptar('o1')).rejects.toThrow(
++      'Ese turno ya tiene una oferta pendiente',
++    );
++    expect(mockUpdate).not.toHaveBeenCalled();
++    expect(mockNotificar).not.toHaveBeenCalled();
++  });
++
++  it('2. aceptar v├ílido con mismo paciente ÔåÆ no notifica y reasigna', async () => {
++    setupAceptar({
++      inscripcion: [{ id: 'le1', pacienteId: 'pNuevo' }],
++      turnoAnterior: [{ id: 't1', pacienteId: 'pNuevo' }],
++      turnoActualizado: {
++        id: 't1',
++        pacienteId: 'pNuevo',
++        estado: 'pendiente',
++        fechaHora: new Date('2026-08-10T09:00:00'),
++        medicoId: 'med-1',
++        updatedAt: new Date(),
++      },
++    });
++
++    const result = await waitlistService.aceptar('o1');
++
++    expect(result.oferta.estado).toBe('aceptada');
++    expect(result.turno.pacienteId).toBe('pNuevo');
++    // turno reasignado al paciente de la inscripci├│n
++    const updateTurno = updateSets.find((u) => u.table === turnos);
++    expect(updateTurno?.values).toMatchObject({
++      pacienteId: 'pNuevo',
++      estado: 'pendiente',
++    });
++    // oferta marcada aceptada
++    const updateOferta = updateSets.find((u) => u.table === ofertasTurno);
++    expect(updateOferta?.values).toMatchObject({ estado: 'aceptada' });
++    // inscripci├│n cumplida
++    const updateLista = updateSets.find((u) => u.table === listaEspera);
++    expect(updateLista?.values).toMatchObject({ estado: 'cumplida' });
++    // mismo paciente ÔåÆ no hay desplazado que notificar
++    expect(mockNotificar).not.toHaveBeenCalled();
++  });
++
++  it('3. turno de otro paciente ÔåÆ llama notificarPacienteReasignado', async () => {
++    setupAceptar({
++      inscripcion: [{ id: 'le1', pacienteId: 'pNuevo' }],
++      turnoAnterior: [{ id: 't1', pacienteId: 'pViejo' }],
++      turnoActualizado: {
++        id: 't1',
++        pacienteId: 'pNuevo',
++        estado: 'pendiente',
++        fechaHora: new Date('2026-08-10T09:00:00'),
++        medicoId: 'med-1',
++        updatedAt: new Date(),
++      },
++    });
++
++    await waitlistService.aceptar('o1');
++
++    // fire-and-forget v├¡a import din├ímico ÔåÆ esperar microtasks
++    await vi.waitFor(() => expect(mockNotificar).toHaveBeenCalledTimes(1));
++    expect(mockNotificar).toHaveBeenCalledWith(
++      expect.objectContaining({
++        id: 't1',
++        pacienteId: 'pNuevo',
++        fechaHora: new Date('2026-08-10T09:00:00'),
++        medicoId: 'med-1',
++      }),
++      'pViejo',
++    );
++  });
++});
+diff --git a/dashboard/lib/services/waitlist.ts b/dashboard/lib/services/waitlist.ts
+index d707cb0..3089089 100644
+--- a/dashboard/lib/services/waitlist.ts
++++ b/dashboard/lib/services/waitlist.ts
+@@ -313,27 +313,50 @@ export const waitlistService = {
+         listaEsperaId: ofertasTurno.listaEsperaId,
+         turnoId: ofertasTurno.turnoId,
+       })
+       .from(ofertasTurno)
+       .where(eq(ofertasTurno.id, ofertaId))
+       .limit(1);
+     if (!oferta) notFound('Oferta no encontrada');
+     if (oferta.estado !== 'pendiente') conflict('La oferta ya fue ' + oferta.estado);
+     if (new Date() > new Date(oferta.expiracion)) conflict('La oferta ha expirado');
+ 
++    // No aceptar si el turno ya tiene otra oferta pendiente (de otra inscripci├│n);
++    // evita que dos pacientes acepten el mismo turno a la vez.
++    const [otraOferta] = await db
++      .select({ id: ofertasTurno.id })
++      .from(ofertasTurno)
++      .where(
++        and(
++          eq(ofertasTurno.turnoId, oferta.turnoId),
++          eq(ofertasTurno.estado, 'pendiente'),
++          not(eq(ofertasTurno.id, ofertaId)),
++        ),
++      )
++      .limit(1);
++    if (otraOferta) conflict('Ese turno ya tiene una oferta pendiente');
++
+     // Obtener la inscripci├│n para saber el paciente
+     const [inscripcion] = await db
+       .select({ pacienteId: listaEspera.pacienteId })
+       .from(listaEspera)
+       .where(eq(listaEspera.id, oferta.listaEsperaId))
+       .limit(1);
+ 
++    // Paciente que ten├¡a el turno antes de la reasignaci├│n (para notificar si
++    // fue desplazado). Se lee ANTES del update para no perder el valor original.
++    const [turnoAnterior] = await db
++      .select({ pacienteId: turnos.pacienteId })
++      .from(turnos)
++      .where(eq(turnos.id, oferta.turnoId))
++      .limit(1);
++
+     // Reasignar el turno al nuevo paciente
+     const [turnoActualizado] = await db
+       .update(turnos)
+       .set({
+         pacienteId: inscripcion.pacienteId,
+         estado: 'pendiente',
+         updatedAt: new Date(),
+       })
+       .where(eq(turnos.id, oferta.turnoId))
+       .returning();
+@@ -343,20 +366,30 @@ export const waitlistService = {
+       .update(ofertasTurno)
+       .set({ estado: 'aceptada', respondedAt: new Date() })
+       .where(eq(ofertasTurno.id, ofertaId));
+ 
+     // Marcar inscripci├│n como cumplida
+     await db
+       .update(listaEspera)
+       .set({ estado: 'cumplida' })
+       .where(eq(listaEspera.id, oferta.listaEsperaId));
+ 
++    // Si el turno pertenec├¡a a otro paciente, notificar al desplazado
++    // (fire-and-forget; import din├ímico evita el ciclo de imports con
++    // whatsapp-waitlist, que importa este servicio).
++    const pacienteAnterior = turnoAnterior?.pacienteId;
++    if (pacienteAnterior && pacienteAnterior !== inscripcion.pacienteId) {
++      void import('@/lib/whatsapp-waitlist')
++        .then((m) => m.notificarPacienteReasignado(turnoActualizado, pacienteAnterior))
++        .catch(() => undefined);
++    }
++
+     return {
+       oferta: { ...oferta, estado: 'aceptada' },
+       turno: turnoActualizado,
+     };
+   },
+ 
+   /**
+    * Rechaza una oferta de turno.
+    * @param ofertaId
+    */

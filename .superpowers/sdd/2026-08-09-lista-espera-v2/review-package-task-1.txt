@@ -1,0 +1,624 @@
+COMMITS:
+3f885d2 feat(waitlist): proximasFranjasLibres calcula franjas libres del m├®dico
+
+STAT:
+ .../services/__tests__/waitlist-franjas.test.ts    | 177 +++++++++++++++++
+ dashboard/lib/services/waitlist.ts                 | 219 ++++++++++++++++++++-
+ 2 files changed, 392 insertions(+), 4 deletions(-)
+
+DIFF:
+diff --git a/dashboard/lib/services/__tests__/waitlist-franjas.test.ts b/dashboard/lib/services/__tests__/waitlist-franjas.test.ts
+new file mode 100644
+index 0000000..17c1c68
+--- /dev/null
++++ b/dashboard/lib/services/__tests__/waitlist-franjas.test.ts
+@@ -0,0 +1,177 @@
++import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
++
++/**
++ * Tests de `proximasFranjasLibres` (lib/services/waitlist.ts).
++ *
++ * Fixtures usados con reloj fijo (vi.setSystemTime) para ser deterministas:
++ * - Lunes 2026-08-10 08:00 local (d├¡a 1 de la semana ÔåÆ 'Lunes').
++ * - M├®dico atiende Lun-Vie 09:00-13:00, `duracionTurnoMinutos: 30`.
++ * - Un `turnos` a las 09:00 (ocupa la franja).
++ * - Un `bloqueosAgenda` 10:00-11:00 (bloquea dos franjas).
++ */
++
++// ÔöÇÔöÇÔöÇ Mocks (vi.hoisted para poder usarlos en vi.mock) ÔöÇÔöÇ
++
++const h = vi.hoisted(() => {
++  const mockSelect = vi.fn();
++  const rowsByTable = new Map<object, unknown[]>();
++  // Tablas de drizzle (identity ├║nica por objeto)
++  const medicos = { id: 'medicos' };
++  const turnos = { id: 'turnos' };
++  const bloqueosAgenda = { id: 'bloqueosAgenda' };
++  return { mockSelect, rowsByTable, medicos, turnos, bloqueosAgenda };
++});
++
++vi.mock('@/drizzle/schema', () => ({
++  medicos: h.medicos,
++  turnos: h.turnos,
++  bloqueosAgenda: h.bloqueosAgenda,
++  pacientes: { id: 'pacientes' },
++  listaEspera: { id: 'listaEspera' },
++  ofertasTurno: { id: 'ofertasTurno' },
++}));
++
++vi.mock('@/lib/db', () => ({ db: { select: h.mockSelect } }));
++
++vi.mock('@/lib/api-handler', () => ({
++  notFound: (m: string) => {
++    throw new Error(m);
++  },
++  conflict: (m: string) => {
++    throw new Error(m);
++  },
++  fail: (m: string) => {
++    throw new Error(m);
++  },
++}));
++
++vi.mock('@/lib/logger', () => ({
++  safeLog: vi.fn(),
++  safeWarn: vi.fn(),
++  safeError: vi.fn(),
++}));
++
++const ROWS = h.rowsByTable;
++const mockSelect = h.mockSelect;
++const medicos = h.medicos;
++const turnos = h.turnos;
++const bloqueosAgenda = h.bloqueosAgenda;
++
++// Cadena tipo drizzle (select ÔåÆ from ÔåÆ where ÔåÆ limit)
++mockSelect.mockImplementation(() => ({
++  from: (table: object) => {
++    const chain: any = {
++      leftJoin: () => chain,
++      where: () => chain,
++      orderBy: () => chain,
++      limit: () => chain,
++      then: (resolve: (value: unknown[]) => void) => resolve(ROWS.get(table) ?? []),
++    };
++    return chain;
++  },
++}));
++
++// ÔöÇÔöÇÔöÇ Fixtures ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
++
++function makeHorario(overrides: Record<string, unknown> = {}) {
++  return {
++    activo: true,
++    inicio: '09:00',
++    fin: '13:00',
++    tipo: 'corrido',
++    inicio2: null,
++    fin2: null,
++    ...overrides,
++  };
++}
++
++function makeMedico() {
++  return {
++    id: 'med-1',
++    duracionTurnoMinutos: 30,
++    horarios: {
++      Lunes: makeHorario(),
++      Martes: makeHorario(),
++      Miercoles: makeHorario(),
++      Jueves: makeHorario(),
++      Viernes: makeHorario(),
++    },
++  };
++}
++
++function makeTurno(fechaHora: Date, duracionMinutos = 30) {
++  return { fechaHora, duracionMinutos, estado: 'confirmada', medicoId: 'med-1' };
++}
++
++function makeBloqueo(fechaInicio: Date, fechaFin: Date) {
++  return { fechaInicio, fechaFin, medicoId: 'med-1' };
++}
++
++import { proximasFranjasLibres } from '@/lib/services/waitlist';
++
++describe('proximasFranjasLibres', () => {
++  beforeEach(() => {
++    vi.useFakeTimers();
++    vi.setSystemTime(new Date('2026-08-10T08:00:00'));
++    mockSelect.mockClear();
++    ROWS.clear();
++  });
++
++  afterEach(() => {
++    vi.useRealTimers();
++    vi.clearAllMocks();
++  });
++
++  it('devuelve slots respetando horario y excluyendo turnos ocupados y bloques', async () => {
++    ROWS.set(medicos, [makeMedico()]);
++    ROWS.set(turnos, [makeTurno(new Date('2026-08-10T09:00:00'))]);
++    ROWS.set(bloqueosAgenda, [
++      makeBloqueo(new Date('2026-08-10T10:00:00'), new Date('2026-08-10T11:00:00')),
++    ]);
++
++    const result = await proximasFranjasLibres('med-1', { dias: 1, limite: 20 });
++
++    // 09:00-13:00 con pasos de 30min: 09:00,,09:30,10:00,10:30,11:00,11:30,12:00,12:30
++    // ÔåÆ 09:00 ocupado por turno, 10:00 y 10:30 bloqueados
++    const esperado = ['09:30', '11:00', '11:30', '12:00', '12:30'].map((hora) =>
++      new Date(`2026-08-10T${hora}:00`).getTime(),
++    );
++    expect(result.map((f) => f.fechaHora.getTime())).toEqual(esperado);
++    expect(result).toHaveLength(5);
++    result.forEach((f) => {
++      expect(f.duracionMinutos).toBe(30);
++      expect(f.fechaHora).toBeInstanceOf(Date);
++    });
++  });
++
++  it('respeta limite y dias', async () => {
++    ROWS.set(medicos, [makeMedico()]);
++    ROWS.set(turnos, []);
++    ROWS.set(bloqueosAgenda, []);
++
++    // limite: corta al llegar a 3 (09:00, 09:30, 10:00 del Lunes)
++    const limitado = await proximasFranjasLibres('med-1', { dias: 1, limite: 3 });
++    expect(limitado).toHaveLength(3);
++    expect(limitado[0].fechaHora.getTime()).toBe(new Date('2026-08-10T09:00:00').getTime());
++    expect(limitado[2].fechaHora.getTime()).toBe(new Date('2026-08-10T10:00:00').getTime());
++
++    // dias: 2 d├¡as h├íbiles ÔåÆ 8 slots por d├¡a (Lunes + Martes)
++    const dosDias = await proximasFranjasLibres('med-1', { dias: 2, limite: 50 });
++    expect(dosDias).toHaveLength(16);
++    expect(dosDias[15].fechaHora.getTime()).toBe(new Date('2026-08-11T12:30:00').getTime());
++  });
++
++  it('no devuelve franjas en el pasado (salta al d├¡a siguiente)', async () => {
++    // Si ya pas├│ todo el horario del Lunes (14:00 > 13:00), empieza el Martes
++    vi.setSystemTime(new Date('2026-08-10T14:00:00'));
++    ROWS.set(medicos, [makeMedico()]);
++    ROWS.set(turnos, []);
++    ROWS.set(bloqueosAgenda, []);
++
++    const result = await proximasFranjasLibres('med-1', { dias: 2, limite: 50 });
++
++    expect(result).toHaveLength(8); // solo Martes
++    expect(result.every((f) => f.fechaHora.getDay() === 2)).toBe(true); // martes
++    expect(result[0].fechaHora.getTime()).toBe(new Date('2026-08-11T09:00:00').getTime());
++  });
++});
+diff --git a/dashboard/lib/services/waitlist.ts b/dashboard/lib/services/waitlist.ts
+index 66de592..45a1cda 100644
+--- a/dashboard/lib/services/waitlist.ts
++++ b/dashboard/lib/services/waitlist.ts
+@@ -7,36 +7,59 @@
+  * 3. Se le ofrece el turno con expiraci├│n de 15 minutos
+  * 4. El paciente acepta/rechaza v├¡a WhatsApp o el m├®dico desde el dashboard
+  * 5. Si acepta: se reasigna el turno al paciente
+  * 6. Si rechaza/expiro: se pasa al siguiente paciente
+  *
+  * L├¡mites:
+  * - M├íximo 3 ofertas por paciente por d├¡a
+  * - Despu├®s de 3 ofertas: pausa de 24h
+  */
+ 
++import {
++  and,
++  eq,
++  sql,
++  count,
++  desc,
++  asc,
++  lt,
++  not,
++  inArray,
++  gte,
++  lte,
++  notInArray,
++} from 'drizzle-orm';
++import {
++  listaEspera,
++  ofertasTurno,
++  turnos,
++  pacientes,
++  medicos,
++  bloqueosAgenda,
++} from '@/drizzle/schema';
++import { notFound, conflict } from '@/lib/api-handler';
+ import { db } from '@/lib/db';
+-import { listaEspera, ofertasTurno, turnos, pacientes, medicos } from '@/drizzle/schema';
+-import { eq, and, sql, count, desc, asc, lt, not, inArray } from 'drizzle-orm';
+-import { notFound, conflict, fail } from '@/lib/api-handler';
+-import type { ListaEspera, OfertaTurno } from '@/drizzle/schema';
+ 
+ const TIEMPO_EXPIRACION_MINUTOS = 15;
+ const LIMITE_OFERTAS_POR_DIA = 3;
+ 
+ export const waitlistService = {
+   // ============================================================
+   // LISTA DE ESPERA
+   // ============================================================
+ 
+   /**
+    * Agrega un paciente a la lista de espera para un m├®dico espec├¡fico.
++   * @param pacienteId
++   * @param medicoId
++   * @param notas
++   * @param sucursalId
+    */
+   async agregar(pacienteId: string, medicoId: string, notas?: string, sucursalId?: string) {
+     // Validar que el paciente existe
+     const [pac] = await db
+       .select({ id: pacientes.id, nombre: pacientes.nombre, apellido: pacientes.apellido })
+       .from(pacientes)
+       .where(and(eq(pacientes.id, pacienteId), sql`${pacientes.deletedAt} IS NULL`))
+       .limit(1);
+     if (!pac) notFound('Paciente no encontrado');
+ 
+@@ -70,38 +93,41 @@ export const waitlistService = {
+         notas: notas || null,
+         sucursalId: sucursalId || null,
+       })
+       .returning();
+ 
+     return nuevo;
+   },
+ 
+   /**
+    * Quita (cancela) una inscripci├│n de la lista de espera.
++   * @param id
+    */
+   async quitar(id: string) {
+     const [existe] = await db
+       .select({ id: listaEspera.id })
+       .from(listaEspera)
+       .where(and(eq(listaEspera.id, id), eq(listaEspera.estado, 'activa')))
+       .limit(1);
+     if (!existe) notFound('Inscripci├│n no encontrada o ya no est├í activa');
+ 
+     await db.update(listaEspera).set({ estado: 'cancelada' }).where(eq(listaEspera.id, id));
+ 
+     return { deleted: true };
+   },
+ 
+   /**
+    * Busca el mejor candidato para un turno cancelado.
+    * FIFO estricto: el paciente que lleva m├ís tiempo esperando.
+    * L├¡mite: 3 ofertas/d├¡a/paciente, luego pausa 24h.
++   * @param medicoId
++   * @param sucursalId
+    */
+   async buscarCandidato(medicoId: string, sucursalId?: string) {
+     const candidatos = await db
+       .select({
+         id: listaEspera.id,
+         pacienteId: listaEspera.pacienteId,
+         fechaInscripcion: listaEspera.fechaInscripcion,
+       })
+       .from(listaEspera)
+       .where(
+@@ -136,20 +162,22 @@ export const waitlistService = {
+ 
+     return candidatosValidos[0] || null;
+   },
+ 
+   // ============================================================
+   // OFERTAS DE TURNO
+   // ============================================================
+ 
+   /**
+    * Crea una oferta de turno para un paciente en lista de espera.
++   * @param listaEsperaId
++   * @param turnoId
+    */
+   async crearOferta(listaEsperaId: string, turnoId: string) {
+     // Validar que la inscripci├│n existe y est├í activa
+     const [inscripcion] = await db
+       .select({ id: listaEspera.id, pacienteId: listaEspera.pacienteId })
+       .from(listaEspera)
+       .where(and(eq(listaEspera.id, listaEsperaId), eq(listaEspera.estado, 'activa')))
+       .limit(1);
+     if (!inscripcion) notFound('Inscripci├│n en lista de espera no encontrada o no activa');
+ 
+@@ -180,20 +208,21 @@ export const waitlistService = {
+         turnoId,
+         expiracion,
+       })
+       .returning();
+ 
+     return nueva;
+   },
+ 
+   /**
+    * Acepta una oferta de turno y reasigna el turno al paciente en espera.
++   * @param ofertaId
+    */
+   async aceptar(ofertaId: string) {
+     const [oferta] = await db
+       .select({
+         id: ofertasTurno.id,
+         estado: ofertasTurno.estado,
+         expiracion: ofertasTurno.expiracion,
+         listaEsperaId: ofertasTurno.listaEsperaId,
+         turnoId: ofertasTurno.turnoId,
+       })
+@@ -235,20 +264,21 @@ export const waitlistService = {
+       .where(eq(listaEspera.id, oferta.listaEsperaId));
+ 
+     return {
+       oferta: { ...oferta, estado: 'aceptada' },
+       turno: turnoActualizado,
+     };
+   },
+ 
+   /**
+    * Rechaza una oferta de turno.
++   * @param ofertaId
+    */
+   async rechazar(ofertaId: string) {
+     const [oferta] = await db
+       .select({ id: ofertasTurno.id, estado: ofertasTurno.estado })
+       .from(ofertasTurno)
+       .where(eq(ofertasTurno.id, ofertaId))
+       .limit(1);
+     if (!oferta) notFound('Oferta no encontrada');
+     if (oferta.estado !== 'pendiente') conflict('La oferta ya fue ' + oferta.estado);
+ 
+@@ -334,20 +364,23 @@ export const waitlistService = {
+       // Notificar al nuevo paciente (fire-and-forget)
+       const { notificarOfertaTurno } = await import('@/lib/whatsapp-waitlist');
+       notificarOfertaTurno(oferta.id, v.turnoId, siguiente.id).catch(() => {});
+     }
+ 
+     return results;
+   },
+ 
+   /**
+    * Busca candidato excluyendo inscripciones espec├¡ficas.
++   * @param medicoId
++   * @param excluirIds
++   * @param sucursalId
+    */
+   async buscarCandidatoExcluyendo(medicoId: string, excluirIds: string[], sucursalId?: string) {
+     const candidatos = await db
+       .select({
+         id: listaEspera.id,
+         pacienteId: listaEspera.pacienteId,
+         fechaInscripcion: listaEspera.fechaInscripcion,
+       })
+       .from(listaEspera)
+       .where(
+@@ -382,20 +415,22 @@ export const waitlistService = {
+ 
+     return null;
+   },
+ 
+   // ============================================================
+   // LISTAR / CONSULTAS
+   // ============================================================
+ 
+   /**
+    * Lista inscripciones en lista de espera con datos del paciente.
++   * @param medicoId
++   * @param estado
+    */
+   async listar(medicoId?: string, estado?: string) {
+     const whereConditions = and(
+       medicoId ? eq(listaEspera.medicoId, medicoId) : undefined,
+       estado ? eq(listaEspera.estado, estado) : undefined,
+     );
+ 
+     const items = await db
+       .select({
+         id: listaEspera.id,
+@@ -413,20 +448,22 @@ export const waitlistService = {
+       .leftJoin(pacientes, eq(listaEspera.pacienteId, pacientes.id))
+       .leftJoin(medicos, eq(listaEspera.medicoId, medicos.id))
+       .where(whereConditions)
+       .orderBy(asc(listaEspera.fechaInscripcion));
+ 
+     return items;
+   },
+ 
+   /**
+    * Lista ofertas de turno con datos relacionados.
++   * @param listaEsperaId
++   * @param estado
+    */
+   async listarOfertas(listaEsperaId?: string, estado?: string) {
+     const whereConditions = and(
+       listaEsperaId ? eq(ofertasTurno.listaEsperaId, listaEsperaId) : undefined,
+       estado ? eq(ofertasTurno.estado, estado) : undefined,
+     );
+ 
+     const items = await db
+       .select({
+         id: ofertasTurno.id,
+@@ -443,10 +480,184 @@ export const waitlistService = {
+       })
+       .from(ofertasTurno)
+       .leftJoin(listaEspera, eq(ofertasTurno.listaEsperaId, listaEspera.id))
+       .leftJoin(pacientes, eq(listaEspera.pacienteId, pacientes.id))
+       .where(whereConditions)
+       .orderBy(desc(ofertasTurno.fechaOferta));
+ 
+     return items;
+   },
+ };
++
++// ============================================================
++// FRANJAS LIBRES
++// ============================================================
++
++/** Entrada de horario configurada para un d├¡a de la semana en `medicos.horarios`. */
++interface HorarioDia {
++  activo?: boolean;
++  inicio?: string;
++  fin?: string;
++  tipo?: string;
++  inicio2?: string | null;
++  fin2?: string | null;
++}
++
++/** Franja horaria libre (no ocupada por turno ni bloqueo de agenda). */
++export interface IFranjaLibre {
++  fechaHora: Date;
++  duracionMinutos: number;
++}
++
++const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
++
++function getDiaSemana(fecha: Date): string {
++  return DIAS[fecha.getDay()];
++}
++
++/**
++ * Calcula las pr├│ximas franjas libres de un m├®dico.
++ *
++ * Considera los horarios configurados en `medicos.horarios` (soporta horarios
++ * partidos `tipo === 'partido'` con `inicio2/fin2`), excluye turnos existentes
++ * (estado distinto de 'cancelada'/'no_asistio') y bloqueos de agenda. Solo se
++ * devuelven franjas futuras (`fechaHora > new Date()`), ordenadas ascendente
++ * y recortadas al `limite` indicado.
++ * @param medicoId - ID del m├®dico del que se calculan las franjas.
++ * @param opts - Opciones: `dias` (ventana en d├¡as, default 7) y `limite` (m├íx. de franjas, default 20).
++ * @param opts.dias
++ * @param opts.limite
++ * @returns Franjas libres futuras ordenadas ascendentemente.
++ */
++export async function proximasFranjasLibres(
++  medicoId: string,
++  opts: { dias?: number; limite?: number } = {},
++): Promise<IFranjaLibre[]> {
++  const dias = Math.max(1, opts.dias ?? 7);
++  const limite = Math.max(1, opts.limite ?? 20);
++  const ahora = new Date();
++
++  const [med] = await db
++    .select({
++      horarios: medicos.horarios,
++      duracionTurnoMinutos: medicos.duracionTurnoMinutos,
++    })
++    .from(medicos)
++    .where(and(eq(medicos.id, medicoId), sql`${medicos.deletedAt} IS NULL`))
++    .limit(1);
++  if (!med) return [];
++
++  const duracion = med.duracionTurnoMinutos || 30;
++  const horariosMedico = (med.horarios || {}) as Record<string, HorarioDia | undefined>;
++
++  // Ventana de consulta: hoy + `dias` d├¡as (filtra en DB, refinamos en memoria por d├¡a)
++  const finVentana = new Date(ahora);
++  finVentana.setDate(ahora.getDate() + dias - 1);
++  finVentana.setHours(23, 59, 59, 999);
++
++  const turnosExistentes = await db
++    .select({ fechaHora: turnos.fechaHora, duracionMinutos: turnos.duracionMinutos })
++    .from(turnos)
++    .where(
++      and(
++        eq(turnos.medicoId, medicoId),
++        gte(turnos.fechaHora, ahora),
++        lte(turnos.fechaHora, finVentana),
++        notInArray(turnos.estado, ['cancelada', 'no_asistio']),
++        sql`${turnos.deletedAt} IS NULL`,
++      ),
++    );
++
++  const bloqueos = await db
++    .select({ fechaInicio: bloqueosAgenda.fechaInicio, fechaFin: bloqueosAgenda.fechaFin })
++    .from(bloqueosAgenda)
++    .where(
++      and(
++        eq(bloqueosAgenda.medicoId, medicoId),
++        gte(bloqueosAgenda.fechaFin, ahora),
++        lte(bloqueosAgenda.fechaInicio, finVentana),
++      ),
++    );
++
++  const franjas: IFranjaLibre[] = [];
++
++  for (let i = 0; i < dias && franjas.length < limite; i++) {
++    const dia = new Date(ahora);
++    dia.setDate(ahora.getDate() + i);
++    dia.setHours(0, 0, 0, 0);
++
++    const horario = horariosMedico[getDiaSemana(dia)];
++    if (!horario?.activo) continue;
++
++    const inicioDia = dia.getTime();
++    const finDia = inicioDia + 24 * 60 * 60 * 1000;
++
++    const turnosDia = turnosExistentes.filter((t) => {
++      const ts = new Date(t.fechaHora).getTime();
++      return ts >= inicioDia && ts < finDia;
++    });
++    const bloqueosDia = bloqueos.filter((b) => {
++      const bInicio = new Date(b.fechaInicio).getTime();
++      const bFin = new Date(b.fechaFin).getTime();
++      return bInicio < finDia && bFin > inicioDia;
++    });
++
++    const intervalos =
++      horario.tipo === 'partido'
++        ? [
++            { inicio: horario.inicio || '', fin: horario.fin || '' },
++            ...(horario.inicio2 && horario.fin2
++              ? [{ inicio: horario.inicio2, fin: horario.fin2 }]
++              : []),
++          ]
++        : [{ inicio: horario.inicio || '', fin: horario.fin || '' }];
++
++    for (const intervalo of intervalos) {
++      const [hInicio, mInicio] = intervalo.inicio.split(':').map(Number);
++      const [hFin, mFin] = intervalo.fin.split(':').map(Number);
++      if (
++        Number.isNaN(hInicio) ||
++        Number.isNaN(mInicio) ||
++        Number.isNaN(hFin) ||
++        Number.isNaN(mFin)
++      ) {
++        continue;
++      }
++
++      let horaActual = new Date(dia);
++      horaActual.setHours(hInicio, mInicio, 0, 0);
++      const horaFin = new Date(dia);
++      horaFin.setHours(hFin, mFin, 0, 0);
++
++      while (
++        franjas.length < limite &&
++        horaActual.getTime() + duracion * 60_000 <= horaFin.getTime()
++      ) {
++        const slotFin = new Date(horaActual.getTime() + duracion * 60_000);
++
++        // Verificar si choca con alg├║n bloqueo de agenda
++        const bloqueado = bloqueosDia.some(
++          (b) =>
++            horaActual.getTime() < new Date(b.fechaFin).getTime() &&
++            slotFin.getTime() > new Date(b.fechaInicio).getTime(),
++        );
++        if (!bloqueado) {
++          // Verificar si choca con alg├║n turno existente
++          const ocupado = turnosDia.some((t) => {
++            const tInicio = new Date(t.fechaHora).getTime();
++            const tFin = tInicio + t.duracionMinutos * 60_000;
++            return horaActual.getTime() < tFin && slotFin.getTime() > tInicio;
++          });
++
++          // Solo franjas futuras
++          if (!ocupado && horaActual.getTime() > ahora.getTime()) {
++            franjas.push({ fechaHora: new Date(horaActual.getTime()), duracionMinutos: duracion });
++          }
++        }
++
++        horaActual = new Date(horaActual.getTime() + duracion * 60_000);
++      }
++    }
++  }
++
++  return franjas;
++}

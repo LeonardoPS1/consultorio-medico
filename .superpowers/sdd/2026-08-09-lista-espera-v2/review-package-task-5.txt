@@ -1,0 +1,477 @@
+REVIEW PACKAGE - TASK 5
+BASE: cb6b27b  HEAD: 82b86ea
+
+=== git log cb6b27b..HEAD ===
+82b86ea feat(waitlist): rutas turnos-disponibles y franjas + POST oferta ampliado
+
+=== git diff --stat cb6b27b..HEAD ===
+ dashboard/app/api/waitlist/[id]/oferta/route.ts    |  33 ++-
+ dashboard/app/api/waitlist/franjas/route.ts        |  33 +++
+ .../app/api/waitlist/turnos-disponibles/route.ts   |  20 ++
+ .../__tests__/waitlist-turnos-disponibles.test.ts  | 226 +++++++++++++++++++++
+ dashboard/lib/services/waitlist.ts                 |  65 ++++++
+ 5 files changed, 369 insertions(+), 8 deletions(-)
+
+=== git diff -U10 cb6b27b..HEAD ===
+diff --git a/dashboard/app/api/waitlist/[id]/oferta/route.ts b/dashboard/app/api/waitlist/[id]/oferta/route.ts
+index 5267347..d565c2c 100644
+--- a/dashboard/app/api/waitlist/[id]/oferta/route.ts
++++ b/dashboard/app/api/waitlist/[id]/oferta/route.ts
+@@ -1,23 +1,40 @@
+ import { NextRequest } from 'next/server';
+-import { apiHandler, success, created } from '@/lib/api-handler';
++import { z } from 'zod';
+ import { requireAuth } from '@/lib/api-auth';
++import { apiHandler, created } from '@/lib/api-handler';
+ import { waitlistService } from '@/lib/services/waitlist';
+-import { z } from 'zod';
+ 
+-const crearOfertaSchema = z.object({
+-  turnoId: z.string().uuid('turnoId debe ser UUID'),
+-});
++const crearOfertaSchema = z.discriminatedUnion('tipo', [
++  z.object({ tipo: z.literal('turno'), turnoId: z.string().uuid('turnoId debe ser UUID') }),
++  z.object({
++    tipo: z.literal('franja'),
++    fechaHora: z.string().min(1, 'fechaHora es requerida'),
++    pacienteId: z.string().uuid('pacienteId debe ser UUID'),
++    medicoId: z.string().uuid('medicoId debe ser UUID'),
++  }),
++]);
+ 
+ /**
+- * POST /api/waitlist/[id]/oferta - Crea una oferta manual para un paciente en espera
++ * POST /api/waitlist/[id]/oferta - Crea una oferta manual para un paciente en espera.
++ *
++ * Body: `{ tipo: 'turno', turnoId }` para ofrecer un turno existente, o
++ * `{ tipo: 'franja', fechaHora, pacienteId, medicoId }` para crear un turno
++ * nuevo en una franja libre del m├®dico.
+  */
+ export const POST = apiHandler(
+   async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
+-  const { id } = await paramsPromise;
++    const { id } = await paramsPromise;
+     await requireAuth();
+     const body = await request.json();
+     const parsed = crearOfertaSchema.parse(body);
+-    const oferta = await waitlistService.crearOferta(id, parsed.turnoId);
++    const oferta =
++      parsed.tipo === 'turno'
++        ? await waitlistService.crearOferta(id, parsed.turnoId)
++        : await waitlistService.crearOferta(id, {
++            fechaHora: new Date(parsed.fechaHora),
++            pacienteId: parsed.pacienteId,
++            medicoId: parsed.medicoId,
++          });
+     return created(oferta);
+   },
+ );
+diff --git a/dashboard/app/api/waitlist/franjas/route.ts b/dashboard/app/api/waitlist/franjas/route.ts
+new file mode 100644
+index 0000000..77b91f9
+--- /dev/null
++++ b/dashboard/app/api/waitlist/franjas/route.ts
+@@ -0,0 +1,33 @@
++'use server';
++
++import { NextRequest } from 'next/server';
++import { requireAuth } from '@/lib/api-auth';
++import { apiHandler, success } from '@/lib/api-handler';
++import { formatearFechaHora, proximasFranjasLibres } from '@/lib/services/waitlist';
++
++// GET /api/waitlist/franjas?medicoId=xxx&dias=7&limite=15
++export const GET = apiHandler(async (request: NextRequest) => {
++  await requireAuth();
++  const { searchParams } = new URL(request.url);
++  const medicoId = searchParams.get('medicoId');
++
++  if (!medicoId) {
++    return success({ data: [] });
++  }
++
++  const dias = Number(searchParams.get('dias')) || 7;
++  const limite = Number(searchParams.get('limite')) || 15;
++  const franjas = await proximasFranjasLibres(medicoId, { dias, limite });
++
++  return success({
++    data: franjas.map((f) => {
++      const { fecha, hora } = formatearFechaHora(f.fechaHora);
++      return {
++        fechaHora: f.fechaHora.toISOString(),
++        fecha,
++        hora,
++        duracionMinutos: f.duracionMinutos,
++      };
++    }),
++  });
++});
+diff --git a/dashboard/app/api/waitlist/turnos-disponibles/route.ts b/dashboard/app/api/waitlist/turnos-disponibles/route.ts
+new file mode 100644
+index 0000000..2350f56
+--- /dev/null
++++ b/dashboard/app/api/waitlist/turnos-disponibles/route.ts
+@@ -0,0 +1,20 @@
++'use server';
++
++import { NextRequest } from 'next/server';
++import { requireAuth } from '@/lib/api-auth';
++import { apiHandler, success } from '@/lib/api-handler';
++import { waitlistService } from '@/lib/services/waitlist';
++
++// GET /api/waitlist/turnos-disponibles?medicoId=xxx
++export const GET = apiHandler(async (request: NextRequest) => {
++  await requireAuth();
++  const { searchParams } = new URL(request.url);
++  const medicoId = searchParams.get('medicoId');
++
++  if (!medicoId) {
++    return success({ data: [] });
++  }
++
++  const turnos = await waitlistService.turnosDisponibles(medicoId);
++  return success({ data: turnos });
++});
+diff --git a/dashboard/lib/services/__tests__/waitlist-turnos-disponibles.test.ts b/dashboard/lib/services/__tests__/waitlist-turnos-disponibles.test.ts
+new file mode 100644
+index 0000000..4e6b9ca
+--- /dev/null
++++ b/dashboard/lib/services/__tests__/waitlist-turnos-disponibles.test.ts
+@@ -0,0 +1,226 @@
++import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
++
++/**
++ * Tests de `waitlistService.turnosDisponibles` (lib/services/waitlist.ts).
++ *
++ * Verifica que el helper devuelva los turnos futuros de un m├®dico con formato
++ * es-CL (`fecha`/"10 de agosto", `hora`/"09:00") y el nombre del paciente en
++ * `pacienteNombre`, y que la query excluya turnos borrados (deletedAt) y
++ * estados fuera de ['pendiente','confirmada','cancelada'].
++ *
++ * Como la exclusi├│n se hace en la cl├íusula WHERE (SQL), el mock simula el
++ * filtrado de la DB usando los valores capturados de los operadores de
++ * drizzle-orm (`inArray`, `gte`, `sql`), de modo que el output refleja lo que
++ * devolver├¡a la query real.
++ */
++
++// ÔöÇÔöÇÔöÇ Mocks (vi.hoisted para poder usarlos en vi.mock) ÔöÇÔöÇ
++
++const h = vi.hoisted(() => {
++  const mockSelect = vi.fn();
++  const rowsByTable = new Map<object, unknown[]>();
++
++  // Capturas de los operadores de drizzle-orm (para simular el WHERE en el mock)
++  const inArrayCalls: unknown[][] = [];
++  const gteCalls: unknown[] = [];
++  const sqlTemplates: string[] = [];
++
++  // Tablas de drizzle (identity ├║nica por objeto)
++  const turnos = { id: 'turnos' };
++  const pacientes = { id: 'pacientes' };
++  const medicos = { id: 'medicos' };
++  const ofertasTurno = { id: 'ofertasTurno' };
++  const listaEspera = { id: 'listaEspera' };
++  const bloqueosAgenda = { id: 'bloqueosAgenda' };
++
++  return {
++    mockSelect,
++    rowsByTable,
++    inArrayCalls,
++    gteCalls,
++    sqlTemplates,
++    turnos,
++    pacientes,
++    medicos,
++    ofertasTurno,
++    listaEspera,
++    bloqueosAgenda,
++  };
++});
++
++// Envuelve los operadores de drizzle-orm para capturar los argumentos del WHERE.
++// `importOriginal` conserva el resto de la API (and, asc, ...) intacto.
++vi.mock('drizzle-orm', async (importOriginal) => {
++  const actual = await importOriginal<typeof import('drizzle-orm')>();
++  return {
++    ...actual,
++    // eslint-disable-next-line @typescript-eslint/no-explicit-any
++    eq: vi.fn((col: any, val: any) => actual.eq(col, val)),
++    // eslint-disable-next-line @typescript-eslint/no-explicit-any
++    gte: vi.fn((col: any, val: any) => {
++      h.gteCalls.push(val);
++      return actual.gte(col, val);
++    }),
++    // eslint-disable-next-line @typescript-eslint/no-explicit-any
++    inArray: vi.fn((col: any, vals: any[]) => {
++      h.inArrayCalls.push(vals);
++      return actual.inArray(col, vals);
++    }),
++    // tag template: sql`...`
++    // eslint-disable-next-line @typescript-eslint/no-explicit-any
++    sql: (...args: any[]) => {
++      const strings = Array.isArray(args[0]) ? args[0] : [];
++      h.sqlTemplates.push(Array.isArray(strings) ? strings.join(' ') : '');
++      // eslint-disable-next-line @typescript-eslint/no-explicit-any
++      return (actual.sql as (...a: any[]) => any)(...args);
++    },
++  };
++});
++
++vi.mock('@/drizzle/schema', () => ({
++  turnos: h.turnos,
++  pacientes: h.pacientes,
++  medicos: h.medicos,
++  ofertasTurno: h.ofertasTurno,
++  listaEspera: h.listaEspera,
++  bloqueosAgenda: h.bloqueosAgenda,
++}));
++
++vi.mock('@/lib/db', () => ({ db: { select: h.mockSelect } }));
++
++vi.mock('@/lib/api-handler', () => ({
++  notFound: (m: string) => {
++    throw new Error(m);
++  },
++  conflict: (m: string) => {
++    throw new Error(m);
++  },
++}));
++
++vi.mock('@/lib/logger', () => ({
++  safeLog: vi.fn(),
++  safeWarn: vi.fn(),
++  safeError: vi.fn(),
++}));
++
++const ROWS = h.rowsByTable;
++const mockSelect = h.mockSelect;
++const { turnos, pacientes } = h;
++
++// Cadena tipo drizzle (select ÔåÆ from ÔåÆ [leftJoin] ÔåÆ where ÔåÆ orderBy ÔåÆ [limit]).
++// `then` simula la DB aplicando el filtro del WHERE capturado sobre las rows
++// (inArray de estados + IS NULL de deletedAt), igual que har├¡a PostgreSQL.
++mockSelect.mockImplementation(() => ({
++  from: (table: object) => {
++    const chain: any = {
++      leftJoin: () => chain,
++      where: () => chain,
++      orderBy: () => chain,
++      limit: () => chain,
++      then: (resolve: (value: unknown[]) => void) => {
++        const estados = h.inArrayCalls.length ? h.inArrayCalls[h.inArrayCalls.length - 1] : [];
++        const tieneFiltroDeleted =
++          h.sqlTemplates.length > 0 && h.sqlTemplates.some((t) => t.includes('IS NULL'));
++        const rows = (ROWS.get(table) ?? []) as Array<Record<string, unknown>>;
++        const filtradas = rows.filter((row) => {
++          if (row.estado !== undefined && !estados.includes(String(row.estado))) return false;
++          if (tieneFiltroDeleted && row.deletedAt != null) return false;
++          return true;
++        });
++        resolve(filtradas);
++      },
++    };
++    return chain;
++  },
++}));
++
++// ÔöÇÔöÇÔöÇ Fixtures ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
++
++function makeTurno(overrides: Record<string, unknown> = {}) {
++  return {
++    id: 'turno-1',
++    fechaHora: new Date('2026-08-10T09:00:00'),
++    estado: 'confirmada',
++    pacienteId: 'pac-1',
++    medicoId: 'med-1',
++    pacienteNombre: 'Ana',
++    pacienteApellido: 'Perez',
++    ...overrides,
++  };
++}
++
++import { waitlistService } from '@/lib/services/waitlist';
++
++describe('waitlistService.turnosDisponibles', () => {
++  beforeEach(() => {
++    vi.useFakeTimers();
++    vi.setSystemTime(new Date('2026-08-10T08:00:00'));
++    mockSelect.mockClear();
++    ROWS.clear();
++    h.inArrayCalls.length = 0;
++    h.gteCalls.length = 0;
++    h.sqlTemplates.length = 0;
++  });
++
++  afterEach(() => {
++    vi.useRealTimers();
++    vi.clearAllMocks();
++  });
++
++  it('1. devuelve turnos futuros del m├®dico con fecha/hora es-CL y pacienteNombre', async () => {
++    ROWS.set(turnos, [makeTurno()]);
++
++    const result = await waitlistService.turnosDisponibles('med-1');
++
++    expect(result).toHaveLength(1);
++    const turno = result[0];
++    expect(turno.id).toBe('turno-1');
++    expect(turno.fechaHora).toBeInstanceOf(Date);
++    expect(turno.fecha).toContain('agosto');
++    expect(turno.hora).toBe('09:00');
++    expect(turno.pacienteNombre).toBe('Ana Perez');
++    expect(turno.estado).toBe('confirmada');
++    expect(turno.medicoId).toBe('med-1');
++  });
++
++  it('2. excluye turnos borrados y estados fuera de pendiente/confirmada/cancelada', async () => {
++    ROWS.set(turnos, [
++      makeTurno({ id: 'turno-cancelada', estado: 'cancelada' }),
++      makeTurno({
++        id: 'turno-atendido',
++        estado: 'atendido',
++        fechaHora: new Date('2026-08-10T10:00:00'),
++      }),
++      makeTurno({
++        id: 'turno-borrado',
++        estado: 'confirmada',
++        deletedAt: new Date('2026-08-09T12:00:00'),
++      }),
++    ]);
++
++    const result = await waitlistService.turnosDisponibles('med-1');
++
++    // cancelada S├ì est├í incluida; atendido y deletedAt excluidos
++    expect(result.map((t) => t.id)).toEqual(['turno-cancelada']);
++    expect(result[0]!.estado).toBe('cancelada');
++
++    // La query se construy├│ con el filtro correcto
++    expect(h.inArrayCalls.length).toBeGreaterThan(0);
++    expect(h.inArrayCalls[h.inArrayCalls.length - 1]).toEqual([
++      'pendiente',
++      'confirmada',
++      'cancelada',
++    ]);
++    expect(h.gteCalls.length).toBeGreaterThan(0);
++    expect(h.gteCalls[h.gteCalls.length - 1]).toBeInstanceOf(Date);
++    expect(h.sqlTemplates.some((t) => t.includes('IS NULL'))).toBe(true);
++  });
++
++  it('3. consulta la tabla turnos y une pacientes para el nombre', async () => {
++    ROWS.set(turnos, [makeTurno()]);
++
++    await waitlistService.turnosDisponibles('med-1');
++
++    expect(mockSelect).toHaveBeenCalledOnce();
++  });
++});
+diff --git a/dashboard/lib/services/waitlist.ts b/dashboard/lib/services/waitlist.ts
+index 3089089..2e4e963 100644
+--- a/dashboard/lib/services/waitlist.ts
++++ b/dashboard/lib/services/waitlist.ts
+@@ -566,20 +566,69 @@ export const waitlistService = {
+       })
+       .from(listaEspera)
+       .leftJoin(pacientes, eq(listaEspera.pacienteId, pacientes.id))
+       .leftJoin(medicos, eq(listaEspera.medicoId, medicos.id))
+       .where(whereConditions)
+       .orderBy(asc(listaEspera.fechaInscripcion));
+ 
+     return items;
+   },
+ 
++  /**
++   * Lista los turnos disponibles de un m├®dico para ofrecer en lista de espera.
++   *
++   * Devuelve los turnos futuros del m├®dico en estado `pendiente`, `confirmada`
++   * o `cancelada` (incluye `cancelada` para permitir reasignarlos), excluyendo
++   * los borrados. Cada turno incluye el nombre del paciente y `fecha`/`hora`
++   * formateadas en es-CL para mostrar en la UI.
++   * @param medicoId - ID del m├®dico del que se listan los turnos.
++   * @returns Turnos disponibles formateados, ordenados por fecha ascendente.
++   */
++  async turnosDisponibles(medicoId: string) {
++    const rows = await db
++      .select({
++        id: turnos.id,
++        fechaHora: turnos.fechaHora,
++        estado: turnos.estado,
++        pacienteId: turnos.pacienteId,
++        medicoId: turnos.medicoId,
++        pacienteNombre: pacientes.nombre,
++        pacienteApellido: pacientes.apellido,
++      })
++      .from(turnos)
++      .leftJoin(pacientes, eq(turnos.pacienteId, pacientes.id))
++      .where(
++        and(
++          eq(turnos.medicoId, medicoId),
++          gte(turnos.fechaHora, new Date()),
++          inArray(turnos.estado, ['pendiente', 'confirmada', 'cancelada']),
++          sql`${turnos.deletedAt} IS NULL`,
++        ),
++      )
++      .orderBy(asc(turnos.fechaHora));
++
++    return rows.map((t) => {
++      const { fecha, hora } = formatearFechaHora(new Date(t.fechaHora));
++      return {
++        id: t.id,
++        fechaHora: t.fechaHora,
++        fecha,
++        hora,
++        estado: t.estado,
++        pacienteNombre: t.pacienteApellido
++          ? `${t.pacienteNombre} ${t.pacienteApellido}`
++          : t.pacienteNombre,
++        medicoId: t.medicoId,
++      };
++    });
++  },
++
+   /**
+    * Lista ofertas de turno con datos relacionados.
+    * @param listaEsperaId
+    * @param estado
+    */
+   async listarOfertas(listaEsperaId?: string, estado?: string) {
+     const whereConditions = and(
+       listaEsperaId ? eq(ofertasTurno.listaEsperaId, listaEsperaId) : undefined,
+       estado ? eq(ofertasTurno.estado, estado) : undefined,
+     );
+@@ -605,20 +654,36 @@ export const waitlistService = {
+       .orderBy(desc(ofertasTurno.fechaOferta));
+ 
+     return items;
+   },
+ };
+ 
+ // ============================================================
+ // FRANJAS LIBRES
+ // ============================================================
+ 
++/**
++ * Formatea fecha/hora de un turno en es-CL para mostrar en la UI.
++ * @param fecha - Fecha a formatear.
++ * @returns Objeto con `fecha` (d├¡a y mes, ej. "10 de agosto") y `hora` (HH:MM, ej. "09:00").
++ */
++export function formatearFechaHora(fecha: Date): { fecha: string; hora: string } {
++  return {
++    fecha: fecha.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' }),
++    hora: fecha.toLocaleTimeString('es-CL', {
++      hour: '2-digit',
++      minute: '2-digit',
++      hour12: false,
++    }),
++  };
++}
++
+ /** Entrada de horario configurada para un d├¡a de la semana en `medicos.horarios`. */
+ interface HorarioDia {
+   activo?: boolean;
+   inicio?: string;
+   fin?: string;
+   tipo?: string;
+   inicio2?: string | null;
+   fin2?: string | null;
+ }
+ 
+

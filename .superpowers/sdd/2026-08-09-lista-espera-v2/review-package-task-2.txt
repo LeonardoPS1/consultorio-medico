@@ -1,0 +1,535 @@
+== Review Package Task 2 — BASE 3f885d2..HEAD 7bbfd13 ==
+
+=== COMMITS ===
+7bbfd13 feat(waitlist): crearOferta soporta turno existente o franja libre + l├¡mite por paciente
+
+=== STAT ===
+ .../__tests__/waitlist-crear-oferta.test.ts        | 326 +++++++++++++++++++++
+ dashboard/lib/services/waitlist.ts                 | 116 +++++++-
+ 2 files changed, 427 insertions(+), 15 deletions(-)
+
+
+=== FULL DIFF (-U10) ===
+diff --git a/dashboard/lib/services/__tests__/waitlist-crear-oferta.test.ts b/dashboard/lib/services/__tests__/waitlist-crear-oferta.test.ts
+new file mode 100644
+index 0000000..11f63e3
+--- /dev/null
++++ b/dashboard/lib/services/__tests__/waitlist-crear-oferta.test.ts
+@@ -0,0 +1,326 @@
++import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
++
++/**
++ * Tests de `waitlistService.crearOferta` (lib/services/waitlist.ts).
++ *
++ * Verifica la firma ampliada que acepta `{ turnoId }` (turno existente) o
++ * `{ fechaHora, pacienteId, medicoId }` (crear turno nuevo en franja libre):
++ * 1. turnoId en estado `pendiente` ÔåÆ crea oferta (no exige `cancelada`).
++ * 2. turnoId en estado `cancelada` ÔåÆ crea oferta (compatibilidad).
++ * 3. turno de otro m├®dico ÔåÆ rechaza.
++ * 4. turno en el pasado ÔåÆ rechaza.
++ * 5. turno con otra oferta pendiente ÔåÆ rechaza.
++ * 6. segunda oferta pendiente del mismo paciente ÔåÆ rechaza.
++ * 7. fechaHora de franja libre ÔåÆ inserta turno nuevo + oferta.
++ * 8. fechaHora ocupada ÔåÆ rechaza.
++ *
++ * Reloj fijo (vi.setSystemTime): Lunes 2026-08-10 08:00 local. El m├®dico
++ * atiende Lun-Vie 09:00-13:00, `duracionTurnoMinutos: 30` (mismo fixture que
++ * waitlist-franjas.test.ts, as├¡ `proximasFranjasLibres` devuelve slot 09:00).
++ */
++
++// ÔöÇÔöÇÔöÇ Mocks (vi.hoisted para poder usarlos en vi.mock) ÔöÇÔöÇ
++
++const h = vi.hoisted(() => {
++  const mockSelect = vi.fn();
++  const mockInsert = vi.fn();
++  const rowsByTable = new Map<object, unknown[]>();
++  const rowsJoin = new Map<object, unknown[]>();
++  const insertValues: Array<Record<string, unknown>> = [];
++
++  // Tablas de drizzle (identity ├║nica por objeto)
++  const turnos = { id: 'turnos' };
++  const pacientes = { id: 'pacientes' };
++  const medicos = { id: 'medicos' };
++  const ofertasTurno = { id: 'ofertasTurno' };
++  const listaEspera = { id: 'listaEspera' };
++  const bloqueosAgenda = { id: 'bloqueosAgenda' };
++
++  // Cadena tipo drizzle (select ÔåÆ from ÔåÆ [innerJoin|leftJoin] ÔåÆ where ÔåÆ orderBy ÔåÆ limit).
++  // Las queries con join leen el Map `rowsJoin`; las simples leen `rowsByTable`.
++  mockSelect.mockImplementation(() => ({
++    from: (table: object) => {
++      let joined = false;
++      const chain: any = {
++        innerJoin: () => {
++          joined = true;
++          return chain;
++        },
++        leftJoin: () => chain,
++        where: () => chain,
++        orderBy: () => chain,
++        limit: () => chain,
++        then: (resolve: (value: unknown[]) => void) =>
++          resolve((joined ? rowsJoin : rowsByTable).get(table) ?? []),
++      };
++      return chain;
++    },
++  }));
++
++  // Cadena tipo drizzle para insert (insert ÔåÆ values ÔåÆ returning).
++  // Registra los values en `insertValues`; distingue insert de `turnos`
++  // (tiene `fechaHora`) de insert de `ofertasTurno`.
++  mockInsert.mockImplementation(() => ({
++    values: (values: Record<string, unknown>) => ({
++      returning: () => {
++        const snapshot = { ...values };
++        insertValues.push(snapshot);
++        const esTurno = 'fechaHora' in snapshot;
++        return Promise.resolve(
++          esTurno
++            ? [{ id: 'turno-nuevo-1' }]
++            : [
++                {
++                  id: 'oferta-1',
++                  listaEsperaId: snapshot.listaEsperaId,
++                  turnoId: snapshot.turnoId,
++                  estado: 'pendiente',
++                  notificada: false,
++                  expiracion: snapshot.expiracion ?? new Date(),
++                  fechaOferta: new Date(),
++                  respondedAt: null,
++                  notificadaAt: null,
++                  createdAt: new Date(),
++                  updatedAt: new Date(),
++                },
++              ],
++        );
++      },
++    }),
++  }));
++
++  return {
++    mockSelect,
++    mockInsert,
++    rowsByTable,
++    rowsJoin,
++    insertValues,
++    turnos,
++    pacientes,
++    medicos,
++    ofertasTurno,
++    listaEspera,
++    bloqueosAgenda,
++  };
++});
++
++vi.mock('@/drizzle/schema', () => ({
++  turnos: h.turnos,
++  pacientes: h.pacientes,
++  medicos: h.medicos,
++  ofertasTurno: h.ofertasTurno,
++  listaEspera: h.listaEspera,
++  bloqueosAgenda: h.bloqueosAgenda,
++}));
++
++vi.mock('@/lib/db', () => ({ db: { select: h.mockSelect, insert: h.mockInsert } }));
++
++vi.mock('@/lib/api-handler', () => ({
++  notFound: (m: string) => {
++    throw new Error(m);
++  },
++  conflict: (m: string) => {
++    throw new Error(m);
++  },
++}));
++
++vi.mock('@/lib/logger', () => ({
++  safeLog: vi.fn(),
++  safeWarn: vi.fn(),
++  safeError: vi.fn(),
++}));
++
++const ROWS = h.rowsByTable;
++const ROWS_JOIN = h.rowsJoin;
++const INSERT_VALUES = h.insertValues;
++const mockSelect = h.mockSelect;
++const mockInsert = h.mockInsert;
++const { turnos, medicos, ofertasTurno, listaEspera, bloqueosAgenda } = h;
++
++// ÔöÇÔöÇÔöÇ Fixtures ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
++
++function makeInscripcion(overrides: Record<string, unknown> = {}) {
++  return { id: 'le-1', pacienteId: 'pac-1', medicoId: 'med-1', estado: 'activa', ...overrides };
++}
++
++function makeTurno(overrides: Record<string, unknown> = {}) {
++  return {
++    id: 'turno-1',
++    estado: 'pendiente',
++    medicoId: 'med-1',
++    fechaHora: '2026-08-10T09:00:00',
++    deletedAt: null,
++    ...overrides,
++  };
++}
++
++function makeHorario(overrides: Record<string, unknown> = {}) {
++  return {
++    activo: true,
++    inicio: '09:00',
++    fin: '13:00',
++    tipo: 'corrido',
++    inicio2: null,
++    fin2: null,
++    ...overrides,
++  };
++}
++
++function makeMedico() {
++  return {
++    id: 'med-1',
++    duracionTurnoMinutos: 30,
++    horarios: {
++      Lunes: makeHorario(),
++      Martes: makeHorario(),
++      Miercoles: makeHorario(),
++      Jueves: makeHorario(),
++      Viernes: makeHorario(),
++    },
++  };
++}
++
++function setupCasoA() {
++  ROWS.set(listaEspera, [makeInscripcion()]);
++  ROWS.set(turnos, [makeTurno()]);
++  ROWS.set(ofertasTurno, []);
++  ROWS_JOIN.set(ofertasTurno, []);
++}
++
++function setupCasoB() {
++  ROWS.set(listaEspera, [makeInscripcion()]);
++  ROWS.set(medicos, [makeMedico()]);
++  ROWS.set(turnos, []);
++  ROWS.set(bloqueosAgenda, []);
++  ROWS.set(ofertasTurno, []);
++  ROWS_JOIN.set(ofertasTurno, []);
++}
++
++import { waitlistService } from '@/lib/services/waitlist';
++
++describe('waitlistService.crearOferta ÔÇö turno existente o franja libre', () => {
++  beforeEach(() => {
++    vi.useFakeTimers();
++    vi.setSystemTime(new Date('2026-08-10T08:00:00'));
++    mockSelect.mockClear();
++    mockInsert.mockClear();
++    INSERT_VALUES.length = 0;
++    ROWS.clear();
++    ROWS_JOIN.clear();
++  });
++
++  afterEach(() => {
++    vi.useRealTimers();
++    vi.clearAllMocks();
++  });
++
++  it('1. turnoId en estado pendiente ÔåÆ crea oferta (no exige cancelada)', async () => {
++    setupCasoA();
++
++    const result = await waitlistService.crearOferta('le-1', { turnoId: 'turno-1' });
++
++    expect(result.estado).toBe('pendiente');
++    expect(result.turnoId).toBe('turno-1');
++    expect(mockInsert).toHaveBeenCalledWith(ofertasTurno);
++    const ofertaInsert = INSERT_VALUES.find(
++      (v) => v.turnoId === 'turno-1' && v.listaEsperaId === 'le-1',
++    );
++    expect(ofertaInsert).toBeDefined();
++  });
++
++  it('2. turnoId en estado cancelada ÔåÆ crea oferta (compatibilidad)', async () => {
++    ROWS.set(listaEspera, [makeInscripcion()]);
++    ROWS.set(turnos, [makeTurno({ estado: 'cancelada' })]);
++    ROWS.set(ofertasTurno, []);
++    ROWS_JOIN.set(ofertasTurno, []);
++
++    const result = await waitlistService.crearOferta('le-1', { turnoId: 'turno-1' });
++
++    expect(result.estado).toBe('pendiente');
++    expect(result.turnoId).toBe('turno-1');
++    expect(mockInsert).toHaveBeenCalledWith(ofertasTurno);
++  });
++
++  it('3. turno de otro m├®dico ÔåÆ rechaza', async () => {
++    ROWS.set(listaEspera, [makeInscripcion()]);
++    ROWS.set(turnos, [makeTurno({ medicoId: 'med-2' })]);
++
++    await expect(waitlistService.crearOferta('le-1', { turnoId: 'turno-1' })).rejects.toThrow(
++      'El turno debe pertenecer al mismo m├®dico del paciente en espera',
++    );
++    expect(mockInsert).not.toHaveBeenCalled();
++  });
++
++  it('4. turno pasado ÔåÆ rechaza', async () => {
++    ROWS.set(listaEspera, [makeInscripcion()]);
++    ROWS.set(turnos, [makeTurno({ fechaHora: '2026-08-09T09:00:00' })]);
++
++    await expect(waitlistService.crearOferta('le-1', { turnoId: 'turno-1' })).rejects.toThrow(
++      'El turno debe estar programado en el futuro',
++    );
++    expect(mockInsert).not.toHaveBeenCalled();
++  });
++
++  it('5. turno con otra oferta pendiente ÔåÆ rechaza', async () => {
++    ROWS.set(listaEspera, [makeInscripcion()]);
++    ROWS.set(turnos, [makeTurno()]);
++    ROWS.set(ofertasTurno, [{ id: 'oferta-existente' }]);
++    ROWS_JOIN.set(ofertasTurno, []);
++
++    await expect(waitlistService.crearOferta('le-1', { turnoId: 'turno-1' })).rejects.toThrow(
++      'Ese turno ya tiene una oferta pendiente',
++    );
++    expect(mockInsert).not.toHaveBeenCalled();
++  });
++
++  it('6. segunda oferta pendiente del mismo paciente ÔåÆ rechaza', async () => {
++    ROWS.set(listaEspera, [makeInscripcion()]);
++    ROWS.set(turnos, [makeTurno()]);
++    ROWS.set(ofertasTurno, []);
++    // Join (A-4): existe oferta pendiente de OTRA inscripci├│n del mismo paciente
++    ROWS_JOIN.set(ofertasTurno, [{ id: 'oferta-prev' }]);
++
++    await expect(waitlistService.crearOferta('le-1', { turnoId: 'turno-1' })).rejects.toThrow(
++      'Ya existe un turno ofrecido pendiente para este paciente',
++    );
++    expect(mockInsert).not.toHaveBeenCalled();
++  });
++
++  it('7. fechaHora de franja libre ÔåÆ crea turno nuevo + oferta', async () => {
++    setupCasoB();
++
++    const result = await waitlistService.crearOferta('le-1', {
++      fechaHora: new Date('2026-08-10T09:00:00'),
++      pacienteId: 'pac-1',
++      medicoId: 'med-1',
++    });
++
++    // Se insert├│ turno nuevo y la oferta apunta a ese turno
++    expect(mockInsert).toHaveBeenCalledWith(turnos);
++    const turnoInsert = INSERT_VALUES.find(
++      (v) => v.pacienteId === 'pac-1' && v.medicoId === 'med-1',
++    );
++    expect(turnoInsert).toBeDefined();
++    expect(turnoInsert!.duracionMinutos).toBe(30);
++    expect(result.turnoId).toBe('turno-nuevo-1');
++    expect(result.estado).toBe('pendiente');
++    const ofertaInsert = INSERT_VALUES.find(
++      (v) => v.turnoId === 'turno-nuevo-1' && v.listaEsperaId === 'le-1',
++    );
++    expect(ofertaInsert).toBeDefined();
++  });
++
++  it('8. fechaHora ocupada (no es franja) ÔåÆ rechaza', async () => {
++    setupCasoB();
++
++    // 08:30 est├í fuera del horario del m├®dico (empieza 09:00) ÔåÆ no es franja
++    await expect(
++      waitlistService.crearOferta('le-1', {
++        fechaHora: new Date('2026-08-10T08:30:00'),
++        pacienteId: 'pac-1',
++        medicoId: 'med-1',
++      }),
++    ).rejects.toThrow('Franja no disponible para el m├®dico');
++    expect(mockInsert).not.toHaveBeenCalled();
++  });
++});
+diff --git a/dashboard/lib/services/waitlist.ts b/dashboard/lib/services/waitlist.ts
+index 45a1cda..d8a03f9 100644
+--- a/dashboard/lib/services/waitlist.ts
++++ b/dashboard/lib/services/waitlist.ts
+@@ -20,35 +20,47 @@ import {
+   sql,
+   count,
+   desc,
+   asc,
+   lt,
+   not,
+   inArray,
+   gte,
+   lte,
+   notInArray,
++  type InferSelectModel,
+ } from 'drizzle-orm';
+ import {
+   listaEspera,
+   ofertasTurno,
+   turnos,
+   pacientes,
+   medicos,
+   bloqueosAgenda,
+ } from '@/drizzle/schema';
+ import { notFound, conflict } from '@/lib/api-handler';
+ import { db } from '@/lib/db';
+ 
+ const TIEMPO_EXPIRACION_MINUTOS = 15;
+ const LIMITE_OFERTAS_POR_DIA = 3;
+ 
++/**
++ * Entrada para crear una oferta de turno: un turno existente (`turnoId`) o una
++ * franja libre propuesta (`fechaHora` + `pacienteId` + `medicoId`) para la que
++ * se crea un turno nuevo.
++ */
++export type CrearOfertaInput =
++  { turnoId: string } | { fechaHora: Date; pacienteId: string; medicoId: string };
++
++/** Oferta de turno creada (row completo de `ofertasTurno`). */
++export type OfertaCreada = InferSelectModel<typeof ofertasTurno>;
++
+ export const waitlistService = {
+   // ============================================================
+   // LISTA DE ESPERA
+   // ============================================================
+ 
+   /**
+    * Agrega un paciente a la lista de espera para un m├®dico espec├¡fico.
+    * @param pacienteId
+    * @param medicoId
+    * @param notas
+@@ -162,48 +174,122 @@ export const waitlistService = {
+ 
+     return candidatosValidos[0] || null;
+   },
+ 
+   // ============================================================
+   // OFERTAS DE TURNO
+   // ============================================================
+ 
+   /**
+    * Crea una oferta de turno para un paciente en lista de espera.
++   *
++   * Acepta un turno existente (`{ turnoId }`) o una franja libre propuesta
++   * (`{ fechaHora, pacienteId, medicoId }`) para la que se crea un turno nuevo.
++   * Valida inscripci├│n activa, que el turno sea del mismo m├®dico y est├® en el
++   * futuro, que no exista otra oferta pendiente para el turno y m├íximo 1 oferta
++   * pendiente por paciente.
+    * @param listaEsperaId
+-   * @param turnoId
++   * @param input - `{ turnoId }` para ofrecer un turno existente; `{ fechaHora, pacienteId, medicoId }` para crear turno nuevo en una franja libre.
++   * @returns Oferta creada (row completo de `ofertasTurno`).
+    */
+-  async crearOferta(listaEsperaId: string, turnoId: string) {
++  async crearOferta(
++    listaEsperaId: string,
++    input: string | CrearOfertaInput,
++  ): Promise<OfertaCreada> {
++    const objetivo: CrearOfertaInput = typeof input === 'string' ? { turnoId: input } : input;
++
+     // Validar que la inscripci├│n existe y est├í activa
+     const [inscripcion] = await db
+-      .select({ id: listaEspera.id, pacienteId: listaEspera.pacienteId })
++      .select({
++        id: listaEspera.id,
++        pacienteId: listaEspera.pacienteId,
++        medicoId: listaEspera.medicoId,
++      })
+       .from(listaEspera)
+       .where(and(eq(listaEspera.id, listaEsperaId), eq(listaEspera.estado, 'activa')))
+       .limit(1);
+     if (!inscripcion) notFound('Inscripci├│n en lista de espera no encontrada o no activa');
+ 
+-    // Validar que el turno existe y est├í cancelado/disponible
+-    const [turno] = await db
+-      .select({ id: turnos.id, estado: turnos.estado })
+-      .from(turnos)
+-      .where(and(eq(turnos.id, turnoId), sql`${turnos.deletedAt} IS NULL`))
+-      .limit(1);
+-    if (!turno) notFound('Turno no encontrado');
+-    if (turno.estado !== 'cancelada') conflict('El turno debe estar cancelado para ser ofrecido');
++    let turnoId: string;
++
++    if ('turnoId' in objetivo) {
++      // Caso A: ofrecer un turno existente
++      const [turno] = await db
++        .select({
++          id: turnos.id,
++          estado: turnos.estado,
++          medicoId: turnos.medicoId,
++          fechaHora: turnos.fechaHora,
++          deletedAt: turnos.deletedAt,
++        })
++        .from(turnos)
++        .where(and(eq(turnos.id, objetivo.turnoId), sql`${turnos.deletedAt} IS NULL`))
++        .limit(1);
++      if (!turno) notFound('Turno no encontrado');
++      if (turno.medicoId !== inscripcion.medicoId) {
++        conflict('El turno debe pertenecer al mismo m├®dico del paciente en espera');
++      }
++      if (new Date(turno.fechaHora) <= new Date()) {
++        conflict('El turno debe estar programado en el futuro');
++      }
++      if (!['pendiente', 'confirmada', 'cancelada'].includes(turno.estado)) {
++        conflict('El turno no est├í disponible para ser ofrecido');
++      }
++
++      // Verificar que no haya otra oferta pendiente para este turno
++      const [ofertaExistente] = await db
++        .select({ id: ofertasTurno.id })
++        .from(ofertasTurno)
++        .where(
++          and(eq(ofertasTurno.turnoId, objetivo.turnoId), eq(ofertasTurno.estado, 'pendiente')),
++        )
++        .limit(1);
++      if (ofertaExistente) conflict('Ese turno ya tiene una oferta pendiente');
++
++      turnoId = objetivo.turnoId;
++    } else {
++      // Caso B: crear turno nuevo en una franja libre del m├®dico
++      const franjas = await proximasFranjasLibres(objetivo.medicoId, { dias: 7, limite: 20 });
++      const franja = franjas.find((f) => f.fechaHora.getTime() === objetivo.fechaHora.getTime());
++      if (!franja) conflict('Franja no disponible para el m├®dico');
++
++      // La franja ya trae duracionMinutos; se usa directamente
++      const [turnoNuevo] = await db
++        .insert(turnos)
++        .values({
++          pacienteId: objetivo.pacienteId,
++          medicoId: objetivo.medicoId,
++          fechaHora: objetivo.fechaHora,
++          duracionMinutos: franja.duracionMinutos,
++          estado: 'pendiente',
++          tipoConsulta: 'consulta',
++          fuente: 'web',
++        })
++        .returning({ id: turnos.id });
++
++      turnoId = turnoNuevo.id;
++    }
+ 
+-    // Verificar que no haya una oferta pendiente para este turno
+-    const [ofertaExistente] = await db
++    // L├¡mite: m├íximo 1 oferta pendiente por paciente (en otra inscripci├│n)
++    const [ofertaPaciente] = await db
+       .select({ id: ofertasTurno.id })
+       .from(ofertasTurno)
+-      .where(and(eq(ofertasTurno.turnoId, turnoId), eq(ofertasTurno.estado, 'pendiente')))
++      .innerJoin(listaEspera, eq(ofertasTurno.listaEsperaId, listaEspera.id))
++      .where(
++        and(
++          eq(ofertasTurno.estado, 'pendiente'),
++          eq(listaEspera.pacienteId, inscripcion.pacienteId),
++          not(eq(ofertasTurno.listaEsperaId, listaEsperaId)),
++        ),
++      )
+       .limit(1);
+-    if (ofertaExistente) conflict('Ya hay una oferta pendiente para este turno');
++    if (ofertaPaciente) conflict('Ya existe un turno ofrecido pendiente para este paciente');
+ 
+     // Calcular expiraci├│n (15 minutos desde ahora)
+     const expiracion = new Date(Date.now() + TIEMPO_EXPIRACION_MINUTOS * 60 * 1000);
+ 
+     const [nueva] = await db
+       .insert(ofertasTurno)
+       .values({
+         listaEsperaId,
+         turnoId,
+         expiracion,
+
