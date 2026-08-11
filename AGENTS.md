@@ -674,11 +674,14 @@ consultorio-medico/
 - Sincronizado desde `turnosService.create()` y `turnosService.update()`
 - Opcional (feature gating)
 
-### MercadoPago (Sandbox)
+### MercadoPago (Chile — MLC)
 - 5 planes de suscripción (Free, Starter, Professional, Business, Enterprise)
 - Webhook con validación HMAC-SHA256 (`x-signature`)
 - Moneda: CLP (Chile)
 - Flujo: checkout → preferencia → webhook → actualiza plan del usuario
+- **Cuenta**: MercadoPago **Chile** (`site_id: MLC`, `country_id: CL`, cuenta TESTUSER1924986703045586537). Tokens actuales en Dokploy: `MERCADOPAGO_ACCESS_TOKEN` + `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY` (ambos `APP_USR-...` **de prueba**); `MERCADOPAGO_CURRENCY` no seteado → default CLP.
+- ⚠️ **Antes (11/08)**: el token era de una cuenta **Argentina** (`MLA`) — pasarela cobraba en la cuenta equivocada. Corregido.
+- ⚠️ **PENDIENTE**: reemplazar credenciales de prueba por credenciales de **producción** de la misma cuenta chilena cuando se quiera cobrar real.
 
 ### n8n
 | Propiedad | Valor |
@@ -824,6 +827,7 @@ consultorio-medico/
 | **Eliminación chat portal + redirección a WhatsApp** | Removido `/portal/mensajes` y APIs `/api/portal/chat` del paciente. Reemplazado por página de redirección amable a WhatsApp (`wa.me`). Tablas `conversaciones`/`mensajes` canal='web' quedan huérfanas intencionalmente (trazabilidad). | 10/08 |
 | **Mensajería interna staff (dashboard)** | Tablas `conversaciones_internas` + `mensajes_internos` con RLS. APIs RESTful (conversaciones CRUD, mensajes enviar/listar, staff listar, no-leídos). Menciones `@nombre` generan notificación al mencionado. Mensajes urgentes con push prioridad urgencia. SSE per-user (`sse-events.ts` extendido con `emitEventToUser`). Frontend completo: lista + conversación con chips contexto paciente/turno, botones "Consultar en mensajería" desde ficha paciente y detalle turno, badge no-leídos en sidebar-nav. Feature gate `mensajeria-interna` (Starter+). Migración 0060 aplicada en prod. Commit `2ea1287` | 10/08 |
 | **Anti-concurrencia reservas portal** | Unique partial index `idx_turnos_medico_fecha_activo` (medico_id, fecha_hora) WHERE deleted_at IS NULL AND estado NOT IN ('cancelada','no_asistio'). Transacción atómica en `crearTurnoPortal()`: recheck ocupado + reconciliación waitlist (oferta activa bloquea reserva directa hasta expirar/rechazar) + insert. Manejo error 23505 → 409 "Este horario ya no está disponible, elegí otro". Fix constraint `turnos.fuente_check` agrega 'portal'. Migración 0061 aplicada en prod. Verificado: 2 POST concurrentes → 1×201 + 1 bloqueado. Build exit 0, tsc 0. Commit `2ea1287` | 10/08 |
+| **Fix MercadoPago → cuenta Chile (MLC)** | La pasarela cobraba en una cuenta ARGENTINA (`MLA`, nick LEONARDOPABLOSPEDALETTI). Reemplazadas credenciales en Dokploy por las de la cuenta chilena TESTUSER1924986703045586537 (`APP_USR-...` de prueba, `site_id: MLC`). Verificado: preference con `init_point https://www.mercadopago.cl`, currency CLP, webhook 401 con firma inválida (HMAC OK). `MERCADOPAGO_CURRENCY` no seteado → default CLP. ⚠️ PENDIENTE: credenciales de producción para cobros reales. | 11/08 |
 
 ### 🟡 Prioridad Media
 
