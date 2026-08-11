@@ -26,7 +26,6 @@ import type {
   NoShowFranja,
   ResumenOcupacion,
 } from './ocupacion-grilla';
-import { HORA_MIN, HORA_MAX } from './ocupacion-grilla';
 
 // ─── Tipos ────────────────────────────────────────────
 
