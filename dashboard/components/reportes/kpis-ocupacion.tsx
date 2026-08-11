@@ -10,10 +10,6 @@ interface KPIsOcupacionProps {
   data: OcupacionReporte;
 }
 
-function indiceDia(dia: number): number {
-  return dia === 0 ? 6 : dia - 1;
-}
-
 const kpiCards = [
   {
     key: 'ocupacionGeneral',
@@ -31,7 +27,7 @@ const kpiCards = [
     iconColor: 'text-rose-500',
     format: (d: OcupacionReporte) =>
       d.resumen?.franjaPico?.ocupacion
-        ? `${DIAS_ABREV[indiceDia(d.resumen.franjaPico.dia)]} ${d.resumen.franjaPico.hora.toString().padStart(2, '0')}:00`
+        ? `${DIAS_ABREV[d.resumen.franjaPico.dia]} ${d.resumen.franjaPico.hora.toString().padStart(2, '0')}:00`
         : '\u2014',
     subtitle: (d: OcupacionReporte) =>
       d.resumen?.franjaPico?.ocupacion
@@ -45,7 +41,7 @@ const kpiCards = [
     iconColor: 'text-blue-500',
     format: (d: OcupacionReporte) =>
       d.resumen?.franjaMasFloja?.ocupacion !== undefined
-        ? `${DIAS_ABREV[indiceDia(d.resumen.franjaMasFloja.dia)]} ${d.resumen.franjaMasFloja.hora.toString().padStart(2, '0')}:00`
+        ? `${DIAS_ABREV[d.resumen.franjaMasFloja.dia]} ${d.resumen.franjaMasFloja.hora.toString().padStart(2, '0')}:00`
         : '\u2014',
     subtitle: (d: OcupacionReporte) =>
       d.resumen?.franjaMasFloja?.ocupacion !== undefined
