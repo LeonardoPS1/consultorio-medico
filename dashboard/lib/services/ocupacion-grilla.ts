@@ -22,6 +22,44 @@ export interface FranjaOcupacion {
   ocupacion: number;
 }
 
+export interface TendenciaSemanal {
+  semana: number;
+  ocupacion: number;
+  totalTurnos: number;
+}
+
+export interface NoShowFranja {
+  dia: number;
+  hora: number;
+  tasaNoShow: number;
+}
+
+export interface ResumenOcupacion {
+  ocupacionGeneral: number;
+  franjaPico: { dia: number; hora: number; ocupacion: number };
+  franjaMasFloja: { dia: number; hora: number; ocupacion: number };
+  tendenciaVsAnterior: number;
+}
+
+export interface Recomendacion {
+  tipo: 'promocionar' | 'abrir_cupos' | 'monitorear';
+  mensaje: string;
+  franja?: { dia: number; hora: number };
+}
+
+export const DIAS_LABEL = [
+  'Domingo',
+  'Lunes',
+  'Martes',
+  'Miércoles',
+  'Jueves',
+  'Viernes',
+  'Sábado',
+];
+export const DIAS_ABREV = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+export const HORA_MIN = 8;
+export const HORA_MAX = 20;
+
 export interface OcupacionReporte {
   /** Franjas con al menos 1 turno en la ventana */
   franjas: FranjaOcupacion[];
@@ -34,6 +72,9 @@ export interface OcupacionReporte {
   /** Turnos por día (para contextualizar el heatmap) */
   totalPorDia: { dia: number; total: number }[];
   _demo?: boolean;
+  tendencias?: TendenciaSemanal[];
+  noShowPorFranja?: NoShowFranja[];
+  resumen?: ResumenOcupacion;
 }
 
 // ─── Constantes ─────────────────────────────────────────
@@ -105,4 +146,45 @@ export function construirGrillaOcupacion(reporte: OcupacionReporte): number[][] 
     grilla[f.dia][f.hora] = f.ocupacion;
   }
   return grilla;
+}
+
+/**
+ *
+ * @param data
+ */
+export function generarRecomendaciones(data: OcupacionReporte): Recomendacion[] {
+  const recs: Recomendacion[] = [];
+  if (!data.franjas.length) return recs;
+
+  for (const f of data.franjas) {
+    if (f.ocupacion <= 0.2 && f.total > 0) {
+      recs.push({
+        tipo: 'promocionar',
+        mensaje: `${DIAS_LABEL[f.dia]} ${f.hora.toString().padStart(2, '0')}:00 tiene solo ${Math.round(f.ocupacion * 100)}% de ocupación. Promocioná este horario.`,
+        franja: { dia: f.dia, hora: f.hora },
+      });
+    }
+    if (f.ocupacion >= 0.85) {
+      recs.push({
+        tipo: 'abrir_cupos',
+        mensaje: `${DIAS_LABEL[f.dia]} ${f.hora.toString().padStart(2, '0')}:00 está saturado al ${Math.round(f.ocupacion * 100)}%. Considerá abrir más cupos.`,
+        franja: { dia: f.dia, hora: f.hora },
+      });
+    }
+  }
+
+  if (data.tendencias && data.tendencias.length >= 4) {
+    const recientes = data.tendencias.slice(-4);
+    const primera = recientes[0].ocupacion;
+    const ultima = recientes[recientes.length - 1].ocupacion;
+    if (primera > 0 && (ultima - primera) / primera > 0.3) {
+      recs.push({
+        tipo: 'monitorear',
+        mensaje:
+          'La ocupación creció más del 30% en las últimas 4 semanas. Monitoreá la capacidad.',
+      });
+    }
+  }
+
+  return recs.slice(0, 5);
 }
