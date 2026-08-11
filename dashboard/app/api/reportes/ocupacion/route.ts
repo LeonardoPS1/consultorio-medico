@@ -7,12 +7,14 @@ import { calcularOcupacionFranjas, getDemoOcupacion } from '@/lib/services/ocupa
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/reportes/ocupacion?demo=true|false&semanas=12
+ * GET /api/reportes/ocupacion?demo=true|false&semanas=12&sucursalId=&medicoId=
  *
  * Devuelve el mapa de calor de ocupación por franja horaria (últimas
  * 12 semanas por defecto). Si ?demo=true (default), devuelve datos demo
  * realistas. Si ?demo=false, calcula sobre DB real (RLS-scoped al tenant
  * actual). Si no hay turnos reales, fallback a demo con _demo:true.
+ * Filtros opcionales: sucursalId y medicoId (aditivos, no rompen el
+ * contrato existente del endpoint).
  */
 export const GET = apiHandler(async (request: NextRequest) => {
   const session = await auth();
@@ -28,6 +30,8 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const forceDemo = searchParams.get('demo') !== 'false';
   const semanasRaw = Number(searchParams.get('semanas') ?? '12');
   const semanas = Number.isFinite(semanasRaw) && semanasRaw >= 4 && semanasRaw <= 16 ? semanasRaw : 12;
+  const sucursalId = searchParams.get('sucursalId') ?? undefined;
+  const medicoId = searchParams.get('medicoId') ?? undefined;
 
   if (forceDemo) {
     const demo = getDemoOcupacion({ semanas });
@@ -35,7 +39,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
   }
 
   try {
-    const reporte = await calcularOcupacionFranjas({ semanas });
+    const reporte = await calcularOcupacionFranjas({ semanas, sucursalId, medicoId });
     if (reporte.totalTurnos === 0) {
       const demo = getDemoOcupacion({ semanas });
       return ok({ ...demo, _demo: true });
