@@ -26,6 +26,13 @@ function fmtHora(h: number): string {
   return `${h.toString().padStart(2, '0')}:00`;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ * @param root0.dia
+ * @param root0.hora
+ */
 export function PanelDetalleFranja({ data, dia, hora }: PanelDetalleFranjaProps) {
   if (dia === null || hora === null) {
     return (
@@ -40,7 +47,9 @@ export function PanelDetalleFranja({ data, dia, hora }: PanelDetalleFranjaProps)
 
   const franja = data.franjas.find((f) => f.dia === dia && f.hora === hora);
   const noShow = (data.noShowPorFranja ?? []).find((n) => n.dia === dia && n.hora === hora);
-  const nivel = franja ? nivelLabel(franja.ocupacion) : { label: '—', color: 'text-muted-foreground' };
+  const nivel = franja
+    ? nivelLabel(franja.ocupacion)
+    : { label: '—', color: 'text-muted-foreground' };
   const recs = generarRecomendaciones(data).filter(
     (r) => r.franja?.dia === dia && r.franja?.hora === hora,
   );
@@ -63,7 +72,9 @@ export function PanelDetalleFranja({ data, dia, hora }: PanelDetalleFranjaProps)
             <p className={cn('text-xl font-bold', nivel.color)}>
               {franja ? `${Math.round(franja.ocupacion * 100)}%` : '—'}
             </p>
-            <span className={cn('text-xs font-medium px-1.5 py-0.5 rounded-full bg-muted', nivel.color)}>
+            <span
+              className={cn('text-xs font-medium px-1.5 py-0.5 rounded-full bg-muted', nivel.color)}
+            >
               {nivel.label}
             </span>
           </div>
@@ -88,7 +99,9 @@ export function PanelDetalleFranja({ data, dia, hora }: PanelDetalleFranjaProps)
               Recomendación
             </p>
             {recs.map((r, i) => (
-              <p key={i} className="text-sm">{r.mensaje}</p>
+              <p key={i} className="text-sm">
+                {r.mensaje}
+              </p>
             ))}
           </div>
         )}

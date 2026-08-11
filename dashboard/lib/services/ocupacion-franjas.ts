@@ -13,40 +13,32 @@
 // filtran los turnos por sucursalId. turnos NO tiene RLS.
 // ============================================================
 
-import { sql } from 'drizzle-orm';
+import { sql, and, gte, ne, isNull, inArray, eq } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 import { turnos, sucursales } from '@/drizzle/schema';
 import { db } from '@/lib/db';
 import { getTenantId } from '@/lib/request-context';
 import { setTenantContext } from '@/lib/rls';
+import type {
+  FranjaOcupacion,
+  OcupacionReporte,
+  TendenciaSemanal,
+  NoShowFranja,
+  ResumenOcupacion,
+} from './ocupacion-grilla';
+import { HORA_MIN, HORA_MAX } from './ocupacion-grilla';
 
 // ─── Tipos ────────────────────────────────────────────
 
-export interface FranjaOcupacion {
-  /** Día de semana 0=Domingo ... 6=Sábado (EXTRACT DOW) */
-  dia: number;
-  /** Hora exacta 0-23 */
-  hora: number;
-  /** Cantidad de turnos agendados en esa franja (excluye cancelados) */
-  total: number;
-  /** Tasa de ocupación 0-1 normalizada al máximo histórico del mismo día */
-  ocupacion: number;
-}
-
-export interface OcupacionReporte {
-  /** Franjas con al menos 1 turno en la ventana */
-  franjas: FranjaOcupacion[];
-  /** Máximo histórico por día (para normalización en front) */
-  maxPorDia: { dia: number; max: number }[];
-  /** Total de turnos considerados en la ventana */
-  totalTurnos: number;
-  /** Semanas analizadas (default 12) */
-  semanas: number;
-  /** Turnos por día (para contextualizar el heatmap) */
-  totalPorDia: { dia: number; total: number }[];
-  _demo?: boolean;
-}
-
-// ─── Constantes ───────────────────────────────────────
+export type {
+  FranjaOcupacion,
+  OcupacionReporte,
+  TendenciaSemanal,
+  NoShowFranja,
+  ResumenOcupacion,
+  Recomendacion,
+} from './ocupacion-grilla';
+export { DIAS_LABEL, DIAS_ABREV, HORA_MIN, HORA_MAX } from './ocupacion-grilla';
 
 export const SEMANAS_DEFAULT = 12;
 export const DIAS_IGNORADOS = ['cancelada'];
@@ -65,19 +57,20 @@ export const DIAS_IGNORADOS = ['cancelada'];
  * La ocupación de cada franja = total_franja / max(total del mismo día),
  * de modo que el día con más demanda tiene la franja en 1.0 y las
  * franjas flojas tienden a 0.
- * @param opts - Opciones: sucursalId opcional, semanas a analizar (default 12)
+ * @param opts - Opciones: sucursalId, medicoId opcionales, semanas a analizar (default 12)
  * @param opts.sucursalId
+ * @param opts.medicoId
  * @param opts.semanas
  */
 export async function calcularOcupacionFranjas(opts?: {
   sucursalId?: string;
+  medicoId?: string;
   semanas?: number;
 }): Promise<OcupacionReporte> {
   const semanas = opts?.semanas ?? SEMANAS_DEFAULT;
   const desde = new Date();
   desde.setDate(desde.getDate() - semanas * 7);
 
-  // ─── Resolver sucursales del tenant actual ───────────
   let sucursalIds: string[] | undefined;
   if (opts?.sucursalId) {
     sucursalIds = [opts.sucursalId];
@@ -91,32 +84,35 @@ export async function calcularOcupacionFranjas(opts?: {
     }
   }
 
-  // ─── Agregar turnos por (día, hora) ──────────────────
-  const rows = await db.execute(sql`
-    SELECT
-      EXTRACT(DOW FROM ${turnos.fechaHora})::int AS dia,
-      EXTRACT(HOUR FROM ${turnos.fechaHora})::int AS hora,
-      COUNT(*)::int AS total
-    FROM ${turnos}
-    WHERE ${turnos.fechaHora} >= ${desde}
-      AND ${turnos.deletedAt} IS NULL
-      AND ${turnos.estado} <> 'cancelada'
-      AND ${turnos.sucursalId} IN ${sucursalIds}
-    GROUP BY 1, 2
-  `);
+  const conditions: SQL[] = [
+    gte(turnos.fechaHora, desde),
+    isNull(turnos.deletedAt),
+    ne(turnos.estado, 'cancelada'),
+    inArray(turnos.sucursalId, sucursalIds),
+  ];
+  if (opts?.medicoId) {
+    conditions.push(eq(turnos.medicoId, opts.medicoId));
+  }
 
-  const franjas = (rows as unknown as Array<{
-    dia: number;
-    hora: number;
-    total: number;
-  }>).map((r) => ({ dia: r.dia, hora: r.hora, total: Number(r.total) }));
+  const rows = await db
+    .select({
+      dia: sql<number>`EXTRACT(DOW FROM ${turnos.fechaHora})::int`,
+      hora: sql<number>`EXTRACT(HOUR FROM ${turnos.fechaHora})::int`,
+      total: sql<number>`COUNT(*)::int`,
+    })
+    .from(turnos)
+    .where(and(...conditions))
+    .groupBy(sql`1`, sql`2`);
+
+  const franjas: FranjaOcupacion[] = (rows as unknown as Array<{
+    dia: number; hora: number; total: number;
+  }>).map((r) => ({ dia: r.dia, hora: r.hora, total: Number(r.total), ocupacion: 0 }));
 
   const totalTurnos = franjas.reduce((acc, f) => acc + f.total, 0);
   if (totalTurnos === 0) {
     return { franjas: [], maxPorDia: [], totalTurnos: 0, semanas, totalPorDia: [] };
   }
 
-  // ─── Normalizar al máximo histórico por día ──────────
   const maxPorDia = Array.from({ length: 7 }, (_, dia) => {
     const deDia = franjas.filter((f) => f.dia === dia);
     return { dia, max: deDia.length > 0 ? Math.max(...deDia.map((f) => f.total)) : 0 };
@@ -128,18 +124,130 @@ export async function calcularOcupacionFranjas(opts?: {
   });
 
   const mapaMax = new Map(maxPorDia.map((m) => [m.dia, m.max]));
+  for (const f of franjas) {
+    f.ocupacion = mapaMax.get(f.dia) ? f.total / (mapaMax.get(f.dia) as number) : 0;
+  }
 
-  const franjasNormalizadas: FranjaOcupacion[] = franjas.map((f) => ({
-    ...f,
-    ocupacion: mapaMax.get(f.dia) ? f.total / (mapaMax.get(f.dia) as number) : 0,
-  }));
+  const [tendencias, noShowPorFranja, resumen] = await Promise.all([
+    calcularTendencias(sucursalIds, desde, opts?.medicoId),
+    calcularNoShowPorFranja(sucursalIds, desde, opts?.medicoId),
+    Promise.resolve(calcularResumen(franjas)),
+  ]);
 
   return {
-    franjas: franjasNormalizadas,
+    franjas,
     maxPorDia,
     totalTurnos,
     semanas,
     totalPorDia,
+    tendencias,
+    noShowPorFranja,
+    resumen,
+  };
+}
+
+async function calcularTendencias(
+  sucursalIds: string[],
+  desde: Date,
+  medicoId?: string,
+): Promise<TendenciaSemanal[]> {
+  const conditions: SQL[] = [
+    gte(turnos.fechaHora, desde),
+    isNull(turnos.deletedAt),
+    ne(turnos.estado, 'cancelada'),
+    inArray(turnos.sucursalId, sucursalIds),
+  ];
+  if (medicoId) {
+    conditions.push(eq(turnos.medicoId, medicoId));
+  }
+
+  const rows = await db
+    .select({
+      semana: sql<number>`EXTRACT(WEEK FROM ${turnos.fechaHora})::int`,
+      total: sql<number>`COUNT(*)::int`,
+    })
+    .from(turnos)
+    .where(and(...conditions))
+    .groupBy(sql`1`)
+    .orderBy(sql`1`);
+
+  if (rows.length === 0) return [];
+
+  const semanaMin = rows[0].semana;
+  const mapped: TendenciaSemanal[] = (rows as unknown as Array<{ semana: number; total: number }>).map((r) => ({
+    semana: r.semana - semanaMin + 1,
+    ocupacion: 0,
+    totalTurnos: Number(r.total),
+  }));
+
+  const maxSemanal = Math.max(...mapped.map((m) => m.totalTurnos), 1);
+
+  for (const m of mapped) {
+    m.ocupacion = m.totalTurnos / maxSemanal;
+  }
+
+  return mapped;
+}
+
+async function calcularNoShowPorFranja(
+  sucursalIds: string[],
+  desde: Date,
+  medicoId?: string,
+): Promise<NoShowFranja[]> {
+  const conditions: SQL[] = [
+    gte(turnos.fechaHora, desde),
+    isNull(turnos.deletedAt),
+    inArray(turnos.sucursalId, sucursalIds),
+  ];
+  if (medicoId) {
+    conditions.push(eq(turnos.medicoId, medicoId));
+  }
+
+  const rows = await db
+    .select({
+      dia: sql<number>`EXTRACT(DOW FROM ${turnos.fechaHora})::int`,
+      hora: sql<number>`EXTRACT(HOUR FROM ${turnos.fechaHora})::int`,
+      total: sql<number>`COUNT(*)::int`,
+      noShow: sql<number>`COUNT(*) FILTER (WHERE ${turnos.estado} = 'no_asistio')::int`,
+    })
+    .from(turnos)
+    .where(and(...conditions))
+    .groupBy(sql`1`, sql`2`);
+
+  return (rows as unknown as Array<{ dia: number; hora: number; total: number; noShow: number }>)
+    .filter((r) => r.total > 0)
+    .map((r) => ({
+      dia: r.dia,
+      hora: r.hora,
+      tasaNoShow: Number(r.noShow) / Number(r.total),
+    }));
+}
+
+function calcularResumen(
+  franjas: FranjaOcupacion[],
+): ResumenOcupacion {
+  if (!franjas.length) {
+    return {
+      ocupacionGeneral: 0,
+      franjaPico: { dia: 0, hora: 0, ocupacion: 0 },
+      franjaMasFloja: { dia: 0, hora: 0, ocupacion: 0 },
+      tendenciaVsAnterior: 0,
+    };
+  }
+
+  const conTurnos = franjas.filter((f) => f.total > 0);
+  const ocupacionGeneral = conTurnos.length > 0
+    ? conTurnos.reduce((s, f) => s + f.ocupacion, 0) / conTurnos.length
+    : 0;
+
+  const pico = franjas.reduce((max, f) => (f.ocupacion > max.ocupacion ? f : max), franjas[0]);
+  const floja = conTurnos.reduce((min, f) => (f.ocupacion < min.ocupacion ? f : min), conTurnos[0] || franjas[0]);
+
+  return {
+    ocupacionGeneral: Math.round(ocupacionGeneral * 100) / 100,
+    franjaPico: { dia: pico.dia, hora: pico.hora, ocupacion: pico.ocupacion },
+    franjaMasFloja: { dia: floja.dia, hora: floja.hora, ocupacion: floja.ocupacion },
+    tendenciaVsAnterior: 0,
   };
 }
 
@@ -191,6 +299,18 @@ export function getDemoOcupacion(opts?: { semanas?: number }): OcupacionReporte 
     semanas,
     totalPorDia,
     _demo: true,
+    tendencias: Array.from({ length: semanas }, (_, i) => ({
+      semana: i + 1,
+      ocupacion: 0.45 + Math.sin(i * 0.8) * 0.25 + Math.round(Math.random() * 2 - 1) * 0.1,
+      totalTurnos: 20 + Math.round(Math.random() * 10),
+    })),
+    noShowPorFranja: [],
+    resumen: {
+      ocupacionGeneral: 0.58,
+      franjaPico: { dia: 4, hora: 10, ocupacion: 0.92 },
+      franjaMasFloja: { dia: 2, hora: 14, ocupacion: 0.15 },
+      tendenciaVsAnterior: 0.12,
+    },
   };
 }
 
@@ -215,11 +335,13 @@ export function construirGrillaOcupacion(reporte: OcupacionReporte): number[][] 
  * @param opts
  * @param opts.sucursalId
  * @param opts.tenantId
+ * @param opts.medicoId
  * @param opts.semanas
  */
 export async function calcularOcupacionTenant(opts?: {
   sucursalId?: string;
   tenantId?: string;
+  medicoId?: string;
   semanas?: number;
 }): Promise<OcupacionReporte> {
   if (opts?.tenantId && opts.tenantId !== getTenantId()) {

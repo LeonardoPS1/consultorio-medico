@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
 import { Lightbulb, TrendingUp, CalendarPlus, Eye } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
+import { useMemo } from 'react';
 import { generarRecomendaciones } from '@/lib/services/ocupacion-grilla';
 import type { OcupacionReporte } from '@/lib/services/ocupacion-grilla';
 import { cn } from '@/lib/utils';
@@ -29,6 +29,11 @@ const iconColorMap = {
   monitorear: 'text-amber-500',
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ */
 export function RecomendacionesOcupacion({ data }: RecomendacionesOcupacionProps) {
   const reduceMotion = useReducedMotion();
 
