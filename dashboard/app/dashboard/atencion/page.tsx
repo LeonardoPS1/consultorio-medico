@@ -11,34 +11,22 @@ export default async function AtencionPage() {
 
   let merged: Turno[] = [];
   try {
-    const hoy = new Date().toISOString().split('T')[0];
+    const turnosAtencion = await turnosService.listParaAtencion();
 
-    const [turnosHoy, turnosEnAtencion] = await Promise.all([
-      turnosService.list(hoy),
-      turnosService.list(undefined, 'en_atencion'),
-    ]);
-
-    const todosIds = new Set<string>();
-    merged = [...(turnosHoy?.data || []), ...(turnosEnAtencion?.data || [])]
-      .filter((t) => {
-        if (todosIds.has(t.id)) return false;
-        todosIds.add(t.id);
-        return true;
-      })
-      .map((t) => ({
-        id: t.id,
-        hora: t.hora,
-        fecha: t.fecha,
-        paciente: t.paciente,
-        pacienteId: t.pacienteId ?? undefined,
-        tipo: t.tipo,
-        tipoConsulta: t.tipoConsulta ?? undefined,
-        medico: t.medico,
-        medicoId: t.medicoId ?? undefined,
-        estado: t.estado as TurnoEstado,
-        inicioAtencionAt: t.inicioAtencionAt,
-        linkVideollamada: t.linkVideollamada ?? undefined,
-      }));
+    merged = (turnosAtencion || []).map((t) => ({
+      id: t.id,
+      hora: t.hora,
+      fecha: t.fecha,
+      paciente: t.paciente,
+      pacienteId: t.pacienteId ?? undefined,
+      tipo: t.tipo,
+      tipoConsulta: t.tipoConsulta ?? undefined,
+      medico: t.medico,
+      medicoId: t.medicoId ?? undefined,
+      estado: t.estado as TurnoEstado,
+      inicioAtencionAt: t.inicioAtencionAt,
+      linkVideollamada: t.linkVideollamada ?? undefined,
+    }));
   } catch (e) {
     console.error('[AtencionPage] Error al cargar turnos:', e);
   }

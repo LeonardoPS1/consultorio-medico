@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { safeError, safeLog } from '@/lib/logger';
 import { turnos, pacientes, medicos, bloqueosAgenda, ofertasTurno, turnoEstadoEnum, turnoTipoEnum } from '@/drizzle/schema';
-import { eq, and, sql, count, desc, gte, lt } from 'drizzle-orm';
+import { eq, and, or, sql, count, desc, gte, lt } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import type { CreateTurno, UpdateTurno } from '@/lib/validations';
 import { conflict, notFound, fail } from '@/lib/api-handler';
@@ -11,6 +11,7 @@ import { cache } from '@/lib/cache';
 import { telemedicinaService } from '@/lib/services/livekit-telemedicina';
 import { emitirWebhook } from '@/lib/webhook-outbox';
 import { getTenantId } from '@/lib/request-context';
+import { getZonedDayRange } from '@/lib/zoned-time';
 
 export const turnosService = {
   async list(
@@ -128,6 +129,71 @@ export const turnosService = {
       },
       10_000,
     ); // TTL 10s — turnos cambian frecuentemente
+  },
+
+  /**
+   * Lista los turnos para el tablero de Atención.
+   *
+   * El tablero debe mostrar:
+   * - Turnos del día actual en la zona horaria del consultorio (America/Santiago).
+   * - Turnos que están en atención, sin importar la fecha programada.
+   * - Turnos que fueron actualizados hoy (ej. movidos de columna), para que
+   *   los cambios persistan visualmente al recargar aunque su fecha sea otra.
+   */
+  async listParaAtencion() {
+    const { start, end } = getZonedDayRange(new Date());
+
+    const whereConditions = and(
+      sql`${turnos.deletedAt} IS NULL`,
+      or(
+        and(gte(turnos.fechaHora, start), lt(turnos.fechaHora, end)),
+        sql`${turnos.estado} = ${'en_atencion'}`,
+        gte(turnos.updatedAt, start),
+      ),
+    );
+
+    const lista = await db
+      .select({
+        id: turnos.id,
+        fecha: sql<string>`TO_CHAR(${turnos.fechaHora}, 'YYYY-MM-DD')`,
+        hora: sql<string>`TO_CHAR(${turnos.fechaHora}, 'HH24:MI')`,
+        estado: turnos.estado,
+        tipo: turnos.tipoConsulta,
+        motivo: turnos.motivo,
+        tipoConsulta: turnos.tipoConsulta,
+        linkVideollamada: turnos.linkVideollamada,
+        pacienteNombre: pacientes.nombre,
+        pacienteApellido: pacientes.apellido,
+        medicoNombre: medicos.nombre,
+        medicoId: medicos.id,
+        pacienteId: pacientes.id,
+        inicioAtencionAt: turnos.inicioAtencionAt,
+      })
+      .from(turnos)
+      .leftJoin(pacientes, eq(turnos.pacienteId, pacientes.id))
+      .leftJoin(medicos, eq(turnos.medicoId, medicos.id))
+      .where(whereConditions)
+      .orderBy(turnos.fechaHora)
+      .limit(200);
+
+    return lista.map((t) => ({
+      id: t.id,
+      hora: t.hora,
+      paciente: `${t.pacienteNombre || ''} ${t.pacienteApellido || ''}`.trim() || 'Paciente',
+      tipo: t.motivo || 'Consulta',
+      medico: t.medicoNombre || 'Medico',
+      medicoId: t.medicoId,
+      pacienteId: t.pacienteId,
+      tipoConsulta: t.tipoConsulta,
+      linkVideollamada: t.linkVideollamada,
+      estado: t.estado,
+      fecha: t.fecha,
+      inicioAtencionAt: t.inicioAtencionAt
+        ? t.inicioAtencionAt instanceof Date
+          ? t.inicioAtencionAt.toISOString()
+          : new Date(t.inicioAtencionAt).toISOString()
+        : undefined,
+    }));
   },
 
   async create(input: CreateTurno) {
