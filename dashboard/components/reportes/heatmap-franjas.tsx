@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
 import { CalendarRange, Flame } from 'lucide-react';
 import type { FranjaOcupacion, OcupacionReporte } from '@/lib/services/ocupacion-grilla';
 import { DIAS_LABEL, DIAS_ABREV, HORA_MIN, HORA_MAX } from '@/lib/services/ocupacion-grilla';
@@ -78,7 +77,6 @@ function franjaDe(data: OcupacionReporte, dia: number, hora: number): FranjaOcup
 }
 
 export function HeatmapFranjas({ data, loading }: HeatmapFranjasProps) {
-  const reduceMotion = useReducedMotion();
   const [seleccion, setSeleccion] = useState<{ dia: number; hora: number } | null>(null);
 
   const horas = useMemo(
