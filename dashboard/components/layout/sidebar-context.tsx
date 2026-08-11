@@ -10,6 +10,11 @@ interface SidebarContextValue {
 
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -24,6 +29,9 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ *
+ */
 export function useSidebar(): SidebarContextValue {
   const ctx = useContext(SidebarContext);
   if (!ctx) throw new Error('useSidebar must be used within SidebarProvider');

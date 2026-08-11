@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Bell, Calendar, MessageSquare, Syringe, AlertTriangle, Eye, EyeOff, Trash2 } from 'lucide-react';
-import { formatRelative } from '@/lib/utils';
-import { useNotifications } from '@/lib/hooks/use-notifications';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +11,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
+import { useNotifications } from '@/lib/hooks/use-notifications';
+import { formatRelative } from '@/lib/utils';
 
 const iconosNotificacion: Record<string, React.ElementType> = {
   turno: Calendar,
@@ -48,18 +48,9 @@ const labelsCortos: Record<string, string> = {
 
 const ordenBadges = ['urgencia', 'receta', 'turno', 'mensaje', 'sistema'] as const;
 
-interface NotificacionData {
-  id: string;
-  titulo: string;
-  descripcion: string | null;
-  tipo: 'turno' | 'mensaje' | 'receta' | 'urgencia' | 'sistema';
-  prioridad: number;
-  leido: boolean;
-  href: string | null;
-  createdAt: string;
-  deletedAt: string | null;
-}
-
+/**
+ *
+ */
 export function NotificationsDropdown() {
   const router = useRouter();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -74,14 +65,6 @@ export function NotificationsDropdown() {
     eliminar: eliminarNotificacion,
     marcarTodasLeidas,
   } = useNotifications();
-
-  const handleNotifClick = (notif: NotificacionData) => {
-    if (!notif.leido) marcarLeida(notif.id);
-    if (notif.href) {
-      router.push(notif.href);
-      setNotifOpen(false);
-    }
-  };
 
   return (
     <DropdownMenu open={notifOpen} onOpenChange={setNotifOpen}>

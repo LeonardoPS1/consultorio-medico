@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { Loader2, CheckCircle2, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -12,10 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, CheckCircle2, Sparkles } from 'lucide-react';
 // Nota: checkbox nativo estilizado (shadcn Checkbox no está instalado en este proyecto)
 
 interface RegistroModalProps {
@@ -27,6 +27,13 @@ interface RegistroModalProps {
 
 type Step = 'form' | 'loading' | 'success' | 'error';
 
+/**
+ *
+ * @param root0
+ * @param root0.open
+ * @param root0.onOpenChange
+ * @param root0.planId
+ */
 export function RegistroExpressModal({ open, onOpenChange, planId }: RegistroModalProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>('form');

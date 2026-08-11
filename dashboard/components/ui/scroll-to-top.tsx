@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { ArrowUp, ArrowDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useEffect, useState } from 'react';
 
+/**
+ *
+ */
 export function ScrollToTopButton() {
   const [show, setShow] = useState(false);
   const [atBottom, setAtBottom] = useState(false);

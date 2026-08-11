@@ -1,28 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { playDelete } from '@/lib/sound';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   ShieldAlert,
   UserPlus,
@@ -32,11 +9,34 @@ import {
   Sparkles,
   Trash2,
   KeyRound,
-  Eye,
   EyeOff,
 } from 'lucide-react';
-import { FEATURE_PLAN, getFeatureRequiredPlan } from '@/lib/features';
+import { useState, useEffect, useCallback } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { FEATURE_PLAN } from '@/lib/features';
 import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
+import { PAID_PLANS } from '@/lib/planes';
+import { playDelete } from '@/lib/sound';
 
 interface Usuario {
   id: string;
@@ -49,8 +49,6 @@ interface Usuario {
   activo2fa: boolean;
   createdAt: string;
 }
-
-import { PAID_PLANS } from '@/lib/planes';
 const PLANES = ['free', ...PAID_PLANS] as const;
 const ROLES = ['medico', 'admin', 'secretaria'] as const;
 
@@ -79,6 +77,9 @@ function RolBadge({ rol }: { rol: string }) {
   return <Badge variant={variants[rol] || 'secondary'}>{labels[rol] || rol}</Badge>;
 }
 
+/**
+ *
+ */
 export default function AdminUsuariosTab() {
   const { data: session } = useEffectiveSession();
   const sessionUserId = session?.user?.id;
@@ -150,7 +151,9 @@ export default function AdminUsuariosTab() {
   }, []);
 
   useEffect(() => {
-    fetchUsers();
+    void (async () => {
+      await fetchUsers();
+    })();
   }, [fetchUsers]);
 
   // ─── Crear usuario ───────────────────────────────────────

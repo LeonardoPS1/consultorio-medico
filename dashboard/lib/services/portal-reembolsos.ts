@@ -6,10 +6,10 @@
  * No requiere migración.
  */
 
-import { db } from '@/lib/db';
-import { portalPagos, turnos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import { safeLog, safeWarn, safeError } from '@/lib/logger';
+import { portalPagos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { safeLog, safeError } from '@/lib/logger';
 
 // ─── Política de reembolso ───────────────────────────────────
 
@@ -24,6 +24,9 @@ export interface RefundPolicy {
   refundAfterAppointment: boolean;
 }
 
+/**
+ *
+ */
 export function getRefundPolicy(): RefundPolicy {
   return {
     fullRefundCutoffHours: Number(process.env.REFUND_FULL_CUTOFF_HOURS) || 24,
@@ -44,6 +47,9 @@ export interface RefundCalculation {
 /**
  * Calcula el reembolso según política y tiempo restante.
  * Acepta Date o string (postgres-js puede devolver timestamp como string).
+ * @param fechaHoraTurno
+ * @param montoPagado
+ * @param policy
  */
 export function calcularReembolso(
   fechaHoraTurno: Date | string,
@@ -108,6 +114,9 @@ export function calcularReembolso(
 
 /**
  * Procesa el reembolso vía MercadoPago y registra en metadata.
+ * @param turnoId
+ * @param pacienteId
+ * @param refund
  */
 export async function procesarReembolso(
   turnoId: string,

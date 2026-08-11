@@ -1,13 +1,12 @@
 import { NextRequest } from 'next/server';
-import { blacklistService } from '@/lib/services/blacklist';
-import { apiHandler, ok, created } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { createBlacklistSchema } from '@/lib/validations';
+import { apiHandler, ok, created } from '@/lib/api-handler';
+import { blacklistService } from '@/lib/services/blacklist';
+import { parseBody , createBlacklistSchema } from '@/lib/validations';
 
 // GET /api/blacklist?activo=&pacienteId=&search=&limit=&offset=
 export const GET = apiHandler(async (request: NextRequest) => {
-  const session = await requireAuth();
+  await requireAuth();
   const { searchParams } = new URL(request.url);
 
   const activo = searchParams.has('activo') ? searchParams.get('activo') === 'true' : undefined;
@@ -34,7 +33,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
 
 // POST /api/blacklist
 export const POST = apiHandler(async (request: NextRequest) => {
-  const session = await requireAuth();
+  await requireAuth();
   const body = await parseBody(request, createBlacklistSchema);
   const nueva = await blacklistService.create(body);
   return created(nueva);

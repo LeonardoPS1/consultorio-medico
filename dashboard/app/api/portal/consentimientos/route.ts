@@ -2,12 +2,15 @@
  * GET /api/portal/consentimientos — Lista consentimientos del paciente
  * Protegido: requiere cookie portal_session
  */
-import { NextResponse } from 'next/server';
-import { getPortalSession } from '@/lib/portal-auth';
-import { db } from '@/lib/db';
-import { consentimientos, medicos } from '@/drizzle/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { consentimientos, medicos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { getPortalSession } from '@/lib/portal-auth';
 
+/**
+ *
+ */
 export async function GET() {
   const session = await getPortalSession();
   if (!session) {

@@ -5,8 +5,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import { FileText, Download, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
@@ -23,6 +23,9 @@ function formatDate(date: string): string {
   return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+/**
+ *
+ */
 export default function PortalCertificadosPage() {
   const [certificados, setCertificados] = useState<Certificado[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +89,7 @@ export default function PortalCertificadosPage() {
               }}
               onMouseEnter={() => setHoveredLink(c.id)}
               onMouseLeave={() => setHoveredLink(null)}
-              title="Ver certificado"
+              title="Ver certificado" rel="noreferrer"
             >
               <Download className="h-3.5 w-3.5" />
               PDF

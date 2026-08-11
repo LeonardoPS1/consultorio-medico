@@ -19,10 +19,10 @@
 
 'use client';
 
+import { Loader2, Search, User } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Search, User } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────
 
@@ -46,6 +46,19 @@ export interface PacienteSearchComboboxProps {
   onLoadingChange?: (loading: boolean) => void;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.value
+ * @param root0.onChange
+ * @param root0.placeholder
+ * @param root0.label
+ * @param root0.error
+ * @param root0.disabled
+ * @param root0.size
+ * @param root0.autoFocus
+ * @param root0.onLoadingChange
+ */
 export function PacienteSearchCombobox({
   value,
   onChange,

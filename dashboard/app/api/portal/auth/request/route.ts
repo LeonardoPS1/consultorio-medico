@@ -14,6 +14,10 @@ import {
 } from '@/lib/portal-auth';
 import { portalAuthRequestSchema } from '@/lib/validations';
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: NextRequest) {
   const parsed = portalAuthRequestSchema.safeParse(await request.json());
   if (!parsed.success) {

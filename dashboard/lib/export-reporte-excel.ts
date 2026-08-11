@@ -12,6 +12,10 @@ export interface ExcelExportInput {
   fecha: string;
 }
 
+/**
+ *
+ * @param input
+ */
 export function exportReporteExcel(input: ExcelExportInput): void {
   const { periodo, datos, intenciones, pacientesObraSocial, fecha } = input;
   const periodoLabel = periodo === 'semana' ? 'Semanal' : periodo === 'mes' ? 'Mensual' : 'Anual';

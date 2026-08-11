@@ -1,7 +1,7 @@
+import type { Novedad } from '@/drizzle/schema';
 import type { ChangelogEntry } from '@/lib/changelog-data';
 import { CHANGELOG } from '@/lib/changelog-data';
 import { listarNovedades, importarChangelogEstatico } from '@/lib/services/novedades';
-import type { Novedad } from '@/drizzle/schema';
 import { NovedadesClient } from './novedades-client';
 
 export const dynamic = 'force-dynamic';
@@ -21,19 +21,24 @@ function novedadToChangelog(n: Novedad): ChangelogEntry & { tipo: string } {
   };
 }
 
+/**
+ * Página de novedades del sistema.
+ */
 export default async function NovedadesPage() {
+  let itemsChangelog: (ChangelogEntry & { tipo: string })[];
+
   try {
     await importarChangelogEstatico();
 
-    let entries = await listarNovedades();
+    const entries = await listarNovedades();
 
-    if (entries.length > 0) {
-      const changelog = entries.map(novedadToChangelog);
-      return <NovedadesClient changelog={changelog} />;
-    }
-
-    return <NovedadesClient changelog={CHANGELOG.map((e) => ({ ...e, tipo: 'feature' as const }))} />;
+    itemsChangelog =
+      entries.length > 0
+        ? entries.map(novedadToChangelog)
+        : CHANGELOG.map((e) => ({ ...e, tipo: 'feature' as const }));
   } catch {
-    return <NovedadesClient changelog={CHANGELOG.map((e) => ({ ...e, tipo: 'feature' as const }))} />;
+    itemsChangelog = CHANGELOG.map((e) => ({ ...e, tipo: 'feature' as const }));
   }
+
+  return <NovedadesClient changelog={itemsChangelog} />;
 }

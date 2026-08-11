@@ -30,6 +30,7 @@ export async function GET() {
  *
  * Registra una respuesta de encuesta de un paciente.
  * Body: { pacienteId, turnoId?, puntaje, comentario? }
+ * @param request
  */
 export async function POST(request: NextRequest) {
   try {

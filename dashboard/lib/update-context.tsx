@@ -60,6 +60,11 @@ const UpdateContext = createContext<UpdateContextType>({
 // Provider
 // ============================================================
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function UpdateProvider({ children }: { children: React.ReactNode }) {
   const [updateReady, setUpdateReady] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
@@ -172,6 +177,9 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
 // Hook
 // ============================================================
 
+/**
+ *
+ */
 export function useUpdate() {
   return useContext(UpdateContext);
 }

@@ -1,13 +1,17 @@
-import { NextResponse } from 'next/server';
-import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
-import { db } from '@/lib/db';
-import { pacientes, sucursales, usuarios, solicitudesDatos } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
-import { sendEmail } from '@/lib/services/email';
+import { NextResponse } from 'next/server';
+import { pacientes, sucursales, usuarios, solicitudesDatos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { safeWarn } from '@/lib/logger';
+import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
+import { sendEmail } from '@/lib/services/email';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   if (!validateCSRFOrigin(request)) {
     return NextResponse.json({ error: 'Origen no válido' }, { status: 403 });

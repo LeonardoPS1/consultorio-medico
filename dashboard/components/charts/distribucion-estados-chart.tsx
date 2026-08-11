@@ -40,6 +40,11 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   );
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ */
 export default function DistribucionEstadosChart({ data }: Props) {
   const chartData = data.map((d) => ({
     ...d,

@@ -6,6 +6,10 @@
 import { NextResponse } from 'next/server';
 import { clearPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 
+/**
+ *
+ * @param req
+ */
 export async function POST(req: Request) {
   if (!validateCSRFOrigin(req)) {
     return NextResponse.json({ error: 'Origen no válido' }, { status: 403 });

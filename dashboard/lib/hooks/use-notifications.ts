@@ -94,6 +94,9 @@ async function fetchPreferencias(): Promise<PreferenciasNotificaciones> {
 // Hook
 // ============================================================
 
+/**
+ *
+ */
 export function useNotifications() {
   const queryClient = useQueryClient();
 

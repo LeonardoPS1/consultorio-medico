@@ -1,9 +1,9 @@
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { servicios } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
+import { NextRequest } from 'next/server';
+import { servicios } from '@/drizzle/schema';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 import { parseBody, updateServicioSchema } from '@/lib/validations';
 
 function extractId(request: NextRequest): string {
@@ -29,7 +29,7 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
     fail('Envia al menos un campo');
   }
 
-  const updateData: Record<string, any> = { updatedAt: new Date() };
+  const updateData: Partial<typeof servicios.$inferInsert> = { updatedAt: new Date() };
   if (body.nombre !== undefined) updateData.nombre = body.nombre;
   if (body.descripcion !== undefined) updateData.descripcion = body.descripcion;
   if (body.duracionMinutos !== undefined) updateData.duracionMinutos = body.duracionMinutos;

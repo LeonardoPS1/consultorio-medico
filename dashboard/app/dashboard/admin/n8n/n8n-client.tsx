@@ -1,11 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import {
   Loader2,
   Network,
@@ -17,8 +13,12 @@ import {
   ArrowRight,
   Clock,
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { useState, useEffect, useCallback } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -90,6 +90,11 @@ interface Props {
   initialStats: N8nStats;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.initialStats
+ */
 export default function N8nClient({ initialStats }: Props) {
   const [tab, setTab] = useState('workflows');
 
@@ -213,16 +218,21 @@ export default function N8nClient({ initialStats }: Props) {
   // ─── Effects ────────────────────────────────────────────
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch functions set loading state
     fetchWorkflows();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch functions set loading state
     fetchExecutions();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch functions set loading state
     fetchStats();
   }, [fetchWorkflows, fetchExecutions, fetchStats]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchLogs sets loading state
     if (tab === 'logs') fetchLogs();
   }, [tab, fetchLogs]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchErrors sets loading state
     if (tab === 'errors') fetchErrors();
   }, [tab, fetchErrors]);
 

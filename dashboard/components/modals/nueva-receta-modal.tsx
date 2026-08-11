@@ -1,18 +1,7 @@
 'use client';
 
+import { Search, Loader2, ShieldAlert, AlertTriangle } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,10 +12,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Search, Loader2, Check, ChevronDown, ShieldAlert, AlertTriangle } from 'lucide-react';
-import { formatPhone } from '@/lib/utils';
-import { useCanAccess } from '@/lib/features';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import type { AlertaClinica } from '@/lib/farmaco-interacciones';
+import { useCanAccess } from '@/lib/features';
+import { formatPhone } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -53,6 +53,13 @@ interface NuevaRecetaModalProps {
 
 // ─── Component ─────────────────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.open
+ * @param root0.onOpenChange
+ * @param root0.onSubmit
+ */
 export function NuevaRecetaModal({ open, onOpenChange, onSubmit }: NuevaRecetaModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<PacienteResult[]>([]);

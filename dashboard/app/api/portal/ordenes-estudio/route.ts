@@ -6,6 +6,9 @@ import { NextResponse } from 'next/server';
 import { getPortalSession } from '@/lib/portal-auth';
 import { ordenesEstudioService } from '@/lib/services/ordenes-estudio';
 
+/**
+ *
+ */
 export async function GET() {
   const session = await getPortalSession();
   if (!session) {

@@ -6,9 +6,9 @@ import fs from 'fs';
 import path from 'path';
 import { sql, desc, eq, and } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
+import { auditoriaAccesos } from '@/drizzle/schema';
 import { db } from '@/lib/db';
 import { safeError } from '@/lib/logger';
-import { auditoriaAccesos } from '@/drizzle/schema';
 
 const AUDIT_DIR = path.join(process.cwd(), '.data');
 const AUDIT_FILE = path.join(AUDIT_DIR, 'auditoria.json');
@@ -52,6 +52,17 @@ export type EntidadAudit =
 
 /**
  * Registra un evento de auditoría
+ * @param entry
+ * @param entry.tenantId
+ * @param entry.usuarioId
+ * @param entry.usuarioEmail
+ * @param entry.usuarioNombre
+ * @param entry.accion
+ * @param entry.entidad
+ * @param entry.entidadId
+ * @param entry.detalle
+ * @param entry.ip
+ * @param entry.userAgent
  */
 export async function logAudit(entry: {
   tenantId?: string;
@@ -126,6 +137,9 @@ export async function logAudit(entry: {
 /**
  * Limpia logs de auditoría anteriores a una fecha o elimina todos.
  * Solo ejecuta en PostgreSQL (no afecta fallback JSON).
+ * @param options
+ * @param options.beforeDays
+ * @param options.all
  */
 export async function cleanAuditLogs(options: {
   beforeDays?: number;
@@ -151,6 +165,16 @@ export async function cleanAuditLogs(options: {
   }
 }
 
+/**
+ *
+ * @param options
+ * @param options.limit
+ * @param options.offset
+ * @param options.entidad
+ * @param options.accion
+ * @param options.usuarioId
+ * @param options.tenantId
+ */
 export async function getAuditLogs(options?: {
   limit?: number;
   offset?: number;

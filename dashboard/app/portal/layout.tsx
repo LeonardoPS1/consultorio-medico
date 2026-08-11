@@ -6,6 +6,11 @@ import Script from 'next/script';
 import { ClientThemeProvider } from '@/components/client-theme-provider';
 import './portal.css';
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   return (
     <>

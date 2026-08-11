@@ -15,9 +15,9 @@
 //   - Alto riesgo (70-100) → 🔴 Riesgo de ausentismo
 // ============================================================
 
-import { db } from '@/lib/db';
-import { turnos } from '@/drizzle/schema';
 import { and, eq, gte, lte, sql, count, inArray, isNull } from 'drizzle-orm';
+import { turnos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 
 // ─── Tipos ────────────────────────────────────────────
 
@@ -66,6 +66,9 @@ function calcularNivel(score: number): ScoringNivel {
 /**
  * Calcula el score de confiabilidad para un paciente específico.
  * Analiza los últimos VENTANA_DIAS días de turnos.
+ * @param pacienteId
+ * @param opts
+ * @param opts.sucursalId
  */
 export async function calcularScorePaciente(
   pacienteId: string,
@@ -205,6 +208,9 @@ export async function calcularScorePaciente(
 /**
  * Calcula score 0-100 con una sola query agregada por paciente.
  * Usa FILTER (WHERE ...) para contar múltiples condiciones sin subqueries.
+ * @param pacienteIds
+ * @param opts
+ * @param opts.sucursalId
  */
 export async function calcularScoreBulk(
   pacienteIds: string[],
@@ -308,6 +314,9 @@ export async function calcularScoreBulk(
  * Calcula el score para todos los pacientes activos de una sucursal.
  * Retorna un Map para lookup rápido.
  * Refactorizada: usa calcularScoreBulk() en vez de loop N+1.
+ * @param opts
+ * @param opts.sucursalId
+ * @param opts.limit
  */
 export async function calcularTodosLosScores(opts?: {
   sucursalId?: string;
@@ -347,6 +356,9 @@ export async function calcularTodosLosScores(opts?: {
  * Actualiza los scores de no-show para todos los turnos próximos (próximos 30 días).
  * Usa el score a nivel paciente (calculado con calcularScoreBulk) y lo asigna a cada turno.
  * Retorna cantidad de turnos actualizados.
+ * @param opts
+ * @param opts.sucursalId
+ * @param opts.diasAntelacion
  */
 export async function actualizarScoresTurnosProximos(opts?: {
   sucursalId?: string;

@@ -1,9 +1,9 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Plus, Bot, Eye, Edit3, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface PlantillaWhatsApp {
   id: string;
@@ -22,7 +22,17 @@ interface Props {
   onDelete: (p: PlantillaWhatsApp) => void;
 }
 
-export function ConfigPlantillas({ plantillas, loading, onNew, onEdit, onPreview, onDelete }: Props) {
+/**
+ *
+ * @param root0
+ * @param root0.plantillas
+ * @param root0.loading
+ * @param root0.onNew
+ * @param root0.onEdit
+ * @param root0.onPreview
+ * @param root0.onDelete
+ */
+export function ConfigPlantillas({ plantillas, loading: _loading, onNew, onEdit, onPreview, onDelete }: Props) {
   return (
     <>
       <div className="flex items-center justify-between">

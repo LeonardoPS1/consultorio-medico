@@ -9,8 +9,8 @@
  * huérfanas intencionalmente para trazabilidad — sus datos NO se borran.
  */
 
-import Link from 'next/link';
 import { ArrowLeft, ExternalLink, MessageCircle } from 'lucide-react';
+import Link from 'next/link';
 import { PortalCard } from '@/components/portal/portal-card';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +28,9 @@ const PRIMARY_BTN =
 const GHOST_BTN =
   'inline-flex items-center justify-center rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer px-5 py-2.5 h-11 w-full bg-transparent text-portal-muted-fg/60 hover:text-portal-fg active:scale-[0.97]';
 
+/**
+ *
+ */
 export default function PortalMensajesRedirectPage() {
   const waLink = whatsappLink();
 

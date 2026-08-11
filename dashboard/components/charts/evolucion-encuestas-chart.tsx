@@ -36,6 +36,11 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
   );
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ */
 export function EvolucionEncuestasChart({ data }: Props) {
   if (!data || data.length === 0) {
     return (

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { z } from 'zod';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,12 +11,11 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SISTEMAS_SALUD, ISAPRES_CHILENAS } from '@/lib/isapres';
 import { getTramos } from '@/lib/aranceles-fonasa';
+import { ISAPRES_CHILENAS } from '@/lib/isapres';
 
 interface Region {
   id: string;
@@ -44,7 +44,10 @@ const nuevoPacienteSchema = z.object({
   numeroAfiliado: z.string().optional(),
 });
 
-/** Formatea RUT chileno: 12.345.678-9 */
+/**
+ * Formatea RUT chileno: 12.345.678-9
+ * @param value
+ */
 function formatRut(value: string): string {
   const cleaned = value.replace(/[^0-9Kk]/g, '').toUpperCase();
   if (cleaned.length <= 1) return cleaned;
@@ -55,7 +58,10 @@ function formatRut(value: string): string {
   return `${withDots}-${dv}`;
 }
 
-/** Agrega prefijo +569 si el teléfono no lo tiene */
+/**
+ * Agrega prefijo +569 si el teléfono no lo tiene
+ * @param value
+ */
 function formatTelefonoChile(value: string): string {
   const digits = value.replace(/\D/g, '');
   // 9 dígitos empezando con 9 → +569 + últimos 8 dígitos
@@ -87,13 +93,19 @@ interface NuevoPacienteModalProps {
   }) => void;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.open
+ * @param root0.onOpenChange
+ * @param root0.onSubmit
+ */
 export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacienteModalProps) {
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [telefono, setTelefono] = useState('');
   const [email, setEmail] = useState('');
   const [dni, setDni] = useState('');
-  const [sistemaSalud, setSistemaSalud] = useState('particular');
   const [isapreNombre, setIsapreNombre] = useState('');
   const [prevision, setPrevision] = useState('particular');
   const [tramoFonasa, setTramoFonasa] = useState('');
@@ -145,7 +157,8 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
       const result = fieldSchema.safeParse(value);
       setErrors(prev => {
         if (result.success) {
-          const { [name]: _, ...rest } = prev;
+          const rest = { ...prev };
+          delete rest[name];
           return rest;
         }
         return { ...prev, [name]: result.error.errors[0].message };
@@ -204,7 +217,6 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
     setTelefono('');
     setEmail('');
     setDni('');
-    setSistemaSalud('particular');
     setIsapreNombre('');
     setPrevision('particular');
     setTramoFonasa('');

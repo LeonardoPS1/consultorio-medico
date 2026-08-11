@@ -6,6 +6,9 @@ export const metadata = {
   description: 'Contacto y feedback con el equipo de soporte',
 };
 
+/**
+ *
+ */
 export default function SoportePage() {
   return (
     <>

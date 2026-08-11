@@ -13,11 +13,6 @@ const METRIC_LABELS: Record<string, string> = {
   TTFB: 'Time to First Byte',
 };
 
-const METRIC_COLORS: Record<string, string> = {
-  LCP: '#6366f1', INP: '#8b5cf6', CLS: '#a855f7',
-  FCP: '#3b82f6', TTFB: '#06b6d4',
-};
-
 const METRIC_THRESHOLDS: Record<string, { good: number; poor: number }> = {
   LCP: { good: 2500, poor: 4000 },
   INP: { good: 200, poor: 500 },
@@ -38,6 +33,11 @@ interface AverageBarChartProps {
   data: Array<{ name: string; value: number; fill: string }>;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ */
 export function WebVitalsAverageBarChart({ data }: AverageBarChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
@@ -51,7 +51,7 @@ export function WebVitalsAverageBarChart({ data }: AverageBarChartProps) {
             border: '1px solid hsl(var(--border))',
             borderRadius: '8px',
           }}
-          formatter={(value: number, name: string) => [formatValue('', value), 'Promedio']}
+          formatter={(value: number, _name: string) => [formatValue('', value), 'Promedio']}
           labelFormatter={(label: string) => METRIC_LABELS[label] || label}
         />
         <Bar dataKey="value" radius={[4, 4, 0, 0]}>

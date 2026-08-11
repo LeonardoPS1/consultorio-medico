@@ -12,22 +12,21 @@
  * - Prompt compacto para respuestas más cortas
  */
 
+import { eq } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { tenants } from '@/drizzle/schema';
+import type { ConfigIa } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth'; // Ollama cold start puede tardar 25s+
 import { apiHandler, success, fail } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
+import { db } from '@/lib/db';
+import { buildContextoDB } from '@/lib/ia/asistente-context';
+import { buildSystemPrompt, buildModoPrompt } from '@/lib/ia/asistente-prompts';
+import { ollamaChat } from '@/lib/ollama';
+import { parseBody } from '@/lib/validations';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 120; // Ollama cold start puede tardar 25s+
-
-import { parseBody } from '@/lib/validations';
-import { ollamaChat } from '@/lib/ollama';
-import { buildSystemPrompt, buildModoPrompt } from '@/lib/ia/asistente-prompts';
-import { buildContextoDB } from '@/lib/ia/asistente-context';
-import { db } from '@/lib/db';
-import { tenants } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
-import { z } from 'zod';
-import type { ConfigIa } from '@/drizzle/schema';
+export const maxDuration = 120;
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 

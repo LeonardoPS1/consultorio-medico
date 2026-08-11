@@ -1,9 +1,8 @@
-import { getEffectiveSession } from '@/lib/auth-effective';
 import { redirect } from 'next/navigation';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { canAccess } from '@/lib/features';
 import { ReportesClient } from './reportes-client';
-import type { Periodo } from './types';
-import type { ReporteApiResponse } from './types';
+import type { Periodo , ReporteApiResponse } from './types';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +19,9 @@ async function fetchReportes(periodo: Periodo): Promise<ReporteApiResponse | nul
   }
 }
 
+/**
+ *
+ */
 export default async function ReportesPage() {
   const session = await getEffectiveSession();
   if (!session) redirect('/login');

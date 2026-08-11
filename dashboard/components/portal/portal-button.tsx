@@ -4,10 +4,10 @@
 
 'use client';
 
-import { cn } from '@/lib/utils';
-import { type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
+import { type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { playClick } from '@/lib/sound';
+import { cn } from '@/lib/utils';
 
 interface PortalButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -26,6 +26,18 @@ const VARIANTS: Record<string, string> = {
   ghost: 'bg-transparent text-portal-muted-fg/60',
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ * @param root0.loading
+ * @param root0.fullWidth
+ * @param root0.variant
+ * @param root0.disabled
+ * @param root0.style
+ * @param root0.className
+ * @param root0.onClick
+ */
 export function PortalButton({
   children,
   loading = false,

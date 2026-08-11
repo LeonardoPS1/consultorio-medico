@@ -13,6 +13,9 @@ import { useAsistenteIA } from '@/lib/hooks/use-asistente-ia';
 import { AsistenteFAB } from './asistente-fab';
 import { AsistentePanel } from './asistente-panel';
 
+/**
+ *
+ */
 export function AsistenteFlotante() {
   const { open, cerrar, habilitado, asistenteActivado } = useAsistenteIA();
 

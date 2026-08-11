@@ -1,11 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { bloqueosAgenda } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
+import { bloqueosAgenda } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 
 /**
  * DELETE /api/medicos/[id]/bloqueos/[bloqueoId]
  * Elimina un bloqueo de agenda.
+ * @param _request
+ * @param root0
+ * @param root0.params
  */
 export async function DELETE(
   _request: NextRequest,
@@ -31,6 +34,9 @@ export async function DELETE(
 /**
  * PATCH /api/medicos/[id]/bloqueos/[bloqueoId]
  * Actualiza un bloqueo existente (titulo, fechas, tipo).
+ * @param request
+ * @param root0
+ * @param root0.params
  */
 export async function PATCH(
   request: NextRequest,
@@ -43,7 +49,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Envia al menos un campo' }, { status: 400 });
     }
 
-    const updateData: Record<string, any> = {};
+    const updateData: Partial<typeof bloqueosAgenda.$inferInsert> = {};
     if (body.titulo !== undefined) updateData.titulo = body.titulo;
     if (body.fechaInicio) updateData.fechaInicio = new Date(body.fechaInicio);
     if (body.fechaFin) updateData.fechaFin = new Date(body.fechaFin);

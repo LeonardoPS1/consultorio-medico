@@ -8,6 +8,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPortalSession } from '@/lib/portal-auth';
 import { getReciboData, generarHTMLRecibo } from '@/lib/services/portal-recibos';
 
+/**
+ *
+ * @param _request
+ * @param root0
+ * @param root0.params
+ */
 export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
   const session = await getPortalSession();

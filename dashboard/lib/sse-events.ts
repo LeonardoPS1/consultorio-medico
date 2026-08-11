@@ -16,7 +16,14 @@ interface SSEEvent {
 let clients: SSEClient[] = [];
 let clientIdCounter = 0;
 
-/** Registra un cliente SSE conectado con su tenant (y opcionalmente userId para fan-out dirigido). */
+/**
+ * Registra un cliente SSE conectado con su tenant (y opcionalmente userId para fan-out dirigido).
+ * @param tenantId
+ * @param write
+ * @param close
+ * @param options
+ * @param options.userId
+ */
 export function addClient(
   tenantId: string,
   write: (data: string) => void,
@@ -43,16 +50,28 @@ export function addClient(
   return id;
 }
 
+/**
+ *
+ * @param id
+ */
 export function removeClient(id: string): void {
   clients = clients.filter((c) => c.id !== id);
 }
 
-/** Fan-out por tenant (reemplaza el evento original). */
+/**
+ * Fan-out por tenant (reemplaza el evento original).
+ * @param tenantId
+ * @param event
+ */
 export function emitEvent(tenantId: string, event: SSEEvent): void {
   emit((client) => client.tenantId === tenantId, event);
 }
 
-/** Fan-out dirigido a un usuario específico (mensajería interna staff). */
+/**
+ * Fan-out dirigido a un usuario específico (mensajería interna staff).
+ * @param userId
+ * @param event
+ */
 export function emitEventToUser(userId: string, event: SSEEvent): void {
   emit((client) => Boolean(client.userId && client.userId === userId), event);
 }

@@ -1,18 +1,23 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Search, Filter, ChevronLeft, ChevronRight, FileText, AlertCircle, CheckCircle, Clock, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import type { SolicitudARCO } from './types';
+import { Search, ChevronLeft, ChevronRight, FileText, AlertCircle, CheckCircle, Clock, X } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import type { SolicitudARCO, Paginacion } from './types';
 
 interface Props {
-  initialData: { solicitudes: SolicitudARCO[]; paginacion: any } | null;
+  initialData: { solicitudes: SolicitudARCO[]; paginacion: Paginacion } | null;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.initialData
+ */
 export function ArcOTab({ initialData }: Props) {
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(!initialData);

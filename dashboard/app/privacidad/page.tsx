@@ -1,6 +1,6 @@
+import { ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ShieldCheck } from 'lucide-react';
 import { Logo } from '@/components/layout/logo';
 
 export const metadata: Metadata = {
@@ -9,6 +9,9 @@ export const metadata: Metadata = {
     'Política de privacidad y protección de datos de AiCoreMed, sistema de gestión para consultorios médicos.',
 };
 
+/**
+ *
+ */
 export default function PrivacidadPage() {
   return (
     <div className="min-h-screen bg-background">

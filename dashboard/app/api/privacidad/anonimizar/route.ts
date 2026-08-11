@@ -6,20 +6,19 @@
  *
  * Anonimiza permanentemente los datos de pacientes cuyo deletedAt
  * superó el período de retención (90 días por defecto).
- *
  * @body { dias?: number } - Días de retención (default: 90)
  * @returns { anonimizados: number } - Cantidad de pacientes procesados
  */
 
 import { NextRequest } from 'next/server';
 import { apiHandler, success } from '@/lib/api-handler';
+import { withRateLimit } from '@/lib/rate-limit';
 import {
   privacidadService,
   getPeriodoRetencionConfig,
   PERIODO_RETENCION_BAJA_DIAS,
 } from '@/lib/services/privacidad';
 import { verifyRequestSecret } from '@/lib/verify-webhook-secret';
-import { withRateLimit } from '@/lib/rate-limit';
 
 const postHandler = apiHandler(async (request: NextRequest) => {
   // Verificar webhook secret (timing-safe)

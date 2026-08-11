@@ -1,16 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
 import { Loader2, ShieldCheck, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 
 interface SolicitudItem {
@@ -56,6 +56,12 @@ function EstadoBadge({ estado }: { estado: string }) {
   );
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.initialData
+ * @param root0.canView
+ */
 export function MisDatosClient({ initialData, canView }: Props) {
   const [items, setItems] = useState<SolicitudItem[]>(initialData);
   const [loading, setLoading] = useState(false);

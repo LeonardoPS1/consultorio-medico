@@ -37,6 +37,11 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   );
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ */
 export default function PrediccionDemanda({ data }: Props) {
   const maxVal = Math.max(
     ...data.map((d) => Math.max(d.real ?? 0, d.estimado ?? 0, d.max ?? 0)),

@@ -1,25 +1,30 @@
+import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
-import { Sidebar } from '@/components/layout/sidebar';
-import { Header } from '@/components/layout/header';
-import { CommandPalette } from '@/components/layout/command-palette';
-import { PatientPanel } from '@/components/layout/patient-panel';
-import { AsistenteFlotante } from '@/components/layout/asistente-flotante';
-import { ImpersonationBanner } from '@/components/layout/impersonation-banner';
-import { PatientPanelProvider } from '@/lib/hooks/use-patient-panel';
-import { AsistenteProvider } from '@/lib/hooks/use-asistente-ia';
-import { GatedContent } from '@/components/gated-content';
-import { PageTransition } from '@/components/dashboard/page-transition';
 import { ClientThemeProvider } from '@/components/client-theme-provider';
-import { LayoutConfigProvider } from '@/lib/layout-config';
 import { DashboardLayoutClient } from '@/components/dashboard/dashboard-layout-client';
 import { MainContent } from '@/components/dashboard/main-content';
+import { PageTransition } from '@/components/dashboard/page-transition';
+import { GatedContent } from '@/components/gated-content';
+import { ImpersonationProvider } from '@/components/impersonation-provider';
+import { AsistenteFlotante } from '@/components/layout/asistente-flotante';
+import { CommandPalette } from '@/components/layout/command-palette';
+import { Header } from '@/components/layout/header';
+import { ImpersonationBanner } from '@/components/layout/impersonation-banner';
+import { PatientPanel } from '@/components/layout/patient-panel';
+import { Sidebar } from '@/components/layout/sidebar';
 import { SidebarProvider } from '@/components/layout/sidebar-context';
+import { Skeleton } from '@/components/ui/skeleton';
 import { auth } from '@/lib/auth';
 import { getImpersonationSession } from '@/lib/auth-impersonation';
-import { redirect } from 'next/navigation';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ImpersonationProvider } from '@/components/impersonation-provider';
+import { AsistenteProvider } from '@/lib/hooks/use-asistente-ia';
+import { PatientPanelProvider } from '@/lib/hooks/use-patient-panel';
+import { LayoutConfigProvider } from '@/lib/layout-config';
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [session, impSession] = await Promise.all([
     auth(),

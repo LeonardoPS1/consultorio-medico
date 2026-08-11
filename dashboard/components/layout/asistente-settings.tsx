@@ -7,10 +7,9 @@
 
 'use client';
 
-import { useRef, useEffect, useCallback, useState } from 'react';
-import { MODOS_ASISTENTE, type ModoAsistente } from '@/lib/ia/asistente-prompts';
+import { MessageSquare, Users, Calendar, Pill, Power, PowerOff } from 'lucide-react';
 import { useAsistenteIA } from '@/lib/hooks/use-asistente-ia';
-import { MessageSquare, Users, Calendar, Pill, Sparkles, Power, PowerOff } from 'lucide-react';
+import { MODOS_ASISTENTE, type ModoAsistente } from '@/lib/ia/asistente-prompts';
 
 interface Props {
   modo: ModoAsistente;
@@ -24,6 +23,12 @@ const CATEGORIAS = [
   { id: 'recetas', label: 'Recetas', icon: Pill, descripcion: 'Por vencer, renovaciones' },
 ] as const;
 
+/**
+ *
+ * @param root0
+ * @param root0.modo
+ * @param root0.onModoChange
+ */
 export function AsistenteSettings({ modo, onModoChange }: Props) {
   const { toggleCategoria, silenciadas, asistenteActivado, setAsistenteActivado } = useAsistenteIA();
 

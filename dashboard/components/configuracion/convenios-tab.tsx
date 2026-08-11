@@ -1,20 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { toast } from '@/components/ui/use-toast';
 import {
   Globe,
   Plus,
@@ -25,6 +10,21 @@ import {
   Calendar,
   Building2,
 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/components/ui/use-toast';
 
 interface ConvenioItem {
   id: string;
@@ -41,6 +41,11 @@ interface ConveniosTabProps {
   isAdmin: boolean;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.isAdmin
+ */
 export default function ConveniosTab({ isAdmin }: ConveniosTabProps) {
   const [convenios, setConvenios] = useState<ConvenioItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +72,9 @@ export default function ConveniosTab({ isAdmin }: ConveniosTabProps) {
   }, []);
 
   useEffect(() => {
-    loadConvenios();
+    void (async () => {
+      await loadConvenios();
+    })();
   }, [loadConvenios]);
 
   const handleCreate = async () => {

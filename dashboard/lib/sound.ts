@@ -17,6 +17,9 @@ function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
+/**
+ *
+ */
 export function isSoundEnabled(): boolean {
   if (typeof window === 'undefined') return false;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
@@ -25,6 +28,10 @@ export function isSoundEnabled(): boolean {
   return stored !== 'false';
 }
 
+/**
+ *
+ * @param enabled
+ */
 export function setSoundEnabled(enabled: boolean): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(STORAGE_KEY, String(enabled));
@@ -55,14 +62,24 @@ function tone(
   osc.stop(ctx.currentTime + duration);
 }
 
+/**
+ *
+ */
 export function playClick(): void {
   tone(800, 0.025, 'sine', 0.06);
 }
 
+/**
+ *
+ * @param checked
+ */
 export function playToggle(checked: boolean): void {
   tone(checked ? 600 : 500, 0.02, 'sine', 0.05);
 }
 
+/**
+ *
+ */
 export function playSuccess(): void {
   const ctx = getAudioContext();
   if (!ctx || !isSoundEnabled()) return;
@@ -84,6 +101,9 @@ export function playSuccess(): void {
   });
 }
 
+/**
+ *
+ */
 export function playError(): void {
   const ctx = getAudioContext();
   if (!ctx || !isSoundEnabled()) return;
@@ -105,36 +125,60 @@ export function playError(): void {
   });
 }
 
+/**
+ *
+ */
 export function playModalOpen(): void {
   tone(400, 0.06, 'sine', 0.06, { freqEnd: 600 });
 }
 
+/**
+ *
+ */
 export function playModalClose(): void {
   tone(600, 0.05, 'sine', 0.05, { freqEnd: 350 });
 }
 
+/**
+ *
+ */
 export function playNavigate(): void {
   tone(550, 0.03, 'sine', 0.04, { freqEnd: 700, volEnd: 0.02 });
 }
 
+/**
+ *
+ */
 export function playNotification(): void {
   tone(1200, 0.08, 'sine', 0.07);
 }
 
 // ─── New sounds: more variety with different waveforms and patterns ───────────
 
+/**
+ *
+ */
 export function playHover(): void {
   tone(900, 0.015, 'sine', 0.02);
 }
 
+/**
+ *
+ */
 export function playTab(): void {
   tone(700, 0.025, 'triangle', 0.05, { freqEnd: 850 });
 }
 
+/**
+ *
+ */
 export function playSelect(): void {
   tone(500, 0.04, 'triangle', 0.05, { freqEnd: 650 });
 }
 
+/**
+ *
+ */
 export function playWarning(): void {
   const ctx = getAudioContext();
   if (!ctx || !isSoundEnabled()) return;
@@ -156,6 +200,9 @@ export function playWarning(): void {
   });
 }
 
+/**
+ *
+ */
 export function playSend(): void {
   const ctx = getAudioContext();
   if (!ctx || !isSoundEnabled()) return;
@@ -174,6 +221,9 @@ export function playSend(): void {
   });
 }
 
+/**
+ *
+ */
 export function playReceive(): void {
   const ctx = getAudioContext();
   if (!ctx || !isSoundEnabled()) return;
@@ -195,6 +245,9 @@ export function playReceive(): void {
   });
 }
 
+/**
+ *
+ */
 export function playComplete(): void {
   const ctx = getAudioContext();
   if (!ctx || !isSoundEnabled()) return;
@@ -213,10 +266,16 @@ export function playComplete(): void {
   });
 }
 
+/**
+ *
+ */
 export function playDelete(): void {
   tone(400, 0.08, 'sawtooth', 0.04, { freqEnd: 200 });
 }
 
+/**
+ *
+ */
 export function playCopy(): void {
   tone(600, 0.03, 'triangle', 0.05, { freqEnd: 800 });
 }

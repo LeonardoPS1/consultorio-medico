@@ -2,11 +2,11 @@
  * Servicio de Órdenes de Estudio (Laboratorio, Imagen, etc.)
  */
 
-import { db } from '@/lib/db';
-import { ordenesEstudio, medicos, pacientes, ordenEstudioEstadoEnum, ordenEstudioTipoEnum } from '@/drizzle/schema';
-import { eq, and, sql, count, desc, like, or } from 'drizzle-orm';
+import { eq, and, sql, count, desc } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
+import { ordenesEstudio, medicos, pacientes } from '@/drizzle/schema';
 import { notFound } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 
 export interface ListOrdenesEstudioOptions {
   limit?: number;

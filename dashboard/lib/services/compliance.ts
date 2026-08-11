@@ -1,7 +1,7 @@
-import { db } from '@/lib/db';
-import { turnos, pacientes, medicos } from '@/drizzle/schema';
 import { sql, eq, and, gte, lte, isNull } from 'drizzle-orm';
 import type { Periodo, ComplianceData, ComplianceMetricas, TiempoEsperaMes, CumplimientoMedico } from '@/app/dashboard/compliance/types';
+import { turnos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 
 const DIAS_PLAZO = 30;
 
@@ -21,6 +21,11 @@ function formatMonthLabel(d: Date): string {
   return `${meses[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+/**
+ *
+ * @param periodo
+ * @param sucursalId
+ */
 export async function getComplianceData(periodo: Periodo, sucursalId?: string): Promise<ComplianceData> {
   const { desde, hasta } = dateRange(periodo);
 
@@ -187,7 +192,11 @@ export async function getComplianceData(periodo: Periodo, sucursalId?: string): 
   };
 }
 
-export async function getDemoComplianceData(periodo: Periodo): Promise<ComplianceData> {
+/**
+ *
+ * @param _periodo
+ */
+export async function getDemoComplianceData(_periodo: Periodo): Promise<ComplianceData> {
   const tendencias: TiempoEsperaMes[] = [];
   const now = new Date();
   for (let i = 11; i >= 0; i--) {

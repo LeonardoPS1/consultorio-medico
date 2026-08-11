@@ -1,12 +1,12 @@
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { recetas } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { recetasService } from '@/lib/services/recetas';
-import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
+import { NextRequest } from 'next/server';
+import { recetas } from '@/drizzle/schema';
 import { requireAuth } from '@/lib/api-auth';
-import { parseBody, updateRecetaSchema } from '@/lib/validations';
+import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
 import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
+import { db } from '@/lib/db';
+import { recetasService } from '@/lib/services/recetas';
+import { parseBody, updateRecetaSchema } from '@/lib/validations';
 
 export const GET = apiHandler(
   async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {

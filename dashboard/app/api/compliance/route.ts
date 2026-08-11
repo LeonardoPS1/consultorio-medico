@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getComplianceData, getDemoComplianceData } from '@/lib/services/compliance';
 import type { Periodo } from '@/app/dashboard/compliance/types';
+import { getComplianceData, getDemoComplianceData } from '@/lib/services/compliance';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ *
+ * @param request
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

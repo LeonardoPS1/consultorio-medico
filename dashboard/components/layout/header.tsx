@@ -1,12 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { UpdateBadge } from '@/components/layout/update-badge';
-import { NotificationsDropdown } from '@/components/layout/header-notifications';
 import {
   Moon,
   Sun,
@@ -20,14 +13,15 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
-import { useSucursal } from '@/lib/sucursal-context';
-import { usePatientPanel } from '@/lib/hooks/use-patient-panel';
-import { useLayoutConfig } from '@/lib/layout-config';
-import { useOrganization } from '@/lib/hooks/use-organization';
+import { useState, useEffect } from 'react';
+import { NotificationsDropdown } from '@/components/layout/header-notifications';
+import { UpdateBadge } from '@/components/layout/update-badge';
 import { useSound } from '@/components/sound-provider';
-import { useAsistenteIA } from '@/lib/hooks/use-asistente-ia';
-import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,11 +30,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAsistenteIA } from '@/lib/hooks/use-asistente-ia';
+import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
+import { useOrganization } from '@/lib/hooks/use-organization';
+import { usePatientPanel } from '@/lib/hooks/use-patient-panel';
+import { useLayoutConfig } from '@/lib/layout-config';
+import { useSucursal } from '@/lib/sucursal-context';
 
 // ============================================================
 // Componente Header
 // ============================================================
 
+/**
+ *
+ */
 export function Header() {
   const { data: session } = useEffectiveSession();
   const { theme, setTheme } = useTheme();

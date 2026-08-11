@@ -1,11 +1,10 @@
+import { relations } from 'drizzle-orm';
 import {
   pgTable,
   uuid,
   varchar,
   timestamp,
-  index,
 } from 'drizzle-orm/pg-core';
-import { relations, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 
 // ============================================================
 // REGIONES DE CHILE

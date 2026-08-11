@@ -1,22 +1,20 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'motion/react';
-import { canAccess } from '@/lib/features';
-import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
-import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { playDelete } from '@/lib/sound';
-import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Ban,
+  Loader2,
+  Search,
+  ShieldAlert,
+  ShieldCheck,
+  Clock,
+} from 'lucide-react';
+import { motion } from 'motion/react';
+import { useState, useEffect, useCallback } from 'react';
+import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
+import { PageHeader } from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -26,18 +24,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/use-toast';
-import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 import {
-  Ban,
-  Loader2,
-  Search,
-  ShieldAlert,
-  ShieldCheck,
-  Clock,
-} from 'lucide-react';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/components/ui/use-toast';
+import { canAccess } from '@/lib/features';
+import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
+import { playDelete } from '@/lib/sound';
 
 interface BlacklistEntry {
   id: string;
@@ -65,13 +65,19 @@ interface Props {
   initialStats: BlacklistStats | null;
 }
 
-export function BlacklistClient({ initialData, initialTotal, initialStats }: Props) {
+/**
+ *
+ * @param root0
+ * @param root0.initialData
+ * @param root0.initialTotal
+ * @param root0.initialStats
+ */
+export function BlacklistClient({ initialData, initialStats }: Props) {
   const { data: session } = useEffectiveSession();
   const userPlan = session?.user?.plan ?? 'free';
   const canView = canAccess(userPlan, 'blacklist');
 
   const [data, setData] = useState<BlacklistEntry[]>(initialData);
-  const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
@@ -104,7 +110,6 @@ export function BlacklistClient({ initialData, initialTotal, initialStats }: Pro
       if (listRes.ok) {
         const json = await listRes.json();
         setData(json.data || []);
-        setTotal(json.total || 0);
       }
       if (statsRes.ok) {
         const json = await statsRes.json();
@@ -155,8 +160,9 @@ export function BlacklistClient({ initialData, initialTotal, initialStats }: Pro
       setCreateOpen(false);
       setForm({ pacienteId: '', motivo: '', bloqueadoHasta: '', activo: 'true' });
       fetchData();
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -175,8 +181,9 @@ export function BlacklistClient({ initialData, initialTotal, initialStats }: Pro
         description: `Paciente ${entry.activo ? 'desbloqueado' : 'bloqueado'} correctamente`,
       });
       fetchData();
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     }
   };
 
@@ -187,8 +194,9 @@ export function BlacklistClient({ initialData, initialTotal, initialStats }: Pro
       toast({ title: 'Eliminado', description: 'Entrada eliminada correctamente' });
       playDelete();
       fetchData();
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     }
   };
 

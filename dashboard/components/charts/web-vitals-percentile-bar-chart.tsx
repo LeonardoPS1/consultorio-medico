@@ -9,6 +9,11 @@ interface PercentileBarChartProps {
   data: Array<{ name: string; p50: number; p75: number; p95: number; p99: number; count: number }>;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ */
 export function WebVitalsPercentileBarChart({ data }: PercentileBarChartProps) {
   if (data.length === 0) return null;
 

@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { apiHandler, success, created } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { waitlistService } from '@/lib/services/waitlist';
 import { z } from 'zod';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, created } from '@/lib/api-handler';
+import { waitlistService } from '@/lib/services/waitlist';
+import { parseBody } from '@/lib/validations';
 
 const agregarSchema = z.object({
   pacienteId: z.string().uuid('pacienteId debe ser UUID'),

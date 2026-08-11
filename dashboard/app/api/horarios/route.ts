@@ -1,10 +1,10 @@
-import { NextRequest } from 'next/server';
-import { apiHandler, success, ok } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody, updateHorariosSchema } from '@/lib/validations';
-import { db } from '@/lib/db';
-import { horariosAtencion } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { NextRequest } from 'next/server';
+import { horariosAtencion } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, ok } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { parseBody, updateHorariosSchema } from '@/lib/validations';
 
 const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 

@@ -11,9 +11,9 @@
 // automáticamente sin aprobación explícita.
 // ============================================================
 
-import { ollamaChat } from '@/lib/ollama';
 import { CIE10_DATA } from '@/lib/cie10-data';
 import { safeError, safeWarn } from '@/lib/logger';
+import { ollamaChat } from '@/lib/ollama';
 
 export interface Cie10Sugerencia {
   codigo: string;
@@ -38,6 +38,7 @@ const MODELO = process.env.OLLAMA_MODEL || 'gemma3';
 /**
  * Extrae de forma robusta el primer array JSON de una respuesta del modelo.
  * Fallback: busca el primer `[...]` en el texto.
+ * @param content
  */
 function extraerArrayJson(content: string): unknown[] {
   if (!content) return [];
@@ -68,6 +69,7 @@ function extraerArrayJson(content: string): unknown[] {
 /**
  * Valida y normaliza una sugerencia contra el dataset CIE-10 local.
  * Si el código existe en CIE10_DATA, usa la descripción canónica.
+ * @param raw
  */
 function normalizarSugerencia(raw: unknown): Cie10Sugerencia | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -88,8 +90,10 @@ function normalizarSugerencia(raw: unknown): Cie10Sugerencia | null {
  * (sección assessment) de una nota SOAP.
  *
  * Fail-open: si Ollama falla o la respuesta no es parseable, devuelve [].
- *
  * @param assessment Texto del diagnóstico (sección A de la nota SOAP)
+ * @param contexto
+ * @param contexto.motivo
+ * @param contexto.subjetivo
  * @returns Sugerencias validadas contra CIE10_DATA (vacío si falla)
  */
 export async function sugerirCie10(
@@ -144,7 +148,7 @@ Reglas:
  *
  * Fuentes: últimas 5 notas SOAP, alergias, medicación crónica y
  * recetas vigentes. Fail-open: devuelve string vacío si falla.
- *
+ * @param datos
  * @returns Texto del resumen (o '' si falla)
  */
 export async function generarResumenLongitudinal(

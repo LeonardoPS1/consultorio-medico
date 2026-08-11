@@ -1,5 +1,5 @@
-import { db } from '@/lib/db';
 import { sql } from 'drizzle-orm';
+import { db } from '@/lib/db';
 
 export interface CheckResult {
   status: 'ok' | 'error' | 'degraded';
@@ -7,6 +7,9 @@ export interface CheckResult {
   latencyMs: number;
 }
 
+/**
+ *
+ */
 export async function checkPostgres(): Promise<CheckResult> {
   const start = Date.now();
   try {
@@ -21,6 +24,9 @@ export async function checkPostgres(): Promise<CheckResult> {
   }
 }
 
+/**
+ *
+ */
 export async function checkN8n(): Promise<CheckResult> {
   const start = Date.now();
   try {
@@ -38,6 +44,9 @@ export async function checkN8n(): Promise<CheckResult> {
   }
 }
 
+/**
+ *
+ */
 export async function checkOllama(): Promise<CheckResult> {
   const start = Date.now();
   try {
@@ -57,6 +66,9 @@ export async function checkOllama(): Promise<CheckResult> {
   }
 }
 
+/**
+ *
+ */
 export async function checkRedis(): Promise<CheckResult> {
   const start = Date.now();
   try {
@@ -72,6 +84,9 @@ export async function checkRedis(): Promise<CheckResult> {
   }
 }
 
+/**
+ *
+ */
 export async function checkTwilio(): Promise<CheckResult> {
   const start = Date.now();
   try {
@@ -97,6 +112,10 @@ export async function checkTwilio(): Promise<CheckResult> {
   }
 }
 
+/**
+ *
+ * @param error
+ */
 export function getMessage(error: unknown): string {
   if (error instanceof Error) return error.message?.slice(0, 100) || 'unknown error';
   return String(error).slice(0, 100);
@@ -107,6 +126,10 @@ export interface HealthSummary {
   checks: Record<string, CheckResult>;
 }
 
+/**
+ *
+ * @param checks
+ */
 export function summarizeHealth(checks: Record<string, CheckResult>): HealthSummary['status'] {
   const statuses = Object.values(checks).map((c) => c.status);
   if (statuses.every((s) => s === 'ok')) return 'ok';

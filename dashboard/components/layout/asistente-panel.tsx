@@ -15,18 +15,18 @@
 
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   X, Send, Loader2, Sparkles, Trash2, AlertCircle, Bot, User,
   ChevronDown, Settings, Bell, AlertTriangle, Info, ArrowRight,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { motion, AnimatePresence } from 'motion/react';
 import { useAsistenteIA } from '@/lib/hooks/use-asistente-ia';
-import { MODOS_ASISTENTE, type ModoAsistente, type AlertaProactiva } from '@/lib/ia/asistente-prompts';
+import { MODOS_ASISTENTE, type ModoAsistente, type AlertaProactiva , Sugerencia } from '@/lib/ia/asistente-prompts';
 import { AsistenteSettings } from './asistente-settings';
-import type { Sugerencia } from '@/lib/ia/asistente-prompts';
+
 
 // ─── Iconos para sugerencias ──────────────────────────────────
 const SUGERENCIA_ICONOS: Record<string, string> = {
@@ -46,6 +46,9 @@ const fadeConfig = { duration: 0.15, ease: [0.16, 1, 0.3, 1] as [number, number,
 // COMPONENTE PRINCIPAL
 // ================================================================
 
+/**
+ *
+ */
 export function AsistentePanel() {
   const {
     open,

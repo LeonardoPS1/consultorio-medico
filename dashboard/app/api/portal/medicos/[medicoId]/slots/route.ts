@@ -9,6 +9,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPortalSession } from '@/lib/portal-auth';
 import { slotsDisponibles } from '@/lib/services/portal-booking';
 
+/**
+ *
+ * @param request
+ * @param root0
+ * @param root0.params
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ medicoId: string }> },

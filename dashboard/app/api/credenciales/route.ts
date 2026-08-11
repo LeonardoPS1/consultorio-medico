@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, ok, fail } from '@/lib/api-handler';
+import { logAudit } from '@/lib/audit-log';
 import {
   getAllCredenciales,
   getAllCredencialesMasked,
@@ -9,10 +12,6 @@ import {
   SERVICIOS_CONFIG,
 } from '@/lib/credential-store';
 import { testCredentialConnection, getN8nCredentials } from '@/lib/n8n-sync';
-import { logAudit } from '@/lib/audit-log';
-import { apiHandler, ok, fail } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody, createCredencialSchema, updateCredencialSchema } from '@/lib/validations';
 
 /**
  * GET /api/credenciales

@@ -1,17 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, LogOut, X } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+import { Logo } from '@/components/layout/logo';
+import { useSidebar } from '@/components/layout/sidebar-context';
+import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Logo } from '@/components/layout/logo';
-import { SidebarNav } from '@/components/layout/sidebar-nav';
-import { ChevronLeft, ChevronRight, LogOut, X } from 'lucide-react';
-import { useSidebar } from '@/components/layout/sidebar-context';
-import { useOrganization } from '@/lib/hooks/use-organization';
 import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
+import { useOrganization } from '@/lib/hooks/use-organization';
+import { cn } from '@/lib/utils';
 
+/**
+ *
+ */
 export function Sidebar() {
   const { data: session, status } = useEffectiveSession();
   const { collapsed, setCollapsed } = useSidebar();

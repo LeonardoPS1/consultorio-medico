@@ -3,26 +3,18 @@
  * Server component con DB directo (no self-fetch).
  */
 
-import { getPortalSession } from '@/lib/portal-auth';
-import { redirect } from 'next/navigation';
-import { db } from '@/lib/db';
-import { historialMedico, medicos } from '@/drizzle/schema';
 import { eq, desc, sql } from 'drizzle-orm';
+import { redirect } from 'next/navigation';
+import { historialMedico, medicos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { getPortalSession } from '@/lib/portal-auth';
 import PortalHistorialClient from './portal-historial-client';
 
 export const dynamic = 'force-dynamic';
 
-interface HistorialEntry {
-  id: string;
-  tipo: string;
-  titulo: string;
-  descripcion: string;
-  diagnosticoCodigo: string | null;
-  diagnosticoDescripcion: string | null;
-  createdAt: string;
-  medicoNombre: string;
-}
-
+/**
+ *
+ */
 export default async function PortalHistorialPage() {
   const session = await getPortalSession();
   if (!session) redirect('/portal');

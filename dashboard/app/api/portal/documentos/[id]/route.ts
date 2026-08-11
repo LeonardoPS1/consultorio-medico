@@ -1,10 +1,16 @@
+import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
+import { documentosMedicos } from '@/drizzle/medical';
+import { db } from '@/lib/db';
 import { getPortalSession } from '@/lib/portal-auth';
 import { documentosService } from '@/lib/services/documentos';
-import { db } from '@/lib/db';
-import { documentosMedicos } from '@/drizzle/medical';
-import { eq } from 'drizzle-orm';
 
+/**
+ *
+ * @param request
+ * @param root0
+ * @param root0.params
+ */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },

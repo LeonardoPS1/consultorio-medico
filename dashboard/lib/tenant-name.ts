@@ -13,6 +13,7 @@ export const DEFAULT_TENANT_NAME =
 /**
  * Obtiene el nombre para mostrar del tenant.
  * Prioriza el argumento (desde API/DB), usa env var como fallback.
+ * @param apiName
  */
 export function resolveTenantName(apiName?: string | null): string {
   return apiName?.trim() || DEFAULT_TENANT_NAME;

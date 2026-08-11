@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { PortalCard } from '@/components/portal/portal-card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { ChevronLeft, ChevronRight, Clock, CalendarDays } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+import { PortalCard } from '@/components/portal/portal-card';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { SlotDisponible } from '@/lib/services/portal-booking';
+import { cn } from '@/lib/utils';
 
 interface SlotPickerProps {
   medicoId: string;
@@ -43,6 +43,14 @@ function formatHora(iso: string) {
   });
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.medicoId
+ * @param root0.servicioId
+ * @param root0.onSelectSlot
+ * @param root0.selectedSlot
+ */
 export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }: SlotPickerProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);

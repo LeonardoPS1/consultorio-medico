@@ -39,6 +39,11 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   );
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ */
 export default function TurnosChart({ data }: Props) {
   return (
     <div className="relative">

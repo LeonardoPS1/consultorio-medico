@@ -6,9 +6,6 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useSearchParams } from 'next/navigation';
 import {
   Phone,
   ArrowRight,
@@ -23,10 +20,13 @@ import {
   User,
   Lock,
 } from 'lucide-react';
-import { isValidPhone } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { PortalCard } from '@/components/portal/portal-card';
+import { motion, AnimatePresence } from 'motion/react';
+import { useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { PortalButton } from '@/components/portal/portal-button';
+import { PortalCard } from '@/components/portal/portal-card';
+import { Button } from '@/components/ui/button';
+import { isValidPhone } from '@/lib/utils';
 
 /* ─── Variants ─────────────────────────────────────────── */
 const fadeSlideUp = {
@@ -110,6 +110,9 @@ interface BypassPaciente {
 }
 
 /* ─── Componente principal ─────────────────────────────── */
+/**
+ *
+ */
 export default function PortalLogin() {
   const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>('landing');

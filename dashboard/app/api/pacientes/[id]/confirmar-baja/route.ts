@@ -11,8 +11,8 @@
  */
 
 import { NextRequest } from 'next/server';
-import { apiHandler, success } from '@/lib/api-handler';
 import { requireAuth, verifyPacienteAccess } from '@/lib/api-auth';
+import { apiHandler, success } from '@/lib/api-handler';
 import { privacidadService } from '@/lib/services/privacidad';
 
 export const POST = apiHandler(async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {

@@ -1,8 +1,13 @@
 'use client';
 
-import { motion } from 'motion/react';
 import { Star } from 'lucide-react';
+import { motion } from 'motion/react';
 
+/**
+ *
+ * @param root0
+ * @param root0.delay
+ */
 export function LandingStars({ delay = 0 }: { delay?: number }) {
   return (
     <div className="flex gap-0.5 mb-4">

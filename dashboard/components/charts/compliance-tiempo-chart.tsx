@@ -1,6 +1,6 @@
 'use client';
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line, ComposedChart, Legend } from 'recharts';
+import { Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line, ComposedChart, Legend } from 'recharts';
 import type { TooltipProps } from 'recharts';
 import type { TiempoEsperaMes } from '@/app/dashboard/compliance/types';
 
@@ -34,6 +34,11 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   );
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ */
 export default function ComplianceTiempoChart({ data }: Props) {
   return (
     <div className="relative">

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'motion/react';
 import { CheckCircle2, ChevronRight } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useState } from 'react';
+import { RegistroExpressModal } from '@/components/landing/registro-modal';
 import { Button } from '@/components/ui/button';
 import { PLANES_ORDERED } from '@/lib/planes';
-import { RegistroExpressModal } from '@/components/landing/registro-modal';
 
 const containerVariants = {
   hidden: {},
@@ -30,6 +30,9 @@ const floatClasses = [
   'animate-gentle-float-4',
 ];
 
+/**
+ *
+ */
 export function Pricing() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | undefined>();

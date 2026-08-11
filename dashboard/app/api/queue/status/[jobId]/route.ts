@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPdfQueue, getReminderQueue, getAnonymizationQueue } from '@/lib/queue';
 
+/**
+ *
+ * @param _request
+ * @param root0
+ * @param root0.params
+ */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> },

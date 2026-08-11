@@ -5,8 +5,8 @@
  */
 
 import { SECCIONES_AYUDA } from '@/lib/ayuda-content';
-import { AyudaClient } from './ayuda-client';
 import type { AyudaSeccion } from '@/lib/ayuda-content';
+import { AyudaClient } from './ayuda-client';
 
 const ICON_MAP: Record<string, string> = {
   Rocket: 'Rocket',
@@ -22,6 +22,9 @@ const ICON_MAP: Record<string, string> = {
   ExternalLink: 'ExternalLink',
 };
 
+/**
+ *
+ */
 export default async function AyudaPage() {
   const secciones: AyudaSeccion[] = SECCIONES_AYUDA;
 

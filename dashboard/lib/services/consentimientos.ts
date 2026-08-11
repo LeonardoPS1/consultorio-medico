@@ -4,11 +4,11 @@
  * Ley 20.584 (Chile) — Derechos y deberes de los pacientes.
  */
 
-import { db } from '@/lib/db';
-import { consentimientos, pacientes, medicos, consentimientoTipoEnum } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, like, or } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
+import { consentimientos, pacientes, medicos, consentimientoTipoEnum } from '@/drizzle/schema';
 import { notFound } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 import type { CreateConsentimiento, UpdateConsentimiento } from '@/lib/validations';
 
 export interface ListConsentimientosOptions {
@@ -39,12 +39,12 @@ export const consentimientosService = {
     if (pacienteId) condList.push(eq(consentimientos.pacienteId, pacienteId));
     if (medicoId) condList.push(eq(consentimientos.medicoId, medicoId));
     if (search)
-      condList.push(
+      {condList.push(
         or(
           like(consentimientos.titulo, `%${search}%`),
           like(consentimientos.nombrePaciente, `%${search}%`),
         ),
-      );
+      );}
 
     const where = condList.length > 0 ? and(...condList) : undefined;
 
@@ -160,7 +160,7 @@ export const consentimientosService = {
     if (input.titulo !== undefined) updateData.titulo = input.titulo;
     if (input.descripcion !== undefined) updateData.descripcion = input.descripcion;
     if (input.fechaFirma !== undefined)
-      updateData.fechaFirma = input.fechaFirma ? new Date(input.fechaFirma) : null;
+      {updateData.fechaFirma = input.fechaFirma ? new Date(input.fechaFirma) : null;}
     if (input.ipFirma !== undefined) updateData.ipFirma = input.ipFirma;
     if (input.nombrePaciente !== undefined) updateData.nombrePaciente = input.nombrePaciente;
     if (input.rutPaciente !== undefined) updateData.rutPaciente = input.rutPaciente;

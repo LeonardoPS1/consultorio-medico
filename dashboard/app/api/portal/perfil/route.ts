@@ -4,13 +4,13 @@
  * Permite editar: email, sistemaSalud, regionId, comunaId, consentimientos
  */
 
+import { eq } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
+import { pacientes } from '@/drizzle/schema';
 import { apiHandler, ok, fail } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 import { parseBody, updatePortalPerfilSchema } from '@/lib/validations';
-import { db } from '@/lib/db';
-import { pacientes } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
 
 export const PATCH = apiHandler(async (request: NextRequest) => {
   if (!validateCSRFOrigin(request)) {
@@ -28,11 +28,11 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
 
   if (body.email !== undefined && body.email !== null) updates.email = body.email;
   if (body.consentimientoWhatsapp !== undefined && body.consentimientoWhatsapp !== null)
-    updates.consentimientoWhatsapp = body.consentimientoWhatsapp;
+    {updates.consentimientoWhatsapp = body.consentimientoWhatsapp;}
   if (body.consentimientoEmail !== undefined && body.consentimientoEmail !== null)
-    updates.consentimientoEmail = body.consentimientoEmail;
+    {updates.consentimientoEmail = body.consentimientoEmail;}
   if (body.sistemaSalud !== undefined && body.sistemaSalud !== null)
-    updates.sistemaSalud = body.sistemaSalud;
+    {updates.sistemaSalud = body.sistemaSalud;}
   if (body.regionId !== undefined && body.regionId !== null) updates.regionId = body.regionId;
   if (body.comunaId !== undefined && body.comunaId !== null) updates.comunaId = body.comunaId;
 

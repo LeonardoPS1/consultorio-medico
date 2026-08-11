@@ -1,10 +1,5 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Calendar,
   Users,
@@ -15,7 +10,12 @@ import {
   RefreshCw,
   Sparkles,
 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState, useCallback } from 'react';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 // ─── Quick Actions definition ─────────────────────────────
 
@@ -54,6 +54,11 @@ interface DashboardClientProps {
 
 // ─── Component ─────────────────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.dateStr
+ */
 export function DashboardClient({ dateStr }: DashboardClientProps) {
   const router = useRouter();
   const [showNewTurno, setShowNewTurno] = useState(false);

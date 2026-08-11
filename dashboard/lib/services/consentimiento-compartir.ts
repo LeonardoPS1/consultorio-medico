@@ -1,8 +1,8 @@
-import { db } from '@/lib/db';
-import { consentimientoCompartir } from '@/drizzle/schema';
 import { eq, and, sql, lte } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
+import { consentimientoCompartir } from '@/drizzle/schema';
 import { notFound } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 
 export interface ListConsentimientoOptions {
   pacienteId?: string;

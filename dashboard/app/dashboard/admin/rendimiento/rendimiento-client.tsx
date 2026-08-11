@@ -1,7 +1,19 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  Activity, Loader2, AlertCircle, BarChart3, PieChart as PieChartIcon,
+  Clock, Gauge, Smartphone, TrendingUp, TrendingDown, Minus,
+  Download, RefreshCw, Thermometer, Table as TableIcon,
+} from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { PageHeader } from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const WebVitalsLineChart = dynamic(
   () => import('@/components/charts/web-vitals-line-chart').then((m) => ({ default: m.WebVitalsLineChart })),
@@ -15,18 +27,6 @@ const WebVitalsPercentileBarChart = dynamic(
   () => import('@/components/charts/web-vitals-percentile-bar-chart').then((m) => ({ default: m.WebVitalsPercentileBarChart })),
   { ssr: false },
 );
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Activity, Loader2, AlertCircle, BarChart3, PieChart as PieChartIcon,
-  Clock, Gauge, Smartphone, TrendingUp, TrendingDown, Minus,
-  Download, RefreshCw, Thermometer, Table as TableIcon,
-} from 'lucide-react';
-import { PageHeader } from '@/components/page-header';
 
 // ─── Types ─────────────────────────────────────────────────
 
@@ -145,6 +145,9 @@ interface HeatmapRow { hour: number; name: string; avgValue: number; count: numb
 
 // ─── Main Component ────────────────────────────────────────
 
+/**
+ *
+ */
 export function WebVitalsClient() {
   const [period, setPeriod] = useState<Period>('24h');
   const [section, setSection] = useState<Section>('all');
@@ -177,18 +180,6 @@ export function WebVitalsClient() {
   // Recent + by-URL
   const [recent, setRecent] = useState<RecentEntry[]>([]);
   const [byUrl, setByUrl] = useState<ByUrlRow[]>([]);
-
-  // ─── Auto-refresh ──────────────────────────────────────
-  useEffect(() => {
-    if (autoRefresh) {
-      intervalRef.current = setInterval(() => {
-        fetchData();
-      }, 30000);
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [autoRefresh, period, section]);
 
   // ─── Fetch all data ────────────────────────────────────
   const fetchData = useCallback(async () => {
@@ -238,6 +229,18 @@ export function WebVitalsClient() {
     }
   }, [period, section]);
 
+  // ─── Auto-refresh ──────────────────────────────────────
+  useEffect(() => {
+    if (autoRefresh) {
+      intervalRef.current = setInterval(() => {
+        fetchData();
+      }, 30000);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [autoRefresh, period, section, fetchData]);
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -269,7 +272,7 @@ export function WebVitalsClient() {
   // Timeline: transform to { bucket, LCP, INP, CLS, FCP, TTFB } per bucket
   const timelineBuckets = Array.from(new Set(timeline.map((t) => t.bucket))).sort();
   const timelineChartData = timelineBuckets.map((bucket) => {
-    const point: Record<string, any> = { bucket };
+    const point: Record<string, string | number | null> = { bucket };
     for (const metric of ['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as const) {
       const entry = timeline.find((t) => t.bucket === bucket && t.name === metric);
       point[metric] = entry ? entry.avgValue : null;
@@ -278,7 +281,6 @@ export function WebVitalsClient() {
   });
 
   // Heatmap unique hours and metrics
-  const heatHours = Array.from(new Set(heatmap.map((h) => h.hour))).sort((a, b) => a - b);
   const heatMetrics = ['LCP', 'INP', 'CLS', 'FCP', 'TTFB'];
 
   return (
@@ -801,10 +803,6 @@ export function WebVitalsClient() {
                         </thead>
                         <tbody>
                           {heatMetrics.map((metric) => {
-                            const maxForMetric = Math.max(
-                              ...heatmap.filter((h) => h.name === metric).map((h) => h.avgValue),
-                              0.001,
-                            );
                             return (
                               <tr key={metric}>
                                 <td className="font-medium px-2 py-1.5 text-xs whitespace-nowrap" title={METRIC_LABELS[metric] || metric}>

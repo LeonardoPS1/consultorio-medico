@@ -13,8 +13,8 @@
  * - La env var N8N_BASE_URL debe apuntar al n8n interno
  */
 
-import { safeLog, safeWarn } from '@/lib/logger';
 import { anonymizeNombreGCal, anonymizeTelefono } from '@/lib/anonymize';
+import { safeLog, safeWarn } from '@/lib/logger';
 
 // ─── Tipos ─────────────────────────────────────────────────
 
@@ -37,6 +37,7 @@ export interface GCalSyncPayload {
 /**
  * Envía una solicitud de sync al workflow de Google Calendar en n8n.
  * Fire-and-forget: timeout de 5s, no lanza error.
+ * @param payload
  */
 export async function syncTurnoToGCal(payload: GCalSyncPayload): Promise<void> {
   try {
@@ -70,6 +71,16 @@ export async function syncTurnoToGCal(payload: GCalSyncPayload): Promise<void> {
 
 /**
  * Construye el payload para el webhook de n8n con los datos disponibles.
+ * @param params
+ * @param params.action
+ * @param params.turnoId
+ * @param params.googleCalendarEventId
+ * @param params.fechaHora
+ * @param params.duracionMinutos
+ * @param params.pacienteNombre
+ * @param params.pacienteTelefono
+ * @param params.medicoNombre
+ * @param params.motivo
  */
 export function buildGCalPayload(params: {
   action: GCalSyncAction;

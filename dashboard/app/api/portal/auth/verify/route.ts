@@ -33,6 +33,10 @@ if (typeof setInterval !== 'undefined') {
   }, VERIFY_RATE_WINDOW_MS);
 }
 
+/**
+ *
+ * @param request
+ */
 export async function GET(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')

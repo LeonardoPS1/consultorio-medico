@@ -1,7 +1,7 @@
-import { db } from '@/lib/db';
-import { safeWarn, safeError } from '@/lib/logger';
-import { workflowLogs, workflowErrors } from '@/drizzle/schema';
 import { desc, eq, and, gte, lte, count } from 'drizzle-orm';
+import { workflowLogs, workflowErrors } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { safeWarn } from '@/lib/logger';
 
 const N8N_BASE_URL = process.env.N8N_BASE_URL || 'http://172.18.0.1:5678';
 const N8N_API_KEY = process.env.N8N_API_KEY || '';
@@ -55,11 +55,19 @@ async function n8nFetch<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/**
+ *
+ */
 export async function fetchWorkflows(): Promise<N8nWorkflow[]> {
   const data = await n8nFetch<{ data: N8nWorkflow[] }>('/api/v1/workflows');
   return data?.data ?? [];
 }
 
+/**
+ *
+ * @param limit
+ * @param workflowId
+ */
 export async function fetchExecutions(limit = 50, workflowId?: string): Promise<N8nExecution[]> {
   let path = `/api/v1/executions?limit=${Math.min(limit, 100)}`;
   if (workflowId) path += `&workflowId=${workflowId}`;
@@ -67,10 +75,23 @@ export async function fetchExecutions(limit = 50, workflowId?: string): Promise<
   return data?.data ?? [];
 }
 
+/**
+ *
+ */
 export async function fetchHealth(): Promise<N8nHealth> {
   return n8nFetch<N8nHealth>('/healthz');
 }
 
+/**
+ *
+ * @param input
+ * @param input.workflowId
+ * @param input.workflowName
+ * @param input.executionId
+ * @param input.nivel
+ * @param input.mensaje
+ * @param input.metadata
+ */
 export async function logWorkflowExecution(input: {
   workflowId: string;
   workflowName?: string;
@@ -93,6 +114,16 @@ export async function logWorkflowExecution(input: {
   return result;
 }
 
+/**
+ *
+ * @param params
+ * @param params.limit
+ * @param params.offset
+ * @param params.workflowId
+ * @param params.nivel
+ * @param params.desde
+ * @param params.hasta
+ */
 export async function getWorkflowLogs(params: {
   limit?: number;
   offset?: number;
@@ -123,6 +154,13 @@ export async function getWorkflowLogs(params: {
   return { logs: rows, total: Number(totalResult?.total ?? 0) };
 }
 
+/**
+ *
+ * @param params
+ * @param params.limit
+ * @param params.offset
+ * @param params.workflowId
+ */
 export async function getWorkflowErrors(params: {
   limit?: number;
   offset?: number;
@@ -147,6 +185,9 @@ export async function getWorkflowErrors(params: {
   return { errors: rows, total: Number(totalResult?.total ?? 0) };
 }
 
+/**
+ *
+ */
 export async function getN8nStats() {
   let n8nReachable = false;
   try {

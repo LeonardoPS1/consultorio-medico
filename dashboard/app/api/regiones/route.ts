@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { regiones } from '@/drizzle/schema';
 import { asc } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { regiones } from '@/drizzle/schema';
 import { cache } from '@/lib/cache';
+import { db } from '@/lib/db';
 
 // Datos estáticos (cambian una vez por década) — cache de 24hs
 export const dynamic = 'force-dynamic';

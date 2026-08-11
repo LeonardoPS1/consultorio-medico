@@ -1,11 +1,11 @@
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody, updateMedicoSchema } from '@/lib/validations';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { medicos } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { parseBody, updateMedicoSchema } from '@/lib/validations';
 
 async function requireMedicoAccess(medicoId: string) {
   const session = await requireAuth();
@@ -35,7 +35,7 @@ export const PATCH = apiHandler(
 
     const body = await parseBody(request, medicoPatchSchema);
 
-    const updateData: Record<string, any> = { updatedAt: new Date() };
+    const updateData: Partial<typeof medicos.$inferInsert> = { updatedAt: new Date() };
     if (body.nombre !== undefined) updateData.nombre = body.nombre;
     if (body.especialidad !== undefined) updateData.especialidad = body.especialidad;
     if (body.email !== undefined) updateData.email = body.email;
@@ -43,7 +43,7 @@ export const PATCH = apiHandler(
     if (body.whatsapp !== undefined) updateData.whatsapp = body.whatsapp;
     if (body.matricula !== undefined) updateData.matricula = body.matricula;
     if (body.duracionTurnoMinutos !== undefined)
-      updateData.duracionTurnoMinutos = body.duracionTurnoMinutos;
+      {updateData.duracionTurnoMinutos = body.duracionTurnoMinutos;}
     if (body.activo !== undefined) updateData.activo = body.activo;
     if (body.horarios !== undefined) updateData.horarios = body.horarios;
 

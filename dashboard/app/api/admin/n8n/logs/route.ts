@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getEffectiveSession } from '@/lib/auth-effective';
 import { getWorkflowLogs } from '@/lib/services/n8n-monitor';
 
+/**
+ *
+ * @param request
+ */
 export async function GET(request: NextRequest) {
   const session = await getEffectiveSession();
   if (!session?.user || session.user.role !== 'admin') {

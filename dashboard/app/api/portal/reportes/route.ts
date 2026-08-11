@@ -12,12 +12,15 @@
  * - ultimaVisita: fecha de la última visita
  */
 
-import { NextResponse } from 'next/server';
-import { getPortalSession } from '@/lib/portal-auth';
-import { db } from '@/lib/db';
-import { turnos, recetas, medicos, recetaEstadoEnum } from '@/drizzle/schema';
 import { eq, and, desc, sql, count } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { turnos, recetas, medicos, recetaEstadoEnum } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { getPortalSession } from '@/lib/portal-auth';
 
+/**
+ *
+ */
 export async function GET() {
   const session = await getPortalSession();
   if (!session) {

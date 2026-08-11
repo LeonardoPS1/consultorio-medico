@@ -1,10 +1,13 @@
-import { getEffectiveSession } from '@/lib/auth-effective';
 import { redirect } from 'next/navigation';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { turnosService } from '@/lib/services/turnos';
 import { AtencionClient, type Turno, type TurnoEstado } from './atencion-client';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ *
+ */
 export default async function AtencionPage() {
   const session = await getEffectiveSession();
   if (!session) redirect('/login');

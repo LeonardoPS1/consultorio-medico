@@ -18,6 +18,10 @@ export interface RegionConfigDisplay {
   regiones: RegionEntry[];
 }
 
+/**
+ *
+ * @param pais
+ */
 export function getRegionConfig(pais?: string): RegionConfigDisplay {
   const paisValido = (pais === 'AR' ? 'AR' : 'CL') as PaisId;
   const cfg = PAISES[paisValido];
@@ -31,11 +35,21 @@ export function getRegionConfig(pais?: string): RegionConfigDisplay {
   };
 }
 
+/**
+ *
+ * @param cantidad
+ * @param pais
+ */
 export function formatMoneda(cantidad: number, pais?: string): string {
   const cfg = getRegionConfig(pais);
   return `${cfg.moneda.simbolo} ${cantidad.toFixed(cfg.moneda.decimales).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 }
 
+/**
+ *
+ * @param numero
+ * @param pais
+ */
 export function formatDocumentoId(numero: string, pais?: string): string {
   const cfg = getRegionConfig(pais);
   // Simple formatter — strips non-digits and applies basic format

@@ -1,7 +1,7 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { format, formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 import {
   Star,
   StarHalf,
@@ -11,8 +11,8 @@ import {
   Meh,
   Stethoscope,
 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Respuesta {
   id: string;
@@ -48,6 +48,11 @@ function formatFecha(fecha: string) {
   return <span title={format(date, "d 'de' MMM 'a las' HH:mm", { locale: es })}>{distancia}</span>;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.respuestas
+ */
 export function EncuestasClient({ respuestas }: { respuestas: Respuesta[] }) {
   if (respuestas.length === 0) {
     return (

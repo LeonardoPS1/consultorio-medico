@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Fuse from 'fuse.js';
-import type { CommandItem } from '@/lib/command-palette-data';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface SearchResult {
   id: string;
@@ -23,11 +22,9 @@ const DEBOUNCE_MS = 250;
 const MIN_QUERY_LENGTH = 2;
 
 // Shared fuse.js cache across hook instances
-let sharedPatientCache: SearchResult[] = [];
 let fuseInstance: Fuse<SearchResult> | null = null;
 
 function initFuse(data: SearchResult[]) {
-  sharedPatientCache = data;
   fuseInstance = new Fuse(data, {
     keys: [
       { name: 'label', weight: 0.5 },
@@ -39,6 +36,9 @@ function initFuse(data: SearchResult[]) {
   });
 }
 
+/**
+ *
+ */
 export function useCommandSearch(): UseCommandSearchReturn {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);

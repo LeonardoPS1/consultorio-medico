@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { preferenciasNotificaciones } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { notificacionesService } from '@/lib/services/notificaciones';
-import { apiHandler, success, created, ok, fail } from '@/lib/api-handler';
+import { NextRequest, NextResponse } from 'next/server';
+import { preferenciasNotificaciones } from '@/drizzle/schema';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, created, ok, fail } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { notificacionesService } from '@/lib/services/notificaciones';
 import { createNotificacionSchema } from '@/lib/validations';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +22,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
 
   // Si hay ?preferencias=true, devolver solo preferencias (backward compat)
   if (searchParams.get('preferencias') === 'true') {
-    let prefs = await db
+    const prefs = await db
       .select()
       .from(preferenciasNotificaciones)
       .where(eq(preferenciasNotificaciones.usuarioId, userId))
@@ -152,9 +152,8 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
   if (action === 'create') {
     const parsed = createNotificacionSchema.parse(body);
-    const { usuarioId: _uid, ...data } = parsed;
     const nueva = await notificacionesService.create({
-      ...data,
+      ...parsed,
       usuarioId: userId,
     });
     return created(nueva);

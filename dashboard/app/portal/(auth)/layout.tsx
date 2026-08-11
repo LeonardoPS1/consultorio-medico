@@ -6,18 +6,23 @@
 
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import PortalNav from './portal-nav';
-import { PortalContent } from './portal-content';
-import { PortalThemeToggle } from '@/components/portal/theme-toggle';
 import { PortalLogoutButton } from '@/components/portal/logout-button';
-import { getPortalSession, checkPortalFeatureAccess } from '@/lib/portal-auth';
+import { PortalThemeToggle } from '@/components/portal/theme-toggle';
 import { safeWarn } from '@/lib/logger';
+import { getPortalSession, checkPortalFeatureAccess } from '@/lib/portal-auth';
+import { PortalContent } from './portal-content';
+import PortalNav from './portal-nav';
 
 export const metadata = {
   title: 'Portal del Paciente — AicoreMed',
   description: 'Accedé a tus turnos, recetas e historial médico',
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export default async function PortalAuthLayout({ children }: { children: React.ReactNode }) {
   const session = await getPortalSession();
   if (!session) redirect('/portal');

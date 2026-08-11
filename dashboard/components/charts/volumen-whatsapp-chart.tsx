@@ -50,6 +50,11 @@ const CustomLegend = ({ payload }: DefaultLegendContentProps) => {
   );
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ */
 export default function VolumenWhatsAppChart({ data }: Props) {
   const maxVal = Math.max(...data.flatMap((d) => [d.recibidos, d.enviados]), 1);
 

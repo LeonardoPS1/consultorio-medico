@@ -2,6 +2,9 @@ import { headers } from 'next/headers';
 import { getTenantBranding } from '@/lib/services/tenant';
 import { hexToHsl } from '@/lib/tenant-config';
 
+/**
+ *
+ */
 export async function TenantProvider() {
   const hdrs = await headers();
   const tenantId = hdrs.get('x-tenant-id') || undefined;

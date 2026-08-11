@@ -1,13 +1,17 @@
-import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import { eq } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { usuarios } from '@/drizzle/schema';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { usuarios } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
 import { changePasswordSchema } from '@/lib/validations';
 
 // POST /api/auth/change-password
 // Cambia la contraseña del usuario autenticado
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   try {
     const session = await auth();

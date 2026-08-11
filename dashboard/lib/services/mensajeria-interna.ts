@@ -13,7 +13,6 @@
  */
 
 import { and, asc, count, desc, eq, or, sql } from 'drizzle-orm';
-import { db } from '@/lib/db';
 import {
   conversacionesInternas,
   mensajesInternos,
@@ -22,6 +21,7 @@ import {
   turnos,
 } from '@/drizzle/schema';
 import { notFound, fail } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 import { notificacionesService } from '@/lib/services/notificaciones';
 import { emitEventToUser } from '@/lib/sse-events';
 
@@ -40,7 +40,11 @@ export interface NuevaConversacionInput {
 
 // ─── Helpers de pertenencia ───────────────────────────────────
 
-/** Verifica que el usuario sea participante (A o B) de la conversación. */
+/**
+ * Verifica que el usuario sea participante (A o B) de la conversación.
+ * @param conversacionId
+ * @param usuarioId
+ */
 async function requireParticipante(conversacionId: string, usuarioId: string) {
   const [conv] = await db
     .select()
@@ -60,7 +64,13 @@ async function requireParticipante(conversacionId: string, usuarioId: string) {
   return conv;
 }
 
-/** Identifica al otro participante de la conversación. */
+/**
+ * Identifica al otro participante de la conversación.
+ * @param conv
+ * @param conv.participanteAId
+ * @param conv.participanteBId
+ * @param usuarioId
+ */
 function otroParticipante(conv: { participanteAId: string; participanteBId: string }, usuarioId: string) {
   return conv.participanteAId === usuarioId ? conv.participanteBId : conv.participanteAId;
 }
@@ -78,6 +88,10 @@ export interface ConversacionConContexto {
   noLeidos: number;
 }
 
+/**
+ *
+ * @param usuarioId
+ */
 export async function listarConversaciones(usuarioId: string): Promise<ConversacionConContexto[]> {
   const convs = await db
     .select({
@@ -172,6 +186,9 @@ export async function listarConversaciones(usuarioId: string): Promise<Conversac
 /**
  * Crea una conversación 1:1, o reutiliza una existente del mismo par que no esté
  * anclada a otro contexto. Valida que el participante sea del mismo tenant.
+ * @param usuarioId
+ * @param tenantId
+ * @param input
  */
 export async function crearConversacion(
   usuarioId: string,
@@ -273,6 +290,8 @@ export interface MensajeConAutor {
 /**
  * Lista mensajes de la conversación y marca como leídos los recibidos.
  * Consultar la conversación equivale a leerla (mismo patrón que el chat del portal).
+ * @param conversacionId
+ * @param usuarioId
  */
 export async function listarMensajes(conversacionId: string, usuarioId: string): Promise<MensajeConAutor[]> {
   await requireParticipante(conversacionId, usuarioId);
@@ -336,6 +355,10 @@ export async function listarMensajes(conversacionId: string, usuarioId: string):
 /**
  * Envía un mensaje: inserta, actualiza la conversación, notifica al destinatario
  * (con mención/urgente) y emite SSE dirigido al usuario destinatario.
+ * @param conversacionId
+ * @param usuarioId
+ * @param tenantId
+ * @param input
  */
 export async function enviarMensaje(
   conversacionId: string,
@@ -485,7 +508,10 @@ async function notificarMenciones(opts: {
   }
 }
 
-/** Extrae menciones @nombre del contenido (soporta nombres con espacios). */
+/**
+ * Extrae menciones @nombre del contenido (soporta nombres con espacios).
+ * @param contenido
+ */
 function extraerMenciones(contenido: string): string[] {
   const matches = contenido.match(/(^|\s)@([A-Za-zÁÉÍÓÚÑáéíóúñ\s']+?)(?=[,.!?;:)]|\s|$)/g) || [];
   return matches
@@ -493,7 +519,11 @@ function extraerMenciones(contenido: string): string[] {
     .filter((m) => m.length > 0);
 }
 
-/** Compara nombres normalizados (ignora mayúsculas, tildes leves y espacios). */
+/**
+ * Compara nombres normalizados (ignora mayúsculas, tildes leves y espacios).
+ * @param nombre
+ * @param mencion
+ */
 function coincideNombre(nombre: string, mencion: string): boolean {
   const normalize = (s: string) =>
     s
@@ -510,7 +540,10 @@ function coincideNombre(nombre: string, mencion: string): boolean {
 
 // ─── Conteo para el badge de navegación ───────────────────────
 
-/** Total de mensajes no leídos del usuario (recibidos, de todas sus conversaciones). */
+/**
+ * Total de mensajes no leídos del usuario (recibidos, de todas sus conversaciones).
+ * @param usuarioId
+ */
 export async function getNoLeidosTotales(usuarioId: string): Promise<number> {
   const convs = await db
     .select({ id: conversacionesInternas.id, participanteAId: conversacionesInternas.participanteAId })
@@ -548,6 +581,11 @@ export async function getNoLeidosTotales(usuarioId: string): Promise<number> {
 
 // ─── Staff disponible para iniciar conversación ───────────────
 
+/**
+ *
+ * @param tenantId
+ * @param excluirUsuarioId
+ */
 export async function listarStaff(tenantId: string, excluirUsuarioId: string) {
   return db
     .select({ id: usuarios.id, nombre: usuarios.nombre, rol: usuarios.rol })

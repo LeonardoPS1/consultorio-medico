@@ -4,6 +4,9 @@ import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+/**
+ *
+ */
 export function PortalLogoutButton() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);

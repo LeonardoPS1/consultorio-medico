@@ -1,3 +1,4 @@
+import { safeLog, safeWarn, safeError } from '@/lib/logger';
 import {
   sendMessage as sendChatwootMessage,
   getActiveMessagingChannel,
@@ -5,11 +6,15 @@ import {
   getOrCreateConversation,
   getInboxId,
 } from '@/lib/services/chatwoot';
-import { safeLog, safeWarn, safeError } from '@/lib/logger';
 
 /**
  * Envía un mensaje WhatsApp al canal activo (Chatwoot o Twilio legacy).
  * Detecta automáticamente según CANAL_MENSAJERIA.
+ * @param params
+ * @param params.to
+ * @param params.body
+ * @param params.pacienteId
+ * @param params.conversationId
  */
 export async function sendWhatsApp(params: {
   to: string;

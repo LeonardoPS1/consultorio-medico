@@ -1,8 +1,6 @@
 import { Queue, type QueueOptions } from 'bullmq';
 import Redis from 'ioredis';
-import { getRedis } from '@/lib/redis';
-import { safeLog, safeWarn, safeError } from '@/lib/logger';
-import { captureError } from '@/lib/glitchtip';
+import { safeWarn } from '@/lib/logger';
 
 function createBullConnection(): Redis | null {
   if (!process.env.REDIS_URL) return null;
@@ -39,6 +37,9 @@ function ensureRedis(): boolean {
   return !!process.env.REDIS_URL;
 }
 
+/**
+ *
+ */
 export function getPdfQueue(): Queue | null {
   if (!ensureRedis()) return null;
   if (!_pdfQueue) {
@@ -49,6 +50,9 @@ export function getPdfQueue(): Queue | null {
   return _pdfQueue;
 }
 
+/**
+ *
+ */
 export function getReminderQueue(): Queue | null {
   if (!ensureRedis()) return null;
   if (!_reminderQueue) {
@@ -59,6 +63,9 @@ export function getReminderQueue(): Queue | null {
   return _reminderQueue;
 }
 
+/**
+ *
+ */
 export function getAnonymizationQueue(): Queue | null {
   if (!ensureRedis()) return null;
   if (!_anonymizationQueue) {
@@ -69,6 +76,11 @@ export function getAnonymizationQueue(): Queue | null {
   return _anonymizationQueue;
 }
 
+/**
+ *
+ * @param name
+ * @param data
+ */
 export async function enqueuePdfGeneration(name: string, data: Record<string, unknown>) {
   const queue = getPdfQueue();
   if (!queue) {
@@ -78,6 +90,11 @@ export async function enqueuePdfGeneration(name: string, data: Record<string, un
   return queue.add(name, data);
 }
 
+/**
+ *
+ * @param name
+ * @param data
+ */
 export async function enqueueReminders(name: string, data: Record<string, unknown>) {
   const queue = getReminderQueue();
   if (!queue) {
@@ -87,6 +104,11 @@ export async function enqueueReminders(name: string, data: Record<string, unknow
   return queue.add(name, data);
 }
 
+/**
+ *
+ * @param name
+ * @param data
+ */
 export async function enqueueAnonymization(name: string, data: Record<string, unknown>) {
   const queue = getAnonymizationQueue();
   if (!queue) {

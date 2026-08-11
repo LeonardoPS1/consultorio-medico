@@ -6,6 +6,9 @@ import { NextResponse } from 'next/server';
 import { getPortalSession } from '@/lib/portal-auth';
 import { listarPaquetesActivos, getSuscripcionesPaciente } from '@/lib/services/portal-paquetes';
 
+/**
+ *
+ */
 export async function GET() {
   const session = await getPortalSession();
   if (!session) {

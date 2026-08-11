@@ -1,15 +1,15 @@
+import { eq, desc, and , sql } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
-import { getPortalSession } from '@/lib/portal-auth';
+import { recetas, documentosMedicos, sucursales , pacientes, turnos , solicitudesDatos } from '@/drizzle/schema';
 import { db } from '@/lib/db';
-import { pacientes, turnos } from '@/drizzle/schema';
-import { recetas, documentosMedicos, sucursales } from '@/drizzle/schema';
-import { eq, desc, and } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
-import { solicitudesDatos } from '@/drizzle/schema';
 import { safeWarn } from '@/lib/logger';
+import { getPortalSession } from '@/lib/portal-auth';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ *
+ */
 export async function GET() {
   const session = await getPortalSession();
   if (!session) {

@@ -1,10 +1,14 @@
+import { eq, and, desc } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { notasSoap, pacientes, medicos } from '@/drizzle/schema';
-import { eq, and, sql, desc } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
+import { db } from '@/lib/db';
 import { transcripcionService } from '@/lib/services/transcripcion';
 
+/**
+ *
+ * @param _request
+ */
 export async function GET(_request: NextRequest) {
   try {
     const session = await auth();
@@ -47,6 +51,10 @@ export async function GET(_request: NextRequest) {
   }
 }
 
+/**
+ *
+ * @param request
+ */
 export async function PATCH(request: NextRequest) {
   try {
     const session = await auth();

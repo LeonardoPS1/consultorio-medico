@@ -6,8 +6,8 @@
 'use client';
 
 import { ClipboardList, Stethoscope, FileText } from 'lucide-react';
-import { PortalCard } from '@/components/portal/portal-card';
 import { PortalBadge } from '@/components/portal/portal-badge';
+import { PortalCard } from '@/components/portal/portal-card';
 
 interface HistorialEntry {
   id: string;
@@ -33,6 +33,11 @@ function formatDate(date: string): string {
   });
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.historial
+ */
 export default function PortalHistorialClient({
   historial,
 }: Props) {

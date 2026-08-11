@@ -1,14 +1,14 @@
 'use client';
 
-import { useMemo, useState } from 'react';
 import { CalendarRange, Flame } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import type { FranjaOcupacion, OcupacionReporte } from '@/lib/services/ocupacion-grilla';
 import { DIAS_LABEL, DIAS_ABREV, HORA_MIN, HORA_MAX, labelSemanas } from '@/lib/services/ocupacion-grilla';
 import { cn } from '@/lib/utils';
 import { KPIsOcupacion } from './kpis-ocupacion';
 import { PanelDetalleFranja } from './panel-detalle-franja';
-import { TendenciasOcupacion } from './tendencias-ocupacion';
 import { RecomendacionesOcupacion } from './recomendaciones-ocupacion';
+import { TendenciasOcupacion } from './tendencias-ocupacion';
 
 interface HeatmapFranjasProps {
   data: OcupacionReporte | null;
@@ -76,6 +76,12 @@ function franjaDe(data: OcupacionReporte, dia: number, hora: number): FranjaOcup
   );
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ * @param root0.loading
+ */
 export function HeatmapFranjas({ data, loading }: HeatmapFranjasProps) {
   const [seleccion, setSeleccion] = useState<{ dia: number; hora: number } | null>(null);
 

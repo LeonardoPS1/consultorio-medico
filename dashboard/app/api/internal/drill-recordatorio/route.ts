@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
-import { sendWhatsApp } from '@/lib/whatsapp';
-import { db } from '@/lib/db';
 import { workflowLogs } from '@/drizzle/operations';
+import { db } from '@/lib/db';
+import { sendWhatsApp } from '@/lib/whatsapp';
 
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || process.env.NOVEDADES_INTERNAL_KEY;
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('x-internal-key');

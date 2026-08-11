@@ -17,6 +17,11 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   );
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ */
 export default function NuevosPacientesChart({ data }: Props) {
   const maxVal = Math.max(...data.map((d) => d.valor), 1);
 

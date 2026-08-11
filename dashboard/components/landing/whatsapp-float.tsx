@@ -1,8 +1,11 @@
 'use client';
 
-import { motion } from 'motion/react';
 import { MessageCircle } from 'lucide-react';
+import { motion } from 'motion/react';
 
+/**
+ *
+ */
 export function WhatsAppFloat() {
   return (
     <motion.a

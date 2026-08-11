@@ -4,12 +4,12 @@
  * Server Component: carga datos de la API y renderiza KPIs + pasa datos al cliente.
  */
 
-export const dynamic = 'force-dynamic';
-
 import { ListChecks, Clock, CheckCircle2, XCircle } from 'lucide-react';
-import { ListaEsperaClient } from './lista-espera-client';
 import { PageHeader } from '@/components/page-header';
 import { waitlistService } from '@/lib/services/waitlist';
+import { ListaEsperaClient } from './lista-espera-client';
+
+export const dynamic = 'force-dynamic';
 
 interface WaitlistItem {
   id: string;
@@ -32,6 +32,9 @@ async function getWaitlist(): Promise<WaitlistItem[]> {
   }
 }
 
+/**
+ *
+ */
 export default async function ListaEsperaPage() {
   const items = await getWaitlist();
 

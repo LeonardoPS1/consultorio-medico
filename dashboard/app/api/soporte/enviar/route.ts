@@ -8,6 +8,10 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { sendWhatsApp } from '@/lib/whatsapp';
 
+/**
+ *
+ * @param req
+ */
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) {
@@ -19,7 +23,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Mensaje requerido' }, { status: 400 });
   }
 
-  const tenantId = (session.user as { tenantId?: string }).tenantId;
   const email = session.user.email ?? 'desconocido@email.com';
   const nombre = session.user.name ?? 'Usuario';
 

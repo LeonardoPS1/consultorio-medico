@@ -5,11 +5,11 @@
  * El cliente maneja filtros interactivos y refetches según necesidad.
  */
 
-export const dynamic = 'force-dynamic';
-
 import { getEffectiveSession } from '@/lib/auth-effective';
 import { turnosService } from '@/lib/services/turnos';
 import { TelemedicinaClient } from './telemedicina-client';
+
+export const dynamic = 'force-dynamic';
 
 export interface TurnoVirtual {
   id: string;
@@ -70,6 +70,9 @@ async function getVirtualTurnos(): Promise<TurnoVirtual[]> {
   }
 }
 
+/**
+ *
+ */
 export default async function TelemedicinaPage() {
   const turnos = await getVirtualTurnos();
 

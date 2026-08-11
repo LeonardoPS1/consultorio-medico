@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { bulkUpdateTurnoStatus } from '@/lib/services/bulk-operations';
-import { safeWarn } from '@/lib/logger';
-import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
 import { cache } from '@/lib/cache';
+import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
+import { safeWarn } from '@/lib/logger';
+import { bulkUpdateTurnoStatus } from '@/lib/services/bulk-operations';
 import type { TurnoEstado } from '@/lib/services/bulk-operations';
 
 const ESTADOS_VALIDOS: TurnoEstado[] = [
@@ -16,6 +16,10 @@ const ESTADOS_VALIDOS: TurnoEstado[] = [
   'no_asistio',
 ];
 
+/**
+ *
+ * @param request
+ */
 export async function PATCH(request: Request) {
   const session = await auth();
   if (!session?.user) {

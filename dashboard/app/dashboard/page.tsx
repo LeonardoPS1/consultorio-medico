@@ -1,8 +1,3 @@
-import { cookies } from 'next/headers';
-import { getEffectiveSession } from '@/lib/auth-effective';
-import { getDashboardStats } from '@/lib/services/dashboard-stats';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Calendar,
   Clock,
@@ -11,10 +6,15 @@ import {
   Sparkles,
   Video,
 } from 'lucide-react';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
-import { DashboardClient } from './dashboard-client';
 import { DashboardKpisClient } from '@/components/dashboard/dashboard-kpis-client';
 import { PWAInstallPrompt } from '@/components/pwa-install-prompt';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getEffectiveSession } from '@/lib/auth-effective';
+import { getDashboardStats } from '@/lib/services/dashboard-stats';
+import { DashboardClient } from './dashboard-client';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -88,6 +88,9 @@ async function getDashboardData(sucursalId?: string): Promise<DashboardData | nu
 
 // ─── Page ──────────────────────────────────────────────────
 
+/**
+ *
+ */
 export default async function DashboardPage() {
   const cookieStore = await cookies();
   const sucursalId = cookieStore.get('sucursal_activa')?.value;

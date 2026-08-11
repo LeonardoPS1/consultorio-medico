@@ -2,10 +2,10 @@
  * Operaciones masivas — WhatsApp, status turnos, exportación.
  */
 
-import { db } from '@/lib/db';
-import { safeLog, safeWarn, safeError } from '@/lib/logger';
-import { pacientes, turnos } from '@/drizzle/schema';
 import { eq, and, inArray, isNull, sql } from 'drizzle-orm';
+import { pacientes, turnos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { safeLog } from '@/lib/logger';
 
 export type TurnoEstado = 'pendiente' | 'confirmada' | 'en_atencion' | 'atendido' | 'cancelada' | 'no_asistio' | 'completada';
 
@@ -56,6 +56,12 @@ async function sendSingleMessage(telefono: string, mensaje: string): Promise<boo
   }
 }
 
+/**
+ *
+ * @param pacienteIds
+ * @param mensaje
+ * @param sucursalId
+ */
 export async function bulkWhatsApp(
   pacienteIds: string[],
   mensaje: string,
@@ -120,6 +126,11 @@ export async function bulkWhatsApp(
 
 // ─── Bulk Status (Turnos) ──────────────────────────────────
 
+/**
+ *
+ * @param turnoIds
+ * @param nuevoEstado
+ */
 export async function bulkUpdateTurnoStatus(
   turnoIds: string[],
   nuevoEstado: TurnoEstado,

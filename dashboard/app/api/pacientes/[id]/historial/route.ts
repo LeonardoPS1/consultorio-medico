@@ -1,12 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { historialMedico } from '@/drizzle/schema';
 import { eq, desc, and } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { historialMedico } from '@/drizzle/schema';
 import { verifyPacienteAccess } from '@/lib/api-auth';
+import { auth } from '@/lib/auth';
+import { db } from '@/lib/db';
 
 /**
  * Autenticación compartida para todas las rutas de historial
+ * @param request
+ * @param params
+ * @param params.id
  */
 async function requireAuthForHistorial(request: NextRequest, params: { id: string }) {
   const session = await auth();
@@ -17,7 +20,7 @@ async function requireAuthForHistorial(request: NextRequest, params: { id: strin
   const sessionRol = session.user?.role;
   try {
     await verifyPacienteAccess(params.id, sessionMedicoId, sessionRol);
-  } catch (e) {
+  } catch {
     return { session: null, error: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) };
   }
   return { session, error: null };
@@ -26,6 +29,9 @@ async function requireAuthForHistorial(request: NextRequest, params: { id: strin
 /**
  * GET /api/pacientes/[id]/historial
  * Lista entradas del historial médico (desde PostgreSQL)
+ * @param _request
+ * @param root0
+ * @param root0.params
  */
 export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
@@ -49,6 +55,9 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
 /**
  * POST /api/pacientes/[id]/historial
  * Crea una nueva entrada en el historial médico
+ * @param request
+ * @param root0
+ * @param root0.params
  */
 export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
@@ -85,6 +94,9 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
 /**
  * PATCH /api/pacientes/[id]/historial?entryId=xxx
  * Actualiza una entrada del historial médico
+ * @param request
+ * @param root0
+ * @param root0.params
  */
 export async function PATCH(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
@@ -121,9 +133,9 @@ export async function PATCH(request: NextRequest, { params: paramsPromise }: { p
     if (body.codigo !== undefined) updateData.diagnosticoCodigo = body.codigo;
     if (body.diagnosticoCodigo !== undefined) updateData.diagnosticoCodigo = body.diagnosticoCodigo;
     if (body.diagnosticoDescripcion !== undefined)
-      updateData.diagnosticoDescripcion = body.diagnosticoDescripcion;
+      {updateData.diagnosticoDescripcion = body.diagnosticoDescripcion;}
     if (body.visibleParaPaciente !== undefined)
-      updateData.visibleParaPaciente = body.visibleParaPaciente;
+      {updateData.visibleParaPaciente = body.visibleParaPaciente;}
 
     const [updated] = await db
       .update(historialMedico)
@@ -144,6 +156,9 @@ export async function PATCH(request: NextRequest, { params: paramsPromise }: { p
 /**
  * DELETE /api/pacientes/[id]/historial?entryId=xxx
  * Elimina una entrada del historial médico
+ * @param request
+ * @param root0
+ * @param root0.params
  */
 export async function DELETE(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;

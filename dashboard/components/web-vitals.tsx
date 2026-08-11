@@ -28,6 +28,9 @@ function sendToAnalytics(metric: { name: string; value: number; rating: string }
   }
 }
 
+/**
+ *
+ */
 export function WebVitals() {
   useEffect(() => {
     onLCP(sendToAnalytics);

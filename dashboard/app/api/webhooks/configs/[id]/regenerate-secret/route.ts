@@ -1,10 +1,10 @@
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { webhookConfigs } from '@/drizzle/operations';
-import { eq } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
-import { apiHandler, ok } from '@/lib/api-handler';
+import { eq } from 'drizzle-orm';
+import { NextRequest } from 'next/server';
+import { webhookConfigs } from '@/drizzle/operations';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, ok } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 
 // POST /api/webhooks/configs/[id]/regenerate-secret
 export const POST = apiHandler(

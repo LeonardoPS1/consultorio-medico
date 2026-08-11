@@ -6,17 +6,17 @@
  * Los campos del bot de WhatsApp (prompt, maxTokens, temperatura) no se tocan acá.
  */
 
+import { eq } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { tenants } from '@/drizzle/schema';
+import type { ConfigIa } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
 import { apiHandler, success, fail } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { parseBody } from '@/lib/validations';
 
 export const dynamic = 'force-dynamic';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { db } from '@/lib/db';
-import { tenants } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
-import { z } from 'zod';
-import type { ConfigIa } from '@/drizzle/schema';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -54,7 +54,7 @@ const putBodySchema = z.object({
 // ─── GET ─────────────────────────────────────────────────────
 
 export const GET = apiHandler(async () => {
-  const session = await requireAuth();
+  await requireAuth();
 
   const [tenant] = await db
     .select({ configIa: tenants.configIa })

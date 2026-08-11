@@ -13,6 +13,9 @@ interface N8nStats {
   inactiveWorkflows?: { id: string; name: string }[];
 }
 
+/**
+ *
+ */
 export function N8nStatusIndicator() {
   const [stats, setStats] = useState<N8nStats | null>(null);
   const [error, setError] = useState(false);

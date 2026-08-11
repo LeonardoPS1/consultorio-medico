@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { comunas } from '@/drizzle/schema';
 import { eq, asc } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
+import { comunas } from '@/drizzle/schema';
 import { cache } from '@/lib/cache';
+import { db } from '@/lib/db';
 
 // Datos estáticos (cambian una vez por década) — cache de 24hs
 export const dynamic = 'force-dynamic';
@@ -13,6 +13,7 @@ const CACHE_TTL = 86_400_000; // 24hs
 /**
  * GET /api/comunas?region_id=xxx
  * Devuelve las comunas de una región, ordenadas por nombre
+ * @param request
  */
 export async function GET(request: NextRequest) {
   try {

@@ -1,3 +1,4 @@
+import { relations, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 import {
   pgTable,
   uuid,
@@ -12,10 +13,7 @@ import {
   index,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { relations, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
-import {
-  notificacionTipoEnum,
-} from './enums';
+import { consentimientoCompartir } from './access';
 import {
   ConfigPrivacidad,
   ConfigIa,
@@ -24,10 +22,12 @@ import {
   medicos,
   turnos,
 } from './core';
+import {
+  notificacionTipoEnum,
+} from './enums';
 import { suscripciones } from './finance';
 import { horariosAtencion } from './operations';
 import { listaEspera } from './waitlist';
-import { consentimientoCompartir } from './access';
 
 // ============================================================
 // Types for JSONB columns

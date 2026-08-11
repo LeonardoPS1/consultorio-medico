@@ -2,7 +2,6 @@
 // Tipos compartidos para Reportes
 // ============================================================
 
-import { Calendar, Users, TrendingDown, DollarSign } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 
 export type Periodo = 'semana' | 'mes' | 'año';

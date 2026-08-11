@@ -1,16 +1,16 @@
-import { db } from '@/lib/db';
-import { safeError, safeLog } from '@/lib/logger';
-import { turnos, pacientes, medicos, bloqueosAgenda, ofertasTurno, turnoEstadoEnum, turnoTipoEnum } from '@/drizzle/schema';
-import { eq, and, or, sql, count, desc, gte, lt } from 'drizzle-orm';
+import { eq, and, or, sql, count, gte, lt } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
-import type { CreateTurno, UpdateTurno } from '@/lib/validations';
+import { turnos, pacientes, medicos, bloqueosAgenda } from '@/drizzle/schema';
 import { conflict, notFound, fail } from '@/lib/api-handler';
-import { buildGCalPayload, syncTurnoToGCal } from '@/lib/google-calendar-sync';
-import { waitlistService } from '@/lib/services/waitlist';
 import { cache } from '@/lib/cache';
-import { telemedicinaService } from '@/lib/services/livekit-telemedicina';
-import { emitirWebhook } from '@/lib/webhook-outbox';
+import { db } from '@/lib/db';
+import { buildGCalPayload, syncTurnoToGCal } from '@/lib/google-calendar-sync';
+import { safeError } from '@/lib/logger';
 import { getTenantId } from '@/lib/request-context';
+import { telemedicinaService } from '@/lib/services/livekit-telemedicina';
+import { waitlistService } from '@/lib/services/waitlist';
+import type { CreateTurno, UpdateTurno } from '@/lib/validations';
+import { emitirWebhook } from '@/lib/webhook-outbox';
 import { getZonedDayRange } from '@/lib/zoned-time';
 
 export const turnosService = {
@@ -323,7 +323,7 @@ export const turnosService = {
       }
       const [nuevo] = await db
         .insert(turnos)
-        .values(insertValues as any)
+        .values(insertValues as typeof turnos.$inferInsert)
         .returning();
 
       // Disparar sync a Google Calendar (fire-and-forget)
@@ -423,7 +423,7 @@ export const turnosService = {
         data.estado = input.estado;
       }
       if (input.fecha && input.hora)
-        data.fechaHora = new Date(`${input.fecha}T${input.hora}:00.000Z`);
+        {data.fechaHora = new Date(`${input.fecha}T${input.hora}:00.000Z`);}
       if (input.motivo !== undefined) data.motivo = input.motivo;
       if (input.tipoConsulta !== undefined) data.tipoConsulta = input.tipoConsulta;
       if (input.duracionMinutos) data.duracionMinutos = input.duracionMinutos;
@@ -609,7 +609,12 @@ export const turnosService = {
     return { deleted: true };
   },
 
-  /** Obtener datos para la Vista Citas del Día: médicos con horarios + turnos */
+  /**
+   * Obtener datos para la Vista Citas del Día: médicos con horarios + turnos
+   * @param fechaStr
+   * @param sucursalId
+   * @param medicoIdFilter
+   */
   async dayView(fechaStr: string, sucursalId?: string, medicoIdFilter?: string) {
     const cacheKey = `turnos:dayview:${fechaStr}:${sucursalId ?? ''}:${medicoIdFilter ?? ''}`;
     return cache.getOrSet(

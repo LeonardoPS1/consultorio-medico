@@ -2,9 +2,9 @@
  * Recibo digital / boleta para pagos de turnos desde el portal.
  */
 
-import { db } from '@/lib/db';
-import { portalPagos, turnos, medicos, pacientes } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
+import { portalPagos, turnos, medicos, pacientes } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { escapeHtml } from '@/lib/html-utils';
 
 export interface ReciboData {
@@ -26,6 +26,8 @@ export interface ReciboData {
 /**
  * Obtiene datos de un recibo por turnoId.
  * Verifica que el pago esté completado.
+ * @param turnoId
+ * @param pacienteId
  */
 export async function getReciboData(
   turnoId: string,
@@ -83,6 +85,7 @@ export async function getReciboData(
 
 /**
  * Genera HTML full para visualización/impresión del recibo.
+ * @param data
  */
 export function generarHTMLRecibo(data: ReciboData): string {
   const orgName = process.env.ORGANIZATION_NAME || 'Consultorio Médico';

@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { exportarFhir, verificarConsentimientoExportacion } from '@/lib/services/fhir-export';
 
+/**
+ *
+ * @param _request
+ * @param root0
+ * @param root0.params
+ */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ pacienteId: string }> },

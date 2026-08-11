@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { CheckCircle2, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, Bot, MessageCircle, PhoneCall, Mail } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 const SPECIALTIES = [
@@ -84,22 +84,9 @@ const SPECIALTIES = [
   },
 ];
 
-const containerVariants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.08 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as const },
-  },
-};
-
+/**
+ *
+ */
 export function Specialties() {
   const [active, setActive] = useState(SPECIALTIES[0].id);
   const current = SPECIALTIES.find((s) => s.id === active)!;

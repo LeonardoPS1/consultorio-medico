@@ -1,11 +1,15 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { suscripciones, usuarios } from '@/drizzle/schema';
 import { eq, lt, and } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { suscripciones, usuarios } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { safeLog, safeWarn } from '@/lib/logger';
 
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY;
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   const authHeader = request.headers.get('x-internal-key');
   if (!INTERNAL_API_KEY || authHeader !== INTERNAL_API_KEY) {

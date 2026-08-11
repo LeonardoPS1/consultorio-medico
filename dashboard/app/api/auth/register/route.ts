@@ -1,11 +1,11 @@
-import { NextRequest } from 'next/server';
-import { apiHandler, created, conflict } from '@/lib/api-handler';
-import { parseBody, registerSchema } from '@/lib/validations';
-import { hash } from 'bcryptjs';
-import { db } from '@/lib/db';
-import { usuarios, tenants, medicos } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
+import { hash } from 'bcryptjs';
+import { eq } from 'drizzle-orm';
+import { NextRequest } from 'next/server';
+import { usuarios, tenants, medicos } from '@/drizzle/schema';
+import { apiHandler, created, conflict } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { parseBody, registerSchema } from '@/lib/validations';
 
 export const POST = apiHandler(async (request: NextRequest) => {
   const body = await parseBody(request, registerSchema);

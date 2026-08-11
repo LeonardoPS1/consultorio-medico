@@ -1,26 +1,15 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Filter, RotateCcw, Search, Users, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Filter, List, RotateCcw, Search, Users, X } from 'lucide-react';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────
-
-type TurnoEstado =
-  | 'pendiente'
-  | 'confirmada'
-  | 'en_atencion'
-  | 'atendido'
-  | 'cancelada'
-  | 'en_consulta'
-  | 'completada'
-  | 'no_asistio';
 
 interface TurnoData {
   id: string;
@@ -64,6 +53,27 @@ const OPCIONES_ESTADO = [
   { value: 'no_asistio', label: 'No asistió' },
 ];
 
+/**
+ *
+ * @param root0
+ * @param root0.filtroMedico
+ * @param root0.filtroEstado
+ * @param root0.filtroTipo
+ * @param root0.searchText
+ * @param root0.medicos
+ * @param root0.tipos
+ * @param root0.filtrosActivos
+ * @param root0.loading
+ * @param root0.turnos
+ * @param root0.turnosFiltrados
+ * @param root0.onFiltroMedicoChange
+ * @param root0.onFiltroEstadoChange
+ * @param root0.onFiltroTipoChange
+ * @param root0.onSearchTextChange
+ * @param root0.onLimpiarFiltros
+ * @param root0.onToggleFilters
+ * @param root0.showFilters
+ */
 export function TurnosFilters({
   filtroMedico,
   filtroEstado,

@@ -1,7 +1,7 @@
-import { db } from '@/lib/db';
-import { turnos, pacientes, conversaciones, pacienteEventos, mensajes } from '@/drizzle/schema';
 import { eq, and, gte, lt, desc, sql, count } from 'drizzle-orm';
+import { turnos, pacientes, conversaciones, pacienteEventos, mensajes } from '@/drizzle/schema';
 import { cacheGet, cacheSet, cacheDel } from '@/lib/cache';
+import { db } from '@/lib/db';
 
 const DEFAULT_STATS_RESPONSE = {
   kpis: [
@@ -23,6 +23,13 @@ const DEFAULT_STATS_RESPONSE = {
   sistema: { online: true, conversacionesActivas: 0, datosReales: false },
 };
 
+/**
+ *
+ * @param opts
+ * @param opts.medicoId
+ * @param opts.isMedico
+ * @param opts.sucursalId
+ */
 export async function getDashboardStats(opts: {
   medicoId?: string;
   isMedico?: boolean;
@@ -349,7 +356,12 @@ export async function getDashboardStats(opts: {
   }
 }
 
-export function invalidateDashboardStats(medicoId?: string, sucursalId?: string) {
+/**
+ *
+ * @param medicoId
+ * @param _sucursalId
+ */
+export function invalidateDashboardStats(medicoId?: string, _sucursalId?: string) {
   const pattern = `stats:dashboard:${medicoId || '*'}*`;
   cacheDel(pattern);
 }

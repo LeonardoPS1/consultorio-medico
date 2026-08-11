@@ -1,7 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   DndContext,
   DragOverlay,
@@ -16,10 +14,6 @@ import {
   type DragCancelEvent,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { playClick, playComplete, playDelete, playWarning } from '@/lib/sound';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Play,
   CheckCircle2,
@@ -33,15 +27,20 @@ import {
   GripVertical,
   Users,
   Video,
-  Phone,
   MapPin,
   RefreshCw,
   AlertTriangle,
   Syringe,
 } from 'lucide-react';
-import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
-import { toast } from '@/components/ui/use-toast';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PageHeader } from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from '@/components/ui/use-toast';
+import { playClick, playComplete, playDelete, playWarning } from '@/lib/sound';
+import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 
 export type TurnoEstado =
   | 'pendiente'
@@ -153,18 +152,6 @@ function TurnoCard({
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault();
         e.stopPropagation();
-        const columnOrder: Record<string, string> = {
-          pendiente: 'en_atencion',
-          en_atencion: 'atendido',
-          atendido: 'cancelada',
-          cancelada: 'no_asistio',
-        };
-        const prevOrder: Record<string, string> = {
-          en_atencion: 'pendiente',
-          atendido: 'en_atencion',
-          cancelada: 'atendido',
-          no_asistio: 'cancelada',
-        };
         if (e.key === 'ArrowRight' && isPending) {
           onAtender(turno.id);
         } else if (e.key === 'ArrowLeft' && isInAttention) {
@@ -229,7 +216,7 @@ function TurnoCard({
             className="text-[10px] px-2 py-0 font-medium pointer-events-none"
             style={{
               backgroundColor: `${color}18`,
-              color: color,
+              color,
               borderColor: `${color}30`,
             }}
           >
@@ -541,6 +528,11 @@ function ResumenBar({
   );
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.initialTurnos
+ */
 export function AtencionClient({ initialTurnos }: { initialTurnos: Turno[] }) {
   const router = useRouter();
   const [turnos, setTurnos] = useState<Turno[]>(initialTurnos);
@@ -605,7 +597,7 @@ export function AtencionClient({ initialTurnos }: { initialTurnos: Turno[] }) {
 
   const atenderTurno = useCallback(
     async (id: string) => {
-      const { ok, error } = await patchTurnoEstado(id, 'en_atencion', (t) => ({
+      const { ok, error } = await patchTurnoEstado(id, 'en_atencion', () => ({
         estado: 'en_atencion' as const,
         inicioAtencionAt: new Date().toISOString(),
       }));

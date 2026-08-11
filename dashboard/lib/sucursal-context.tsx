@@ -35,7 +35,10 @@ const STORAGE_KEY = 'sucursal_activa';
 // Helpers
 // ============================================================
 
-/** Escribe la cookie para que la lean los server components (con consentimiento) */
+/**
+ * Escribe la cookie para que la lean los server components (con consentimiento)
+ * @param id
+ */
 function setSucursalCookie(id: string) {
   setCookieWithConsent(STORAGE_KEY, id, 'functional', 365);
 }
@@ -50,6 +53,11 @@ function getSucursalCookie(): string | null {
 // Provider
 // ============================================================
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function SucursalProvider({ children }: { children: ReactNode }) {
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [sucursalId, setSucursalIdState] = useState<string | null>(null);
@@ -129,6 +137,9 @@ export function SucursalProvider({ children }: { children: ReactNode }) {
 // Hook
 // ============================================================
 
+/**
+ *
+ */
 export function useSucursal(): SucursalContextType {
   const ctx = useContext(SucursalContext);
   if (!ctx) {

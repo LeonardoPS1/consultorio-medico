@@ -4,6 +4,9 @@ import { ShieldAlert, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 
+/**
+ *
+ */
 export function ImpersonationBanner() {
   const { data: session } = useEffectiveSession();
 

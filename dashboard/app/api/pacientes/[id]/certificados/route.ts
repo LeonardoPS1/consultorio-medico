@@ -1,15 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { historialMedico, pacientes, medicos } from '@/drizzle/schema';
 import { eq, desc, and } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
-import { verifyPacienteAccess } from '@/lib/api-auth';
-import { generarHashCertificado, generarHTMLCertificado } from '@/lib/certificados';
+import { NextRequest, NextResponse } from 'next/server';
 import QRCode from 'qrcode';
+import { historialMedico, pacientes, medicos } from '@/drizzle/schema';
+import { verifyPacienteAccess } from '@/lib/api-auth';
+import { auth } from '@/lib/auth';
+import { generarHashCertificado, generarHTMLCertificado } from '@/lib/certificados';
+import { db } from '@/lib/db';
 
 /**
  * GET /api/pacientes/[id]/certificados
  * Lista certificados del paciente (entradas de tipo 'certificado' en historial)
+ * @param _request
+ * @param root0
+ * @param root0.params
  */
 export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
@@ -122,6 +125,9 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
 /**
  * POST /api/pacientes/[id]/certificados
  * Crea un nuevo certificado médico (como entrada en historial)
+ * @param request
+ * @param root0
+ * @param root0.params
  */
 export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;

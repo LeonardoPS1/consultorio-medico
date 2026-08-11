@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server';
-import { derivacionesService } from '@/lib/services/derivaciones';
-import { apiHandler, ok, notFound } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { updateDerivacionSchema } from '@/lib/validations';
+import { apiHandler, ok } from '@/lib/api-handler';
+import { derivacionesService } from '@/lib/services/derivaciones';
+import { parseBody , updateDerivacionSchema } from '@/lib/validations';
 
 // GET /api/derivaciones/[id]
 export const GET = apiHandler(

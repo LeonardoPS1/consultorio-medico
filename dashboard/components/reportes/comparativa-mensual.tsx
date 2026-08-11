@@ -1,6 +1,7 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { motion } from 'motion/react';
 import {
   BarChart,
   Bar,
@@ -13,9 +14,8 @@ import {
   type TooltipProps,
   type DefaultLegendContentProps,
 } from 'recharts';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { motion } from 'motion/react';
 import type { Periodo } from '@/app/dashboard/reportes/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export type ComparativaData = {
   kpis: {
@@ -59,6 +59,12 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   );
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ * @param root0.periodo
+ */
 export default function ComparativaMensual({ data, periodo }: Props) {
   const pALabel = periodoAnteriorLabel[periodo];
 

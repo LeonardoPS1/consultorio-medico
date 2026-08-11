@@ -5,16 +5,16 @@
  * Admin only — requiere sesión con rol admin
  */
 
-import { NextRequest } from 'next/server';
-import { apiHandler, ok, created, fail, conflict } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody, createUserSchema } from '@/lib/validations';
-import { db } from '@/lib/db';
-import { usuarios, medicos, tenants } from '@/drizzle/schema';
-import { eq, asc } from 'drizzle-orm';
-import { hash } from 'bcryptjs';
 import crypto from 'crypto';
+import { hash } from 'bcryptjs';
+import { eq, asc } from 'drizzle-orm';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { usuarios, medicos } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, ok, created, fail, conflict } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { parseBody, createUserSchema } from '@/lib/validations';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 

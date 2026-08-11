@@ -1,13 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Logo } from '@/components/layout/logo';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, ArrowLeft, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
+import { Logo } from '@/components/layout/logo';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
+/**
+ *
+ */
 export default function RecuperarPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);

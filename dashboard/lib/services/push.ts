@@ -1,7 +1,7 @@
-import { db } from '@/lib/db';
-import { pushSubscriptions } from '@/drizzle/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import webPush from 'web-push';
+import { pushSubscriptions } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 
 // ─── Configurar VAPID ────────────────────────────────────────
 const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
@@ -34,6 +34,12 @@ export interface SendPushOptions {
 export const pushService = {
   /**
    * Guardar o actualizar una suscripción push (usuario o paciente)
+   * @param subscription
+   * @param userAgent
+   * @param options
+   * @param options.usuarioId
+   * @param options.pacienteId
+   * @param options.tenantId
    */
   async subscribe(
     subscription: PushSubscriptionData,
@@ -80,6 +86,10 @@ export const pushService = {
 
   /**
    * Desuscribir (soft delete / marcar inactiva)
+   * @param endpoint
+   * @param options
+   * @param options.usuarioId
+   * @param options.pacienteId
    */
   async unsubscribe(endpoint: string, options?: { usuarioId?: string; pacienteId?: string }) {
     const conditions = [eq(pushSubscriptions.endpoint, endpoint)];
@@ -95,6 +105,9 @@ export const pushService = {
 
   /**
    * Desuscribir todas las suscripciones de un usuario o paciente
+   * @param options
+   * @param options.usuarioId
+   * @param options.pacienteId
    */
   async unsubscribeAll(options: { usuarioId?: string; pacienteId?: string }) {
     if (!options?.usuarioId && !options?.pacienteId) {
@@ -113,6 +126,7 @@ export const pushService = {
 
   /**
    * Eliminar una suscripción expirada (endpoint ya no válido)
+   * @param endpoint
    */
   async eliminarEndpoint(endpoint: string) {
     await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
@@ -121,6 +135,9 @@ export const pushService = {
 
   /**
    * Obtener suscripciones activas de un usuario o paciente
+   * @param options
+   * @param options.usuarioId
+   * @param options.pacienteId
    */
   async getSubscriptions(options: { usuarioId?: string; pacienteId?: string }) {
     if (!options?.usuarioId && !options?.pacienteId) {
@@ -138,6 +155,10 @@ export const pushService = {
 
   /**
    * Enviar push a todas las suscripciones activas de un usuario o paciente
+   * @param options
+   * @param options.usuarioId
+   * @param options.pacienteId
+   * @param payload
    */
   async sendToUser(options: { usuarioId?: string; pacienteId?: string }, payload: SendPushOptions) {
     const subs = await this.getSubscriptions(options);
@@ -168,6 +189,8 @@ export const pushService = {
 
   /**
    * Enviar push a una suscripción específica
+   * @param sub
+   * @param payload
    */
   async _enviar(sub: typeof pushSubscriptions.$inferSelect, payload: SendPushOptions) {
     const subscription: PushSubscriptionData = {

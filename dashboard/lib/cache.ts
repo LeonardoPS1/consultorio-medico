@@ -1,8 +1,12 @@
-import { getRedis } from '@/lib/redis';
 import { safeWarn } from '@/lib/logger';
+import { getRedis } from '@/lib/redis';
 
 const DEFAULT_TTL = 60;
 
+/**
+ *
+ * @param key
+ */
 export async function cacheGet<T>(key: string): Promise<T | null> {
   try {
     const redis = await getRedis();
@@ -15,6 +19,12 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
   }
 }
 
+/**
+ *
+ * @param key
+ * @param data
+ * @param ttlSec
+ */
 export async function cacheSet(key: string, data: unknown, ttlSec = DEFAULT_TTL): Promise<void> {
   try {
     const redis = await getRedis();
@@ -26,6 +36,10 @@ export async function cacheSet(key: string, data: unknown, ttlSec = DEFAULT_TTL)
   }
 }
 
+/**
+ *
+ * @param pattern
+ */
 export async function cacheDel(pattern: string): Promise<void> {
   try {
     const redis = await getRedis();

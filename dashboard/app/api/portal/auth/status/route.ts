@@ -1,11 +1,14 @@
 /**
  * GET /api/portal/auth/status — Estado del portal + pacientes de prueba
  */
+import { and, sql, desc } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { pacientes } from '@/drizzle/schema';
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { db } from '@/lib/db';
 
+/**
+ *
+ */
 export async function GET() {
   const bypass = process.env.PORTAL_BYPASS === 'true';
   const isDev = process.env.NODE_ENV !== 'production';

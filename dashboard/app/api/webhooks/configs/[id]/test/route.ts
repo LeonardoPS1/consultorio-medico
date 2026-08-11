@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { webhooksService } from '@/lib/services/webhooks';
-import { apiHandler, ok } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, ok } from '@/lib/api-handler';
+import { webhooksService } from '@/lib/services/webhooks';
 
 // POST /api/webhooks/configs/[id]/test
 export const POST = apiHandler(

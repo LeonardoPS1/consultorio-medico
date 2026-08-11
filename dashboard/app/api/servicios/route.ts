@@ -1,9 +1,9 @@
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { servicios } from '@/drizzle/schema';
 import { sql, count } from 'drizzle-orm';
-import { apiHandler, success, created } from '@/lib/api-handler';
+import { NextRequest } from 'next/server';
+import { servicios } from '@/drizzle/schema';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, created } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 import { parseBody, createServicioSchema } from '@/lib/validations';
 
 export const GET = apiHandler(async (_request: NextRequest) => {

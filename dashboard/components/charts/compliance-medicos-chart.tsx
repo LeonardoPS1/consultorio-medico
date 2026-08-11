@@ -31,6 +31,11 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 
 const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16'];
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ */
 export default function ComplianceMedicosChart({ data }: Props) {
   const sorted = [...data].sort((a, b) => b.turnosAtendidos - a.turnosAtendidos);
 

@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { apiHandler, success, ok } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
-import { parseBody, updateOrganizationSchema } from '@/lib/validations';
+import { apiHandler, success, ok } from '@/lib/api-handler';
 import { getOrganization, updateOrganization } from '@/lib/organization-store';
 import { getTenantBranding } from '@/lib/services/tenant';
+import { parseBody, updateOrganizationSchema } from '@/lib/validations';
 
 export const GET = apiHandler(async (request: NextRequest) => {
   await requireAuth();

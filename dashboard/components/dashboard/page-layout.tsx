@@ -9,6 +9,12 @@ interface PageLayoutProps {
   children: React.ReactNode;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.variant
+ * @param root0.children
+ */
 export function PageLayout({ variant, children }: PageLayoutProps) {
   const { setVariant } = useLayoutConfig();
 

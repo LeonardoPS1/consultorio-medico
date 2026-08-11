@@ -1,14 +1,5 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { PageAnimation } from '@/components/dashboard/page-animation';
-import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { useSucursal } from '@/lib/sucursal-context';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Search,
   Plus,
@@ -24,11 +15,16 @@ import {
   Send,
   X,
 } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-
-import { formatPhone, getInitials, formatDate } from '@/lib/utils';
-import { NuevoPacienteModal } from '@/components/modals/nuevo-paciente-modal';
+import Link from 'next/link';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { PageAnimation } from '@/components/dashboard/page-animation';
 import { EditarPacienteModal } from '@/components/modals/editar-paciente-modal';
+import { NuevoPacienteModal } from '@/components/modals/nuevo-paciente-modal';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -37,8 +33,11 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
+import { useSucursal } from '@/lib/sucursal-context';
+import { formatPhone, getInitials, formatDate } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -84,6 +83,12 @@ const PAGE_SIZE = 25;
 
 // ─── Component ─────────────────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.initialPacientes
+ * @param root0.initialTotal
+ */
 export function PacientesClient({ initialPacientes, initialTotal }: PacientesClientProps) {
   const { sucursalId } = useSucursal();
   const [search, setSearch] = useState('');
@@ -349,7 +354,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
       };
       setPacientesList((prev) => [newPaciente, ...prev]);
       toast({ title: 'Paciente creado', description: `${created.nombre} ${created.apellido}` });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Error de red al crear paciente',

@@ -1,10 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
-import Link from 'next/link';
 import { motion } from 'motion/react';
+import Link from 'next/link';
+import { useEffect } from 'react';
 
+/**
+ *
+ * @param root0
+ * @param root0.error
+ * @param root0.reset
+ */
 export default function PortalError({
   error,
   reset,

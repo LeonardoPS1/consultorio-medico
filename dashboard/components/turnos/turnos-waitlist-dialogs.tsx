@@ -12,14 +12,30 @@ import {
 
 // ─── Waitlist Reassign Dialog ─────────────────────────────
 
+export interface WaitlistCandidate {
+  id: string;
+  pacienteId: string;
+  fechaInscripcion: string;
+  paciente?: { nombre: string; apellido: string };
+}
+
 interface WaitlistReassignDialogProps {
   open: boolean;
   pacienteNombre: string;
-  waitlistCandidates: any[];
+  waitlistCandidates: WaitlistCandidate[];
   waitlistReassignLoading: boolean;
   onClose: () => void;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.open
+ * @param root0.pacienteNombre
+ * @param root0.waitlistCandidates
+ * @param root0.waitlistReassignLoading
+ * @param root0.onClose
+ */
 export function WaitlistReassignDialog({
   open,
   pacienteNombre,
@@ -105,6 +121,15 @@ interface WaitlistProposalDialogProps {
   onAddToWaitlist: () => Promise<void>;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.open
+ * @param root0.proposal
+ * @param root0.waitlistLoading
+ * @param root0.onClose
+ * @param root0.onAddToWaitlist
+ */
 export function WaitlistProposalDialog({
   open,
   proposal,

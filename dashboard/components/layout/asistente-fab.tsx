@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAsistenteIA } from '@/lib/hooks/use-asistente-ia';
 import { MODOS_ASISTENTE } from '@/lib/ia/asistente-prompts';
 
+/**
+ *
+ */
 export function AsistenteFAB() {
   const { open, toggle, sugerenciasPendientes, modo, cargando, alertasProactivas } = useAsistenteIA();
 

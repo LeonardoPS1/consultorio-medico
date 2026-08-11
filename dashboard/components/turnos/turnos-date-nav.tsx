@@ -1,8 +1,8 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface TurnosDateNavProps {
   selectedDate: Date;
@@ -11,6 +11,14 @@ interface TurnosDateNavProps {
   rightExtra?: ReactNode;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.selectedDate
+ * @param root0.onNavigate
+ * @param root0.onGoToToday
+ * @param root0.rightExtra
+ */
 export function TurnosDateNav({
   selectedDate,
   onNavigate,

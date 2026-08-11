@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server';
-import { conveniosService } from '@/lib/services/convenios';
-import { apiHandler, ok, fail } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { updateConvenioSchema } from '@/lib/validations';
+import { apiHandler, ok, fail } from '@/lib/api-handler';
+import { conveniosService } from '@/lib/services/convenios';
+import { parseBody , updateConvenioSchema } from '@/lib/validations';
 
 export const GET = apiHandler(
   async (_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {

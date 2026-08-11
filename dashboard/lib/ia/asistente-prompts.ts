@@ -90,6 +90,8 @@ const CONTEXT_PROMPTS: Record<string, (datos?: Record<string, unknown>) => strin
 /**
  * Construye el system prompt completo para el asistente,
  * combinando el prompt base con el contexto de la página actual.
+ * @param contexto
+ * @param configIa
  */
 export function buildSystemPrompt(
   contexto: ContextoPagina,
@@ -223,6 +225,8 @@ const SUGERENCIAS_POR_PAGINA: Record<string, Sugerencia[]> = {
 /**
  * Retorna las sugerencias disponibles para la ruta actual,
  * filtradas por las categorías habilitadas en la config.
+ * @param ruta
+ * @param categoriasHabilitadas
  */
 export function getSugerencias(
   ruta: string,
@@ -261,6 +265,10 @@ export interface AlertaProactiva {
 // Constantes exportadas
 // ============================================================
 
+/**
+ *
+ * @param modo
+ */
 export function buildModoPrompt(modo: ModoAsistente): string {
   const prompts: Record<ModoAsistente, string> = {
     silencioso:
@@ -328,6 +336,10 @@ export const MODOS_ASISTENTE: { id: ModoAsistente; label: string; descripcion: s
   },
 ];
 
+/**
+ *
+ * @param datosContextoDB
+ */
 export function getAlertasProactivas(datosContextoDB: string | null): AlertaProactiva[] {
   if (!datosContextoDB) return [];
 

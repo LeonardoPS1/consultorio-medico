@@ -8,7 +8,7 @@
  * - Verificación de cancelaciones
  */
 
-import { db } from '@/lib/db';
+import { eq, and, ne, sql, gte, lte, inArray, notInArray, gt } from 'drizzle-orm';
 import {
   medicos,
   servicios,
@@ -18,9 +18,9 @@ import {
   pacientes,
   ofertasTurno,
 } from '@/drizzle/schema';
-import { eq, and, ne, sql, gte, lte, inArray, notInArray, gt } from 'drizzle-orm';
-import { safeWarn, safeError } from '@/lib/logger';
 import { HttpError } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { safeWarn, safeError } from '@/lib/logger';
 
 // ─── Tipos públicos ──────────────────────────────────────────
 
@@ -52,6 +52,10 @@ export interface SlotDisponible {
 
 // ─── Médicos disponibles (para el portal) ────────────────────
 
+/**
+ *
+ * @param sucursalId
+ */
 export async function medicosDisponiblesPortal(sucursalId?: string): Promise<MedicoPortal[]> {
   const rows = await db
     .select({
@@ -109,6 +113,9 @@ export async function medicosDisponiblesPortal(sucursalId?: string): Promise<Med
 /**
  * Calcula los slots disponibles para un médico en una fecha específica.
  * Considera: horarios de atención, bloqueos de agenda, turnos existentes.
+ * @param medicoId
+ * @param fecha
+ * @param servicioId
  */
 export async function slotsDisponibles(
   medicoId: string,
@@ -259,6 +266,10 @@ export interface CrearTurnoPortalInput {
 
 export type TurnoCreadoPortal = Awaited<ReturnType<typeof crearTurnoPortal>>;
 
+/**
+ *
+ * @param input
+ */
 export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
   const ahora = new Date();
   const fechaHoraTurno = new Date(input.fechaHora);
@@ -406,13 +417,13 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
       }
       const [creado] = await tx
         .insert(turnos)
-        .values(insertValues as any)
+        .values(insertValues as typeof turnos.$inferInsert)
         .returning();
       return creado;
     });
   } catch (err) {
     // 23505 = unique_violation del índice idx_turnos_medico_fecha_activo.
-    if (err && typeof err === 'object' && 'code' in err && (err as any).code === '23505') {
+    if (err && typeof err === 'object' && 'code' in err && err.code === '23505') {
       throw new HttpError('Este horario ya no está disponible, elegí otro', 409);
     }
     throw err;
@@ -484,6 +495,14 @@ export async function crearTurnoPortal(input: CrearTurnoPortalInput) {
  * Envía confirmación de turno por WhatsApp al paciente.
  * Fire-and-forget: no bloquea el flujo principal.
  * Incluye archivo .ics para agregar al calendario.
+ * @param telefono
+ * @param pacienteNombre
+ * @param medicoNombre
+ * @param especialidad
+ * @param fechaHora
+ * @param motivo
+ * @param precio
+ * @param turnoId
  */
 export async function sendTurnoConfirmacionWhatsApp(
   telefono: string,
@@ -519,7 +538,7 @@ Hola ${pacienteNombre}, tu turno fue agendado correctamente:
 
   if (motivo) message += `\n📝 *Motivo:* ${motivo}`;
   if (precio && precio > 0)
-    message += `\n💰 *Pendiente de pago:* $${precio.toLocaleString('es-CL')}`;
+    {message += `\n💰 *Pendiente de pago:* $${precio.toLocaleString('es-CL')}`;}
   message += `\n\nSi no puedes asistir, cancelá con anticipación desde el portal.
 🔗 ${appUrl}/portal`;
 
@@ -565,6 +584,15 @@ Hola ${pacienteNombre}, tu turno fue agendado correctamente:
 /**
  * Envía notificación WhatsApp al médico sobre cancelación/traslado de turno.
  * Fire-and-forget.
+ * @param medicoTelefono
+ * @param medicoNombre
+ * @param pacienteNombre
+ * @param mensajeTipo
+ * @param detalles
+ * @param detalles.fechaVieja
+ * @param detalles.fechaNueva
+ * @param detalles.horaVieja
+ * @param detalles.horaNueva
  */
 export async function notifyDoctorWhatsApp(
   medicoTelefono: string,

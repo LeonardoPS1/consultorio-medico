@@ -4,18 +4,25 @@
  * Los route handlers solo parsean requests y llaman estos servicios.
  */
 
-import { db } from '@/lib/db';
+import { eq, and, sql, count, or, ilike } from 'drizzle-orm';
 import { pacientes, turnos, pacienteEventos } from '@/drizzle/schema';
-import { eq, and, sql, count, or, ilike, desc } from 'drizzle-orm';
-import type { CreatePaciente, UpdatePaciente } from '@/lib/validations';
 import { conflict, notFound } from '@/lib/api-handler';
-import { privacidadService } from '@/lib/services/privacidad';
 import { cache } from '@/lib/cache';
-import { emitirWebhook } from '@/lib/webhook-outbox';
+import { db } from '@/lib/db';
 import { getTenantId } from '@/lib/request-context';
+import { privacidadService } from '@/lib/services/privacidad';
+import type { CreatePaciente, UpdatePaciente } from '@/lib/validations';
+import { emitirWebhook } from '@/lib/webhook-outbox';
 
 export const pacientesService = {
-  /** Listar pacientes con búsqueda y stats */
+  /**
+   * Listar pacientes con búsqueda y stats
+   * @param search
+   * @param limit
+   * @param offset
+   * @param sucursalId
+   * @param medicoId
+   */
   async list(search?: string, limit = 100, offset = 0, sucursalId?: string, medicoId?: string) {
     const cacheKey = `pacientes:list:${search ?? ''}:${limit}:${offset}:${sucursalId ?? ''}:${medicoId ?? ''}`;
     return cache.getOrSet(
@@ -122,7 +129,10 @@ export const pacientesService = {
     ); // TTL 30s — pacientes cambian con menos frecuencia
   },
 
-  /** Crear paciente */
+  /**
+   * Crear paciente
+   * @param input
+   */
   async create(input: CreatePaciente) {
     const existente = await db
       .select({ id: pacientes.id })
@@ -156,7 +166,7 @@ export const pacientesService = {
           if (input.sistemaSalud === 'fonasa') return ['Fonasa'];
           if (input.sistemaSalud === 'isapre' && input.isapreNombre) return [input.isapreNombre];
           if (input.sistemaSalud === 'particular' || input.obraSocial === 'Particular')
-            return ['Particular'];
+            {return ['Particular'];}
           return ['Fonasa'];
         })(),
         sucursalId: input.sucursalId ?? null,
@@ -197,7 +207,10 @@ export const pacientesService = {
     return nuevo;
   },
 
-  /** Obtener detalle completo */
+  /**
+   * Obtener detalle completo
+   * @param id
+   */
   async getById(id: string) {
     return cache.getOrSet(
       `pacientes:get:${id}`,
@@ -213,7 +226,11 @@ export const pacientesService = {
     ); // TTL 30s
   },
 
-  /** Actualizar paciente */
+  /**
+   * Actualizar paciente
+   * @param id
+   * @param input
+   */
   async update(id: string, input: UpdatePaciente) {
     await this.getById(id);
     const data: Record<string, unknown> = { updatedAt: new Date() };
@@ -245,7 +262,10 @@ export const pacientesService = {
     return updated;
   },
 
-  /** Soft-delete paciente con cascada de datos relacionados (ARCO) */
+  /**
+   * Soft-delete paciente con cascada de datos relacionados (ARCO)
+   * @param id
+   */
   async delete(id: string) {
     // Delega en privacidadService que maneja la cascada completa:
     // soft-delete de turnos, conversaciones, mensajes, recetas,

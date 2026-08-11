@@ -4,6 +4,9 @@ import { getN8nStats } from '@/lib/services/n8n-monitor';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ *
+ */
 export async function GET() {
   const session = await getEffectiveSession();
   if (!session?.user || session.user.role !== 'admin') {

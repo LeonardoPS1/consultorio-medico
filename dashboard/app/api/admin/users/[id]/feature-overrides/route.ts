@@ -8,14 +8,14 @@
  * superiores para usuarios específicos.
  */
 
+import { eq } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
-import { apiHandler, ok, fail } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { db } from '@/lib/db';
-import { usuarios, userFeatureOverrides } from '@/drizzle/schema';
-import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
+import { userFeatureOverrides } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, ok, fail } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { parseBody } from '@/lib/validations';
 
 // ─── GET ─────────────────────────────────────────────────────
 

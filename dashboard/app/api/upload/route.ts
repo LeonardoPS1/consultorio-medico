@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { writeFile } from 'fs/promises';
 import path from 'path';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getPortalSession } from '@/lib/portal-auth';
 import { getUploadDir } from '@/lib/upload-dir';
@@ -9,6 +9,10 @@ const ALLOWED_TYPES_DASHBOARD = ['image/jpeg', 'image/png', 'image/webp', 'image
 const ALLOWED_TYPES_PORTAL = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
 const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'pdf'];
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: NextRequest) {
   let uploadDir = '';
   try {

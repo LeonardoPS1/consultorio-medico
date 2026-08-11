@@ -3,9 +3,9 @@
  * Usa la tabla `notificaciones` con pacienteId.
  */
 
-import { db } from '@/lib/db';
-import { notificaciones } from '@/drizzle/schema';
 import { eq, and, isNull, desc, sql } from 'drizzle-orm';
+import { notificaciones } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 
 export interface PortalNotificacion {
   id: string;
@@ -29,6 +29,12 @@ const SELECT_COLS = {
 
 /**
  * Crea una notificación para un paciente del portal.
+ * @param pacienteId
+ * @param data
+ * @param data.titulo
+ * @param data.descripcion
+ * @param data.tipo
+ * @param data.href
  */
 export async function crearNotificacion(
   pacienteId: string,
@@ -56,6 +62,8 @@ export async function crearNotificacion(
 
 /**
  * Lista notificaciones del paciente, ordenadas por fecha descendente.
+ * @param pacienteId
+ * @param limit
  */
 export async function listarNotificaciones(
   pacienteId: string,
@@ -71,6 +79,7 @@ export async function listarNotificaciones(
 
 /**
  * Cuenta notificaciones no leídas del paciente.
+ * @param pacienteId
  */
 export async function noLeidasCount(pacienteId: string): Promise<number> {
   const [row] = await db
@@ -88,6 +97,8 @@ export async function noLeidasCount(pacienteId: string): Promise<number> {
 
 /**
  * Marca una notificación como leída.
+ * @param id
+ * @param pacienteId
  */
 export async function marcarLeida(id: string, pacienteId: string): Promise<void> {
   await db
@@ -98,6 +109,7 @@ export async function marcarLeida(id: string, pacienteId: string): Promise<void>
 
 /**
  * Marca todas las notificaciones del paciente como leídas.
+ * @param pacienteId
  */
 export async function marcarTodasLeidas(pacienteId: string): Promise<void> {
   await db

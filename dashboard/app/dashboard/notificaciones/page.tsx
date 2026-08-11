@@ -5,11 +5,11 @@
  * El cliente maneja filtros interactivos, mutations y refetches.
  */
 
-export const dynamic = 'force-dynamic';
-
 import { getEffectiveSession } from '@/lib/auth-effective';
 import { notificacionesService } from '@/lib/services/notificaciones';
 import { NotificacionesClient } from './notificaciones-client';
+
+export const dynamic = 'force-dynamic';
 
 interface NotificacionItem {
   id: string;
@@ -63,6 +63,9 @@ async function getNotificaciones(): Promise<{
   }
 }
 
+/**
+ *
+ */
 export default async function NotificacionesPage() {
   const data = await getNotificaciones();
 

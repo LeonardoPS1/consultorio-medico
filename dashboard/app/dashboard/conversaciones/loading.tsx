@@ -1,6 +1,9 @@
-import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
+/**
+ *
+ */
 export default function ConversacionesLoading() {
   return (
     <div className="space-y-6 animate-in">

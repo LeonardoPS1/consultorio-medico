@@ -5,7 +5,12 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+/**
+ *
+ * @param root0
+ * @param root0.params
+ */
+export async function generateMetadata({ params: _params }: Props): Promise<Metadata> {
   return {
     title: 'Verificar Receta Médica',
     description: 'Verificación de autenticidad de receta médica',
@@ -28,6 +33,11 @@ async function getRecetaData(id: string) {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.params
+ */
 export default async function VerificarRecetaPage({ params }: Props) {
   const { id } = await params;
   const data = await getRecetaData(id);

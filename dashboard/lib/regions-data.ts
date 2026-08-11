@@ -73,18 +73,34 @@ export const PAISES: Record<string, PaisConfig> = {
   },
 };
 
+/**
+ *
+ * @param pais
+ */
 export function getMonedaLabel(pais: string): string {
   return PAISES[pais]?.moneda?.codigo || 'CLP';
 }
 
+/**
+ *
+ * @param pais
+ */
 export function getDocumentoLabel(pais: string): string {
   return PAISES[pais]?.documentoId?.label || 'RUT';
 }
 
+/**
+ *
+ * @param pais
+ */
 export function getSistemasSalud(pais: string): string[] {
   return PAISES[pais]?.sistemaSalud || ['Fonasa', 'Isapre'];
 }
 
+/**
+ *
+ * @param pais
+ */
 export function getRegiones(pais: string): RegionEntry[] {
   return PAISES[pais]?.regiones || PAISES.CL.regiones;
 }

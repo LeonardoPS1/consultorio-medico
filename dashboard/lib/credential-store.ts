@@ -12,7 +12,10 @@ import fs from 'fs';
 import path from 'path';
 import { encrypt, decrypt, maskValue } from '@/lib/encryption';
 
-/** Helper para extraer rows de un resultado SQL (Drizzle + postgres-js) */
+/**
+ * Helper para extraer rows de un resultado SQL (Drizzle + postgres-js)
+ * @param result
+ */
 function extractRows<T>(result: unknown): T[] {
   if (Array.isArray(result)) return result as T[];
   if (result && typeof result === 'object' && 'rows' in result) {
@@ -363,6 +366,7 @@ export async function getAllCredencialesMasked(): Promise<CredencialData[]> {
 
 /**
  * Obtiene las credenciales agrupadas por servicio.
+ * @param servicio
  */
 export async function getCredencialesByServicio(servicio: string): Promise<Record<string, string>> {
   const all = await getAllCredenciales();
@@ -376,6 +380,8 @@ export async function getCredencialesByServicio(servicio: string): Promise<Recor
 
 /**
  * Obtiene una credencial específica.
+ * @param servicio
+ * @param clave
  */
 export async function getCredencial(
   servicio: string,
@@ -388,6 +394,7 @@ export async function getCredencial(
 /**
  * Guarda (crea o actualiza) una credencial.
  * El valor se encripta antes de almacenar.
+ * @param input
  */
 export async function saveCredencial(input: CredencialInput): Promise<CredencialData> {
   const valorEncriptado = encrypt(input.valor);
@@ -475,6 +482,9 @@ export async function saveCredencial(input: CredencialInput): Promise<Credencial
 /**
  * Guarda todas las credenciales de un servicio de una vez.
  * Y sincroniza con n8n si corresponde.
+ * @param servicio
+ * @param valores
+ * @param n8nCredentialId
  */
 export async function saveServicioCredenciales(
   servicio: string,
@@ -522,6 +532,8 @@ export async function saveServicioCredenciales(
 
 /**
  * Elimina una credencial.
+ * @param servicio
+ * @param clave
  */
 export async function deleteCredencial(servicio: string, clave: string): Promise<boolean> {
   const pg = await checkPostgres();
@@ -544,6 +556,7 @@ export async function deleteCredencial(servicio: string, clave: string): Promise
 
 /**
  * Elimina todas las credenciales de un servicio.
+ * @param servicio
  */
 export async function deleteServicioCredenciales(servicio: string): Promise<boolean> {
   const pg = await checkPostgres();

@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
-import { Navbar } from '@/components/landing/navbar';
+import { CookieConsentBanner } from '@/components/landing/cookie-consent';
 import { Hero } from '@/components/landing/hero';
 import { HowItWorks } from '@/components/landing/how-it-works';
+import { Navbar } from '@/components/landing/navbar';
 import { Testimonials } from '@/components/landing/testimonials';
 import { WhatsAppFloat } from '@/components/landing/whatsapp-float';
-import { CookieConsentBanner } from '@/components/landing/cookie-consent';
 
 const Features = dynamic(() => import('@/components/landing/features').then((m) => m.Features));
 const Specialties = dynamic(() =>
@@ -49,6 +49,9 @@ const jsonLd: Record<string, unknown> = {
     'Software de gestión para consultorios médicos con IA local. WhatsApp integrado, telemedicina, portal del paciente, OCR, recetas digitales y más.',
 };
 
+/**
+ *
+ */
 export default function LandingPage() {
   return (
     <>

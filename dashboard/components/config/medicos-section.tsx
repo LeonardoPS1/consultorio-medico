@@ -1,11 +1,11 @@
 'use client';
 
+import { Plus, Stethoscope, Pencil, CalendarX, Clock, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { BloqueosDialog } from '@/components/config/bloqueos-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -13,10 +13,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Plus, Stethoscope, Pencil, X, CalendarX, Clock, ChevronDown, Store } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
-import { BloqueosDialog } from '@/components/config/bloqueos-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { toast } from '@/components/ui/use-toast';
 
 interface Medico {
   id: string;
@@ -104,7 +104,12 @@ const DEFAULT_HORARIOS: Record<string, HorarioDia> = {
   },
 };
 
-export function MedicosSection({ plan }: Props) {
+/**
+ *
+ * @param root0
+ * @param root0.plan
+ */
+export function MedicosSection({ plan: _plan }: Props) {
   const [medicos, setMedicos] = useState<Medico[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);

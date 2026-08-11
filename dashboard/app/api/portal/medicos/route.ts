@@ -9,6 +9,9 @@ import { NextResponse } from 'next/server';
 import { getPortalSession } from '@/lib/portal-auth';
 import { medicosDisponiblesPortal } from '@/lib/services/portal-booking';
 
+/**
+ *
+ */
 export async function GET() {
   const session = await getPortalSession();
   if (!session) {

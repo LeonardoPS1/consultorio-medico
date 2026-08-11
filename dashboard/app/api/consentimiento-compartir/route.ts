@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server';
-import { consentimientoCompartirService } from '@/lib/services/consentimiento-compartir';
-import { apiHandler, success, created, ok } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { createConsentimientoCompartirSchema } from '@/lib/validations';
+import { apiHandler, created, ok } from '@/lib/api-handler';
+import { consentimientoCompartirService } from '@/lib/services/consentimiento-compartir';
+import { parseBody , createConsentimientoCompartirSchema } from '@/lib/validations';
 
 export const GET = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();

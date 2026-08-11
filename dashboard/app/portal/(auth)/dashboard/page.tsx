@@ -5,15 +5,18 @@
  * Todo en un solo page con tabs en el client.
  */
 
-import { getPortalSession } from '@/lib/portal-auth';
-import { redirect } from 'next/navigation';
-import { db } from '@/lib/db';
-import { pacientes, turnos, recetas, historialMedico, medicos } from '@/drizzle/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
+import { redirect } from 'next/navigation';
+import { pacientes, turnos, recetas, historialMedico, medicos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { getPortalSession } from '@/lib/portal-auth';
 import PortalDashboardClient from './portal-dashboard-client';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ *
+ */
 export default async function PortalDashboardPage() {
   const session = await getPortalSession();
   if (!session) redirect('/portal');

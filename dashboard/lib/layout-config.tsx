@@ -46,6 +46,11 @@ interface LayoutContextValue {
 
 const LayoutContext = createContext<LayoutContextValue | null>(null);
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function LayoutConfigProvider({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState<LayoutConfig>({
     variant: 'default',
@@ -63,6 +68,9 @@ export function LayoutConfigProvider({ children }: { children: React.ReactNode }
   );
 }
 
+/**
+ *
+ */
 export function useLayoutConfig() {
   const ctx = useContext(LayoutContext);
   if (!ctx) throw new Error('useLayoutConfig must be used within LayoutConfigProvider');

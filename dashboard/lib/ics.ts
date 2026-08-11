@@ -15,6 +15,7 @@ export interface IcsEventInput {
 /**
  * Genera el contenido textual de un archivo .ics
  * con zona horaria Santiago de Chile.
+ * @param event
  */
 export function generateIcs(event: IcsEventInput): string {
   const formatDt = (d: Date): string => {
@@ -77,6 +78,7 @@ export function generateIcs(event: IcsEventInput): string {
 
 /**
  * Escapa caracteres especiales según RFC 5545.
+ * @param text
  */
 function escapeIcsText(text: string): string {
   return text
@@ -91,6 +93,14 @@ function escapeIcsText(text: string): string {
 /**
  * Genera y descarga un archivo .ics para agregar un turno al calendario.
  * Función client-side (usa Blob/URL.createObjectURL).
+ * @param turno
+ * @param turno.id
+ * @param turno.fechaHora
+ * @param turno.duracionMinutos
+ * @param turno.paciente
+ * @param turno.medico
+ * @param turno.motivo
+ * @param turno.tipoConsulta
  */
 export function descargarICS(turno: {
   id: string;

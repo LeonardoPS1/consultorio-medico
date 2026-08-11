@@ -1,12 +1,21 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Loader2,
+  Shield,
+  ArrowLeft,
+  ArrowRight,
+  Filter,
+  Trash2,
+  AlertTriangle,
+} from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -15,19 +24,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  Loader2,
-  Search,
-  Shield,
-  ArrowLeft,
-  ArrowRight,
-  Filter,
-  Trash2,
-  AlertTriangle,
-} from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { PageHeader } from '@/components/page-header';
 
 interface AuditEntry {
   id: string;
@@ -65,6 +64,12 @@ interface Props {
   initialTotal: number;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.initialLogs
+ * @param root0.initialTotal
+ */
 export function AuditoriaClient({ initialLogs, initialTotal }: Props) {
   const [logs, setLogs] = useState<AuditEntry[]>(initialLogs);
   const [total, setTotal] = useState(initialTotal);
@@ -97,6 +102,7 @@ export function AuditoriaClient({ initialLogs, initialTotal }: Props) {
   }, [offset, filtroEntidad, filtroAccion]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch bajo demanda al cambiar filtros/paginación (setLoading inicial es síncrono)
     if (offset > 0 || filtroEntidad || filtroAccion) fetchLogs();
   }, [fetchLogs, offset, filtroEntidad, filtroAccion]);
 

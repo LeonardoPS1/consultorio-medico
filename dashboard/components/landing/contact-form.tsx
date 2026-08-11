@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'motion/react';
-import { Button } from '@/components/ui/button';
 import { CheckCircle2, MessageCircle, ArrowRight, Loader2 } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 const BENEFITS = [
   {
@@ -24,6 +24,9 @@ const BENEFITS = [
   },
 ];
 
+/**
+ *
+ */
 export function ContactForm() {
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);

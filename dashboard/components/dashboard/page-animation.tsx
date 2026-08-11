@@ -25,6 +25,8 @@ export const fadeIn = {
 /**
  * Wrapper de página con fade-in y stagger opcional.
  * Reemplaza al fragment raíz de las páginas del dashboard.
+ * @param root0
+ * @param root0.children
  */
 export function PageAnimation({ children }: { children: ReactNode }) {
   return (
@@ -50,6 +52,12 @@ export function PageAnimation({ children }: { children: ReactNode }) {
  * Usar con variants={fadeInUp} para efecto escalonado.
  */
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ * @param root0.className
+ */
 export function AnimSection({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <motion.div variants={fadeInUp} className={className}>

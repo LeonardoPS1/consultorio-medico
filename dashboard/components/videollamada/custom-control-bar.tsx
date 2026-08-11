@@ -7,8 +7,8 @@
 
 'use client';
 
-import { Track } from 'livekit-client';
 import { useTrackToggle, useDisconnectButton } from '@livekit/components-react';
+import { Track } from 'livekit-client';
 import {
   Mic,
   MicOff,
@@ -20,7 +20,6 @@ import {
   Maximize,
   Minimize,
 } from 'lucide-react';
-import { useMemo } from 'react';
 
 // ─── Props ─────────────────────────────────────────────────
 
@@ -75,6 +74,14 @@ function CtrlButton({
 
 // ─── Componente principal ──────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.onChatToggle
+ * @param root0.chatOpen
+ * @param root0.isFullscreen
+ * @param root0.onFullscreenToggle
+ */
 export function CustomControlBar({
   onChatToggle,
   chatOpen,
@@ -84,26 +91,24 @@ export function CustomControlBar({
   const {
     buttonProps: micProps,
     enabled: micEnabled,
-    pending: micPending,
   } = useTrackToggle({ source: Track.Source.Microphone });
 
   const {
     buttonProps: camProps,
     enabled: camEnabled,
-    pending: camPending,
   } = useTrackToggle({ source: Track.Source.Camera });
 
   const {
     buttonProps: screenProps,
     enabled: screenEnabled,
-    pending: screenPending,
   } = useTrackToggle({ source: Track.Source.ScreenShare });
 
   const { buttonProps: disconnectProps } = useDisconnectButton({});
 
   // Limpiamos className de los buttonProps para evitar conflictos
   const cleanProps = (p: React.ButtonHTMLAttributes<HTMLButtonElement>) => {
-    const { className, ...rest } = p;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { className: _className, ...rest } = p;
     return rest;
   };
 

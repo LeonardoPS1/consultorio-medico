@@ -5,15 +5,17 @@
 
 'use client';
 
+import { Bell, BellOff, Loader2 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { Bell, BellOff, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 
+/**
+ *
+ */
 export function PushNotificationToggle() {
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
   const [publicKey, setPublicKey] = useState('');
-  const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [permission, setPermission] = useState<NotificationPermission>('default');
 
   const cargarEstado = useCallback(async () => {
@@ -60,19 +62,13 @@ export function PushNotificationToggle() {
 
   const suscribir = async () => {
     if (!publicKey) {
-      setMsg({ type: 'error', text: 'Push no configurado en el servidor' });
       return;
     }
     if (permission === 'denied') {
-      setMsg({
-        type: 'error',
-        text: 'Permisos denegados. Habilitá notificaciones en el navegador.',
-      });
       return;
     }
 
     setToggling(true);
-    setMsg(null);
 
     try {
       // Pedir permiso si es necesario
@@ -80,7 +76,6 @@ export function PushNotificationToggle() {
         const perm = await Notification.requestPermission();
         setPermission(perm);
         if (perm !== 'granted') {
-          setMsg({ type: 'error', text: 'Permiso denegado' });
           return;
         }
       }
@@ -114,9 +109,8 @@ export function PushNotificationToggle() {
       }
 
       setSubscribed(true);
-      setMsg({ type: 'success', text: 'Notificaciones activadas ✓' });
-    } catch (e) {
-      setMsg({ type: 'error', text: e instanceof Error ? e.message : 'Error al activar' });
+    } catch {
+      // Error silently handled
     } finally {
       setToggling(false);
     }
@@ -124,7 +118,6 @@ export function PushNotificationToggle() {
 
   const desuscribir = async () => {
     setToggling(true);
-    setMsg(null);
 
     try {
       const registration = await navigator.serviceWorker.ready;
@@ -141,9 +134,8 @@ export function PushNotificationToggle() {
       });
 
       setSubscribed(false);
-      setMsg({ type: 'success', text: 'Notificaciones desactivadas' });
-    } catch (e) {
-      setMsg({ type: 'error', text: e instanceof Error ? e.message : 'Error al desactivar' });
+    } catch {
+      // Error silently handled
     } finally {
       setToggling(false);
     }

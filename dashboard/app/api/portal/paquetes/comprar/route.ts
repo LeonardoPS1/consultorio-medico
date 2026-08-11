@@ -6,6 +6,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 import { comprarPaquete } from '@/lib/services/portal-paquetes';
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: NextRequest) {
   if (!validateCSRFOrigin(request)) {
     return NextResponse.json({ error: 'Origen no válido' }, { status: 403 });

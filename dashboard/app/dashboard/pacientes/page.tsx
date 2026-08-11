@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
-import { PacientesClient } from './pacientes-client';
 import { PageHeader } from '@/components/page-header';
 import { getServerPacientes } from '@/lib/server-page-data';
+import { PacientesClient } from './pacientes-client';
 
 // ─── Data fetching ─────────────────────────────────────────
 
@@ -9,6 +9,9 @@ export const dynamic = 'force-dynamic';
 
 // ─── Page ──────────────────────────────────────────────────
 
+/**
+ *
+ */
 export default async function PacientesPage() {
   const cookieStore = await cookies();
   const sucursalId = cookieStore.get('sucursal_activa')?.value;

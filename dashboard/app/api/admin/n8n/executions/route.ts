@@ -4,6 +4,10 @@ import { fetchExecutions } from '@/lib/services/n8n-monitor';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ *
+ * @param request
+ */
 export async function GET(request: NextRequest) {
   const session = await getEffectiveSession();
   if (!session?.user || session.user.role !== 'admin') {

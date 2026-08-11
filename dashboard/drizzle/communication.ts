@@ -1,3 +1,4 @@
+import { relations, sql, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 import {
   pgTable,
   uuid,
@@ -9,12 +10,11 @@ import {
   decimal,
   index,
 } from 'drizzle-orm/pg-core';
-import { relations, sql, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
+import { pacientes, medicos } from './core';
 import {
   plantillaTipoEnum,
   plantillaEstadoEnum,
 } from './enums';
-import { pacientes, medicos } from './core';
 
 // ============================================================
 // CONVERSACIONES

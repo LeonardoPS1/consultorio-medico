@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { pacientes, conversaciones, mensajes } from '@/drizzle/schema';
-import { eq, and, isNull, asc } from 'drizzle-orm';
-import { verifyWebhookSignature, sendMessage, getInboxId } from '@/lib/services/chatwoot';
-import { handleWaitlistResponse } from '@/lib/whatsapp-waitlist';
-import { safeLog, safeWarn, safeError } from '@/lib/logger';
-import { z } from 'zod';
 import { createHash } from 'crypto';
+import { eq, and, isNull } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { pacientes, conversaciones, mensajes } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { safeLog, safeWarn, safeError } from '@/lib/logger';
+import { verifyWebhookSignature, getInboxId } from '@/lib/services/chatwoot';
+import { handleWaitlistResponse } from '@/lib/whatsapp-waitlist';
 
 const chatwootSchema = z.object({
   event: z.string(),
@@ -46,6 +46,10 @@ function getIdempotencyKey(payload: unknown): string {
   return `chatwoot:${createHash('sha256').update(String(msgId)).digest('hex').slice(0, 16)}`;
 }
 
+/**
+ *
+ * @param req
+ */
 export async function POST(req: NextRequest) {
   const bodyText = await req.text();
   const signature = req.headers.get('x-chatwoot-signature') || req.headers.get('x-hub-signature-256');
@@ -220,6 +224,9 @@ export async function POST(req: NextRequest) {
   }
 }
 
+/**
+ *
+ */
 export async function OPTIONS() {
   return NextResponse.json({}, {
     headers: {

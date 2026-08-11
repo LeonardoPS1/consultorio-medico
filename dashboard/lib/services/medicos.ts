@@ -8,10 +8,10 @@
  * Al crear/editar/eliminar un médico, llamar a medicosService.invalidate().
  */
 
-import { db } from '@/lib/db';
-import { medicos } from '@/drizzle/schema';
 import { eq, and, sql, count } from 'drizzle-orm';
+import { medicos } from '@/drizzle/schema';
 import { cache } from '@/lib/cache';
+import { db } from '@/lib/db';
 
 const CACHE_PREFIX = 'medicos';
 const CACHE_TTL = 60_000; // 60s — balance entre frescura y reducción de lecturas
@@ -21,6 +21,7 @@ export type MedicoRow = typeof medicos.$inferSelect;
 export const medicosService = {
   /**
    * Lista médicos activos con cache.
+   * @param sucursalId
    */
   async list(sucursalId?: string): Promise<{ data: MedicoRow[]; total: number }> {
     const cacheKey = `${CACHE_PREFIX}:list:${sucursalId ?? 'todas'}`;
@@ -52,6 +53,7 @@ export const medicosService = {
 
   /**
    * Obtiene un médico por ID (sin cache, es individual).
+   * @param id
    */
   async getById(id: string): Promise<MedicoRow | null> {
     const [medico] = await db

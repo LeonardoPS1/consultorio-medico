@@ -75,6 +75,9 @@ function ensureDataDir() {
   }
 }
 
+/**
+ *
+ */
 export function getOrganization(): OrganizationData {
   try {
     ensureDataDir();
@@ -89,6 +92,10 @@ export function getOrganization(): OrganizationData {
   }
 }
 
+/**
+ *
+ * @param data
+ */
 export function updateOrganization(data: Partial<OrganizationData>): OrganizationData {
   const current = getOrganization();
   const updated = { ...current, ...data };
@@ -97,6 +104,9 @@ export function updateOrganization(data: Partial<OrganizationData>): Organizatio
   return updated;
 }
 
+/**
+ *
+ */
 export function getOrgStyle(): Record<string, string> {
   const org = getOrganization();
   return {

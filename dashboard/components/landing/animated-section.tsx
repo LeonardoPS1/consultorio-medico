@@ -28,6 +28,15 @@ const variants = {
   },
 } as const;
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ * @param root0.className
+ * @param root0.delay
+ * @param root0.variant
+ * @param root0.as
+ */
 export function AnimatedSection({
   children,
   className,

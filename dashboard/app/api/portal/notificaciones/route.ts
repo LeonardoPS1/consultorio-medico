@@ -12,6 +12,10 @@ import {
   marcarTodasLeidas,
 } from '@/lib/services/portal-notificaciones';
 
+/**
+ *
+ * @param request
+ */
 export async function GET(request: NextRequest) {
   const session = await getPortalSession();
   if (!session) {
@@ -30,6 +34,10 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ data: notificaciones });
 }
 
+/**
+ *
+ * @param request
+ */
 export async function PATCH(request: NextRequest) {
   const session = await getPortalSession();
   if (!session) {

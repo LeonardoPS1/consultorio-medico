@@ -7,9 +7,8 @@
 
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
 import { Mic, MicOff, Camera, CameraOff, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Logo } from '@/components/layout/logo';
 
 // ─── Props ─────────────────────────────────────────────────
@@ -22,6 +21,13 @@ interface PreJoinLobbyProps {
 
 // ─── Componente ────────────────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.identity
+ * @param root0.role
+ * @param root0.onJoin
+ */
 export function PreJoinLobby({ identity, role, onJoin }: PreJoinLobbyProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);

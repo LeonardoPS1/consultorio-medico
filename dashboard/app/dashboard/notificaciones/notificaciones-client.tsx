@@ -1,12 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { PageHeader } from '@/components/page-header';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Switch } from '@/components/ui/switch';
 import {
   Bell,
   BellOff,
@@ -18,14 +11,20 @@ import {
   EyeOff,
   Trash2,
   CheckCheck,
-  Loader2,
   Smartphone,
   Volume2,
   VolumeX,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { PageHeader } from '@/components/page-header';
 import { PushNotificationToggle } from '@/components/push-notification-toggle';
-import { formatRelative } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
 import { useNotifications } from '@/lib/hooks/use-notifications';
+import { formatRelative } from '@/lib/utils';
 
 // ============================================================
 // Tipos
@@ -86,11 +85,20 @@ const descripcionesTipo: Record<string, string> = {
 // Componente
 // ============================================================
 
+/* eslint-disable react/prop-types */
+/**
+ *
+ * @param root0
+ * @param root0.initialNotificaciones
+ * @param root0.initialTotal
+ * @param root0.initialNoLeidas
+ */
 export function NotificacionesClient({
   initialNotificaciones,
   initialTotal,
   initialNoLeidas,
-}: NotificacionesClientProps) {
+}: NotificacionesClientProps): React.ReactElement {
+/* eslint-enable react/prop-types */
   const router = useRouter();
   const {
     notificaciones,

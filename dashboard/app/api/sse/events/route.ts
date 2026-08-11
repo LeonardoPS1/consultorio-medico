@@ -1,10 +1,14 @@
+import { NextRequest } from 'next/server';
+import { safeLog } from '@/lib/logger';
+import { addClient } from '@/lib/sse-events';
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-import { NextRequest } from 'next/server';
-import { addClient } from '@/lib/sse-events';
-import { safeLog } from '@/lib/logger';
-
+/**
+ *
+ * @param request
+ */
 export async function GET(request: NextRequest) {
   const tenantId = request.headers.get('x-tenant-id') || '00000000-0000-0000-0000-000000000000';
   const userId = request.headers.get('x-user-id') || undefined;

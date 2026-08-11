@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import dynamic from 'next/dynamic';
+import { Clock, TrendingUp, TrendingDown, Calendar, AlertTriangle, Users, Shield, FileText } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Clock, TrendingUp, TrendingDown, Calendar, AlertTriangle, Users, Shield, FileText, Search } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/page-header';
-import type { ComplianceData, Periodo, AccesoAuditoria, SolicitudARCO } from './types';
-import { AuditoriaTab } from './auditoria-tab';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArcOTab } from './arco-tab';
+import { AuditoriaTab } from './auditoria-tab';
+import type { ComplianceData, Periodo, AccesoAuditoria, SolicitudARCO, Paginacion } from './types';
 
 const TiempoChart = dynamic(() => import('@/components/charts/compliance-tiempo-chart'), {
   ssr: false,
@@ -23,10 +23,17 @@ const MedicosChart = dynamic(() => import('@/components/charts/compliance-medico
 
 interface Props {
   initialData: ComplianceData | null;
-  initialAuditoriaData: { accesos: AccesoAuditoria[]; paginacion: any } | null;
-  initialArcData: { solicitudes: SolicitudARCO[]; paginacion: any } | null;
+  initialAuditoriaData: { accesos: AccesoAuditoria[]; paginacion: Paginacion } | null;
+  initialArcData: { solicitudes: SolicitudARCO[]; paginacion: Paginacion } | null;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.initialData
+ * @param root0.initialAuditoriaData
+ * @param root0.initialArcData
+ */
 export function ComplianceClient({ initialData, initialAuditoriaData, initialArcData }: Props) {
   const [activeTab, setActiveTab] = useState<'tiempos' | 'auditoria' | 'arco'>('tiempos');
   const [periodo, setPeriodo] = useState<Periodo>('mes');

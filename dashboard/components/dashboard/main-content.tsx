@@ -1,9 +1,14 @@
 'use client';
 
+import { Breadcrumbs } from '@/components/layout/breadcrumbs';
 import { useLayoutConfig } from '@/lib/layout-config';
 import { cn } from '@/lib/utils';
-import { Breadcrumbs } from '@/components/layout/breadcrumbs';
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function MainContent({ children }: { children: React.ReactNode }) {
   const { config } = useLayoutConfig();
 

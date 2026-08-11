@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
-import { apiHandler, success, created, fail } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, created, fail } from '@/lib/api-handler';
 import { listarNovedades, crearNovedad, importarChangelogEstatico, type CreateNovedadInput } from '@/lib/services/novedades';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +23,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
     console.error('[API Novedades] Error al importar CHANGELOG:', err);
   }
 
-  let entries = await listarNovedades(limit);
+  const entries = await listarNovedades(limit);
 
   return success(entries);
 });

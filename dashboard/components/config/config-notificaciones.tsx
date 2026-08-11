@@ -1,11 +1,11 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { Save } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
 
 interface NotifData {
@@ -48,6 +48,15 @@ function SwitchRow({
   );
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.notificaciones
+ * @param root0.loading
+ * @param root0.soundEnabled
+ * @param root0.onToggleSound
+ * @param root0.onNotificacionesChange
+ */
 export function ConfigNotificaciones({
   notificaciones,
   loading,

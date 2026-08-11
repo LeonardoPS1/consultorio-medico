@@ -33,6 +33,12 @@ interface Props {
   certId: string;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ * @param root0.certId
+ */
 export function VerificarCertificadoClient({ data, certId }: Props) {
   if (!data) {
     return (

@@ -39,6 +39,11 @@ const defaultTestimonials: TestimonialItem[] = [
   },
 ];
 
+/**
+ *
+ * @param root0
+ * @param root0.testimonials
+ */
 export function Testimonials({ testimonials: customTestimonials }: TestimonialsProps = {}) {
   const items = customTestimonials ?? defaultTestimonials;
 

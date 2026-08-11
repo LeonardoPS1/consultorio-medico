@@ -1,7 +1,7 @@
-import { db } from '@/lib/db';
-import { notificaciones, notificacionTipoEnum } from '@/drizzle/schema';
 import { eq, and, sql, count, desc } from 'drizzle-orm';
+import { notificaciones } from '@/drizzle/schema';
 import { notFound } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 
 /** Prioridad por tipo: urgencia=0 (más alta), sistema=4 (más baja) */
 export const PRIORIDAD_POR_TIPO: Record<string, number> = {
@@ -42,6 +42,8 @@ export interface ConteoPorTipo {
 export const notificacionesService = {
   /**
    * Listar notificaciones de un usuario con paginación y filtros
+   * @param usuarioId
+   * @param options
    */
   async list(usuarioId: string, options: ListNotificacionesOptions = {}) {
     const { limit = 50, offset = 0, tipo, soloNoLeidas = false, includeDeleted = false } = options;
@@ -107,6 +109,7 @@ export const notificacionesService = {
 
   /**
    * Crear una notificación y enviar push si está configurado
+   * @param input
    */
   async create(input: CreateNotificacionInput) {
     const tipo = input.tipo || 'sistema';
@@ -152,6 +155,8 @@ export const notificacionesService = {
 
   /**
    * Obtener una notificación por ID (verificando que pertenezca al usuario)
+   * @param id
+   * @param usuarioId
    */
   async getById(id: string, usuarioId: string) {
     const [notif] = await db
@@ -172,6 +177,8 @@ export const notificacionesService = {
 
   /**
    * Marcar una notificación como leída
+   * @param id
+   * @param usuarioId
    */
   async marcarLeida(id: string, usuarioId: string) {
     await this.getById(id, usuarioId); // verifica existencia + ownership
@@ -184,6 +191,8 @@ export const notificacionesService = {
 
   /**
    * Marcar una notificación como no leída
+   * @param id
+   * @param usuarioId
    */
   async marcarNoLeida(id: string, usuarioId: string) {
     await this.getById(id, usuarioId);
@@ -196,6 +205,7 @@ export const notificacionesService = {
 
   /**
    * Marcar todas las notificaciones como leídas
+   * @param usuarioId
    */
   async marcarTodasLeidas(usuarioId: string) {
     await db
@@ -213,6 +223,8 @@ export const notificacionesService = {
 
   /**
    * Eliminar (soft delete) una notificación
+   * @param id
+   * @param usuarioId
    */
   async eliminar(id: string, usuarioId: string) {
     await this.getById(id, usuarioId);
@@ -225,6 +237,7 @@ export const notificacionesService = {
 
   /**
    * Obtener cantidad de notificaciones no leídas
+   * @param usuarioId
    */
   async getNoLeidasCount(usuarioId: string) {
     const [result] = await db
@@ -242,6 +255,7 @@ export const notificacionesService = {
 
   /**
    * Obtener conteo de no leídas agrupado por tipo
+   * @param usuarioId
    */
   async getConteoPorTipo(usuarioId: string): Promise<ConteoPorTipo> {
     const rows = await db

@@ -2,10 +2,10 @@
  * Paquetes de turnos y suscripciones para el portal del paciente.
  */
 
-import { db } from '@/lib/db';
-import { paquetesPortal, suscripcionesPaciente, turnos, pacientes } from '@/drizzle/schema';
-import { eq, and, sql, gte } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
+import { paquetesPortal, suscripcionesPaciente, turnos, pacientes } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { safeLog, safeError } from '@/lib/logger';
 
 // ─── Cliente MP ─────────────────────────────────────────────────
@@ -22,11 +22,18 @@ export interface PaqueteConSuscripcion {
 }
 
 // ─── Listar paquetes activos ────────────────────────────────────
+/**
+ *
+ */
 export async function listarPaquetesActivos(): Promise<(typeof paquetesPortal.$inferSelect)[]> {
   return db.select().from(paquetesPortal).where(eq(paquetesPortal.activo, true));
 }
 
 // ─── Obtener suscripciones activas del paciente ─────────────────
+/**
+ *
+ * @param pacienteId
+ */
 export async function getSuscripcionesPaciente(pacienteId: string) {
   return db
     .select()
@@ -41,6 +48,11 @@ export async function getSuscripcionesPaciente(pacienteId: string) {
 }
 
 // ─── Crear preferencia de pago para paquete ─────────────────────
+/**
+ *
+ * @param pacienteId
+ * @param paqueteId
+ */
 export async function comprarPaquete(pacienteId: string, paqueteId: string) {
   const [paquete] = await db
     .select()
@@ -136,6 +148,12 @@ export async function comprarPaquete(pacienteId: string, paqueteId: string) {
 }
 
 // ─── Activar suscripción después de pago exitoso ────────────────
+/**
+ *
+ * @param paqueteId
+ * @param pacienteId
+ * @param mercadopagoPaymentId
+ */
 export async function activarSuscripcion(
   paqueteId: string,
   pacienteId: string,
@@ -179,6 +197,11 @@ export async function activarSuscripcion(
 }
 
 // ─── Consumir un turno de la suscripción ────────────────────────
+/**
+ *
+ * @param pacienteId
+ * @param turnoId
+ */
 export async function consumirTurnoSuscripcion(
   pacienteId: string,
   turnoId: string,
@@ -227,6 +250,10 @@ export async function consumirTurnoSuscripcion(
 }
 
 // ─── Verificar si paciente puede usar paquete para un turno ─────
+/**
+ *
+ * @param pacienteId
+ */
 export async function tienePaqueteDisponible(pacienteId: string): Promise<boolean> {
   const [row] = await db
     .select({ count: sql<number>`count(*)` })

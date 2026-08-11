@@ -1,24 +1,20 @@
 'use client';
 
+import { Search, Phone, Hash, Loader2 } from 'lucide-react';
 import { useRef, useEffect } from 'react';
-import { Search, User, Phone, Mail, Hash, Loader2 } from 'lucide-react';
-import { useFuzzyPatients } from '@/lib/hooks/use-fuzzy-patients';
-import { usePatientPanel } from '@/lib/hooks/use-patient-panel';
-import { cn, getInitials } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useFuzzyPatients } from '@/lib/hooks/use-fuzzy-patients';
+import { usePatientPanel } from '@/lib/hooks/use-patient-panel';
 import type { PatientSummaryLite } from '@/lib/types/patient-panel';
+import { cn, getInitials } from '@/lib/utils';
 
-/** Scoring dot colors */
-const scoringColor: Record<string, string> = {
-  alto: 'bg-red-500',
-  medio: 'bg-yellow-500',
-  bajo: 'bg-green-500',
-};
-
+/**
+ *
+ */
 export function PatientSearch() {
   const { results, query, setQuery, isLoadingCache, totalCached } = useFuzzyPatients();
-  const { selectPatient, data, close } = usePatientPanel();
+  const { selectPatient, data } = usePatientPanel();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Auto-focus on mount

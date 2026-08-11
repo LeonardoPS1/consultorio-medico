@@ -1,6 +1,8 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,18 +11,21 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 
 interface NuevaConversacionModalProps {
   onCreated: () => void;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.onCreated
+ */
 export function NuevaConversacionModal({ onCreated }: NuevaConversacionModalProps) {
   const [open, setOpen] = useState(false);
   const [nombre, setNombre] = useState('');
@@ -57,7 +62,7 @@ export function NuevaConversacionModal({ onCreated }: NuevaConversacionModalProp
       setTelefono('+569');
       setMensaje('');
       setCanal('whatsapp');
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'No se pudo crear la conversación. Intentá de nuevo.',

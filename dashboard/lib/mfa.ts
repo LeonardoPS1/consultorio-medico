@@ -2,8 +2,8 @@
 // 2FA / MFA - Autenticación de dos factores
 // ============================================================
 
-import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
+import speakeasy from 'speakeasy';
 
 const ISSUER = 'Consultorio Médico';
 
@@ -16,6 +16,8 @@ export function generate2faSecret(): string {
 
 /**
  * Verifica un código TOTP contra el secreto
+ * @param token
+ * @param secret
  */
 export function verify2faToken(token: string, secret: string): boolean {
   if (!token || !secret) return false;
@@ -33,6 +35,8 @@ export function verify2faToken(token: string, secret: string): boolean {
 
 /**
  * Genera la URL para Google Authenticator / Authy
+ * @param secret
+ * @param email
  */
 export function generateOtpAuthUrl(secret: string, email: string): string {
   return speakeasy.otpauthURL({
@@ -45,6 +49,8 @@ export function generateOtpAuthUrl(secret: string, email: string): string {
 
 /**
  * Genera un QR code en base64 para mostrar en el setup
+ * @param secret
+ * @param email
  */
 export async function generateQRCodeBase64(secret: string, email: string): Promise<string> {
   const otpauth = generateOtpAuthUrl(secret, email);
@@ -57,6 +63,7 @@ export async function generateQRCodeBase64(secret: string, email: string): Promi
 
 /**
  * Genera códigos de respaldo (para cuando no tienes el teléfono)
+ * @param count
  */
 export function generateBackupCodes(count: number = 8): string[] {
   const codes: string[] = [];

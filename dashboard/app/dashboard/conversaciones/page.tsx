@@ -1,12 +1,15 @@
-import { getEffectiveSession } from '@/lib/auth-effective';
+import { eq, desc, isNull } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
-import { db } from '@/lib/db';
 import { conversaciones, pacientes } from '@/drizzle/schema';
-import { eq, desc, isNull, sql } from 'drizzle-orm';
+import { getEffectiveSession } from '@/lib/auth-effective';
+import { db } from '@/lib/db';
 import { ConversacionesClient } from './conversaciones-client';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ *
+ */
 export default async function ConversacionesPage() {
   const session = await getEffectiveSession();
   if (!session) redirect('/login');

@@ -3,12 +3,18 @@
  * Protegido: requiere cookie portal_session
  * Lee ipFirma del header x-forwarded-for o la IP de la request
  */
-import { NextResponse } from 'next/server';
-import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
-import { db } from '@/lib/db';
-import { consentimientos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { consentimientos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 
+/**
+ *
+ * @param req
+ * @param root0
+ * @param root0.params
+ */
 export async function POST(req: Request, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   if (!validateCSRFOrigin(req)) {
     return NextResponse.json({ error: 'Origen no válido' }, { status: 403 });

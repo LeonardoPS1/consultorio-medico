@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
-import { TurnosClient } from './turnos-client';
 import { PageHeader } from '@/components/page-header';
 import { getServerTurnos } from '@/lib/server-page-data';
+import { TurnosClient } from './turnos-client';
 
 // ─── Data fetching ─────────────────────────────────────────
 
@@ -31,6 +31,9 @@ const LABELS_ESTADO: Record<string, string> = {
 
 // ─── Page ──────────────────────────────────────────────────
 
+/**
+ *
+ */
 export default async function TurnosPage() {
   let apiData: Awaited<ReturnType<typeof getServerTurnos>>;
   try {

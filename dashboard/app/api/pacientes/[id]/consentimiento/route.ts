@@ -7,15 +7,15 @@
  * - GET:  Obtener historial de consentimientos
  */
 
+import { eq, and, sql } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
-import { apiHandler, success } from '@/lib/api-handler';
-import { requireAuth, verifyPacienteAccess } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
 import { z } from 'zod';
-import { privacidadService } from '@/lib/services/privacidad';
+import { pacientes } from '@/drizzle/schema';
+import { requireAuth, verifyPacienteAccess } from '@/lib/api-auth';
+import { apiHandler, success } from '@/lib/api-handler';
 import { db } from '@/lib/db';
-import { pacientes, consentimientoLog } from '@/drizzle/schema';
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { privacidadService } from '@/lib/services/privacidad';
+import { parseBody } from '@/lib/validations';
 
 // Schema de validación para registrar consentimiento
 const registrarConsentimientoSchema = z.object({

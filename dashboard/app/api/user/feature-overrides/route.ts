@@ -5,11 +5,11 @@
  * y así pasarlos a canAccessWithUserOverrides().
  */
 
-import { apiHandler, success } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { db } from '@/lib/db';
-import { userFeatureOverrides } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { userFeatureOverrides } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 
 export const GET = apiHandler(async () => {
   const session = await requireAuth();

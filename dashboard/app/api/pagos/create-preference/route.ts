@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, fail } from '@/lib/api-handler';
 import { createCheckoutPreference } from '@/lib/mercadopago';
 import { PAID_PLANS } from '@/lib/planes';
-import { apiHandler, fail } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
 import { parseBody, createPreferenceSchema } from '@/lib/validations';
 
 // POST /api/pagos/create-preference
@@ -14,7 +14,7 @@ export const POST = apiHandler(async (request: Request) => {
     fail('No autorizado', 401);
   }
 
-  const { planId } = await parseBody(request as any, createPreferenceSchema);
+  const { planId } = await parseBody(request as NextRequest, createPreferenceSchema);
 
   if (!PAID_PLANS.includes(planId as (typeof PAID_PLANS)[number])) {
     fail('Plan no válido');

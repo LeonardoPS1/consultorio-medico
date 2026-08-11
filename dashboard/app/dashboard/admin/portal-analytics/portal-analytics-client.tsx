@@ -1,21 +1,20 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import {
+  Activity, Loader2, AlertCircle, Smartphone, TrendingUp,
+  RefreshCw, Users, Gauge, Clock,
+} from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { useState, useEffect, useCallback } from 'react';
+import { PageHeader } from '@/components/page-header';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const WebVitalsLineChart = dynamic(
   () => import('@/components/charts/web-vitals-line-chart').then((m) => ({ default: m.WebVitalsLineChart })),
   { ssr: false },
 );
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Activity, Loader2, AlertCircle, Smartphone, TrendingUp,
-  RefreshCw, Users, Gauge, Clock,
-} from 'lucide-react';
-import { PageHeader } from '@/components/page-header';
 
 // ─── Types ─────────────────────────────────────────────────
 
@@ -78,23 +77,12 @@ function formatValue(name: string, value: number | string | null | undefined): s
   return Math.round(num).toLocaleString('es-CL');
 }
 
-function getBarColor(name: string) {
-  return METRIC_COLORS[name] || '#6b7280';
-}
-
 function getThresholdColor(name: string, value: number): string {
   const t = METRIC_THRESHOLDS[name];
   if (!t) return '#6b7280';
   if (value <= t.good) return '#22c55e';
   if (value <= t.poor) return '#eab308';
   return '#ef4444';
-}
-
-function formatDate(iso: string) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '—';
-  return d.toLocaleString('es-CL');
 }
 
 function categorizeUrl(url: string | null): string {
@@ -122,6 +110,9 @@ interface ByUrlRow { url: string | null; metricName: string; avgValue: number; m
 
 // ─── Main Component ────────────────────────────────────────
 
+/**
+ *
+ */
 export function PortalAnalyticsClient() {
   const [period, setPeriod] = useState<Period>('24h');
   const [loading, setLoading] = useState(true);
@@ -173,6 +164,7 @@ export function PortalAnalyticsClient() {
     }
   }, [period]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchData sets loading state
   useEffect(() => { fetchData(); }, [fetchData]);
 
   // ─── Derived: compliance % ─────────────────────────────
@@ -197,7 +189,6 @@ export function PortalAnalyticsClient() {
   const categoryList = Object.values(categories).sort((a, b) => b.count - a.count);
 
   // ─── Derived: mobile stats ─────────────────────────────
-  const mobileData = deviceData.filter((d) => d.device === 'mobile');
   const mobilePct = total > 0
     ? Math.round((deviceData.filter((d) => d.device === 'mobile').reduce((a, d) => a + d.count, 0) / deviceData.reduce((a, d) => a + d.count, 0)) * 100)
     : 0;
@@ -205,7 +196,7 @@ export function PortalAnalyticsClient() {
   // ─── Derived: timeline chart data ──────────────────────
   const timelineBuckets = Array.from(new Set(timeline.map((t) => t.bucket))).sort();
   const timelineChartData = timelineBuckets.map((bucket) => {
-    const point: Record<string, any> = { bucket };
+    const point: Record<string, string | number | null> = { bucket };
     for (const metric of ['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as const) {
       const entry = timeline.find((t) => t.bucket === bucket && t.name === metric);
       point[metric] = entry ? entry.avgValue : null;

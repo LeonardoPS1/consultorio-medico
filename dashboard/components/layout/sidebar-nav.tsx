@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Calendar,
@@ -39,6 +38,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { N8nStatusIndicator } from '@/components/layout/n8n-status-indicator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFeatureFlags } from '@/lib/feature-flags-context';

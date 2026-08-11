@@ -28,6 +28,18 @@ const PADDINGS: Record<Padding, string> = {
   lg: 'p-5',
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ * @param root0.hover
+ * @param root0.padding
+ * @param root0.className
+ * @param root0.style
+ * @param root0.onClick
+ * @param root0.onMouseEnter
+ * @param root0.onMouseLeave
+ */
 export function PortalCard({
   children,
   hover = false,

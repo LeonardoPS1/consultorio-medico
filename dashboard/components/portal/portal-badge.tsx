@@ -3,8 +3,8 @@
  * Variants: primary, success, warning, destructive, muted
  */
 
-import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 type BadgeVariant = 'primary' | 'success' | 'warning' | 'destructive' | 'muted' | 'accent';
 
@@ -24,6 +24,14 @@ const variantStyles: Record<BadgeVariant, string> = {
   accent: 'bg-portal-accent/10 text-portal-accent',
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.variant
+ * @param root0.children
+ * @param root0.className
+ * @param root0.style
+ */
 export function PortalBadge({
   variant = 'muted',
   children,

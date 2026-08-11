@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server';
-import { consentimientosService } from '@/lib/services/consentimientos';
-import { apiHandler, ok } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { updateConsentimientoSchema } from '@/lib/validations';
+import { apiHandler, ok } from '@/lib/api-handler';
+import { consentimientosService } from '@/lib/services/consentimientos';
+import { parseBody , updateConsentimientoSchema } from '@/lib/validations';
 
 // GET /api/consentimientos/[id]
 export const GET = apiHandler(

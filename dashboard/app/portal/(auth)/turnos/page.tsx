@@ -3,29 +3,18 @@
  * Server component con DB directo (no self-fetch).
  */
 
-import { getPortalSession } from '@/lib/portal-auth';
-import { redirect } from 'next/navigation';
-import { db } from '@/lib/db';
-import { turnos, medicos } from '@/drizzle/schema';
 import { eq, desc, sql } from 'drizzle-orm';
+import { redirect } from 'next/navigation';
+import { turnos, medicos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { getPortalSession } from '@/lib/portal-auth';
 import PortalTurnosClient from './portal-turnos-client';
 
 export const dynamic = 'force-dynamic';
 
-interface Turno {
-  id: string;
-  fechaHora: string;
-  hora: string;
-  estado: string;
-  motivo?: string;
-  tipoConsulta: string;
-  duracionMinutos: number;
-  linkVideollamada?: string;
-  medicoNombre: string;
-  medicoEspecialidad: string;
-  pagado: boolean;
-}
-
+/**
+ *
+ */
 export default async function PortalTurnosPage() {
   const session = await getPortalSession();
   if (!session) redirect('/portal');

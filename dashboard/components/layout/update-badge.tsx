@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
 import { Newspaper, RefreshCw, ArrowUp, Bug, Shield, Code } from 'lucide-react';
-import { useUpdate } from '@/lib/update-context';
-import { CHANGELOG, type ChangelogEntry } from '@/lib/changelog-data';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +12,9 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { type ChangelogEntry } from '@/lib/changelog-data';
+import { useUpdate } from '@/lib/update-context';
 
 type NovedadApi = {
   id: string;
@@ -63,13 +63,15 @@ function apiToChangelog(n: NovedadApi): ChangelogEntry & { tipo: string } {
   };
 }
 
+/**
+ *
+ */
 export function UpdateBadge() {
   const {
     updateReady,
     handleUpdate,
     changelogOpen,
     setChangelogOpen,
-    appVersion,
     hasUnseenChangelog,
     markChangelogSeen,
   } = useUpdate();

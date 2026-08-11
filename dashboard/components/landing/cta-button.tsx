@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { ChevronRight, MessageCircle } from 'lucide-react';
+import { useState } from 'react';
 import { RegistroExpressModal } from '@/components/landing/registro-modal';
+import { Button } from '@/components/ui/button';
 
+/**
+ *
+ */
 export function CTASectionButton() {
   const [registroOpen, setRegistroOpen] = useState(false);
 

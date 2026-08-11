@@ -32,7 +32,6 @@ import {
   Network,
   Webhook,
   Smartphone,
-  Plus,
   FileDown,
   Search,
   UserPlus,

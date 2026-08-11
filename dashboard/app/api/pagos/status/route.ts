@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { suscripciones, usuarios } from '@/drizzle/schema';
 import { eq, desc } from 'drizzle-orm';
-import { PLANES, type PlanId } from '@/lib/planes';
-import { apiHandler } from '@/lib/api-handler';
+import { NextResponse } from 'next/server';
+import { suscripciones, usuarios } from '@/drizzle/schema';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { PLANES, type PlanId } from '@/lib/planes';
 
 // GET /api/pagos/status
 // Devuelve el estado de la suscripción del usuario logueado

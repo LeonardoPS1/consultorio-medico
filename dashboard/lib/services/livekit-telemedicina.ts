@@ -11,12 +11,12 @@
  *   4. Envía WhatsApp al paciente con el link
  */
 
-import { db } from '@/lib/db';
-import { safeError, safeLog } from '@/lib/logger';
-import { turnos, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import { getRoomName, getSalaLink, LIVEKIT_URL } from '@/lib/livekit-client';
+import { turnos, pacientes, medicos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { generateMedicoToken, generatePacienteToken, LIVEKIT_API_KEY } from '@/lib/livekit';
+import { getRoomName, getSalaLink } from '@/lib/livekit-client';
+import { safeError, safeLog } from '@/lib/logger';
 
 // ─── Tipos ─────────────────────────────────────────────────
 
@@ -38,7 +38,8 @@ export const telemedicinaService = {
    * 2. Genera tokens para médico y paciente
    * 3. Guarda linkVideollamada en el turno
    * 4. Envía WhatsApp al paciente
-   *
+   * @param turnoId
+   * @param fechaHoraOverride
    * @returns SalaResult o null si falla (no bloquea el flujo principal)
    */
   async configurarSala(turnoId: string, fechaHoraOverride?: Date): Promise<SalaResult | null> {
@@ -154,6 +155,12 @@ export const telemedicinaService = {
 
   /**
    * Envía WhatsApp al paciente con el link de videollamada.
+   * @param params
+   * @param params.telefono
+   * @param params.fecha
+   * @param params.hora
+   * @param params.medicoNombre
+   * @param params.linkVideollamada
    */
   async enviarNotificacionWhatsApp(params: {
     telefono: string;

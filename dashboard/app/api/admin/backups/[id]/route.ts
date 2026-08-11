@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getEffectiveSession } from '@/lib/auth-effective';
 import fs from 'fs';
 import path from 'path';
+import { NextRequest, NextResponse } from 'next/server';
+import { getEffectiveSession } from '@/lib/auth-effective';
 
 // ============================================================
 // Config
@@ -24,6 +24,12 @@ function findBackupFile(id: string): string | null {
 // GET /api/admin/backups/[id] — Descargar backup
 // ============================================================
 
+/**
+ *
+ * @param _request
+ * @param root0
+ * @param root0.params
+ */
 export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
   try {
@@ -57,6 +63,12 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
 // DELETE /api/admin/backups/[id] — Eliminar backup
 // ============================================================
 
+/**
+ *
+ * @param _request
+ * @param root0
+ * @param root0.params
+ */
 export async function DELETE(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
   try {

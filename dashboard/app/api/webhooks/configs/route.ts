@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { webhooksService } from '@/lib/services/webhooks';
-import { apiHandler, success, created, ok, fail } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
 import { z } from 'zod';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, created, ok, fail } from '@/lib/api-handler';
+import { webhooksService } from '@/lib/services/webhooks';
+import { parseBody } from '@/lib/validations';
 
 const createWebhookSchema = z.object({
   evento: z.enum([

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { motion, AnimatePresence } from 'motion/react';
-import { Button } from '@/components/ui/button';
 import { Menu, X, ChevronRight, MessageCircle, Calculator } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { RegistroExpressModal } from '@/components/landing/registro-modal';
 import { Logo } from '@/components/layout/logo';
+import { Button } from '@/components/ui/button';
 
 const NAV_ITEMS = [
   { label: 'Funcionalidades', href: '#features' },
@@ -15,6 +15,9 @@ const NAV_ITEMS = [
   { label: 'FAQ', href: '#faq' },
 ];
 
+/**
+ *
+ */
 export function Navbar() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);

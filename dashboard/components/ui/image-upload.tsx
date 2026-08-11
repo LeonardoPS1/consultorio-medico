@@ -1,8 +1,8 @@
 'use client';
 
+import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
 
 interface ImageUploadProps {
   value: string; // data URL o URL externa
@@ -28,6 +28,19 @@ const shapeClasses = {
   square: 'rounded-lg',
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.value
+ * @param root0.onChange
+ * @param root0.onRemove
+ * @param root0.className
+ * @param root0.size
+ * @param root0.shape
+ * @param root0.label
+ * @param root0.fallback
+ * @param root0.maxSizeMB
+ */
 export function ImageUpload({
   value,
   onChange,

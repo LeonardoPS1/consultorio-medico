@@ -7,9 +7,9 @@
 
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
 import { useChat } from '@livekit/components-react';
 import { X, Send, Loader2 } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 // ─── Props ─────────────────────────────────────────────────
 
@@ -26,6 +26,11 @@ function formatTime(ts: number | Date): string {
 
 // ─── Componente ────────────────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.onClose
+ */
 export function CustomChat({ onClose }: CustomChatProps) {
   const { chatMessages, send, isSending } = useChat();
   const [input, setInput] = useState('');

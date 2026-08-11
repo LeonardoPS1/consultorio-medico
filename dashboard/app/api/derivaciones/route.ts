@@ -1,13 +1,12 @@
 import { NextRequest } from 'next/server';
-import { derivacionesService } from '@/lib/services/derivaciones';
-import { apiHandler, success, created, ok, fail } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { createDerivacionSchema } from '@/lib/validations';
+import { apiHandler, created, ok } from '@/lib/api-handler';
+import { derivacionesService } from '@/lib/services/derivaciones';
+import { parseBody , createDerivacionSchema } from '@/lib/validations';
 
 // GET /api/derivaciones?estado=&pacienteId=&medicoId=&search=&limit=&offset=
 export const GET = apiHandler(async (request: NextRequest) => {
-  const session = await requireAuth();
+  await requireAuth();
   const { searchParams } = new URL(request.url);
 
   const estado = searchParams.get('estado') || undefined;
@@ -42,7 +41,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
 
 // POST /api/derivaciones
 export const POST = apiHandler(async (request: NextRequest) => {
-  const session = await requireAuth();
+  await requireAuth();
   const body = await parseBody(request, createDerivacionSchema);
 
   const nueva = await derivacionesService.create(body);

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { motion, useMotionValue, useSpring, useReducedMotion } from 'motion/react';
-import { Button } from '@/components/ui/button';
 import { ChevronRight, Bot, Play, MessageCircle } from 'lucide-react';
+import { motion, useMotionValue, useSpring, useReducedMotion } from 'motion/react';
+import Image from 'next/image';
+import { useState } from 'react';
 import { RegistroExpressModal } from '@/components/landing/registro-modal';
+import { Button } from '@/components/ui/button';
 
 export interface HeroProps {
   badgeText?: string;
@@ -16,6 +16,16 @@ export interface HeroProps {
   stats?: { value: string; label: string }[];
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.badgeText
+ * @param root0.titleNormal
+ * @param root0.titleHighlight
+ * @param root0.subtitle
+ * @param root0.subtitleBold
+ * @param root0.stats
+ */
 export function Hero({
   badgeText = 'WhatsApp con IA · Gestión clínica · Sin ausentismo',
   titleNormal = 'Tu consultorio abierto 24/7',
@@ -169,8 +179,8 @@ export function Hero({
             <motion.div
               className="relative rounded-2xl border border-border/50 shadow-2xl shadow-primary/10 overflow-hidden bg-card hero-dashboard-hover"
               style={{
-                rotateX: rotateX,
-                rotateY: rotateY,
+                rotateX,
+                rotateY,
                 transformPerspective: 1000,
               }}
             >

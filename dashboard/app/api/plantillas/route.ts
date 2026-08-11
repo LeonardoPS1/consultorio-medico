@@ -1,9 +1,9 @@
+import { eq, isNull } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { plantillasMensajes, plantillaEstadoEnum } from '@/drizzle/schema';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { plantillasMensajes, plantillaTipoEnum, plantillaEstadoEnum } from '@/drizzle/schema';
-import { eq, isNull } from 'drizzle-orm';
 
 const NUEVAS_CATEGORIAS = [
   'recordatorio',
@@ -30,6 +30,9 @@ const updatePlantillaSchema = z.object({
   variables: z.array(z.string()).optional(),
 });
 
+/**
+ *
+ */
 export async function GET() {
   try {
     const session = await auth();
@@ -59,6 +62,10 @@ export async function GET() {
   }
 }
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -93,6 +100,10 @@ const [nueva] = await db.insert(plantillasMensajes).values({
   }
 }
 
+/**
+ *
+ * @param request
+ */
 export async function PATCH(request: Request) {
   try {
     const session = await auth();
@@ -119,6 +130,10 @@ export async function PATCH(request: Request) {
   }
 }
 
+/**
+ *
+ * @param request
+ */
 export async function DELETE(request: Request) {
   try {
     const session = await auth();

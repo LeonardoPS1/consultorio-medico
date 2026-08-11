@@ -1,10 +1,9 @@
 'use client';
 
+import { Video, MapPin, Clock, AlertTriangle, RefreshCw, Syringe, Plus } from 'lucide-react';
 import { useMemo, useRef, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
-import { Video, Phone, MapPin, Clock, AlertTriangle, RefreshCw, Syringe, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { getTurnoColor, getTurnoLabel , cn } from '@/lib/utils';
 
 // ============================================================
 // Tipos
@@ -60,13 +59,20 @@ const HORA_INICIO = 7; // 07:00
 const HORA_FIN = 21; // 21:00
 const SLOT_HEIGHT_PX = 60; // px per hour slot
 
-/** Convert "HH:MM" to minutes from midnight */
+/**
+ * Convert "HH:MM" to minutes from midnight
+ * @param hora
+ */
 function horaToMinutos(hora: string): number {
   const [h, m] = hora.split(':').map(Number);
   return h * 60 + m;
 }
 
-/** Get the schedule blocks for a medico on a given date */
+/**
+ * Get the schedule blocks for a medico on a given date
+ * @param horarios
+ * @param fecha
+ */
 function getHorarioBlocks(
   horarios: MedicoDia['horarios'],
   fecha: string,
@@ -86,12 +92,11 @@ function getHorarioBlocks(
   return blocks;
 }
 
-/** Check if a minute-of-day value is within any schedule block */
-function isEnHorario(minutos: number, blocks: { inicio: number; fin: number }[]): boolean {
-  return blocks.some((b) => minutos >= b.inicio && minutos < b.fin);
-}
-
-/** Get tipoConsulta icon */
+/**
+ * Get tipoConsulta icon
+ * @param root0
+ * @param root0.tipo
+ */
 function TipoIcon({ tipo }: { tipo: string | null }) {
   switch (tipo) {
     case 'telemedicina':
@@ -113,6 +118,15 @@ function TipoIcon({ tipo }: { tipo: string | null }) {
 // Component
 // ============================================================
 
+/**
+ *
+ * @param root0
+ * @param root0.medicos
+ * @param root0.turnos
+ * @param root0.fecha
+ * @param root0.onTurnoClick
+ * @param root0.onSlotClick
+ */
 export function DayTimeline({ medicos, turnos, fecha, onTurnoClick, onSlotClick }: DayTimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 

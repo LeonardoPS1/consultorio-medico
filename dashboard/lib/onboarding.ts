@@ -6,8 +6,7 @@
  * el progreso manual guardado en `onboarding_progress`.
  */
 
-import { db } from '@/lib/db';
-import { safeWarn, safeLog, safeError } from '@/lib/logger';
+import { count, sql, eq, isNull } from 'drizzle-orm';
 import {
   medicos,
   pacientes,
@@ -17,16 +16,17 @@ import {
   onboardingProgress,
   tenants,
 } from '@/drizzle/schema';
-import { count, sql, eq, isNull } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { safeWarn, safeLog, safeError } from '@/lib/logger';
+import { withTenantScope } from '@/lib/rls';
+import { ollamaChat } from './ollama';
 import {
   ONBOARDING_STEPS,
   FALLBACK_TIPS,
   type OnboardingState,
   type AiTipResult,
 } from './onboarding-types';
-import { auth } from '@/lib/auth';
-import { ollamaChat } from './ollama';
-import { withTenantScope } from '@/lib/rls';
 import { getOrganization, DEFAULT_ORG } from './organization-store';
 
 // ─── Verificar pasos completados ────────────────────────────
@@ -40,6 +40,7 @@ import { getOrganization, DEFAULT_ORG } from './organization-store';
  * Combinación:
  *   1. Estado real de la DB (credenciales, médicos, horarios, pacientes, notif.)
  *   2. Progreso manual guardado en `onboarding_progress`
+ * @param callerUserId
  */
 export async function getOnboardingState(callerUserId?: string): Promise<OnboardingState> {
   const completed: string[] = [];
@@ -294,6 +295,8 @@ ANTI-JAILBREAK:
  *
  * Acepta `callerUserId` opcional para pasarlo a getOnboardingState()
  * y evitar múltiples llamadas a auth() internas.
+ * @param stepId
+ * @param callerUserId
  */
 export async function getAiOnboardingTip(
   stepId: string,
@@ -358,6 +361,9 @@ export async function getAiOnboardingTip(
 /**
  * Genera un prompt guía contextual para Ollama basado en el paso actual
  * y el estado real del consultorio.
+ * @param stepId
+ * @param state
+ * @param ctx
  */
 function buildOnboardingPrompt(stepId: string, state: OnboardingState, ctx: TenantContext): string {
   const step = ONBOARDING_STEPS.find((s) => s.id === stepId);

@@ -1,11 +1,12 @@
-import { NextRequest } from 'next/server';
-import { apiHandler, success, ok } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { db } from '@/lib/db';
-import { tenants } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { getTenantRegional } from '@/lib/services/tenant';
+import { NextRequest } from 'next/server';
+import { tenants } from '@/drizzle/schema';
+import type { ConfigRegional } from '@/drizzle/tenant';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, ok } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 import { PAISES } from '@/lib/regions-data';
+import { getTenantRegional } from '@/lib/services/tenant';
 
 export const GET = apiHandler(async (request: NextRequest) => {
   await requireAuth();
@@ -31,7 +32,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
   }
 
   const paisConfig = PAISES[pais];
-  const configRegional = {
+  const configRegional: ConfigRegional = {
     pais: paisConfig.codigo,
     moneda: paisConfig.moneda,
     documentoId: paisConfig.documentoId,
@@ -41,7 +42,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
   await db
     .update(tenants)
-    .set({ configRegional: configRegional as any, updatedAt: new Date() })
+    .set({ configRegional, updatedAt: new Date() })
     .where(eq(tenants.id, tenantId));
 
   return ok({ data: configRegional, message: `Configuración regional actualizada a ${paisConfig.nombre}` });

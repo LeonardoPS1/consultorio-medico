@@ -1,17 +1,17 @@
 'use client';
 
-import { Navbar } from '@/components/landing/navbar';
-import { Hero } from '@/components/landing/hero';
-import { Features } from '@/components/landing/features';
-import { Gallery } from '@/components/landing/gallery';
-import { Testimonials } from '@/components/landing/testimonials';
-import { Pricing } from '@/components/landing/pricing';
-import { FAQ } from '@/components/landing/faq';
 import { ContactForm } from '@/components/landing/contact-form';
-import { CTASection } from '@/components/landing/cta-section';
-import { Footer } from '@/components/landing/footer';
-import { WhatsAppFloat } from '@/components/landing/whatsapp-float';
 import { CookieConsentBanner } from '@/components/landing/cookie-consent';
+import { CTASection } from '@/components/landing/cta-section';
+import { FAQ } from '@/components/landing/faq';
+import { Features } from '@/components/landing/features';
+import { Footer } from '@/components/landing/footer';
+import { Gallery } from '@/components/landing/gallery';
+import { Hero } from '@/components/landing/hero';
+import { Navbar } from '@/components/landing/navbar';
+import { Pricing } from '@/components/landing/pricing';
+import { Testimonials } from '@/components/landing/testimonials';
+import { WhatsAppFloat } from '@/components/landing/whatsapp-float';
 import {
   odontologia,
   clinicasMedicas,
@@ -31,6 +31,11 @@ interface Props {
   slug: string;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.slug
+ */
 export function LandingEspecialidad({ slug }: Props) {
   const data = dataMap[slug];
   if (!data) return null;

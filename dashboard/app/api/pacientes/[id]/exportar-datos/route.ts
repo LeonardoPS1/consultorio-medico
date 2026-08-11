@@ -1,5 +1,5 @@
+import { eq, sql, desc, and } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import {
   pacientes,
   turnos,
@@ -14,9 +14,9 @@ import {
   consentimientoLog,
   auditoriaAccesos,
 } from '@/drizzle/schema';
-import { eq, sql, desc, and } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
 import { verifyPacienteAccess } from '@/lib/api-auth';
+import { auth } from '@/lib/auth';
+import { db } from '@/lib/db';
 
 /**
  * GET /api/pacientes/[id]/exportar-datos
@@ -33,6 +33,9 @@ import { verifyPacienteAccess } from '@/lib/api-auth';
  * - Facturación
  * - Historial de consentimientos
  * - Auditoría de accesos a sus datos
+ * @param _request
+ * @param root0
+ * @param root0.params
  */
 export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
@@ -191,10 +194,10 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
       comunicaciones: {
         conversaciones: conversacionesConMensajes,
       },
-      eventos: eventos,
+      eventos,
       tareasPendientes: tareas,
       facturacion: facturas,
-      consentimientos: consentimientos,
+      consentimientos,
       accesosRegistrados: accesos,
     };
 

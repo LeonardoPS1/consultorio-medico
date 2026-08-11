@@ -5,13 +5,10 @@
 
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Calendar,
   MapPin,
   Video,
-  Phone,
   Clock,
   XCircle,
   AlertCircle,
@@ -22,8 +19,10 @@ import {
   Syringe,
   Plus,
 } from 'lucide-react';
-import { PortalCard } from '@/components/portal/portal-card';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { PortalBadge } from '@/components/portal/portal-badge';
+import { PortalCard } from '@/components/portal/portal-card';
 import { playDelete } from '@/lib/sound';
 
 interface Turno {
@@ -62,6 +61,11 @@ function formatDate(date: string): string {
   });
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.turnos
+ */
 export default function PortalTurnosClient({ turnos }: Props) {
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -270,7 +274,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
                         href={`/api/portal/recibos/${t.id}`}
                         target="_blank"
                         className="text-xs font-medium flex items-center gap-1 transition-colors text-portal-primary"
-                        title="Ver recibo"
+                        title="Ver recibo" rel="noreferrer"
                       >
                         <Receipt className="h-3.5 w-3.5" />
                         Recibo

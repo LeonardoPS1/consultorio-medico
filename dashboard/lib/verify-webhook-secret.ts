@@ -3,7 +3,6 @@
  *
  * Usa `crypto.timingSafeEqual` para evitar timing attacks
  * en la comparación de secrets compartidos entre servicios.
- *
  * @see https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b
  */
 
@@ -13,6 +12,8 @@ import { timingSafeEqual } from 'crypto';
  * Compara dos strings en tiempo constante para evitar timing attacks.
  * Si las longitudes difieren, se comparan con buffers padding para
  * no filtrar información sobre la longitud real del secret.
+ * @param provided
+ * @param expected
  */
 export function verifyWebhookSecret(
   provided: string | null | undefined,
@@ -43,6 +44,10 @@ export function verifyWebhookSecret(
 /**
  * Helper para extraer secret del header x-webhook-secret
  * y compararlo con la variable de entorno.
+ * @param request
+ * @param request.headers
+ * @param request.headers.get
+ * @param expectedSecret
  */
 export function verifyRequestSecret(
   request: { headers: { get(name: string): string | null } },

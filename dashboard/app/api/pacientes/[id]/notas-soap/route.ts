@@ -1,14 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { notasSoap, medicos } from '@/drizzle/schema';
 import { eq, desc, and, sql } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
-import { verifyPacienteAccess } from '@/lib/api-auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { notasSoap, medicos } from '@/drizzle/schema';
 import { sugerirCie10 } from '@/lib/ai-clinical';
+import { verifyPacienteAccess } from '@/lib/api-auth';
+import { auth } from '@/lib/auth';
+import { db } from '@/lib/db';
 import { canAccess } from '@/lib/features';
 
 /**
  * Helper de auth para GET/PATCH/DELETE de notas SOAP
+ * @param request
+ * @param params
+ * @param params.id
  */
 async function requireAuthForNotasSoap(request: NextRequest, params: { id: string }) {
   const session = await auth();
@@ -28,6 +31,9 @@ async function requireAuthForNotasSoap(request: NextRequest, params: { id: strin
 /**
  * GET /api/pacientes/[id]/notas-soap
  * Lista Notas SOAP del paciente (con nombre del médico)
+ * @param _request
+ * @param root0
+ * @param root0.params
  */
 export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
@@ -72,6 +78,9 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
 /**
  * POST /api/pacientes/[id]/notas-soap
  * Crea una nueva Nota SOAP
+ * @param request
+ * @param root0
+ * @param root0.params
  */
 export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
@@ -158,6 +167,9 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
 /**
  * PATCH /api/pacientes/[id]/notas-soap?entryId=xxx
  * Actualiza una Nota SOAP existente
+ * @param request
+ * @param root0
+ * @param root0.params
  */
 export async function PATCH(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
@@ -236,6 +248,9 @@ export async function PATCH(request: NextRequest, { params: paramsPromise }: { p
 /**
  * DELETE /api/pacientes/[id]/notas-soap?entryId=xxx
  * Elimina una Nota SOAP
+ * @param request
+ * @param root0
+ * @param root0.params
  */
 export async function DELETE(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;

@@ -1,8 +1,8 @@
+import { eq } from 'drizzle-orm';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-import { eq } from 'drizzle-orm';
-import { db } from '@/lib/db';
 import { impersonationTokens } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 
 export interface ImpersonationSession {
   sub: string;
@@ -30,6 +30,10 @@ function getCookieName(): string {
   return process.env.NODE_ENV === 'production' ? COOKIE_NAME_PROD : COOKIE_NAME_DEV;
 }
 
+/**
+ *
+ * @param session
+ */
 export async function createImpersonationToken(session: ImpersonationSession): Promise<string> {
   const secret = getSecret();
   const { jti, ...claims } = session;
@@ -42,6 +46,10 @@ export async function createImpersonationToken(session: ImpersonationSession): P
   return token;
 }
 
+/**
+ *
+ * @param jti
+ */
 export async function isImpersonationSessionRevoked(jti: string): Promise<boolean> {
   try {
     const [row] = await db
@@ -55,6 +63,10 @@ export async function isImpersonationSessionRevoked(jti: string): Promise<boolea
   }
 }
 
+/**
+ *
+ * @param token
+ */
 export async function verifyImpersonationToken(token: string): Promise<ImpersonationSession | null> {
   try {
     const secret = getSecret();
@@ -67,6 +79,10 @@ export async function verifyImpersonationToken(token: string): Promise<Impersona
   }
 }
 
+/**
+ *
+ * @param session
+ */
 export async function setImpersonationCookie(session: ImpersonationSession): Promise<string> {
   const token = await createImpersonationToken(session);
   const cookieStore = await cookies();
@@ -80,6 +96,9 @@ export async function setImpersonationCookie(session: ImpersonationSession): Pro
   return token;
 }
 
+/**
+ *
+ */
 export async function getImpersonationSession(): Promise<ImpersonationSession | null> {
   try {
     const cookieStore = await cookies();
@@ -101,11 +120,20 @@ export async function getImpersonationSession(): Promise<ImpersonationSession | 
   }
 }
 
+/**
+ *
+ */
 export async function clearImpersonationCookie(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(getCookieName());
 }
 
+/**
+ *
+ * @param request
+ * @param request.cookies
+ * @param request.cookies.get
+ */
 export function hasImpersonationCookie(request: { cookies: { get: (name: string) => { value?: string } | undefined } }): boolean {
   return !!request.cookies.get(getCookieName());
 }

@@ -52,11 +52,17 @@ function initDb() {
   _migrationDb = drizzle(migrationClient, { schema });
 }
 
+/**
+ *
+ */
 export function getDb() {
   initDb();
   return _db!;
 }
 
+/**
+ *
+ */
 export function getMigrationDb() {
   initDb();
   return _migrationDb!;

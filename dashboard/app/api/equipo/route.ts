@@ -1,9 +1,12 @@
+import { eq, ne, and } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+import { usuarios } from '@/drizzle/schema';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { usuarios } from '@/drizzle/schema';
-import { eq, ne, and } from 'drizzle-orm';
 
+/**
+ *
+ */
 export async function GET() {
   try {
     const session = await auth();

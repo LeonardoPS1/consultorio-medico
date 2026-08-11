@@ -1,13 +1,13 @@
-import { NextRequest } from 'next/server';
-import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
-import { parseBody, updateTurnoSchema } from '@/lib/validations';
-import { turnosService } from '@/lib/services/turnos';
-import { sendSurveyWhatsApp } from '@/lib/encuestas';
-import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { turnos, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { NextRequest } from 'next/server';
+import { turnos, pacientes, medicos } from '@/drizzle/schema';
+import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
+import { auth } from '@/lib/auth';
 import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
+import { db } from '@/lib/db';
+import { sendSurveyWhatsApp } from '@/lib/encuestas';
+import { turnosService } from '@/lib/services/turnos';
+import { parseBody, updateTurnoSchema } from '@/lib/validations';
 
 /**
  * GET /api/turnos/[id] - Detalle individual de turno

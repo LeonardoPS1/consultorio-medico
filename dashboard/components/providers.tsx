@@ -1,14 +1,19 @@
 'use client';
 
-import { SessionProvider } from 'next-auth/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SessionProvider } from 'next-auth/react';
 import { useState } from 'react';
+import { SoundProvider } from '@/components/sound-provider';
+import { SmartTooltipProvider } from '@/components/ui/smart-tooltip';
 import { FeatureFlagsProvider, UserFeatureOverridesProvider } from '@/lib/feature-flags-context';
 import { SucursalProvider } from '@/lib/sucursal-context';
 import { UpdateProvider } from '@/lib/update-context';
-import { SmartTooltipProvider } from '@/components/ui/smart-tooltip';
-import { SoundProvider } from '@/components/sound-provider';
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>

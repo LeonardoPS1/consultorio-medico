@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { impersonationTokens } from '@/drizzle/schema';
 import { and, eq, isNotNull, isNull } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { impersonationTokens } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { safeWarn } from '@/lib/logger';
 
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY;

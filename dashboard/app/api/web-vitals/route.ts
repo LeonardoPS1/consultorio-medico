@@ -1,9 +1,10 @@
+import { and, gte, desc, sql, count, avg, min, max, lt, like, not, isNull, or } from 'drizzle-orm';
+import type { SQLWrapper } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
 import { webVitalsMetrics } from '@/drizzle/schema';
 import { apiHandler, success, fail } from '@/lib/api-handler';
 import { getEffectiveSession } from '@/lib/auth-effective';
-import { and, gte, desc, sql, count, avg, min, max, lte, lt, like, not, isNull, or } from 'drizzle-orm';
+import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,18 +30,18 @@ function getPreviousPeriodRange(period: string, now: Date = new Date()): { since
 function getSectionCondition(section: string) {
   if (section === 'dashboard') return like(webVitalsMetrics.url, '/dashboard/%');
   if (section === 'portal') return like(webVitalsMetrics.url, '/portal/%');
-  if (section === 'landing') return or(
+  if (section === 'landing') {return or(
     isNull(webVitalsMetrics.url),
     and(
       not(like(webVitalsMetrics.url, '/dashboard/%')),
       not(like(webVitalsMetrics.url, '/portal/%')),
     ),
-  );
+  );}
   return undefined;
 }
 
 function buildWhere(since?: Date, until?: Date, section?: string) {
-  const conds: any[] = [];
+  const conds: Array<SQLWrapper | undefined> = [];
   if (since) conds.push(gte(webVitalsMetrics.createdAt, since));
   if (until) conds.push(lt(webVitalsMetrics.createdAt, until));
   if (section && section !== 'all') {
@@ -57,15 +58,6 @@ function classifyDevice(userAgent: string | null): string {
   if (/mobile|iphone|ipod|android|blackberry|opera mini|iemobile|wpdesktop/i.test(ua)) return 'mobile';
   return 'desktop';
 }
-
-const METRIC_ORDER = ['LCP', 'INP', 'CLS', 'FCP', 'TTFB'];
-const METRIC_LABELS: Record<string, string> = {
-  LCP: 'Largest Contentful Paint',
-  INP: 'Interaction to Next Paint',
-  CLS: 'Cumulative Layout Shift',
-  FCP: 'First Contentful Paint',
-  TTFB: 'Time to First Byte',
-};
 
 // ─── GET ───────────────────────────────────────────────────
 

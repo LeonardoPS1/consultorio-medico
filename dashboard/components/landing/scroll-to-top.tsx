@@ -2,6 +2,9 @@
 
 import { ArrowUp } from 'lucide-react';
 
+/**
+ *
+ */
 export function ScrollToTop() {
   return (
     <button

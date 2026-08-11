@@ -3,9 +3,14 @@
  * Extraído del page.tsx para reducir bundle size (~35KB menos)
  */
 
-import { escapeHtml } from '@/lib/html-utils';
 import type { ReporteApiResponse, Periodo } from '@/app/dashboard/reportes/types';
+import { escapeHtml } from '@/lib/html-utils';
 
+/**
+ *
+ * @param data
+ * @param periodo
+ */
 export function generarHTMLReporte(data: ReporteApiResponse, periodo: Periodo): string {
   const periodoLabel = periodo === 'semana' ? 'Semanal' : periodo === 'mes' ? 'Mensual' : 'Anual';
   const fechaHoy = new Date().toLocaleDateString('es-CL', {

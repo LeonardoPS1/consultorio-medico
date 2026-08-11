@@ -1,7 +1,7 @@
+import { sql } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { getEffectiveSession } from '@/lib/auth-effective';
 import { db } from '@/lib/db';
-import { sql } from 'drizzle-orm';
 
 // ============================================================
 // Config
@@ -20,6 +20,9 @@ async function ensureDir() {
 // GET /api/admin/backups — Listar backups
 // ============================================================
 
+/**
+ *
+ */
 export async function GET() {
   try {
     const session = await getEffectiveSession();
@@ -67,6 +70,9 @@ export async function GET() {
 // POST /api/admin/backups — Crear backup
 // ============================================================
 
+/**
+ *
+ */
 export async function POST() {
   try {
     const session = await getEffectiveSession();

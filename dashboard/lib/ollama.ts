@@ -71,6 +71,10 @@ async function healthCheck(baseUrl: string, signal: AbortSignal): Promise<boolea
 
 // ─── Función principal ────────────────────────────────────────
 
+/**
+ *
+ * @param options
+ */
 export async function ollamaChat(options: OllamaChatOptions): Promise<OllamaChatResult> {
   const model = process.env.OLLAMA_MODEL || 'gemma3';
   const configured = process.env.OLLAMA_BASE_URL;
@@ -241,6 +245,9 @@ async function tryUrl(
 
 // ─── Utilidad: listar modelos ─────────────────────────────────
 
+/**
+ *
+ */
 export async function listModels(): Promise<string[]> {
   const urls = getUrls();
   const results = await Promise.allSettled(

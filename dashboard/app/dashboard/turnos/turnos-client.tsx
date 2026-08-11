@@ -1,31 +1,32 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { useSucursal } from '@/lib/sucursal-context';
 import { Calendar } from 'lucide-react';
-import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
-import { PageAnimation } from '@/components/dashboard/page-animation';
 import { motion } from 'motion/react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { PageAnimation } from '@/components/dashboard/page-animation';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
-import { playDelete } from '@/lib/sound';
-import { toast } from '@/components/ui/use-toast';
 
 // Existing extracted components
-import { TurnosFilters } from '@/components/turnos/turnos-filters';
-import { TurnosTable } from '@/components/turnos/turnos-table';
-import { TurnosCalendar } from '@/components/turnos/turnos-calendar';
+import type { MedicoDia, TurnoDia } from '@/components/turnos/day-timeline';
 import { TurnoDetailModal, CancelTurnoDialog } from '@/components/turnos/turno-detail-modal';
-
-// New extracted components
-import { TurnosHeader } from '@/components/turnos/turnos-header';
+import { TurnosCalendar } from '@/components/turnos/turnos-calendar';
 import { TurnosDateNav } from '@/components/turnos/turnos-date-nav';
 import { TurnosDayView } from '@/components/turnos/turnos-day-view';
+import { TurnosFilters } from '@/components/turnos/turnos-filters';
+import { TurnosHeader } from '@/components/turnos/turnos-header';
+import { NuevoPacienteConfirmDialog } from '@/components/turnos/turnos-patient-confirm';
+import { TurnosTable } from '@/components/turnos/turnos-table';
+
+// New extracted components
 import {
   WaitlistReassignDialog,
   WaitlistProposalDialog,
 } from '@/components/turnos/turnos-waitlist-dialogs';
-import { NuevoPacienteConfirmDialog } from '@/components/turnos/turnos-patient-confirm';
-import type { MedicoDia, TurnoDia } from '@/components/turnos/day-timeline';
+import type { WaitlistCandidate } from '@/components/turnos/turnos-waitlist-dialogs';
+import { toast } from '@/components/ui/use-toast';
+import { playDelete } from '@/lib/sound';
+import { useSucursal } from '@/lib/sucursal-context';
+import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -62,6 +63,14 @@ interface TurnosClientProps {
 
 // ─── Component ────────────────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.initialTurnos
+ * @param root0.initialMedicos
+ * @param root0.initialTipos
+ * @param root0.initialFecha
+ */
 export function TurnosClient({
   initialTurnos,
   initialMedicos,
@@ -85,7 +94,7 @@ export function TurnosClient({
     medicoId: string;
     pacienteNombre: string;
   } | null>(null);
-  const [waitlistCandidates, setWaitlistCandidates] = useState<any[]>([]);
+  const [waitlistCandidates, setWaitlistCandidates] = useState<WaitlistCandidate[]>([]);
   const [waitlistReassignLoading, setWaitlistReassignLoading] = useState(false);
 
   // Waitlist proposal when time conflict
@@ -456,7 +465,7 @@ export function TurnosClient({
           setWaitlistProposal({
             pacienteId: pacienteId!,
             medicoId: medicoId!,
-            pacienteNombre: pacienteNombre,
+            pacienteNombre,
             medicoNombre: data.medico,
             fecha: data.fecha,
             hora: data.hora,

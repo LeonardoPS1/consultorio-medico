@@ -1,15 +1,14 @@
-import { db } from '@/lib/db';
+import { eq, and, desc, isNull, inArray } from 'drizzle-orm';
+import { consentimientos } from '@/drizzle/access';
 import { pacientes, turnos, medicos } from '@/drizzle/core';
 import { historialMedico, notasSoap, recetas } from '@/drizzle/medical';
-import { consentimientos } from '@/drizzle/access';
-import { eq, and, desc, isNull, inArray } from 'drizzle-orm';
+import { db } from '@/lib/db';
 
 // ============================================================
 // FHIR-lite — Subconjunto simplificado compatible con FHIR R4
 // NO es una implementación certificada HL7 FHIR.
 // ============================================================
 
-const FHIR_VERSION = '4.0.1';
 const DISCLAIMER = 'Formato FHIR-compatible simplificado — no es una implementación certificada HL7 FHIR. Usar como referencia para integración, no como reemplazo de un sistema FHIR completo.';
 
 type FhirIdentifier = {
@@ -133,7 +132,6 @@ function toFhirIso(d: Date | string | null | undefined): string | undefined {
 }
 
 async function buildPatient(p: typeof pacientes.$inferSelect): Promise<FhirPatient> {
-  const fullName = [p.nombre, p.apellido].filter(Boolean).join(' ');
   const identifier: FhirIdentifier[] = [];
   if (p.rut) identifier.push({ use: 'official', system: 'https://www.registrocivil.cl/rut', value: p.rut });
   if (p.dni) identifier.push({ use: 'secondary', system: 'urn:oid:1.2.36.1.2001.1003.0', value: p.dni });
@@ -287,6 +285,10 @@ export interface FhirExportOptions {
   maxEntries?: number;
 }
 
+/**
+ *
+ * @param pacienteId
+ */
 export async function verificarConsentimientoExportacion(pacienteId: string): Promise<boolean> {
   const paciente = await db
     .select({ consentimientoEmail: pacientes.consentimientoEmail })
@@ -313,6 +315,11 @@ export async function verificarConsentimientoExportacion(pacienteId: string): Pr
   return paciente.consentimientoEmail === true;
 }
 
+/**
+ *
+ * @param pacienteId
+ * @param options
+ */
 export async function exportarFhir(
   pacienteId: string,
   options: FhirExportOptions = {},

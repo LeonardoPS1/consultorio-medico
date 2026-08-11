@@ -4,14 +4,14 @@
  * Protegido: requiere cookie portal_session
  */
 
+import { eq, and } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
-import { db } from '@/lib/db';
 import { turnos, historialMedico } from '@/drizzle/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { db } from '@/lib/db';
 import { analyzeSentiment } from '@/lib/encuestas';
 import { safeLog, safeError } from '@/lib/logger';
+import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 
 const encuestaSchema = z.object({
   turnoId: z.string().uuid(),
@@ -19,6 +19,10 @@ const encuestaSchema = z.object({
   comentario: z.string().max(500).optional(),
 });
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   if (!validateCSRFOrigin(request)) {
     return NextResponse.json({ error: 'Origen no válido' }, { status: 403 });
@@ -62,7 +66,7 @@ export async function POST(request: Request) {
     }
 
     // Analizar sentimiento si hay comentario
-    let archivos: Record<string, unknown> = {};
+    const archivos: Record<string, unknown> = {};
     if (parsed.comentario && parsed.comentario.trim().length >= 3) {
       const sentimiento = await analyzeSentiment(parsed.comentario);
       if (sentimiento) {

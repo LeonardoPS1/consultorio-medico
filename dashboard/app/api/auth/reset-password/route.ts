@@ -1,13 +1,17 @@
-import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { db } from '@/lib/db';
-import { usuarios } from '@/drizzle/schema';
+import bcrypt from 'bcryptjs';
 import { eq, sql } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { usuarios } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { resetPasswordSchema } from '@/lib/validations';
 
 // POST /api/auth/reset-password
 // Valida el token (comparando contra SHA-256 almacenado) y actualiza la contraseña
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   try {
     const parsed = resetPasswordSchema.safeParse(await request.json());

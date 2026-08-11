@@ -1,13 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
-import { redirect } from 'next/navigation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Loader2,
   Database,
@@ -19,6 +13,11 @@ import {
   Table2,
   Rows3,
 } from 'lucide-react';
+import { redirect } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 
 interface BackupInfo {
   id: string;
@@ -35,6 +34,9 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
+/**
+ *
+ */
 export default function AdminBackupsPage() {
   const { data: session } = useEffectiveSession();
 
@@ -65,6 +67,7 @@ function BackupsContent() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch inicial de backups al montar (setLoading síncrono requerido)
     fetchBackups();
   }, [fetchBackups]);
 
@@ -96,7 +99,7 @@ function BackupsContent() {
         `¿Eliminar backup del ${format(new Date(backup.createdAt), 'dd/MM/yy HH:mm', { locale: es })}?`,
       )
     )
-      return;
+      {return;}
     try {
       await fetch(`/api/admin/backups/${backup.id}`, { method: 'DELETE' });
       await fetchBackups();

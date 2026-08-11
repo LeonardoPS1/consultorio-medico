@@ -1,5 +1,8 @@
 import { Skeleton } from '@/components/ui/skeleton';
 
+/**
+ *
+ */
 export default function ComplianceLoading() {
   return (
     <div className="space-y-6">

@@ -1,7 +1,7 @@
 'use client';
 
-import { TurnosDateNav } from '@/components/turnos/turnos-date-nav';
 import { DayTimeline, type MedicoDia, type TurnoDia } from '@/components/turnos/day-timeline';
+import { TurnosDateNav } from '@/components/turnos/turnos-date-nav';
 
 interface TurnosDayViewProps {
   selectedDate: Date;
@@ -17,6 +17,17 @@ interface TurnosDayViewProps {
   onSlotClick: (medicoId: string, hora: string) => void;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.selectedDate
+ * @param root0.dayViewData
+ * @param root0.dayViewLoading
+ * @param root0.onDateNavigate
+ * @param root0.onGoToToday
+ * @param root0.onTurnoClick
+ * @param root0.onSlotClick
+ */
 export function TurnosDayView({
   selectedDate,
   dayViewData,

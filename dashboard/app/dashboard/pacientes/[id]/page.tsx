@@ -1,6 +1,5 @@
+import { eq, and, sql, desc } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
-import { PacienteDetalleClient } from './paciente-detalle-client';
-import { db } from '@/lib/db';
 import {
   pacientes,
   turnos,
@@ -10,10 +9,10 @@ import {
   notasSoap,
   conversaciones,
 } from '@/drizzle/schema';
-import { eq, and, sql, desc } from 'drizzle-orm';
-
 import { getEffectiveSession } from '@/lib/auth-effective';
+import { db } from '@/lib/db';
 import { withTenantScope } from '@/lib/rls';
+import { PacienteDetalleClient } from './paciente-detalle-client';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -327,6 +326,11 @@ async function getPacienteDetalle(id: string): Promise<PacienteDetalle | null> {
 
 // ─── Page ──────────────────────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.params
+ */
 export default async function PacienteDetallePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await getPacienteDetalle(id);

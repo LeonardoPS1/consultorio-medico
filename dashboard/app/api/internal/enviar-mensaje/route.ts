@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
-import { sendWhatsApp } from '@/lib/whatsapp';
 import { safeLog, safeWarn } from '@/lib/logger';
+import { sendWhatsApp } from '@/lib/whatsapp';
 
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || process.env.NOVEDADES_INTERNAL_KEY;
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   const authHeader = request.headers.get('x-internal-key');
   if (!INTERNAL_API_KEY || authHeader !== INTERNAL_API_KEY) {

@@ -43,22 +43,46 @@ function safeLogMessage(level: 'info' | 'warn' | 'error' | 'debug', message: str
   }
 }
 
+/**
+ *
+ * @param message
+ * @param data
+ */
 export function safeLog(message: string, data?: unknown): void {
   safeLogMessage('info', message, data);
 }
 
+/**
+ *
+ * @param message
+ * @param data
+ */
 export function safeWarn(message: string, data?: unknown): void {
   safeLogMessage('warn', message, data);
 }
 
+/**
+ *
+ * @param message
+ * @param data
+ */
 export function safeError(message: string, data?: unknown): void {
   safeLogMessage('error', message, data);
 }
 
+/**
+ *
+ * @param message
+ * @param data
+ */
 export function safeDebug(message: string, data?: unknown): void {
   safeLogMessage('debug', message, data);
 }
 
+/**
+ *
+ * @param {...any} args
+ */
 export function safeConsoleLog(...args: unknown[]): void {
   const sanitized = args.map((arg) => {
     if (arg !== null && typeof arg === 'object' && !(arg instanceof Error)) {

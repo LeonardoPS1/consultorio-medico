@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDemoReportes } from '@/lib/reportes-demo-data';
-import { safeWarn } from '@/lib/logger';
 import { turnoEstadoEnum } from '@/drizzle/schema';
+import { safeWarn } from '@/lib/logger';
+import { getDemoReportes } from '@/lib/reportes-demo-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
  * Devuelve datos de reportes. Si ?demo=true (default), retorna datos demo
  * realistas para que la UI se vea completa siempre.
  * Si ?demo=false, solo entonces intenta query a PostgreSQL real.
+ * @param request
  */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -26,14 +27,13 @@ export async function GET(request: NextRequest) {
   // ─── Modo DB real (solo si ?demo=false) ──────────────────
   try {
     const { db } = await import('@/lib/db');
-    const { turnos, pacientes, conversaciones, mensajes } = await import('@/drizzle/schema');
-    const { eq, and, gte, lte, lt, sql, count, asc, isNotNull } = await import('drizzle-orm');
+    const { turnos } = await import('@/drizzle/schema');
+    const { eq, and, gte, lt, sql, count } = await import('drizzle-orm');
 
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     let startDate: Date;
-    const labelFormat: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit' };
 
     switch (periodo) {
       case 'semana':
@@ -46,9 +46,6 @@ export async function GET(request: NextRequest) {
         startDate = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
         break;
     }
-
-    const periodLength = todayStart.getTime() - startDate.getTime();
-    const prevStart = new Date(startDate.getTime() - periodLength);
 
     const [turnosTot] = await db
       .select({ total: count() })

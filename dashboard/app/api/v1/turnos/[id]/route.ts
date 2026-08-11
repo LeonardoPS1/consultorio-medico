@@ -5,16 +5,16 @@
  * Público: Sí (con API key)
  */
 
-import { db } from '@/lib/db';
-import { turnos, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { turnos, pacientes, medicos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { API_SCOPES } from '@/lib/public-api-auth';
 import {
   publicApiHandler,
   jsonResponse,
   errorResponse,
   type AuthenticatedRequest,
 } from '@/lib/public-api-handler';
-import { API_SCOPES } from '@/lib/public-api-auth';
 
 async function handler(
   request: AuthenticatedRequest,

@@ -1,12 +1,10 @@
 'use client';
 
+import { Plus, Trash2, CalendarX, Calendar, Umbrella, Ban, Pencil } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { playDelete } from '@/lib/sound';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -14,9 +12,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, CalendarX, Calendar, Umbrella, Ban, Pencil } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { playDelete } from '@/lib/sound';
 
 interface Bloqueo {
   id: string;
@@ -77,6 +77,14 @@ function formatBloqueoFecha(isoInicio: string, isoFin: string): string {
   return `${fechaIni} → ${fechaFinStr}`;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.medicoId
+ * @param root0.medicoNombre
+ * @param root0.open
+ * @param root0.onOpenChange
+ */
 export function BloqueosDialog({
   medicoId,
   medicoNombre,
@@ -100,7 +108,7 @@ export function BloqueosDialog({
 
   const fetchBloqueos = () => {
     setLoading(true);
-    fetch(`/api/medicos/${medicoId}/bloqueos`)
+    return fetch(`/api/medicos/${medicoId}/bloqueos`)
       .then((r) => r.json())
       .then((d) => setBloqueos(d.data || []))
       .catch(() => toast({ title: 'Error al cargar bloqueos', variant: 'destructive' }))
@@ -108,7 +116,11 @@ export function BloqueosDialog({
   };
 
   useEffect(() => {
-    if (open) fetchBloqueos();
+    if (open) {
+      void (async () => {
+        await fetchBloqueos();
+      })();
+    }
   }, [open, medicoId]);
 
   const handleCreate = async () => {

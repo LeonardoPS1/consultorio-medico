@@ -12,7 +12,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { safeError } from '@/lib/logger';
-import { withRateLimit } from '@/lib/rate-limit';
 import {
   extractApiKey,
   validateApiKey,
@@ -20,6 +19,7 @@ import {
   type ApiKeyData,
   type ApiScope,
 } from '@/lib/public-api-auth';
+import { withRateLimit } from '@/lib/rate-limit';
 
 // ─── Extender Request con datos de auth ──────────────────────
 
@@ -49,6 +49,11 @@ function corsHeaders(): Record<string, string> {
   };
 }
 
+/**
+ *
+ * @param data
+ * @param status
+ */
 export function jsonResponse(data: unknown, status = 200) {
   return NextResponse.json(data, {
     status,
@@ -56,6 +61,11 @@ export function jsonResponse(data: unknown, status = 200) {
   });
 }
 
+/**
+ *
+ * @param message
+ * @param status
+ */
 export function errorResponse(message: string, status = 400) {
   return NextResponse.json(
     { error: message },
@@ -68,6 +78,9 @@ export function errorResponse(message: string, status = 400) {
 
 // ─── OPTIONS handler para CORS preflight ─────────────────────
 
+/**
+ *
+ */
 export function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
@@ -98,6 +111,8 @@ type HandlerFn = (
  * 3. Validación de API key
  * 4. Verificación de scopes
  * 5. Inyección de tenantId y apiKey en request
+ * @param handler
+ * @param options
  */
 export function publicApiHandler(handler: HandlerFn, options: PublicApiHandlerOptions = {}) {
   const { scopes = [], maxRequests = 60, windowMs = 60_000 } = options;

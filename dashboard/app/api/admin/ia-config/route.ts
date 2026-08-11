@@ -6,15 +6,15 @@
  * Almacena prompt, maxTokens y temperatura en tenants.config_ia (JSONB)
  */
 
+import { eq } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
-import { apiHandler, success, fail } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { db } from '@/lib/db';
+import { z } from 'zod';
 import { tenants } from '@/drizzle/schema';
 import type { ConfigIa } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
-import { z } from 'zod';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, fail } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { parseBody } from '@/lib/validations';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 const DEFAULT_CONFIG: ConfigIa = {

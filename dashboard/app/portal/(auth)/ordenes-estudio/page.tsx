@@ -5,7 +5,6 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import {
   FileText,
   FlaskConical,
@@ -14,8 +13,9 @@ import {
   Clock,
   XCircle,
 } from 'lucide-react';
-import { PortalCard } from '@/components/portal/portal-card';
+import { useState, useEffect, useCallback } from 'react';
 import { PortalBadge } from '@/components/portal/portal-badge';
+import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
 interface OrdenEstudio {
@@ -70,6 +70,9 @@ function getEstadoBadge(estado: string) {
   }
 }
 
+/**
+ *
+ */
 export default function PortalOrdenesEstudioPage() {
   const [ordenes, setOrdenes] = useState<OrdenEstudio[]>([]);
   const [loading, setLoading] = useState(true);
@@ -154,7 +157,7 @@ export default function PortalOrdenesEstudioPage() {
                       transition: 'color 200ms ease-out',
                     }}
                     onMouseEnter={() => setHoverVerResultado(o.id)}
-                    onMouseLeave={() => setHoverVerResultado(null)}
+                    onMouseLeave={() => setHoverVerResultado(null)} rel="noreferrer"
                   >
                     <FileText className="h-3.5 w-3.5" />
                     Ver resultado

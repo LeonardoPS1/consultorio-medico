@@ -1,6 +1,5 @@
 'use client';
 
-import { usePatientPanel } from '@/lib/hooks/use-patient-panel';
 import {
   Sheet,
   SheetContent,
@@ -8,9 +7,13 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
+import { usePatientPanel } from '@/lib/hooks/use-patient-panel';
 import { PatientSearch } from './patient-search';
 import { PatientSummary } from './patient-summary';
 
+/**
+ *
+ */
 export function PatientPanel() {
   const { isOpen, close, data } = usePatientPanel();
 

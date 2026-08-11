@@ -5,6 +5,16 @@
 
 import type { ComponentType, SVGProps } from 'react';
 
+// Import the types we need locally
+import type {
+  TurnoDia,
+  DistribucionEstado,
+  WhatsAppVolumen,
+  PrediccionDia,
+  ConversionLead,
+  EjecutivoResumen,
+} from './reportes-data';
+
 // Re-export everything from reportes-data.ts for backward compat
 export type {
   Periodo,
@@ -19,16 +29,6 @@ export type {
   ComparativaAnual,
   EjecutivoResumen,
   ReportesData,
-} from './reportes-data';
-
-// Import the types we need locally
-import type {
-  TurnoDia,
-  DistribucionEstado,
-  WhatsAppVolumen,
-  PrediccionDia,
-  ConversionLead,
-  EjecutivoResumen,
 } from './reportes-data';
 
 export interface ReporteApiResponse {

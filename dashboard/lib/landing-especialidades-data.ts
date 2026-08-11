@@ -1,8 +1,3 @@
-import type { FeatureItem } from '@/components/landing/features';
-import type { FAQItem } from '@/components/landing/faq';
-import type { TestimonialItem } from '@/components/landing/testimonials';
-import type { HeroProps } from '@/components/landing/hero';
-import type { CTASectionProps } from '@/components/landing/cta-section';
 import {
   Calendar,
   MessageSquare,
@@ -10,7 +5,6 @@ import {
   BarChart3,
   Users,
   Shield,
-  Smartphone,
   Stethoscope,
   Eye,
   Sparkles,
@@ -18,6 +12,11 @@ import {
   Syringe,
   Video,
 } from 'lucide-react';
+import type { CTASectionProps } from '@/components/landing/cta-section';
+import type { FAQItem } from '@/components/landing/faq';
+import type { FeatureItem } from '@/components/landing/features';
+import type { HeroProps } from '@/components/landing/hero';
+import type { TestimonialItem } from '@/components/landing/testimonials';
 
 export interface EspecialidadPageData {
   slug: string;

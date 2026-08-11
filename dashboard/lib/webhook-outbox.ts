@@ -1,9 +1,15 @@
-import { db } from '@/lib/db';
-import { webhookConfigs, webhookLogs } from '@/drizzle/operations';
 import { eq, and, sql } from 'drizzle-orm';
+import { webhookConfigs, webhookLogs } from '@/drizzle/operations';
+import { db } from '@/lib/db';
 import { safeError, safeWarn } from '@/lib/logger';
 import { entregar } from '@/lib/services/webhooks';
 
+/**
+ *
+ * @param evento
+ * @param payload
+ * @param tenantId
+ */
 export async function emitirWebhook(evento: string, payload: object, tenantId: string) {
   try {
     const configs = await db

@@ -12,6 +12,8 @@
 
 'use client';
 
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { usePathname } from 'next/navigation';
 import {
   createContext,
   useContext,
@@ -21,11 +23,9 @@ import {
   useEffect,
   type ReactNode,
 } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { usePathname } from 'next/navigation';
 import { canAccess } from '@/lib/features';
-import type { ModoAsistente, Sugerencia, MensajeChat, AlertaProactiva } from '@/lib/ia/asistente-prompts';
 import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
+import type { ModoAsistente, Sugerencia, MensajeChat, AlertaProactiva } from '@/lib/ia/asistente-prompts';
 
 // ============================================================
 // Tipos
@@ -115,6 +115,11 @@ const AsistenteContext = createContext<AsistenteContextType | null>(null);
 // Provider
 // ============================================================
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function AsistenteProvider({ children }: { children: ReactNode }) {
   const { data: session } = useEffectiveSession();
   const pathname = usePathname();
@@ -163,64 +168,7 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
   // ─── Refetch interval según modo ─────────────────────────
   const refetchInterval = userSettings.modo === 'activo' ? 20000 : 60000;
 
-  // ─── Sugerencias contextuales ────────────────────────────
-  const {
-    data: sugerenciasData,
-  } = useQuery({
-    queryKey: ['ia-sugerencias', pathname],
-    queryFn: async () => {
-      if (!habilitado) return [];
-      const res = await fetch(`/api/ia/sugerencias?ruta=${encodeURIComponent(pathname)}`);
-      if (!res.ok) return [];
-      const json = await res.json();
-      return (json.data?.sugerencias || []) as Sugerencia[];
-    },
-    enabled: habilitado && userSettings.modo !== 'silencioso',
-    refetchInterval,
-    staleTime: refetchInterval / 2,
-  });
-
-  const sugerencias = (sugerenciasData || []).filter(
-    (s) => !userSettings.silenciadas[s.categoria],
-  );
-
-  // ─── Alertas proactivas (solo modo activo) ───────────────
-  const {
-    data: alertasData,
-  } = useQuery({
-    queryKey: ['ia-alertas', pathname],
-    queryFn: async () => {
-      if (!habilitado) return [];
-      const res = await fetch(`/api/ia/sugerencias?ruta=${encodeURIComponent(pathname)}&alertas=true`);
-      if (!res.ok) return [];
-      const json = await res.json();
-      return (json.data?.alertas || []) as AlertaProactiva[];
-    },
-    enabled: habilitado && userSettings.modo === 'activo',
-    refetchInterval: 30000,
-    staleTime: 15000,
-  });
-
-  useEffect(() => {
-    if (alertasData) setAlertasProactivas(alertasData);
-  }, [alertasData]);
-
   // ─── Chat mutation ──────────────────────────────────────
-  // ─── Auto-insight al abrir en modo activo ────────────────
-  const autoInsightSentRef = useRef(false);
-  useEffect(() => {
-    if (open && userSettings.modo === 'activo' && mensajes.length === 0 && !autoInsightSentRef.current && habilitado) {
-      autoInsightSentRef.current = true;
-      const timer = setTimeout(() => {
-        enviarMensaje('Analizá el estado actual del consultorio. Decime si hay algo que deba saber: anomalías, pacientes sin confirmar, mensajes pendientes o cualquier cosa que requiera mi atención.');
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-    if (!open) {
-      autoInsightSentRef.current = false;
-    }
-  }, [open, userSettings.modo, mensajes.length, habilitado]);
-
   const chatMutation = useMutation({
     mutationFn: async (mensaje: string) => {
       const res = await fetch('/api/ia/chat', {
@@ -265,6 +213,81 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  const enviarMensaje = useCallback(
+    async (mensaje: string) => {
+      if (!mensaje.trim() || cargando) return;
+
+      // Agregar mensaje del usuario
+      setMensajes((prev) => [
+        ...prev,
+        { rol: 'user', contenido: mensaje.trim(), timestamp: Date.now() },
+      ]);
+      setCargando(true);
+      setError(null);
+
+      chatMutation.mutate(mensaje.trim());
+    },
+    [cargando, chatMutation],
+  );
+
+  // ─── Sugerencias contextuales ────────────────────────────
+  const {
+    data: sugerenciasData,
+  } = useQuery({
+    queryKey: ['ia-sugerencias', pathname],
+    queryFn: async () => {
+      if (!habilitado) return [];
+      const res = await fetch(`/api/ia/sugerencias?ruta=${encodeURIComponent(pathname)}`);
+      if (!res.ok) return [];
+      const json = await res.json();
+      return (json.data?.sugerencias || []) as Sugerencia[];
+    },
+    enabled: habilitado && userSettings.modo !== 'silencioso',
+    refetchInterval,
+    staleTime: refetchInterval / 2,
+  });
+
+  const sugerencias = (sugerenciasData || []).filter(
+    (s) => !userSettings.silenciadas[s.categoria],
+  );
+
+  // ─── Alertas proactivas (solo modo activo) ───────────────
+  const {
+    data: alertasData,
+  } = useQuery({
+    queryKey: ['ia-alertas', pathname],
+    queryFn: async () => {
+      if (!habilitado) return [];
+      const res = await fetch(`/api/ia/sugerencias?ruta=${encodeURIComponent(pathname)}&alertas=true`);
+      if (!res.ok) return [];
+      const json = await res.json();
+      return (json.data?.alertas || []) as AlertaProactiva[];
+    },
+    enabled: habilitado && userSettings.modo === 'activo',
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => {
+    if (alertasData) setAlertasProactivas(alertasData);
+  }, [alertasData]);
+
+  // ─── Auto-insight al abrir en modo activo ────────────────
+  const autoInsightSentRef = useRef(false);
+  useEffect(() => {
+    if (open && userSettings.modo === 'activo' && mensajes.length === 0 && !autoInsightSentRef.current && habilitado) {
+      autoInsightSentRef.current = true;
+      const timer = setTimeout(() => {
+        enviarMensaje('Analizá el estado actual del consultorio. Decime si hay algo que deba saber: anomalías, pacientes sin confirmar, mensajes pendientes o cualquier cosa que requiera mi atención.');
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+    if (!open) {
+      autoInsightSentRef.current = false;
+    }
+  }, [open, userSettings.modo, mensajes.length, habilitado]);
+
   // ─── Atajos de teclado ──────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -288,23 +311,6 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
   const toggle = useCallback(() => setOpen((prev) => !prev), []);
   const abrir = useCallback(() => setOpen(true), []);
   const cerrar = useCallback(() => setOpen(false), []);
-
-  const enviarMensaje = useCallback(
-    async (mensaje: string) => {
-      if (!mensaje.trim() || cargando) return;
-
-      // Agregar mensaje del usuario
-      setMensajes((prev) => [
-        ...prev,
-        { rol: 'user', contenido: mensaje.trim(), timestamp: Date.now() },
-      ]);
-      setCargando(true);
-      setError(null);
-
-      chatMutation.mutate(mensaje.trim());
-    },
-    [cargando, chatMutation],
-  );
 
   const enviarSugerencia = useCallback(
     async (sugerencia: Sugerencia) => {
@@ -377,7 +383,6 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
 
 /**
  * Hook para acceder al estado del asistente IA flotante.
- *
  * @example
  * ```tsx
  * const { open, toggle, enviarMensaje, mensajes } = useAsistenteIA();

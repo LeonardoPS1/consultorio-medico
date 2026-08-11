@@ -5,9 +5,10 @@ const jsdocPlugin = require('eslint-plugin-jsdoc');
 const reactPlugin = require('eslint-plugin-react');
 const reactHooksPlugin = require('eslint-plugin-react-hooks');
 const importPlugin = require('eslint-plugin-import');
+const unusedImportsPlugin = require('eslint-plugin-unused-imports');
 
 module.exports = [
-  { ignores: ['node_modules/**', '.next/**', 'public/**', 'eslint.config.js', 'scripts/**'] },
+  { ignores: ['node_modules/**', '.next/**', 'public/**', 'eslint.config.js', 'scripts/**', '.storybook/**'] },
   {
     files: ['**/*.ts', '**/*.tsx'],
     plugins: {
@@ -17,6 +18,7 @@ module.exports = [
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
       import: importPlugin,
+      'unused-imports': unusedImportsPlugin,
     },
     languageOptions: {
       parser: tsParser,
@@ -51,6 +53,8 @@ module.exports = [
       '@typescript-eslint/explicit-function-return-type': 'warn',
       '@typescript-eslint/explicit-module-boundary-types': 'warn',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'warn',
       '@typescript-eslint/no-unsafe-member-access': 'warn',
       '@typescript-eslint/no-unsafe-call': 'warn',
@@ -59,6 +63,7 @@ module.exports = [
       'react/display-name': 'off',
       'react/no-array-index-key': 'warn',
       'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/set-state-in-effect': 'warn',
       'react-hooks/exhaustive-deps': 'warn',
       'react/react-in-jsx-scope': 'off',
       'import/order': [

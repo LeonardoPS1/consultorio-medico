@@ -1,19 +1,19 @@
+import { createHash } from 'crypto';
+import { compare } from 'bcryptjs';
+import { eq } from 'drizzle-orm';
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import { compare } from 'bcryptjs';
-import { getUserByEmail, createAdminUserIfNotExists } from '@/lib/data-store';
+import { usuarios } from '@/drizzle/schema';
 import {
   isAccountLocked,
   incrementFailedAttempts,
   resetFailedAttempts,
 } from '@/lib/account-lockout';
-import { verify2faToken } from '@/lib/mfa';
 import { logAudit } from '@/lib/audit-log';
-import { createHash } from 'crypto';
+import { getUserByEmail, createAdminUserIfNotExists } from '@/lib/data-store';
 import { db } from '@/lib/db';
 import { safeError } from '@/lib/logger';
-import { usuarios } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { verify2faToken } from '@/lib/mfa';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,

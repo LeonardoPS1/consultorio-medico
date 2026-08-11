@@ -1,19 +1,22 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'motion/react';
-import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  FileSignature,
+  Loader2,
+  Search,
+  FileText,
+  Calendar,
+  Shield,
+  Download,
+  Eye,
+} from 'lucide-react';
+import { motion } from 'motion/react';
+import { useState, useEffect, useCallback } from 'react';
+import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
+import { PageHeader } from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -23,21 +26,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/use-toast';
-import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 import {
-  FileSignature,
-  Loader2,
-  Search,
-  FileText,
-  User,
-  Calendar,
-  Shield,
-  Download,
-  Eye,
-} from 'lucide-react';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/components/ui/use-toast';
 
 interface ConsentimientoItem {
   id: string;
@@ -69,14 +68,20 @@ interface ConsentimientosClientProps {
 
 const TIPOS = ['general', 'cirugia', 'tratamiento', 'procedimiento', 'estetica', 'otros'] as const;
 
+/**
+ *
+ * @param root0
+ * @param root0.initialData
+ * @param root0.initialTotal
+ * @param root0.initialStats
+ * @param root0.canView
+ */
 export function ConsentimientosClient({
   initialData,
-  initialTotal,
   initialStats,
   canView,
 }: ConsentimientosClientProps) {
   const [data, setData] = useState<ConsentimientoItem[]>(initialData);
-  const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<string>('todos');
@@ -114,7 +119,6 @@ export function ConsentimientosClient({
       if (listRes.ok) {
         const json = await listRes.json();
         setData(json.data || []);
-        setTotal(json.total || 0);
       }
       if (statsRes.ok) {
         const json = await statsRes.json();
@@ -177,8 +181,9 @@ export function ConsentimientosClient({
         ipFirma: '',
       });
       fetchData();
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -192,7 +197,7 @@ export function ConsentimientosClient({
         setDetailData(json.data);
         setDetailOpen(true);
       }
-    } catch (err) {
+    } catch {
       toast({
         title: 'Error',
         description: 'No se pudo cargar el detalle',

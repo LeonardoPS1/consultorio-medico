@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { pushService } from '@/lib/services/push';
-import { notificacionesService } from '@/lib/services/notificaciones';
-import { apiHandler, fail } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, fail } from '@/lib/api-handler';
+import { notificacionesService } from '@/lib/services/notificaciones';
+import { pushService } from '@/lib/services/push';
 import { pushSubscriptionSchema } from '@/lib/validations';
 
 // GET /api/notificaciones/push?action=public-key

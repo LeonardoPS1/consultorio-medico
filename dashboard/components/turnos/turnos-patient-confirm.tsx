@@ -18,6 +18,15 @@ interface NuevoPacienteConfirmDialogProps {
   onConfirm: () => Promise<void>;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.open
+ * @param root0.nombre
+ * @param root0.apellido
+ * @param root0.onClose
+ * @param root0.onConfirm
+ */
 export function NuevoPacienteConfirmDialog({
   open,
   nombre,

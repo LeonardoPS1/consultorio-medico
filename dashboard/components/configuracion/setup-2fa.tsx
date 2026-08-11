@@ -1,14 +1,17 @@
 'use client';
 
+import { Shield, Smartphone, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
-import { Shield, Smartphone, Copy, Check, Download } from 'lucide-react';
 import { playCopy } from '@/lib/sound';
 
+/**
+ *
+ */
 export default function Setup2FA() {
   const [step, setStep] = useState<'idle' | 'qr' | 'verify' | 'done'>('idle');
   const [secret, setSecret] = useState('');

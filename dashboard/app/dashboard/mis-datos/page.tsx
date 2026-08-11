@@ -5,13 +5,13 @@
  * eliminación pendientes del tenant. Pasa todo al Client Component island.
  */
 
-export const dynamic = 'force-dynamic';
-
+import { and, desc, eq, isNull } from 'drizzle-orm';
+import { pacientes, solicitudesDatos } from '@/drizzle/schema';
 import { getEffectiveSession } from '@/lib/auth-effective';
 import { db } from '@/lib/db';
-import { pacientes, solicitudesDatos } from '@/drizzle/schema';
-import { and, desc, eq, isNull } from 'drizzle-orm';
 import { MisDatosClient } from './mis-datos-client';
+
+export const dynamic = 'force-dynamic';
 
 interface SolicitudItem {
   id: string;
@@ -84,6 +84,9 @@ async function getInitialData(): Promise<{
   }
 }
 
+/**
+ *
+ */
 export default async function MisDatosPage() {
   const initial = await getInitialData();
 

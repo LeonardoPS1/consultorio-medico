@@ -1,7 +1,6 @@
-import { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
-import { apiHandler, success, fail } from '@/lib/api-handler';
+import { NextRequest , NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, fail } from '@/lib/api-handler';
 import { generarDesdeGitLog, generarDesdeCommits } from '@/lib/services/novedades';
 
 export const dynamic = 'force-dynamic';

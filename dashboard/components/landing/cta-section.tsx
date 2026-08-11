@@ -1,7 +1,7 @@
+import { MessageCircle, Sparkles, ShieldCheck, Lock, Server } from 'lucide-react';
 import { AnimatedSection } from '@/components/landing/animated-section';
 import { CTASectionButton } from '@/components/landing/cta-button';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, MessageCircle, Sparkles, ShieldCheck, Lock, Server } from 'lucide-react';
 
 export interface CTASectionProps {
   title?: string;
@@ -9,6 +9,13 @@ export interface CTASectionProps {
   badgeText?: string;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.title
+ * @param root0.subtitle
+ * @param root0.badgeText
+ */
 export function CTASection({
   title = '¿Listo para transformar tu consultorio?',
   subtitle = 'Empieza hoy. En 5 minutos tienes todo configurado. Sin compromisos, sin tarjeta.',

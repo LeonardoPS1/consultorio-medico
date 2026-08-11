@@ -5,19 +5,18 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { PortalSkeleton } from '@/components/portal/portal-skeleton';
-import { cn } from '@/lib/utils';
 import {
   Bell,
   CheckCheck,
-  RefreshCw,
   AlertCircle,
   Calendar,
   MessageSquare,
   FileText,
 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
 import { PortalCard } from '@/components/portal/portal-card';
+import { PortalSkeleton } from '@/components/portal/portal-skeleton';
+import { cn } from '@/lib/utils';
 
 interface Notificacion {
   id: string;
@@ -57,6 +56,9 @@ function formatDate(dateStr: string): string {
   });
 }
 
+/**
+ *
+ */
 export default function PortalNotificacionesPage() {
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>(
     [],

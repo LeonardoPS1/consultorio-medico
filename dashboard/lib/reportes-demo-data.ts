@@ -3,6 +3,10 @@
  * Muestra métricas realistas de un consultorio médico en funcionamiento.
  */
 
+/**
+ *
+ * @param periodo
+ */
 export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
   const esAnual = periodo === 'año';
   const esSemana = periodo === 'semana';
@@ -338,7 +342,7 @@ export function getDemoReportes(periodo: 'semana' | 'mes' | 'año') {
     nps: 72,
     leadsConvertidos: conversionLeads[3].cantidad,
     leadsTotales: conversionLeads[0].cantidad,
-    ingresosTrend: ingresosTrend,
+    ingresosTrend,
     ocupacionTrend: ingresosTrend,
   };
 

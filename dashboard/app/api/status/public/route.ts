@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
-import { obtenerEstadoPublico } from '@/lib/status-publico';
 import { safeWarn } from '@/lib/logger';
+import { obtenerEstadoPublico } from '@/lib/status-publico';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ *
+ */
 export async function GET() {
   try {
     const data = await obtenerEstadoPublico();

@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { apiHandler, created } from '@/lib/api-handler';
+import { auth } from '@/lib/auth';
 import {
   getConversaciones,
-  getConversacionById,
   createConversacion,
   getPacienteByTelefono,
   createPaciente,
   seedDataIfEmpty,
 } from '@/lib/data-store';
-import { auth } from '@/lib/auth';
-import { apiHandler, created } from '@/lib/api-handler';
+import { emitEvent } from '@/lib/sse-events';
 import {
   parseBody,
   parseQuery,
   createConversacionSchema,
   conversacionQuerySchema,
 } from '@/lib/validations';
-import { emitEvent } from '@/lib/sse-events';
-import { z } from 'zod';
 
 const conversacionCreateSchema = createConversacionSchema
   .extend({

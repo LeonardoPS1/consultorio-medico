@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
-import { apiHandler, created, success } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, created, success } from '@/lib/api-handler';
 import { listarConversaciones, crearConversacion } from '@/lib/services/mensajeria-interna';
 
 /**

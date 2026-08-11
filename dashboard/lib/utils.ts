@@ -1,10 +1,11 @@
 import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { format, formatDistanceToNow, isToday, isTomorrow, isYesterday } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { twMerge } from 'tailwind-merge';
 
 /**
  * Combina clases de Tailwind de forma inteligente
+ * @param {...any} inputs
  */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -12,6 +13,8 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Formatea una fecha para mostrar
+ * @param date
+ * @param pattern
  */
 export function formatDate(date: Date | string, pattern: string = 'PPP') {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -20,6 +23,7 @@ export function formatDate(date: Date | string, pattern: string = 'PPP') {
 
 /**
  * Formatea una hora
+ * @param date
  */
 export function formatTime(date: Date | string) {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -28,6 +32,7 @@ export function formatTime(date: Date | string) {
 
 /**
  * Formatea fecha + hora
+ * @param date
  */
 export function formatDateTime(date: Date | string) {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -36,6 +41,7 @@ export function formatDateTime(date: Date | string) {
 
 /**
  * Retorna un texto relativo (hace 5 min, ayer, etc)
+ * @param date
  */
 export function formatRelative(date: Date | string) {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -44,6 +50,7 @@ export function formatRelative(date: Date | string) {
 
 /**
  * Texto amigable para fecha de turno
+ * @param date
  */
 export function formatTurnoDate(date: Date | string) {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -55,6 +62,7 @@ export function formatTurnoDate(date: Date | string) {
 
 /**
  * Retorna el color según el estado del turno
+ * @param estado
  */
 export function getTurnoColor(estado: string) {
   const colors: Record<string, string> = {
@@ -72,6 +80,7 @@ export function getTurnoColor(estado: string) {
 
 /**
  * Traduce estados del turno a texto legible
+ * @param estado
  */
 export function getTurnoLabel(estado: string) {
   const labels: Record<string, string> = {
@@ -89,6 +98,7 @@ export function getTurnoLabel(estado: string) {
 
 /**
  * Valida un número de teléfono chileno (+569 o 9)
+ * @param phone
  */
 export function isValidPhone(phone: string): boolean {
   const cleaned = phone.replace(/[\s\-()]/g, '');
@@ -98,6 +108,7 @@ export function isValidPhone(phone: string): boolean {
 /**
  * Formatea un número de teléfono chileno para mostrar
  * +569XXXXXXXX → +56 9 XXXX XXXX
+ * @param phone
  */
 export function formatPhone(phone: string) {
   if (!phone) return '';
@@ -117,6 +128,7 @@ export function formatPhone(phone: string) {
 /**
  * Limpia un RUT: elimina puntos, guión y espacios
  * "12.345.678-5" → "123456785"
+ * @param rut
  */
 export function cleanRut(rut: string): string {
   return rut.replace(/[.\\-]/g, '').trim();
@@ -125,6 +137,7 @@ export function cleanRut(rut: string): string {
 /**
  * Formatea un RUT chileno para mostrar
  * "123456785" → "12.345.678-5"
+ * @param rut
  */
 export function formatRut(rut: string): string {
   const cleaned = cleanRut(rut);
@@ -138,6 +151,7 @@ export function formatRut(rut: string): string {
 /**
  * Valida un RUT chileno (dígito verificador)
  * Retorna true si el RUT es válido
+ * @param rut
  */
 export function validateRut(rut: string): boolean {
   const cleaned = cleanRut(rut);
@@ -161,6 +175,8 @@ export function validateRut(rut: string): boolean {
 
 /**
  * Trunca texto largo
+ * @param text
+ * @param length
  */
 export function truncate(text: string, length: number = 100) {
   if (text.length <= length) return text;
@@ -169,6 +185,8 @@ export function truncate(text: string, length: number = 100) {
 
 /**
  * Genera iniciales para avatar
+ * @param nombre
+ * @param apellido
  */
 export function getInitials(nombre: string, apellido: string) {
   return `${nombre.charAt(0)}${apellido.charAt(0)}`.toUpperCase();
@@ -176,6 +194,7 @@ export function getInitials(nombre: string, apellido: string) {
 
 /**
  * Slug para URLs
+ * @param text
  */
 export function slugify(text: string) {
   return text

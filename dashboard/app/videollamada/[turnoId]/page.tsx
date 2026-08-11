@@ -1,12 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Loader2, AlertTriangle, X } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Loader2, AlertTriangle, Video, Mic, Monitor, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { VideoRoom } from '@/components/videollamada/video-room';
 import { getRoomName, LIVEKIT_URL } from '@/lib/livekit-client';
 
+/**
+ *
+ * @param root0
+ * @param root0.params
+ */
 export default function VideollamadaPage({ params }: { params: Promise<{ turnoId: string }> }) {
   const searchParams = useSearchParams();
   const router = useRouter();

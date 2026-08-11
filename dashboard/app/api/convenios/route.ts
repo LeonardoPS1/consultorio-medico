@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server';
-import { conveniosService } from '@/lib/services/convenios';
-import { apiHandler, ok, created, fail } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { createConvenioSchema } from '@/lib/validations';
+import { apiHandler, ok, created, fail } from '@/lib/api-handler';
+import { conveniosService } from '@/lib/services/convenios';
+import { parseBody , createConvenioSchema } from '@/lib/validations';
 
 export const GET = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();

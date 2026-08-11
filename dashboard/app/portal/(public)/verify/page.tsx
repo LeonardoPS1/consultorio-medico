@@ -7,13 +7,15 @@
 
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
-import Link from 'next/link';
-import { PortalCard } from '@/components/portal/portal-card';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import { PortalButton } from '@/components/portal/portal-button';
+import { PortalCard } from '@/components/portal/portal-card';
 
+/**
+ *
+ */
 export default function PortalVerify() {
   return (
     <Suspense

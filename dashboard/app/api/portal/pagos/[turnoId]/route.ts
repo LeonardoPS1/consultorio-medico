@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { turnos, portalPagos } from '@/drizzle/schema';
 import { eq, desc } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { turnos, portalPagos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 
 // ─── Portal session helper ──────────────────────────────────
 function getPortalSession(request: Request): { pacienteId: string } | null {
@@ -15,6 +15,12 @@ function getPortalSession(request: Request): { pacienteId: string } | null {
 }
 
 // ─── GET /api/portal/pagos/[turnoId] — Estado del pago ──────
+/**
+ *
+ * @param _request
+ * @param root0
+ * @param root0.params
+ */
 export async function GET(_request: Request, { params: paramsPromise }: { params: Promise<{ turnoId: string }> }) {
   const { turnoId } = await paramsPromise;
   const session = getPortalSession(_request);

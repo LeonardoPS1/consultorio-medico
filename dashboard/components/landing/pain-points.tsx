@@ -1,6 +1,6 @@
-import { AnimatedSection } from '@/components/landing/animated-section';
 import { CalendarX, PhoneCall, BellOff, FileText, Receipt, MessageCircleOff, Sparkles } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { AnimatedSection } from '@/components/landing/animated-section';
 
 export interface PainPointItem {
   icon: LucideIcon;
@@ -60,6 +60,13 @@ export interface PainPointsProps {
   painPoints?: PainPointItem[];
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.title
+ * @param root0.subtitle
+ * @param root0.painPoints
+ */
 export function PainPoints({
   title = '¿Tu clínica sufre estos problemas?',
   subtitle = 'La administración médica está llena de obstáculos que te hacen perder tiempo, pacientes y dinero. Identificarlos es el primer paso para resolverlos.',

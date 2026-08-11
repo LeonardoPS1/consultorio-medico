@@ -3,11 +3,11 @@
  * CRUD completo con integración al sistema de notificaciones.
  */
 
-import { db } from '@/lib/db';
-import { derivaciones, pacientes, medicos, consentimientoCompartir } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, like, or } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
+import { derivaciones, pacientes, medicos } from '@/drizzle/schema';
 import { notFound } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 import type { UpdateDerivacion } from '@/lib/validations';
 
 export interface ListDerivacionesOptions {
@@ -37,17 +37,17 @@ export const derivacionesService = {
     if (estado) condList.push(eq(derivaciones.estado, estado));
     if (pacienteId) condList.push(eq(derivaciones.pacienteId, pacienteId));
     if (medicoId)
-      condList.push(
+      {condList.push(
         or(eq(derivaciones.medicoOrigenId, medicoId), eq(derivaciones.medicoDestinoId, medicoId)),
-      );
+      );}
     if (search)
-      condList.push(
+      {condList.push(
         or(
           like(derivaciones.motivo, `%${search}%`),
           like(derivaciones.diagnostico, `%${search}%`),
           like(derivaciones.especialidad, `%${search}%`),
         ),
-      );
+      );}
 
     const where = condList.length > 0 ? and(...condList) : undefined;
 

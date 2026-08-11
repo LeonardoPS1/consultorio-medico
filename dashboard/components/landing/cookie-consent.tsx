@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { Cookie, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
-import { Cookie, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
 
 // ─── Tipos ────────────────────────────────────────────────────
 export interface CookiePreferences {
@@ -56,6 +56,9 @@ function savePreferences(prefs: CookiePreferences) {
 }
 
 // ─── Hook público: obtener preferencias de cookies ──────────
+/**
+ *
+ */
 export function useCookiePreferences(): CookiePreferences | null {
   const [prefs, setPrefs] = useState<CookiePreferences | null>(null);
 
@@ -68,6 +71,10 @@ export function useCookiePreferences(): CookiePreferences | null {
 }
 
 // ─── Hook público: verificar si una categoría está habilitada ─
+/**
+ *
+ * @param category
+ */
 export function useCookieCategory(category: keyof CookiePreferences): boolean {
   const prefs = useCookiePreferences();
   // Si no hay preferencias guardadas, asumir false (salvo essential)
@@ -76,18 +83,32 @@ export function useCookieCategory(category: keyof CookiePreferences): boolean {
 }
 
 // ─── Utilidad para verificar consentimiento desde otros módulos ─
+/**
+ *
+ */
 export function getCookieConsent(): CookiePreferences | null {
   if (typeof document === 'undefined') return null;
   const raw = getCookie(COOKIE_NAME);
   return parsePreferences(raw);
 }
 
+/**
+ *
+ * @param category
+ */
 export function canUseCookieCategory(category: keyof CookiePreferences): boolean {
   const prefs = getCookieConsent();
   if (!prefs) return category === 'essential'; // Denegar hasta que haya consentimiento
   return prefs[category] === true;
 }
 
+/**
+ *
+ * @param name
+ * @param value
+ * @param category
+ * @param days
+ */
 export function setCookieWithConsent(
   name: string,
   value: string,
@@ -121,6 +142,9 @@ const CATEGORIES: {
 ];
 
 // ─── Componente del banner ────────────────────────────────────
+/**
+ *
+ */
 export function CookieConsentBanner() {
   const [savedPrefs, setSavedPrefs] = useState<CookiePreferences | null>(null);
   const [visible, setVisible] = useState(false);

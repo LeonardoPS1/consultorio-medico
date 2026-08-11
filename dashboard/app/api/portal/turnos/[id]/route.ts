@@ -3,13 +3,13 @@
  * Protegido: requiere cookie portal_session
  */
 
+import { eq, and } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
+import { turnos } from '@/drizzle/schema';
 import { apiHandler, ok, fail, notFound } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 import { parseBody, portalTurnoUpdateSchema } from '@/lib/validations';
-import { db } from '@/lib/db';
-import { turnos } from '@/drizzle/schema';
-import { eq, and } from 'drizzle-orm';
 
 export const PATCH = apiHandler(
   async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {

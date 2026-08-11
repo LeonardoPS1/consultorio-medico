@@ -1,9 +1,9 @@
 'use client';
 
-import * as React from 'react';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
-import { cn } from '@/lib/utils';
+import * as React from 'react';
 import { playTab } from '@/lib/sound';
+import { cn } from '@/lib/utils';
 
 const Tabs = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Root>,

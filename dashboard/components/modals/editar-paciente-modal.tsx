@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,12 +10,12 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SISTEMAS_SALUD, ISAPRES_CHILENAS } from '@/lib/isapres';
+import { toast } from '@/components/ui/use-toast';
 import { getTramos } from '@/lib/aranceles-fonasa';
+import { ISAPRES_CHILENAS } from '@/lib/isapres';
 
 interface Region {
   id: string;
@@ -54,7 +54,10 @@ interface EditarPacienteModalProps {
   onSaved: (updated: PacienteData) => void;
 }
 
-/** Formatea RUT chileno: 12345678-9 (auto-guion antes del dígito verificador) */
+/**
+ * Formatea RUT chileno: 12345678-9 (auto-guion antes del dígito verificador)
+ * @param value
+ */
 function formatRut(value: string): string {
   const cleaned = value.replace(/[^0-9Kk]/g, '').toUpperCase();
   if (cleaned.length <= 1) return cleaned;
@@ -74,6 +77,14 @@ function formatTelefonoChile(value: string): string {
   return value;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.open
+ * @param root0.onOpenChange
+ * @param root0.paciente
+ * @param root0.onSaved
+ */
 export function EditarPacienteModal({
   open,
   onOpenChange,
@@ -87,7 +98,6 @@ export function EditarPacienteModal({
   const [dni, setDni] = useState('');
   const [fechaNacimiento, setFechaNacimiento] = useState('');
   const [direccion, setDireccion] = useState('');
-  const [sistemaSalud, setSistemaSalud] = useState('particular');
   const [isapreNombre, setIsapreNombre] = useState('');
   const [prevision, setPrevision] = useState('particular');
   const [tramoFonasa, setTramoFonasa] = useState('');
@@ -111,7 +121,6 @@ export function EditarPacienteModal({
       setDni(paciente.dni || '');
       setFechaNacimiento(paciente.fechaNacimiento ? paciente.fechaNacimiento.split('T')[0] : '');
       setDireccion(paciente.direccion || '');
-      setSistemaSalud(paciente.sistemaSalud || 'particular');
       setIsapreNombre(paciente.isapreNombre || '');
       setPrevision(paciente.prevision || paciente.sistemaSalud || 'particular');
       setTramoFonasa(paciente.tramoFonasa || '');

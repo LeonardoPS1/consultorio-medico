@@ -7,6 +7,10 @@ export const dynamic = 'force-dynamic';
 
 const CACHE_TTL = 30_000;
 
+/**
+ *
+ * @param request
+ */
 export async function GET(request: Request) {
   try {
     const session = await auth();

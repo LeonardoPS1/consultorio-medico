@@ -1,11 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // ============================================================
 // Tipos
@@ -73,6 +73,15 @@ function isToday(date: Date): boolean {
 // Componente
 // ============================================================
 
+/**
+ *
+ * @param root0
+ * @param root0.turnos
+ * @param root0.onDateChange
+ * @param root0.onTurnoClick
+ * @param root0.viewMode
+ * @param root0.onViewModeChange
+ */
 export function CalendarView({
   turnos,
   onDateChange,
@@ -83,13 +92,13 @@ export function CalendarView({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'mes' | 'dia'>(viewModeProp ?? 'mes');
+  const [prevViewModeProp, setPrevViewModeProp] = useState(viewModeProp);
 
-  // Sync with parent if controlled
-  useEffect(() => {
-    if (viewModeProp && viewModeProp !== viewMode) {
-      setViewMode(viewModeProp);
-    }
-  }, [viewModeProp]);
+  // Sync with parent if controlled (derived state during render)
+  if (viewModeProp && viewModeProp !== prevViewModeProp) {
+    setPrevViewModeProp(viewModeProp);
+    setViewMode(viewModeProp);
+  }
 
   const setViewModeInternal = useCallback(
     (mode: 'mes' | 'dia') => {

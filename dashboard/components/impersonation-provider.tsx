@@ -5,6 +5,12 @@ import type { ImpersonationSession } from '@/lib/auth-impersonation';
 
 const ImpersonationContext = createContext<ImpersonationSession | null>(null);
 
+/**
+ *
+ * @param root0
+ * @param root0.session
+ * @param root0.children
+ */
 export function ImpersonationProvider({
   session,
   children,
@@ -15,6 +21,9 @@ export function ImpersonationProvider({
   return <ImpersonationContext.Provider value={session}>{children}</ImpersonationContext.Provider>;
 }
 
+/**
+ *
+ */
 export function useImpersonation(): ImpersonationSession | null {
   return useContext(ImpersonationContext);
 }

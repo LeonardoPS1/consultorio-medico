@@ -1,6 +1,8 @@
 'use client';
 
+import { Loader2, Search, Plus, User, Video, MapPin, RefreshCw, AlertTriangle, Syringe } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,11 +11,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Search, Plus, User, Video, Phone, MapPin, RefreshCw, AlertTriangle, Syringe } from 'lucide-react';
 
 interface MedicoOption {
   id: string;
@@ -44,6 +44,15 @@ interface NuevoTurnoModalProps {
   pacienteName?: string;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.open
+ * @param root0.onOpenChange
+ * @param root0.onSubmit
+ * @param root0.pacienteId
+ * @param root0.pacienteName
+ */
 export function NuevoTurnoModal({
   open,
   onOpenChange,
@@ -51,7 +60,6 @@ export function NuevoTurnoModal({
   pacienteId: propPacienteId,
   pacienteName,
 }: NuevoTurnoModalProps) {
-  const [paciente, setPaciente] = useState(pacienteName || '');
   const [tipo, setTipo] = useState('Consulta');
   const [tipoConsulta, setTipoConsulta] = useState('consulta');
   const [medicoId, setMedicoId] = useState('');
@@ -69,9 +77,9 @@ export function NuevoTurnoModal({
   const [pacienteSuggestions, setPacienteSuggestions] = useState<PacienteSuggestion[]>([]);
   const [pacienteSearchOpen, setPacienteSearchOpen] = useState(false);
   const [pacienteSearchLoading, setPacienteSearchLoading] = useState(false);
+  const [pacienteSearchError, setPacienteSearchError] = useState(false);
   const [selectedPaciente, setSelectedPaciente] = useState<PacienteSuggestion | null>(null);
   const [highlightedIdx, setHighlightedIdx] = useState(-1);
-  const [pacienteSearchError, setPacienteSearchError] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -88,7 +96,6 @@ export function NuevoTurnoModal({
       }
       setPacienteSuggestions([]);
       setPacienteSearchOpen(false);
-      setPacienteSearchError(false);
       setHighlightedIdx(-1);
     }
   }, [open, pacienteName]);
@@ -120,7 +127,6 @@ export function NuevoTurnoModal({
         setPacienteSearchOpen(list.length > 0);
         setHighlightedIdx(-1);
       } catch {
-        setPacienteSearchError(true);
         setPacienteSuggestions([]);
         setPacienteSearchOpen(false);
       } finally {

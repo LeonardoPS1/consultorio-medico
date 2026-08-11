@@ -1,6 +1,7 @@
 'use client';
 
 import { CalendarView } from '@/components/calendar/calendar-view';
+import type { CalendarioTurno } from '@/components/calendar/calendar-view';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -25,6 +26,14 @@ interface TurnosCalendarProps {
 
 // ─── Component ────────────────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.turnos
+ * @param root0.viewMode
+ * @param root0.onViewModeChange
+ * @param root0.onDateChange
+ */
 export function TurnosCalendar({
   turnos,
   viewMode,
@@ -33,7 +42,7 @@ export function TurnosCalendar({
 }: TurnosCalendarProps) {
   return (
     <CalendarView
-      turnos={turnos as any}
+      turnos={turnos as CalendarioTurno[]}
       viewMode={viewMode}
       onViewModeChange={onViewModeChange}
       onDateChange={(date: Date) => {

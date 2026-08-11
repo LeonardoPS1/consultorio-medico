@@ -1,13 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Search,
   Phone,
@@ -18,11 +11,18 @@ import {
   Loader2,
   RefreshCw,
 } from 'lucide-react';
-import { getInitials, formatRelative, truncate, formatPhone } from '@/lib/utils';
-import { toast } from '@/components/ui/use-toast';
-import { NuevaConversacionModal } from '@/components/modals/nueva-conversacion-modal';
 import { motion } from 'motion/react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { NuevaConversacionModal } from '@/components/modals/nueva-conversacion-modal';
 import { PageHeader } from '@/components/page-header';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast } from '@/components/ui/use-toast';
+import { getInitials, formatRelative, truncate, formatPhone } from '@/lib/utils';
 
 interface Conversacion {
   id: string;
@@ -78,6 +78,11 @@ interface Props {
   initialConversaciones: Conversacion[];
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.initialConversaciones
+ */
 export function ConversacionesClient({ initialConversaciones }: Props) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -143,10 +148,9 @@ export function ConversacionesClient({ initialConversaciones }: Props) {
     refetchInterval: 30000,
   });
 
-  const {
+const {
     data: mensajesData,
     isLoading: loadingMensajes,
-    refetch: refetchMensajes,
   } = useQuery({
     queryKey: ['mensajes', selectedId],
     queryFn: async () => {

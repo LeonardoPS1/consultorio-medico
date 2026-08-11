@@ -1,10 +1,10 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Save } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 interface HorarioData {
@@ -24,6 +24,13 @@ interface Props {
   onHorariosChange: (horarios: HorarioData[]) => void;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.horarios
+ * @param root0.loading
+ * @param root0.onHorariosChange
+ */
 export function ConfigHorarios({ horarios, loading, onHorariosChange }: Props) {
   return (
     <Card>

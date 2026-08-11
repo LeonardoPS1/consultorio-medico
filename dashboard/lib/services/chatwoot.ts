@@ -11,6 +11,9 @@ function getWebhookSecret(): string | null {
   return process.env.CHATWOOT_WEBHOOK_SECRET || null;
 }
 
+/**
+ *
+ */
 export function getActiveMessagingChannel(): 'chatwoot' | 'twilio' {
   return (process.env.CANAL_MENSAJERIA as 'chatwoot' | 'twilio') || 'chatwoot';
 }
@@ -29,14 +32,12 @@ interface ChatwootConversation {
   status: string;
 }
 
-interface ChatwootMessage {
-  id: number;
-  content: string;
-  message_type: number;
-  created_at: number;
-  sender: { id: number; name: string } | null;
-}
-
+/**
+ *
+ * @param name
+ * @param phoneNumber
+ * @param email
+ */
 export async function createContact(
   name: string,
   phoneNumber: string,
@@ -75,6 +76,10 @@ export async function createContact(
   }
 }
 
+/**
+ *
+ * @param phoneNumber
+ */
 export async function findContactByPhone(phoneNumber: string): Promise<ChatwootContact | null> {
   const baseUrl = getBaseUrl();
   const token = getBotToken();
@@ -100,6 +105,11 @@ export async function findContactByPhone(phoneNumber: string): Promise<ChatwootC
   }
 }
 
+/**
+ *
+ * @param contactId
+ * @param inboxId
+ */
 export async function getOrCreateConversation(
   contactId: number,
   inboxId?: string,
@@ -139,6 +149,12 @@ export async function getOrCreateConversation(
   }
 }
 
+/**
+ *
+ * @param conversationId
+ * @param content
+ * @param messageType
+ */
 export async function sendMessage(
   conversationId: number,
   content: string,
@@ -176,6 +192,11 @@ export async function sendMessage(
   }
 }
 
+/**
+ *
+ * @param conversationId
+ * @param content
+ */
 export async function sendTemplateMessage(
   conversationId: number,
   content: string,
@@ -183,6 +204,11 @@ export async function sendTemplateMessage(
   return sendMessage(conversationId, content, 'outgoing');
 }
 
+/**
+ *
+ * @param body
+ * @param signatureHeader
+ */
 export function verifyWebhookSignature(
   body: string,
   signatureHeader: string | null,
@@ -210,6 +236,10 @@ export function verifyWebhookSignature(
   }
 }
 
+/**
+ *
+ * @param tipo
+ */
 export function getInboxId(tipo: 'pacientes' | 'soporte'): string | null {
   if (tipo === 'soporte') return process.env.CHATWOOT_SUPPORT_INBOX_ID || null;
   return process.env.CHATWOOT_PATIENT_INBOX_ID || null;

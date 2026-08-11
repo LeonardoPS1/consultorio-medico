@@ -1,9 +1,8 @@
-import { db } from '@/lib/db';
-import { webhookConfigs, webhookLogs } from '@/drizzle/operations';
-import { eq, and, sql, desc, count } from 'drizzle-orm';
-import { notFound, fail } from '@/lib/api-handler';
-import { safeError, safeWarn } from '@/lib/logger';
 import { createHmac, randomBytes } from 'crypto';
+import { eq, and, sql, desc } from 'drizzle-orm';
+import { webhookConfigs } from '@/drizzle/operations';
+import { notFound } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 
 export const EVENTOS_DISPONIBLES = [
   'turno.creado',
@@ -19,11 +18,15 @@ export const EVENTOS_DISPONIBLES = [
 
 export type EventoWebhook = (typeof EVENTOS_DISPONIBLES)[number];
 
-function sign(payload: object, secret: string): string {
-  const data = JSON.stringify(payload);
-  return createHmac('sha256', secret).update(data).digest('hex');
-}
-
+/**
+ *
+ * @param evento
+ * @param payload
+ * @param config
+ * @param config.id
+ * @param config.url
+ * @param config.secret
+ */
 async function entregar(
   evento: string,
   payload: object,
@@ -34,7 +37,7 @@ async function entregar(
   let lastError: string | undefined;
   let lastStatusCode = 0;
   let lastRespuesta = '';
-  let totalDuracion = 0;
+  const totalDuracion = 0;
 
   for (let intento = 1; intento <= maxIntentos; intento++) {
     const inicio = Date.now();
@@ -119,7 +122,7 @@ export const webhooksService = {
   },
 
   async update(id: string, input: { url?: string; evento?: string; activo?: boolean }) {
-    const config = await this.getById(id);
+    await this.getById(id);
     const data: Record<string, unknown> = { updatedAt: new Date() };
     if (input.url !== undefined) data.url = input.url;
     if (input.evento !== undefined) data.evento = input.evento;

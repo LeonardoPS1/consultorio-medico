@@ -5,12 +5,12 @@
  * y pasa todo al Client Component island para interactividad.
  */
 
-export const dynamic = 'force-dynamic';
-
 import { getEffectiveSession } from '@/lib/auth-effective';
 import { canAccess } from '@/lib/features';
 import { consentimientosService } from '@/lib/services/consentimientos';
 import { ConsentimientosClient } from './consentimientos-client';
+
+export const dynamic = 'force-dynamic';
 
 interface ConsentimientoItem {
   id: string;
@@ -85,6 +85,9 @@ async function getInitialData(): Promise<{
   }
 }
 
+/**
+ *
+ */
 export default async function ConsentimientosPage() {
   const initial = await getInitialData();
 

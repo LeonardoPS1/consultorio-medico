@@ -1,21 +1,7 @@
 'use client';
 
+import { Plus, Trash2, Edit, Play, Copy, Loader2 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { toast } from '@/components/ui/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +12,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Trash2, Edit, Play, Copy, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { toast } from '@/components/ui/use-toast';
 
 const EVENTOS = [
   { value: 'turno.creado', label: 'Turno creado' },
@@ -154,6 +154,9 @@ function WebhookForm({ initial, onSave, onCancel, onRegenerateSecret, regenerati
   );
 }
 
+/**
+ *
+ */
 export function WebhooksTab() {
   const [configs, setConfigs] = useState<WebhookConfigItem[]>([]);
   const [logs, setLogs] = useState<Record<string, WebhookLogItem[]>>({});
@@ -193,7 +196,9 @@ export function WebhooksTab() {
   }, []);
 
   useEffect(() => {
-    cargarConfigs();
+    void (async () => {
+      await cargarConfigs();
+    })();
   }, [cargarConfigs]);
 
   useEffect(() => {

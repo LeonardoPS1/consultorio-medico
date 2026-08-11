@@ -1,8 +1,14 @@
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
+/**
+ *
+ * @param root0
+ * @param root0.error
+ * @param root0.reset
+ */
 export default function ComplianceError({
   error,
   reset,

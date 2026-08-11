@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { bulkWhatsApp } from '@/lib/services/bulk-operations';
 import { safeWarn } from '@/lib/logger';
+import { bulkWhatsApp } from '@/lib/services/bulk-operations';
 import { bulkWhatsAppSchema } from '@/lib/validations';
 
-const BULK_MAX = 100;
-
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) {

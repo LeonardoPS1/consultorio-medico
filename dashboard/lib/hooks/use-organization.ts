@@ -3,6 +3,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
 
+/**
+ *
+ */
 export function useOrganization() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [orgNombre, setOrgNombre] = useState(DEFAULT_TENANT_NAME);

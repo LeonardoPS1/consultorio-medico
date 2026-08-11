@@ -48,6 +48,10 @@ const kpiConfig: Record<string, KpiStyle> = {
   },
 };
 
+/**
+ *
+ * @param type
+ */
 export function getKpiConfig(type: string): KpiStyle {
   return kpiConfig[type] ?? {
     icon: Activity,

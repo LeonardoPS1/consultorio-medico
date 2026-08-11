@@ -3,14 +3,18 @@
  * Protegido: requiere cookie portal_session
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
-import { db } from '@/lib/db';
-import { turnos, medicos, historialMedico } from '@/drizzle/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
-import { safeError } from '@/lib/logger';
+import { NextRequest, NextResponse } from 'next/server';
+import { turnos, medicos, historialMedico } from '@/drizzle/schema';
 import { HttpError } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { safeError } from '@/lib/logger';
+import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 
+/**
+ *
+ * @param request
+ */
 export async function GET(request: NextRequest) {
   const session = await getPortalSession();
   if (!session) {
@@ -77,6 +81,7 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/portal/turnos — Crear turno desde el portal
  * Protegido: requiere cookie portal_session + validaciones.
+ * @param request
  */
 export async function POST(request: NextRequest) {
   if (!validateCSRFOrigin(request)) {

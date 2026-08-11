@@ -25,7 +25,11 @@ function getFormatter(tz: string): Intl.DateTimeFormat {
   return fmt;
 }
 
-/** Devuelve 'YYYY-MM-DD' (día calendario) de `date` en la zona `tz`. */
+/**
+ * Devuelve 'YYYY-MM-DD' (día calendario) de `date` en la zona `tz`.
+ * @param date
+ * @param tz
+ */
 export function zonedDateStr(date: Date, tz: string = DEFAULT_CLINIC_TZ): string {
   return getFormatter(tz).format(date);
 }
@@ -34,6 +38,8 @@ export function zonedDateStr(date: Date, tz: string = DEFAULT_CLINIC_TZ): string
  * Calcula el inicio y el fin (instantes UTC) del día calendario local de
  * `date` en la zona `tz`. Maneja cambios de DST buscando el instante exacto
  * donde cambia la fecha local.
+ * @param date
+ * @param tz
  */
 export function getZonedDayRange(
   date: Date,

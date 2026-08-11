@@ -8,7 +8,7 @@
  */
 
 import { MercadoPagoConfig, Preference, Payment, MerchantOrder } from 'mercadopago';
-import { PLANES, PAID_PLANS } from '@/lib/planes';
+import { PLANES } from '@/lib/planes';
 import type { PlanId } from '@/lib/planes';
 
 // ─── Cliente ─────────────────────────────────────────────────
@@ -33,6 +33,7 @@ export interface CreateTurnoPreferenceInput {
 /**
  * Crea una preferencia de pago en MercadoPago para un turno individual.
  * Usa external_reference con formato "turno:{turnoId}" para identificar el pago.
+ * @param input
  */
 export async function createTurnoPaymentPreference(
   input: CreateTurnoPreferenceInput,
@@ -95,6 +96,9 @@ export interface CreatePreferenceResult {
 /**
  * Crea una preferencia de pago en MercadoPago.
  * La moneda se configura via MERCADOPAGO_CURRENCY (default CLP para Chile).
+ * @param planId
+ * @param externalReference
+ * @param payerEmail
  */
 export async function createCheckoutPreference(
   planId: string,
@@ -154,6 +158,10 @@ export async function createCheckoutPreference(
 }
 
 // ─── Obtener pago por ID ─────────────────────────────────────
+/**
+ *
+ * @param paymentId
+ */
 export async function getPaymentById(paymentId: string) {
   const client = getClient();
   if (!client) return null;
@@ -163,6 +171,10 @@ export async function getPaymentById(paymentId: string) {
 }
 
 // ─── Obtener merchant order por ID ───────────────────────────
+/**
+ *
+ * @param orderId
+ */
 export async function getMerchantOrderById(orderId: string) {
   const client = getClient();
   if (!client) return null;

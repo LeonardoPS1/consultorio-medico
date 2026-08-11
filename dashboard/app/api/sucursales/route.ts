@@ -1,12 +1,15 @@
+import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+import { sucursales } from '@/drizzle/schema';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { sucursales } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 
 // GET — Listar sucursales activas del tenant actual
+/**
+ *
+ */
 export async function GET() {
   const session = await auth();
   if (!session?.user) {

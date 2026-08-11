@@ -1,12 +1,11 @@
 'use client';
 
+import { Store, Plus, Loader2, Pencil, MapPin, Phone, Mail, Check, X } from 'lucide-react';
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -15,9 +14,10 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { Store, Plus, Loader2, Pencil, MapPin, Phone, Mail, Check, X } from 'lucide-react';
-import { PageHeader } from '@/components/page-header';
 
 interface Sucursal {
   id: string;
@@ -32,6 +32,11 @@ interface Props {
   initialList: Sucursal[];
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.initialList
+ */
 export function SucursalesClient({ initialList }: Props) {
   const { toast } = useToast();
   const [list, setList] = useState<Sucursal[]>(initialList);

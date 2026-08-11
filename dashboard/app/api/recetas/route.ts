@@ -3,12 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { pacientes, medicos } from '@/drizzle/schema';
 import { apiHandler, created, notFound } from '@/lib/api-handler';
+import { logAudit } from '@/lib/audit-log';
 import { auth } from '@/lib/auth';
 import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
 import { db } from '@/lib/db';
 import { recetasService } from '@/lib/services/recetas';
 import { parseBody, parseQuery, createRecetaSchema } from '@/lib/validations';
-import { logAudit } from '@/lib/audit-log';
 
 const recetasQuerySchema = z.object({
   estado: z.enum(['activa', 'vencida', 'historial']).optional(),

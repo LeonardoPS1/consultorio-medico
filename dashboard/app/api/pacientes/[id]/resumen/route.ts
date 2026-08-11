@@ -5,9 +5,9 @@ import { generarResumenLongitudinal } from '@/lib/ai-clinical';
 import { verifyPacienteAccess } from '@/lib/api-auth';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { canAccess } from '@/lib/features';
 import { safeError, safeLog } from '@/lib/logger';
 import { getHoyISO, ESTADOS_ACTIVOS } from '@/lib/receta-utils';
-import { canAccess } from '@/lib/features';
 
 const MAX_NOTAS = 5;
 

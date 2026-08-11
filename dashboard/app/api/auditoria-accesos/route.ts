@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { apiHandler, success } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { db } from '@/lib/db';
-import { auditoriaAccesos, usuarios } from '@/drizzle/schema';
 import { and, eq, gte, lte, desc, sql } from 'drizzle-orm';
+import { NextRequest } from 'next/server';
+import { auditoriaAccesos, usuarios } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 

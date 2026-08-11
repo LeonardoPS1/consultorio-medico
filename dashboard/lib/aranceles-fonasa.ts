@@ -41,18 +41,32 @@ const ISAPRES: { value: string; label: string }[] = [
   { value: 'lautaro', label: 'Lautaro' },
 ]
 
+/**
+ *
+ */
 export function getTramos(): TramoInfo[] {
   return TRAMOS
 }
 
+/**
+ *
+ */
 export function getPrevisiones(): { value: Prevision; label: string }[] {
   return PREVISIONES
 }
 
+/**
+ *
+ */
 export function getIsapres(): { value: string; label: string }[] {
   return ISAPRES
 }
 
+/**
+ *
+ * @param tramo
+ * @param valorPrestacion
+ */
 export function calcularCopago(tramo: string, valorPrestacion: number): number {
   const t = TRAMOS.find((t) => t.value === tramo)
   if (!t) return 0

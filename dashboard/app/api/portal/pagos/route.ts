@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { turnos, pacientes, medicos, portalPagos } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { turnos, pacientes, medicos, portalPagos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { safeError } from '@/lib/logger';
 import { createTurnoPaymentPreference } from '@/lib/mercadopago';
 
@@ -17,6 +17,10 @@ function getPortalSession(request: Request): { pacienteId: string } | null {
 }
 
 // ─── POST /api/portal/pagos — Iniciar pago de un turno ──────
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   const session = getPortalSession(request);
   if (!session?.pacienteId) {

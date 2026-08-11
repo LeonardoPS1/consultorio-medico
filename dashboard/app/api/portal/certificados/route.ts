@@ -4,12 +4,15 @@
  * Filtra solo visibleParaPaciente = true y tipo = 'certificado'
  */
 
-import { NextResponse } from 'next/server';
-import { getPortalSession } from '@/lib/portal-auth';
-import { db } from '@/lib/db';
-import { historialMedico, medicos } from '@/drizzle/schema';
 import { eq, and, desc } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { historialMedico, medicos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { getPortalSession } from '@/lib/portal-auth';
 
+/**
+ *
+ */
 export async function GET() {
   const session = await getPortalSession();
   if (!session) {

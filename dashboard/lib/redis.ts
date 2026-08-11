@@ -1,4 +1,4 @@
-import { safeLog, safeWarn, safeError } from '@/lib/logger';
+import { safeLog, safeWarn } from '@/lib/logger';
 
 let _redis: Redis | null = null;
 let _enabled = false;
@@ -57,6 +57,9 @@ function createClient(): Redis | null {
   }
 }
 
+/**
+ *
+ */
 export async function getRedis(): Promise<Redis | null> {
   if (!_redis) {
     _redis = createClient();
@@ -74,6 +77,9 @@ export async function getRedis(): Promise<Redis | null> {
   return _enabled ? _redis : null;
 }
 
+/**
+ *
+ */
 export async function redisHealthCheck(): Promise<{ ok: boolean; latencyMs: number }> {
   const start = Date.now();
   try {

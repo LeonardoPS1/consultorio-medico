@@ -5,12 +5,12 @@
  * y pasa todo al Client Component island para interactividad.
  */
 
-export const dynamic = 'force-dynamic';
-
 import { getEffectiveSession } from '@/lib/auth-effective';
 import { canAccess } from '@/lib/features';
 import { derivacionesService } from '@/lib/services/derivaciones';
 import { DerivacionesClient } from './derivaciones-client';
+
+export const dynamic = 'force-dynamic';
 
 interface DerivacionItem {
   id: string;
@@ -109,6 +109,9 @@ async function getInitialData(): Promise<{
   }
 }
 
+/**
+ *
+ */
 export default async function DerivacionesPage() {
   const initial = await getInitialData();
 

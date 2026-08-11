@@ -24,6 +24,10 @@ function getTransporter() {
   });
 }
 
+/**
+ *
+ * @param input
+ */
 export async function sendEmail(input: SendEmailInput): Promise<boolean> {
   const transporter = getTransporter();
   if (!transporter) {

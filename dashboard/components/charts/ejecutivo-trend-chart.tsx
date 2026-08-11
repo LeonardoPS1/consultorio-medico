@@ -10,8 +10,7 @@ import {
   ResponsiveContainer,
   Legend,
   type DefaultLegendContentProps,
-} from 'recharts';
-import type { TooltipProps } from 'recharts';
+ TooltipProps } from 'recharts';
 
 export interface EjecutivoTrend {
   label: string;
@@ -60,6 +59,15 @@ const CustomLegend = ({ payload }: DefaultLegendContentProps) => {
   );
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ * @param root0.metric
+ * @param root0.title
+ * @param root0.yLabel
+ * @param root0.color
+ */
 export default function EjecutivoTrendChart({ data, metric, title, yLabel, color }: Props) {
   if (!data || data.length === 0) {
     return (

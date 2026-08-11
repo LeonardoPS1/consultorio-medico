@@ -5,7 +5,12 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+/**
+ *
+ * @param root0
+ * @param root0.params
+ */
+export async function generateMetadata({ params: _params }: Props): Promise<Metadata> {
   return {
     title: 'Verificar Certificado Médico',
     description: 'Verificación de autenticidad de certificado médico',
@@ -31,6 +36,11 @@ async function getCertificadoData(id: string) {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.params
+ */
 export default async function VerificarCertificadoPage({ params }: Props) {
   const { id } = await params;
   const data = await getCertificadoData(id);

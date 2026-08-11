@@ -1,16 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { ShieldAlert, Smartphone, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 import { signIn } from 'next-auth/react';
+import { useState, useEffect } from 'react';
+import { Logo } from '@/components/layout/logo';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShieldAlert, Smartphone, ArrowLeft } from 'lucide-react';
 import { DEFAULT_TENANT_NAME, resolveTenantName } from '@/lib/tenant-name';
-import Link from 'next/link';
-import { Logo } from '@/components/layout/logo';
 
+/**
+ *
+ */
 export default function LoginPage() {
   // Leer callbackUrl del query string directamente (evita Suspense boundary)
   const callbackUrl =

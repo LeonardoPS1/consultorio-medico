@@ -1,11 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { PortalCard } from '@/components/portal/portal-card';
-import { PortalBadge } from '@/components/portal/portal-badge';
-import { PortalButton } from '@/components/portal/portal-button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import {
   Calendar,
   Syringe,
@@ -25,10 +21,14 @@ import {
   HeartPulse,
   Activity,
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'motion/react';
+import { useState } from 'react';
 import { staggerContainer, itemVariants } from '@/components/portal/page-transition';
+import { PortalBadge } from '@/components/portal/portal-badge';
+import { PortalButton } from '@/components/portal/portal-button';
+import { PortalCard } from '@/components/portal/portal-card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -365,6 +365,15 @@ className={`transition-[transform,opacity] duration-150 active:scale-75 ${
 
 // ─── Componente Principal ─────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.paciente
+ * @param root0.turnos
+ * @param root0.recetas
+ * @param root0.historial
+ * @param root0.turnosSinEncuesta
+ */
 export default function PortalDashboardClient({
   paciente,
   turnos,

@@ -1,13 +1,12 @@
 import { NextRequest } from 'next/server';
-import { consentimientosService } from '@/lib/services/consentimientos';
-import { apiHandler, ok, created } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { createConsentimientoSchema } from '@/lib/validations';
+import { apiHandler, ok, created } from '@/lib/api-handler';
+import { consentimientosService } from '@/lib/services/consentimientos';
+import { parseBody , createConsentimientoSchema } from '@/lib/validations';
 
 // GET /api/consentimientos?tipo=&pacienteId=&medicoId=&search=&limit=&offset=
 export const GET = apiHandler(async (request: NextRequest) => {
-  const session = await requireAuth();
+  await requireAuth();
   const { searchParams } = new URL(request.url);
 
   const tipo = searchParams.get('tipo') || undefined;
@@ -36,7 +35,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
 
 // POST /api/consentimientos
 export const POST = apiHandler(async (request: NextRequest) => {
-  const session = await requireAuth();
+  await requireAuth();
   const body = await parseBody(request, createConsentimientoSchema);
   const nuevo = await consentimientosService.create(body);
   return created(nuevo);

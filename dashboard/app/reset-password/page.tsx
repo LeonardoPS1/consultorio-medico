@@ -1,14 +1,17 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Logo } from '@/components/layout/logo';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lock, Loader2, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { Logo } from '@/components/layout/logo';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
+/**
+ *
+ */
 export default function ResetPasswordPage() {
   return (
     <Suspense
@@ -24,7 +27,6 @@ export default function ResetPasswordPage() {
 }
 
 function ResetPasswordContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams?.get('token') || '';
 

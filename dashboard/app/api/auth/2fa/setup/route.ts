@@ -1,18 +1,21 @@
 // ============================================================
 // API: 2FA Setup — Generar y verificar secreto
 // ============================================================
+import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { createHash } from 'crypto';
+import { updateUser2FA, storeBackupCodes } from '@/lib/data-store';
 import {
   generate2faSecret,
   generateQRCodeBase64,
   generateBackupCodes,
   verify2faToken,
 } from '@/lib/mfa';
-import { updateUser2FA, getUserByEmail, storeBackupCodes } from '@/lib/data-store';
 import { setup2faSchema } from '@/lib/validations';
 
+/**
+ *
+ */
 export async function GET() {
   try {
     const session = await auth();
@@ -35,6 +38,10 @@ export async function GET() {
   }
 }
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -77,6 +84,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ *
+ */
 export async function DELETE() {
   try {
     const session = await auth();

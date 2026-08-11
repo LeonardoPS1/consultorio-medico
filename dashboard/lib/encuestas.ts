@@ -6,10 +6,10 @@
  * - Consulta estadísticas desde DB real
  */
 
+import { eq, and, sql, desc } from 'drizzle-orm';
+import { turnos, pacientes, medicos, historialMedico } from '@/drizzle/schema';
 import { db } from '@/lib/db';
 import { safeLog, safeWarn, safeError } from '@/lib/logger';
-import { turnos, pacientes, medicos, historialMedico } from '@/drizzle/schema';
-import { eq, and, sql, count, avg, desc, gte, lt } from 'drizzle-orm';
 
 // ─── Tipos ─────────────────────────────────────────────────
 
@@ -48,6 +48,7 @@ export interface EncuestaStats {
 /**
  * Analiza el sentimiento de un comentario usando Ollama (Gemma3).
  * Returns: { sentimiento, score } o null si falla.
+ * @param comentario
  */
 export async function analyzeSentiment(comentario: string): Promise<{
   sentimiento: 'positivo' | 'neutral' | 'negativo';
@@ -111,6 +112,7 @@ JSON:`;
 /**
  * Envía un WhatsApp al paciente preguntando cómo calificaría su atención.
  * Fire-and-forget: no bloquea la respuesta.
+ * @param turnoId
  */
 export async function sendSurveyWhatsApp(turnoId: string): Promise<void> {
   try {
@@ -197,6 +199,12 @@ export async function sendSurveyWhatsApp(turnoId: string): Promise<void> {
  * Se llama tanto desde el endpoint POST como desde el webhook de Twilio
  * cuando detecta una respuesta numérica.
  * Opcionalmente analiza el sentimiento del comentario vía Ollama.
+ * @param data
+ * @param data.pacienteId
+ * @param data.medicoId
+ * @param data.turnoId
+ * @param data.puntaje
+ * @param data.comentario
  */
 export async function storeSurveyResponse(data: {
   pacienteId: string;
@@ -207,7 +215,7 @@ export async function storeSurveyResponse(data: {
 }): Promise<boolean> {
   try {
     // Analizar sentimiento si hay comentario significativo
-    let archivos: Record<string, unknown> = {};
+    const archivos: Record<string, unknown> = {};
     if (data.comentario && data.comentario.trim().length >= 3) {
       const sentimiento = await analyzeSentiment(data.comentario);
       if (sentimiento) {
@@ -246,6 +254,7 @@ export async function storeSurveyResponse(data: {
  * (un número del 1 al 5, opcionalmente con texto adicional).
  *
  * Returns: { esEncuesta: true, puntaje: 1-5 } o { esEncuesta: false }
+ * @param body
  */
 export function detectSurveyResponse(body: string): { esEncuesta: boolean; puntaje?: number } {
   const trimmed = body.trim();
@@ -274,6 +283,9 @@ export function detectSurveyResponse(body: string): { esEncuesta: boolean; punta
 
 // ─── ESTADÍSTICAS: Obtener stats desde DB real ─────────────
 
+/**
+ *
+ */
 export async function getSurveyStats(): Promise<EncuestaStats> {
   // Obtener todas las encuestas de historial_medico con datos completos
   const rows = await db

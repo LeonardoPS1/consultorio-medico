@@ -1,17 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Bot,
   Globe,
   Database,
   Mail,
   Phone,
-  Calendar,
   Calendar as CalendarIcon,
   CheckCircle2,
   XCircle,
@@ -20,6 +14,10 @@ import {
   Key,
   Wifi,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 // ============================================================
 // Tipos
@@ -27,6 +25,12 @@ import {
 
 interface IntegracionesDashboardProps {
   isAdmin: boolean;
+}
+
+interface ServicioGrouped {
+  servicio: string;
+  credenciales: Record<string, string>;
+  config?: { campos?: Array<{ clave: string }> };
 }
 
 function WorkflowItem({ name, active }: { name: string; active: boolean }) {
@@ -50,9 +54,14 @@ function WorkflowItem({ name, active }: { name: string; active: boolean }) {
 // Componente principal
 // ============================================================
 
+/**
+ *
+ * @param root0
+ * @param root0.isAdmin
+ */
 export default function IntegracionesDashboard({ isAdmin }: IntegracionesDashboardProps) {
   const router = useRouter();
-  const [servicios, setServicios] = useState<any[]>([]);
+  const [servicios, setServicios] = useState<ServicioGrouped[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadStatus = useCallback(async () => {
@@ -71,7 +80,9 @@ export default function IntegracionesDashboard({ isAdmin }: IntegracionesDashboa
   }, []);
 
   useEffect(() => {
-    loadStatus();
+    void (async () => {
+      await loadStatus();
+    })();
   }, [loadStatus]);
 
   if (loading) {
@@ -176,13 +187,13 @@ export default function IntegracionesDashboard({ isAdmin }: IntegracionesDashboa
         </Card>
 
         {/* Cards de cada servicio */}
-        {servicios.map((sv: any) => {
+        {servicios.map((sv) => {
           const srv = sv.servicio;
           const style = iconMap[srv] || { icon: <Globe className="h-5 w-5" />, bg: 'bg-muted' };
           const creds = sv.credenciales || {};
           const campos = sv.config?.campos || [];
           const totalCampos = campos.length;
-          const completados = campos.filter((c: any) => creds[c.clave]?.length > 0).length;
+          const completados = campos.filter((c) => creds[c.clave]?.length > 0).length;
           const porcentaje = totalCampos > 0 ? Math.round((completados / totalCampos) * 100) : 0;
 
           let status: 'success' | 'warning' | 'error' = 'error';

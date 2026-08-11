@@ -5,11 +5,11 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import { FileText, PenSquare, CheckCircle2, Eye } from 'lucide-react';
-import { PortalCard } from '@/components/portal/portal-card';
+import { useState, useEffect, useCallback } from 'react';
 import { PortalBadge } from '@/components/portal/portal-badge';
 import { PortalButton } from '@/components/portal/portal-button';
+import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
 interface Consentimiento {
@@ -28,6 +28,9 @@ function formatDate(date: string): string {
   return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+/**
+ *
+ */
 export default function PortalConsentimientosPage() {
   const [consentimientos, setConsentimientos] = useState<Consentimiento[]>([]);
   const [loading, setLoading] = useState(true);
@@ -161,7 +164,7 @@ export default function PortalConsentimientosPage() {
                       <a
                         href={c.documentoPdf}
                         target="_blank"
-                        className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-xl transition-colors duration-200 text-portal-muted-fg bg-portal-muted hover:bg-hsl(var(--portal-muted) / 0.9) hover:text-hsl(var(--portal-foreground))"
+                        className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-xl transition-colors duration-200 text-portal-muted-fg bg-portal-muted hover:bg-hsl(var(--portal-muted) / 0.9) hover:text-hsl(var(--portal-foreground))" rel="noreferrer"
                       >
                         <Eye className="h-3.5 w-3.5" />
                         Ver

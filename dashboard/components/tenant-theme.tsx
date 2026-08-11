@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useTheme } from 'next-themes';
+import { useEffect } from 'react';
 
 /**
  * Client-side theme manager.
@@ -9,7 +9,7 @@ import { useTheme } from 'next-themes';
  * Handles dark mode CSS var overrides when next-themes toggles .dark class.
  */
 export function TenantTheme() {
-  const { theme, resolvedTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     const root = document.documentElement;

@@ -16,16 +16,11 @@
 
 'use client';
 
-import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
-import dynamic from 'next/dynamic';
-import { Track, ConnectionState } from 'livekit-client';
 import {
   useTracks,
-  useChat,
   useTrackToggle,
   useConnectionState,
   useRemoteParticipants,
-  useLocalParticipant,
   FocusLayout,
   FocusLayoutContainer,
   GridLayout,
@@ -33,6 +28,7 @@ import {
   ParticipantTile,
   type ParticipantClickEvent,
 } from '@livekit/components-react';
+import { Track, ConnectionState } from 'livekit-client';
 import {
   Loader2,
   AlertTriangle,
@@ -41,13 +37,14 @@ import {
   Clock,
   Ban,
   RefreshCw,
-  Video,
   UserCheck,
   UserX,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { CustomControlBar } from './custom-control-bar';
 import { CustomChat } from './custom-chat';
+import { CustomControlBar } from './custom-control-bar';
 import { PreJoinLobby } from './prejoin-lobby';
 
 // ─── LiveKit dinámico (solo cliente, sin SSR) ──────────────
@@ -95,7 +92,7 @@ interface ErrorInfo {
   accion?: 'reload' | 'retry' | 'back';
 }
 
-function analizarError(err: Error | string, role: 'medico' | 'paciente'): ErrorInfo {
+function analizarError(err: Error | string, _role: 'medico' | 'paciente'): ErrorInfo {
   const msg = typeof err === 'string' ? err : err?.message || '';
   const m = msg.toLowerCase();
 
@@ -213,6 +210,19 @@ function formatElapsed(seconds: number): string {
 
 // ─── Componente principal ──────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.roomName
+ * @param root0.token
+ * @param root0.liveKitUrl
+ * @param root0.onDisconnect
+ * @param root0.role
+ * @param root0.identity
+ * @param root0.turnoId
+ */
+/* eslint-disable react/prop-types */
+// eslint-disable-next-line react/prop-types
 export function VideoRoom({
   roomName,
   token,
@@ -221,7 +231,8 @@ export function VideoRoom({
   role = 'medico',
   identity,
   turnoId,
-}: VideoRoomProps) {
+}: VideoRoomProps): React.ReactElement {
+/* eslint-enable react/prop-types */
   const serverUrl = useMemo(() => liveKitUrl || 'wss://livekit.aicorebots.com', [liveKitUrl]);
   const [joined, setJoined] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -483,7 +494,6 @@ function VideoContent({
 
   // ─── Participantes ──────────────────────────────────
   const remoteParticipants = useRemoteParticipants();
-  const localParticipant = useLocalParticipant();
 
   // ─── Atajos de teclado ──────────────────────────────
   const { toggle: toggleMic } = useTrackToggle({ source: Track.Source.Microphone });

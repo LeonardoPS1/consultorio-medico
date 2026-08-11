@@ -1,6 +1,6 @@
-import path from 'path';
-import os from 'os';
 import { existsSync, mkdirSync, writeFileSync, rmSync } from 'fs';
+import os from 'os';
+import path from 'path';
 
 let _uploadDir: string | null = null;
 

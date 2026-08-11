@@ -1,9 +1,8 @@
 'use client';
 
+import { ChevronRight, Home } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import { ChevronRight, Home } from 'lucide-react';
 
 const routeLabels: Record<string, string> = {
   dashboard: 'Panel Principal',
@@ -37,6 +36,9 @@ const routeLabels: Record<string, string> = {
   'plantillas-mensajes': 'Plantillas de Mensajes',
 };
 
+/**
+ *
+ */
 export function Breadcrumbs() {
   const pathname = usePathname();
   const segments = pathname.split('/').filter(Boolean);

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
 import { Search } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { buscarCie10Fuzzy, type Cie10Entry } from '@/lib/cie10-data';
 
@@ -13,6 +13,15 @@ interface Props {
   className?: string;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.value
+ * @param root0.onSelect
+ * @param root0.onChange
+ * @param root0.placeholder
+ * @param root0.className
+ */
 export function Cie10Search({
   value,
   onSelect,

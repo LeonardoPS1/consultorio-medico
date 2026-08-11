@@ -3,11 +3,11 @@
  * CRUD completo para gestionar bloqueos por inasistencia.
  */
 
-import { db } from '@/lib/db';
-import { blacklist, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql, count, desc, like, or } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
+import { blacklist, pacientes, medicos } from '@/drizzle/schema';
 import { notFound } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 import type { CreateBlacklistEntry, UpdateBlacklistEntry } from '@/lib/validations';
 
 export interface ListBlacklistOptions {

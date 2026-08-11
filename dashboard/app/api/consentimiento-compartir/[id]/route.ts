@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { consentimientoCompartirService } from '@/lib/services/consentimiento-compartir';
-import { apiHandler, ok } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, ok } from '@/lib/api-handler';
+import { consentimientoCompartirService } from '@/lib/services/consentimiento-compartir';
 
 export const GET = apiHandler(
   async (_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
@@ -15,7 +15,7 @@ export const GET = apiHandler(
 export const PATCH = apiHandler(
   async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
     const { id } = await paramsPromise;
-    const session = await requireAuth();
+    await requireAuth();
     const body = await request.json();
 
     let result;

@@ -39,16 +39,27 @@ const FeatureFlagsContext = createContext<FeatureFlagsContextValue>({
   loading: true,
 });
 
+/**
+ *
+ */
 export function useFeatureFlags() {
   return useContext(FeatureFlagsContext);
 }
 
-/** Hook para verificar si un feature específico está habilitado a nivel tenant */
+/**
+ * Hook para verificar si un feature específico está habilitado a nivel tenant
+ * @param featureId
+ */
 export function useFeatureFlag(featureId: string): boolean {
   const { isFeatureEnabled } = useFeatureFlags();
   return isFeatureEnabled(featureId);
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
   const [toggles, setToggles] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
@@ -113,16 +124,27 @@ const UserOverridesContext = createContext<UserOverridesContextValue>({
   refresh: async () => {},
 });
 
+/**
+ *
+ */
 export function useUserOverrides() {
   return useContext(UserOverridesContext);
 }
 
-/** Hook: ¿el usuario actual tiene override para este feature? */
+/**
+ * Hook: ¿el usuario actual tiene override para este feature?
+ * @param featureId
+ */
 export function useHasFeatureOverride(featureId: string): boolean {
   const { overrides } = useUserOverrides();
   return overrides.has(featureId);
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function UserFeatureOverridesProvider({ children }: { children: ReactNode }) {
   const [overrides, setOverrides] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);

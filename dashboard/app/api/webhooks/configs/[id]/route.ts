@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { webhooksService } from '@/lib/services/webhooks';
-import { apiHandler, ok } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
 import { z } from 'zod';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, ok } from '@/lib/api-handler';
+import { webhooksService } from '@/lib/services/webhooks';
+import { parseBody } from '@/lib/validations';
 
 const updateWebhookSchema = z.object({
   url: z.string().url('URL inválida').optional(),

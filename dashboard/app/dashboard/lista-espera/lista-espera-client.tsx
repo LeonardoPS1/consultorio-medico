@@ -1,31 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { X, Trash2, RefreshCw, UserPlus, CalendarPlus, ChevronDown, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useCallback, useEffect, useState } from 'react';
+import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,8 +16,29 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 
 interface WaitlistItem {
   id: string;
@@ -90,6 +90,11 @@ type DestinoOferta =
   | { tipo: 'turno'; turnoId: string }
   | { tipo: 'franja'; fechaHora: string; pacienteId: string; medicoId: string };
 
+/**
+ *
+ * @param root0
+ * @param root0.initialItems
+ */
 export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem[] }) {
   const [items, setItems] = useState(initialItems);
   const [removing, setRemoving] = useState<string | null>(null);

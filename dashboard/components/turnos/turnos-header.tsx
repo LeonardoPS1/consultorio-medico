@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Calendar, Plus, List, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface TurnosHeaderProps {
   view: 'lista' | 'calendario' | 'dia';
@@ -9,6 +9,13 @@ interface TurnosHeaderProps {
   onNewTurno: () => void;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.view
+ * @param root0.onViewChange
+ * @param root0.onNewTurno
+ */
 export function TurnosHeader({ view, onViewChange, onNewTurno }: TurnosHeaderProps) {
   return (
     <div className="flex items-center justify-between flex-wrap gap-2">

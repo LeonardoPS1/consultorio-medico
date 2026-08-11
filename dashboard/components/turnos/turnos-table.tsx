@@ -1,18 +1,5 @@
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
-import { RiskBadge } from './risk-badge';
-import { descargarICS } from '@/lib/ics';
-import { generateGCalUrl, formatGCalEventText } from '@/lib/google-calendar';
 import {
   Calendar,
   Plus,
@@ -24,6 +11,19 @@ import {
   MessageSquare,
   MoreHorizontal,
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { generateGCalUrl, formatGCalEventText } from '@/lib/google-calendar';
+import { descargarICS } from '@/lib/ics';
+import { getTurnoColor, getTurnoLabel } from '@/lib/utils';
+import { RiskBadge } from './risk-badge';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -339,6 +339,19 @@ function TurnoRow({
 
 // ─── Main Component ─────────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.turnosFiltrados
+ * @param root0.loading
+ * @param root0.filtrosActivos
+ * @param root0.savingStates
+ * @param root0.onActualizarEstado
+ * @param root0.onEditTurno
+ * @param root0.onCancelTurno
+ * @param root0.onLimpiarFiltros
+ * @param root0.onNewTurno
+ */
 export function TurnosTable({
   turnosFiltrados,
   loading,

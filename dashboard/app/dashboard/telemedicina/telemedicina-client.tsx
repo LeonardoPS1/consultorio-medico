@@ -1,22 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import {
-  Calendar,
-  Users,
   Video,
   ExternalLink,
   Loader2,
   AlertCircle,
-  Filter,
   ChevronDown,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import type { TurnoVirtual } from './page';
 
 type FiltroEstado = 'todos' | 'proximos' | 'en_curso' | 'finalizados';
@@ -25,6 +22,11 @@ interface TelemedicinaClientProps {
   initialTurnos: TurnoVirtual[];
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.initialTurnos
+ */
 export function TelemedicinaClient({ initialTurnos }: TelemedicinaClientProps) {
   const [turnos, setTurnos] = useState<TurnoVirtual[]>(initialTurnos);
   const [loading, setLoading] = useState(false);

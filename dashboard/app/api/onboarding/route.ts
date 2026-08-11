@@ -8,15 +8,15 @@
  *     que pueden retornar resultados inconsistentes entre contextos.
  */
 
-import { NextRequest } from 'next/server';
-import { apiHandler, ok, fail } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody, onboardingStepSchema } from '@/lib/validations';
-import { db } from '@/lib/db';
-import { onboardingProgress } from '@/drizzle/schema';
-import { getOnboardingState, getAiOnboardingTip } from '@/lib/onboarding';
-import { safeWarn } from '@/lib/logger';
 import { eq } from 'drizzle-orm';
+import { NextRequest } from 'next/server';
+import { onboardingProgress } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, ok, fail } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { safeWarn } from '@/lib/logger';
+import { getOnboardingState, getAiOnboardingTip } from '@/lib/onboarding';
+import { parseBody, onboardingStepSchema } from '@/lib/validations';
 
 export const GET = apiHandler(async () => {
   const session = await requireAuth();

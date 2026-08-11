@@ -7,6 +7,7 @@ import { recetasService } from '@/lib/services/recetas';
  *
  * Exporta pacientes en formato Excel (.xlsx) o PDF (HTML imprimible).
  * Requiere autenticación.
+ * @param request
  */
 export async function GET(request: NextRequest) {
   try {
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
         wch:
           Math.max(
             key.length,
-            ...data.map((r: Record<string, any>) => String(r[key] || '').length),
+            ...data.map((r: Record<string, unknown>) => String(r[key] || '').length),
           ) + 2,
       }));
       ws['!cols'] = colWidths;
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest) {
 
     const filas = data
       .map(
-        (r: any, i: number) => `
+        (r, i) => `
       <tr>
         <td>${i + 1}</td>
         <td>${r.Nombre}</td>

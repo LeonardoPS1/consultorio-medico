@@ -1,13 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { playDelete } from '@/lib/sound';
 import {
   Bot,
   Globe,
@@ -16,7 +8,6 @@ import {
   Phone,
   Calendar,
   CheckCircle2,
-  XCircle,
   AlertCircle,
   Eye,
   EyeOff,
@@ -28,6 +19,13 @@ import {
   Trash2,
   RotateCcw,
 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { playDelete } from '@/lib/sound';
 
 // ============================================================
 // Tipos
@@ -85,6 +83,9 @@ const ICONOS: Record<string, React.ReactNode> = {
 // Componente Principal
 // ============================================================
 
+/**
+ *
+ */
 export default function CredencialesTab() {
   const [servicios, setServicios] = useState<ServicioConfig[]>([]);
   const [serviciosState, setServiciosState] = useState<Record<string, ServicioState>>({});
@@ -106,7 +107,9 @@ export default function CredencialesTab() {
         // Inicializar estado de cada servicio
         const state: Record<string, ServicioState> = {};
         for (const sv of data.servicios || []) {
-          const existingData = data.grouped?.find((g: any) => g.servicio === sv.servicio);
+          const existingData = data.grouped?.find(
+            (g: { servicio: string }) => g.servicio === sv.servicio,
+          );
           const valores: CredencialesState = {};
           for (const campo of sv.campos) {
             valores[campo.clave] = existingData?.credenciales?.[campo.clave] || '';
@@ -140,7 +143,9 @@ export default function CredencialesTab() {
   }, [activeServicio]);
 
   useEffect(() => {
-    loadCredenciales();
+    void (async () => {
+      await loadCredenciales();
+    })();
   }, []);
 
   // Actualizar un valor
@@ -213,7 +218,7 @@ export default function CredencialesTab() {
           },
         }));
       }
-    } catch (err) {
+    } catch {
       setServiciosState((prev) => ({
         ...prev,
         [servicio]: {
@@ -262,7 +267,7 @@ export default function CredencialesTab() {
           mensajeTipo: data.success ? 'success' : 'error',
         },
       }));
-    } catch (err) {
+    } catch {
       setServiciosState((prev) => ({
         ...prev,
         [servicio]: {
@@ -325,7 +330,7 @@ export default function CredencialesTab() {
           },
         }));
       }
-    } catch (err) {
+    } catch {
       setServiciosState((prev) => ({
         ...prev,
         [servicio]: {

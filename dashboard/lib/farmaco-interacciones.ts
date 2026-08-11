@@ -266,6 +266,7 @@ export const INTERACCIONES: Interaccion[] = [
 /**
  * Normaliza el nombre de un fármaco eliminando unidades, presentaciones
  * y caracteres no alfabéticos para mejorar el matching por alias.
+ * @param nombre
  */
 export function normalizarFarmaco(nombre: string): string {
   return (nombre ?? '')
@@ -282,14 +283,22 @@ export function normalizarFarmaco(nombre: string): string {
     .trim();
 }
 
-/** Determina si un término normalizado dispara un medicamento de una familia. */
+/**
+ * Determina si un término normalizado dispara un medicamento de una familia.
+ * @param familia
+ * @param termino
+ */
 function matcheaFamilia(familia: string, termino: string): boolean {
   const def = FAMILIAS[familia as keyof typeof FAMILIAS];
   if (!def || !def.desencadenantes.length) return false;
   return def.desencadenantes.some((d) => termino.includes(normalizarFarmaco(d)));
 }
 
-/** Determina si un término normalizado contiene una familia (para alergias). */
+/**
+ * Determina si un término normalizado contiene una familia (para alergias).
+ * @param familia
+ * @param termino
+ */
 function matcheaEtiquetaFamilia(familia: string, termino: string): boolean {
   const def = FAMILIAS[familia as keyof typeof FAMILIAS];
   if (!def) return false;
@@ -298,7 +307,10 @@ function matcheaEtiquetaFamilia(familia: string, termino: string): boolean {
   );
 }
 
-/** Normaliza la lista de familias de las que participa un término. */
+/**
+ * Normaliza la lista de familias de las que participa un término.
+ * @param termino
+ */
 function familiasDeTermino(termino: string): string[] {
   return (Object.keys(FAMILIAS) as string[])
     .filter((f) => matcheaFamilia(f, termino))
@@ -310,6 +322,10 @@ function familiasDeTermino(termino: string): string[] {
  *  (a) alergias registradas del paciente (texto libre → familias) y
  *  (b) medicamentos ya vigentes en otras recetas activas.
  * Devuelve alertas de alergia e interacción. Nunca bloquea por sí mismo.
+ * @param params
+ * @param params.medicamento
+ * @param params.alergias
+ * @param params.medicamentosActivos
  */
 export function verificarReceta(params: {
   medicamento: string;

@@ -6,7 +6,7 @@
  * - El n8n workflow `workflow-08-google-calendar` puede usarse para auto-sync con OAuth.
  */
 
-import { format, addMinutes } from 'date-fns';
+import { addMinutes } from 'date-fns';
 
 // ─── Tipos ─────────────────────────────────────────────────
 
@@ -38,6 +38,7 @@ export interface GCalEventData {
  *   Agregar a Google Calendar
  * </a>
  * ```
+ * @param data
  */
 export function generateGCalUrl(data: GCalEventData): string {
   const inicio = new Date(data.fechaHora);
@@ -77,6 +78,8 @@ export function generateGCalUrl(data: GCalEventData): string {
 
 /**
  * Formatea el texto para el evento de Google Calendar
+ * @param paciente
+ * @param tipo
  */
 export function formatGCalEventText(paciente: string, tipo?: string): string {
   return tipo ? `Consulta: ${paciente} (${tipo})` : `Consulta: ${paciente}`;

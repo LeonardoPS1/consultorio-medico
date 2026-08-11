@@ -10,13 +10,13 @@
  * 5. Páginas protegidas leen cookie → JWT → paciente autenticado.
  */
 
-import { db } from '@/lib/db';
-import { safeWarn, safeError } from '@/lib/logger';
-import { pacientes, blacklist, rateLimits, usuarios, sucursales, turnos, medicos } from '@/drizzle/schema';
-import { eq, and, sql, lte, gte } from 'drizzle-orm';
+import crypto from 'crypto';
+import { eq, and, sql, gte } from 'drizzle-orm';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-import crypto from 'crypto';
+import { pacientes, blacklist, rateLimits, usuarios, sucursales, turnos, medicos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { safeWarn, safeError } from '@/lib/logger';
 import { canAccess, type FeatureId } from './features';
 
 // ─── Config ──────────────────────────────────────────────────
@@ -26,7 +26,6 @@ const PORTAL_SESSION_HOURS = 24;
 const SESSION_COOKIE_NAME = 'portal_session';
 const RATE_LIMIT_MAX = 3; // intentos de magic link
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutos
-const RATE_LIMIT_CANCELACIONES = 3; // cancelaciones permitidas por mes
 const AUTH_SECRET = () => {
   const secret = process.env.AUTH_SECRET;
   if (!secret) throw new Error('AUTH_SECRET no configurado');
@@ -34,6 +33,12 @@ const AUTH_SECRET = () => {
 };
 
 // ─── Rate limiting en DB (por teléfono) ─────────────────────
+/**
+ *
+ * @param telefono
+ * @param maxRequests
+ * @param windowMs
+ */
 export async function checkPhoneRateDB(
   telefono: string,
   maxRequests = RATE_LIMIT_MAX,
@@ -83,6 +88,10 @@ export async function checkPhoneRateDB(
 
 // ─── Blacklist check ─────────────────────────────────────────
 
+/**
+ *
+ * @param pacienteId
+ */
 export async function checkBlacklist(
   pacienteId: string,
 ): Promise<{ bloqueado: boolean; motivo?: string }> {
@@ -109,6 +118,10 @@ export async function checkBlacklist(
 
 // ─── Cancelaciones del mes ──────────────────────────────────
 
+/**
+ *
+ * @param pacienteId
+ */
 export async function contarCancelacionesMes(pacienteId: string): Promise<number> {
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
@@ -149,6 +162,8 @@ export interface GenerateTokenResult {
  * Genera un token de magic link y lo almacena en la DB.
  * Incluye rate limiting por teléfono y verificación de blacklist.
  * Devuelve el token y la URL completa del magic link.
+ * @param telefono
+ * @param redirect
  */
 export async function generateMagicLink(
   telefono: string,
@@ -209,6 +224,7 @@ export async function generateMagicLink(
  * Verifica un token de magic link y devuelve el paciente si es válido.
  * Invalida el token después de usarlo (one-time use).
  * Actualiza ultimoAccesoPortal al iniciar sesión.
+ * @param token
  */
 export async function verifyMagicToken(token: string): Promise<PortalSession | null> {
   const [paciente] = await db
@@ -247,6 +263,7 @@ export async function verifyMagicToken(token: string): Promise<PortalSession | n
 /**
  * Genera un JWT de sesión para el portal del paciente.
  * Válido por 24 horas.
+ * @param session
  */
 export async function generateSessionToken(session: PortalSession): Promise<string> {
   const secret = AUTH_SECRET();
@@ -261,6 +278,7 @@ export async function generateSessionToken(session: PortalSession): Promise<stri
 
 /**
  * Verifica un JWT de sesión del portal y devuelve los datos.
+ * @param token
  */
 export async function verifySessionToken(token: string): Promise<PortalSession | null> {
   try {
@@ -276,6 +294,7 @@ export async function verifySessionToken(token: string): Promise<PortalSession |
 
 /**
  * Setea la cookie de sesión del portal (httpOnly, secure en prod).
+ * @param session
  */
 export async function setPortalSessionCookie(session: PortalSession): Promise<string> {
   const token = await generateSessionToken(session);
@@ -321,6 +340,9 @@ export async function clearPortalSession(): Promise<void> {
 /**
  * Envía el magic link por WhatsApp usando Twilio.
  * Fire-and-forget: no bloquea la respuesta.
+ * @param telefono
+ * @param pacienteNombre
+ * @param magicLink
  */
 export async function sendPortalMagicLinkWhatsApp(
   telefono: string,
@@ -377,6 +399,7 @@ No compartas este mensaje.`;
 /**
  * Valida el header Origin contra el host del servidor.
  * Previene CSRF en rutas POST/PATCH del portal.
+ * @param req
  */
 export function validateCSRFOrigin(req: Request): boolean {
   const origin = req.headers.get('origin');
@@ -400,6 +423,7 @@ export function validateCSRFOrigin(req: Request): boolean {
  * 1. Paciente → sucursal → tenantId
  * 2. Busca el primer usuario activo de ese tenant
  * 3. Verifica canAccess(plan, 'portal-paciente')
+ * @param pacienteId
  */
 export async function checkPortalFeatureAccess(
   pacienteId: string,

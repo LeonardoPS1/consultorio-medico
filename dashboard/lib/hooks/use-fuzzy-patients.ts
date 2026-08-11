@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Fuse, { type IFuseOptions } from 'fuse.js';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { PatientSummaryLite } from '@/lib/types/patient-panel';
 
 /** Cache staleness: 5 minutes */
@@ -45,6 +45,9 @@ interface UseFuzzyPatientsReturn {
 let sharedCache: PatientSummaryLite[] = [];
 let sharedCacheAt = 0;
 
+/**
+ *
+ */
 export function useFuzzyPatients(): UseFuzzyPatientsReturn {
   const [cache, setCache] = useState<PatientSummaryLite[]>(sharedCache);
   const [isLoadingCache, setIsLoadingCache] = useState(sharedCache.length === 0);

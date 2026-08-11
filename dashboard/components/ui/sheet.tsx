@@ -1,11 +1,11 @@
 'use client';
 
-import * as React from 'react';
 import * as SheetPrimitive from '@radix-ui/react-dialog';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import * as React from 'react';
 import { playModalOpen, playModalClose } from '@/lib/sound';
+import { cn } from '@/lib/utils';
 
 const SheetPrimitiveRoot = SheetPrimitive.Root;
 const SheetTrigger = SheetPrimitive.Trigger;

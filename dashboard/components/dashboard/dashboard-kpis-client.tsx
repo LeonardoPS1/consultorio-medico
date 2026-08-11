@@ -1,11 +1,11 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { motion } from 'motion/react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useSucursal } from '@/lib/sucursal-context';
 import { getKpiConfig } from '@/lib/kpi-config';
+import { useSucursal } from '@/lib/sucursal-context';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -72,6 +72,11 @@ const kpiCardVariants = {
   },
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.initialKpis
+ */
 export function DashboardKpisClient({ initialKpis }: DashboardKpisClientProps) {
   const { sucursalId } = useSucursal();
   const prevDataRef = useRef<string>('');
@@ -93,8 +98,13 @@ export function DashboardKpisClient({ initialKpis }: DashboardKpisClientProps) {
 
   const kpis = data ?? [];
   const kpisStr = JSON.stringify(kpis);
-  const animKey =
-    kpisStr !== prevDataRef.current ? ((prevDataRef.current = kpisStr), Date.now()) : 0;
+  const [animKey, setAnimKey] = useState(0);
+  useEffect(() => {
+    if (kpisStr && kpisStr !== prevDataRef.current) {
+      prevDataRef.current = kpisStr;
+      setAnimKey(Date.now());
+    }
+  }, [kpisStr]);
 
   if (kpis.length === 0) return null;
 

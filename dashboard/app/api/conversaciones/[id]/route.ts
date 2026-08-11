@@ -1,12 +1,12 @@
+import { eq } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { conversaciones } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
 import { getConversacionById } from '@/lib/data-store';
 import { db } from '@/lib/db';
-import { conversaciones } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
-import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
 import { parseBody, updateConversacionSchema } from '@/lib/validations';
-import { z } from 'zod';
 
 const conversacionUpdateSchema = updateConversacionSchema
   .extend({
@@ -71,7 +71,7 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
 
   const body = await parseBody(request, conversacionUpdateSchema);
 
-  const updateData: Record<string, any> = { updatedAt: new Date() };
+  const updateData: Partial<typeof conversaciones.$inferInsert> = { updatedAt: new Date() };
   if (body.estado !== undefined) updateData.estado = body.estado;
   if (body.notas !== undefined) updateData.notas = body.notas;
   if (body.optOut !== undefined) {
@@ -82,12 +82,12 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
   if (body.ultimoMensajeRol !== undefined) updateData.ultimoMensajeRol = body.ultimoMensajeRol;
   if (body.ultimaIntencion !== undefined) updateData.ultimaIntencion = body.ultimaIntencion;
   if (body.ultimaInteraccion !== undefined)
-    updateData.ultimaInteraccion = new Date(body.ultimaInteraccion);
+    {updateData.ultimaInteraccion = new Date(body.ultimaInteraccion);}
   if (body.medicoId !== undefined) updateData.medicoId = body.medicoId;
   if (body.proximoRecordatorio !== undefined)
-    updateData.proximoRecordatorio = body.proximoRecordatorio
+    {updateData.proximoRecordatorio = body.proximoRecordatorio
       ? new Date(body.proximoRecordatorio)
-      : null;
+      : null;}
 
   const [actualizada] = await db
     .update(conversaciones)

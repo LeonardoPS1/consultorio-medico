@@ -1,10 +1,7 @@
+import { and, eq, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateRequest } from 'twilio';
-import { and, eq, sql } from 'drizzle-orm';
-import { withRateLimit } from '@/lib/rate-limit';
-import { db } from '@/lib/db';
 import { turnos, pacienteEventos } from '@/drizzle/schema';
-import { turnosService } from '@/lib/services/turnos';
 import {
   getPacienteByTelefono,
   createPaciente,
@@ -13,15 +10,19 @@ import {
   createMensaje,
   updateMensajeByTwilioSid,
 } from '@/lib/data-store';
+import { db } from '@/lib/db';
 import { detectSurveyResponse, storeSurveyResponse } from '@/lib/encuestas';
-import { handleWaitlistResponse } from '@/lib/whatsapp-waitlist';
+import { captureError } from '@/lib/glitchtip';
 import { escapeHtml } from '@/lib/html-utils';
 import { safeLog, safeWarn, safeError } from '@/lib/logger';
-import { captureError } from '@/lib/glitchtip';
+import { withRateLimit } from '@/lib/rate-limit';
+import { turnosService } from '@/lib/services/turnos';
+import { handleWaitlistResponse } from '@/lib/whatsapp-waitlist';
 
 /**
  * Forwardea el webhook a n8n para procesamiento con IA.
  * Fire-and-forget: no bloquea la respuesta a Twilio.
+ * @param params
  */
 async function forwardToN8n(params: Record<string, string>) {
   const n8nWebhookUrl = process.env.N8N_WEBHOOK_INBOUND_URL;
@@ -52,6 +53,9 @@ async function forwardToN8n(params: Record<string, string>) {
 /**
  * Envía una notificación WhatsApp al médico cuando un paciente escribe.
  * Fire-and-forget: si falla, solo se loguea el error.
+ * @param patientName
+ * @param messagePreview
+ * @param telefono
  */
 async function notifyDoctor(patientName: string, messagePreview: string, telefono: string) {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -114,7 +118,9 @@ async function notifyDoctor(patientName: string, messagePreview: string, telefon
  * Cuando un paciente responde a un recordatorio:
  * - CONFIRMAR → marca confirmoAsistencia y envía confirmación
  * - CANCELAR  → cancela el turno vía turnosService (dispara waitlist + GCal)
- *
+ * @param messageBody
+ * @param pacienteId
+ * @param telefono
  * @returns true si se manejó la respuesta (no debe forwardearse a n8n)
  */
 async function handleReminderResponse(
@@ -249,6 +255,8 @@ async function handleReminderResponse(
  *
  - En producción: la validación es OBLIGATORIA. Si falta firma o token, se rechaza.
  - En desarrollo: si no hay TWILIO_AUTH_TOKEN configurado, se salta (útil para testing local).
+ * @param request
+ * @param params
  */
 function validateTwilioRequest(request: NextRequest, params: Record<string, string>): boolean {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -306,8 +314,7 @@ export const POST = withRateLimit(
       let body: string;
       let profileName: string | null;
       let messageSid: string | null;
-      let to: string | null;
-      let params: Record<string, string> = {};
+      const params: Record<string, string> = {};
 
       const contentType = request.headers.get('content-type') || '';
 
@@ -317,7 +324,6 @@ export const POST = withRateLimit(
         body = json.Body || json.body;
         profileName = json.ProfileName || json.profileName || null;
         messageSid = json.MessageSid || json.messageSid || null;
-        to = json.To || json.to || null;
 
         // Recolectar params también para JSON (necesario para validación de firma)
         Object.entries(json).forEach(([key, value]) => {
@@ -329,7 +335,6 @@ export const POST = withRateLimit(
         body = (formData.get('Body') as string) || '';
         profileName = (formData.get('ProfileName') as string) || null;
         messageSid = (formData.get('MessageSid') as string) || null;
-        to = (formData.get('To') as string) || null;
 
         // Recolectar todos los params para validación de firma
         Array.from(formData.entries()).forEach(([key, value]) => {
@@ -587,6 +592,7 @@ export const POST = withRateLimit(
  * GET /api/webhooks/twilio
  *
  * Endpoint para verificación de webhook (Twilio challenge).
+ * @param request
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

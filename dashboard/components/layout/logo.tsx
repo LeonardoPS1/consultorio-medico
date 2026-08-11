@@ -8,6 +8,9 @@ interface LogoProps {
 /**
  * Componente Logo inline SVG de AiCoreMed.
  * Reemplaza la carga externa de /aicoremed_dark_1200.svg para evitar requests HTTP adicionales.
+ * @param root0
+ * @param root0.className
+ * @param root0.showTagline
  */
 export function Logo({ className, showTagline = false }: LogoProps) {
   return (

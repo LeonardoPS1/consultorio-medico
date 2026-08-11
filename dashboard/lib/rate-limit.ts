@@ -1,10 +1,10 @@
 import crypto from 'crypto';
-import { NextRequest, NextResponse } from 'next/server';
-import { getRedis } from '@/lib/redis';
-import { db } from '@/lib/db';
-import { rateLimits } from '@/drizzle/schema';
 import { eq, sql } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
+import { rateLimits } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { safeWarn } from '@/lib/logger';
+import { getRedis } from '@/lib/redis';
 
 export interface RateLimitConfig {
   maxRequests: number;
@@ -88,6 +88,11 @@ async function checkRateLimitPostgres(key: string, config: RateLimitConfig): Pro
   };
 }
 
+/**
+ *
+ * @param key
+ * @param config
+ */
 export async function checkRateLimit(
   key: string,
   config: Partial<RateLimitConfig> = {},
@@ -100,6 +105,11 @@ export async function checkRateLimit(
   return checkRateLimitPostgres(key, fullConfig);
 }
 
+/**
+ *
+ * @param handler
+ * @param config
+ */
 export function withRateLimit(
   handler: (request: NextRequest) => Promise<NextResponse>,
   config?: Partial<RateLimitConfig>,

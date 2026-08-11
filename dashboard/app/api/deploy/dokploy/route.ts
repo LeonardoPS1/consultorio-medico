@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { safeWarn } from '@/lib/logger';
-import { captureError } from '@/lib/glitchtip';
 import { timingSafeEqual } from 'crypto';
+import { NextRequest, NextResponse } from 'next/server';
+import { captureError } from '@/lib/glitchtip';
+import { safeWarn } from '@/lib/logger';
 
 const DOKPLOY_API_KEY = process.env.DOKPLOY_API_KEY;
 const DOKPLOY_INTERNAL_URL = process.env.DOKPLOY_INTERNAL_URL || 'http://dokploy:3000';
@@ -18,6 +18,10 @@ function verifyApiKey(request: NextRequest): boolean {
   }
 }
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: NextRequest) {
   if (!verifyApiKey(request)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });

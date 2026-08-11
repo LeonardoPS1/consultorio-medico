@@ -1,10 +1,14 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { impersonationTokens, usuarios } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
-import { safeWarn } from '@/lib/logger';
+import { NextResponse } from 'next/server';
+import { impersonationTokens, usuarios } from '@/drizzle/schema';
 import { setImpersonationCookie } from '@/lib/auth-impersonation';
+import { db } from '@/lib/db';
+import { safeWarn } from '@/lib/logger';
 
+/**
+ *
+ * @param request
+ */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get('token');

@@ -5,15 +5,16 @@
 // Reemplaza la versión in-memory que se perdía al reiniciar el servidor.
 // Usa la tabla `account_lockouts` en PostgreSQL para persistencia.
 
-import { db } from '@/lib/db';
+import { eq, sql } from 'drizzle-orm';
 import { accountLockouts } from '@/drizzle/schema';
-import { eq, sql, and } from 'drizzle-orm';
+import { db } from '@/lib/db';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutos
 
 /**
  * Verifica si una cuenta está bloqueada.
+ * @param email
  */
 export async function isAccountLocked(
   email: string,
@@ -46,6 +47,7 @@ export async function isAccountLocked(
 /**
  * Incrementa el contador de intentos fallidos.
  * Devuelve el estado de bloqueo.
+ * @param email
  */
 export async function incrementFailedAttempts(
   email: string,
@@ -98,6 +100,7 @@ export async function incrementFailedAttempts(
 
 /**
  * Resetea el contador de intentos fallidos (login exitoso).
+ * @param email
  */
 export async function resetFailedAttempts(email: string): Promise<void> {
   const key = email.toLowerCase().trim();
@@ -106,6 +109,7 @@ export async function resetFailedAttempts(email: string): Promise<void> {
 
 /**
  * Devuelve los intentos restantes antes del bloqueo.
+ * @param email
  */
 export async function getRemainingAttempts(email: string): Promise<number> {
   const key = email.toLowerCase().trim();

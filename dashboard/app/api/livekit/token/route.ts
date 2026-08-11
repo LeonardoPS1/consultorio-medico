@@ -16,18 +16,17 @@
  *   - Pacientes: require portal_session (verifica turno asociado), identity se deriva de session.nombre + apellido
  */
 
+import { eq, and, sql } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
-import { apiHandler, ok, fail } from '@/lib/api-handler';
+import { turnos } from '@/drizzle/schema';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, ok, fail } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 import {
-  getRoomName,
   generateMedicoToken,
   generatePacienteToken,
   LIVEKIT_URL,
 } from '@/lib/livekit';
-import { db } from '@/lib/db';
-import { turnos } from '@/drizzle/schema';
-import { eq, and, sql } from 'drizzle-orm';
 import { getPortalSession } from '@/lib/portal-auth';
 
 export const POST = apiHandler(async (request: NextRequest) => {

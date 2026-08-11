@@ -1,11 +1,11 @@
 'use client';
 
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CalendarIcon } from 'lucide-react';
+import { PortalCard } from '@/components/portal/portal-card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PortalCard } from '@/components/portal/portal-card';
-import { CalendarIcon } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { MedicoPortal } from '@/lib/services/portal-booking';
 
 interface DoctorCardProps {
@@ -43,6 +43,13 @@ function getAvatarColor(nombre: string): string {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.medico
+ * @param root0.selected
+ * @param root0.onSelect
+ */
 export function DoctorCard({ medico, selected, onSelect }: DoctorCardProps) {
   return (
     <PortalCard

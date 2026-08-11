@@ -9,9 +9,9 @@
  * - Scoring alto de pacientes (riesgo de ausentismo)
  */
 
+import { eq, and, sql, gte, count, desc } from 'drizzle-orm';
+import { turnos, pacientes, historialMedico } from '@/drizzle/schema';
 import { db } from '@/lib/db';
-import { turnos, pacientes, historialMedico, listaEspera } from '@/drizzle/schema';
-import { eq, and, sql, gte, lte, count, desc } from 'drizzle-orm';
 
 // ─── Tipos ──────────────────────────────────────────────────
 
@@ -97,6 +97,7 @@ export const alertasService = {
 
   /**
    * Detecta pacientes con 2+ turnos "no_asistio" en los últimos 30 días.
+   * @param dias
    */
   async detectarAusentismoRecurrente(dias?: number): Promise<AlertaAusentismo[]> {
     const ventana = dias ?? 30;
@@ -148,6 +149,7 @@ export const alertasService = {
 
   /**
    * Detecta pacientes con alta frecuencia de consultas (+3 en los últimos 60 días).
+   * @param dias
    */
   async detectarPacientesCriticos(dias?: number): Promise<AlertaPacienteCritico[]> {
     const ventana = dias ?? 60;

@@ -1,9 +1,9 @@
-import { NextRequest } from 'next/server';
-import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { db } from '@/lib/db';
-import { turnos, pacientes } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { NextRequest } from 'next/server';
+import { turnos, pacientes } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 import { canAccess } from '@/lib/features';
 
 /**

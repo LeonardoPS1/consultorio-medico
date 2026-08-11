@@ -1,6 +1,9 @@
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+/**
+ *
+ */
 export default function DashboardLoading() {
   return (
     <div className="space-y-6 animate-in">

@@ -1,10 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { turnos, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
+import { turnos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { safeLog, safeError } from '@/lib/logger';
 import { transcripcionService } from '@/lib/services/transcripcion';
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: NextRequest) {
   try {
     const secret = request.headers.get('x-webhook-secret');
@@ -29,7 +33,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No se pudo extraer turnoId' }, { status: 400 });
     }
 
-    const egressId = body.egress?.egressId || body.egressId;
     const audioUrl = body.egress?.file?.filename || body.filename;
     if (!audioUrl) {
       safeLog('[Transcripcion] Webhook sin archivo de audio, ignorando');

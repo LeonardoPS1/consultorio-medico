@@ -41,10 +41,16 @@ function formatValue(name: string, value: number | string | null | undefined): s
 }
 
 interface WebVitalsLineChartProps {
-  data: Array<Record<string, any>>;
+  data: Array<Record<string, string | number | null | undefined>>;
   bucketType: string;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ * @param root0.bucketType
+ */
 export function WebVitalsLineChart({ data, bucketType }: WebVitalsLineChartProps) {
   if (data.length === 0) {
     return (

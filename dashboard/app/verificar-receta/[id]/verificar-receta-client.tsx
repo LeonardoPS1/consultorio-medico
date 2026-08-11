@@ -4,7 +4,6 @@ import {
   Shield,
   ShieldCheck,
   ShieldAlert,
-  FileText,
   Calendar,
   Clock,
   User,
@@ -44,6 +43,12 @@ interface Props {
   recetaId: string;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ * @param root0.recetaId
+ */
 export function VerificarRecetaClient({ data, recetaId }: Props) {
   if (!data) {
     return (

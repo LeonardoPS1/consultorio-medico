@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import type { ChangelogEntry } from '@/lib/changelog-data';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { PageHeader } from '@/components/page-header';
 import { Search, PackageOpen, ArrowUp, Bug, Shield, RefreshCw, Code } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { PageHeader } from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import type { ChangelogEntry } from '@/lib/changelog-data';
 
 interface NovedadesClientProps {
   changelog: (ChangelogEntry & { tipo: string })[];
@@ -27,6 +27,11 @@ const TIPO_BADGE: Record<string, { variant: 'default' | 'secondary' | 'destructi
   improvement: { variant: 'outline', label: 'Mejora' },
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.changelog
+ */
 export function NovedadesClient({ changelog }: NovedadesClientProps) {
   const [search, setSearch] = useState('');
 

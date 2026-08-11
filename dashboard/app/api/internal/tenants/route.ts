@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { safeWarn } from '@/lib/logger';
-import { crearTenantConAdmin } from '@/lib/services/tenant';
 import { sendEmail } from '@/lib/services/email';
+import { crearTenantConAdmin } from '@/lib/services/tenant';
 
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY;
 
 const PLAN_VALUES = ['free', 'starter', 'professional', 'premium', 'enterprise'];
 
 // POST /api/internal/tenants - Crear tenant + admin desde ops-console
+/**
+ *
+ * @param request
+ */
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('x-internal-key');
   if (!INTERNAL_API_KEY || authHeader !== INTERNAL_API_KEY) {

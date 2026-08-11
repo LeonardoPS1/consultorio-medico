@@ -5,13 +5,17 @@
  * Acepta { pacienteId } opcional para elegir qué paciente usar.
  */
 
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { pacientes } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import { setPortalSessionCookie } from '@/lib/portal-auth';
+import { NextResponse } from 'next/server';
+import { pacientes } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { safeError } from '@/lib/logger';
+import { setPortalSessionCookie } from '@/lib/portal-auth';
 
+/**
+ *
+ * @param req
+ */
 export async function POST(req: Request) {
   const bypass = process.env.PORTAL_BYPASS === 'true';
   const isDev = process.env.NODE_ENV !== 'production';
@@ -66,7 +70,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const token = await setPortalSessionCookie({
+    await setPortalSessionCookie({
       pacienteId: targetPaciente.id,
       nombre: targetPaciente.nombre || 'Paciente',
       apellido: targetPaciente.apellido || 'Prueba',

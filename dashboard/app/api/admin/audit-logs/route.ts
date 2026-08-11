@@ -6,9 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { getAuditLogs, cleanAuditLogs } from '@/lib/audit-log';
 import type { EntidadAudit, AccionAudit } from '@/lib/audit-log';
+import { auth } from '@/lib/auth';
 
 // Forzar dinámico para evitar errores de build en Linux (auth() usa headers/cookies)
 export const dynamic = 'force-dynamic';
@@ -21,6 +21,10 @@ async function getSessionSafe() {
   }
 }
 
+/**
+ *
+ * @param request
+ */
 export async function GET(request: NextRequest) {
   const session = await getSessionSafe();
   if (!session?.user || session.user.role !== 'admin') {
@@ -45,6 +49,10 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(result);
 }
 
+/**
+ *
+ * @param request
+ */
 export async function DELETE(request: NextRequest) {
   const session = await getSessionSafe();
   if (!session?.user || session.user.role !== 'admin') {

@@ -38,6 +38,11 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 
 const COLORS = ['#6366f1', '#818cf8', '#a5b4fc', '#3b82f6', '#60a5fa'];
 
+/**
+ *
+ * @param root0
+ * @param root0.data
+ */
 export default function ConversionFunnel({ data }: Props) {
   const maxVal = Math.max(...data.map((d) => d.cantidad), 1);
 

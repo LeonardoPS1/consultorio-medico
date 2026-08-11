@@ -3,13 +3,19 @@
  * Protegido: requiere cookie portal_session
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getPortalSession } from '@/lib/portal-auth';
-import { db } from '@/lib/db';
-import { turnos, medicos, pacientes } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
+import { turnos, medicos, pacientes } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { generateIcs } from '@/lib/ics';
+import { getPortalSession } from '@/lib/portal-auth';
 
+/**
+ *
+ * @param _request
+ * @param root0
+ * @param root0.params
+ */
 export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
   const session = await getPortalSession();

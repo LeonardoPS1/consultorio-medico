@@ -3,13 +3,16 @@
  * Server component: verifica sesión y carga médicos disponibles.
  */
 
-import { getPortalSession } from '@/lib/portal-auth';
 import { redirect } from 'next/navigation';
-import { medicosDisponiblesPortal } from '@/lib/services/portal-booking';
 import { BookingWizard } from '@/components/portal/booking-wizard';
+import { getPortalSession } from '@/lib/portal-auth';
+import { medicosDisponiblesPortal } from '@/lib/services/portal-booking';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ *
+ */
 export default async function AgendarPage() {
   const session = await getPortalSession();
   if (!session) redirect('/portal');

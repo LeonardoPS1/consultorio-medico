@@ -1,30 +1,24 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Search,
   MessageSquarePlus,
   Send,
   Loader2,
   RefreshCw,
-  User,
   AlertTriangle,
   Stethoscope,
   CalendarClock,
 } from 'lucide-react';
-import { getInitials, formatRelative, truncate, cn, formatDateTime } from '@/lib/utils';
-import { toast } from '@/components/ui/use-toast';
-import { playSend, playReceive } from '@/lib/sound';
 import { motion } from 'motion/react';
-import { PageHeader } from '@/components/page-header';
 import { useSearchParams } from 'next/navigation';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { PageHeader } from '@/components/page-header';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -33,7 +27,12 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast } from '@/components/ui/use-toast';
+import { playSend, playReceive } from '@/lib/sound';
+import { getInitials, formatRelative, truncate, cn, formatDateTime } from '@/lib/utils';
 
 interface StaffUser {
   id: string;
@@ -87,6 +86,14 @@ const rolLabels: Record<string, string> = {
   paciente: 'Paciente',
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.initialConversaciones
+ * @param root0.miUserId
+ * @param root0.contextoPaciente
+ * @param root0.contextoTurno
+ */
 export function MensajeriaInternaClient({
   initialConversaciones,
   miUserId,
@@ -129,6 +136,7 @@ export function MensajeriaInternaClient({
   // selectedId en ref para no re-crear el handler en cada render
   const selectedIdRef = useRef(selectedId);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability
     selectedIdRef.current = selectedId;
   }, [selectedId]);
 
@@ -168,7 +176,6 @@ export function MensajeriaInternaClient({
   const {
     data: mensajesData,
     isLoading: loadingMensajes,
-    refetch: refetchMensajes,
   } = useQuery({
     queryKey: ['msgs-internos', selectedId],
     queryFn: async () => {
@@ -518,7 +525,7 @@ export function MensajeriaInternaClient({
                   onSubmit={(e) => {
                     e.preventDefault();
                     if (mensajeInput.trim())
-                      enviarMutation.mutate({ contenido: mensajeInput.trim(), urgente: urgenteActivo });
+                      {enviarMutation.mutate({ contenido: mensajeInput.trim(), urgente: urgenteActivo });}
                   }}
                   className="flex flex-col gap-2"
                 >

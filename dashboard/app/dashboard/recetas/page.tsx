@@ -1,6 +1,6 @@
-import { RecetasClient } from './recetas-client';
 import { PageHeader } from '@/components/page-header';
 import { getServerRecetas } from '@/lib/server-page-data';
+import { RecetasClient } from './recetas-client';
 
 // ─── Data fetching ─────────────────────────────────────────
 
@@ -8,6 +8,9 @@ export const dynamic = 'force-dynamic';
 
 // ─── Page ──────────────────────────────────────────────────
 
+/**
+ *
+ */
 export default async function RecetasPage() {
   const apiData = await getServerRecetas();
 

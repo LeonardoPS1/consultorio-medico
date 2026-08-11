@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { apiHandler, success } from '@/lib/api-handler';
-import { requireAuth, verifyPacienteAccess } from '@/lib/api-auth';
-import { db } from '@/lib/db';
-import { consentimientoLog, pacientes, usuarios, auditoriaAccesos } from '@/drizzle/schema';
 import { and, eq, desc, sql } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
+import { consentimientoLog, pacientes, auditoriaAccesos } from '@/drizzle/schema';
+import { requireAuth, verifyPacienteAccess } from '@/lib/api-auth';
+import { apiHandler, success } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +14,6 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const pagina = Math.max(1, parseInt(searchParams.get('pagina') || '1', 10));
   const limite = Math.min(100, Math.max(1, parseInt(searchParams.get('limite') || '50', 10)));
   const tipo = searchParams.get('tipo') || undefined;
-  const estado = searchParams.get('estado') || undefined;
   const pacienteId = searchParams.get('pacienteId') || undefined;
 
   const filtros = [];

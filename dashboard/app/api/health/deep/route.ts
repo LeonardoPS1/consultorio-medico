@@ -1,8 +1,11 @@
-export const dynamic = 'force-dynamic';
-
 import { NextResponse } from 'next/server';
 import { checkPostgres, checkN8n, checkOllama, checkTwilio, summarizeHealth } from '@/lib/health-checks';
 
+export const dynamic = 'force-dynamic';
+
+/**
+ *
+ */
 export async function GET() {
   const [pg, n8n, ollama, twilio] = await Promise.all([
     checkPostgres(),

@@ -5,16 +5,16 @@
  * filtradas por las categorías habilitadas en la config del tenant.
  */
 
-import { apiHandler, success } from '@/lib/api-handler';
+import { eq } from 'drizzle-orm';
+import { tenants } from '@/drizzle/schema';
+import type { ConfigIa } from '@/drizzle/schema';
 import { requireAuth } from '@/lib/api-auth';
-import { getSugerencias, getAlertasProactivas } from '@/lib/ia/asistente-prompts';
+import { apiHandler, success } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 import { buildContextoDB } from '@/lib/ia/asistente-context';
+import { getSugerencias, getAlertasProactivas } from '@/lib/ia/asistente-prompts';
 
 export const dynamic = 'force-dynamic';
-import { db } from '@/lib/db';
-import { tenants } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
-import type { ConfigIa } from '@/drizzle/schema';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 

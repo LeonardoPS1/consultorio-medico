@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { calcularTodosLosScores } from '@/lib/services/scoring-pacientes';
-import { blacklistService } from '@/lib/services/blacklist';
-import { apiHandler, ok } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, ok } from '@/lib/api-handler';
 import { safeLog } from '@/lib/logger';
+import { blacklistService } from '@/lib/services/blacklist';
+import { calcularTodosLosScores } from '@/lib/services/scoring-pacientes';
 
 // POST /api/blacklist/auto-check
 // Corre scoring para todos los pacientes y bloquea automáticamente

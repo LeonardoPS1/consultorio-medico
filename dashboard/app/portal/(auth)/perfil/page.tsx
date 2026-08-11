@@ -3,11 +3,11 @@
  * Server component con DB directo (no self-fetch).
  */
 
-import { getPortalSession } from '@/lib/portal-auth';
+import { eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
-import { db } from '@/lib/db';
 import { pacientes } from '@/drizzle/schema';
-import { eq, sql } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { getPortalSession } from '@/lib/portal-auth';
 import PortalPerfilClient from './portal-perfil-client';
 
 export const dynamic = 'force-dynamic';
@@ -29,6 +29,9 @@ interface PacienteData {
   consentimientoEmail?: boolean;
 }
 
+/**
+ *
+ */
 export default async function PortalPerfilPage() {
   const session = await getPortalSession();
   if (!session) redirect('/portal');

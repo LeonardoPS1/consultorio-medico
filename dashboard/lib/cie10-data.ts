@@ -1,6 +1,10 @@
 // ─── CIE-10: Códigos más usados en consultorio médico ──────
 // ~1.311 códigos de las categorías más frecuentes en atención primaria (incluye Chile)
 
+// ─── Fuse.js index para búsqueda fuzzy ──────────────────────
+
+import Fuse from 'fuse.js';
+
 export interface Cie10Entry {
   codigo: string;
   descripcion: string;
@@ -2117,10 +2121,6 @@ export const CIE10_DATA: Cie10Entry[] = [
   },
 ];
 
-// ─── Fuse.js index para búsqueda fuzzy ──────────────────────
-
-import Fuse from 'fuse.js';
-
 let fuseIndex: Fuse<Cie10Entry> | null = null;
 
 function getFuse(): Fuse<Cie10Entry> {
@@ -2141,6 +2141,10 @@ function getFuse(): Fuse<Cie10Entry> {
 
 // ─── Helper: buscar códigos ─────────────────────────────────
 
+/**
+ *
+ * @param termino
+ */
 export function buscarCie10(termino: string): Cie10Entry[] {
   const q = termino.toLowerCase().trim();
   if (!q) return [];
@@ -2149,6 +2153,10 @@ export function buscarCie10(termino: string): Cie10Entry[] {
   ).slice(0, 20);
 }
 
+/**
+ *
+ * @param termino
+ */
 export function buscarCie10Fuzzy(termino: string): Cie10Entry[] {
   const q = termino.trim();
   if (!q) return [];

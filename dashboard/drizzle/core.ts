@@ -1,3 +1,4 @@
+import { relations } from 'drizzle-orm';
 import {
   pgTable,
   uuid,
@@ -12,15 +13,14 @@ import {
   uniqueIndex,
   index,
 } from 'drizzle-orm/pg-core';
-import { relations, sql, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
+import { blacklist, consentimientos } from './access';
+import { conversaciones } from './communication';
 import {
   rolEnum,
   turnoTipoEnum,
   turnoEstadoEnum,
 } from './enums';
-import { tenants, sucursales } from './tenant';
 import { regiones, comunas } from './location';
-import { conversaciones } from './communication';
 import {
   historialMedico,
   notasSoap,
@@ -28,8 +28,8 @@ import {
   pacienteEventos,
 } from './medical';
 import { tareasPendientes, servicios } from './operations';
+import { tenants, sucursales } from './tenant';
 import { listaEspera } from './waitlist';
-import { blacklist, consentimientos } from './access';
 
 // ============================================================
 // USUARIOS

@@ -1,13 +1,17 @@
-import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { db } from '@/lib/db';
-import { usuarios } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { usuarios } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { forgotPasswordSchema } from '@/lib/validations';
 
 // POST /api/auth/forgot-password
 // Genera un token de recuperación y lo devuelve (modo dev)
 // En producción se enviaría por email
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   try {
     const parsed = forgotPasswordSchema.safeParse(await request.json());

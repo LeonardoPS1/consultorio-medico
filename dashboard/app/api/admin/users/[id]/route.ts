@@ -5,15 +5,15 @@
  * Admin only — requiere sesión con rol admin
  */
 
-import { NextRequest } from 'next/server';
-import { apiHandler, success, fail, notFound } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody, updateUserSchema } from '@/lib/validations';
-import { db } from '@/lib/db';
-import { usuarios } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
-import { z } from 'zod';
 import { hash } from 'bcryptjs';
+import { eq } from 'drizzle-orm';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { usuarios } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, fail, notFound } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { parseBody, updateUserSchema } from '@/lib/validations';
 
 export const PATCH = apiHandler(
   async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {

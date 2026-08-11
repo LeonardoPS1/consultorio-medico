@@ -2,12 +2,18 @@
  * GET /api/portal/consentimientos/[id] — Ver consentimiento (HTML firmable)
  * Protegido: requiere cookie portal_session
  */
-import { NextResponse } from 'next/server';
-import { getPortalSession } from '@/lib/portal-auth';
-import { db } from '@/lib/db';
-import { consentimientos, pacientes, medicos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { consentimientos, pacientes, medicos } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { getPortalSession } from '@/lib/portal-auth';
 
+/**
+ *
+ * @param _req
+ * @param root0
+ * @param root0.params
+ */
 export async function GET(_req: Request, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
   const session = await getPortalSession();

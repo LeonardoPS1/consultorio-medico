@@ -2,13 +2,19 @@
  * GET /api/portal/recetas/[id] — Genera PDF imprimible de una receta
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getPortalSession } from '@/lib/portal-auth';
-import { db } from '@/lib/db';
-import { recetas, medicos, pacientes } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
+import { recetas, medicos, pacientes } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 import { escapeHtml } from '@/lib/html-utils';
+import { getPortalSession } from '@/lib/portal-auth';
 
+/**
+ *
+ * @param _request
+ * @param root0
+ * @param root0.params
+ */
 export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
   const session = await getPortalSession();

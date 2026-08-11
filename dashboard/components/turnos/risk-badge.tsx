@@ -2,6 +2,12 @@
 
 import { Badge } from '@/components/ui/badge';
 
+/**
+ *
+ * @param root0
+ * @param root0.riskNivel
+ * @param root0.riskScore
+ */
 export function RiskBadge({ riskNivel, riskScore }: { riskNivel: 'bajo' | 'medio' | 'alto' | null | undefined; riskScore?: number | null }) {
   if (!riskNivel) {
     return (

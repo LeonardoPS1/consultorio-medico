@@ -1,7 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   ChevronDown,
   ChevronRight,
@@ -11,20 +9,20 @@ import {
   Syringe,
   Activity,
   Stethoscope,
-  ArrowRight,
   Clock,
   Shield,
   AlertTriangle,
   Pill,
   ExternalLink,
 } from 'lucide-react';
-import { usePatientPanel } from '@/lib/hooks/use-patient-panel';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { usePatientPanel } from '@/lib/hooks/use-patient-panel';
 import { cn, getInitials, formatRelative } from '@/lib/utils';
-import type { PatientSummaryLite } from '@/lib/types/patient-panel';
 
 // ============================================================
 // Collapsible section
@@ -95,6 +93,9 @@ function SistemaSaludBadge({ sistema, isapre }: { sistema: string | null; isapre
 // Patient summary
 // ============================================================
 
+/**
+ *
+ */
 export function PatientSummary() {
   const { data, isLoadingDetail, clearPatient, close } = usePatientPanel();
   const router = useRouter();
@@ -125,6 +126,15 @@ export function PatientSummary() {
     close();
   }, [patient, router, close]);
 
+  const age = useMemo(() => {
+    if (!patient?.fechaNacimiento) return null;
+    return Math.floor(
+      // eslint-disable-next-line react-hooks/purity
+      (Date.now() - new Date(patient.fechaNacimiento).getTime()) /
+        (365.25 * 24 * 60 * 60 * 1000)
+    );
+  }, [patient]);
+
   if (!patient) return null;
 
   const score = scoresMap[patient.id];
@@ -134,10 +144,6 @@ export function PatientSummary() {
       : score.nivel === 'medio'
         ? 'bg-yellow-500'
         : 'bg-green-500'
-    : null;
-
-  const age = patient.fechaNacimiento
-    ? Math.floor((Date.now() - new Date(patient.fechaNacimiento).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
     : null;
 
   return (

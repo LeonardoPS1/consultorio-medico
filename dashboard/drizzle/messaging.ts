@@ -1,3 +1,4 @@
+import { relations, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 import {
   pgTable,
   uuid,
@@ -6,7 +7,6 @@ import {
   boolean,
   index,
 } from 'drizzle-orm/pg-core';
-import { relations, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 import { usuarios, pacientes, turnos } from './core';
 import { tenants } from './tenant';
 

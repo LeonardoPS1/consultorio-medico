@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { medicos } from '@/drizzle/schema';
-import { medicosService } from '@/lib/services/medicos';
-import { apiHandler, created } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody, parseQuery, createMedicoSchema } from '@/lib/validations';
 import { z } from 'zod';
+import { medicos } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, created } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { medicosService } from '@/lib/services/medicos';
+import { parseBody, parseQuery, createMedicoSchema } from '@/lib/validations';
 
 const medicosQuerySchema = z.object({
   sucursalId: z.string().optional(),

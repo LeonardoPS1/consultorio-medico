@@ -1,5 +1,5 @@
-import { db } from '@/lib/db';
 import { sql } from 'drizzle-orm';
+import { db } from '@/lib/db';
 
 export type EstadoPublico = 'operativo' | 'degradado' | 'caido';
 
@@ -83,6 +83,9 @@ function resolverEstado(okList: boolean[]): EstadoPublico {
   return 'caido';
 }
 
+/**
+ *
+ */
 export async function obtenerEstadoPublico(): Promise<EstadoCategoria[]> {
   if (_cache && Date.now() - _cache.timestamp < CACHE_TTL_MS) {
     return _cache.data;

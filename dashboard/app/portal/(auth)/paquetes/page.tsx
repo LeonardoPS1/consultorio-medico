@@ -5,10 +5,10 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Package, ArrowRight, CreditCard } from 'lucide-react';
-import { PortalCard } from '@/components/portal/portal-card';
+import { useState, useEffect } from 'react';
 import { PortalButton } from '@/components/portal/portal-button';
+import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
 interface Paquete {
@@ -28,6 +28,9 @@ interface Suscripcion {
   activa: boolean;
 }
 
+/**
+ *
+ */
 export default function PaquetesPage() {
   const [paquetes, setPaquetes] = useState<Paquete[]>([]);
   const [suscripciones, setSuscripciones] = useState<Suscripcion[]>([]);
@@ -55,7 +58,7 @@ export default function PaquetesPage() {
       });
       const data = await res.json();
       if (data.init_point) {
-        window.location.href = data.init_point;
+        window.location.assign(data.init_point);
       } else {
         alert(data.error || 'Error al iniciar pago');
       }

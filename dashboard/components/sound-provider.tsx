@@ -12,6 +12,11 @@ const SoundContext = createContext<SoundContextValue | null>(null);
 
 const STORAGE_KEY = 'aicoremed:sound-enabled';
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function SoundProvider({ children }: { children: ReactNode }) {
   const [enabled, setEnabled] = useState(true);
 
@@ -35,6 +40,9 @@ export function SoundProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ *
+ */
 export function useSound(): SoundContextValue {
   const ctx = useContext(SoundContext);
   if (!ctx) throw new Error('useSound must be used within SoundProvider');

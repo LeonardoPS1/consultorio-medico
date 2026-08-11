@@ -6,11 +6,11 @@
  */
 
 import bcrypt from 'bcryptjs';
-import { db } from '@/lib/db';
-import { safeLog, safeError } from '@/lib/logger';
-import { pacientes, conversaciones, mensajes, usuarios, medicos, tenants } from '@/drizzle/schema';
 import { eq, and, or, like, sql, desc, count, gte, lte, asc, isNull } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
+import { pacientes, conversaciones, mensajes, usuarios, medicos, tenants } from '@/drizzle/schema';
+import { db } from '@/lib/db';
+import { safeLog, safeError } from '@/lib/logger';
 
 // ============================================================
 // Tipos compartidos
@@ -101,6 +101,10 @@ export interface MensajeData {
 // PACIENTES
 // ============================================================
 
+/**
+ *
+ * @param telefono
+ */
 export async function getPacienteByTelefono(telefono: string): Promise<PacienteData | null> {
   const result = await db.select().from(pacientes).where(eq(pacientes.telefono, telefono)).limit(1);
   if (result.length === 0) return null;
@@ -129,6 +133,10 @@ export async function getPacienteByTelefono(telefono: string): Promise<PacienteD
   };
 }
 
+/**
+ *
+ * @param data
+ */
 export async function createPaciente(
   data: Omit<PacienteData, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<PacienteData> {
@@ -167,6 +175,16 @@ export async function createPaciente(
 // CONVERSACIONES
 // ============================================================
 
+/**
+ *
+ * @param options
+ * @param options.estado
+ * @param options.canal
+ * @param options.search
+ * @param options.limit
+ * @param options.offset
+ * @param options.medicoId
+ */
 export async function getConversaciones(options?: {
   estado?: string;
   canal?: string;
@@ -243,6 +261,10 @@ export async function getConversaciones(options?: {
   }));
 }
 
+/**
+ *
+ * @param id
+ */
 export async function getConversacionById(id: string): Promise<ConversacionData | null> {
   const result = await db
     .select({
@@ -282,6 +304,16 @@ export async function getConversacionById(id: string): Promise<ConversacionData 
   };
 }
 
+/**
+ *
+ * @param data
+ * @param data.pacienteId
+ * @param data.medicoId
+ * @param data.canal
+ * @param data.mensajeInicial
+ * @param data.rolMensajeInicial
+ * @param data.intencionInicial
+ */
 export async function createConversacion(data: {
   pacienteId: string;
   medicoId?: string;
@@ -325,6 +357,11 @@ export async function createConversacion(data: {
   return nueva;
 }
 
+/**
+ *
+ * @param id
+ * @param data
+ */
 export async function updateConversacion(
   id: string,
   data: Partial<{
@@ -349,6 +386,10 @@ export async function updateConversacion(
 // MENSAJES
 // ============================================================
 
+/**
+ *
+ * @param conversacionId
+ */
 export async function getMensajesByConversacion(conversacionId: string): Promise<MensajeData[]> {
   const result = await db
     .select()
@@ -373,6 +414,21 @@ export async function getMensajesByConversacion(conversacionId: string): Promise
   }));
 }
 
+/**
+ *
+ * @param data
+ * @param data.conversacionId
+ * @param data.rol
+ * @param data.contenido
+ * @param data.contenidoProcesado
+ * @param data.tipo
+ * @param data.intencion
+ * @param data.confianzaIntencion
+ * @param data.twilioSid
+ * @param data.twilioStatus
+ * @param data.n8nExecutionId
+ * @param data.metadata
+ */
 export async function createMensaje(data: {
   conversacionId: string;
   rol: string;
@@ -427,6 +483,14 @@ export async function createMensaje(data: {
   return nuevo;
 }
 
+/**
+ *
+ * @param twilioSid
+ * @param updates
+ * @param updates.twilioStatus
+ * @param updates.costo
+ * @param updates.metadata
+ */
 export async function updateMensajeByTwilioSid(
   twilioSid: string,
   updates: {
@@ -496,6 +560,10 @@ export interface MensajeWithPaciente extends MensajeData {
   conversacionCanal: string;
 }
 
+/**
+ *
+ * @param options
+ */
 export async function getMensajes(
   options: GetMensajesOptions = {},
 ): Promise<{ mensajes: MensajeWithPaciente[]; total: number; porEstado: Record<string, number> }> {
@@ -603,6 +671,10 @@ export async function getMensajes(
 // USUARIOS
 // ============================================================
 
+/**
+ *
+ * @param email
+ */
 export async function getUserByEmail(email: string): Promise<UsuarioData | null> {
   const result = await db.select().from(usuarios).where(eq(usuarios.email, email)).limit(1);
   if (result.length === 0) return null;
@@ -640,6 +712,9 @@ export async function getUserByEmail(email: string): Promise<UsuarioData | null>
   };
 }
 
+/**
+ *
+ */
 export async function createAdminUserIfNotExists(): Promise<boolean> {
   try {
     const existing = await db
@@ -714,6 +789,14 @@ export async function createAdminUserIfNotExists(): Promise<boolean> {
   }
 }
 
+/**
+ *
+ * @param email
+ * @param data
+ * @param data.secreto2fa
+ * @param data.activo2fa
+ * @param data.clearBackupCodes
+ */
 export async function updateUser2FA(
   email: string,
   data: { secreto2fa: string | null; activo2fa: boolean; clearBackupCodes?: boolean },
@@ -737,6 +820,8 @@ export async function updateUser2FA(
 /**
  * Almacena los códigos de respaldo 2FA hasheados.
  * Se recibe un array de SHA-256 (hex) ya calculados.
+ * @param email
+ * @param hashedCodes
  */
 export async function storeBackupCodes(email: string, hashedCodes: string[]): Promise<void> {
   await db
@@ -752,6 +837,9 @@ export async function storeBackupCodes(email: string, hashedCodes: string[]): Pr
 // SEED DATA
 // ============================================================
 
+/**
+ *
+ */
 export async function seedDataIfEmpty(): Promise<boolean> {
   await createAdminUserIfNotExists();
   return false;

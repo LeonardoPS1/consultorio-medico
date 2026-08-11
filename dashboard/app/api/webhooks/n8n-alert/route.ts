@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { logWorkflowExecution } from '@/lib/services/n8n-monitor';
-import { safeWarn } from '@/lib/logger';
 import { captureError } from '@/lib/glitchtip';
+import { safeWarn } from '@/lib/logger';
+import { logWorkflowExecution } from '@/lib/services/n8n-monitor';
 import { verifyRequestSecret } from '@/lib/verify-webhook-secret';
 
 // Rate limiter en memoria para este webhook
@@ -25,6 +25,10 @@ setInterval(() => {
   }
 }, 5 * 60_000);
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   if (!checkAlertRate(ip)) {

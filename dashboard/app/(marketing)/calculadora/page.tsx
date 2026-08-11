@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { ArrowRight, MessageSquare } from 'lucide-react';
+import { useState, useRef } from 'react';
 import styles from './calculadora.module.css';
-import { Flame, ArrowRight, MessageSquare } from 'lucide-react';
 
 const CLP_FMT = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
 
@@ -10,31 +10,9 @@ function clp(n: number) {
   return CLP_FMT.format(Math.round(n));
 }
 
-function prefersReducedMotion() {
-  if (typeof window === 'undefined') return true;
-  try {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch {
-    return true;
-  }
-}
-
-function countUp(el: HTMLElement | null, endValue: number, duration = 700) {
-  if (!el) return;
-  if (prefersReducedMotion()) {
-    el!.textContent = clp(endValue);
-    return;
-  }
-  const start = performance.now();
-  function tick(now: number) {
-    const p = Math.min((now - start) / duration, 1);
-    const eased = 1 - Math.pow(1 - p, 3);
-    el!.textContent = clp(endValue * eased);
-    if (p < 1) requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-}
-
+/**
+ *
+ */
 export default function CalculadoraAusentismo() {
   const [pacientes, setPacientes] = useState(180);
   const [tasa, setTasa] = useState(22);
@@ -205,7 +183,7 @@ export default function CalculadoraAusentismo() {
       </div>
 
       <footer className={styles.footer}>
-        <span>Hecho por <a href="https://aicorebots.com" target="_blank" rel="noopener">Aicore Agency</a></span>
+        <span>Hecho por <a href="https://aicorebots.com" target="_blank" rel="noopener noreferrer">Aicore Agency</a></span>
         <span>Herramienta gratuita — sin registro</span>
       </footer>
 

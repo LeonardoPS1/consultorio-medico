@@ -1,20 +1,19 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Star,
   TrendingUp,
   TrendingDown,
   Minus,
   MessageSquare,
-  Users,
   BarChart3,
   ThumbsUp,
   ThumbsDown,
   Meh,
 } from 'lucide-react';
-import { EncuestasClient } from './encuestas-client';
-import { PageHeader } from '@/components/page-header';
 import { EvolucionEncuestasChart } from '@/components/charts/evolucion-encuestas-chart';
+import { PageHeader } from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EncuestasClient } from './encuestas-client';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -283,6 +282,9 @@ function SentimientoSection({
 
 // ─── Page ──────────────────────────────────────────────────
 
+/**
+ *
+ */
 export default async function EncuestasPage() {
   const apiData = await getSurveyStats();
   const stats = apiData?.data ?? null;

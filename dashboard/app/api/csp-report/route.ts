@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { safeWarn } from '@/lib/logger';
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();

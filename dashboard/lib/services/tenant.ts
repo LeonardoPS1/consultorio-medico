@@ -1,8 +1,8 @@
-import { db } from '@/lib/db';
-import { tenants, usuarios } from '@/drizzle/schema';
-import { eq, and } from 'drizzle-orm';
-import { hash } from 'bcryptjs';
 import crypto from 'crypto';
+import { hash } from 'bcryptjs';
+import { eq, and } from 'drizzle-orm';
+import { tenants, usuarios } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 
 export interface TenantBranding {
   nombre: string;
@@ -38,6 +38,10 @@ const defaultRegional: TenantRegional = {
   regiones: 'cl',
 };
 
+/**
+ *
+ * @param tenantId
+ */
 export async function getTenantBranding(tenantId?: string): Promise<TenantBranding> {
   if (!tenantId || tenantId === DEFAULT_TENANT_ID) {
     return defaultBranding;
@@ -69,6 +73,10 @@ export async function getTenantBranding(tenantId?: string): Promise<TenantBrandi
   }
 }
 
+/**
+ *
+ * @param tenantId
+ */
 export async function getTenantRegional(tenantId?: string): Promise<TenantRegional> {
   if (!tenantId || tenantId === DEFAULT_TENANT_ID) {
     return defaultRegional;
@@ -104,6 +112,7 @@ const IGNORE_SUBDOMAINS = new Set(['www', 'app', 'status', 'consultorio']);
  * 3. Fallback: DEFAULT_TENANT_ID (00000000-0000-0000-0000-000000000000)
  *
  * Cache en memoria con TTL de 60s para evitar queries repetidas por request.
+ * @param hostname
  */
 export async function resolveTenantByHost(hostname: string): Promise<string> {
   const host = hostname.toLowerCase().trim();
@@ -155,7 +164,10 @@ export async function resolveTenantByHost(hostname: string): Promise<string> {
   return cacheSet(DEFAULT_TENANT_ID);
 }
 
-/** Limpia la cache de resolución para un hostname específico */
+/**
+ * Limpia la cache de resolución para un hostname específico
+ * @param hostname
+ */
 export function invalidateTenantCache(hostname: string): void {
   tenantCache.delete(hostname.toLowerCase().trim());
 }
@@ -180,6 +192,9 @@ export interface CrearTenantResult {
 /**
  * Crea un tenant nuevo (con verificación de subdominio único).
  * Lanza un Error con el mensaje si el subdominio ya está en uso.
+ * @param input
+ * @param input.nombre
+ * @param input.subdomain
  */
 export async function crearTenant(input: {
   nombre: string;
@@ -212,6 +227,12 @@ export async function crearTenant(input: {
  * Crea un tenant nuevo con su primer usuario administrador.
  * Devuelve el tenantId, subdomain y la contraseña temporal generada
  * para que el caller pueda enviarla al admin por email.
+ * @param input
+ * @param input.nombre
+ * @param input.subdomain
+ * @param input.plan
+ * @param input.adminEmail
+ * @param input.adminNombre
  */
 export async function crearTenantConAdmin(input: {
   nombre: string;

@@ -4,7 +4,6 @@ import { Bot, CreditCard, Globe, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, useMemo, Suspense } from 'react';
-import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 import { ConfigEquipo } from '@/components/config/config-equipo';
 import { ConfigHorarios } from '@/components/config/config-horarios';
 import { ConfigNotificaciones } from '@/components/config/config-notificaciones';
@@ -44,6 +43,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { canAccess } from '@/lib/features';
+import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 
 // ============================================================
 // Tipos

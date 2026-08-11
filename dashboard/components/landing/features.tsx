@@ -1,4 +1,3 @@
-import { AnimatedSection } from '@/components/landing/animated-section';
 import {
   Calendar,
   MessageSquare,
@@ -20,6 +19,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
+import { AnimatedSection } from '@/components/landing/animated-section';
 import { Button } from '@/components/ui/button';
 
 export interface FeatureItem {
@@ -117,6 +117,13 @@ const defaultFeatures: FeatureItem[] = [
   },
 ];
 
+/**
+ *
+ * @param root0
+ * @param root0.title
+ * @param root0.subtitle
+ * @param root0.features
+ */
 export function Features({
   title = 'Todo lo que necesitas en un solo lugar',
   subtitle = 'Más de 56 funcionalidades profesionales integradas en un solo panel: gestión de turnos, WhatsApp con IA, telemedicina, recetas con QR, portal del paciente, OCR, compliance y mucho más.',

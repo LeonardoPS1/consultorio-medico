@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'motion/react';
 import { ChevronDown, ExternalLink, MessageCircle, Mail } from 'lucide-react';
+import { motion } from 'motion/react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 type FooterLink = {
   label: string;
@@ -11,6 +11,14 @@ type FooterLink = {
   external?: boolean;
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.section
+ * @param root0.section.label
+ * @param root0.section.links
+ * @param root0.defaultOpen
+ */
 export function FooterColumn({
   section,
   defaultOpen = true,

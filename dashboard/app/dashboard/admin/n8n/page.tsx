@@ -1,10 +1,13 @@
-import { getEffectiveSession } from '@/lib/auth-effective';
 import { redirect } from 'next/navigation';
+import { PageHeader } from '@/components/page-header';
+import { getEffectiveSession } from '@/lib/auth-effective';
 import { canAccess } from '@/lib/features';
 import { getN8nStats } from '@/lib/services/n8n-monitor';
 import N8nClient from './n8n-client';
-import { PageHeader } from '@/components/page-header';
 
+/**
+ *
+ */
 export default async function N8nAdminPage() {
   const session = await getEffectiveSession();
   if (session?.user?.role !== 'admin') redirect('/dashboard');

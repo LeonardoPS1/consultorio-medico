@@ -1,11 +1,11 @@
+import { eq, sql } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { usuarios } from '@/drizzle/schema';
 import { apiHandler, ok } from '@/lib/api-handler';
-import { parseBody, setupSchema } from '@/lib/validations';
 import { seedDataIfEmpty, createAdminUserIfNotExists } from '@/lib/data-store';
 import { db } from '@/lib/db';
-import { usuarios } from '@/drizzle/schema';
-import { eq, sql } from 'drizzle-orm';
-import { z } from 'zod';
+import { parseBody, setupSchema } from '@/lib/validations';
 
 const setupBodySchema = setupSchema.partial().extend({ force: z.boolean().optional() });
 

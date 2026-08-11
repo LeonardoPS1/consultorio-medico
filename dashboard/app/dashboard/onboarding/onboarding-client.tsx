@@ -1,12 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { playComplete } from '@/lib/sound';
 import {
   CheckCircle2,
   Loader2,
@@ -24,8 +17,15 @@ import {
   SkipForward,
   Building2,
 } from 'lucide-react';
-import { ONBOARDING_STEPS, FALLBACK_TIPS } from '@/lib/onboarding-types';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
+import { ONBOARDING_STEPS, FALLBACK_TIPS } from '@/lib/onboarding-types';
+import { playComplete } from '@/lib/sound';
 
 // ─── Tipos ──────────────────────────────────────────────────
 
@@ -65,7 +65,6 @@ function useOnboarding(
   isForceRestart?: boolean,
   verProgreso?: boolean,
 ) {
-  const router = useRouter();
   const { toast } = useToast();
 
   // ── Pasos completados ────────────────────────────────────
@@ -315,6 +314,8 @@ function SuccessScreen({
 //  Sub-component: AiTipCard
 // ═══════════════════════════════════════════════════════════════
 
+/* eslint-disable react/prop-types */
+// eslint-disable-next-line react/prop-types
 function AiTipCard({
   stepId,
   stepTitle,
@@ -325,7 +326,8 @@ function AiTipCard({
   stepTitle: string;
   tipState: TipState | undefined;
   onRetry: () => void;
-}) {
+}): React.ReactElement {
+/* eslint-enable react/prop-types */
   return (
     <div className="rounded-xl bg-gradient-to-br from-amber-50 to-orange-50/40 dark:from-amber-950/15 dark:to-orange-950/8 border border-amber-200/40 dark:border-amber-800/25 p-4 shadow-sm">
       <div className="flex items-start gap-3">
@@ -453,9 +455,13 @@ function StepDots({
 //  Componente principal
 // ═══════════════════════════════════════════════════════════════
 
+/**
+ *
+ * @param props
+ */
 export function OnboardingClient(props: OnboardingClientProps) {
   const router = useRouter();
-  const { isForceRestart, verProgreso } = props;
+  const { isForceRestart } = props;
 
   const {
     completed,

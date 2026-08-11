@@ -1,33 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'motion/react';
-import React from 'react';
-import { PageHeader } from '@/components/page-header';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Cie10Search } from '@/components/ui/cie10-search';
-import { toast } from '@/components/ui/use-toast';
-import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 import {
   ArrowRightLeft,
   Loader2,
@@ -42,6 +14,33 @@ import {
   Stethoscope,
   Activity,
 } from 'lucide-react';
+import { motion } from 'motion/react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
+import { PageHeader } from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Cie10Search } from '@/components/ui/cie10-search';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/components/ui/use-toast';
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -151,15 +150,22 @@ function StatCard({
 
 // ─── Componente Principal ──────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.initialData
+ * @param root0.initialTotal
+ * @param root0.initialStats
+ * @param root0.initialMedicos
+ * @param root0.canView
+ */
 export function DerivacionesClient({
   initialData,
-  initialTotal,
   initialStats,
   initialMedicos,
   canView,
 }: DerivacionesClientProps) {
   const [data, setData] = useState<DerivacionItem[]>(initialData);
-  const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<string>('todas');
@@ -210,7 +216,6 @@ export function DerivacionesClient({
       if (res.ok) {
         const json = await res.json();
         setData(json.data ?? []);
-        setTotal(json.total ?? 0);
       }
       if (statsRes.ok) {
         const json = await statsRes.json();
@@ -319,7 +324,7 @@ export function DerivacionesClient({
         consentimientoAceptado: false,
       });
       fetchData();
-    } catch (err) {
+    } catch {
       toast({
         title: 'Error',
         description: 'No se pudo crear la derivación',
@@ -354,7 +359,7 @@ export function DerivacionesClient({
     notasDestino?: string,
   ) => {
     try {
-      const body: Record<string, any> = { estado: nuevoEstado };
+      const body: Record<string, unknown> = { estado: nuevoEstado };
       if (notasDestino) body.notasDestino = notasDestino;
       const res = await fetch(`/api/derivaciones/${id}`, {
         method: 'PATCH',

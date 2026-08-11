@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { PortalButton } from './portal-button';
 import { ChevronRight, ShieldCheck } from 'lucide-react';
+import { PortalButton } from './portal-button';
 
 const meta: Meta<typeof PortalButton> = {
   title: 'Portal/PortalButton',

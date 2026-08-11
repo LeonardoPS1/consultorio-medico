@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useState } from 'react';
 
 export interface FAQItem {
   q: string;
@@ -48,6 +48,11 @@ const defaultFAQS: FAQItem[] = [
   },
 ];
 
+/**
+ *
+ * @param root0
+ * @param root0.items
+ */
 export function FAQ({ items }: FAQProps = {}) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const faqs = items ?? defaultFAQS;

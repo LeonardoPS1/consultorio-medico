@@ -1,10 +1,9 @@
-import { db } from '@/lib/db';
-import { novedades, type Novedad, type NewNovedad } from '@/drizzle/schema';
-import { eq, desc } from 'drizzle-orm';
-import { notFound } from '@/lib/api-handler';
-import { sql } from 'drizzle-orm';
 import { execSync } from 'child_process';
+import { eq, desc } from 'drizzle-orm';
+import { novedades, type Novedad } from '@/drizzle/schema';
+import { notFound } from '@/lib/api-handler';
 import { CHANGELOG } from '@/lib/changelog-data';
+import { db } from '@/lib/db';
 
 // ─── CRUD ─────────────────────────────────────────────────
 
@@ -16,6 +15,10 @@ export interface CreateNovedadInput {
   tipo?: 'feature' | 'bugfix' | 'improvement' | 'security';
 }
 
+/**
+ *
+ * @param limit
+ */
 export async function listarNovedades(limit?: number): Promise<Novedad[]> {
   const query = db
     .select()
@@ -29,6 +32,9 @@ export async function listarNovedades(limit?: number): Promise<Novedad[]> {
   return query;
 }
 
+/**
+ *
+ */
 export async function obtenerUltimaNovedad(): Promise<Novedad | null> {
   const [entry] = await db
     .select()
@@ -39,6 +45,10 @@ export async function obtenerUltimaNovedad(): Promise<Novedad | null> {
   return entry ?? null;
 }
 
+/**
+ *
+ * @param input
+ */
 export async function crearNovedad(input: CreateNovedadInput): Promise<Novedad> {
   const [entry] = await db
     .insert(novedades)
@@ -54,6 +64,10 @@ export async function crearNovedad(input: CreateNovedadInput): Promise<Novedad> 
   return entry;
 }
 
+/**
+ *
+ * @param id
+ */
 export async function eliminarNovedad(id: string): Promise<void> {
   const [entry] = await db
     .delete(novedades)
@@ -121,7 +135,10 @@ function parseCommitMessage(message: string): {
   };
 }
 
-/** Genera entradas de novedades desde un array de mensajes de commits */
+/**
+ * Genera entradas de novedades desde un array de mensajes de commits
+ * @param commitMessages
+ */
 export async function generarDesdeCommits(commitMessages: string[]): Promise<Novedad[]> {
   const items: string[] = [];
   let tieneFeatures = false;
@@ -160,7 +177,10 @@ export async function generarDesdeCommits(commitMessages: string[]): Promise<Nov
 
 // ─── Auto-generación desde git log ─────────────────────────
 
-/** Parsea un commit message en formato conventional commits */
+/**
+ * Parsea un commit message en formato conventional commits
+ * @param message
+ */
 function parseCommitType(message: string): GitCommit['type'] {
   if (message.startsWith('feat')) return 'feature';
   if (message.startsWith('fix')) return 'bugfix';
@@ -170,7 +190,10 @@ function parseCommitType(message: string): GitCommit['type'] {
   return 'other';
 }
 
-/** Lee commits desde git log desde un tag o commit hasta HEAD */
+/**
+ * Lee commits desde git log desde un tag o commit hasta HEAD
+ * @param desdeTag
+ */
 function leerCommitsDesde(desdeTag?: string): GitCommit[] {
   const range = desdeTag ? `${desdeTag}..HEAD` : '--since="7 days ago"';
   const format = `--format=%H|%ai|%s`;
@@ -196,7 +219,10 @@ function leerCommitsDesde(desdeTag?: string): GitCommit[] {
     });
 }
 
-/** Agrupa commits por tipo y genera un título coherente */
+/**
+ * Agrupa commits por tipo y genera un título coherente
+ * @param commits
+ */
 function generarTitulo(commits: GitCommit[]): string {
   const features = commits.filter((c) => c.type === 'feature').length;
   const fixes = commits.filter((c) => c.type === 'bugfix').length;
@@ -210,7 +236,10 @@ function generarTitulo(commits: GitCommit[]): string {
   return parts.length > 0 ? parts.join(', ') : 'Actualizaciones del sistema';
 }
 
-/** Genera una entrada de novedades desde los commits recientes */
+/**
+ * Genera una entrada de novedades desde los commits recientes
+ * @param desdeTag
+ */
 export async function generarDesdeGitLog(desdeTag?: string): Promise<Novedad[]> {
   const commits = leerCommitsDesde(desdeTag);
 

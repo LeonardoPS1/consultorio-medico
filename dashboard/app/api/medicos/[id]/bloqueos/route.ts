@@ -1,13 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { bloqueosAgenda } from '@/drizzle/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
+import { bloqueosAgenda } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 
 /**
  * GET /api/medicos/[id]/bloqueos
  *
  * Lista todos los bloqueos de agenda de un médico (vacaciones, feriados, etc.)
  * Query params: desde, hasta (filtro por rango de fechas)
+ * @param request
+ * @param root0
+ * @param root0.params
  */
 export async function GET(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
@@ -50,6 +53,9 @@ export async function GET(request: NextRequest, { params: paramsPromise }: { par
  *
  * Crea un nuevo bloqueo de agenda para un médico.
  * Body: { titulo, fechaInicio, fechaFin, tipo?, motivo? }
+ * @param request
+ * @param root0
+ * @param root0.params
  */
 export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;

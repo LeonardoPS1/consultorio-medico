@@ -5,8 +5,6 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import {
   Star,
   MessageSquareText,
@@ -14,8 +12,10 @@ import {
   Send,
   User as UserIcon,
 } from 'lucide-react';
-import { PortalCard } from '@/components/portal/portal-card';
+import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect } from 'react';
 import { PortalButton } from '@/components/portal/portal-button';
+import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
 interface Encuesta {
@@ -265,6 +265,9 @@ className={`transition-transform duration-150 active:scale-75 ${
   );
 }
 
+/**
+ *
+ */
 export default function PortalEncuestasPage() {
   const [encuestas, setEncuestas] = useState<Encuesta[]>([]);
   const [pendientes, setPendientes] = useState<TurnoPendiente[]>([]);

@@ -5,17 +5,22 @@
  * usando getOnboardingState(), y pasa todo al OnboardingClient.
  */
 
-export const dynamic = 'force-dynamic';
-
 import { getEffectiveSession } from '@/lib/auth-effective';
 import { getOnboardingState } from '@/lib/onboarding';
-import { OnboardingClient } from './onboarding-client';
 import type { OnboardingState } from '@/lib/onboarding-types';
+import { OnboardingClient } from './onboarding-client';
+
+export const dynamic = 'force-dynamic';
 
 interface OnboardingPageProps {
   searchParams?: { reiniciar?: string; 'ver-progreso'?: string };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.searchParams
+ */
 export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
   const isForceRestart = searchParams?.reiniciar === 'true';
   const verProgreso = searchParams?.['ver-progreso'] === 'true';

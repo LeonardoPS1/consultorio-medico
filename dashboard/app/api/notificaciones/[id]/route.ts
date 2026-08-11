@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { notificacionesService } from '@/lib/services/notificaciones';
-import { apiHandler, ok, notFound } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, ok, notFound } from '@/lib/api-handler';
+import { notificacionesService } from '@/lib/services/notificaciones';
 import { parseBody, updateNotificacionSchema } from '@/lib/validations';
 
 /**

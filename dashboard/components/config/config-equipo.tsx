@@ -1,9 +1,9 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Plus, Shield, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 interface MiembroEquipo {
   id?: string;
@@ -19,6 +19,13 @@ interface Props {
   onInvite: () => void;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.miembros
+ * @param root0.loading
+ * @param root0.onInvite
+ */
 export function ConfigEquipo({ miembros, loading, onInvite }: Props) {
   return (
     <Card>

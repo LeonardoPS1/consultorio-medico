@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'motion/react';
+import { usePathname } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 import { playNavigate } from '@/lib/sound';
 
 const pageVariants = {
@@ -25,6 +25,8 @@ const pageVariants = {
  * PortalContent — Wrapper con fade + slide en cada navegación.
  * Usa AnimatePresence mode="popLayout" para que la página de salida
  * no bloquee la entrada (fix del bug que requería F5).
+ * @param root0
+ * @param root0.children
  */
 export function PortalContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

@@ -1,17 +1,22 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Search, Filter, ChevronLeft, ChevronRight, Download, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import type { AccesoAuditoria } from './types';
+import { Search, ChevronLeft, ChevronRight, Download, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import type { AccesoAuditoria, Paginacion } from './types';
 
 interface Props {
-  initialData: { accesos: AccesoAuditoria[]; paginacion: any } | null;
+  initialData: { accesos: AccesoAuditoria[]; paginacion: Paginacion } | null;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.initialData
+ */
 export function AuditoriaTab({ initialData }: Props) {
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(!initialData);

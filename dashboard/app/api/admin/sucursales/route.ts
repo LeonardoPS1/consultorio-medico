@@ -1,11 +1,11 @@
-import { NextRequest } from 'next/server';
-import { apiHandler, success, created, fail, notFound } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody, createSucursalSchema } from '@/lib/validations';
-import { db } from '@/lib/db';
-import { sucursales } from '@/drizzle/schema';
 import { eq, sql } from 'drizzle-orm';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { sucursales } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, created, fail, notFound } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { parseBody, createSucursalSchema } from '@/lib/validations';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 

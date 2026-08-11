@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { apiHandler } from '@/lib/api-handler';
-import { turnosService } from '@/lib/services/turnos';
 import { auth } from '@/lib/auth';
+import { turnosService } from '@/lib/services/turnos';
 
 export const dynamic = 'force-dynamic';
 

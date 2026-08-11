@@ -1,16 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { canAccess, type FeatureId } from '@/lib/features';
-import { useFeatureFlags } from '@/lib/feature-flags-context';
-import {
-  ALL_COMMAND_ITEMS,
-  GROUP_LABELS,
-  GROUP_ORDER,
-  type CommandItem,
-} from '@/lib/command-palette-data';
-import { useCommandSearch, type SearchResult } from '@/lib/hooks/use-command-search';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   CommandDialog,
   CommandEmpty,
@@ -21,13 +12,24 @@ import {
   CommandSeparator,
 } from '@/components/ui/command';
 import { Skeleton } from '@/components/ui/skeleton';
-import { isMac } from '@/lib/utils';
+import {
+  ALL_COMMAND_ITEMS,
+  GROUP_LABELS,
+  type CommandItem,
+} from '@/lib/command-palette-data';
+import { useFeatureFlags } from '@/lib/feature-flags-context';
+import { canAccess, type FeatureId } from '@/lib/features';
+import { useCommandSearch, type SearchResult } from '@/lib/hooks/use-command-search';
 import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
+import { isMac } from '@/lib/utils';
 
 // ============================================================
 // Command Palette Component
 // ============================================================
 
+/**
+ *
+ */
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');

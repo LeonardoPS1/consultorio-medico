@@ -18,6 +18,7 @@
  * Anonimiza un nombre completo.
  * Estrategia: "Juan Pérez" → "Juan P." (primer nombre + inicial del apellido)
  *             "María García López" → "María G." (solo primera inicial del apellido)
+ * @param nombre
  */
 export function anonymizeNombre(nombre?: string | null): string | null {
   if (!nombre) return null;
@@ -35,6 +36,7 @@ export function anonymizeNombre(nombre?: string | null): string | null {
 /**
  * Anonimiza un email.
  * Estrategia: "juan.perez@gmail.com" → "ju***@gmail.com"
+ * @param email
  */
 export function anonymizeEmail(email?: string | null): string | null {
   if (!email) return null;
@@ -50,6 +52,7 @@ export function anonymizeEmail(email?: string | null): string | null {
  * Estrategia: "+56975680702" → "+569******02" (conserva código país + últimos 2)
  *             "1155550000" → "******0000"
  * Conserva suficientes dígitos para trazabilidad.
+ * @param telefono
  */
 export function anonymizeTelefono(telefono?: string | null): string | null {
   if (!telefono) return null;
@@ -66,6 +69,7 @@ export function anonymizeTelefono(telefono?: string | null): string | null {
  * Anonimiza un DNI / RUT / documento.
  * Estrategia: "12345678-9" → "******678-9"
  *             "12345678" → "****5678"
+ * @param documento
  */
 export function anonymizeDocumento(documento?: string | null): string | null {
   if (!documento) return null;
@@ -78,6 +82,7 @@ export function anonymizeDocumento(documento?: string | null): string | null {
 /**
  * Versión corta para Google Calendar (solo inicial + apellido sin contexto).
  * Estrategia: "Juan Pérez" → "Turno - Juan P."
+ * @param nombre
  */
 export function anonymizeNombreGCal(nombre?: string | null): string {
   if (!nombre) return 'Paciente';
@@ -106,6 +111,7 @@ export interface DatosAnonimizados {
 
 /**
  * Anonimiza todos los campos PII de un paciente de una sola vez.
+ * @param data
  */
 export function anonymizePaciente(data: DatosPaciente): DatosAnonimizados {
   return {
@@ -120,6 +126,7 @@ export function anonymizePaciente(data: DatosPaciente): DatosAnonimizados {
  * Máscara profunda para objects con PII — recorre recursivamente y anonimiza
  * campos conocidos (nombre, email, telefono, dni, rut).
  * Útil para sanitizar logs y payloads.
+ * @param obj
  */
 export function maskPII<T extends Record<string, unknown>>(obj: T): T {
   const result = { ...obj };

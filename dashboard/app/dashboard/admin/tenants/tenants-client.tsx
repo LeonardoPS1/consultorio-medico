@@ -1,11 +1,11 @@
 'use client';
 
+import { Building2, Plus, Loader2, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -14,8 +14,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Building2, Plus, Loader2, AlertCircle } from 'lucide-react';
-import { PageHeader } from '@/components/page-header';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface Tenant {
   id: string;
@@ -29,6 +29,11 @@ interface Props {
   initialTenants: Tenant[];
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.initialTenants
+ */
 export function TenantsClient({ initialTenants }: Props) {
   const [tenants, setTenants] = useState<Tenant[]>(initialTenants);
   const [loading, setLoading] = useState(false);

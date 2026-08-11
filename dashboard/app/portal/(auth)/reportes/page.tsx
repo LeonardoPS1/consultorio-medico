@@ -5,8 +5,6 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
 import {
   Calendar,
   DollarSign,
@@ -16,6 +14,8 @@ import {
   Activity,
   Eye,
 } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useState, useEffect } from 'react';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
@@ -148,6 +148,9 @@ function StatCard({
 }
 
 /* ─── Página Principal ──────────────────────────────────── */
+/**
+ *
+ */
 export default function PortalReportesPage() {
   const [data, setData] = useState<ReportesData | null>(null);
   const [loading, setLoading] = useState(true);

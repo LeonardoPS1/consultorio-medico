@@ -15,6 +15,7 @@ export interface PasswordValidation {
  * - Al menos 1 minúscula
  * - Al menos 1 número
  * - Al menos 1 símbolo especial
+ * @param password
  */
 export function validatePasswordStrength(password: string): PasswordValidation {
   const errors: string[] = [];
@@ -59,6 +60,7 @@ export function validatePasswordStrength(password: string): PasswordValidation {
 
 /**
  * Genera un mensaje de error legible para mostrar en UI
+ * @param errors
  */
 export function passwordErrorsToString(errors: string[]): string {
   if (errors.length === 0) return '';

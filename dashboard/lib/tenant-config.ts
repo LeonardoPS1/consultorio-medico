@@ -9,6 +9,9 @@ export interface TenantConfig {
   colorPrimario: string; // hex
 }
 
+/**
+ *
+ */
 export function getTenantConfig(): TenantConfig {
   return {
     nombre: process.env.NEXT_PUBLIC_TENANT_NAME || 'Consultorio',
@@ -19,6 +22,7 @@ export function getTenantConfig(): TenantConfig {
 /**
  * Convierte un color hex a HSL string para usar en CSS variables.
  * Ej: #2563eb → "221.2 83.2% 53.3%"
+ * @param hex
  */
 export function hexToHsl(hex: string): string {
   // Remover #

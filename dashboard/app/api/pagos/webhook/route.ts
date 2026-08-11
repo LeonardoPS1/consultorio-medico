@@ -1,7 +1,6 @@
+import { createHmac, timingSafeEqual } from 'crypto';
+import { eq, desc } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
-import { getPaymentById, getMerchantOrderById } from '@/lib/mercadopago';
-import { PLANES, type PlanId } from '@/lib/planes';
-import { db } from '@/lib/db';
 import {
   suscripciones,
   usuarios,
@@ -9,11 +8,12 @@ import {
   turnos,
   suscripcionesPaciente,
 } from '@/drizzle/schema';
-import { eq, desc } from 'drizzle-orm';
-import { getUserByEmail } from '@/lib/data-store';
-import { safeLog, safeWarn, safeError } from '@/lib/logger';
-import { createHmac, timingSafeEqual } from 'crypto';
 import { apiHandler, ok } from '@/lib/api-handler';
+import { getUserByEmail } from '@/lib/data-store';
+import { db } from '@/lib/db';
+import { safeLog, safeWarn, safeError } from '@/lib/logger';
+import { getPaymentById, getMerchantOrderById } from '@/lib/mercadopago';
+import { PLANES, type PlanId } from '@/lib/planes';
 
 // ─── Verificar firma de MercadoPago ──────────────────────────
 function verifySignature(

@@ -10,12 +10,11 @@
  * - unstable_cache(): cachea entre requests con tag-based revalidation
  */
 
+import { cache as reactCache } from 'react';
 import { auth } from '@/lib/auth';
-import { turnosService } from '@/lib/services/turnos';
 import { pacientesService } from '@/lib/services/pacientes';
 import { recetasService } from '@/lib/services/recetas';
-import { cache as reactCache } from 'react';
-import { CACHE_TAGS } from '@/lib/data-cache';
+import { turnosService } from '@/lib/services/turnos';
 
 // ─── Turnos ────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
-import type { ComponentType, HTMLAttributes } from 'react';
 import type { TrackReferenceOrPlaceholder } from '@livekit/components-core';
+import type { ComponentType, HTMLAttributes } from 'react';
 
 export interface FocusLayoutProps extends HTMLAttributes<HTMLElement> {
   trackRef?: TrackReferenceOrPlaceholder;

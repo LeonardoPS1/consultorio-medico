@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
-import { safeWarn } from '@/lib/logger';
 import { escapeHtml } from '@/lib/html-utils';
+import { safeWarn } from '@/lib/logger';
 
 // ─── Constants ──────────────────────────────────────────────
 
@@ -42,6 +42,13 @@ export interface CertificadoParams {
 
 // ─── Hash ───────────────────────────────────────────────────
 
+/**
+ *
+ * @param params
+ * @param params.id
+ * @param params.pacienteId
+ * @param params.diagnostico
+ */
 export function generarHashCertificado(params: {
   id: string;
   pacienteId: string;
@@ -58,6 +65,12 @@ export function generarHashCertificado(params: {
 
 // ─── HTML Template ──────────────────────────────────────────
 
+/**
+ *
+ * @param params
+ * @param qrDataUrl
+ * @param baseUrl
+ */
 export function generarHTMLCertificado(
   params: CertificadoParams,
   qrDataUrl: string,

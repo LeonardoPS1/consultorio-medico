@@ -6,16 +6,16 @@
  * Seguridad: IDOR check — verifica que el paciente pertenezca al médico autenticado
  */
 
-import { NextRequest } from 'next/server';
-import { apiHandler, success, fail, notFound } from '@/lib/api-handler';
-import { parseBody } from '@/lib/validations';
-import { updatePacienteSchema } from '@/lib/validations';
-import { pacientesService } from '@/lib/services/pacientes';
-import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { pacientes, turnos } from '@/drizzle/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { NextRequest } from 'next/server';
+import { pacientes, turnos } from '@/drizzle/schema';
+import { apiHandler, success } from '@/lib/api-handler';
+import { auth } from '@/lib/auth';
 import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
+import { db } from '@/lib/db';
+import { pacientesService } from '@/lib/services/pacientes';
+import { parseBody , updatePacienteSchema } from '@/lib/validations';
+
 
 // Helper: verifica que el médico tenga acceso a este paciente
 async function verifyPacienteAccess(

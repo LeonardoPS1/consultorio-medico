@@ -1,5 +1,13 @@
 export type Periodo = 'semana' | 'mes';
 
+export interface Paginacion {
+  pagina: number;
+  limite: number;
+  total: number;
+  totalPaginas: number;
+  hayMas: boolean;
+}
+
 export interface ComplianceMetricas {
   tiempoEsperaPromedio: number;
   cumplimientoPlazos: number;

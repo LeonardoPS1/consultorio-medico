@@ -6,7 +6,6 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import {
   User,
   Phone,
@@ -18,10 +17,11 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { ISAPRES_CHILENAS } from '@/lib/isapres';
-import { PushNotificationToggle } from '@/components/portal/PushNotificationToggle';
-import { PortalCard } from '@/components/portal/portal-card';
+import { useState, useEffect } from 'react';
 import { PortalButton } from '@/components/portal/portal-button';
+import { PortalCard } from '@/components/portal/portal-card';
+import { PushNotificationToggle } from '@/components/portal/PushNotificationToggle';
+import { ISAPRES_CHILENAS } from '@/lib/isapres';
 
 interface Region {
   id: string;
@@ -70,6 +70,11 @@ const inputStyle: React.CSSProperties = {
   borderRadius: '0.75rem',
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.paciente
+ */
 export default function PortalPerfilClient({
   paciente,
 }: Props) {

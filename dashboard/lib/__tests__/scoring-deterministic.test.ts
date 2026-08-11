@@ -1,8 +1,8 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { calcularScorePaciente, calcularScoreBulk } from '@/lib/services/scoring-pacientes';
 import { db } from '@/lib/db';
-import { turnos, pacientes } from '@/drizzle/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { turnos } from '@/drizzle/schema';
+import { eq } from 'drizzle-orm';
 
 describe('Scoring de inasistencia - Determinismo', () => {
   const testPacienteId = 'test-paciente-deterministic';

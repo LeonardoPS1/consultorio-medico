@@ -6,12 +6,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { apiHandler, created } from '@/lib/api-handler';
-import { parseBody } from '@/lib/validations';
-import { createPacienteSchema } from '@/lib/validations';
-import { pacientesService } from '@/lib/services/pacientes';
 import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, created } from '@/lib/api-handler';
 import { CACHE_TAGS, revalidate } from '@/lib/data-cache';
+import { pacientesService } from '@/lib/services/pacientes';
+import { parseBody , createPacienteSchema } from '@/lib/validations';
 
 export const GET = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();

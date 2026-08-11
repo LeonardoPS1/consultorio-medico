@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { AlertTriangle, ShieldCheck, HelpCircle, MessagesSquare } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -14,9 +13,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { toast } from '@/components/ui/use-toast';
-import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, ShieldCheck, HelpCircle, MessagesSquare } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TurnoData {
   id: string;
@@ -73,6 +72,13 @@ interface TurnoDetailModalProps {
 
 // ─── Component ────────────────────────────────────────────
 
+/**
+ *
+ * @param root0
+ * @param root0.editTurno
+ * @param root0.onOpenChange
+ * @param root0.onSaveEdit
+ */
 export function TurnoDetailModal({ editTurno, onOpenChange, onSaveEdit }: TurnoDetailModalProps) {
   const [saving, setSaving] = useState(false);
   const router = useRouter();
@@ -176,6 +182,13 @@ interface CancelTurnoDialogProps {
   onConfirmCancel: (id: string, motivo: string) => Promise<void>;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.showCancelDialog
+ * @param root0.onOpenChange
+ * @param root0.onConfirmCancel
+ */
 export function CancelTurnoDialog({
   showCancelDialog,
   onOpenChange,

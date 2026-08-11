@@ -1,20 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'motion/react';
-import { DoctorCard } from './doctor-card';
-import { SlotPicker } from './slot-picker';
-import { PortalCard } from '@/components/portal/portal-card';
-import { PortalButton } from '@/components/portal/portal-button';
-import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  ArrowLeft,
+  Check,
+  CalendarIcon,
+  Stethoscope,
+  CreditCard,
+  ExternalLink,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { PortalButton } from '@/components/portal/portal-button';
+import { PortalCard } from '@/components/portal/portal-card';
+import { Button } from '@/components/ui/button';
 import {
   CardContent,
   CardHeader,
@@ -24,22 +23,15 @@ import {
 } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { cn } from '@/lib/utils';
-import {
-  Loader2,
-  ArrowLeft,
-  Check,
-  CalendarIcon,
-  Stethoscope,
-  CreditCard,
-  ExternalLink,
-} from 'lucide-react';
 import type {
   MedicoPortal,
   SlotDisponible,
   TurnoCreadoPortal,
 } from '@/lib/services/portal-booking';
 import { playComplete } from '@/lib/sound';
+import { cn } from '@/lib/utils';
+import { DoctorCard } from './doctor-card';
+import { SlotPicker } from './slot-picker';
 
 type Step = 'medico' | 'slot' | 'confirmar' | 'pago' | 'completado';
 
@@ -137,6 +129,12 @@ function StepIndicator({ currentStep, showPago }: { currentStep: Step; showPago:
 }
 
 /* ─── Componente principal ─────────────────────────────── */
+/**
+ *
+ * @param root0
+ * @param root0.medicos
+ * @param root0.rescheduleTurnoId
+ */
 export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>('medico');

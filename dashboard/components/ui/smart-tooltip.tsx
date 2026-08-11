@@ -12,6 +12,11 @@ interface SmartTooltipProps {
   className?: string;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function SmartTooltipProvider({ children }: { children: React.ReactNode }) {
   return (
     <TooltipProvider delayDuration={500} skipDelayDuration={300}>
@@ -20,6 +25,15 @@ export function SmartTooltipProvider({ children }: { children: React.ReactNode }
   );
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.content
+ * @param root0.children
+ * @param root0.side
+ * @param root0.align
+ * @param root0.className
+ */
 export function SmartTooltip({ content, children, side = 'top', align = 'center', className }: SmartTooltipProps) {
   return (
     <Tooltip>

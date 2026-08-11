@@ -9,7 +9,7 @@
  *   3. Post-retención (90 días) → job de anonimización permanente en n8n (WF-09)
  */
 
-import { db } from '@/lib/db';
+import { eq, and, sql, inArray } from 'drizzle-orm';
 import {
   consentimientoLog,
   pacientes,
@@ -25,14 +25,14 @@ import {
   tenants,
 } from '@/drizzle/schema';
 import type { ConfigPrivacidad } from '@/drizzle/schema';
-import { eq, and, sql, inArray } from 'drizzle-orm';
-import { notFound } from '@/lib/api-handler';
 import {
   anonymizeNombre,
   anonymizeEmail,
   anonymizeTelefono,
   anonymizeDocumento,
 } from '@/lib/anonymize';
+import { notFound } from '@/lib/api-handler';
+import { db } from '@/lib/db';
 
 // ─── Tipos ──────────────────────────────────────────────────────
 
@@ -85,6 +85,7 @@ export const privacidadService = {
   /**
    * Registra un evento de consentimiento en consentimiento_log.
    * Esta tabla es la fuente de verdad para auditoría de consentimientos.
+   * @param input
    */
   async registrarConsentimiento(input: RegistrarConsentimientoInput) {
     const [result] = await db
@@ -103,6 +104,7 @@ export const privacidadService = {
 
   /**
    * Obtiene el historial de consentimientos de un paciente.
+   * @param pacienteId
    */
   async getHistorialConsentimiento(pacienteId: string) {
     return db
@@ -119,6 +121,9 @@ export const privacidadService = {
    * 2. Registra la solicitud en consentimiento_log
    * 3. Registra en auditoria_accesos
    * 4. Devuelve el registro de consentimiento creado
+   * @param pacienteId
+   * @param ip
+   * @param userAgent
    */
   async solicitarBaja(pacienteId: string, ip?: string, userAgent?: string) {
     const [paciente] = await db
@@ -174,6 +179,9 @@ export const privacidadService = {
    * 6. Soft-delete del paciente
    * 7. Notifica a n8n (fire-and-forget)
    * 8. Registra en auditoria_accesos
+   * @param pacienteId
+   * @param ip
+   * @param userAgent
    */
   async confirmarBaja(pacienteId: string, ip?: string, userAgent?: string) {
     const [paciente] = await db
@@ -273,6 +281,8 @@ export const privacidadService = {
    * - n8n_chat_histories (memoria del agente)
    * - Datos relacionados en workflows
    * Fire-and-forget: no bloquea la respuesta.
+   * @param pacienteId
+   * @param pacienteNombre
    */
   async notificarBajaAN8n(pacienteId: string, pacienteNombre: string): Promise<void> {
     try {
@@ -304,6 +314,7 @@ export const privacidadService = {
    *
    * Actualmente los datos ya están anonimizados en confirmarBaja(),
    * pero este método puede ejecutarse para limpieza adicional o hard-delete.
+   * @param fechaLimite
    */
   async anonimizarPostRetencion(fechaLimite: Date): Promise<number> {
     const expirados = await db

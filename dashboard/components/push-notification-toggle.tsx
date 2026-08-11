@@ -1,8 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
 import { BellRing, BellOff, Loader2, Smartphone, AlertCircle, RefreshCw } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
 
+/**
+ *
+ */
 export function PushNotificationToggle() {
   const [status, setStatus] = useState<
     'loading' | 'unsupported' | 'denied' | 'inactive' | 'subscribed' | 'error'
@@ -82,7 +85,8 @@ export function PushNotificationToggle() {
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(publicKey) as unknown as BufferSource,
         });
-      } catch (err: any) {
+      } catch (e: unknown) {
+        const err = e as { name?: string; message?: string };
         console.error('[Push] Error en pushManager.subscribe:', {
           name: err?.name,
           message: err?.message,
@@ -142,7 +146,8 @@ export function PushNotificationToggle() {
       }
 
       setStatus('subscribed');
-    } catch (error: any) {
+    } catch (e: unknown) {
+      const error = e as { message?: string };
       console.error('[Push] Error al suscribir:', error);
       setErrorMessage(error?.message || 'Error desconocido al activar notificaciones.');
       setStatus('error');

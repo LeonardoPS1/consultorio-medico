@@ -15,8 +15,8 @@
  *   revalidate(CACHE_TAGS.TURNOS);
  */
 
-import { cache as reactCache } from 'react';
 import { unstable_cache, revalidateTag } from 'next/cache';
+import { cache as reactCache } from 'react';
 
 // ─── Tags ──────────────────────────────────────────────────
 
@@ -51,7 +51,6 @@ type Serializable = string | number | boolean | null | undefined;
  *
  * - React.cache(): deduplica llamadas dentro del mismo render (evita queries duplicadas)
  * - unstable_cache(): cachea entre requests con tag-based revalidation
- *
  * @param tag - Tag de revalidación (o array de tags)
  * @param fn - Función async a cachear (args deben ser serializables)
  * @param cacheKeySuffix - Sufijo opcional para la key de cache
@@ -81,6 +80,7 @@ export function unstableCache<T, Args extends Serializable[]>(
 /**
  * Invalida el cache por tag(s).
  * Llamar desde mutaciones (API routes o Server Actions).
+ * @param tag
  */
 export function revalidate(tag: CacheTag | CacheTag[]): void {
   const tags = Array.isArray(tag) ? tag : [tag];

@@ -1,9 +1,12 @@
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
-
 import { NextResponse } from 'next/server';
 import { checkPostgres, checkRedis, summarizeHealth } from '@/lib/health-checks';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+/**
+ *
+ */
 export async function GET() {
   const [pg, redis] = await Promise.all([checkPostgres(), checkRedis()]);
   const checks = { postgres: pg, redis };

@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server';
-import { blacklistService } from '@/lib/services/blacklist';
-import { apiHandler, ok } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/api-auth';
-import { parseBody } from '@/lib/validations';
-import { updateBlacklistSchema } from '@/lib/validations';
+import { apiHandler, ok } from '@/lib/api-handler';
+import { blacklistService } from '@/lib/services/blacklist';
+import { parseBody , updateBlacklistSchema } from '@/lib/validations';
 
 // GET /api/blacklist/[id]
 export const GET = apiHandler(

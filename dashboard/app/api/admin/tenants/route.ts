@@ -1,11 +1,11 @@
-import { NextRequest } from 'next/server';
-import { apiHandler, success, created, fail, conflict } from '@/lib/api-handler';
-import { requireAuth } from '@/lib/api-auth';
-import { parseBody, createTenantSchema } from '@/lib/validations';
-import { db } from '@/lib/db';
-import { tenants } from '@/drizzle/schema';
-import { crearTenant } from '@/lib/services/tenant';
 import { desc } from 'drizzle-orm';
+import { NextRequest } from 'next/server';
+import { tenants } from '@/drizzle/schema';
+import { requireAuth } from '@/lib/api-auth';
+import { apiHandler, success, created, fail, conflict } from '@/lib/api-handler';
+import { db } from '@/lib/db';
+import { crearTenant } from '@/lib/services/tenant';
+import { parseBody, createTenantSchema } from '@/lib/validations';
 
 // GET /api/admin/tenants - Listar todos los tenants
 export const GET = apiHandler(async () => {

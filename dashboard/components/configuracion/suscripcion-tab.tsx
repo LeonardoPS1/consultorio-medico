@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle2,
   CreditCard,
   Loader2,
   ArrowRight,
   AlertCircle,
-  ExternalLink,
 } from 'lucide-react';
-import { PLANES, PLANES_ORDERED, type PlanInfo, type PlanId } from '@/lib/planes';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PLANES_ORDERED, type PlanInfo, type PlanId } from '@/lib/planes';
 
 const PAID_PLAN_IDS: PlanId[] = ['starter', 'professional', 'premium', 'enterprise'];
 
@@ -25,6 +24,9 @@ interface SuscripcionData {
   trialEnd: string | null;
 }
 
+/**
+ *
+ */
 export default function SuscripcionTab() {
   const [data, setData] = useState<SuscripcionData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,19 +48,7 @@ export default function SuscripcionTab() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Si llegó con un plan desde la landing → auto checkout
-  useEffect(() => {
-    if (autoTriggerDone.current) return;
-    if (loading) return;
-    const planParam = new URLSearchParams(window.location.search).get('plan');
-    if (planParam && (PAID_PLAN_IDS as readonly string[]).includes(planParam)) {
-      autoTriggerDone.current = true;
-      const timer = setTimeout(() => handleCheckout(planParam), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [loading]);
-
-  const handleCheckout = async (planId: string) => {
+  const handleCheckout = useCallback(async (planId: string) => {
     setCheckoutLoading(planId);
     setError('');
 
@@ -98,7 +88,19 @@ export default function SuscripcionTab() {
     } finally {
       setCheckoutLoading(null);
     }
-  };
+  }, []);
+
+  // Si llegó con un plan desde la landing → auto checkout
+  useEffect(() => {
+    if (autoTriggerDone.current) return;
+    if (loading) return;
+    const planParam = new URLSearchParams(window.location.search).get('plan');
+    if (planParam && (PAID_PLAN_IDS as readonly string[]).includes(planParam)) {
+      autoTriggerDone.current = true;
+      const timer = setTimeout(() => handleCheckout(planParam), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, handleCheckout]);
 
   const planActual = data?.plan || 'free';
   const estado = data?.estado || 'free';

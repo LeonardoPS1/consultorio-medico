@@ -1,3 +1,4 @@
+import { relations, sql, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 import {
   pgTable,
   uuid,
@@ -10,12 +11,11 @@ import {
   index,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { relations, sql, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
+import { usuarios, pacientes, medicos } from './core';
 import {
   consentimientoTipoEnum,
   consentimientoEstadoEnum,
 } from './enums';
-import { usuarios, pacientes, medicos } from './core';
 import { tenants, sucursales } from './tenant';
 
 // ============================================================

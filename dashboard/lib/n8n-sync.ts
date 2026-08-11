@@ -208,6 +208,8 @@ function getHeaders(): Record<string, string> {
 /**
  * Construye el objeto `data` que n8n espera para un tipo de credential.
  * Toma un mapa de clave→valor del dashboard y lo traduce según fieldMapping.
+ * @param servicio
+ * @param credenciales
  */
 function buildN8nData(
   servicio: string,
@@ -245,7 +247,6 @@ function buildN8nData(
 /**
  * Sincroniza una credencial (o grupo de credenciales del mismo servicio)
  * con n8n. Incluye retry logic con exponential backoff.
- *
  * @param servicio - Nombre del servicio (twilio, ollama, etc.)
  * @param credenciales - Mapa de clave→valor de todas las credenciales del servicio
  * @param n8nCredentialId - ID de la credential en n8n (si ya existe)
@@ -364,6 +365,7 @@ export async function getN8nCredentials(): Promise<{
  */
 /**
  * Valida que una URL no apunte a IP privada/reservada (protección SSRF).
+ * @param url
  */
 function isSafeUrl(url: string): boolean {
   try {
@@ -385,6 +387,11 @@ function isSafeUrl(url: string): boolean {
   }
 }
 
+/**
+ *
+ * @param servicio
+ * @param credenciales
+ */
 export async function testCredentialConnection(
   servicio: string,
   credenciales: Record<string, string>,
@@ -401,7 +408,9 @@ export async function testCredentialConnection(
         });
         if (res.ok) {
           const data = await res.json();
-          const models = data.models?.map((m: any) => m.name).join(', ') || 'desconocidos';
+          const models = (data.models as Array<{ name: string }> | undefined)
+            ?.map((m) => m.name)
+            .join(', ') || 'desconocidos';
           return { success: true, message: `✅ Ollama responde. Modelos: ${models}` };
         }
         return { success: false, message: `❌ Ollama respondió con status ${res.status}` };

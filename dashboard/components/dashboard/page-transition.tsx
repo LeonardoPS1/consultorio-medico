@@ -1,7 +1,7 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { playNavigate } from '@/lib/sound';
 
@@ -19,6 +19,11 @@ const pageVariants = {
   },
 } as const;
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const prevPathname = useRef(pathname);

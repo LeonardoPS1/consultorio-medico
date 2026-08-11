@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import Image from 'next/image';
+import { useState } from 'react';
 
 const SCREENSHOTS = [
   { id: 'home', label: 'Panel Principal', src: '/assets/dashboard-real-home.png' },
@@ -17,6 +17,9 @@ const SCREENSHOTS = [
 const IMG_WIDTH = 1440;
 const IMG_HEIGHT = 900;
 
+/**
+ *
+ */
 export function Gallery() {
   const [active, setActive] = useState(SCREENSHOTS[0].id);
   const shouldReduceMotion = useReducedMotion();

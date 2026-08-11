@@ -1,10 +1,10 @@
+import { eq, and } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
+import { tenants, usuarios } from '@/drizzle/schema';
 import { apiHandler, success } from '@/lib/api-handler';
 import { db } from '@/lib/db';
-import { tenants, usuarios } from '@/drizzle/schema';
-import { eq, and } from 'drizzle-orm';
-import { notificacionesService } from '@/lib/services/notificaciones';
 import { safeWarn } from '@/lib/logger';
+import { notificacionesService } from '@/lib/services/notificaciones';
 
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY;
 const DOKPLOY_INTERNAL_URL = process.env.DOKPLOY_INTERNAL_URL || 'http://dokploy:3000';

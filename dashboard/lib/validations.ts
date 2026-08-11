@@ -9,13 +9,17 @@
  *   // body tiene tipo inferido automáticamente
  */
 
-import { z } from 'zod';
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { fail } from './api-handler';
 
 // ─── Helpers ────────────────────────────────────────────
 
-/** Parsea el body de un request y valida con el schema. Tira error 400 si falla. */
+/**
+ * Parsea el body de un request y valida con el schema. Tira error 400 si falla.
+ * @param request
+ * @param schema
+ */
 export async function parseBody<T extends z.ZodType>(
   request: NextRequest,
   schema: T,
@@ -32,7 +36,11 @@ export async function parseBody<T extends z.ZodType>(
   }
 }
 
-/** Parsea query params y valida con el schema */
+/**
+ * Parsea query params y valida con el schema
+ * @param request
+ * @param schema
+ */
 export function parseQuery<T extends z.ZodType>(request: NextRequest, schema: T): z.infer<T> {
   const { searchParams } = new URL(request.url);
   const params: Record<string, string> = {};

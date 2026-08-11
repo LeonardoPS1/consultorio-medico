@@ -1,14 +1,17 @@
 'use client';
 
+import { Globe, Loader2, Check } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
-import { Globe, Loader2, Check } from 'lucide-react';
-import { PAISES } from '@/lib/regions-data';
 import type { ConfigRegional } from '@/drizzle/schema';
+import { PAISES } from '@/lib/regions-data';
 
+/**
+ *
+ */
 export function ConfigRegional() {
   const [config, setConfig] = useState<ConfigRegional | null>(null);
   const [loading, setLoading] = useState(true);

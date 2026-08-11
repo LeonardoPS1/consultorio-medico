@@ -32,7 +32,10 @@ type PatientPanelContextValue = PatientPanelState & PatientPanelActions;
 
 const PatientPanelContext = createContext<PatientPanelContextValue | null>(null);
 
-/** Fetch full panel detail data for a patient */
+/**
+ * Fetch full panel detail data for a patient
+ * @param patientId
+ */
 async function fetchPanelData(patientId: string): Promise<Omit<PatientPanelData, 'patient'>> {
   const [detailRes, soapRes] = await Promise.allSettled([
     fetch(`/api/pacientes/${patientId}/detalle`),
@@ -83,6 +86,11 @@ async function fetchPanelData(patientId: string): Promise<Omit<PatientPanelData,
   return { lastSoap, activeRecetas, upcomingTurnos, loadedAt: Date.now() };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export function PatientPanelProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<PatientPanelState>({
     isOpen: false,
@@ -91,19 +99,6 @@ export function PatientPanelProvider({ children }: { children: React.ReactNode }
   });
 
   const abortRef = useRef<AbortController | null>(null);
-
-  const open = useCallback((patient?: PatientSummaryLite) => {
-    setState((prev) => ({ ...prev, isOpen: true }));
-    if (patient) {
-      // Select patient immediately, fetch detail in background
-      selectPatient(patient);
-    }
-  }, []);
-
-  const close = useCallback(() => {
-    abortRef.current?.abort();
-    setState({ isOpen: false, data: null, isLoadingDetail: false });
-  }, []);
 
   const selectPatient = useCallback(async (patient: PatientSummaryLite) => {
     // Set lite data immediately
@@ -136,6 +131,19 @@ export function PatientPanelProvider({ children }: { children: React.ReactNode }
         console.error('[PatientPanel] Error fetching detail:', err);
       }
     }
+  }, []);
+
+  const open = useCallback((patient?: PatientSummaryLite) => {
+    setState((prev) => ({ ...prev, isOpen: true }));
+    if (patient) {
+      // Select patient immediately, fetch detail in background
+      selectPatient(patient);
+    }
+  }, [selectPatient]);
+
+  const close = useCallback(() => {
+    abortRef.current?.abort();
+    setState({ isOpen: false, data: null, isLoadingDetail: false });
   }, []);
 
   const clearPatient = useCallback(() => {

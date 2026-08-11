@@ -1,9 +1,9 @@
+import { env } from 'node:process';
+import { eq, and, sql } from 'drizzle-orm';
+import { notasSoap } from '@/drizzle/schema';
+import { sugerirCie10 } from '@/lib/ai-clinical';
 import { db } from '@/lib/db';
 import { safeError, safeLog } from '@/lib/logger';
-import { notasSoap, turnos, pacientes, medicos } from '@/drizzle/schema';
-import { eq, and, sql, isNull } from 'drizzle-orm';
-import { env } from 'node:process';
-import { sugerirCie10 } from '@/lib/ai-clinical';
 
 const WHISPER_URL = env.WHISPER_URL || 'http://whisper:8000';
 const OLLAMA_URL = env.OLLAMA_URL || 'http://ollama:11434';

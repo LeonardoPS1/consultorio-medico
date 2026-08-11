@@ -1,12 +1,16 @@
+import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { getPortalSession } from '@/lib/portal-auth';
-import { documentosService } from '@/lib/services/documentos';
-import { db } from '@/lib/db';
 import { pacientes } from '@/drizzle/core';
 import { sucursales } from '@/drizzle/tenant';
-import { eq } from 'drizzle-orm';
+import { db } from '@/lib/db';
 import { safeError } from '@/lib/logger';
+import { getPortalSession } from '@/lib/portal-auth';
+import { documentosService } from '@/lib/services/documentos';
 
+/**
+ *
+ * @param request
+ */
 export async function POST(request: NextRequest) {
   try {
     const portalSession = await getPortalSession();
@@ -54,7 +58,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+/**
+ *
+ * @param _request
+ */
+export async function GET(_request: NextRequest) {
   try {
     const portalSession = await getPortalSession();
     if (!portalSession?.pacienteId) {

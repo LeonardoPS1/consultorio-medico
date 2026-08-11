@@ -33,6 +33,7 @@ function getEnvOrThrow(): { apiKey: string; apiSecret: string } {
 /**
  * Genera el nombre de sala a partir del turno ID.
  * Formato: `consultorio_{turnoId}`
+ * @param turnoId
  */
 export function getRoomName(turnoId: string): string {
   return `consultorio_${turnoId}`;
@@ -42,6 +43,8 @@ export function getRoomName(turnoId: string): string {
  * Genera un token JWT para el médico (permisos completos).
  * - Puede publicar/subscribir audio/video
  * - Puede administrar la sala (kick, mute, close)
+ * @param roomName
+ * @param identity
  */
 export async function generateMedicoToken(roomName: string, identity: string): Promise<string> {
   const { apiKey, apiSecret } = getEnvOrThrow();
@@ -65,6 +68,8 @@ export async function generateMedicoToken(roomName: string, identity: string): P
  * Genera un token JWT para el paciente (permisos limitados).
  * - Puede publicar/subscribir audio/video
  * - NO puede administrar la sala
+ * @param roomName
+ * @param identity
  */
 export async function generatePacienteToken(roomName: string, identity: string): Promise<string> {
   const { apiKey, apiSecret } = getEnvOrThrow();
@@ -87,6 +92,8 @@ export async function generatePacienteToken(roomName: string, identity: string):
 /**
  * Genera la URL completa de la videollamada para el paciente.
  * El token se pasa como query param para acceso directo.
+ * @param turnoId
+ * @param token
  */
 export function getSalaLink(turnoId: string, token: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://med.aicorebots.com';

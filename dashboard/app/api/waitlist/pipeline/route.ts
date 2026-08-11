@@ -8,15 +8,14 @@
  * 1. Marca ofertas pendientes vencidas como 'expirada'
  * 2. Para cada turno con oferta vencida, busca el siguiente candidato
  * 3. Crea nueva oferta y notifica al paciente
- *
  * @returns { expiradas, nuevasOfertas, ofertas[] }
  */
 
 import { NextRequest } from 'next/server';
 import { apiHandler, success } from '@/lib/api-handler';
+import { withRateLimit } from '@/lib/rate-limit';
 import { waitlistService } from '@/lib/services/waitlist';
 import { verifyRequestSecret } from '@/lib/verify-webhook-secret';
-import { withRateLimit } from '@/lib/rate-limit';
 
 const postHandler = apiHandler(async (request: NextRequest) => {
   // Verificar webhook secret (timing-safe)

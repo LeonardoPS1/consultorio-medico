@@ -11,6 +11,7 @@ export const LIVEKIT_URL = process.env.NEXT_PUBLIC_LIVEKIT_URL || 'wss://livekit
 /**
  * Genera el nombre de sala a partir del turno ID.
  * Formato: `consultorio_{turnoId}`
+ * @param turnoId
  */
 export function getRoomName(turnoId: string): string {
   return `consultorio_${turnoId}`;
@@ -19,6 +20,8 @@ export function getRoomName(turnoId: string): string {
 /**
  * Genera la URL completa de la videollamada para el paciente.
  * El token se pasa como query param para acceso directo.
+ * @param turnoId
+ * @param token
  */
 export function getSalaLink(turnoId: string, token: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://med.aicorebots.com';
