@@ -36,6 +36,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useCanAccess } from '@/lib/features';
 import { generarHTMLReporte } from '@/lib/reportes-export-html';
 import type { OcupacionReporte } from '@/lib/services/ocupacion-franjas';
+import { labelSemanas } from '@/lib/services/ocupacion-grilla';
 import type { ReporteApiResponse, Periodo, IconMap } from './types';
 
 const TurnosChart = dynamic(() => import('@/components/charts/turnos-chart'), {
@@ -344,7 +345,10 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
     setOcupacionLoading(true);
     (async () => {
       try {
-        const res = await fetch(`/api/reportes/ocupacion?demo=${ocupacionDemo ? 'true' : 'false'}`, { cache: 'no-store' });
+        const res = await fetch(
+          `/api/reportes/ocupacion?demo=${ocupacionDemo ? 'true' : 'false'}&periodo=${periodo}`,
+          { cache: 'no-store' },
+        );
         if (!res.ok) throw new Error(`Error ${res.status}`);
         const json = await res.json();
         if (!cancelled) setOcupacionData(json);
@@ -355,7 +359,7 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
       }
     })();
     return () => { cancelled = true; };
-  }, [canVerOcupacion, ocupacionDemo, fetchKey]);
+  }, [canVerOcupacion, ocupacionDemo, fetchKey, periodo]);
 
   const reintentar = useCallback(() => setFetchKey((k) => k + 1), []);
 
@@ -527,7 +531,7 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
                     <Flame className="h-5 w-5 text-primary" /> Ocupación por día y horario
                   </h3>
                  <p className="text-xs text-muted-foreground">
-                   Demanda histórica por día y franja horaria (últimas {ocupacionData?.semanas ?? 12} semanas).
+                   Demanda histórica por día y franja horaria ({labelSemanas(ocupacionData?.semanas ?? 12)}).
                  </p>
                </div>
                <div className="flex items-center gap-2">

@@ -28,8 +28,12 @@ export const GET = apiHandler(async (request: NextRequest) => {
 
   const searchParams = request.nextUrl.searchParams;
   const forceDemo = searchParams.get('demo') !== 'false';
+  const periodo = searchParams.get('periodo') as 'semana' | 'mes' | 'año' | null;
+  const semanasMap: Record<string, number> = { semana: 1, mes: 4, año: 52 };
   const semanasRaw = Number(searchParams.get('semanas') ?? '12');
-  const semanas = Number.isFinite(semanasRaw) && semanasRaw >= 4 && semanasRaw <= 16 ? semanasRaw : 12;
+  const semanasClamped =
+    Number.isFinite(semanasRaw) && semanasRaw >= 1 && semanasRaw <= 52 ? semanasRaw : 12;
+  const semanas = periodo && semanasMap[periodo] ? semanasMap[periodo] : semanasClamped;
   const sucursalId = searchParams.get('sucursalId') ?? undefined;
   const medicoId = searchParams.get('medicoId') ?? undefined;
 

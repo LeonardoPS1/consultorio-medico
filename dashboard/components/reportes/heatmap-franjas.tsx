@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { CalendarRange, Flame } from 'lucide-react';
 import type { FranjaOcupacion, OcupacionReporte } from '@/lib/services/ocupacion-grilla';
-import { DIAS_LABEL, DIAS_ABREV, HORA_MIN, HORA_MAX } from '@/lib/services/ocupacion-grilla';
+import { DIAS_LABEL, DIAS_ABREV, HORA_MIN, HORA_MAX, labelSemanas } from '@/lib/services/ocupacion-grilla';
 import { cn } from '@/lib/utils';
 import { KPIsOcupacion } from './kpis-ocupacion';
 import { PanelDetalleFranja } from './panel-detalle-franja';
@@ -133,8 +133,7 @@ export function HeatmapFranjas({ data, loading }: HeatmapFranjasProps) {
       <KPIsOcupacion data={data} />
 
       <p className="text-xs text-muted-foreground -mb-3">
-        {data.totalTurnos.toLocaleString('es-ES')} turnos analizados en las últimas{' '}
-        {data.semanas} semanas
+        {data.totalTurnos.toLocaleString('es-ES')} turnos analizados en {labelSemanas(data.semanas)}.
       </p>
 
       {/* Heatmap + panel de detalle */}
