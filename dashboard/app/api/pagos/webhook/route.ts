@@ -79,7 +79,7 @@ export const POST = apiHandler(async (request: Request) => {
   const rawBody = await request.text();
   let body: { type?: string; data?: { id?: string | number } };
   try {
-    body = JSON.parse(rawBody);
+    body = JSON.parse(rawBody) as { type?: string; data?: { id?: string | number } };
   } catch {
     return NextResponse.json({ ok: false, error: 'JSON inválido' }, { status: 400 });
   }
@@ -138,7 +138,7 @@ export const POST = apiHandler(async (request: Request) => {
 const GRACE_PERIOD_DAYS = 7;
 
 // ─── Manejar notificación de pago ────────────────────────────
-async function handlePaymentNotification(paymentId: string) {
+async function handlePaymentNotification(paymentId: string): Promise<void> {
   const payment = await getPaymentById(paymentId);
   if (!payment) {
     safeWarn('[MP Webhook] Payment no encontrado:', paymentId);
@@ -172,7 +172,7 @@ async function handlePaymentNotification(paymentId: string) {
   // ── Pago de suscripción (formato original) ──
   let refData: Record<string, string> = {};
   try {
-    refData = JSON.parse(externalRef);
+    refData = JSON.parse(externalRef) as Record<string, string>;
   } catch {
     refData = { raw: externalRef };
   }
@@ -271,7 +271,7 @@ async function handleTurnoPayment(
   paymentId: string,
   status: string | undefined,
   merchantOrderId: string | number | undefined,
-) {
+): Promise<void> {
   const now = new Date();
 
   // Buscar el pago en portal_pagos
@@ -330,7 +330,7 @@ async function handlePaquetePayment(
   suscripcionId: string,
   paymentId: string,
   status: string | undefined,
-) {
+): Promise<void> {
   const now = new Date();
 
   if (status === 'approved') {
@@ -363,7 +363,7 @@ async function handlePaquetePayment(
 }
 
 // ─── Manejar notificación de merchant_order ──────────────────
-async function handleMerchantOrderNotification(orderId: string) {
+async function handleMerchantOrderNotification(orderId: string): Promise<void> {
   const order = await getMerchantOrderById(orderId);
   if (!order) {
     safeWarn('[MP Webhook] Merchant order no encontrada:', orderId);

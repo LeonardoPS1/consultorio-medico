@@ -4,8 +4,9 @@ import { getRedis } from '@/lib/redis';
 const DEFAULT_TTL = 60;
 
 /**
- *
- * @param key
+ * Lee un valor del caché Redis.
+ * @param {string} key - Clave del caché.
+ * @returns {Promise<T | null>} Valor parseado o null si no existe.
  */
 export async function cacheGet<T>(key: string): Promise<T | null> {
   try {
@@ -20,10 +21,10 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
 }
 
 /**
- *
- * @param key
- * @param data
- * @param ttlSec
+ * Guarda un valor en el caché Redis con TTL.
+ * @param {string} key - Clave del caché.
+ * @param {unknown} data - Valor a guardar.
+ * @param {number} [ttlSec] - Tiempo de vida en segundos.
  */
 export async function cacheSet(key: string, data: unknown, ttlSec = DEFAULT_TTL): Promise<void> {
   try {
@@ -37,8 +38,8 @@ export async function cacheSet(key: string, data: unknown, ttlSec = DEFAULT_TTL)
 }
 
 /**
- *
- * @param pattern
+ * Elimina claves del caché que coincidan con el patrón glob.
+ * @param {string} pattern - Patrón glob de claves a eliminar.
  */
 export async function cacheDel(pattern: string): Promise<void> {
   try {

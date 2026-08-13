@@ -6,7 +6,10 @@ import * as React from 'react';
 import { playSelect } from '@/lib/sound';
 import { cn } from '@/lib/utils';
 
-const Select = ({ onOpenChange, ...props }: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>) => (
+const Select = ({
+  onOpenChange,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>): React.JSX.Element => (
   <SelectPrimitive.Root
     onOpenChange={(open) => {
       if (open) playSelect();

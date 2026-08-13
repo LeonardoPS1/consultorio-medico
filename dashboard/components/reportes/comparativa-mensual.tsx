@@ -2,6 +2,7 @@
 
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { motion } from 'motion/react';
+import type { JSX } from 'react';
 import {
   BarChart,
   Bar,
@@ -44,13 +45,17 @@ const periodoAnteriorLabel: Record<Periodo, string> = {
   año: 'Año anterior',
 };
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>): JSX.Element | null => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-foreground text-background text-xs rounded-lg px-3 py-2 shadow-card border border-border/50">
       <p className="font-semibold mb-1">{label}</p>
-      {payload.map((entry, idx) => (
-        <p key={idx} className="flex items-center gap-1.5">
+      {payload.map((entry) => (
+        <p key={entry.name} className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: entry.color }} />
           {entry.name}: {entry.value}
         </p>
@@ -60,12 +65,13 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 };
 
 /**
- *
- * @param root0
- * @param root0.data
- * @param root0.periodo
+ * Comparación de turnos, intenciones de mensajes y KPIs entre el período actual y el anterior.
+ * @param {Props} root0 - Props del componente.
+ * @param {ComparativaData} root0.data - Datos comparativos entre períodos.
+ * @param {Periodo} root0.periodo - Período seleccionado (semana, mes o año).
+ * @returns {JSX.Element} El panel comparativo con KPIs, gráficos y tablas.
  */
-export default function ComparativaMensual({ data, periodo }: Props) {
+export default function ComparativaMensual({ data, periodo }: Props): JSX.Element {
   const pALabel = periodoAnteriorLabel[periodo];
 
   return (
@@ -161,8 +167,8 @@ export default function ComparativaMensual({ data, periodo }: Props) {
                 <Legend
                   content={({ payload }: DefaultLegendContentProps) => (
                     <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground pt-2">
-                      {payload?.map((entry, idx) => (
-                        <span key={idx} className="flex items-center gap-1.5">
+                      {payload?.map((entry) => (
+                        <span key={String(entry.value)} className="flex items-center gap-1.5">
                           <span
                             className="h-2 w-2 rounded-sm"
                             style={{ backgroundColor: entry.color }}

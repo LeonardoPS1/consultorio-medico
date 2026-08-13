@@ -3,6 +3,7 @@
 import { Lightbulb, TrendingUp, CalendarPlus, Eye } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { useMemo } from 'react';
+import type { JSX } from 'react';
 import { generarRecomendaciones } from '@/lib/services/ocupacion-grilla';
 import type { OcupacionReporte } from '@/lib/services/ocupacion-grilla';
 import { cn } from '@/lib/utils';
@@ -30,11 +31,12 @@ const iconColorMap = {
 };
 
 /**
- *
- * @param root0
- * @param root0.data
+ * Recomendaciones de gestión de cupos según la ocupación de las franjas.
+ * @param {RecomendacionesOcupacionProps} root0 - Props del componente.
+ * @param {OcupacionReporte} root0.data - Reporte de ocupación por franja horaria.
+ * @returns {JSX.Element | null} La lista de recomendaciones o null si no hay ninguna.
  */
-export function RecomendacionesOcupacion({ data }: RecomendacionesOcupacionProps) {
+export function RecomendacionesOcupacion({ data }: RecomendacionesOcupacionProps): JSX.Element | null {
   const reduceMotion = useReducedMotion();
 
   const recs = useMemo(() => generarRecomendaciones(data), [data]);
@@ -53,7 +55,7 @@ export function RecomendacionesOcupacion({ data }: RecomendacionesOcupacionProps
           const Icon = iconMap[rec.tipo];
           return (
             <motion.div
-              key={idx}
+              key={rec.mensaje}
               initial={reduceMotion ? false : { opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.18, delay: reduceMotion ? 0 : idx * 0.05 }}

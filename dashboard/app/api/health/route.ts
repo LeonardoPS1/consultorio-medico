@@ -5,9 +5,10 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 /**
- *
+ * Health check básico del servicio.
+ * @returns {Promise<NextResponse>} Estado de salud del servicio.
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   const [pg, redis] = await Promise.all([checkPostgres(), checkRedis()]);
   const checks = { postgres: pg, redis };
   const overall = summarizeHealth(checks);

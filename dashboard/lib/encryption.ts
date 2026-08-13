@@ -15,6 +15,7 @@ const ALGORITHM = 'aes-256-gcm';
  * En producción, ENCRYPTION_KEY es OBLIGATORIO. Sin él, las credenciales
  * almacenadas no pueden desencriptarse.
  * En desarrollo, si no está configurado, usa un fallback local.
+ * @returns {Buffer} Clave de encriptación derivada (sha256 de la secret).
  */
 function getEncryptionKey(): Buffer {
   const secret = process.env.ENCRYPTION_KEY;
@@ -36,7 +37,8 @@ function getEncryptionKey(): Buffer {
 /**
  * Encripta un texto usando AES-256-GCM.
  * Retorna: `base64(iv):base64(tag):base64(ciphertext)`
- * @param text
+ * @param {string} text - Texto en claro a encriptar.
+ * @returns {string} Texto encriptado en formato iv:tag:ciphertext.
  */
 export function encrypt(text: string): string {
   const key = getEncryptionKey();
@@ -53,7 +55,8 @@ export function encrypt(text: string): string {
 /**
  * Desencripta un texto que fue encriptado con encrypt().
  * Formato esperado: `base64(iv):base64(tag):base64(ciphertext)`
- * @param encryptedText
+ * @param {string} encryptedText - Texto encriptado.
+ * @returns {string} Texto en claro (o el original si no estaba encriptado).
  */
 export function decrypt(encryptedText: string): string {
   try {
@@ -82,7 +85,8 @@ export function decrypt(encryptedText: string): string {
  * Enmascara un valor para mostrarlo en la UI.
  * Muestra solo los últimos 4 caracteres.
  * Ej: "AC****************************f3a2"
- * @param value
+ * @param {string} value - Valor a enmascarar.
+ * @returns {string} Valor enmascarado.
  */
 export function maskValue(value: string): string {
   if (value.length <= 8) {

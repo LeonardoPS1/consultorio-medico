@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, ReferenceLine,
@@ -34,11 +35,12 @@ interface AverageBarChartProps {
 }
 
 /**
- *
- * @param root0
- * @param root0.data
+ * Gráfico de promedios de métricas Web Vitals.
+ * @param {AverageBarChartProps} root0 - Props del componente.
+ * @param {Array<{ name: string; value: number; fill: string }>} root0.data - Métricas con su promedio y color.
+ * @returns {JSX.Element} Gráfico de barras con promedios.
  */
-export function WebVitalsAverageBarChart({ data }: AverageBarChartProps) {
+export function WebVitalsAverageBarChart({ data }: AverageBarChartProps): JSX.Element {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
@@ -55,8 +57,8 @@ export function WebVitalsAverageBarChart({ data }: AverageBarChartProps) {
           labelFormatter={(label: string) => METRIC_LABELS[label] || label}
         />
         <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-          {data.map((entry, idx) => (
-            <Cell key={idx} fill={entry.fill} />
+          {data.map((entry) => (
+            <Cell key={entry.name} fill={entry.fill} />
           ))}
         </Bar>
         {data.map((entry) => {

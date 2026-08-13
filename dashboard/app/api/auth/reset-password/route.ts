@@ -9,10 +9,11 @@ import { resetPasswordSchema } from '@/lib/validations';
 // POST /api/auth/reset-password
 // Valida el token (comparando contra SHA-256 almacenado) y actualiza la contraseña
 /**
- *
- * @param request
+ * Valida el token de recuperación y actualiza la contraseña.
+ * @param {Request} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} Confirmación de actualización o un error.
  */
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     const parsed = resetPasswordSchema.safeParse(await request.json());
     if (!parsed.success) {
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
       })
       .where(eq(usuarios.id, user.id));
 
-    console.log(`[ResetPassword] Contraseña actualizada para ${user.email}`);
+    console.warn(`[ResetPassword] Contraseña actualizada para ${user.email}`);
 
     return NextResponse.json({
       ok: true,

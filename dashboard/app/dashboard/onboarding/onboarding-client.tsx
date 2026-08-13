@@ -317,7 +317,7 @@ function SuccessScreen({
 /* eslint-disable react/prop-types */
 // eslint-disable-next-line react/prop-types
 function AiTipCard({
-  stepId,
+  stepId: _stepId,
   stepTitle,
   tipState,
   onRetry,

@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import { Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line, ComposedChart, Legend } from 'recharts';
 import type { TooltipProps } from 'recharts';
 import type { TiempoEsperaMes } from '@/app/dashboard/compliance/types';
@@ -8,9 +9,13 @@ interface Props {
   data: TiempoEsperaMes[];
 }
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>): JSX.Element | null => {
   if (!active || !payload?.length) return null;
-  const entry = payload[0]?.payload;
+  const entry = payload[0]?.payload as TiempoEsperaMes;
   return (
     <div className="bg-foreground text-background text-xs rounded-lg px-3 py-2 shadow-card border border-border/50">
       <p className="font-semibold mb-1">{label}</p>
@@ -35,11 +40,12 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 };
 
 /**
- *
- * @param root0
- * @param root0.data
+ * Gráfico de evolución de tiempos de espera y cumplimiento.
+ * @param {Props} root0 - Props del componente.
+ * @param {TiempoEsperaMes[]} root0.data - Series mensuales de tiempos de espera.
+ * @returns {JSX.Element} Gráfico combinado de barras y línea.
  */
-export default function ComplianceTiempoChart({ data }: Props) {
+export default function ComplianceTiempoChart({ data }: Props): JSX.Element {
   return (
     <div className="relative">
       <ResponsiveContainer width="100%" height={280}>

@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import type { TooltipProps } from 'recharts';
 import type { CumplimientoMedico } from '@/app/dashboard/compliance/types';
@@ -8,9 +9,13 @@ interface Props {
   data: CumplimientoMedico[];
 }
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>): JSX.Element | null => {
   if (!active || !payload?.length) return null;
-  const entry = payload[0]?.payload;
+  const entry = payload[0]?.payload as CumplimientoMedico;
   return (
     <div className="bg-foreground text-background text-xs rounded-lg px-3 py-2 shadow-card border border-border/50">
       <p className="font-semibold mb-1">{label}</p>
@@ -32,11 +37,12 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16'];
 
 /**
- *
- * @param root0
- * @param root0.data
+ * Gráfico de cumplimiento de plazos por médico.
+ * @param {Props} root0 - Props del componente.
+ * @param {CumplimientoMedico[]} root0.data - Datos de cumplimiento por médico.
+ * @returns {JSX.Element} Gráfico de barras horizontales de cumplimiento.
  */
-export default function ComplianceMedicosChart({ data }: Props) {
+export default function ComplianceMedicosChart({ data }: Props): JSX.Element {
   const sorted = [...data].sort((a, b) => b.turnosAtendidos - a.turnosAtendidos);
 
   return (
@@ -77,8 +83,8 @@ export default function ComplianceMedicosChart({ data }: Props) {
             animationDuration={300}
             animationEasing="ease-out"
           >
-            {sorted.map((_, index) => (
-              <Cell key={index} fill={COLORS[index % COLORS.length]} />
+            {sorted.map((item, index) => (
+              <Cell key={item.medicoId} fill={COLORS[index % COLORS.length]} />
             ))}
           </Bar>
         </BarChart>

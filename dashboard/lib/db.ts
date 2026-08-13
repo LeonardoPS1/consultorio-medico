@@ -11,7 +11,7 @@ import * as schema from '@/drizzle/schema';
 let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 let _migrationDb: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
-function initDb() {
+function initDb(): void {
   if (_db) return;
 
   const connectionString = process.env.DATABASE_URL;
@@ -53,30 +53,38 @@ function initDb() {
 }
 
 /**
- *
+ * Devuelve el cliente de base de datos para queries.
+ * @returns {ReturnType<typeof drizzle<typeof schema>>} Cliente drizzle de queries.
  */
-export function getDb() {
+export function getDb(): ReturnType<typeof drizzle<typeof schema>> {
   initDb();
   return _db!;
 }
 
 /**
- *
+ * Devuelve el cliente de base de datos para migraciones (conexión directa).
+ * @returns {ReturnType<typeof drizzle<typeof schema>>} Cliente drizzle de migraciones.
  */
-export function getMigrationDb() {
+export function getMigrationDb(): ReturnType<typeof drizzle<typeof schema>> {
   initDb();
   return _migrationDb!;
 }
 
 // Proxy lazy: mantiene compatibilidad con import { db } desde otros módulos
 export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
-  get(_, prop) {
+  get(
+    _,
+    prop,
+  ): ReturnType<typeof drizzle<typeof schema>>[keyof ReturnType<typeof drizzle<typeof schema>>] {
     return getDb()[prop as keyof ReturnType<typeof drizzle<typeof schema>>];
   },
 });
 
 export const migrationDb = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
-  get(_, prop) {
+  get(
+    _,
+    prop,
+  ): ReturnType<typeof drizzle<typeof schema>>[keyof ReturnType<typeof drizzle<typeof schema>>] {
     return getMigrationDb()[prop as keyof ReturnType<typeof drizzle<typeof schema>>];
   },
 });

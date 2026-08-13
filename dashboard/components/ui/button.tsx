@@ -42,7 +42,7 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, onClick, ...props }, ref) => {
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
       playClick();
       onClick?.(e);
     };

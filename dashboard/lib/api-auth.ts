@@ -11,7 +11,10 @@ import { auth } from '@/lib/auth';
 import { getImpersonationSession } from '@/lib/auth-impersonation';
 import { db } from '@/lib/db';
 
-/** Obtiene la sesión y lanza 401 si no está autenticado. Compatible con apiHandler. */
+/**
+ * Obtiene la sesión y lanza 401 si no está autenticado. Compatible con apiHandler.
+ * @returns {Promise<Session & { user: NonNullable<Session['user']> & { id: string } }>} Sesión autenticada.
+ */
 export async function requireAuth(): Promise<
   Session & { user: NonNullable<Session['user']> & { id: string } }
 > {
@@ -45,9 +48,9 @@ export async function requireAuth(): Promise<
 
 /**
  * Verifica que el médico tenga acceso al paciente (IDOR check). Lanza 403 si no.
- * @param pacienteId
- * @param medicoId
- * @param rol
+ * @param {string} pacienteId - ID del paciente a verificar.
+ * @param {string} [medicoId] - ID del médico con sesión activa.
+ * @param {string} [rol] - Rol del usuario (admin no lo requiere).
  */
 export async function verifyPacienteAccess(
   pacienteId: string,
@@ -74,8 +77,11 @@ export async function verifyPacienteAccess(
   }
 }
 
-/** Helper rápido: retorna session y lanza 401 si no auth. Para rutas sin apiHandler. */
-export async function requireSession() {
+/**
+ * Helper rápido: retorna session y lanza 401 si no auth. Para rutas sin apiHandler.
+ * @returns {Promise<Session | null>} Sesión activa o null si no hay auth.
+ */
+export async function requireSession(): Promise<Session | null> {
   const session = await auth();
   if (!session?.user?.id) {
     return null;

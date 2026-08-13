@@ -3,15 +3,16 @@ import { auth } from '@/lib/auth';
 import { exportarFhir, verificarConsentimientoExportacion } from '@/lib/services/fhir-export';
 
 /**
- *
- * @param _request
- * @param root0
- * @param root0.params
+ * Exporta el historial de un paciente en formato FHIR.
+ * @param {NextRequest} _request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ pacienteId: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} El bundle FHIR del paciente o un error.
  */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ pacienteId: string }> },
-) {
+): Promise<NextResponse> {
   try {
     const session = await auth();
     if (!session?.user?.id) {

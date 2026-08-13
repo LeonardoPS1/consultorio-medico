@@ -13,9 +13,10 @@ const CACHE_TTL = 86_400_000; // 24hs
 /**
  * GET /api/comunas?region_id=xxx
  * Devuelve las comunas de una región, ordenadas por nombre
- * @param request
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} La respuesta JSON con las comunas.
  */
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const regionId = request.nextUrl.searchParams.get('region_id');
 

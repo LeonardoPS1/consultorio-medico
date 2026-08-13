@@ -25,7 +25,16 @@ const createApiKeySchema = z.object({
 });
 
 // Session helper with strict user.id check
-async function getSession() {
+async function getSession(): Promise<{
+  user: {
+    id: string;
+    role: string;
+    plan: string;
+    name: string;
+    email: string;
+    tenantId?: string;
+  };
+} | null> {
   const session = await auth();
   if (!session?.user?.id) return null;
   return session as {
@@ -43,9 +52,10 @@ async function getSession() {
 // ─── GET: Listar API keys ────────────────────────────────────
 
 /**
- *
+ * Lista las API keys del tenant actual.
+ * @returns {Promise<NextResponse>} La respuesta JSON con las API keys.
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -60,10 +70,11 @@ export async function GET() {
 // ─── POST: Crear API key ─────────────────────────────────────
 
 /**
- *
- * @param request
+ * Crea una nueva API key para el tenant actual.
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} La respuesta JSON con la key creada.
  */
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -71,7 +82,7 @@ export async function POST(request: NextRequest) {
 
   let body: Record<string, unknown>;
   try {
-    body = await request.json();
+    body = (await request.json()) as Record<string, unknown>;
   } catch {
     return NextResponse.json({ error: 'Body inválido' }, { status: 400 });
   }
@@ -111,9 +122,10 @@ export async function POST(request: NextRequest) {
  * Elimina definitivamente una API key del tenant.
  * Reemplaza el soft-revoke (activa=false) por borrado físico,
  * para que las keys revocadas no queden para siempre en la lista.
- * @param request
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} Confirmación de eliminación o un error.
  */
-export async function DELETE(request: NextRequest) {
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });

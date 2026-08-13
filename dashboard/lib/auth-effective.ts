@@ -23,6 +23,7 @@ import { getImpersonationSession } from '@/lib/auth-impersonation';
  * - Si no, intenta con la sesión de impersonación (JWT de impersonación),
  *   que ya trae role/plan/tenantId del admin impersonado.
  * - Si tampoco hay, devuelve null.
+ * @returns {Promise<Session | null>} Sesión efectiva o null si no hay auth.
  */
 export async function getEffectiveSession(): Promise<Session | null> {
   const session = await auth();

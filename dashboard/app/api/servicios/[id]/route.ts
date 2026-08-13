@@ -33,7 +33,8 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
   if (body.nombre !== undefined) updateData.nombre = body.nombre;
   if (body.descripcion !== undefined) updateData.descripcion = body.descripcion;
   if (body.duracionMinutos !== undefined) updateData.duracionMinutos = body.duracionMinutos;
-  if (body.precio !== undefined) updateData.precio = body.precio;
+  if (body.precio !== undefined)
+    {updateData.precio = body.precio === null ? null : String(body.precio);}
   if (body.activo !== undefined) updateData.activo = body.activo;
 
   const [actualizado] = await db

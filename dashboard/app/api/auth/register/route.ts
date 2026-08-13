@@ -61,7 +61,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     activo: true,
   });
 
-  console.log(`[Register] Usuario creado: ${normalizedEmail} (tenant: ${tenantId})`);
+  console.warn(`[Register] Usuario creado: ${normalizedEmail} (tenant: ${tenantId})`);
 
   return created({
     success: true,

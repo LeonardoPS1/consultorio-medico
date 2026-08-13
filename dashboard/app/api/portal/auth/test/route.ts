@@ -14,9 +14,10 @@ import { setPortalSessionCookie } from '@/lib/portal-auth';
 
 /**
  *
- * @param req
+ * @param {Request} req - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} La sesión de prueba creada o un error.
  */
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<NextResponse> {
   const bypass = process.env.PORTAL_BYPASS === 'true';
   const isDev = process.env.NODE_ENV !== 'production';
   if (!isDev && !bypass) {
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
   try {
     let body: { pacienteId?: string } = {};
     try {
-      body = await req.json();
+      body = (await req.json()) as { pacienteId?: string };
     } catch {
       // body opcional
     }

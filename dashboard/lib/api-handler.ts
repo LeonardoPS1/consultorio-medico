@@ -20,13 +20,13 @@ import { withTenantScope } from '@/lib/rls';
 
 /**
  * Envuelve un handler de API unificando contexto de tenant y captura de errores.
- * @param fn - Función handler a envolver.
- * @returns Handler envuelto listo para Next.js.
+ * @param {((...args: unknown[]) => Promise<NextResponse> | NextResponse)} fn - Función handler a envolver.
+ * @returns {((...args: unknown[]) => Promise<NextResponse>)} Handler envuelto listo para Next.js.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- wrapper que acepta distintos tipos de callbacks
 export function apiHandler(fn: (...args: any[]) => Promise<NextResponse> | NextResponse) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return async (...args: any[]) => {
+  return async (...args: any[]): Promise<NextResponse> => {
     const request = args[0] as NextRequest;
     const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
     // Tenant por defecto como fallback; withTenantScope() lo corrige a la sesión activa
@@ -62,19 +62,21 @@ export function apiHandler(fn: (...args: any[]) => Promise<NextResponse> | NextR
 
 /**
  * Respuesta exitosa con datos (wrappeado en { data } para compatibilidad con clientes)
- * @param data
- * @param status
+ * @param {T} data - Datos a devolver en la respuesta.
+ * @param {number} [status] - Código de estado HTTP.
+ * @returns {NextResponse} Respuesta JSON con los datos.
  */
-export function success<T>(data: T, status = 200) {
+export function success<T>(data: T, status = 200): NextResponse {
   return NextResponse.json({ data }, { status });
 }
 
 /**
  * Respuesta exitosa sin wrapper data (para respuestas planas como health)
- * @param body
- * @param status
+ * @param {T} body - Cuerpo de la respuesta.
+ * @param {number} [status] - Código de estado HTTP.
+ * @returns {NextResponse} Respuesta JSON con el cuerpo.
  */
-export function ok<T>(body: T, status = 200) {
+export function ok<T>(body: T, status = 200): NextResponse {
   return NextResponse.json(body, { status });
 }
 
@@ -82,9 +84,9 @@ export function ok<T>(body: T, status = 200) {
 export class HttpError extends Error {
   status: number;
   /**
-   *
-   * @param message
-   * @param status
+   * Constructor de error HTTP.
+   * @param {string} message - Mensaje de error.
+   * @param {number} status - Código de estado HTTP.
    */
   constructor(message: string, status: number) {
     super(message);
@@ -95,8 +97,8 @@ export class HttpError extends Error {
 
 /**
  * Respuesta de error con mensaje personalizado
- * @param message
- * @param status
+ * @param {string} message - Mensaje de error.
+ * @param {number} [status] - Código de estado HTTP.
  */
 export function fail(message: string, status = 400): never {
   throw new HttpError(message, status);
@@ -104,15 +106,16 @@ export function fail(message: string, status = 400): never {
 
 /**
  * Respuesta 201 Created (wrappeado en { data } para compatibilidad con clientes)
- * @param data
+ * @param {T} data - Datos del recurso creado.
+ * @returns {NextResponse} Respuesta JSON 201 con los datos.
  */
-export function created<T>(data: T) {
+export function created<T>(data: T): NextResponse {
   return NextResponse.json({ data }, { status: 201 });
 }
 
 /**
  * Respuesta 404 Not Found
- * @param message
+ * @param {string} [message] - Mensaje de error.
  */
 export function notFound(message = 'Recurso no encontrado'): never {
   throw new HttpError(message, 404);
@@ -120,7 +123,7 @@ export function notFound(message = 'Recurso no encontrado'): never {
 
 /**
  * Respuesta 409 Conflict
- * @param message
+ * @param {string} message - Mensaje de error.
  */
 export function conflict(message: string): never {
   throw new HttpError(message, 409);

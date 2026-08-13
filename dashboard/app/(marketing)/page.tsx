@@ -50,9 +50,10 @@ const jsonLd: Record<string, unknown> = {
 };
 
 /**
- *
+ * Página principal de la landing de AicoreMed.
+ * @returns {React.ReactElement} La sección de la landing con el contenido de marketing.
  */
-export default function LandingPage() {
+export default function LandingPage(): React.ReactElement {
   return (
     <>
       <script

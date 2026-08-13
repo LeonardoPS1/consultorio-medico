@@ -6,14 +6,15 @@ import styles from './calculadora.module.css';
 
 const CLP_FMT = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
 
-function clp(n: number) {
+function clp(n: number): string {
   return CLP_FMT.format(Math.round(n));
 }
 
 /**
- *
+ * Calculadora interactiva de ausentismo para la landing.
+ * @returns {React.ReactElement} La interfaz de la calculadora con sus resultados.
  */
-export default function CalculadoraAusentismo() {
+export default function CalculadoraAusentismo(): React.ReactElement {
   const [pacientes, setPacientes] = useState(180);
   const [tasa, setTasa] = useState(22);
   const [valor, setValor] = useState(25000);
@@ -26,7 +27,7 @@ export default function CalculadoraAusentismo() {
   const recuperaMes = perdidaMes * 0.85;
   const recuperaAnio = perdidaAnio * 0.85;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
     setShowResult(true);
     setTimeout(() => {

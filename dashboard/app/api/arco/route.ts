@@ -63,7 +63,12 @@ export const GET = apiHandler(async (request: NextRequest) => {
 export const POST = apiHandler(async (request: NextRequest) => {
   await requireAuth();
 
-  const body = await request.json();
+  const body = (await request.json()) as {
+    pacienteId: string;
+    tipo: string;
+    accion: string;
+    motivo?: string;
+  };
   const { pacienteId, tipo, accion, motivo } = body;
 
   if (!pacienteId || !tipo || !accion) {

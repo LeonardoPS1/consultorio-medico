@@ -31,8 +31,9 @@ function getCookieName(): string {
 }
 
 /**
- *
- * @param session
+ * Crea y firma un JWT de impersonación.
+ * @param {ImpersonationSession} session - Datos de la sesión de impersonación.
+ * @returns {Promise<string>} Token JWT firmado.
  */
 export async function createImpersonationToken(session: ImpersonationSession): Promise<string> {
   const secret = getSecret();
@@ -47,8 +48,9 @@ export async function createImpersonationToken(session: ImpersonationSession): P
 }
 
 /**
- *
- * @param jti
+ * Verifica si una sesión de impersonación fue revocada por su jti.
+ * @param {string} jti - Identificador único del JWT.
+ * @returns {Promise<boolean>} true si la sesión está revocada.
  */
 export async function isImpersonationSessionRevoked(jti: string): Promise<boolean> {
   try {
@@ -64,8 +66,9 @@ export async function isImpersonationSessionRevoked(jti: string): Promise<boolea
 }
 
 /**
- *
- * @param token
+ * Verifica y valida un token JWT de impersonación.
+ * @param {string} token - Token JWT a verificar.
+ * @returns {Promise<ImpersonationSession | null>} Sesión impersonada o null si es inválido.
  */
 export async function verifyImpersonationToken(token: string): Promise<ImpersonationSession | null> {
   try {
@@ -80,8 +83,9 @@ export async function verifyImpersonationToken(token: string): Promise<Impersona
 }
 
 /**
- *
- * @param session
+ * Genera el token y lo guarda en la cookie de impersonación.
+ * @param {ImpersonationSession} session - Datos de la sesión de impersonación.
+ * @returns {Promise<string>} Token JWT guardado en la cookie.
  */
 export async function setImpersonationCookie(session: ImpersonationSession): Promise<string> {
   const token = await createImpersonationToken(session);
@@ -97,7 +101,8 @@ export async function setImpersonationCookie(session: ImpersonationSession): Pro
 }
 
 /**
- *
+ * Lee y valida la cookie de impersonación activa.
+ * @returns {Promise<ImpersonationSession | null>} Sesión impersonada o null si no existe.
  */
 export async function getImpersonationSession(): Promise<ImpersonationSession | null> {
   try {
@@ -121,7 +126,7 @@ export async function getImpersonationSession(): Promise<ImpersonationSession | 
 }
 
 /**
- *
+ * Elimina la cookie de impersonación.
  */
 export async function clearImpersonationCookie(): Promise<void> {
   const cookieStore = await cookies();
@@ -129,10 +134,11 @@ export async function clearImpersonationCookie(): Promise<void> {
 }
 
 /**
- *
- * @param request
- * @param request.cookies
- * @param request.cookies.get
+ * Verifica si la request trae la cookie de impersonación.
+ * @param {{ cookies: { get: (name: string) => { value?: string } | undefined } }} request - Objeto con acceso a cookies.
+ * @param {object} request.cookies - API de lectura de cookies de la request.
+ * @param {{ (name: string): { value?: string } | undefined }} request.cookies.get - Función para obtener una cookie por nombre.
+ * @returns {boolean} true si existe la cookie de impersonación.
  */
 export function hasImpersonationCookie(request: { cookies: { get: (name: string) => { value?: string } | undefined } }): boolean {
   return !!request.cookies.get(getCookieName());

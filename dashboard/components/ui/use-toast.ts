@@ -24,7 +24,7 @@ const actionTypes = {
 
 let count = 0;
 
-function genId() {
+function genId(): string {
   count = (count + 1) % Number.MAX_SAFE_INTEGER;
   return count.toString();
 }
@@ -55,7 +55,7 @@ interface State {
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
-const addToRemoveQueue = (toastId: string) => {
+const addToRemoveQueue = (toastId: string): void => {
   if (toastTimeouts.has(toastId)) {
     return;
   }
@@ -126,7 +126,7 @@ const listeners: Array<(state: State) => void> = [];
 
 let memoryState: State = { toasts: [] };
 
-function dispatch(action: Action) {
+function dispatch(action: Action): void {
   memoryState = reducer(memoryState, action);
   listeners.forEach((listener) => {
     listener(memoryState);
@@ -136,18 +136,25 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, 'id'>;
 
 /**
- *
- * @param root0
+ * Muestra una notificación toast.
+ * @param {Toast} root0 - Props de la notificación (todas menos el id).
+ * @returns {{ id: string; dismiss: () => void; update: (props: ToasterToast) => void }} Identificador y acciones de la notificación.
  */
-function toast({ ...props }: Toast) {
+function toast({
+  ...props
+}: Toast): {
+  id: string;
+  dismiss: () => void;
+  update: (props: ToasterToast) => void;
+} {
   const id = genId();
 
-  const update = (props: ToasterToast) =>
+  const update = (props: ToasterToast): void =>
     dispatch({
       type: 'UPDATE_TOAST',
       toast: { ...props, id },
     });
-  const dismiss = () => dispatch({ type: 'DISMISS_TOAST', toastId: id });
+  const dismiss = (): void => dispatch({ type: 'DISMISS_TOAST', toastId: id });
 
   dispatch({
     type: 'ADD_TOAST',
@@ -180,14 +187,15 @@ function toast({ ...props }: Toast) {
 }
 
 /**
- *
+ * Hook para acceder al estado y acciones de las notificaciones toast.
+ * @returns {State & { toast: typeof toast; dismiss: (toastId?: string) => void }} Estado y acciones de los toasts.
  */
-function useToast() {
+function useToast(): State & { toast: typeof toast; dismiss: (toastId?: string) => void } {
   const [state, setState] = React.useState<State>(memoryState);
 
   React.useEffect(() => {
     listeners.push(setState);
-    return () => {
+    return (): void => {
       const index = listeners.indexOf(setState);
       if (index > -1) {
         listeners.splice(index, 1);
@@ -198,7 +206,7 @@ function useToast() {
   return {
     ...state,
     toast,
-    dismiss: (toastId?: string) => dispatch({ type: 'DISMISS_TOAST', toastId }),
+    dismiss: (toastId?: string): void => dispatch({ type: 'DISMISS_TOAST', toastId }),
   };
 }
 

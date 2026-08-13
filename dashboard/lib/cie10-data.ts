@@ -2142,8 +2142,9 @@ function getFuse(): Fuse<Cie10Entry> {
 // ─── Helper: buscar códigos ─────────────────────────────────
 
 /**
- *
- * @param termino
+ * Busca códigos CIE-10 por término (código o descripción).
+ * @param {string} termino - Término de búsqueda.
+ * @returns {Cie10Entry[]} Hasta 20 resultados coincidentes.
  */
 export function buscarCie10(termino: string): Cie10Entry[] {
   const q = termino.toLowerCase().trim();
@@ -2154,8 +2155,9 @@ export function buscarCie10(termino: string): Cie10Entry[] {
 }
 
 /**
- *
- * @param termino
+ * Busca códigos CIE-10 con búsqueda fuzzy (fuse.js).
+ * @param {string} termino - Término de búsqueda.
+ * @returns {Cie10Entry[]} Hasta 20 resultados con coincidencia fuzzy.
  */
 export function buscarCie10Fuzzy(termino: string): Cie10Entry[] {
   const q = termino.trim();

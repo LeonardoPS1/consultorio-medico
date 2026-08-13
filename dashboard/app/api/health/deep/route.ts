@@ -4,9 +4,10 @@ import { checkPostgres, checkN8n, checkOllama, checkTwilio, summarizeHealth } fr
 export const dynamic = 'force-dynamic';
 
 /**
- *
+ * Health check profundo de todos los servicios críticos.
+ * @returns {Promise<NextResponse>} Estado de salud de los servicios.
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   const [pg, n8n, ollama, twilio] = await Promise.all([
     checkPostgres(),
     checkN8n(),

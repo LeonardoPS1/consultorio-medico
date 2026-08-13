@@ -14,8 +14,9 @@ const encuestaSchema = z.object({
  * GET /api/encuestas
  *
  * Obtiene estadísticas reales de encuestas desde la DB (historial_medico).
+ * @returns {Promise<NextResponse>} La respuesta JSON con las estadísticas.
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     const stats = await getSurveyStats();
     return NextResponse.json({ data: stats });
@@ -30,11 +31,12 @@ export async function GET() {
  *
  * Registra una respuesta de encuesta de un paciente.
  * Body: { pacienteId, turnoId?, puntaje, comentario? }
- * @param request
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} Confirmación del registro o un error.
  */
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as z.infer<typeof encuestaSchema>;
     const parsed = encuestaSchema.parse(body);
 
     const ok = await storeSurveyResponse({

@@ -5,10 +5,11 @@ import { fetchExecutions } from '@/lib/services/n8n-monitor';
 export const dynamic = 'force-dynamic';
 
 /**
- *
- * @param request
+ * Obtiene las ejecuciones recientes de los workflows de n8n.
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} La respuesta JSON con las ejecuciones.
  */
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const session = await getEffectiveSession();
   if (!session?.user || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });

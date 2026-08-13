@@ -9,10 +9,11 @@ import { forgotPasswordSchema } from '@/lib/validations';
 // Genera un token de recuperación y lo devuelve (modo dev)
 // En producción se enviaría por email
 /**
- *
- * @param request
+ * Genera un token de recuperación de contraseña.
+ * @param {Request} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} Confirmación del proceso de recuperación.
  */
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     const parsed = forgotPasswordSchema.safeParse(await request.json());
     if (!parsed.success) {

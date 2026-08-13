@@ -3,10 +3,11 @@ import { getEffectiveSession } from '@/lib/auth-effective';
 import { getWorkflowErrors } from '@/lib/services/n8n-monitor';
 
 /**
- *
- * @param request
+ * Obtiene los errores de los workflows de n8n.
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} La respuesta JSON con los errores.
  */
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const session = await getEffectiveSession();
   if (!session?.user || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });

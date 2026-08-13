@@ -8,9 +8,10 @@ export const metadata: Metadata = {
 };
 
 /**
- *
+ * Página de documentación interactiva de la API pública.
+ * @returns {React.ReactElement} La documentación Scalar de la API.
  */
-export default function ApiDocsPage() {
+export default function ApiDocsPage(): React.ReactElement {
   return (
     <>
       <Script

@@ -9,10 +9,11 @@ import { changePasswordSchema } from '@/lib/validations';
 // POST /api/auth/change-password
 // Cambia la contraseña del usuario autenticado
 /**
- *
- * @param request
+ * Cambia la contraseña del usuario autenticado.
+ * @param {Request} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} Confirmación de actualización o un error.
  */
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     const session = await auth();
     if (!session?.user?.email) {

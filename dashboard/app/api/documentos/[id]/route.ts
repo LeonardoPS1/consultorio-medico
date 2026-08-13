@@ -3,12 +3,16 @@ import { auth } from '@/lib/auth';
 import { documentosService } from '@/lib/services/documentos';
 
 /**
- *
- * @param request
- * @param root0
- * @param root0.params
+ * Revisa (aprueba, rechaza o edita) un documento médico.
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} El documento revisado o un error.
  */
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -16,7 +20,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const { id } = await params;
-    const body = await request.json();
+    const body = (await request.json()) as {
+      accion: string;
+      datosEditados?: Record<string, unknown>;
+      turnoId?: string;
+      motivoRechazo?: string;
+    };
     const { accion, datosEditados, turnoId, motivoRechazo } = body;
 
     if (!accion || !['aprobar', 'rechazar', 'editar'].includes(accion)) {
@@ -38,7 +47,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const doc = await documentosService.revisar({
       notaId: id,
-      accion,
+      accion: accion as 'aprobar' | 'rechazar' | 'editar',
       datosEditados: datosEditados || undefined,
       medicoId,
       turnoId: turnoId || undefined,

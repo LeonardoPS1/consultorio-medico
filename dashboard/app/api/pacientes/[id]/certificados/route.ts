@@ -4,17 +4,21 @@ import QRCode from 'qrcode';
 import { historialMedico, pacientes, medicos } from '@/drizzle/schema';
 import { verifyPacienteAccess } from '@/lib/api-auth';
 import { auth } from '@/lib/auth';
-import { generarHashCertificado, generarHTMLCertificado } from '@/lib/certificados';
+import { generarHashCertificado, generarHTMLCertificado, type CertificadoData } from '@/lib/certificados';
 import { db } from '@/lib/db';
 
 /**
  * GET /api/pacientes/[id]/certificados
  * Lista certificados del paciente (entradas de tipo 'certificado' en historial)
- * @param _request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} _request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} El certificado en HTML o la lista de certificados.
  */
-export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   try {
     const session = await auth();
@@ -73,7 +77,9 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
       }
 
       // Data del certificado (descripcion es JSON string)
-      const data = entry.descripcion ? JSON.parse(entry.descripcion) : { diagnostico: '' };
+      const data = entry.descripcion
+        ? (JSON.parse(entry.descripcion) as CertificadoData)
+        : { diagnostico: '' };
 
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://med.aicorebots.com';
       const verificationUrl = `${baseUrl}/verificar-certificado/${entry.id}`;
@@ -125,11 +131,15 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
 /**
  * POST /api/pacientes/[id]/certificados
  * Crea un nuevo certificado médico (como entrada en historial)
- * @param request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} El certificado creado o un error.
  */
-export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   try {
     const session = await auth();
@@ -154,7 +164,14 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
       return NextResponse.json({ error: 'Debe estar autenticado como médico' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as {
+      diagnostico?: string;
+      cie10Codigo?: string | null;
+      reposoDesde?: string | null;
+      reposoHasta?: string | null;
+      reposoDias?: string | null;
+      indicaciones?: string | null;
+    };
     const { diagnostico, cie10Codigo, reposoDesde, reposoHasta, reposoDias, indicaciones } = body;
 
     if (!diagnostico?.trim()) {

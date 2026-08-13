@@ -5,9 +5,10 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 
 /**
- *
+ * Obtiene los miembros activos del equipo del consultorio.
+ * @returns {Promise<NextResponse>} La respuesta JSON con el equipo.
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     const session = await auth();
     if (!session?.user?.id) {

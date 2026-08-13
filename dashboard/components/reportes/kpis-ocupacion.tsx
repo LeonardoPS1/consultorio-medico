@@ -2,6 +2,7 @@
 
 import { Flame, CalendarDays, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
+import type { JSX } from 'react';
 import type { OcupacionReporte } from '@/lib/services/ocupacion-grilla';
 import { DIAS_ABREV } from '@/lib/services/ocupacion-grilla';
 import { cn } from '@/lib/utils';
@@ -16,7 +17,7 @@ const kpiCards = [
     label: 'Ocupación general',
     icon: TrendingUp,
     iconColor: 'text-emerald-500',
-    format: (d: OcupacionReporte) =>
+    format: (d: OcupacionReporte): string =>
       d.resumen ? `${Math.round(d.resumen.ocupacionGeneral * 100)}%` : '\u2014',
     subtitle: 'promedio de todas las franjas',
   },
@@ -25,11 +26,11 @@ const kpiCards = [
     label: 'Hora pico',
     icon: Flame,
     iconColor: 'text-rose-500',
-    format: (d: OcupacionReporte) =>
+    format: (d: OcupacionReporte): string =>
       d.resumen?.franjaPico?.ocupacion
         ? `${DIAS_ABREV[d.resumen.franjaPico.dia]} ${d.resumen.franjaPico.hora.toString().padStart(2, '0')}:00`
         : '\u2014',
-    subtitle: (d: OcupacionReporte) =>
+    subtitle: (d: OcupacionReporte): string =>
       d.resumen?.franjaPico?.ocupacion
         ? `${Math.round(d.resumen.franjaPico.ocupacion * 100)}% ocupación`
         : '',
@@ -39,11 +40,11 @@ const kpiCards = [
     label: 'Franja más disponible',
     icon: CalendarDays,
     iconColor: 'text-blue-500',
-    format: (d: OcupacionReporte) =>
+    format: (d: OcupacionReporte): string =>
       d.resumen?.franjaMasFloja?.ocupacion !== undefined
         ? `${DIAS_ABREV[d.resumen.franjaMasFloja.dia]} ${d.resumen.franjaMasFloja.hora.toString().padStart(2, '0')}:00`
         : '\u2014',
-    subtitle: (d: OcupacionReporte) =>
+    subtitle: (d: OcupacionReporte): string =>
       d.resumen?.franjaMasFloja?.ocupacion !== undefined
         ? `${Math.round(d.resumen.franjaMasFloja.ocupacion * 100)}% ocupación`
         : '',
@@ -53,13 +54,13 @@ const kpiCards = [
     label: 'Tendencia',
     icon: TrendingUp,
     iconColor: '',
-    format: (d: OcupacionReporte) => {
+    format: (d: OcupacionReporte): string => {
       const v = d.resumen?.tendenciaVsAnterior ?? 0;
       const positivo = v >= 0;
       return positivo ? `+${Math.round(v * 100)}%` : `${Math.round(v * 100)}%`;
     },
     subtitle: 'vs período anterior',
-    valueColor: (d: OcupacionReporte) => {
+    valueColor: (d: OcupacionReporte): string => {
       const v = d.resumen?.tendenciaVsAnterior ?? 0;
       return v >= 0 ? 'text-emerald-600' : 'text-rose-600';
     },
@@ -67,11 +68,12 @@ const kpiCards = [
 ];
 
 /**
- *
- * @param root0
- * @param root0.data
+ * KPIs resumen de ocupación por franja horaria.
+ * @param {KPIsOcupacionProps} root0 - Props del componente.
+ * @param {OcupacionReporte} root0.data - Reporte de ocupación con resumen de franjas.
+ * @returns {JSX.Element} Las tarjetas de KPIs de ocupación.
  */
-export function KPIsOcupacion({ data }: KPIsOcupacionProps) {
+export function KPIsOcupacion({ data }: KPIsOcupacionProps): JSX.Element {
   const reduceMotion = useReducedMotion();
 
   return (

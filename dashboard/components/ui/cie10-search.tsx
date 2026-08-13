@@ -14,13 +14,14 @@ interface Props {
 }
 
 /**
- *
- * @param root0
- * @param root0.value
- * @param root0.onSelect
- * @param root0.onChange
- * @param root0.placeholder
- * @param root0.className
+ * Buscador de códigos CIE-10 con autocompletado.
+ * @param {Props} root0 - Props del componente.
+ * @param {string} root0.value - Valor inicial de la búsqueda.
+ * @param {(entry: Cie10Entry) => void} root0.onSelect - Callback al seleccionar una entrada.
+ * @param {(value: string) => void} root0.onChange - Callback al cambiar el valor de búsqueda.
+ * @param {string} root0.placeholder - Texto de ejemplo del campo de búsqueda.
+ * @param {string} root0.className - Clases CSS adicionales.
+ * @returns {React.JSX.Element} Campo de búsqueda con lista de resultados.
  */
 export function Cie10Search({
   value,
@@ -28,7 +29,7 @@ export function Cie10Search({
   onChange,
   placeholder = 'Buscar código CIE-10...',
   className,
-}: Props) {
+}: Props): React.JSX.Element {
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<Cie10Entry[]>([]);
   const [open, setOpen] = useState(false);
@@ -39,6 +40,7 @@ export function Cie10Search({
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza el estado con el prop value
     setQuery(value);
   }, [value]);
 
@@ -46,6 +48,7 @@ export function Cie10Search({
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (query.length < 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resetea resultados al vaciar la búsqueda
       setResults([]);
       setOpen(false);
       return;
@@ -58,13 +61,13 @@ export function Cie10Search({
       setHighlightedIdx(-1);
     }, 200);
 
-    return () => {
+    return (): void => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [query]);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent): void => {
       if (
         listRef.current &&
         !listRef.current.contains(e.target as Node) &&
@@ -74,10 +77,10 @@ export function Cie10Search({
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return (): void => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent): void => {
     if (!open) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -93,7 +96,7 @@ export function Cie10Search({
     }
   };
 
-  const handleSelect = (entry: Cie10Entry) => {
+  const handleSelect = (entry: Cie10Entry): void => {
     setQuery(`${entry.codigo} — ${entry.descripcion}`);
     setOpen(false);
     onSelect(entry);

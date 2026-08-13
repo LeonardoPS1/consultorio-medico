@@ -19,7 +19,7 @@ import {
   Trash2,
   RotateCcw,
 } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type JSX } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -84,9 +84,10 @@ const ICONOS: Record<string, React.ReactNode> = {
 // ============================================================
 
 /**
- *
+ * Gestión de credenciales de servicios externos (CRUD + sync con n8n).
+ * @returns {JSX.Element} El panel de credenciales con formularios por servicio.
  */
-export default function CredencialesTab() {
+export default function CredencialesTab(): JSX.Element {
   const [servicios, setServicios] = useState<ServicioConfig[]>([]);
   const [serviciosState, setServiciosState] = useState<Record<string, ServicioState>>({});
   const [loading, setLoading] = useState(true);
@@ -98,7 +99,11 @@ export default function CredencialesTab() {
     setLoading(true);
     try {
       const res = await fetch('/api/credenciales?raw=true');
-      const data = await res.json();
+      const data = (await res.json()) as {
+        servicios?: ServicioConfig[];
+        isAdmin?: boolean;
+        grouped?: Array<{ servicio: string; credenciales?: Record<string, string> }>;
+      };
 
       if (res.ok) {
         setServicios(data.servicios || []);
@@ -107,9 +112,7 @@ export default function CredencialesTab() {
         // Inicializar estado de cada servicio
         const state: Record<string, ServicioState> = {};
         for (const sv of data.servicios || []) {
-          const existingData = data.grouped?.find(
-            (g: { servicio: string }) => g.servicio === sv.servicio,
-          );
+          const existingData = data.grouped?.find((g) => g.servicio === sv.servicio);
           const valores: CredencialesState = {};
           for (const campo of sv.campos) {
             valores[campo.clave] = existingData?.credenciales?.[campo.clave] || '';
@@ -131,8 +134,9 @@ export default function CredencialesTab() {
         setServiciosState(state);
 
         // Seleccionar primer servicio como activo
-        if (data.servicios?.length > 0 && !activeServicio) {
-          setActiveServicio(data.servicios[0].servicio);
+        const serviciosDisponibles = data.servicios ?? [];
+        if (serviciosDisponibles.length > 0) {
+          setActiveServicio((prev) => (prev === '' ? serviciosDisponibles[0].servicio : prev));
         }
       }
     } catch (err) {
@@ -140,16 +144,15 @@ export default function CredencialesTab() {
     } finally {
       setLoading(false);
     }
-  }, [activeServicio]);
-
-  useEffect(() => {
-    void (async () => {
-      await loadCredenciales();
-    })();
   }, []);
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- carga inicial que setea loading y estados al montar
+    void loadCredenciales();
+  }, [loadCredenciales]);
+
   // Actualizar un valor
-  const updateValor = (servicio: string, clave: string, valor: string) => {
+  const updateValor = (servicio: string, clave: string, valor: string): void => {
     setServiciosState((prev) => {
       const s = prev[servicio];
       if (!s) return prev;
@@ -168,7 +171,7 @@ export default function CredencialesTab() {
   };
 
   // Guardar credenciales
-  const guardar = async (servicio: string) => {
+  const guardar = async (servicio: string): Promise<void> => {
     const s = serviciosState[servicio];
     if (!s) return;
 
@@ -188,7 +191,10 @@ export default function CredencialesTab() {
         }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as {
+        n8nSync?: { n8nId?: string; success?: boolean; error?: string };
+        error?: string;
+      };
 
       if (res.ok) {
         setServiciosState((prev) => ({
@@ -232,7 +238,7 @@ export default function CredencialesTab() {
   };
 
   // Probar conexión
-  const probar = async (servicio: string) => {
+  const probar = async (servicio: string): Promise<void> => {
     const s = serviciosState[servicio];
     if (!s) return;
 
@@ -256,7 +262,7 @@ export default function CredencialesTab() {
         }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as { success?: boolean; message?: string };
 
       setServiciosState((prev) => ({
         ...prev,
@@ -281,7 +287,7 @@ export default function CredencialesTab() {
   };
 
   // Eliminar credenciales de un servicio (BORRA de DB)
-  const eliminar = async (servicio: string) => {
+  const eliminar = async (servicio: string): Promise<void> => {
     const s = serviciosState[servicio];
     if (!s) return;
 
@@ -319,7 +325,7 @@ export default function CredencialesTab() {
           },
         }));
       } else {
-        const data = await res.json();
+        const data = (await res.json()) as { error?: string };
         setServiciosState((prev) => ({
           ...prev,
           [servicio]: {
@@ -344,7 +350,7 @@ export default function CredencialesTab() {
   };
 
   // Limpiar campos localmente (no borra de DB hasta que se guarde)
-  const limpiarCampos = (servicio: string) => {
+  const limpiarCampos = (servicio: string): void => {
     const valoresVacios: CredencialesState = {};
     for (const campo of servicios.find((sv) => sv.servicio === servicio)?.campos || []) {
       valoresVacios[campo.clave] = '';
@@ -487,7 +493,7 @@ function ServicioForm({
   onEliminar: () => void;
   onLimpiarCampos: () => void;
   onTogglePasswords: () => void;
-}) {
+}): JSX.Element {
   const mensajeColors: Record<string, string> = {
     success: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400',
     error: 'text-red-600 bg-red-50 dark:bg-red-950/30 dark:text-red-400',

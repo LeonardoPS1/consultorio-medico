@@ -52,17 +52,17 @@ export type EntidadAudit =
 
 /**
  * Registra un evento de auditoría
- * @param entry
- * @param entry.tenantId
- * @param entry.usuarioId
- * @param entry.usuarioEmail
- * @param entry.usuarioNombre
- * @param entry.accion
- * @param entry.entidad
- * @param entry.entidadId
- * @param entry.detalle
- * @param entry.ip
- * @param entry.userAgent
+ * @param {object} entry - Datos del evento a registrar.
+ * @param {string} [entry.tenantId] - ID del tenant al que pertenece el evento.
+ * @param {string} [entry.usuarioId] - ID del usuario que ejecutó la acción.
+ * @param {string} [entry.usuarioEmail] - Email del usuario.
+ * @param {string} [entry.usuarioNombre] - Nombre del usuario.
+ * @param {AccionAudit} entry.accion - Acción realizada.
+ * @param {EntidadAudit} entry.entidad - Entidad afectada.
+ * @param {string} [entry.entidadId] - ID de la entidad afectada.
+ * @param {string} [entry.detalle] - Detalle libre del evento.
+ * @param {string} [entry.ip] - Dirección IP del usuario.
+ * @param {string} [entry.userAgent] - User agent del navegador.
  */
 export async function logAudit(entry: {
   tenantId?: string;
@@ -104,7 +104,7 @@ export async function logAudit(entry: {
     let logs: AuditEntry[] = [];
     try {
       const raw = fs.readFileSync(AUDIT_FILE, 'utf-8');
-      logs = JSON.parse(raw);
+      logs = JSON.parse(raw) as AuditEntry[];
     } catch {
       logs = [];
     }
@@ -137,9 +137,10 @@ export async function logAudit(entry: {
 /**
  * Limpia logs de auditoría anteriores a una fecha o elimina todos.
  * Solo ejecuta en PostgreSQL (no afecta fallback JSON).
- * @param options
- * @param options.beforeDays
- * @param options.all
+ * @param {object} [options] - Opciones de limpieza.
+ * @param {number} [options.beforeDays] - Días de retención (default 90).
+ * @param {boolean} [options.all] - Si es true, elimina todos los logs.
+ * @returns {Promise<{ deleted: number }>} Cantidad de registros eliminados.
  */
 export async function cleanAuditLogs(options: {
   beforeDays?: number;
@@ -166,14 +167,15 @@ export async function cleanAuditLogs(options: {
 }
 
 /**
- *
- * @param options
- * @param options.limit
- * @param options.offset
- * @param options.entidad
- * @param options.accion
- * @param options.usuarioId
- * @param options.tenantId
+ * Obtiene los logs de auditoría con filtros y paginación.
+ * @param {object} [options] - Opciones de filtro y paginación.
+ * @param {number} [options.limit] - Cantidad máxima de registros (default 100).
+ * @param {number} [options.offset] - Desplazamiento para la paginación.
+ * @param {EntidadAudit} [options.entidad] - Filtra por entidad afectada.
+ * @param {AccionAudit} [options.accion] - Filtra por acción realizada.
+ * @param {string} [options.usuarioId] - Filtra por usuario.
+ * @param {string} [options.tenantId] - Filtra por tenant.
+ * @returns {Promise<{ logs: AuditEntry[]; total: number }>} Logs filtrados y total.
  */
 export async function getAuditLogs(options?: {
   limit?: number;
@@ -236,7 +238,7 @@ export async function getAuditLogs(options?: {
       return { logs: [], total: 0 };
     }
     const raw = fs.readFileSync(AUDIT_FILE, 'utf-8');
-    let logs: AuditEntry[] = JSON.parse(raw);
+    let logs: AuditEntry[] = JSON.parse(raw) as AuditEntry[];
 
     // Aplicar filtros
     if (options?.entidad) logs = logs.filter((l) => l.entidad === options.entidad);

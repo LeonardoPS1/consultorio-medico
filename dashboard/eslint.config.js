@@ -32,6 +32,7 @@ module.exports = [
     settings: {
       react: { version: 'detect' },
       'import/resolver': { typescript: {} },
+      jsdoc: { mode: 'typescript' },
     },
     rules: {
       ...nextPlugin.configs.recommended.rules,

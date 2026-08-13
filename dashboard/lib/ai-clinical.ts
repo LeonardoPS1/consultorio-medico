@@ -38,12 +38,13 @@ const MODELO = process.env.OLLAMA_MODEL || 'gemma3';
 /**
  * Extrae de forma robusta el primer array JSON de una respuesta del modelo.
  * Fallback: busca el primer `[...]` en el texto.
- * @param content
+ * @param {string} content - Contenido devuelto por el modelo.
+ * @returns {unknown[]} Array JSON extraído (vacío si no se puede parsear).
  */
 function extraerArrayJson(content: string): unknown[] {
   if (!content) return [];
   try {
-    const parsed = JSON.parse(content);
+    const parsed: unknown = JSON.parse(content);
     if (Array.isArray(parsed)) return parsed;
     if (Array.isArray((parsed as { sugerencias?: unknown[] })?.sugerencias)) {
       return (parsed as { sugerencias: unknown[] }).sugerencias;
@@ -56,7 +57,7 @@ function extraerArrayJson(content: string): unknown[] {
     const m = content.match(/\[[\s\S]*\]/);
     if (m) {
       try {
-        const parsed = JSON.parse(m[0]);
+        const parsed: unknown = JSON.parse(m[0]);
         return Array.isArray(parsed) ? parsed : [];
       } catch {
         return [];
@@ -69,7 +70,8 @@ function extraerArrayJson(content: string): unknown[] {
 /**
  * Valida y normaliza una sugerencia contra el dataset CIE-10 local.
  * Si el código existe en CIE10_DATA, usa la descripción canónica.
- * @param raw
+ * @param {unknown} raw - Sugerencia cruda devuelta por el modelo.
+ * @returns {Cie10Sugerencia | null} Sugerencia normalizada o null si es inválida.
  */
 function normalizarSugerencia(raw: unknown): Cie10Sugerencia | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -90,11 +92,11 @@ function normalizarSugerencia(raw: unknown): Cie10Sugerencia | null {
  * (sección assessment) de una nota SOAP.
  *
  * Fail-open: si Ollama falla o la respuesta no es parseable, devuelve [].
- * @param assessment Texto del diagnóstico (sección A de la nota SOAP)
- * @param contexto
- * @param contexto.motivo
- * @param contexto.subjetivo
- * @returns Sugerencias validadas contra CIE10_DATA (vacío si falla)
+ * @param {string} assessment Texto del diagnóstico (sección A de la nota SOAP)
+ * @param {object} [contexto] - Contexto adicional opcional de la consulta.
+ * @param {string} [contexto.motivo] - Motivo de la consulta.
+ * @param {string} [contexto.subjetivo] - Sección subjetiva de la nota SOAP.
+ * @returns {Promise<Cie10Sugerencia[]>} Sugerencias validadas contra CIE10_DATA (vacío si falla)
  */
 export async function sugerirCie10(
   assessment: string,
@@ -148,8 +150,8 @@ Reglas:
  *
  * Fuentes: últimas 5 notas SOAP, alergias, medicación crónica y
  * recetas vigentes. Fail-open: devuelve string vacío si falla.
- * @param datos
- * @returns Texto del resumen (o '' si falla)
+ * @param {DatosResumenLongitudinal} datos - Datos clínicos del paciente para el resumen.
+ * @returns {Promise<string>} Texto del resumen (o '' si falla)
  */
 export async function generarResumenLongitudinal(
   datos: DatosResumenLongitudinal,
@@ -212,7 +214,10 @@ Genera el resumen longitudinal (máx. 5 líneas):`;
   }
 }
 
-/** Nombre del modelo usado (para UI/tooltip). */
+/**
+ * Nombre del modelo usado (para UI/tooltip).
+ * @returns {string} Nombre del modelo de Ollama configurado.
+ */
 export function modeloIaClinica(): string {
   return MODELO;
 }

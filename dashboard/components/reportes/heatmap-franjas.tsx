@@ -1,7 +1,7 @@
 'use client';
 
 import { CalendarRange, Flame } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type JSX } from 'react';
 import type { FranjaOcupacion, OcupacionReporte } from '@/lib/services/ocupacion-grilla';
 import { DIAS_LABEL, DIAS_ABREV, HORA_MIN, HORA_MAX, labelSemanas } from '@/lib/services/ocupacion-grilla';
 import { cn } from '@/lib/utils';
@@ -57,7 +57,7 @@ const NIVELES = [
   },
 ];
 
-function nivelDe(valor: number) {
+function nivelDe(valor: number): (typeof NIVELES)[number] {
   return NIVELES.find((n) => valor > n.min && valor <= n.max) ?? NIVELES[NIVELES.length - 1];
 }
 
@@ -77,12 +77,13 @@ function franjaDe(data: OcupacionReporte, dia: number, hora: number): FranjaOcup
 }
 
 /**
- *
- * @param root0
- * @param root0.data
- * @param root0.loading
+ * Mapa de calor de ocupación por día y horario con KPIs y panel de detalle.
+ * @param {HeatmapFranjasProps} root0 - Props del componente.
+ * @param {OcupacionReporte | null} root0.data - Reporte de ocupación por franja horaria.
+ * @param {boolean} root0.loading - Si está cargando los datos.
+ * @returns {JSX.Element} El heatmap con KPIs, tendencias y recomendaciones.
  */
-export function HeatmapFranjas({ data, loading }: HeatmapFranjasProps) {
+export function HeatmapFranjas({ data, loading }: HeatmapFranjasProps): JSX.Element {
   const [seleccion, setSeleccion] = useState<{ dia: number; hora: number } | null>(null);
 
   const horas = useMemo(
@@ -104,6 +105,7 @@ export function HeatmapFranjas({ data, loading }: HeatmapFranjasProps) {
       <div className="space-y-6">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
+            // eslint-disable-next-line react/no-array-index-key -- esqueletos estáticos de carga sin identidad propia
             <div key={i} className="rounded-xl border p-4 space-y-2 animate-pulse">
               <div className="h-3 w-24 bg-muted rounded" />
               <div className="h-7 w-32 bg-muted rounded" />
@@ -114,6 +116,7 @@ export function HeatmapFranjas({ data, loading }: HeatmapFranjasProps) {
           <div className="h-4 w-48 bg-muted rounded mb-4" />
           <div className="grid grid-cols-7 gap-1.5">
             {Array.from({ length: 91 }).map((_, i) => (
+              // eslint-disable-next-line react/no-array-index-key -- esqueletos estáticos de carga sin identidad propia
               <div key={i} className="h-10 bg-muted rounded" />
             ))}
           </div>

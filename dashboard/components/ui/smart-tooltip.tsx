@@ -13,11 +13,16 @@ interface SmartTooltipProps {
 }
 
 /**
- *
- * @param root0
- * @param root0.children
+ * Proveedor de tooltips con retraso inteligente.
+ * @param {{ children: React.ReactNode }} root0 - Props del componente.
+ * @param {React.ReactNode} root0.children - Contenido a envolver.
+ * @returns {React.JSX.Element} Proveedor de tooltips.
  */
-export function SmartTooltipProvider({ children }: { children: React.ReactNode }) {
+export function SmartTooltipProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
   return (
     <TooltipProvider delayDuration={500} skipDelayDuration={300}>
       {children}
@@ -26,15 +31,22 @@ export function SmartTooltipProvider({ children }: { children: React.ReactNode }
 }
 
 /**
- *
- * @param root0
- * @param root0.content
- * @param root0.children
- * @param root0.side
- * @param root0.align
- * @param root0.className
+ * Tooltip con contenido personalizado y retraso inteligente.
+ * @param {SmartTooltipProps} root0 - Props del componente.
+ * @param {React.ReactNode} root0.content - Contenido mostrado en el tooltip.
+ * @param {React.ReactNode} root0.children - Elemento que dispara el tooltip.
+ * @param {'top' | 'bottom' | 'left' | 'right'} root0.side - Lado donde se muestra el tooltip.
+ * @param {'start' | 'center' | 'end'} root0.align - Alineación del tooltip.
+ * @param {string} root0.className - Clases CSS adicionales.
+ * @returns {React.JSX.Element} Tooltip con su disparador.
  */
-export function SmartTooltip({ content, children, side = 'top', align = 'center', className }: SmartTooltipProps) {
+export function SmartTooltip({
+  content,
+  children,
+  side = 'top',
+  align = 'center',
+  className,
+}: SmartTooltipProps): React.JSX.Element {
   return (
     <Tooltip>
       <TooltipTrigger asChild>

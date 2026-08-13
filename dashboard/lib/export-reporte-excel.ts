@@ -13,8 +13,8 @@ export interface ExcelExportInput {
 }
 
 /**
- *
- * @param input
+ * Exporta un reporte a Excel con múltiples hojas.
+ * @param {ExcelExportInput} input - Datos del reporte a exportar.
  */
 export function exportReporteExcel(input: ExcelExportInput): void {
   const { periodo, datos, intenciones, pacientesObraSocial, fecha } = input;

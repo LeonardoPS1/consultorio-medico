@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import {
   AreaChart,
   Area,
@@ -24,7 +25,11 @@ interface Props {
   data: PrediccionDia[];
 }
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>): JSX.Element | null => {
   if (!active || !payload?.length) return null;
   const real = payload.find((p) => p.dataKey === 'real');
   const estimado = payload.find((p) => p.dataKey === 'estimado');
@@ -38,11 +43,12 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 };
 
 /**
- *
- * @param root0
- * @param root0.data
+ * Predicción de demanda diaria comparando turnos reales y estimados.
+ * @param {Props} root0 - Props del componente.
+ * @param {PrediccionDia[]} root0.data - Series diarias con turnos reales y estimados.
+ * @returns {JSX.Element} El gráfico de área con la predicción de demanda.
  */
-export default function PrediccionDemanda({ data }: Props) {
+export default function PrediccionDemanda({ data }: Props): JSX.Element {
   const maxVal = Math.max(
     ...data.map((d) => Math.max(d.real ?? 0, d.estimado ?? 0, d.max ?? 0)),
     1,

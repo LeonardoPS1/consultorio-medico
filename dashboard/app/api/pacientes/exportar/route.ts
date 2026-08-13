@@ -2,14 +2,34 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { recetasService } from '@/lib/services/recetas';
 
+interface PacienteExportFila {
+  Nombre: string;
+  Teléfono: string;
+  Email: string;
+  'Obra Social': string;
+  Tags: string;
+  'Último Turno': string;
+  'Total Turnos': number;
+}
+
+interface XlsxLib {
+  utils: {
+    book_new: () => unknown;
+    json_to_sheet: (data: unknown) => Record<string, unknown>;
+    book_append_sheet: (wb: unknown, ws: Record<string, unknown>, name: string) => void;
+  };
+  write: (wb: unknown, opts: { type: 'buffer'; bookType: 'xlsx' }) => Buffer;
+}
+
 /**
  * GET /api/pacientes/exportar?formato=excel|pdf
  *
  * Exporta pacientes en formato Excel (.xlsx) o PDF (HTML imprimible).
  * Requiere autenticación.
- * @param request
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} El archivo Excel o HTML imprimible con los pacientes.
  */
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const session = await auth();
     if (!session?.user) {
@@ -23,16 +43,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const formato = searchParams.get('formato') || 'excel';
 
-    const data = await recetasService.getPacientesForExport({
+    const data = (await recetasService.getPacientesForExport({
       medicoId: isMedico ? sessionMedicoId : null,
-    });
+    })) as PacienteExportFila[];
 
     if (data.length === 0) {
       return NextResponse.json({ error: 'No hay pacientes para exportar' }, { status: 404 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const XLSX = require('xlsx');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const XLSX = require('xlsx') as XlsxLib;
 
     const fecha = new Date().toISOString().split('T')[0];
     const filename = `pacientes-${fecha}`;
@@ -41,13 +61,15 @@ export async function GET(request: NextRequest) {
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(data);
 
-      const colWidths = Object.keys(data[0] || {}).map((key: string) => ({
-        wch:
-          Math.max(
-            key.length,
-            ...data.map((r: Record<string, unknown>) => String(r[key] || '').length),
-          ) + 2,
-      }));
+      const colWidths = (Object.keys(data[0] || {}) as Array<keyof PacienteExportFila>).map(
+        (key) => ({
+          wch:
+            Math.max(
+              key.length,
+              ...data.map((r) => String(r[key] || '').length),
+            ) + 2,
+        }),
+      );
       ws['!cols'] = colWidths;
 
       XLSX.utils.book_append_sheet(wb, ws, 'Pacientes');

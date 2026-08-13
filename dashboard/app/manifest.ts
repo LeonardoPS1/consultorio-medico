@@ -1,5 +1,8 @@
 import type { MetadataRoute } from 'next';
 
+/**
+ *
+ */
 export default function manifest(): MetadataRoute.Manifest {
   const appName = process.env.NEXT_PUBLIC_TENANT_NAME || 'AiCoreMed';
   const themeColor = process.env.NEXT_PUBLIC_TENANT_PRIMARY || '#2563eb';

@@ -7,7 +7,7 @@ import { apiHandler, success, notFound, fail } from '@/lib/api-handler';
 import { db } from '@/lib/db';
 import { parseBody, updateMedicoSchema } from '@/lib/validations';
 
-async function requireMedicoAccess(medicoId: string) {
+async function requireMedicoAccess(medicoId: string): Promise<void> {
   const session = await requireAuth();
   const sessionMedicoId = session.user?.medicoId;
   const sessionRol = session.user?.role;

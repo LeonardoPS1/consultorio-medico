@@ -12,8 +12,9 @@ import { getPortalSession } from '@/lib/portal-auth';
 
 /**
  *
+ * @returns {Promise<NextResponse>} La lista de certificados del paciente.
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   const session = await getPortalSession();
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });

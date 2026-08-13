@@ -3,10 +3,11 @@ import { auth } from '@/lib/auth';
 import { documentosService } from '@/lib/services/documentos';
 
 /**
- *
- * @param request
+ * Obtiene los documentos pendientes de revisión del tenant.
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} La respuesta JSON con los documentos.
  */
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const session = await auth();
     if (!session?.user?.id) {

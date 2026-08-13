@@ -1,5 +1,6 @@
 import { eq, desc, and } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
+import type { Session } from 'next-auth';
 import { historialMedico } from '@/drizzle/schema';
 import { verifyPacienteAccess } from '@/lib/api-auth';
 import { auth } from '@/lib/auth';
@@ -7,11 +8,15 @@ import { db } from '@/lib/db';
 
 /**
  * Autenticación compartida para todas las rutas de historial
- * @param request
- * @param params
- * @param params.id
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} params - Contexto de la ruta.
+ * @param {string} params.id - ID del paciente.
+ * @returns {Promise<{ session: Session | null; error: NextResponse | null }>} Sesión y error de auth, o null.
  */
-async function requireAuthForHistorial(request: NextRequest, params: { id: string }) {
+async function requireAuthForHistorial(
+  request: NextRequest,
+  params: { id: string },
+): Promise<{ session: Session | null; error: NextResponse | null }> {
   const session = await auth();
   if (!session?.user?.id) {
     return { session: null, error: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) };
@@ -29,11 +34,15 @@ async function requireAuthForHistorial(request: NextRequest, params: { id: strin
 /**
  * GET /api/pacientes/[id]/historial
  * Lista entradas del historial médico (desde PostgreSQL)
- * @param _request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} _request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} La respuesta JSON con las entradas del historial.
  */
-export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   const { error } = await requireAuthForHistorial(_request, { id });
   if (error) return error;
@@ -55,17 +64,29 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
 /**
  * POST /api/pacientes/[id]/historial
  * Crea una nueva entrada en el historial médico
- * @param request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} La entrada creada o un error.
  */
-export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   const { error } = await requireAuthForHistorial(request, { id });
   if (error) return error;
 
   try {
-    const body = await request.json();
+    const body = (await request.json()) as {
+      titulo?: string;
+      tipo?: string;
+      descripcion?: string;
+      codigo?: string;
+      diagnosticoCodigo?: string;
+      diagnosticoDescripcion?: string;
+      visibleParaPaciente?: boolean;
+    };
 
     if (!body.titulo || !body.tipo) {
       return NextResponse.json({ error: 'titulo y tipo son obligatorios' }, { status: 400 });
@@ -75,7 +96,7 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
       .insert(historialMedico)
       .values({
         pacienteId: id,
-        tipo: body.tipo,
+        tipo: body.tipo as (typeof historialMedico.$inferInsert)['tipo'],
         titulo: body.titulo,
         descripcion: body.descripcion || null,
         diagnosticoCodigo: body.codigo || body.diagnosticoCodigo || null,
@@ -94,11 +115,15 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
 /**
  * PATCH /api/pacientes/[id]/historial?entryId=xxx
  * Actualiza una entrada del historial médico
- * @param request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} La entrada actualizada o un error.
  */
-export async function PATCH(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   const { error } = await requireAuthForHistorial(request, { id });
   if (error) return error;
@@ -111,7 +136,15 @@ export async function PATCH(request: NextRequest, { params: paramsPromise }: { p
       return NextResponse.json({ error: 'entryId es requerido' }, { status: 400 });
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as {
+      tipo?: unknown;
+      titulo?: unknown;
+      descripcion?: unknown;
+      codigo?: unknown;
+      diagnosticoCodigo?: unknown;
+      diagnosticoDescripcion?: unknown;
+      visibleParaPaciente?: unknown;
+    };
 
     // Verificar que la entrada existe y pertenece al paciente
     const [existing] = await db
@@ -156,11 +189,15 @@ export async function PATCH(request: NextRequest, { params: paramsPromise }: { p
 /**
  * DELETE /api/pacientes/[id]/historial?entryId=xxx
  * Elimina una entrada del historial médico
- * @param request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} Confirmación de eliminación o un error.
  */
-export async function DELETE(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   const { error } = await requireAuthForHistorial(request, { id });
   if (error) return error;

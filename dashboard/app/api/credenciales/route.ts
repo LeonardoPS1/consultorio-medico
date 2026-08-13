@@ -98,7 +98,11 @@ export const POST = apiHandler(async (request: NextRequest) => {
     fail('Solo administradores', 403);
   }
 
-  const body = await request.json();
+  const body = (await request.json()) as {
+    servicio?: string;
+    credenciales?: Record<string, string>;
+    n8nCredentialId?: string | null;
+  };
   const { servicio, credenciales, n8nCredentialId } = body;
 
   if (!servicio) {
@@ -209,7 +213,10 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
       fail('Solo administradores', 403);
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as {
+      servicio?: string;
+      credenciales?: Record<string, string>;
+    };
     const { servicio, credenciales } = body;
 
     if (!servicio || !credenciales) {

@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import type { Session } from 'next-auth';
 import { getAuditLogs, cleanAuditLogs } from '@/lib/audit-log';
 import type { EntidadAudit, AccionAudit } from '@/lib/audit-log';
 import { auth } from '@/lib/auth';
@@ -13,7 +14,7 @@ import { auth } from '@/lib/auth';
 // Forzar dinámico para evitar errores de build en Linux (auth() usa headers/cookies)
 export const dynamic = 'force-dynamic';
 
-async function getSessionSafe() {
+async function getSessionSafe(): Promise<Session | null> {
   try {
     return await auth();
   } catch {
@@ -22,10 +23,11 @@ async function getSessionSafe() {
 }
 
 /**
- *
- * @param request
+ * Lista los logs de auditoría con filtros opcionales.
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} La respuesta JSON con los logs de auditoría.
  */
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const session = await getSessionSafe();
   if (!session?.user || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
@@ -50,10 +52,11 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- *
- * @param request
+ * Limpia los logs de auditoría según los parámetros de antigüedad.
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} La respuesta JSON con el resultado de la limpieza.
  */
-export async function DELETE(request: NextRequest) {
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
   const session = await getSessionSafe();
   if (!session?.user || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });

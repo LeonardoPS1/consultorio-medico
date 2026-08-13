@@ -48,7 +48,7 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
   }
   const tenantId = session.user.tenantId || DEFAULT_TENANT_ID;
 
-  const body = await request.json().catch(() => null);
+  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body || typeof body !== 'object' || typeof (body as { id?: unknown }).id !== 'string') {
     fail('Falta el id de la solicitud', 400);
   }

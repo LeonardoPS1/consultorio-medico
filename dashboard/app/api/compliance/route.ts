@@ -5,10 +5,11 @@ import { getComplianceData, getDemoComplianceData } from '@/lib/services/complia
 export const dynamic = 'force-dynamic';
 
 /**
- *
- * @param request
+ * Obtiene los datos de cumplimiento normativo del dashboard.
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} La respuesta JSON con los datos de cumplimiento.
  */
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(request.url);
     const periodo = (searchParams.get('periodo') as Periodo) || 'mes';

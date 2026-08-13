@@ -8,8 +8,9 @@ import { db } from '@/lib/db';
 
 /**
  *
+ * @returns {Promise<NextResponse>} Estado del portal y pacientes de prueba.
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   const bypass = process.env.PORTAL_BYPASS === 'true';
   const isDev = process.env.NODE_ENV !== 'production';
   const bypassHabilitado = bypass || isDev;

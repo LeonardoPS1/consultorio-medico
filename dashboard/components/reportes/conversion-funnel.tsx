@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import {
   BarChart,
   Bar,
@@ -23,14 +24,19 @@ interface Props {
   data: ConversionLead[];
 }
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>): JSX.Element | null => {
   if (!active || !payload?.length) return null;
   const item = payload[0];
+  const lead = item?.payload as ConversionLead | undefined;
   return (
     <div className="bg-foreground text-background text-xs rounded-lg px-3 py-2 shadow-card border border-border/50">
       <p className="font-semibold">{label}</p>
       <p className="opacity-80">
-        {item.value} pacientes ({item.payload?.porcentaje ?? 0}%)
+        {item.value} pacientes ({lead?.porcentaje ?? 0}%)
       </p>
     </div>
   );
@@ -39,11 +45,12 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 const COLORS = ['#6366f1', '#818cf8', '#a5b4fc', '#3b82f6', '#60a5fa'];
 
 /**
- *
- * @param root0
- * @param root0.data
+ * Embudo de conversión por etapas con barras horizontales.
+ * @param {Props} root0 - Props del componente.
+ * @param {ConversionLead[]} root0.data - Etapas del embudo con cantidad y porcentaje.
+ * @returns {JSX.Element} El gráfico de barras del embudo de conversión.
  */
-export default function ConversionFunnel({ data }: Props) {
+export default function ConversionFunnel({ data }: Props): JSX.Element {
   const maxVal = Math.max(...data.map((d) => d.cantidad), 1);
 
   return (

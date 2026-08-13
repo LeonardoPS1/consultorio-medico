@@ -33,11 +33,15 @@ import { db } from '@/lib/db';
  * - Facturación
  * - Historial de consentimientos
  * - Auditoría de accesos a sus datos
- * @param _request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} _request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} La exportación JSON de los datos del paciente.
  */
-export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   try {
     const session = await auth();

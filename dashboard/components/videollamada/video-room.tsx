@@ -223,6 +223,17 @@ function formatElapsed(seconds: number): string {
  */
 /* eslint-disable react/prop-types */
 // eslint-disable-next-line react/prop-types
+/**
+ *
+ * @param root0
+ * @param root0.roomName
+ * @param root0.token
+ * @param root0.liveKitUrl
+ * @param root0.onDisconnect
+ * @param root0.role
+ * @param root0.identity
+ * @param root0.turnoId
+ */
 export function VideoRoom({
   roomName,
   token,
@@ -230,7 +241,7 @@ export function VideoRoom({
   onDisconnect,
   role = 'medico',
   identity,
-  turnoId,
+  turnoId: _turnoId,
 }: VideoRoomProps): React.ReactElement {
 /* eslint-enable react/prop-types */
   const serverUrl = useMemo(() => liveKitUrl || 'wss://livekit.aicorebots.com', [liveKitUrl]);
@@ -458,7 +469,7 @@ function VideoContent({
   onFullscreenToggle,
   identity,
   role,
-  roomName,
+  roomName: _roomName,
 }: {
   focusedIdentity: string | null;
   onParticipantClick: (evt: ParticipantClickEvent) => void;

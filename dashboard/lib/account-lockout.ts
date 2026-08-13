@@ -14,7 +14,8 @@ const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutos
 
 /**
  * Verifica si una cuenta está bloqueada.
- * @param email
+ * @param {string} email - Correo del usuario a verificar.
+ * @returns {Promise<{ locked: boolean; remainingMinutes?: number }>} Estado de bloqueo y minutos restantes si está bloqueado.
  */
 export async function isAccountLocked(
   email: string,
@@ -47,7 +48,8 @@ export async function isAccountLocked(
 /**
  * Incrementa el contador de intentos fallidos.
  * Devuelve el estado de bloqueo.
- * @param email
+ * @param {string} email - Correo del usuario con el intento fallido.
+ * @returns {Promise<{ locked: boolean; remainingMinutes?: number }>} Estado de bloqueo tras incrementar el contador.
  */
 export async function incrementFailedAttempts(
   email: string,
@@ -100,7 +102,7 @@ export async function incrementFailedAttempts(
 
 /**
  * Resetea el contador de intentos fallidos (login exitoso).
- * @param email
+ * @param {string} email - Correo del usuario a desbloquear.
  */
 export async function resetFailedAttempts(email: string): Promise<void> {
   const key = email.toLowerCase().trim();
@@ -109,7 +111,8 @@ export async function resetFailedAttempts(email: string): Promise<void> {
 
 /**
  * Devuelve los intentos restantes antes del bloqueo.
- * @param email
+ * @param {string} email - Correo del usuario a consultar.
+ * @returns {Promise<number>} Cantidad de intentos restantes.
  */
 export async function getRemainingAttempts(email: string): Promise<number> {
   const key = email.toLowerCase().trim();

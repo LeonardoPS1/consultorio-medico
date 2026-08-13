@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import {
   LineChart,
   Line,
@@ -22,9 +23,13 @@ interface Props {
   data: EvolucionData[];
 }
 
-function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>): JSX.Element | null {
   if (!active || !payload?.length) return null;
-  const item = payload[0].payload;
+  const item = payload[0].payload as EvolucionData;
   return (
     <div className="rounded-lg border bg-card p-3 shadow-md text-sm">
       <p className="font-medium mb-1">{label}</p>
@@ -37,11 +42,12 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
 }
 
 /**
- *
- * @param root0
- * @param root0.data
+ * Gráfico de evolución del promedio de encuestas.
+ * @param {Props} root0 - Props del componente.
+ * @param {EvolucionData[]} root0.data - Evolución por mes.
+ * @returns {JSX.Element} Gráfico de línea con la evolución.
  */
-export function EvolucionEncuestasChart({ data }: Props) {
+export function EvolucionEncuestasChart({ data }: Props): JSX.Element {
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">

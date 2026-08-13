@@ -18,6 +18,9 @@
   "settings": {
     "import/resolver": {
       "typescript": {}
+    },
+    "jsdoc": {
+      "mode": "typescript"
     }
   },
   "rules": {

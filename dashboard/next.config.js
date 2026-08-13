@@ -24,7 +24,7 @@ const nextConfig = withBundleAnalyzer({
   },
   outputFileTracingRoot: path.join(__dirname, '..'),
   outputFileTracingExcludes: {
-    '**/*': ['**/app/api/admin/backups/**'],
+    '**/*': ['**/app/api/admin/backups/**', './next.config.js'],
   },
   output: process.env.DISABLE_STANDALONE === 'true' ? undefined : 'standalone',
   env: {

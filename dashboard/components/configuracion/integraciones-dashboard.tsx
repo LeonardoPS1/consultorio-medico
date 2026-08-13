@@ -30,7 +30,7 @@ interface IntegracionesDashboardProps {
 interface ServicioGrouped {
   servicio: string;
   credenciales: Record<string, string>;
-  config?: { campos?: Array<{ clave: string }> };
+  config?: { campos?: Array<{ clave: string }>; n8nSync?: boolean };
 }
 
 function WorkflowItem({ name, active }: { name: string; active: boolean }) {

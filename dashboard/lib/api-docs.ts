@@ -2,7 +2,7 @@
  * OpenAPI 3.1 spec builder para API v1 pública.
  *
  * Genera automáticamente el spec desde los schemas Zod de validations.ts
- * usando @asteasolutions/zod-to-openapi. Solo expone endpoints /api/v1/*.
+ * usando \`@asteasolutions/zod-to-openapi\`. Solo expone endpoints /api/v1/*.
  * Los endpoints internos (/api/internal/*, /api/recuperacion/*, etc.) no se registran.
  */
 
@@ -382,6 +382,7 @@ let cachedSpec: Record<string, unknown> | null = null;
 /**
  * Genera (o devuelve cacheado) el spec OpenAPI 3.1.
  * Solo expone endpoints públicos /api/v1/*.
+ * @returns {Record<string, unknown>} Spec OpenAPI 3.1 generado.
  */
 export function buildOpenApiSpec(): Record<string, unknown> {
   if (cachedSpec) return cachedSpec;
@@ -412,6 +413,7 @@ export function buildOpenApiSpec(): Record<string, unknown> {
 /**
  * Verifica que el spec no contenga paths internos.
  * Útil para tests automatizados.
+ * @returns {string[]} Lista de paths públicos del spec.
  */
 export function getPublicPaths(): string[] {
   const spec = buildOpenApiSpec();

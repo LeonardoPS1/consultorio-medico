@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import {
   LineChart,
   Line,
@@ -26,9 +27,13 @@ interface Props {
   color: string;
 }
 
-function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>): JSX.Element | null {
   if (!active || !payload?.length) return null;
-  const item = payload[0].payload;
+  const item = payload[0].payload as EjecutivoTrend;
   const value = item.ingresos !== undefined ? item.ingresos : item.ocupacion;
   const formattedValue = item.ingresos !== undefined
     ? `$${value}M`
@@ -45,12 +50,12 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
   );
 }
 
-const CustomLegend = ({ payload }: DefaultLegendContentProps) => {
+const CustomLegend = ({ payload }: DefaultLegendContentProps): JSX.Element | null => {
   if (!payload?.length) return null;
   return (
     <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground pt-1">
-      {payload.map((entry, idx: number) => (
-        <span key={idx} className="flex items-center gap-1.5">
+      {payload.map((entry) => (
+        <span key={entry.dataKey?.toString() ?? String(entry.value)} className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: entry.color }} />
           {entry.value}
         </span>
@@ -60,15 +65,22 @@ const CustomLegend = ({ payload }: DefaultLegendContentProps) => {
 };
 
 /**
- *
- * @param root0
- * @param root0.data
- * @param root0.metric
- * @param root0.title
- * @param root0.yLabel
- * @param root0.color
+ * Gráfico de tendencia de ingresos u ocupación.
+ * @param {Props} root0 - Props del componente.
+ * @param {EjecutivoTrend[]} root0.data - Series de datos a graficar.
+ * @param {'ingresos' | 'ocupacion'} root0.metric - Métrica a mostrar.
+ * @param {string} root0.title - Título del gráfico.
+ * @param {string} root0.yLabel - Etiqueta del eje Y.
+ * @param {string} root0.color - Color de la línea.
+ * @returns {JSX.Element} Gráfico de línea con la tendencia.
  */
-export default function EjecutivoTrendChart({ data, metric, title, yLabel, color }: Props) {
+export default function EjecutivoTrendChart({
+  data,
+  metric,
+  title,
+  yLabel,
+  color,
+}: Props): JSX.Element {
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">

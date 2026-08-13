@@ -5,16 +5,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useEffect, useState } from 'react';
 
 /**
- *
+ * Botón flotante para llegar al inicio o al final de la página.
+ * @returns {React.JSX.Element} Contenedor con los botones de desplazamiento.
  */
-export function ScrollToTopButton() {
+export function ScrollToTopButton(): React.JSX.Element {
   const [show, setShow] = useState(false);
   const [atBottom, setAtBottom] = useState(false);
 
   useEffect(() => {
     let rafId: number | null = null;
 
-    const handleScroll = () => {
+    const handleScroll = (): void => {
       if (rafId !== null) return;
       rafId = requestAnimationFrame(() => {
         rafId = null;
@@ -28,17 +29,17 @@ export function ScrollToTopButton() {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
+    return (): void => {
       window.removeEventListener('scroll', handleScroll);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, []);
 
-  const scrollToTop = () => {
+  const scrollToTop = (): void => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (): void => {
     window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
   };
 

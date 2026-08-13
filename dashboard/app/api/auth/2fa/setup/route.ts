@@ -14,9 +14,10 @@ import {
 import { setup2faSchema } from '@/lib/validations';
 
 /**
- *
+ * Genera un secreto 2FA nuevo y sus códigos de respaldo.
+ * @returns {Promise<NextResponse>} La respuesta JSON con el secreto y el QR.
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     const session = await auth();
     if (!session?.user?.email) {
@@ -39,10 +40,11 @@ export async function GET() {
 }
 
 /**
- *
- * @param request
+ * Verifica el token TOTP y activa el 2FA para el usuario.
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} Confirmación de activación o un error.
  */
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const session = await auth();
     if (!session?.user?.email) {
@@ -85,9 +87,10 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- *
+ * Desactiva el 2FA del usuario.
+ * @returns {Promise<NextResponse>} Confirmación de desactivación o un error.
  */
-export async function DELETE() {
+export async function DELETE(): Promise<NextResponse> {
   try {
     const session = await auth();
     if (!session?.user?.email) {

@@ -23,12 +23,13 @@ export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
 
 /**
- *
- * @param root0
- * @param root0.className
- * @param root0.variant
+ * Componente de badge reutilizable.
+ * @param {BadgeProps} root0 - Props del componente.
+ * @param {string} root0.className - Clases CSS adicionales para el badge.
+ * @param {'default' | 'secondary' | 'destructive' | 'outline'} root0.variant - Variante visual del badge.
+ * @returns {React.JSX.Element} Elemento div con el estilo del badge.
  */
-function Badge({ className, variant, ...props }: BadgeProps) {
+function Badge({ className, variant, ...props }: BadgeProps): React.JSX.Element {
   return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
 }
 

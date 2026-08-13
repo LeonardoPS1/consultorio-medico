@@ -1,3 +1,7 @@
+import fs from 'fs';
+import path from 'path';
+import { Readable } from 'stream';
+import zlib from 'zlib';
 import { sql } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { getEffectiveSession } from '@/lib/auth-effective';
@@ -9,30 +13,21 @@ import { db } from '@/lib/db';
 
 const BACKUP_DIR = process.env.BACKUP_DIR || '/tmp/backups';
 
-async function ensureDir() {
-  const fs = await import('fs');
-  if (!fs.existsSync(BACKUP_DIR)) {
-    fs.mkdirSync(BACKUP_DIR, { recursive: true });
-  }
-}
-
 // ============================================================
 // GET /api/admin/backups — Listar backups
 // ============================================================
 
 /**
- *
+ * Lista los backups disponibles en el directorio.
+ * @returns {Promise<NextResponse>} La respuesta JSON con la lista de backups.
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     const session = await getEffectiveSession();
     if (!session?.user?.id || session?.user?.role !== 'admin') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const fs = await import('fs');
-    const path = await import('path');
-    await ensureDir();
     const files = fs
       .readdirSync(BACKUP_DIR)
       .filter((f) => f.endsWith('.sql.gz'))
@@ -71,20 +66,15 @@ export async function GET() {
 // ============================================================
 
 /**
- *
+ * Crea un backup comprimido de la base de datos.
+ * @returns {Promise<NextResponse>} La respuesta JSON con el backup creado.
  */
-export async function POST() {
+export async function POST(): Promise<NextResponse> {
   try {
     const session = await getEffectiveSession();
     if (!session?.user?.id || session?.user?.role !== 'admin') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
-
-    const fs = await import('fs');
-    const path = await import('path');
-    const zlib = await import('zlib');
-    const { Readable } = await import('stream');
-    await ensureDir();
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const id = `backup_${timestamp}`;

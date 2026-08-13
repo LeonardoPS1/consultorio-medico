@@ -12,7 +12,10 @@ const SheetTrigger = SheetPrimitive.Trigger;
 const SheetClose = SheetPrimitive.Close;
 const SheetPortal = SheetPrimitive.Portal;
 
-const SheetRoot = ({ onOpenChange, ...props }: React.ComponentPropsWithoutRef<typeof SheetPrimitive.Root>) => (
+const SheetRoot = ({
+  onOpenChange,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SheetPrimitive.Root>): React.JSX.Element => (
   <SheetPrimitiveRoot
     onOpenChange={(open) => {
       if (open) playModalOpen();
@@ -81,12 +84,18 @@ const SheetContent = React.forwardRef<
 ));
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 
-const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+const SheetHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>): React.JSX.Element => (
   <div className={cn('flex flex-col space-y-2 text-center sm:text-left', className)} {...props} />
 );
 SheetHeader.displayName = 'SheetHeader';
 
-const SheetFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+const SheetFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>): React.JSX.Element => (
   <div
     className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2', className)}
     {...props}

@@ -19,16 +19,17 @@ function verifyApiKey(request: NextRequest): boolean {
 }
 
 /**
- *
- * @param request
+ * Dispara el deploy de una aplicación en Dokploy.
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} El resultado del deploy.
  */
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!verifyApiKey(request)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
   try {
-    const body = await request.json();
+    const body = (await request.json()) as { applicationId?: unknown };
     const { applicationId } = body;
 
     if (!applicationId || typeof applicationId !== 'string') {

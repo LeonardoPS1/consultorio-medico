@@ -1,6 +1,7 @@
 'use client';
 
 import { Flame, Clock, AlertTriangle } from 'lucide-react';
+import type { JSX } from 'react';
 import type { OcupacionReporte } from '@/lib/services/ocupacion-grilla';
 import { DIAS_LABEL, generarRecomendaciones } from '@/lib/services/ocupacion-grilla';
 import { cn } from '@/lib/utils';
@@ -27,13 +28,14 @@ function fmtHora(h: number): string {
 }
 
 /**
- *
- * @param root0
- * @param root0.data
- * @param root0.dia
- * @param root0.hora
+ * Detalle de una franja horaria seleccionada del heatmap (turnos, ocupación, no-show).
+ * @param {PanelDetalleFranjaProps} root0 - Props del componente.
+ * @param {OcupacionReporte} root0.data - Reporte de ocupación por franja horaria.
+ * @param {number | null} root0.dia - Día seleccionado (null si no hay selección).
+ * @param {number | null} root0.hora - Hora seleccionada (null si no hay selección).
+ * @returns {JSX.Element} El panel con el detalle de la franja o un placeholder.
  */
-export function PanelDetalleFranja({ data, dia, hora }: PanelDetalleFranjaProps) {
+export function PanelDetalleFranja({ data, dia, hora }: PanelDetalleFranjaProps): JSX.Element {
   if (dia === null || hora === null) {
     return (
       <div className="rounded-xl border bg-card p-6 flex flex-col items-center justify-center text-center min-h-[200px]">
@@ -98,8 +100,8 @@ export function PanelDetalleFranja({ data, dia, hora }: PanelDetalleFranjaProps)
               <Flame className="h-3 w-3 text-rose-500" />
               Recomendación
             </p>
-            {recs.map((r, i) => (
-              <p key={i} className="text-sm">
+            {recs.map((r) => (
+              <p key={r.mensaje} className="text-sm">
                 {r.mensaje}
               </p>
             ))}

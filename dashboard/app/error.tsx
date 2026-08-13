@@ -2,6 +2,12 @@
 
 import { useEffect } from 'react';
 
+/**
+ *
+ * @param root0
+ * @param root0.error
+ * @param root0.reset
+ */
 export default function GlobalError({
   error,
   reset,

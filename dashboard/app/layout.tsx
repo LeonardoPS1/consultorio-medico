@@ -2,11 +2,11 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
-import { Toaster } from '@/components/ui/toaster';
 import { PWARegister } from '@/components/pwa-register';
-import { TenantTheme } from '@/components/tenant-theme';
 import { TenantProvider } from '@/components/tenant-provider';
+import { TenantTheme } from '@/components/tenant-theme';
 import { ScrollToTopButton } from '@/components/ui/scroll-to-top';
+import { Toaster } from '@/components/ui/toaster';
 import { WebVitals } from '@/components/web-vitals';
 import { validateN8nConfig } from '@/lib/n8n-sync';
 
@@ -64,12 +64,17 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: themeColor,
+  themeColor,
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
 };
 
+/**
+ *
+ * @param root0
+ * @param root0.children
+ */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" suppressHydrationWarning>

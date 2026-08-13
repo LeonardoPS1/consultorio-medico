@@ -179,8 +179,9 @@ const PLAN_ORDER: Record<PlanId, number> = {
 
 /**
  * Verifica si un plan tiene acceso a una funcionalidad.
- * @param plan
- * @param feature
+ * @param {PlanId | string | undefined} [plan] - Plan del usuario.
+ * @param {FeatureId} feature - Feature a verificar.
+ * @returns {boolean} true si el plan alcanza la feature.
  * @example canAccess('professional', 'turnos') → true
  * @example canAccess('starter', 'ia-assistant') → false
  */
@@ -195,7 +196,8 @@ export function canAccess(plan: PlanId | string | undefined, feature: FeatureId)
 
 /**
  * Dado un plan, devuelve la lista de features disponibles.
- * @param plan
+ * @param {PlanId} plan - Plan del usuario.
+ * @returns {FeatureId[]} Features disponibles para el plan.
  */
 export function getAvailableFeatures(plan: PlanId): FeatureId[] {
   return (Object.keys(FEATURE_PLAN) as FeatureId[]).filter((f) => canAccess(plan, f));
@@ -204,7 +206,8 @@ export function getAvailableFeatures(plan: PlanId): FeatureId[] {
 /**
  * Devuelve el nombre del plan requerido para una feature.
  * Ej: getFeatureRequiredPlan('integraciones') → 'Profesional'
- * @param feature
+ * @param {FeatureId} feature - Feature a consultar.
+ * @returns {string} Nombre del plan requerido.
  */
 export function getFeatureRequiredPlan(feature: FeatureId): string {
   const planId = FEATURE_PLAN[feature];
@@ -218,11 +221,12 @@ export function getFeatureRequiredPlan(feature: FeatureId): string {
 /**
  * Verifica si un feature está habilitado a nivel tenant.
  * Combina plan gating + tenant toggles.
- * @param plan - Plan del usuario
- * @param feature - Feature a verificar
- * @param disabledFeatures - Set de features deshabilitados a nivel tenant (opcional)
+ * @param {PlanId | string | undefined} [plan] - Plan del usuario
+ * @param {FeatureId} feature - Feature a verificar
+ * @param {Set<string>} [disabledFeatures] - Set de features deshabilitados a nivel tenant (opcional)
  *
  * Si no se pasan disabledFeatures, solo se verifica el plan.
+ * @returns {boolean} true si el feature está habilitado a nivel tenant.
  */
 export function canAccessWithToggles(
   plan: PlanId | string | undefined,
@@ -249,10 +253,11 @@ export function canAccessWithToggles(
  * 2. Plan gating: si el plan del usuario NO alcanza → denegado
  * 3. Tenant toggle: si está deshabilitado → denegado
  * 4. Por defecto → concedido
- * @param plan - Plan del usuario
- * @param feature - Feature a verificar
- * @param disabledFeatures - Set de features deshabilitados a nivel tenant
- * @param userOverrideFeatures - Set de features override para este usuario (opcional)
+ * @param {PlanId | string | undefined} [plan] - Plan del usuario
+ * @param {FeatureId} feature - Feature a verificar
+ * @param {Set<string>} [disabledFeatures] - Set de features deshabilitados a nivel tenant
+ * @param {Set<string>} [userOverrideFeatures] - Set de features override para este usuario (opcional)
+ * @returns {boolean} true si el usuario tiene acceso al feature.
  */
 export function canAccessWithUserOverrides(
   plan: PlanId | string | undefined,
@@ -278,7 +283,8 @@ export function canAccessWithUserOverrides(
  *
  * Los features que no aparecen en el record se consideran habilitados
  * (por defecto, todo lo que el plan permite está activo).
- * @param featuresEnabled
+ * @param {Record<string, boolean> | null | undefined} [featuresEnabled] - Record de features_enabled del tenant.
+ * @returns {Set<string>} Set de features deshabilitados.
  */
 export function getDisabledFeatures(
   featuresEnabled: Record<string, boolean> | null | undefined,
@@ -301,7 +307,8 @@ export function getDisabledFeatures(
 /**
  * Hook para components client. Usa la sesión de NextAuth.
  * Si no hay sesión o no tiene plan, asume 'free'.
- * @param feature
+ * @param {FeatureId} feature - Feature a verificar.
+ * @returns {boolean} true si el usuario puede acceder al feature.
  */
 export function useCanAccess(feature: FeatureId): boolean {
   const { data: session } = useSession();
@@ -311,6 +318,7 @@ export function useCanAccess(feature: FeatureId): boolean {
 
 /**
  * Devuelve el plan del usuario desde la sesión.
+ * @returns {PlanId} Plan del usuario (default 'free').
  */
 export function useUserPlan(): PlanId {
   const { data: session } = useSession();

@@ -29,7 +29,7 @@ async function verifyConversacionAccess(
   conversacionId: string,
   medicoId: string | undefined,
   rol: string | undefined,
-) {
+): Promise<void> {
   if (rol === 'admin') return;
   if (!medicoId) fail('No autorizado', 403);
 
@@ -73,7 +73,13 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
 
   const updateData: Partial<typeof conversaciones.$inferInsert> = { updatedAt: new Date() };
   if (body.estado !== undefined) updateData.estado = body.estado;
-  if (body.notas !== undefined) updateData.notas = body.notas;
+  if (body.notas !== undefined) {
+    const [existente] = await db
+      .select({ metadata: conversaciones.metadata })
+      .from(conversaciones)
+      .where(eq(conversaciones.id, id));
+    updateData.metadata = { ...((existente?.metadata as object | null) ?? {}), notas: body.notas };
+  }
   if (body.optOut !== undefined) {
     updateData.optOut = body.optOut;
     if (body.optOut) updateData.optOutAt = new Date();

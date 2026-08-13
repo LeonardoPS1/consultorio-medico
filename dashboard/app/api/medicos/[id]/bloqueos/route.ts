@@ -8,11 +8,15 @@ import { db } from '@/lib/db';
  *
  * Lista todos los bloqueos de agenda de un médico (vacaciones, feriados, etc.)
  * Query params: desde, hasta (filtro por rango de fechas)
- * @param request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} La respuesta JSON con los bloqueos.
  */
-export async function GET(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   try {
     const medicoId = id;
@@ -53,15 +57,25 @@ export async function GET(request: NextRequest, { params: paramsPromise }: { par
  *
  * Crea un nuevo bloqueo de agenda para un médico.
  * Body: { titulo, fechaInicio, fechaFin, tipo?, motivo? }
- * @param request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} El bloqueo creado o un error.
  */
-export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   try {
     const medicoId = id;
-    const body = await request.json();
+    const body = (await request.json()) as {
+      titulo?: string;
+      fechaInicio?: string;
+      fechaFin?: string;
+      tipo?: string;
+      motivo?: string | null;
+    };
     const { titulo, fechaInicio, fechaFin, tipo, motivo } = body;
 
     if (!titulo?.trim() || !fechaInicio || !fechaFin) {

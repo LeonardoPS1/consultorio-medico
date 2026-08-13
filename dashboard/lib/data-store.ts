@@ -102,8 +102,9 @@ export interface MensajeData {
 // ============================================================
 
 /**
- *
- * @param telefono
+ * Busca un paciente por teléfono exacto.
+ * @param {string} telefono - Teléfono del paciente.
+ * @returns {Promise<PacienteData | null>} Paciente encontrado o null.
  */
 export async function getPacienteByTelefono(telefono: string): Promise<PacienteData | null> {
   const result = await db.select().from(pacientes).where(eq(pacientes.telefono, telefono)).limit(1);
@@ -134,8 +135,9 @@ export async function getPacienteByTelefono(telefono: string): Promise<PacienteD
 }
 
 /**
- *
- * @param data
+ * Crea un nuevo paciente en la base de datos.
+ * @param {Omit<PacienteData, 'id' | 'createdAt' | 'updatedAt'>} data - Datos del paciente a crear.
+ * @returns {Promise<PacienteData>} Paciente creado con id y timestamps.
  */
 export async function createPaciente(
   data: Omit<PacienteData, 'id' | 'createdAt' | 'updatedAt'>,
@@ -176,14 +178,15 @@ export async function createPaciente(
 // ============================================================
 
 /**
- *
- * @param options
- * @param options.estado
- * @param options.canal
- * @param options.search
- * @param options.limit
- * @param options.offset
- * @param options.medicoId
+ * Devuelve conversaciones con filtros opcionales.
+ * @param {object} [options] - Filtros de búsqueda.
+ * @param {string} [options.estado] - Estado de la conversación.
+ * @param {string} [options.canal] - Canal de la conversación.
+ * @param {string} [options.search] - Texto a buscar en paciente o último mensaje.
+ * @param {number} [options.limit] - Límite de resultados.
+ * @param {number} [options.offset] - Desplazamiento (paginación).
+ * @param {string} [options.medicoId] - Filtrar por médico.
+ * @returns {Promise<ConversacionData[]>} Lista de conversaciones.
  */
 export async function getConversaciones(options?: {
   estado?: string;
@@ -262,8 +265,9 @@ export async function getConversaciones(options?: {
 }
 
 /**
- *
- * @param id
+ * Obtiene una conversación por su id.
+ * @param {string} id - Id de la conversación.
+ * @returns {Promise<ConversacionData | null>} Conversación encontrada o null.
  */
 export async function getConversacionById(id: string): Promise<ConversacionData | null> {
   const result = await db
@@ -305,14 +309,15 @@ export async function getConversacionById(id: string): Promise<ConversacionData 
 }
 
 /**
- *
- * @param data
- * @param data.pacienteId
- * @param data.medicoId
- * @param data.canal
- * @param data.mensajeInicial
- * @param data.rolMensajeInicial
- * @param data.intencionInicial
+ * Crea una nueva conversación.
+ * @param {object} data - Datos iniciales de la conversación.
+ * @param {string} data.pacienteId - Id del paciente.
+ * @param {string} [data.medicoId] - Id del médico asignado.
+ * @param {string} [data.canal] - Canal de la conversación.
+ * @param {string} [data.mensajeInicial] - Primer mensaje de la conversación.
+ * @param {string} [data.rolMensajeInicial] - Rol del primer mensaje.
+ * @param {string} [data.intencionInicial] - Intención detectada inicialmente.
+ * @returns {Promise<ConversacionData>} Conversación creada.
  */
 export async function createConversacion(data: {
   pacienteId: string;
@@ -358,9 +363,10 @@ export async function createConversacion(data: {
 }
 
 /**
- *
- * @param id
- * @param data
+ * Actualiza una conversación existente.
+ * @param {string} id - Id de la conversación.
+ * @param {object} data - Campos a actualizar.
+ * @returns {Promise<ConversacionData | null>} Conversación actualizada o null.
  */
 export async function updateConversacion(
   id: string,
@@ -387,8 +393,9 @@ export async function updateConversacion(
 // ============================================================
 
 /**
- *
- * @param conversacionId
+ * Devuelve los mensajes de una conversación (hasta 50).
+ * @param {string} conversacionId - Id de la conversación.
+ * @returns {Promise<MensajeData[]>} Lista de mensajes ordenados por fecha.
  */
 export async function getMensajesByConversacion(conversacionId: string): Promise<MensajeData[]> {
   const result = await db
@@ -415,19 +422,20 @@ export async function getMensajesByConversacion(conversacionId: string): Promise
 }
 
 /**
- *
- * @param data
- * @param data.conversacionId
- * @param data.rol
- * @param data.contenido
- * @param data.contenidoProcesado
- * @param data.tipo
- * @param data.intencion
- * @param data.confianzaIntencion
- * @param data.twilioSid
- * @param data.twilioStatus
- * @param data.n8nExecutionId
- * @param data.metadata
+ * Crea un nuevo mensaje y actualiza la conversación asociada.
+ * @param {object} data - Datos del mensaje.
+ * @param {string} data.conversacionId - Id de la conversación.
+ * @param {string} data.rol - Rol del remitente (paciente/medico).
+ * @param {string} data.contenido - Contenido del mensaje.
+ * @param {string} [data.contenidoProcesado] - Contenido procesado por la IA.
+ * @param {string} [data.tipo] - Tipo de mensaje (texto, plantilla, etc).
+ * @param {string} [data.intencion] - Intención detectada.
+ * @param {number} [data.confianzaIntencion] - Confianza de la intención detectada.
+ * @param {string} [data.twilioSid] - SID del mensaje en Twilio.
+ * @param {string} [data.twilioStatus] - Estado del mensaje en Twilio.
+ * @param {string} [data.n8nExecutionId] - Id de la ejecución de n8n.
+ * @param {Record<string, unknown>} [data.metadata] - Metadatos adicionales.
+ * @returns {Promise<MensajeData>} Mensaje creado.
  */
 export async function createMensaje(data: {
   conversacionId: string;
@@ -484,12 +492,13 @@ export async function createMensaje(data: {
 }
 
 /**
- *
- * @param twilioSid
- * @param updates
- * @param updates.twilioStatus
- * @param updates.costo
- * @param updates.metadata
+ * Actualiza un mensaje usando su twilioSid.
+ * @param {string} twilioSid - SID de Twilio del mensaje.
+ * @param {object} updates - Campos a actualizar.
+ * @param {string} [updates.twilioStatus] - Nuevo estado de Twilio.
+ * @param {number} [updates.costo] - Costo del mensaje.
+ * @param {Record<string, unknown>} [updates.metadata] - Metadatos adicionales.
+ * @returns {Promise<MensajeData | null>} Mensaje actualizado o null si no existe.
  */
 export async function updateMensajeByTwilioSid(
   twilioSid: string,
@@ -561,8 +570,9 @@ export interface MensajeWithPaciente extends MensajeData {
 }
 
 /**
- *
- * @param options
+ * Devuelve mensajes paginados con filtros (para logs del dashboard).
+ * @param {GetMensajesOptions} [options] - Filtros y paginación.
+ * @returns {Promise<{ mensajes: MensajeWithPaciente[]; total: number; porEstado: Record<string, number> }>} Mensajes con total y conteo por estado.
  */
 export async function getMensajes(
   options: GetMensajesOptions = {},
@@ -672,8 +682,9 @@ export async function getMensajes(
 // ============================================================
 
 /**
- *
- * @param email
+ * Devuelve un usuario activo por su email.
+ * @param {string} email - Email del usuario.
+ * @returns {Promise<UsuarioData | null>} Usuario encontrado (con medicoId resuelto) o null.
  */
 export async function getUserByEmail(email: string): Promise<UsuarioData | null> {
   const result = await db.select().from(usuarios).where(eq(usuarios.email, email)).limit(1);
@@ -713,7 +724,9 @@ export async function getUserByEmail(email: string): Promise<UsuarioData | null>
 }
 
 /**
- *
+ * Crea el usuario admin por defecto (admin@consultorio.com) si no existe,
+ * garantizando también el tenant default y su médico asociado.
+ * @returns {Promise<boolean>} true si se creó, false si ya existía o hubo error.
  */
 export async function createAdminUserIfNotExists(): Promise<boolean> {
   try {
@@ -790,12 +803,13 @@ export async function createAdminUserIfNotExists(): Promise<boolean> {
 }
 
 /**
- *
- * @param email
- * @param data
- * @param data.secreto2fa
- * @param data.activo2fa
- * @param data.clearBackupCodes
+ * Actualiza la configuración 2FA de un usuario.
+ * @param {string} email - Email del usuario.
+ * @param {object} data - Datos de 2FA a actualizar.
+ * @param {string | null} data.secreto2fa - Nuevo secreto TOTP (o null).
+ * @param {boolean} data.activo2fa - Indica si el 2FA está activo.
+ * @param {boolean} [data.clearBackupCodes] - Si se deben limpiar los códigos de respaldo.
+ * @returns {Promise<boolean>} true si se actualizó correctamente.
  */
 export async function updateUser2FA(
   email: string,
@@ -820,8 +834,9 @@ export async function updateUser2FA(
 /**
  * Almacena los códigos de respaldo 2FA hasheados.
  * Se recibe un array de SHA-256 (hex) ya calculados.
- * @param email
- * @param hashedCodes
+ * @param {string} email - Email del usuario.
+ * @param {string[]} hashedCodes - Array de códigos de respaldo hasheados.
+ * @returns {Promise<void>}
  */
 export async function storeBackupCodes(email: string, hashedCodes: string[]): Promise<void> {
   await db
@@ -838,7 +853,8 @@ export async function storeBackupCodes(email: string, hashedCodes: string[]): Pr
 // ============================================================
 
 /**
- *
+ * Siembra datos por defecto si la base de datos está vacía.
+ * @returns {Promise<boolean>} Resultado del proceso de seed.
  */
 export async function seedDataIfEmpty(): Promise<boolean> {
   await createAdminUserIfNotExists();

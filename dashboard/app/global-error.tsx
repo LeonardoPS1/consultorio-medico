@@ -6,6 +6,9 @@ import { useEffect } from 'react';
  * Global Error Boundary — atrapa errores del RootLayout.
  * A diferencia de error.tsx, este archivo SÍ captura errores en <html>/<body>.
  * Next.js requiere que global-error.tsx tenga su propio <html> y <body>.
+ * @param root0
+ * @param root0.error
+ * @param root0.reset
  */
 export default function GlobalError({
   error,

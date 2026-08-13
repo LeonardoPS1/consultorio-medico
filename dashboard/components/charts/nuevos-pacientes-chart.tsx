@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { TooltipProps } from 'recharts';
 
@@ -7,7 +8,11 @@ interface Props {
   data: { label: string; valor: number }[];
 }
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>): JSX.Element | null => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-foreground text-background text-xs rounded-lg px-3 py-2 shadow-card border border-border/50">
@@ -18,11 +23,12 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 };
 
 /**
- *
- * @param root0
- * @param root0.data
+ * Gráfico de nuevos pacientes por período.
+ * @param {Props} root0 - Props del componente.
+ * @param {{ label: string; valor: number }[]} root0.data - Cantidad de pacientes nuevos por etiqueta.
+ * @returns {JSX.Element} Gráfico de barras de pacientes nuevos.
  */
-export default function NuevosPacientesChart({ data }: Props) {
+export default function NuevosPacientesChart({ data }: Props): JSX.Element {
   const maxVal = Math.max(...data.map((d) => d.valor), 1);
 
   return (

@@ -6,10 +6,11 @@ import { db } from '@/lib/db';
 import { safeWarn } from '@/lib/logger';
 
 /**
- *
- * @param request
+ * Intercambia un token de impersonación por una sesión activa.
+ * @param {Request} request - La solicitud HTTP entrante.
+ * @returns {Promise<Response>} Redirección al dashboard o un error.
  */
-export async function GET(request: Request) {
+export async function GET(request: Request): Promise<Response> {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get('token');
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { ShieldCheck, TrendingDown, TrendingUp, Users } from 'lucide-react';
+import type { JSX } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,13 +40,14 @@ interface Props {
 }
 
 /**
- *
- * @param root0
- * @param root0.data
- * @param root0.loading
- * @param root0.isAdvancedReports
+ * Comparativa de métricas de la clínica contra el promedio anónimo de clínicas similares.
+ * @param {Props} root0 - Props del componente.
+ * @param {BenchComparativaResponse | null} root0.data - Respuesta del benchmark (o null en demo/error).
+ * @param {boolean} root0.loading - Si está cargando los datos.
+ * @param {boolean} root0.isAdvancedReports - Si el plan habilita los reportes avanzados.
+ * @returns {JSX.Element} El panel de benchmark con indicadores comparativos.
  */
-export function BenchmarkComparativa({ data, loading, isAdvancedReports }: Props) {
+export function BenchmarkComparativa({ data, loading, isAdvancedReports }: Props): JSX.Element {
   function fmtPct(v: number | null | undefined): string {
     if (v == null) return '—';
     return `${v.toFixed(1)}%`;
@@ -60,6 +62,7 @@ export function BenchmarkComparativa({ data, loading, isAdvancedReports }: Props
         <CardContent className="pb-3">
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
+              // eslint-disable-next-line react/no-array-index-key -- esqueletos estáticos de carga sin identidad propia
               <div key={i} className="h-4 w-full max-w-xs bg-muted rounded animate-pulse" />
             ))}
           </div>
@@ -266,7 +269,7 @@ function StatCard({
   diferencia: number | null;
   invert?: boolean;
   fmt?: (v: number) => string;
-}) {
+}): JSX.Element {
   const bueno =
     diferencia == null
       ? null
@@ -322,9 +325,9 @@ function BarraComparativa({
   invert?: boolean;
   max?: number;
   min?: number;
-}) {
+}): JSX.Element {
   const rango = max - min;
-  const pct = (v: number) => {
+  const pct = (v: number): number => {
     const norm = (v - min) / rango;
     return Math.max(0, Math.min(1, norm)) * 100;
   };

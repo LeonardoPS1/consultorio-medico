@@ -17,7 +17,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
   try {
     const importadas = await importarChangelogEstatico();
     if (importadas > 0) {
-      console.log(`[API Novedades] Importadas ${importadas} novedades del CHANGELOG estático`);
+      console.warn(`[API Novedades] Importadas ${importadas} novedades del CHANGELOG estático`);
     }
   } catch (err) {
     console.error('[API Novedades] Error al importar CHANGELOG:', err);

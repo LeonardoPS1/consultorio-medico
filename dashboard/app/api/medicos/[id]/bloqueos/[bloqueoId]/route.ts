@@ -6,14 +6,15 @@ import { db } from '@/lib/db';
 /**
  * DELETE /api/medicos/[id]/bloqueos/[bloqueoId]
  * Elimina un bloqueo de agenda.
- * @param _request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} _request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string; bloqueoId: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} Confirmación de eliminación o un error.
  */
 export async function DELETE(
   _request: NextRequest,
   { params: paramsPromise }: { params: Promise<{ id: string; bloqueoId: string }> },
-) {
+): Promise<NextResponse> {
   const { id, bloqueoId } = await paramsPromise;
   try {
     const result = await db
@@ -34,17 +35,24 @@ export async function DELETE(
 /**
  * PATCH /api/medicos/[id]/bloqueos/[bloqueoId]
  * Actualiza un bloqueo existente (titulo, fechas, tipo).
- * @param request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string; bloqueoId: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} El bloqueo actualizado o un error.
  */
 export async function PATCH(
   request: NextRequest,
   { params: paramsPromise }: { params: Promise<{ id: string; bloqueoId: string }> },
-) {
+): Promise<NextResponse> {
   const { id, bloqueoId } = await paramsPromise;
   try {
-    const body = await request.json();
+    const body = (await request.json()) as {
+      titulo?: string;
+      fechaInicio?: string;
+      fechaFin?: string;
+      tipo?: string;
+      motivo?: string | null;
+    };
     if (!body || Object.keys(body).length === 0) {
       return NextResponse.json({ error: 'Envia al menos un campo' }, { status: 400 });
     }

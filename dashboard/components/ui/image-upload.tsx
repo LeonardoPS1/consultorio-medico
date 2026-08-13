@@ -29,17 +29,18 @@ const shapeClasses = {
 };
 
 /**
- *
- * @param root0
- * @param root0.value
- * @param root0.onChange
- * @param root0.onRemove
- * @param root0.className
- * @param root0.size
- * @param root0.shape
- * @param root0.label
- * @param root0.fallback
- * @param root0.maxSizeMB
+ * Componente de subida de imagen con arrastrar y soltar.
+ * @param {ImageUploadProps} root0 - Props del componente.
+ * @param {string} root0.value - URL o data URL de la imagen cargada.
+ * @param {(dataUrl: string) => void} root0.onChange - Callback con la URL resultante.
+ * @param {() => void} root0.onRemove - Callback al eliminar la imagen.
+ * @param {string} root0.className - Clases CSS adicionales.
+ * @param {'sm' | 'md' | 'lg'} root0.size - Tamaño del área de subida.
+ * @param {'circle' | 'rounded' | 'square'} root0.shape - Forma del área de subida.
+ * @param {string} root0.label - Texto del botón cuando no hay imagen.
+ * @param {React.ReactNode} root0.fallback - Contenido de respaldo cuando no hay imagen.
+ * @param {number} root0.maxSizeMB - Tamaño máximo de archivo en MB.
+ * @returns {React.JSX.Element} Área de subida de imagen.
  */
 export function ImageUpload({
   value,
@@ -51,7 +52,7 @@ export function ImageUpload({
   label = 'Subir imagen',
   fallback,
   maxSizeMB = 2,
-}: ImageUploadProps) {
+}: ImageUploadProps): React.JSX.Element {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -77,7 +78,7 @@ export function ImageUpload({
           method: 'POST',
           body: formData,
         });
-        const json = await res.json();
+        const json = (await res.json()) as { url?: string; error?: string };
         if (res.ok && json.url) {
           onChange(json.url);
         } else {
@@ -152,6 +153,7 @@ export function ImageUpload({
 
         {value ? (
           <>
+            {/* eslint-disable-next-line @next/next/no-img-element -- la imagen es una data URL o URL de upload dinámica */}
             <img
               src={value}
               alt="Upload"

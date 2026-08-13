@@ -11,9 +11,10 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 
 /**
- *
+ * Renderiza las notificaciones toast de la aplicación.
+ * @returns {React.JSX.Element} Proveedor de toasts con la vista.
  */
-export function Toaster() {
+export function Toaster(): React.JSX.Element {
   const { toasts } = useToast();
 
   return (

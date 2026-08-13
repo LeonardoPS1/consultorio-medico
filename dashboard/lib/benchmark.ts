@@ -33,8 +33,9 @@ export const BUCKETS: Array<{ min: number; max: number; label: string; range: st
 ];
 
 /**
- *
- * @param pacientes
+ * Determina el bucket de tamaño según la cantidad de pacientes activos.
+ * @param {number} pacientes - Cantidad de pacientes activos del tenant.
+ * @returns {{ label: string; range: string }} Bucket con label y rango.
  */
 export function bucketForPacientes(pacientes: number): { label: string; range: string } {
   for (const b of BUCKETS) {

@@ -8,10 +8,11 @@ export const dynamic = 'force-dynamic';
 const CACHE_TTL = 30_000;
 
 /**
- *
- * @param request
+ * Obtiene las estadísticas del dashboard.
+ * @param {Request} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} La respuesta JSON con las estadísticas.
  */
-export async function GET(request: Request) {
+export async function GET(request: Request): Promise<NextResponse> {
   try {
     const session = await auth();
     const sessionMedicoId = session?.user?.medicoId;

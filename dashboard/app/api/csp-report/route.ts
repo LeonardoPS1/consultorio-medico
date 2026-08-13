@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import { safeWarn } from '@/lib/logger';
 
 /**
- *
- * @param request
+ * Recibe y registra los reportes de violación de CSP.
+ * @param {Request} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} Respuesta 200 para no alertar al atacante.
  */
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     // Loggear violación CSP para debugging
     safeWarn('[CSP Violation]', {
       'csp-report': body['csp-report'] || body,

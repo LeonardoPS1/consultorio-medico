@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
@@ -24,7 +25,7 @@ const METRIC_COLORS: Record<string, string> = {
 
 const METRICS = ['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as const;
 
-function formatBucket(bucket: string, bucketType: string) {
+function formatBucket(bucket: string, bucketType: string): string {
   if (!bucket) return '\u2014';
   const d = new Date(bucket.includes('T') ? bucket : bucket.replace(' ', 'T') + 'Z');
   if (isNaN(d.getTime())) return bucket;
@@ -46,12 +47,16 @@ interface WebVitalsLineChartProps {
 }
 
 /**
- *
- * @param root0
- * @param root0.data
- * @param root0.bucketType
+ * Gráfico de línea con la tendencia de métricas Web Vitals.
+ * @param {WebVitalsLineChartProps} root0 - Props del componente.
+ * @param {Array<Record<string, string | number | null | undefined>>} root0.data - Series temporales por métrica.
+ * @param {string} root0.bucketType - Tipo de agrupación temporal.
+ * @returns {JSX.Element} Gráfico de líneas de tendencia.
  */
-export function WebVitalsLineChart({ data, bucketType }: WebVitalsLineChartProps) {
+export function WebVitalsLineChart({
+  data,
+  bucketType,
+}: WebVitalsLineChartProps): JSX.Element {
   if (data.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-12 text-center">

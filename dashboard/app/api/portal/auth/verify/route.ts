@@ -35,9 +35,10 @@ if (typeof setInterval !== 'undefined') {
 
 /**
  *
- * @param request
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} Redirección al portal o un error.
  */
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')
     || '127.0.0.1';

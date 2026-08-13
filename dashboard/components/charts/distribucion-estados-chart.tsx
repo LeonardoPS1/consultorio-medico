@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import {
   BarChart,
   Bar,
@@ -29,7 +30,11 @@ const colorMap: Record<string, string> = {
   'bg-blue-500': '#3b82f6',
 };
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>): JSX.Element | null => {
   if (!active || !payload?.length) return null;
   const entry = payload[0];
   return (
@@ -41,11 +46,12 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 };
 
 /**
- *
- * @param root0
- * @param root0.data
+ * Gráfico de distribución de turnos por estado.
+ * @param {Props} root0 - Props del componente.
+ * @param {DistribucionEstado[]} root0.data - Distribución por estado con color.
+ * @returns {JSX.Element} Gráfico de barras de distribución.
  */
-export default function DistribucionEstadosChart({ data }: Props) {
+export default function DistribucionEstadosChart({ data }: Props): JSX.Element {
   const chartData = data.map((d) => ({
     ...d,
     fill: colorMap[d.color] || '#6b7280',
@@ -85,8 +91,8 @@ export default function DistribucionEstadosChart({ data }: Props) {
             animationDuration={300}
             animationEasing="ease-out"
           >
-            {chartData.map((entry, idx) => (
-              <Cell key={idx} fill={entry.fill} />
+            {chartData.map((entry) => (
+              <Cell key={entry.estado} fill={entry.fill} />
             ))}
           </Bar>
         </BarChart>

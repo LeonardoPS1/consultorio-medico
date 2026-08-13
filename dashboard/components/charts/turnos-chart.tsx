@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { TooltipProps } from 'recharts';
 export interface TurnoDia {
@@ -14,9 +15,13 @@ interface Props {
   data: TurnoDia[];
 }
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>): JSX.Element | null => {
   if (!active || !payload?.length) return null;
-  const entry = payload[0]?.payload;
+  const entry = payload[0]?.payload as TurnoDia;
   return (
     <div className="bg-foreground text-background text-xs rounded-lg px-3 py-2 shadow-card border border-border/50">
       <p className="font-semibold mb-1">{label}</p>
@@ -40,11 +45,12 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 };
 
 /**
- *
- * @param root0
- * @param root0.data
+ * Gráfico de turnos por día y resultado.
+ * @param {Props} root0 - Props del componente.
+ * @param {TurnoDia[]} root0.data - Turnos agrupados por día.
+ * @returns {JSX.Element} Gráfico de barras apiladas.
  */
-export default function TurnosChart({ data }: Props) {
+export default function TurnosChart({ data }: Props): JSX.Element {
   return (
     <div className="relative">
       <ResponsiveContainer width="100%" height={240}>

@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import {
   BarChart,
   Bar,
@@ -21,13 +22,17 @@ interface Props {
   data: WhatsAppVolumen[];
 }
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>): JSX.Element | null => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-foreground text-background text-xs rounded-lg px-3 py-2 shadow-card border border-border/50">
       <p className="font-semibold mb-1">{label}</p>
-      {payload.map((entry, idx: number) => (
-        <p key={idx} className="flex items-center gap-1.5">
+      {payload.map((entry) => (
+        <p key={entry.name} className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: entry.color }} />
           {entry.name}: {entry.value}
         </p>
@@ -36,12 +41,12 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   );
 };
 
-const CustomLegend = ({ payload }: DefaultLegendContentProps) => {
+const CustomLegend = ({ payload }: DefaultLegendContentProps): JSX.Element | null => {
   if (!payload?.length) return null;
   return (
     <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground pt-1">
-      {payload.map((entry, idx: number) => (
-        <span key={idx} className="flex items-center gap-1.5">
+      {payload.map((entry) => (
+        <span key={entry.dataKey?.toString() ?? String(entry.value)} className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: entry.color }} />
           {entry.value}
         </span>
@@ -51,11 +56,12 @@ const CustomLegend = ({ payload }: DefaultLegendContentProps) => {
 };
 
 /**
- *
- * @param root0
- * @param root0.data
+ * Gráfico de volumen de mensajes de WhatsApp recibidos y enviados.
+ * @param {Props} root0 - Props del componente.
+ * @param {WhatsAppVolumen[]} root0.data - Volumen por día.
+ * @returns {JSX.Element} Gráfico de barras con los volúmenes.
  */
-export default function VolumenWhatsAppChart({ data }: Props) {
+export default function VolumenWhatsAppChart({ data }: Props): JSX.Element {
   const maxVal = Math.max(...data.flatMap((d) => [d.recibidos, d.enviados]), 1);
 
   return (

@@ -1,5 +1,6 @@
 import { eq, desc, and, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
+import type { Session } from 'next-auth';
 import { notasSoap, medicos } from '@/drizzle/schema';
 import { sugerirCie10 } from '@/lib/ai-clinical';
 import { verifyPacienteAccess } from '@/lib/api-auth';
@@ -9,11 +10,15 @@ import { canAccess } from '@/lib/features';
 
 /**
  * Helper de auth para GET/PATCH/DELETE de notas SOAP
- * @param request
- * @param params
- * @param params.id
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} params - Contexto de la ruta.
+ * @param {string} params.id - ID del paciente.
+ * @returns {Promise<{ session: Session | null; error: NextResponse | null }>} Sesión y error de auth, o null.
  */
-async function requireAuthForNotasSoap(request: NextRequest, params: { id: string }) {
+async function requireAuthForNotasSoap(
+  request: NextRequest,
+  params: { id: string },
+): Promise<{ session: Session | null; error: NextResponse | null }> {
   const session = await auth();
   if (!session?.user?.id) {
     return { session: null, error: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) };
@@ -31,11 +36,15 @@ async function requireAuthForNotasSoap(request: NextRequest, params: { id: strin
 /**
  * GET /api/pacientes/[id]/notas-soap
  * Lista Notas SOAP del paciente (con nombre del médico)
- * @param _request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} _request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} La respuesta JSON con las notas SOAP.
  */
-export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   const { error } = await requireAuthForNotasSoap(_request, { id });
   if (error) return error;
@@ -78,11 +87,15 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
 /**
  * POST /api/pacientes/[id]/notas-soap
  * Crea una nueva Nota SOAP
- * @param request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} La nota SOAP creada o un error.
  */
-export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   try {
     const session = await auth();
@@ -116,7 +129,23 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as {
+      subjetivo?: string | null;
+      objetivo?: string | null;
+      assessment?: string | null;
+      plan?: string | null;
+      cie10Codigo?: string | null;
+      cie10Descripcion?: string | null;
+      cie10Sugerido?: unknown;
+      turnoId?: string | null;
+      derivarA?: string | null;
+      requiereControl?: boolean;
+      controlEnDias?: number | null;
+      iaGenerated?: boolean;
+      createdByIa?: boolean;
+      estadoRevision?: string | null;
+      transcripcionTexto?: string | null;
+    };
 
     const plan = (session.user as { plan?: string } | undefined)?.plan;
     const assessment = typeof body.assessment === 'string' ? body.assessment.trim() : '';
@@ -167,11 +196,15 @@ export async function POST(request: NextRequest, { params: paramsPromise }: { pa
 /**
  * PATCH /api/pacientes/[id]/notas-soap?entryId=xxx
  * Actualiza una Nota SOAP existente
- * @param request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} La nota SOAP actualizada o un error.
  */
-export async function PATCH(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   const authResult = await requireAuthForNotasSoap(request, { id });
   if (authResult.error) return authResult.error;
@@ -185,7 +218,20 @@ export async function PATCH(request: NextRequest, { params: paramsPromise }: { p
       return NextResponse.json({ error: 'entryId es requerido' }, { status: 400 });
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as {
+      subjetivo?: unknown;
+      objetivo?: unknown;
+      assessment?: unknown;
+      plan?: unknown;
+      cie10Codigo?: unknown;
+      cie10Descripcion?: unknown;
+      cie10Sugerido?: unknown;
+      derivarA?: unknown;
+      requiereControl?: unknown;
+      controlEnDias?: unknown;
+      estadoRevision?: unknown;
+      iaGenerated?: unknown;
+    };
 
     // Verificar que la nota existe y pertenece al paciente
     const [existing] = await db
@@ -248,11 +294,15 @@ export async function PATCH(request: NextRequest, { params: paramsPromise }: { p
 /**
  * DELETE /api/pacientes/[id]/notas-soap?entryId=xxx
  * Elimina una Nota SOAP
- * @param request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} Confirmación de eliminación o un error.
  */
-export async function DELETE(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   const { error } = await requireAuthForNotasSoap(request, { id });
   if (error) return error;

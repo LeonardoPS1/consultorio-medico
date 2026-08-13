@@ -7,17 +7,21 @@ import { eq, and } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import QRCode from 'qrcode';
 import { historialMedico, pacientes, medicos } from '@/drizzle/schema';
-import { generarHTMLCertificado } from '@/lib/certificados';
+import { generarHTMLCertificado, type CertificadoData } from '@/lib/certificados';
 import { db } from '@/lib/db';
 import { getPortalSession } from '@/lib/portal-auth';
 
 /**
  *
- * @param _request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} _request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} El certificado en HTML o un error.
  */
-export async function GET(_request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   const session = await getPortalSession();
   if (!session) {
@@ -65,7 +69,9 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
     }
   }
 
-  const data = entry.descripcion ? JSON.parse(entry.descripcion) : { diagnostico: '' };
+  const data = entry.descripcion
+    ? (JSON.parse(entry.descripcion) as CertificadoData)
+    : { diagnostico: '' };
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://med.aicorebots.com';
   const verificationUrl = `${baseUrl}/verificar-certificado/${entry.id}`;

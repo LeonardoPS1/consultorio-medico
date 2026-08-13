@@ -2,6 +2,7 @@
 
 import { TrendingUp } from 'lucide-react';
 import { useMemo } from 'react';
+import type { JSX } from 'react';
 import {
   ComposedChart,
   Line,
@@ -20,21 +21,21 @@ interface TendenciasOcupacionProps {
 }
 
 /**
- *
- * @param root0
- * @param root0.data
+ * Tendencia semanal de ocupación y turnos con promedio.
+ * @param {TendenciasOcupacionProps} root0 - Props del componente.
+ * @param {OcupacionReporte} root0.data - Reporte de ocupación por franja horaria.
+ * @returns {JSX.Element} El gráfico de tendencia semanal.
  */
-export function TendenciasOcupacion({ data }: TendenciasOcupacionProps) {
-  const tendencias = data.tendencias ?? [];
-
+export function TendenciasOcupacion({ data }: TendenciasOcupacionProps): JSX.Element {
   const chartData = useMemo(() => {
+    const tendencias = data.tendencias ?? [];
     if (!tendencias.length) return [];
     return tendencias.map((t) => ({
       semana: `S${t.semana}`,
       ocupacion: Math.round(t.ocupacion * 100),
       turnos: t.totalTurnos,
     }));
-  }, [tendencias]);
+  }, [data]);
 
   const promedio = useMemo(() => {
     if (!chartData.length) return 0;

@@ -77,7 +77,6 @@ export function NuevoTurnoModal({
   const [pacienteSuggestions, setPacienteSuggestions] = useState<PacienteSuggestion[]>([]);
   const [pacienteSearchOpen, setPacienteSearchOpen] = useState(false);
   const [pacienteSearchLoading, setPacienteSearchLoading] = useState(false);
-  const [pacienteSearchError, setPacienteSearchError] = useState(false);
   const [selectedPaciente, setSelectedPaciente] = useState<PacienteSuggestion | null>(null);
   const [highlightedIdx, setHighlightedIdx] = useState(-1);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -115,7 +114,6 @@ export function NuevoTurnoModal({
 
     searchTimeoutRef.current = setTimeout(async () => {
       setPacienteSearchLoading(true);
-      setPacienteSearchError(false);
       try {
         const res = await fetch(
           `/api/pacientes?search=${encodeURIComponent(pacienteSearch.trim())}&limit=8`,

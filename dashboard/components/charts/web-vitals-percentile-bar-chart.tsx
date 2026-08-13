@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
@@ -10,11 +11,12 @@ interface PercentileBarChartProps {
 }
 
 /**
- *
- * @param root0
- * @param root0.data
+ * Gráfico de percentiles de métricas Web Vitals.
+ * @param {PercentileBarChartProps} root0 - Props del componente.
+ * @param {Array<{ name: string; p50: number; p75: number; p95: number; p99: number; count: number }>} root0.data - Métricas con sus percentiles.
+ * @returns {JSX.Element | null} Gráfico de barras apiladas o null sin datos.
  */
-export function WebVitalsPercentileBarChart({ data }: PercentileBarChartProps) {
+export function WebVitalsPercentileBarChart({ data }: PercentileBarChartProps): JSX.Element | null {
   if (data.length === 0) return null;
 
   const chartData = data.map((p) => ({

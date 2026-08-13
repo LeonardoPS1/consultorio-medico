@@ -2367,17 +2367,19 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
 ];
 
 /**
- *
- * @param id
+ * Busca una sección de ayuda por su id.
+ * @param {string} id - Identificador de la sección.
+ * @returns {AyudaSeccion | undefined} Sección encontrada o undefined.
  */
 export function getSeccionAyuda(id: string): AyudaSeccion | undefined {
   return SECCIONES_AYUDA.find((s) => s.id === id);
 }
 
 /**
- *
+ * Devuelve los enlaces del sidebar de ayuda.
+ * @returns {{ id: string; titulo: string; icono: string }[]} Lista de enlaces para el sidebar.
  */
-export function getAyudaSidebarLinks() {
+export function getAyudaSidebarLinks(): { id: string; titulo: string; icono: string }[] {
   return SECCIONES_AYUDA.map((s) => ({
     id: s.id,
     titulo: s.titulo,

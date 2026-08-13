@@ -43,11 +43,12 @@ export interface CertificadoParams {
 // ─── Hash ───────────────────────────────────────────────────
 
 /**
- *
- * @param params
- * @param params.id
- * @param params.pacienteId
- * @param params.diagnostico
+ * Genera el hash SHA-256 de verificación del certificado.
+ * @param {object} params - Datos para el hash.
+ * @param {string} params.id - ID del certificado.
+ * @param {string} params.pacienteId - ID del paciente.
+ * @param {string} params.diagnostico - Diagnóstico (normalizado a minúsculas).
+ * @returns {string} Hash hex de verificación.
  */
 export function generarHashCertificado(params: {
   id: string;
@@ -66,10 +67,11 @@ export function generarHashCertificado(params: {
 // ─── HTML Template ──────────────────────────────────────────
 
 /**
- *
- * @param params
- * @param qrDataUrl
- * @param baseUrl
+ * Genera el HTML del certificado médico con QR de verificación.
+ * @param {CertificadoParams} params - Datos del paciente, médico y certificado.
+ * @param {string} qrDataUrl - Data URL del código QR de verificación.
+ * @param {string} baseUrl - URL base para el enlace de verificación.
+ * @returns {string} HTML del certificado.
  */
 export function generarHTMLCertificado(
   params: CertificadoParams,

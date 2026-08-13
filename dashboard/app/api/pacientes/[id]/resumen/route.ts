@@ -1,5 +1,6 @@
 import { eq, desc, and, inArray, or, gte, isNull } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
+import type { Session } from 'next-auth';
 import { notasSoap, pacientes, recetas, resumenesPaciente } from '@/drizzle/schema';
 import { generarResumenLongitudinal } from '@/lib/ai-clinical';
 import { verifyPacienteAccess } from '@/lib/api-auth';
@@ -13,10 +14,14 @@ const MAX_NOTAS = 5;
 
 /**
  * Auth + acceso al paciente (mismo patrón que notas-soap)
- * @param request
- * @param pacienteId
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {string} pacienteId - ID del paciente.
+ * @returns {Promise<{ session: Session | null; error: NextResponse | null }>} Sesión y error de auth, o null.
  */
-async function requireAuth(request: NextRequest, pacienteId: string) {
+async function requireAuth(
+  request: NextRequest,
+  pacienteId: string,
+): Promise<{ session: Session | null; error: NextResponse | null }> {
   const session = await auth();
   if (!session?.user?.id) {
     return { session: null, error: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) };
@@ -32,11 +37,15 @@ async function requireAuth(request: NextRequest, pacienteId: string) {
 /**
  * GET /api/pacientes/[id]/resumen
  * Devuelve el resumen longitudinal cacheado (si existe).
- * @param request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} El resumen cacheado o un error.
  */
-export async function GET(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   const { session, error } = await requireAuth(request, id);
   if (error) return error;
@@ -67,11 +76,15 @@ export async function GET(request: NextRequest, { params: paramsPromise }: { par
  * POST /api/pacientes/[id]/resumen
  * Genera (o regenera) el resumen longitudinal con IA y lo cachea.
  * Fail-open: si la IA falla responde 502 con mensaje claro, sin tocar el cache.
- * @param request
- * @param root0
- * @param root0.params
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @param {object} root0 - Contexto de la ruta.
+ * @param {Promise<{ id: string }>} root0.params - Promesa con los parámetros dinámicos de la ruta.
+ * @returns {Promise<NextResponse>} El resumen generado o un error.
  */
-export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  request: NextRequest,
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   const { id } = await paramsPromise;
   const { session, error } = await requireAuth(request, id);
   if (error) return error;

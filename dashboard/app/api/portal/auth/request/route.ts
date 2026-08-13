@@ -16,9 +16,10 @@ import { portalAuthRequestSchema } from '@/lib/validations';
 
 /**
  *
- * @param request
+ * @param {NextRequest} request - La solicitud HTTP entrante.
+ * @returns {Promise<NextResponse>} Confirmación del envío del magic link o un error.
  */
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   const parsed = portalAuthRequestSchema.safeParse(await request.json());
   if (!parsed.success) {
     return NextResponse.json({ error: 'Teléfono inválido' }, { status: 400 });

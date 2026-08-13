@@ -94,9 +94,9 @@ const descripcionesTipo: Record<string, string> = {
  * @param root0.initialNoLeidas
  */
 export function NotificacionesClient({
-  initialNotificaciones,
-  initialTotal,
-  initialNoLeidas,
+  initialNotificaciones: _initialNotificaciones,
+  initialTotal: _initialTotal,
+  initialNoLeidas: _initialNoLeidas,
 }: NotificacionesClientProps): React.ReactElement {
 /* eslint-enable react/prop-types */
   const router = useRouter();
