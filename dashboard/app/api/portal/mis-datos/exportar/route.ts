@@ -1,6 +1,13 @@
-import { eq, desc, and , sql } from 'drizzle-orm';
+import { eq, desc, and, sql } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
-import { recetas, documentosMedicos, sucursales , pacientes, turnos , solicitudesDatos } from '@/drizzle/schema';
+import {
+  recetas,
+  documentosMedicos,
+  sucursales,
+  pacientes,
+  turnos,
+  solicitudesDatos,
+} from '@/drizzle/schema';
 import { db } from '@/lib/db';
 import { safeWarn } from '@/lib/logger';
 import { getPortalSession } from '@/lib/portal-auth';
@@ -58,7 +65,12 @@ export async function GET() {
         createdAt: documentosMedicos.createdAt,
       })
       .from(documentosMedicos)
-      .where(and(eq(documentosMedicos.pacienteId, session.pacienteId), sql`${documentosMedicos.deletedAt} IS NULL`))
+      .where(
+        and(
+          eq(documentosMedicos.pacienteId, session.pacienteId),
+          sql`${documentosMedicos.deletedAt} IS NULL`,
+        ),
+      )
       .orderBy(desc(documentosMedicos.createdAt));
 
     await db.insert(solicitudesDatos).values({
@@ -102,7 +114,6 @@ export async function GET() {
         frecuencia: r.frecuencia,
         duracion: r.duracion || null,
         estado: r.estado,
-        tipo: r.tipo,
         fechaInicio: r.fechaInicio,
         fechaFin: r.fechaFin || null,
         creadoEn: r.createdAt,

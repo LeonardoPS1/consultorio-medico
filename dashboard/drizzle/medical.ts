@@ -13,12 +13,7 @@ import {
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { pacientes, medicos, turnos } from './core';
-import {
-  historialTipoEnum,
-  recetaTipoEnum,
-  ordenEstudioTipoEnum,
-  ordenEstudioEstadoEnum,
-} from './enums';
+import { historialTipoEnum, ordenEstudioTipoEnum, ordenEstudioEstadoEnum } from './enums';
 
 // ============================================================
 // PACIENTE EVENTOS (historial de contacto)
@@ -136,7 +131,6 @@ export const recetas = pgTable(
       .references(() => medicos.id),
     turnoId: uuid('turno_id').references(() => turnos.id),
     estado: text('estado').notNull().default('emitida'),
-    tipo: recetaTipoEnum('tipo').notNull().default('simple'),
     medicamento: varchar('medicamento', { length: 255 }).notNull(),
     presentacion: varchar('presentacion', { length: 255 }),
     dosis: varchar('dosis', { length: 255 }).notNull(),
