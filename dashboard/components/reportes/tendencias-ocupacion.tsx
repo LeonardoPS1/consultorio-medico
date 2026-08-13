@@ -15,27 +15,31 @@ import {
   ReferenceLine,
 } from 'recharts';
 import type { OcupacionReporte } from '@/lib/services/ocupacion-grilla';
+import { DIAS_ABREV } from '@/lib/services/ocupacion-grilla';
 
 interface TendenciasOcupacionProps {
   data: OcupacionReporte;
 }
 
 /**
- * Tendencia semanal de ocupación y turnos con promedio.
+ * Tendencia de ocupación y turnos. Con filtro "semana" (data.semanas === 1)
+ * muestra los días de la semana (Lun→Dom); si no, tendencia semanal (S1..Sn).
  * @param {TendenciasOcupacionProps} root0 - Props del componente.
  * @param {OcupacionReporte} root0.data - Reporte de ocupación por franja horaria.
- * @returns {JSX.Element} El gráfico de tendencia semanal.
+ * @returns {JSX.Element} El gráfico de tendencia (semanal o por día).
  */
 export function TendenciasOcupacion({ data }: TendenciasOcupacionProps): JSX.Element {
+  const porDia = data.semanas === 1;
+
   const chartData = useMemo(() => {
     const tendencias = data.tendencias ?? [];
     if (!tendencias.length) return [];
     return tendencias.map((t) => ({
-      semana: `S${t.semana}`,
+      semana: porDia ? DIAS_ABREV[t.semana] : `S${t.semana}`,
       ocupacion: Math.round(t.ocupacion * 100),
       turnos: t.totalTurnos,
     }));
-  }, [data]);
+  }, [data, porDia]);
 
   const promedio = useMemo(() => {
     if (!chartData.length) return 0;
@@ -47,7 +51,7 @@ export function TendenciasOcupacion({ data }: TendenciasOcupacionProps): JSX.Ele
       <div className="rounded-xl border bg-card p-5">
         <h3 className="text-base font-semibold flex items-center gap-2 mb-4">
           <TrendingUp className="h-4 w-4 text-primary" />
-          Tendencia semanal
+          {porDia ? 'Tendencia por día' : 'Tendencia semanal'}
         </h3>
         <p className="text-sm text-muted-foreground py-4 text-center">
           No hay suficientes datos para mostrar tendencias.
@@ -60,10 +64,13 @@ export function TendenciasOcupacion({ data }: TendenciasOcupacionProps): JSX.Ele
     <div className="rounded-xl border bg-card p-5">
       <h3 className="text-base font-semibold flex items-center gap-2 mb-1">
         <TrendingUp className="h-4 w-4 text-primary" />
-        Tendencia semanal
+        {porDia ? 'Tendencia por día' : 'Tendencia semanal'}
       </h3>
       <p className="text-xs text-muted-foreground mb-4">
-        Ocupación y turnos por semana · promedio {promedio}%
+        {porDia
+          ? 'Ocupación y turnos por día de la semana · promedio '
+          : 'Ocupación y turnos por semana · promedio '}
+        {promedio}%
       </p>
 
       <div className="h-[200px]">

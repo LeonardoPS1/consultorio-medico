@@ -2,7 +2,15 @@
 
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { X, Trash2, RefreshCw, UserPlus, CalendarPlus, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  X,
+  Trash2,
+  RefreshCw,
+  UserPlus,
+  CalendarPlus,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { PacienteSearchCombobox } from '@/components/pacientes/paciente-search-combobox';
 import {
@@ -122,6 +130,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
   // Ver turnos ofrecidos
   const [ofertasAbiertas, setOfertasAbiertas] = useState<Record<string, boolean>>({});
   const [ofertasPorItem, setOfertasPorItem] = useState<Record<string, OfertaTurnoItem[]>>({});
+  const [confirmandoOferta, setConfirmandoOferta] = useState<string | null>(null);
 
   const cargarMedicos = useCallback(async () => {
     try {
@@ -139,18 +148,15 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
     }
   }, []);
 
-  const cargarOfertas = useCallback(
-    async (itemId: string) => {
-      try {
-        const res = await fetch(`/api/waitlist/ofertas?listaEsperaId=${itemId}`);
-        const json = await res.json();
-        setOfertasPorItem((prev) => ({ ...prev, [itemId]: json.data || [] }));
-      } catch {
-        setOfertasPorItem((prev) => ({ ...prev, [itemId]: [] }));
-      }
-    },
-    [],
-  );
+  const cargarOfertas = useCallback(async (itemId: string) => {
+    try {
+      const res = await fetch(`/api/waitlist/ofertas?listaEsperaId=${itemId}`);
+      const json = await res.json();
+      setOfertasPorItem((prev) => ({ ...prev, [itemId]: json.data || [] }));
+    } catch {
+      setOfertasPorItem((prev) => ({ ...prev, [itemId]: [] }));
+    }
+  }, []);
 
   const cargarTurnosDisponibles = useCallback(async (medicoId: string) => {
     setLoadingTurnosDisponibles(true);
@@ -194,7 +200,11 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pacienteId: nuevoPacienteId, medicoId: nuevoMedicoId, notas: notasNuevo.trim() || undefined }),
+        body: JSON.stringify({
+          pacienteId: nuevoPacienteId,
+          medicoId: nuevoMedicoId,
+          notas: notasNuevo.trim() || undefined,
+        }),
       });
       if (!res.ok) throw new Error('Error al agregar');
       toast({ title: 'Paciente agregado a la lista de espera' });
@@ -258,6 +268,32 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
         pacienteId: inscripcionDestino?.pacienteId ?? turnoDialogFor.pacienteId,
         medicoId: turnoDialogFor.medicoId,
       });
+    }
+  };
+
+  const handleConfirmarOferta = async (oferta: OfertaTurnoItem) => {
+    setConfirmandoOferta(oferta.id);
+    try {
+      const res = await fetch(`/api/waitlist/ofertas/${oferta.id}/aceptar`, { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        toast({
+          title:
+            typeof json.error === 'string' ? json.error : 'No se pudo confirmar el turno ofrecido',
+          variant: 'destructive',
+        });
+        return;
+      }
+      toast({ title: 'Turno ofrecido confirmado' });
+      await cargarOfertas(oferta.listaEsperaId);
+      await handleRefresh();
+    } catch {
+      toast({
+        title: 'No se pudo confirmar el turno. Intente nuevamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setConfirmandoOferta(null);
     }
   };
 
@@ -339,8 +375,8 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
             </div>
             <h3 className="font-semibold text-lg">No hay pacientes en espera</h3>
             <p className="text-muted-foreground text-sm max-w-md">
-              Agregá pacientes o esperá: cuando un turno se cancele, los pacientes en lista de espera
-              recibirán automáticamente un turno ofrecido vía WhatsApp.
+              Agregá pacientes o esperá: cuando un turno se cancele, los pacientes en lista de
+              espera recibirán automáticamente un turno ofrecido vía WhatsApp.
             </p>
             <div className="flex items-center gap-2">
               <Dialog open={addOpen} onOpenChange={setAddOpen}>
@@ -354,7 +390,8 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                   <DialogHeader>
                     <DialogTitle>Agregar paciente a lista de espera</DialogTitle>
                     <DialogDescription>
-                      El paciente recibirá un turno ofrecido cuando se libere un turno del médico elegido.
+                      El paciente recibirá un turno ofrecido cuando se libere un turno del médico
+                      elegido.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
@@ -363,7 +400,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                       <PacienteSearchCombobox
                         value=""
                         onChange={(id) => setNuevoPacienteId(id)}
-                       placeholder="Buscar paciente..."
+                        placeholder="Buscar paciente..."
                       />
                     </div>
                     <div className="space-y-2">
@@ -426,7 +463,8 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
               <DialogHeader>
                 <DialogTitle>Agregar paciente a lista de espera</DialogTitle>
                 <DialogDescription>
-                  El paciente recibirá un turno ofrecido por WhatsApp cuando se libere un turno del médico.
+                  El paciente recibirá un turno ofrecido por WhatsApp cuando se libere un turno del
+                  médico.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -551,7 +589,9 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                             </SelectTrigger>
                             <SelectContent>
                               {items
-                                .filter((i) => i.medicoId === item.medicoId && i.estado === 'activa')
+                                .filter(
+                                  (i) => i.medicoId === item.medicoId && i.estado === 'activa',
+                                )
                                 .map((p) => (
                                   <SelectItem key={p.id} value={p.id}>
                                     {p.pacienteNombre} {p.pacienteApellido}
@@ -587,7 +627,9 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                                 <div
                                   key={t.id}
                                   className={`flex items-center justify-between gap-3 rounded-lg border p-2 pl-3 transition-colors ${
-                                    seleccionado ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+                                    seleccionado
+                                      ? 'border-primary bg-primary/5'
+                                      : 'hover:bg-muted/50'
                                   }`}
                                 >
                                   <button
@@ -617,9 +659,14 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                             })}
                           </TabsContent>
 
-                          <TabsContent value="franja" className="space-y-2 max-h-72 overflow-y-auto">
+                          <TabsContent
+                            value="franja"
+                            className="space-y-2 max-h-72 overflow-y-auto"
+                          >
                             {loadingFranjas && (
-                              <p className="text-sm text-muted-foreground">Cargando franjas libres...</p>
+                              <p className="text-sm text-muted-foreground">
+                                Cargando franjas libres...
+                              </p>
                             )}
                             {!loadingFranjas && franjas.length === 0 && (
                               <p className="text-sm text-muted-foreground">
@@ -632,7 +679,9 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                                 <div
                                   key={f.fechaHora}
                                   className={`flex items-center justify-between gap-3 rounded-lg border p-2 pl-3 transition-colors ${
-                                    seleccionada ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+                                    seleccionada
+                                      ? 'border-primary bg-primary/5'
+                                      : 'hover:bg-muted/50'
                                   }`}
                                 >
                                   <button
@@ -752,7 +801,9 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                   {!ofertasPorItem[item.id] ? (
                     <p className="text-sm text-muted-foreground">Cargando turnos ofrecidos...</p>
                   ) : ofertasPorItem[item.id].length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Sin turnos ofrecidos registrados.</p>
+                    <p className="text-sm text-muted-foreground">
+                      Sin turnos ofrecidos registrados.
+                    </p>
                   ) : (
                     <div className="space-y-2">
                       {ofertasPorItem[item.id].map((oferta) => (
@@ -771,6 +822,17 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
                             )}
                           </div>
                           {estadoOfertaBadge(oferta.estado)}
+                          {oferta.estado === 'pendiente' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7"
+                              disabled={confirmandoOferta === oferta.id}
+                              onClick={() => handleConfirmarOferta(oferta)}
+                            >
+                              {confirmandoOferta === oferta.id ? 'Confirmando...' : 'Confirmar'}
+                            </Button>
+                          )}
                         </div>
                       ))}
                     </div>

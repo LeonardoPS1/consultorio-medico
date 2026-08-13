@@ -131,6 +131,18 @@ export function getDemoOcupacion(opts?: { semanas?: number }): OcupacionReporte 
     semanas,
     totalPorDia,
     _demo: true,
+    tendencias:
+      semanas === 1
+        ? [1, 2, 3, 4, 5, 6, 0].map((dia) => ({
+            semana: dia,
+            ocupacion: 0.45 + Math.sin(dia * 0.9) * 0.25,
+            totalTurnos: 15 + Math.round(Math.random() * 20),
+          }))
+        : Array.from({ length: semanas }, (_, i) => ({
+            semana: i + 1,
+            ocupacion: 0.45 + Math.sin(i * 0.8) * 0.25 + Math.round(Math.random() * 2 - 1) * 0.1,
+            totalTurnos: 20 + Math.round(Math.random() * 10),
+          })),
   };
 }
 

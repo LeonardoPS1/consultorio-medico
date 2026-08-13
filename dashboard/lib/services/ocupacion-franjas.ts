@@ -74,9 +74,7 @@ export async function calcularOcupacionFranjas(opts?: {
   if (opts?.sucursalId) {
     sucursalIds = [opts.sucursalId];
   } else {
-    const sucursalesTenant = await db
-      .select({ id: sucursales.id })
-      .from(sucursales);
+    const sucursalesTenant = await db.select({ id: sucursales.id }).from(sucursales);
     sucursalIds = sucursalesTenant.map((s) => s.id);
     if (sucursalIds.length === 0) {
       return { franjas: [], maxPorDia: [], totalTurnos: 0, semanas, totalPorDia: [] };
@@ -103,9 +101,13 @@ export async function calcularOcupacionFranjas(opts?: {
     .where(and(...conditions))
     .groupBy(sql`1`, sql`2`);
 
-  const franjas: FranjaOcupacion[] = (rows as unknown as Array<{
-    dia: number; hora: number; total: number;
-  }>).map((r) => ({ dia: r.dia, hora: r.hora, total: Number(r.total), ocupacion: 0 }));
+  const franjas: FranjaOcupacion[] = (
+    rows as unknown as Array<{
+      dia: number;
+      hora: number;
+      total: number;
+    }>
+  ).map((r) => ({ dia: r.dia, hora: r.hora, total: Number(r.total), ocupacion: 0 }));
 
   const totalTurnos = franjas.reduce((acc, f) => acc + f.total, 0);
   if (totalTurnos === 0) {
@@ -128,7 +130,7 @@ export async function calcularOcupacionFranjas(opts?: {
   }
 
   const [tendencias, noShowPorFranja, resumen] = await Promise.all([
-    calcularTendencias(sucursalIds, desde, opts?.medicoId),
+    calcularTendencias(sucursalIds, desde, opts?.medicoId, semanas === 1),
     calcularNoShowPorFranja(sucursalIds, desde, opts?.medicoId),
     Promise.resolve(calcularResumen(franjas)),
   ]);
@@ -149,6 +151,7 @@ async function calcularTendencias(
   sucursalIds: string[],
   desde: Date,
   medicoId?: string,
+  porDia = false,
 ): Promise<TendenciaSemanal[]> {
   const conditions: SQL[] = [
     gte(turnos.fechaHora, desde),
@@ -160,9 +163,13 @@ async function calcularTendencias(
     conditions.push(eq(turnos.medicoId, medicoId));
   }
 
+  const agrupador = porDia
+    ? sql<number>`EXTRACT(DOW FROM ${turnos.fechaHora})::int`
+    : sql<number>`EXTRACT(WEEK FROM ${turnos.fechaHora})::int`;
+
   const rows = await db
     .select({
-      semana: sql<number>`EXTRACT(WEEK FROM ${turnos.fechaHora})::int`,
+      semana: agrupador,
       total: sql<number>`COUNT(*)::int`,
     })
     .from(turnos)
@@ -172,11 +179,33 @@ async function calcularTendencias(
 
   if (rows.length === 0) return [];
 
-  const semanaMin = rows[0].semana;
-  const mapped: TendenciaSemanal[] = (rows as unknown as Array<{ semana: number; total: number }>).map((r) => ({
+  const sinAjuste = (rows as unknown as Array<{ semana: number; total: number }>).map((r) => ({
+    semana: Number(r.semana),
+    totalTurnos: Number(r.total),
+  }));
+
+  if (porDia) {
+    // 1 semana → tendencia por día de la semana (DOW 0=Dom..6=Sáb),
+    // completando días sin turnos con 0 para mostrar los 7 días.
+    const porDiaMap = new Map(sinAjuste.map((r) => [r.semana, r.totalTurnos]));
+    const orden = [1, 2, 3, 4, 5, 6, 0]; // Lun→Dom
+    const completa: TendenciaSemanal[] = orden.map((dow) => ({
+      semana: dow,
+      ocupacion: 0,
+      totalTurnos: porDiaMap.get(dow) ?? 0,
+    }));
+    const maxDia = Math.max(...completa.map((m) => m.totalTurnos), 1);
+    for (const m of completa) {
+      m.ocupacion = m.totalTurnos / maxDia;
+    }
+    return completa;
+  }
+
+  const semanaMin = sinAjuste[0].semana;
+  const mapped: TendenciaSemanal[] = sinAjuste.map((r) => ({
     semana: r.semana - semanaMin + 1,
     ocupacion: 0,
-    totalTurnos: Number(r.total),
+    totalTurnos: r.totalTurnos,
   }));
 
   const maxSemanal = Math.max(...mapped.map((m) => m.totalTurnos), 1);
@@ -222,9 +251,7 @@ async function calcularNoShowPorFranja(
     }));
 }
 
-function calcularResumen(
-  franjas: FranjaOcupacion[],
-): ResumenOcupacion {
+function calcularResumen(franjas: FranjaOcupacion[]): ResumenOcupacion {
   if (!franjas.length) {
     return {
       ocupacionGeneral: 0,
@@ -235,12 +262,14 @@ function calcularResumen(
   }
 
   const conTurnos = franjas.filter((f) => f.total > 0);
-  const ocupacionGeneral = conTurnos.length > 0
-    ? conTurnos.reduce((s, f) => s + f.ocupacion, 0) / conTurnos.length
-    : 0;
+  const ocupacionGeneral =
+    conTurnos.length > 0 ? conTurnos.reduce((s, f) => s + f.ocupacion, 0) / conTurnos.length : 0;
 
   const pico = franjas.reduce((max, f) => (f.ocupacion > max.ocupacion ? f : max), franjas[0]);
-  const floja = conTurnos.reduce((min, f) => (f.ocupacion < min.ocupacion ? f : min), conTurnos[0] || franjas[0]);
+  const floja = conTurnos.reduce(
+    (min, f) => (f.ocupacion < min.ocupacion ? f : min),
+    conTurnos[0] || franjas[0],
+  );
 
   return {
     ocupacionGeneral: Math.round(ocupacionGeneral * 100) / 100,
@@ -298,11 +327,21 @@ export function getDemoOcupacion(opts?: { semanas?: number }): OcupacionReporte 
     semanas,
     totalPorDia,
     _demo: true,
-    tendencias: Array.from({ length: semanas }, (_, i) => ({
-      semana: i + 1,
-      ocupacion: 0.45 + Math.sin(i * 0.8) * 0.25 + Math.round(Math.random() * 2 - 1) * 0.1,
-      totalTurnos: 20 + Math.round(Math.random() * 10),
-    })),
+    tendencias:
+      semanas === 1
+        ? [1, 2, 3, 4, 5, 6, 0].map((dia) => {
+            const total = 15 + Math.round(Math.random() * 20);
+            return {
+              semana: dia,
+              ocupacion: 0.45 + Math.sin(dia * 0.9) * 0.25,
+              totalTurnos: total,
+            };
+          })
+        : Array.from({ length: semanas }, (_, i) => ({
+            semana: i + 1,
+            ocupacion: 0.45 + Math.sin(i * 0.8) * 0.25 + Math.round(Math.random() * 2 - 1) * 0.1,
+            totalTurnos: 20 + Math.round(Math.random() * 10),
+          })),
     noShowPorFranja: [],
     resumen: {
       ocupacionGeneral: 0.58,
