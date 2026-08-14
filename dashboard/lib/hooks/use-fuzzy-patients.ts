@@ -108,6 +108,7 @@ export function useFuzzyPatients(): UseFuzzyPatientsReturn {
   // Initial load
   useEffect(() => {
     if (sharedCache.length === 0) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       loadCache();
     } else {
       setCache(sharedCache);

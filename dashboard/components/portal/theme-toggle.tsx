@@ -12,6 +12,7 @@ export function PortalThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration guard de next-themes (debe ser false en SSR)
   useEffect(() => setMounted(true), []);
 
   if (!mounted) {

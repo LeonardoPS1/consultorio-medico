@@ -84,6 +84,7 @@ export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     fetchToggles();
   }, [fetchToggles]);
 
@@ -168,6 +169,7 @@ export function UserFeatureOverridesProvider({ children }: { children: ReactNode
   }, []);
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     fetchOverrides();
   }, [fetchOverrides]);
 

@@ -2,9 +2,9 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 10/08/2026
+**Última actualización:** 13/08/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
-**Versión actual:** 1.38.0
+**Versión actual:** 1.39.0
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
 **Repositorio:** `main` → https://github.com/LeonardoPS1/consultorio-medico
@@ -829,6 +829,9 @@ consultorio-medico/
 | **Anti-concurrencia reservas portal** | Unique partial index `idx_turnos_medico_fecha_activo` (medico_id, fecha_hora) WHERE deleted_at IS NULL AND estado NOT IN ('cancelada','no_asistio'). Transacción atómica en `crearTurnoPortal()`: recheck ocupado + reconciliación waitlist (oferta activa bloquea reserva directa hasta expirar/rechazar) + insert. Manejo error 23505 → 409 "Este horario ya no está disponible, elegí otro". Fix constraint `turnos.fuente_check` agrega 'portal'. Migración 0061 aplicada en prod. Verificado: 2 POST concurrentes → 1×201 + 1 bloqueado. Build exit 0, tsc 0. Commit `2ea1287` | 10/08 |
 | **Fix MercadoPago → cuenta Chile (MLC)** | La pasarela cobraba en una cuenta ARGENTINA (`MLA`, nick LEONARDOPABLOSPEDALETTI). Reemplazadas credenciales en Dokploy por las de la cuenta chilena TESTUSER1924986703045586537 (`APP_USR-...` de prueba, `site_id: MLC`). Verificado: preference con `init_point https://www.mercadopago.cl`, currency CLP, webhook 401 con firma inválida (HMAC OK). `MERCADOPAGO_CURRENCY` no seteado → default CLP. ⚠️ PENDIENTE: credenciales de producción para cobros reales. | 11/08 |
 | **Fix persistencia tablero Atención** | Bug reportado: mover tarjetas entre columnas (en_atencion→atendidos/cancelados/no_asistio) se perdía al recargar o navegar. Causa raíz: la página cargaba `list(hoy UTC)` + `list(undefined,'en_atencion')`; un turno cuya `fecha_hora` cae fuera de la ventana UTC-de-hoy y ya no está en_atencion desaparecía del tablero (el UPDATE en DB sí persistía, probado con rows d7fb9332/82af0a2d). Fix: nuevo `turnosService.listParaAtencion()` (sin cache) que muestra turnos del día local America/Santiago (ventana DST-safe vía `getZonedDayRange` en nuevo `lib/zoned-time.ts`) + turnos en_atencion de cualquier fecha + turnos actualizados hoy (`updatedAt >= start`). Página atencion/page.tsx usa listParaAtencion(). 5 tests nuevos en `lib/__tests__/zoned-time.test.ts`. tsc 0, build 0. Commit `e2ff700` | 11/08 |
+| **Fix columna fantasma `tipo` en recetas (bug crítico prod)** | La schema declaraba `recetas.tipo` (enum `receta_tipo`, agregado en split 150922a) pero **nunca hubo migración** que lo creara en prod y nada lo usaba. Todo `.returning()` (crear/actualizar/renovar) emitía `RETURNING ... "tipo"` → prod error 42703 "column tipo does not exist" → HTTP 500 en crear/borrar recetas. Fix: eliminadas la línea `tipo` de `drizzle/medical.ts:139` + import `recetaTipoEnum` y `tipo: r.tipo` de `app/api/portal/mis-datos/exportar/route.ts:105`. Verificado prod: DELETE y POST recetas → 200 OK. Commit `1615d26` | 13/08 |
+| **Historial recetas + ocupación por día + confirmar oferta** | Bug1: `DELETE /api/recetas/[id]` mandaba estado 'historial' pero el CHECK legacy `recetas_estado_check` de prod solo admitía activa/vencida/cancelada/renovada → 500 → historial vacío. Migración 0062 DROP+recreate CHECK con unión de estados + DEFAULT 'emitida', aplicada en prod. Bug2: filtro ocupación 'semana' daba un único punto (EXTRACT WEEK). Fix: `calcularTendencias(porDia)` agrupa por EXTRACT(DOW) 7 días Lun→Dom zero-fill, labels DIAS_ABREV. Feature: botón Confirmar en ofertas pendientes de waitlist → `POST /api/waitlist/ofertas/[id]/aceptar`. Commit `2f604a0` | 13/08 |
+| **Limpieza build: 1419 problemas corregidos** | 14 errores TS bloqueantes (conversaciones/[id], certificados, historial, exportar, servicios/[id], credenciales-tab, auth.ts), fix NFT warning (imports estáticos fs/path/zlib/stream), eslint --fix + jsdoc mode typescript en eslint.config.js (flat config autoritativo): ~1400 JSDoc autofixados. Build 0 errores/0 warnings. Commit `4ad7c3e` | 13/08 |
 
 ### 🟡 Prioridad Media
 

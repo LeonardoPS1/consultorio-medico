@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key -- skeleton placeholders estaticos, index key estable */
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 

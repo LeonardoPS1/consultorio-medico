@@ -56,6 +56,7 @@ export function ArcOTab({ initialData }: Props) {
   }, [filtros]);
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     fetchData(1);
   }, [fetchData]);
 

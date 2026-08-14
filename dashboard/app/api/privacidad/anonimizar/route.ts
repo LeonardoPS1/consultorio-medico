@@ -6,8 +6,9 @@
  *
  * Anonimiza permanentemente los datos de pacientes cuyo deletedAt
  * superó el período de retención (90 días por defecto).
- * @body { dias?: number } - Días de retención (default: 90)
- * @returns { anonimizados: number } - Cantidad de pacientes procesados
+ *
+ * Body: `{ dias?: number }` — Días de retención (default: 90)
+ * @returns {{ anonimizados: number }} - Cantidad de pacientes procesados
  */
 
 import { NextRequest } from 'next/server';

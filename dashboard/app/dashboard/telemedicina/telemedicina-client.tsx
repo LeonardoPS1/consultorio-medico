@@ -64,6 +64,7 @@ export function TelemedicinaClient({ initialTurnos }: TelemedicinaClientProps) {
   };
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     fetchTurnos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtroMedico, fechaDesde, fechaHasta]);
@@ -204,8 +205,8 @@ export function TelemedicinaClient({ initialTurnos }: TelemedicinaClientProps) {
           { label: 'En curso', count: turnos.filter((t) => t.estado === 'en_atencion').length },
           { label: 'Atendidos', count: turnos.filter((t) => t.estado === 'atendido').length },
           { label: 'Cancelados', count: turnos.filter((t) => t.estado === 'cancelada' || t.estado === 'no_asistio').length },
-        ].map((stat, i) => (
-          <Card key={i} className="border-primary/10 bg-gradient-to-br from-primary/[0.03] to-transparent">
+        ].map((stat) => (
+          <Card key={stat.label} className="border-primary/10 bg-gradient-to-br from-primary/[0.03] to-transparent">
             <CardContent className="flex items-center justify-between p-4">
               <div>
                 <p className="text-2xl font-bold text-foreground">{stat.count}</p>

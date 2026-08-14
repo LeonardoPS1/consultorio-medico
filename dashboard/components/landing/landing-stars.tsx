@@ -13,6 +13,7 @@ export function LandingStars({ delay = 0 }: { delay?: number }) {
     <div className="flex gap-0.5 mb-4">
       {[...Array(5)].map((_, i) => (
         <motion.div
+          // eslint-disable-next-line react/no-array-index-key -- estrellas decorativas estaticas
           key={i}
           initial={{ scale: 0, opacity: 0 }}
           whileInView={{ scale: 1, opacity: 1 }}

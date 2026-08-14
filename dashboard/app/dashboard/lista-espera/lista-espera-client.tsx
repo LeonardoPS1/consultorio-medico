@@ -187,6 +187,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
   }, []);
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     if (addOpen && medicos.length === 0) void cargarMedicos();
   }, [addOpen, medicos.length, cargarMedicos]);
 

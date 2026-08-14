@@ -98,6 +98,7 @@ function AtencionTimer({ desde }: { desde: string }) {
       const m = min % 60;
       return h > 0 ? `${h}h ${m}m` : `${m} min`;
     };
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     setElapsed(calc());
     const interval = setInterval(() => setElapsed(calc()), 30000);
     return () => clearInterval(interval);
@@ -549,6 +550,7 @@ export function AtencionClient({ initialTurnos }: { initialTurnos: Turno[] }) {
   );
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     setMounted(true);
   }, []);
 

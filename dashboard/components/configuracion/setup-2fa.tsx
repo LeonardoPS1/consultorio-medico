@@ -137,8 +137,8 @@ export default function Setup2FA() {
             <div className="space-y-2">
               <p className="text-sm font-medium">Códigos de respaldo</p>
               <div className="grid grid-cols-2 gap-1 font-mono text-xs bg-muted p-3 rounded-lg">
-                {backupCodes.map((code, i) => (
-                  <span key={i} className="text-center">
+                {backupCodes.map((code) => (
+                  <span key={code} className="text-center">
                     {code}
                   </span>
                 ))}

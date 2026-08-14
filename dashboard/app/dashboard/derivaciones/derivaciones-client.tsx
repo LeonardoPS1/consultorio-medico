@@ -229,6 +229,7 @@ export function DerivacionesClient({
   }, [filtroEstado, search]);
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     fetchData();
   }, [fetchData]);
 
@@ -486,6 +487,7 @@ export function DerivacionesClient({
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
+            // eslint-disable-next-line react/no-array-index-key -- skeleton placeholder
             <div key={i} className="h-16 bg-muted rounded-lg animate-pulse" />
           ))}
         </div>

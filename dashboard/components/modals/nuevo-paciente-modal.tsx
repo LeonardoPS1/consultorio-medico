@@ -134,6 +134,7 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
   // Cargar comunas al cambiar región
   useEffect(() => {
     if (!regionId) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setComunas([]);
       return;
     }

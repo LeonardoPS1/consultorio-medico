@@ -212,6 +212,7 @@ export function PushNotificationToggle() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(() => checkSubscription());
     } else {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setStatus('unsupported');
     }
   }, [checkSubscription]);

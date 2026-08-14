@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     const filename = `recetas-${estadoLabel}-${fecha}`;
 
     if (formato === 'excel') {
-      const buffer = recetasService.generarExcel(data);
+      const buffer = await recetasService.generarExcel(data);
 
       return new NextResponse(new Uint8Array(buffer), {
         status: 200,

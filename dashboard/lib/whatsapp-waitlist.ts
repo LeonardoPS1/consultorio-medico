@@ -216,7 +216,7 @@ export async function notificarConfirmacionReasignacion(
  * @param turno.fechaHora
  * @param turno.medicoId
  * @param pacienteAnteriorId ID del paciente que perdió el turno.
- * @returns true si el mensaje pudo enviarse por WhatsApp.
+ * @returns {Promise<boolean>} true si el mensaje pudo enviarse por WhatsApp.
  */
 export async function notificarPacienteReasignado(
   turno: { pacienteId: string; fechaHora: Date; medicoId: string },
@@ -263,7 +263,7 @@ export async function notificarPacienteReasignado(
  *                       Si viene, las confirmaciones se envían por ese mismo
  *                       canal (Chatwoot/Evolution) en vez de elegir canal según
  *                       el flag global. Si no viene, se usa el canal activo.
- * @returns true si el mensaje fue procesado como respuesta de waitlist
+ * @returns {Promise<boolean>} true si el mensaje fue procesado como respuesta de waitlist
  */
 export async function handleWaitlistResponse(
   pacienteId: string,

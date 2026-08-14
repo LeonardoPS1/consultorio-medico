@@ -4,7 +4,6 @@
 // ============================================================
 
 import type { ComponentType, SVGProps } from 'react';
-
 // Import the types we need locally
 import type {
   TurnoDia,

@@ -57,6 +57,7 @@ export function ComplianceClient({ initialData, initialAuditoriaData, initialArc
   }, []);
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     fetchData(periodo);
   }, [periodo, fetchData]);
 
@@ -154,6 +155,7 @@ export function ComplianceClient({ initialData, initialAuditoriaData, initialArc
           {loading ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[...Array(4)].map((_, i) => (
+                // eslint-disable-next-line react/no-array-index-key -- skeleton placeholder
                 <Card key={i}>
                   <CardContent className="pt-6">
                     <div className="h-20 animate-pulse rounded-lg bg-muted" />

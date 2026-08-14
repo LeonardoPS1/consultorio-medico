@@ -77,8 +77,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (formato === 'excel') {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const XLSX = require('xlsx');
+      const { default: XLSX } = await import('xlsx');
       const rows = items.map((i) => ({
         Origen: i.origen === 'soap' ? 'Nota SOAP' : 'Historial',
         Fecha: i.fecha ? new Date(i.fecha).toLocaleString('es-CL') : '',

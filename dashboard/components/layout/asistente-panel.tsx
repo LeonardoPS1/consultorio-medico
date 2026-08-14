@@ -387,9 +387,9 @@ function PanelContent({
             )}
 
             {/* ─── Mensajes ────────────────────────────────── */}
-            {mensajes.map((msg, i) => (
+            {mensajes.map((msg) => (
               <motion.div
-                key={`${msg.timestamp}-${i}`}
+                key={`${msg.timestamp}-${msg.rol}-${msg.contenido}`}
                 className={`flex items-start gap-2.5 ${msg.rol === 'user' ? 'flex-row-reverse' : ''}`}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}

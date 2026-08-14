@@ -39,8 +39,7 @@ Service: lib/services/recetas.ts
 | `pacienteId` | UUID FK→pacientes.id | |
 | `medicoId` | UUID FK→medicos.id | |
 | `turnoId` | UUID FK→turnos.id | Opcional |
-| `estado` | receta_estado enum | borrador, emitida, entregada, anulada, expirada, renovada, historial |
-| `tipo` | receta_tipo enum | simple, crónica, estupefaciente, psicotropo, controlada |
+| `estado` | varchar (legacy, no enum) | borrador, emitida, entregada, anulada, expirada, renovada, historial |
 | `medicamento` | varchar(255) | |
 | `presentacion` | varchar(255) | |
 | `dosis` | varchar(255) | |
@@ -62,7 +61,7 @@ Service: lib/services/recetas.ts
 
 ## Estados
 
-**DB (7 estados PG enum):**
+**DB (7 estados, columna `estado` varchar legacy):**
 ```
 borrador → emitida → entregada
                  → anulada
@@ -70,6 +69,8 @@ borrador → emitida → entregada
                  → renovada → nueva receta
                  → historial (soft-delete)
 ```
+
+> **Nota**: `estado` es `varchar` en producción (el enum `receta_estado` no existe). El CHECK `recetas_estado_check` (migración 0062) admite la unión de estados: borrador, emitida, entregada, anulada, expirada, renovada, historial, activa, vencida, cancelada — con DEFAULT `emitida`.
 
 **Service (3 estados lógicos):**
 | Lógico | DB | UI |

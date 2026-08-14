@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key -- skeleton placeholders estaticos, index key estable */
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { ClientThemeProvider } from '@/components/client-theme-provider';

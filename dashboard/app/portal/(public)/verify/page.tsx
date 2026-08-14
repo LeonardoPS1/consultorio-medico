@@ -41,6 +41,7 @@ function PortalVerifyContent() {
     const redirect = searchParams?.get('redirect');
 
     if (!token) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setError('Enlace inválido: falta el token de acceso.');
       setVerifying(false);
       return;

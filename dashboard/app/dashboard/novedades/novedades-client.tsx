@@ -106,8 +106,8 @@ export function NovedadesClient({ changelog }: NovedadesClientProps) {
                   </div>
 
                   <ul className="space-y-1.5">
-                    {entry.items.map((item, idx) => (
-                      <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                    {entry.items.map((item) => (
+                      <li key={item} className="text-sm text-muted-foreground flex items-start gap-2">
                         <span className="text-primary/60 mt-1.5 shrink-0">•</span>
                         <span>{item}</span>
                       </li>

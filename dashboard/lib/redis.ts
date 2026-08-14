@@ -19,7 +19,7 @@ interface Redis {
   status: string;
 }
 
-function createClient(): Redis | null {
+async function createClient(): Promise<Redis | null> {
   const url = process.env.REDIS_URL;
   if (!url) {
     safeLog('[Redis] REDIS_URL no configurado — deshabilitado');
@@ -27,7 +27,7 @@ function createClient(): Redis | null {
   }
 
   try {
-    const IORedis = require('ioredis');
+    const { default: IORedis } = await import('ioredis');
     const client = new IORedis(url, {
       maxRetriesPerRequest: 3,
       retryStrategy(times: number) {
@@ -50,7 +50,7 @@ function createClient(): Redis | null {
       safeWarn('[Redis] Conexión cerrada');
     });
 
-    return client;
+    return client as unknown as Redis;
   } catch (e) {
     safeWarn('[Redis] Error al crear cliente:', e instanceof Error ? e.message : e);
     return null;
@@ -62,7 +62,7 @@ function createClient(): Redis | null {
  */
 export async function getRedis(): Promise<Redis | null> {
   if (!_redis) {
-    _redis = createClient();
+    _redis = await createClient();
   }
   if (_redis && !_enabled && _redis.status !== 'ready' && _redis.status !== 'connecting') {
     try {

@@ -254,8 +254,8 @@ function ChangelogModal({
 
                     {entry.items.length > 0 && (
                       <ul className="space-y-1">
-                        {entry.items.map((item, i) => (
-                          <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                        {entry.items.map((item) => (
+                          <li key={item} className="text-xs text-muted-foreground flex items-start gap-2">
                             <span className="text-primary mt-0.5 shrink-0">•</span>
                             <span>{item}</span>
                           </li>

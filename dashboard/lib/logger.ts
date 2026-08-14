@@ -80,8 +80,7 @@ export function safeDebug(message: string, data?: unknown): void {
 }
 
 /**
- *
- * @param {...any} args
+ * @param {...unknown} args
  */
 export function safeConsoleLog(...args: unknown[]): void {
   const sanitized = args.map((arg) => {

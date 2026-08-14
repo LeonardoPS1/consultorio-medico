@@ -32,7 +32,7 @@ const SEMAFORO: Record<EstadoCategoria['estado'], { label: string; dot: string; 
 
 /**
  * Status page component - displays real-time service status
- * @returns JSX.Element
+ * @returns {React.ReactElement} JSX element de la página de estado
  */
 export default function StatusPage(): React.ReactElement {
   const [categorias, setCategorias] = useState<EstadoCategoria[] | null>(null);
@@ -56,6 +56,7 @@ export default function StatusPage(): React.ReactElement {
 
   useEffect(() => {
     // Initial load
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     cargar();
     // Refresh every 60 seconds
     const interval = setInterval(cargar, 60_000);

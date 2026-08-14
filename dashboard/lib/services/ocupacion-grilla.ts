@@ -204,7 +204,7 @@ export function generarRecomendaciones(data: OcupacionReporte): Recomendacion[] 
 /**
  * Devuelve el texto humano para una ventana expresada en semanas.
  * @param n - Cantidad de semanas de la ventana.
- * @returns Etiqueta en español (ej. 'última semana', 'último mes', 'el último año').
+ * @returns {string} Etiqueta en español (ej. 'última semana', 'último mes', 'el último año').
  */
 export function labelSemanas(n: number): string {
   if (n === 1) return 'última semana';

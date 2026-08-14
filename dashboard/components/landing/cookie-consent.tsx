@@ -64,6 +64,7 @@ export function useCookiePreferences(): CookiePreferences | null {
 
   useEffect(() => {
     const raw = getCookie(COOKIE_NAME);
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     setPrefs(parsePreferences(raw));
   }, []);
 
@@ -155,6 +156,7 @@ export function CookieConsentBanner() {
     const raw = getCookie(COOKIE_NAME);
     const prefs = parsePreferences(raw);
     if (prefs) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setSavedPrefs(prefs);
       return;
     }

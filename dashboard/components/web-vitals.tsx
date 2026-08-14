@@ -6,6 +6,7 @@ import { onLCP, onINP, onCLS, onFCP, onTTFB } from 'web-vitals';
 function sendToAnalytics(metric: { name: string; value: number; rating: string }) {
   // Enviar a consola en desarrollo
   if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console -- telemetría de desarrollo
     console.log('[Web Vitals]', metric.name, metric.value, metric.rating);
     return;
   }

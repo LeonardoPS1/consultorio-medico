@@ -196,9 +196,9 @@ export default async function DashboardPage() {
           <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
             {data?.actividadReciente && data.actividadReciente.length > 0 ? (
               <div className="space-y-1">
-                {data.actividadReciente.map((act, i) => (
+                {data.actividadReciente.map((act) => (
                   <div
-                    key={`${act.hora}-${i}`}
+                    key={`${act.hora}-${act.tipo}-${act.texto}`}
                     className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl hoverable:hoverable:hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-1 sm:gap-2 min-w-[60px] sm:min-w-[70px]">

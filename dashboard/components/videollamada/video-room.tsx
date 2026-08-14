@@ -634,6 +634,7 @@ function VideoContent({
       return () => clearInterval(interval);
     } else {
       startTimeRef.current = null;
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setElapsed(0);
     }
   }, [isConnected]);

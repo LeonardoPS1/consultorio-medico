@@ -78,6 +78,7 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const lastSeen = getCookie(COOKIE_CHANGELOG_SEEN);
     if (lastSeen !== appVersion) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza estado con cookie en mount
       setHasUnseenChangelog(true);
     }
   }, [appVersion]);
@@ -103,6 +104,7 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
   // ─── Efecto principal: SW + offline ──────────────────────
   useEffect(() => {
     // Offline detection
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza estado con navigator.onLine en mount
     setIsOffline(!navigator.onLine);
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);

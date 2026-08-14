@@ -114,6 +114,7 @@ export function EditarPacienteModal({
   // Inicializar valores cuando se abre el modal o cambia el paciente
   useEffect(() => {
     if (open && paciente) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setNombre(paciente.nombre || '');
       setApellido(paciente.apellido || '');
       setTelefono(paciente.telefono || '');
@@ -143,6 +144,7 @@ export function EditarPacienteModal({
   // Cargar comunas al cambiar región
   useEffect(() => {
     if (!regionId) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setComunas([]);
       return;
     }

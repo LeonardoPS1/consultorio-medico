@@ -137,6 +137,7 @@ export function ConsentimientosClient({
   }, [filtroTipo, search]);
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     fetchData();
   }, [fetchData]);
 

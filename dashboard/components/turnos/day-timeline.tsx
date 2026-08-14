@@ -246,6 +246,7 @@ export function DayTimeline({ medicos, turnos, fecha, onTurnoClick, onSlotClick 
           <div className="flex flex-1 min-w-0 overflow-x-auto">
             {/* Horizontal hour lines */}
             {Array.from({ length: totalHours + 1 }, (_, i) => (
+              // eslint-disable-next-line react/no-array-index-key -- lineas de hora posicionales estaticas
               <div
                 key={`line-${i}`}
                 className="absolute left-0 right-0 border-t border-muted/50"
@@ -280,12 +281,12 @@ export function DayTimeline({ medicos, turnos, fecha, onTurnoClick, onSlotClick 
                   }}
                 >
                   {/* Schedule background (working hours) */}
-                  {blocks.map((block, i) => {
+                  {blocks.map((block) => {
                     const top = (block.inicio - HORA_INICIO * 60) * (SLOT_HEIGHT_PX / 60);
                     const height = (block.fin - block.inicio) * (SLOT_HEIGHT_PX / 60);
                     return (
                       <div
-                        key={i}
+                        key={`${block.inicio}-${block.fin}`}
                         className="absolute left-0 right-0 opacity-[0.04]"
                         style={{
                           top,
@@ -317,7 +318,7 @@ export function DayTimeline({ medicos, turnos, fecha, onTurnoClick, onSlotClick 
                         const h = Math.floor(min / 60);
                         slots.push(
                           <div
-                            key={`slot-${blockIdx}-${min}`}
+                            key={`slot-${block.inicio}-${min}`}
                             className="absolute left-0.5 right-0.5 rounded cursor-pointer hover:bg-primary/5 border border-dashed border-transparent hover:border-primary/20 transition-colors group z-[1]"
                             style={{ top, height }}
                             onClick={() =>

@@ -145,6 +145,7 @@ export default function PortalPerfilClient({
   };
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     setLoadingRegiones(true);
     fetch('/api/regiones')
       .then((r) => r.json())
@@ -155,6 +156,7 @@ export default function PortalPerfilClient({
 
   useEffect(() => {
     if (!regionId) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setComunas([]);
       return;
     }

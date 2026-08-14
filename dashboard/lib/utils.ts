@@ -5,7 +5,7 @@ import { twMerge } from 'tailwind-merge';
 
 /**
  * Combina clases de Tailwind de forma inteligente
- * @param {...any} inputs
+ * @param {...unknown} inputs
  */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

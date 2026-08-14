@@ -242,6 +242,7 @@ export function WebVitalsClient() {
   }, [autoRefresh, period, section, fetchData]);
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     fetchData();
   }, [fetchData]);
 
@@ -731,12 +732,12 @@ export function WebVitalsClient() {
                   <CardContent>
                     {deviceData.length > 0 ? (
                       <div className="space-y-3">
-                        {deviceData.map((d, idx) => {
+                        {deviceData.map((d) => {
                           const totalForDevice = deviceData
                             .filter((x) => x.name === d.name)
                             .reduce((acc, x) => acc + x.count, 0);
                           return (
-                            <div key={`${d.name}-${d.device}-${idx}`}>
+                            <div key={`${d.name}-${d.device}`}>
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-xs font-medium flex items-center gap-1.5">
                                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: DEVICE_COLORS[d.device] }} />
@@ -945,8 +946,8 @@ export function WebVitalsClient() {
                         </tr>
                       </thead>
                       <tbody>
-                        {byUrl.map((r, idx) => (
-                          <tr key={idx} className="border-b border-border/50 hover:bg-muted/30">
+                        {byUrl.map((r) => (
+                          <tr key={`${r.url}-${r.metricName}`} className="border-b border-border/50 hover:bg-muted/30">
                             <td className="px-4 py-2 text-xs max-w-[200px] truncate font-mono">
                               {r.url || '—'}
                             </td>

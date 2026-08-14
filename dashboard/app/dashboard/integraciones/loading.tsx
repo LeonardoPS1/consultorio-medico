@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key -- skeleton placeholders estaticos, index key estable */
 import { Skeleton } from '@/components/ui/skeleton';
 
 /**

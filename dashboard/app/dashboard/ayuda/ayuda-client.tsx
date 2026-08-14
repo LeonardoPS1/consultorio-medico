@@ -141,7 +141,7 @@ export function AyudaClient({ sections, iconMap: _iconMap }: AyudaClientProps) {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Instrucciones</h3>
               {seccionActual.pasos.map((paso, i) => (
-                <Card key={i}>
+                <Card key={paso.titulo}>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">
@@ -160,9 +160,9 @@ export function AyudaClient({ sections, iconMap: _iconMap }: AyudaClientProps) {
                             Tips
                           </p>
                           <ul className="space-y-1">
-                            {paso.tips.map((tip, j) => (
+                            {paso.tips.map((tip) => (
                               <li
-                                key={j}
+                                key={tip}
                                 className="text-sm text-amber-700 dark:text-amber-400 flex items-start gap-1.5"
                               >
                                 <span className="text-amber-500 mt-0.5">•</span>
@@ -193,9 +193,9 @@ export function AyudaClient({ sections, iconMap: _iconMap }: AyudaClientProps) {
             <div className="space-y-3">
               <h3 className="text-lg font-semibold">Preguntas frecuentes</h3>
               <div className="space-y-2">
-                {seccionActual.preguntas.map((pq, i) => (
+                {seccionActual.preguntas.map((pq) => (
                   <details
-                    key={i}
+                    key={pq.pregunta}
                     className="group rounded-lg border border-border p-3 transition-colors hover:border-muted-foreground/30"
                   >
                     <summary className="flex items-center justify-between cursor-pointer text-sm font-medium list-none">

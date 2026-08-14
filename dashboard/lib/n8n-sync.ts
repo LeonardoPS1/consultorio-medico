@@ -250,7 +250,7 @@ function buildN8nData(
  * @param servicio - Nombre del servicio (twilio, ollama, etc.)
  * @param credenciales - Mapa de clave→valor de todas las credenciales del servicio
  * @param n8nCredentialId - ID de la credential en n8n (si ya existe)
- * @returns El ID de la credential en n8n
+ * @returns {Promise<{ success: boolean; n8nId?: string; error?: string }>} El ID de la credential en n8n
  */
 export async function syncToN8n(
   servicio: string,

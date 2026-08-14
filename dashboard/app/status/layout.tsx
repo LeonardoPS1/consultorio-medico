@@ -42,9 +42,9 @@ export const viewport: Viewport = {
 
 /**
  * Status layout with theme guard and client theme provider
- * @param children - React children
- * @param children.children
- * @returns JSX.Element
+ * @param root0 - Props del layout.
+ * @param root0.children - React children.
+ * @returns {React.ReactElement} JSX element del layout
  */
 export default function StatusLayout({ children }: { children: React.ReactNode }): React.ReactElement {
   return (

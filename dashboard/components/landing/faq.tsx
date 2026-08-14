@@ -85,7 +85,7 @@ export function FAQ({ items }: FAQProps = {}) {
         >
           {faqs.map((faq, i) => (
             <motion.div
-              key={i}
+              key={faq.q}
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

@@ -135,6 +135,7 @@ export function Pricing() {
           {/* Scroll indicator dots */}
           <div className="flex justify-center gap-1.5">
             {PLANES_ORDERED.filter((p) => p.id !== 'free').map((_, i) => (
+              // eslint-disable-next-line react/no-array-index-key -- dots decorativos estaticos
               <div key={i} className="h-1.5 w-1.5 rounded-full bg-primary/30" />
             ))}
           </div>

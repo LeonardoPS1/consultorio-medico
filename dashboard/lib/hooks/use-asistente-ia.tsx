@@ -270,6 +270,7 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     if (alertasData) setAlertasProactivas(alertasData);
   }, [alertasData]);
 

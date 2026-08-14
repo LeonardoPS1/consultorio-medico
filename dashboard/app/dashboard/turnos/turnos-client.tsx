@@ -5,7 +5,6 @@ import { motion } from 'motion/react';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { PageAnimation } from '@/components/dashboard/page-animation';
 import { NuevoTurnoModal } from '@/components/modals/nuevo-turno-modal';
-
 // Existing extracted components
 import type { MedicoDia, TurnoDia } from '@/components/turnos/day-timeline';
 import { TurnoDetailModal, CancelTurnoDialog } from '@/components/turnos/turno-detail-modal';
@@ -16,7 +15,6 @@ import { TurnosFilters } from '@/components/turnos/turnos-filters';
 import { TurnosHeader } from '@/components/turnos/turnos-header';
 import { NuevoPacienteConfirmDialog } from '@/components/turnos/turnos-patient-confirm';
 import { TurnosTable } from '@/components/turnos/turnos-table';
-
 // New extracted components
 import {
   WaitlistReassignDialog,
@@ -239,6 +237,7 @@ export function TurnosClient({
   useEffect(() => {
     if (view === 'calendario') {
       if (calendarViewMode === 'mes') {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
         fetchTurnosMes(selectedDate);
       } else {
         fetchTurnos(selectedDate);
@@ -273,6 +272,7 @@ export function TurnosClient({
 
   useEffect(() => {
     if (view === 'dia') {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       fetchDayView(selectedDate);
     }
   }, [view, selectedDate, fetchDayView]);
@@ -288,6 +288,7 @@ export function TurnosClient({
         fetchTurnos(selectedDate, searchText.trim());
       }, 400);
     } else {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       fetchTurnos(selectedDate);
     }
     return () => {

@@ -1,4 +1,5 @@
-import type { Event } from '@sentry/nextjs';
+import type { ErrorEvent } from '@sentry/nextjs';
+import type * as SentryTypes from '@sentry/nextjs';
 import { safeLog, safeWarn, safeError } from '@/lib/logger';
 import { getRequestContext } from '@/lib/request-context';
 
@@ -12,11 +13,12 @@ interface CaptureOptions {
 }
 
 let enabled = false;
+let sentryModule: typeof SentryTypes | null = null;
 
 /**
  *
  */
-export function initGlitchtip(): void {
+export async function initGlitchtip(): Promise<void> {
   const dsn = process.env.GLITCHTIP_DSN;
   if (!dsn) {
     safeLog('[GlitchTip] GLITCHTIP_DSN no configurado — deshabilitado');
@@ -24,7 +26,8 @@ export function initGlitchtip(): void {
   }
 
   try {
-    const Sentry = require('@sentry/nextjs');
+    const Sentry = await import('@sentry/nextjs');
+    sentryModule = Sentry;
 
     Sentry.init({
       dsn,
@@ -36,7 +39,7 @@ export function initGlitchtip(): void {
         Sentry.requestDataIntegration() as never,
         Sentry.httpClientIntegration() as never,
       ],
-      beforeSend(event: Event) {
+      beforeSend(event: ErrorEvent) {
         const context = getRequestContext();
         if (context) {
           event.tags = {
@@ -58,22 +61,13 @@ export function initGlitchtip(): void {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getSentry(): any {
-  try {
-    return require('@sentry/nextjs');
-  } catch {
-    return null;
-  }
-}
-
 /**
  *
  * @param error
  * @param options
  */
 export function captureError(error: unknown, options?: CaptureOptions): void {
-  if (!enabled) {
+  if (!enabled || !sentryModule) {
     safeError(
       '[GlitchTip] Error no reportado (GlitchTip deshabilitado):',
       error instanceof Error ? error.message : error,
@@ -82,7 +76,7 @@ export function captureError(error: unknown, options?: CaptureOptions): void {
   }
 
   try {
-    const Sentry = getSentry();
+    const Sentry = sentryModule;
     if (!Sentry) return;
 
     const context = getRequestContext();
@@ -95,11 +89,7 @@ export function captureError(error: unknown, options?: CaptureOptions): void {
     if (context?.requestId) tags.requestId = context.requestId;
 
     Sentry.withScope(
-      (scope: {
-        setTags: (t: Record<string, string>) => void;
-        setLevel: (l: string) => void;
-        setUser: (u: { id: string }) => void;
-      }) => {
+      (scope: SentryTypes.Scope) => {
         scope.setTags(tags);
         if (options?.level) scope.setLevel(options.level);
         if (options?.userId) scope.setUser({ id: options.userId });

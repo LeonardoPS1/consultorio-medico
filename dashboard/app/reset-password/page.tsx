@@ -38,6 +38,7 @@ function ResetPasswordContent() {
 
   useEffect(() => {
     if (!token) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setError('Token de recuperación no encontrado. Solicitá uno nuevo.');
     }
   }, [token]);

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
 import { isSoundEnabled, setSoundEnabled } from '@/lib/sound';
 
 interface SoundContextValue {
@@ -18,11 +18,7 @@ const STORAGE_KEY = 'aicoremed:sound-enabled';
  * @param root0.children
  */
 export function SoundProvider({ children }: { children: ReactNode }) {
-  const [enabled, setEnabled] = useState(true);
-
-  useEffect(() => {
-    setEnabled(isSoundEnabled());
-  }, []);
+  const [enabled, setEnabled] = useState(() => isSoundEnabled());
 
   const toggle = useCallback(() => {
     setEnabled((prev) => {

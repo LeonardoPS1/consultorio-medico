@@ -509,7 +509,7 @@ async function notificarMenciones(opts: {
 }
 
 /**
- * Extrae menciones @nombre del contenido (soporta nombres con espacios).
+ * Extrae menciones \@nombre del contenido (soporta nombres con espacios).
  * @param contenido
  */
 function extraerMenciones(contenido: string): string[] {

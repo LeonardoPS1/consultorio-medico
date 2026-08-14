@@ -10,8 +10,20 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 10/08/2026 — v1.38.0 Mensajería interna + anti-concurrencia + eliminar chat portal
+// Actualizado: 13/08/2026 — v1.39.0 Ocupación por período + fixes atención/recetas
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.39.0',
+    date: '13/08/2026',
+    title: 'Ocupación por período, historial de recetas y Atención estable',
+    items: [
+      'Reportes: la pestaña Ocupación ahora responde al selector de período (Semana/Mes/Año). En Semana muestra la tendencia día por día (lunes a domingo) y en Mes/Año agrega las tendencias mensuales/anuales.',
+      'Historial de recetas corregido: al mover una receta al historial ya no se pierde. Eliminada una columna fantasma del modelo de datos (tipo de receta) que no existía en la base de datos de producción y rompía las operaciones de crear y borrar recetas con error interno.',
+      'Fix Atención Diaria: los cambios de estado de los turnos (En atención → Atendido/Cancelado/No asistió) ahora se mantienen al recargar o navegar. El tablero muestra los turnos del día local de la clínica (America/Santiago, con soporte de horario de verano) más los que están en atención.',
+      'Lista de Espera: las ofertas pendientes ahora tienen botón "Confirmar" para confirmar manualmente la asignación desde el tablero, sin depender de la respuesta del paciente por WhatsApp.',
+      'Calidad: corregidos 1419 problemas de build (14 errores de TypeScript, ~1400 de ESLint auto-corregibles y un warning de Next.js File Tracing).',
+    ],
+  },
   {
     version: '1.38.0',
     date: '10/08/2026',

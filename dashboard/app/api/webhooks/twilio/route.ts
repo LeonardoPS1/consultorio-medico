@@ -121,7 +121,7 @@ async function notifyDoctor(patientName: string, messagePreview: string, telefon
  * @param messageBody
  * @param pacienteId
  * @param telefono
- * @returns true si se manejó la respuesta (no debe forwardearse a n8n)
+ * @returns {{ handled: boolean; skipN8n: boolean }} true si se manejó la respuesta (no debe forwardearse a n8n)
  */
 async function handleReminderResponse(
   messageBody: string,

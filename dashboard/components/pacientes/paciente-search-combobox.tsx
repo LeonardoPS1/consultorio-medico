@@ -85,6 +85,7 @@ export function PacienteSearchCombobox({
   // Cleanup al cambiar value externamente
   useEffect(() => {
     if (!value) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setSelectedName('');
       isSelectedRef.current = false;
     }
@@ -94,6 +95,7 @@ export function PacienteSearchCombobox({
   useEffect(() => {
     if (isSelectedRef.current) return;
     if (search.trim().length < 2) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setResults([]);
       setOpen(false);
       return;

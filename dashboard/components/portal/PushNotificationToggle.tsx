@@ -37,6 +37,7 @@ export function PushNotificationToggle() {
   }, []);
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     cargarEstado();
   }, [cargarEstado]);
 

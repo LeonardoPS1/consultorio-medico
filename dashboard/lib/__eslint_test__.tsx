@@ -13,6 +13,7 @@ export function TestA() {
     void res;
   }, []);
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     fetchA();
   }, [fetchA]);
   return <div>{a}</div>;
@@ -70,6 +71,7 @@ export function TestD() {
 export function TestE() {
   const [a, setA] = useState(0);
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     setA(1);
   }, []);
   return <div>{a}</div>;

@@ -549,10 +549,8 @@ export async function getRecetasForExport(params: {
  * Genera buffer Excel (.xlsx) desde datos exportables.
  * @param data
  */
-export function generarExcelRecetas(data: RecetaExportRow[]): Buffer {
-  // Usamos require para evitar problemas de tipos con xlsx
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const XLSX = require('xlsx');
+export async function generarExcelRecetas(data: RecetaExportRow[]): Promise<Buffer> {
+  const { default: XLSX } = await import('xlsx');
 
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.json_to_sheet(data);
@@ -678,14 +676,13 @@ export async function getPacientesForExport(params: {
   medicoId?: string | null;
   sucursalId?: string | null;
 }) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { pacientesService } = require('./pacientes');
+  const { pacientesService } = await import('./pacientes');
   const result = await pacientesService.list(
     params.search,
     10000,
     0,
-    params.sucursalId,
-    params.medicoId,
+    params.sucursalId ?? undefined,
+    params.medicoId ?? undefined,
   );
 
   return result.data.map((p: PacienteExportSource) => ({

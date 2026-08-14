@@ -29,7 +29,7 @@ import { db } from '@/lib/db';
  * @param usuarioId - ID del usuario autenticado (session.user.id)
  * @param _ruta - Ruta actual del dashboard (reservado para contexto futuro)
  * @param incluirAnomalias - Si debe incluir un bloque extra de anomalías detectadas (modo activo)
- * @returns Texto con datos reales, o null si no se pudo consultar nada
+ * @returns {Promise<string | null>} Texto con datos reales, o null si no se pudo consultar nada
  */
 export async function buildContextoDB(
   usuarioId: string,

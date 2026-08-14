@@ -128,6 +128,7 @@ export function BlacklistClient({ initialData, initialStats }: Props) {
   }, [filtroEstado, search]);
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     if (search || filtroEstado !== 'todos') fetchData();
   }, [fetchData, search, filtroEstado]);
 

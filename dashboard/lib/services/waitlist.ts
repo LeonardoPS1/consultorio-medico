@@ -189,7 +189,7 @@ export const waitlistService = {
    * pendiente por paciente.
    * @param listaEsperaId
    * @param input - `{ turnoId }` para ofrecer un turno existente; `{ fechaHora, pacienteId, medicoId }` para crear turno nuevo en una franja libre.
-   * @returns Oferta creada (row completo de `ofertasTurno`).
+   * @returns {Promise<OfertaCreada>} Oferta creada (row completo de `ofertasTurno`).
    */
   async crearOferta(
     listaEsperaId: string,
@@ -581,7 +581,7 @@ export const waitlistService = {
    * los borrados. Cada turno incluye el nombre del paciente y `fecha`/`hora`
    * formateadas en es-CL para mostrar en la UI.
    * @param medicoId - ID del médico del que se listan los turnos.
-   * @returns Turnos disponibles formateados, ordenados por fecha ascendente.
+   * @returns {Promise<Array<{ id: string; fechaHora: Date; fecha: string; hora: string; estado: string; pacienteNombre: string }>>} Turnos disponibles formateados, ordenados por fecha ascendente.
    */
   async turnosDisponibles(medicoId: string) {
     const rows = await db
@@ -664,7 +664,7 @@ export const waitlistService = {
 /**
  * Formatea fecha/hora de un turno en es-CL para mostrar en la UI.
  * @param fecha - Fecha a formatear.
- * @returns Objeto con `fecha` (día y mes, ej. "10 de agosto") y `hora` (HH:MM, ej. "09:00").
+ * @returns {{ fecha: string; hora: string }} Objeto con `fecha` (día y mes, ej. "10 de agosto") y `hora` (HH:MM, ej. "09:00").
  */
 export function formatearFechaHora(fecha: Date): { fecha: string; hora: string } {
   return {
@@ -711,7 +711,7 @@ function getDiaSemana(fecha: Date): string {
  * @param opts - Opciones: `dias` (ventana en días, default 7) y `limite` (máx. de franjas, default 20).
  * @param opts.dias
  * @param opts.limite
- * @returns Franjas libres futuras ordenadas ascendentemente.
+ * @returns {Promise<IFranjaLibre[]>} Franjas libres futuras ordenadas ascendentemente.
  */
 export async function proximasFranjasLibres(
   medicoId: string,

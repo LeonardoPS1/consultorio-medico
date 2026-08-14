@@ -466,6 +466,7 @@ export function PacienteDetalleClient({
 
   useEffect(() => {
     if (notasSoapList.length >= 2 && !resumenLoaded) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       void cargarResumen();
     }
   }, [notasSoapList.length, resumenLoaded, cargarResumen]);
@@ -2930,9 +2931,9 @@ export function PacienteDetalleClient({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-2">
-            {alertasClinicas.map((alerta, idx) => (
+            {alertasClinicas.map((alerta) => (
               <div
-                key={idx}
+                key={`${alerta.tipo}-${alerta.con}-${alerta.riesgo}`}
                 className={`rounded-lg border p-3 text-sm ${
                   alerta.riesgo === 'alta'
                     ? 'border-red-200 bg-red-50 text-red-800'

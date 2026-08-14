@@ -81,6 +81,7 @@ export function PWAInstallPrompt() {
 
     // Re-check en caso de que ya haya cargado tarde
     if (!shouldShow()) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setDeferredPrompt(null);
     }
 

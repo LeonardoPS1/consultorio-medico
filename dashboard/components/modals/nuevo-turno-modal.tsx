@@ -87,6 +87,7 @@ export function NuevoTurnoModal({
   useEffect(() => {
     if (open) {
       if (pacienteName) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
         setPacienteSearch(pacienteName);
         setSelectedPaciente(null); // will be set from prop below
       } else {
@@ -105,6 +106,7 @@ export function NuevoTurnoModal({
     if (selectedPaciente) return; // already selected
 
     if (pacienteSearch.trim().length < 2) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setPacienteSuggestions([]);
       setPacienteSearchOpen(false);
       return;
@@ -181,6 +183,7 @@ export function NuevoTurnoModal({
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     setLoadingMedicos(true);
     setMedicosError(null);
     fetch('/api/medicos')
@@ -217,6 +220,7 @@ export function NuevoTurnoModal({
   // Reset form on close
   useEffect(() => {
     if (!open) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setLoading(false);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     }

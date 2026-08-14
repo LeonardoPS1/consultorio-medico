@@ -51,12 +51,19 @@ Lib (lib/)
 | Alta | orange |
 | Saturada | rose |
 
+### Periodo de Ocupación
+
+- `semana` (default, semanas=1): barras por hora por día + tendencia **por día** (`EXTRACT(DOW)`, lunes→domingo, zero-fill)
+- `mes` (semanas=4): tendencia semanal
+- `año` (semanas=52): tendencia mensual
+- La tendencia usa `labelSemanas` client-safe y se renderiza desde `heatmap-franjas.tsx` con `porDia=data.semanas===1`
+
 ## API Endpoints
 
 | Método | Ruta | Params | Respuesta |
 |--------|------|--------|-----------|
 | GET | `/api/reportes` | `periodo=semana\|mes\|año`, `demo=true` | `NextResponse.json` directo (KPIs, turnos, pacientes, whatsapp, intenciones, comparativa, predicción, embudo, ejecutivo) |
-| GET | `/api/reportes/ocupacion` | `demo=true\|false` | `ok(grillaOcupacion)` vía apiHandler |
+| GET | `/api/reportes/ocupacion` | `demo=true\|false`, `periodo=semana\|mes\|año`, `sucursalId`, `medicoId` | `ok(grillaOcupacion)` vía apiHandler |
 | GET | `/api/reportes/benchmark` | — | `ok(comparativa)` con `_opsError` si el ops-console está caído |
 
 ## Reglas de Negocio

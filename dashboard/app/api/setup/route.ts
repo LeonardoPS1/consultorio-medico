@@ -45,6 +45,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     const dataDir = path.default.join(process.cwd(), '.data');
     if (fs.existsSync(dataDir)) {
       fs.rmSync(dataDir, { recursive: true, force: true });
+      // eslint-disable-next-line no-console -- log de setup en desarrollo
       console.log('[Setup] Datos existentes eliminados');
     }
   }

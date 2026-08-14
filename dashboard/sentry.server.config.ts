@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/nextjs';
+import { getRequestContext } from '@/lib/request-context';
 
 const dsn = process.env.GLITCHTIP_DSN;
 
@@ -14,7 +15,6 @@ if (dsn && process.env.GLITCHTIP_ENABLED !== 'false') {
     ],
     beforeSend(event) {
       try {
-        const { getRequestContext } = require('@/lib/request-context');
         const context = getRequestContext();
         if (context) {
           event.tags = {

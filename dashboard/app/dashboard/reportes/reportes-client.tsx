@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key -- skeleton placeholders estaticos, index key estable */
 'use client';
 
 import {
@@ -342,6 +343,7 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
   useEffect(() => {
     if (!canVerOcupacion) return;
     let cancelled = false;
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     setOcupacionLoading(true);
     (async () => {
       try {

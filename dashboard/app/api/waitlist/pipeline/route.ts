@@ -8,7 +8,7 @@
  * 1. Marca ofertas pendientes vencidas como 'expirada'
  * 2. Para cada turno con oferta vencida, busca el siguiente candidato
  * 3. Crea nueva oferta y notifica al paciente
- * @returns { expiradas, nuevasOfertas, ofertas[] }
+ * @returns {{ expiradas: number; nuevasOfertas: number; ofertas: unknown[] }}
  */
 
 import { NextRequest } from 'next/server';

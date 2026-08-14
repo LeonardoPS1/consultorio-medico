@@ -193,6 +193,7 @@ export function CalendarView({
               {/* Días del mes */}
               {days.map((day, i) => {
                 if (day === null) {
+                  // eslint-disable-next-line react/no-array-index-key -- celdas vacias posicionales del calendario
                   return <div key={`empty-${i}`} className="bg-background p-2 min-h-[80px]" />;
                 }
 

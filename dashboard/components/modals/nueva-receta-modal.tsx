@@ -136,6 +136,7 @@ export function NuevaRecetaModal({ open, onOpenChange, onSubmit }: NuevaRecetaMo
 
   useEffect(() => {
     if (!open) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setSearchTerm('');
       setResults([]);
       setSelectedPaciente(null);
@@ -408,9 +409,9 @@ export function NuevaRecetaModal({ open, onOpenChange, onSubmit }: NuevaRecetaMo
         </AlertDialogHeader>
 
         <div className="space-y-2 max-h-[40vh] overflow-y-auto">
-          {alertas.map((a, i) => (
+          {alertas.map((a) => (
             <div
-              key={i}
+              key={`${a.tipo}-${a.con}-${a.riesgo}`}
               className={`rounded-md border p-2 text-sm ${
                 a.riesgo === 'alta'
                   ? 'border-red-200 bg-red-50 text-red-800 dark:bg-red-950/30'

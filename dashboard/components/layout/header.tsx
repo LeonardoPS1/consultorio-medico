@@ -58,6 +58,7 @@ export function Header() {
 
   // Evitar hydration mismatch del theme toggle
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
     setMounted(true);
   }, []);
 

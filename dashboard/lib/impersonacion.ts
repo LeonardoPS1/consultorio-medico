@@ -32,7 +32,7 @@ export interface TokenImpersonacion {
  * @param params.operatorId
  * @param params.operatorEmail
  * @param params.motivo - Motivo obligatorio de la impersonación
- * @returns Los datos del admin, el link de acceso y la expiración; o null si no hay admin activo.
+ * @returns {Promise<TokenImpersonacion | null>} Los datos del admin, el link de acceso y la expiración; o null si no hay admin activo.
  */
 export async function crearTokenImpersonacion(params: {
   tenantId: string;

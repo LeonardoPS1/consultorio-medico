@@ -149,6 +149,7 @@ function useOnboarding(
     const current = tipStates[activeStep];
     // Solo cargar si está idle o error (para reintentar automático)
     if (!current || current.status === 'idle' || current.status === 'error') {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       loadTip(activeStep);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

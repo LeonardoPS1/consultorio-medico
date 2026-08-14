@@ -217,6 +217,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         tips: [
           'Arrastrá un turno de "Pendiente" a "En Atención" cuando empiece la consulta',
           'Pasalo a "Atendido" al finalizar',
+          'Los cambios de estado se guardan al instante y se mantienen al recargar o navegar',
           'Los tiempos de atención se registran automáticamente',
           'Filtrá por médico para ver solo tus turnos',
         ],
@@ -316,6 +317,7 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
           'Seleccioná el paciente en espera del mismo médico que recibirá la oferta (por defecto el de la fila)',
           'Se muestra una vista previa del destino antes de confirmar el envío por WhatsApp',
           'Una vez enviada, el paciente tiene 15 minutos para aceptar o rechazar',
+          'Si el paciente aún no responde, podés confirmar la oferta manualmente con el botón "Confirmar"', 
         ],
         enlace: { href: '/dashboard/lista-espera', label: 'Ir a Lista de Espera' },
       },
@@ -465,6 +467,8 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
         tips: [
           'Las recetas activas son las vigentes',
           'Las vencidas se archivan automáticamente',
+          'Podés mover una receta al historial desde la ficha o la lista (botón "Mover a historial")',
+          'El historial muestra recetas anuladas, renovadas y movidas manualmente',
           'El paciente puede ver sus recetas activas desde el Portal',
         ],
       },
@@ -609,6 +613,16 @@ export const SECCIONES_AYUDA: AyudaSeccion[] = [
           'Ejecutivo: resumen con ingresos, ocupación, satisfacción, NPS + charts de tendencia',
         ],
         enlace: { href: '/dashboard/reportes', label: 'Ir a Reportes' },
+      },
+      {
+        titulo: 'Ocupación por período',
+        descripcion: 'La pestaña Ocupación se adapta al período seleccionado.',
+        tips: [
+          'Semana: barras de demanda por hora (08:00-20:00) por día, con tendencia día por día',
+          'Mes: tendencia semanal de ocupación normalizada',
+          'Año: tendencia mensual de ocupación',
+          'Las fichas "hora pico" y "día con más demanda" se recalculan según el período',
+        ],
       },
       {
         titulo: 'Selector de período',

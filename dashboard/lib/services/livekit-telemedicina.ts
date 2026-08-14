@@ -40,7 +40,7 @@ export const telemedicinaService = {
    * 4. Envía WhatsApp al paciente
    * @param turnoId
    * @param fechaHoraOverride
-   * @returns SalaResult o null si falla (no bloquea el flujo principal)
+   * @returns {Promise<SalaResult | null>} SalaResult o null si falla (no bloquea el flujo principal)
    */
   async configurarSala(turnoId: string, fechaHoraOverride?: Date): Promise<SalaResult | null> {
     try {

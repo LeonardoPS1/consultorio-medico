@@ -192,6 +192,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (!search.trim() && page === 1) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       setPacientesList(initialPacientes);
       setTotal(initialTotal);
       return;
@@ -209,6 +210,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
   // Cuando cambia página con búsqueda vacía y page > 1, fetch inmediato
   useEffect(() => {
     if (page > 1 && !search.trim()) {
+// eslint-disable-next-line react-hooks/set-state-in-effect -- setState tras fetch asincrono en mount
       fetchPacientes('', page);
     }
   }, [page, search, fetchPacientes]);

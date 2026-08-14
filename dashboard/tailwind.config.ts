@@ -1,5 +1,6 @@
 import type { Config } from 'tailwindcss';
 import plugin from 'tailwindcss/plugin';
+import tailwindcssAnimate from 'tailwindcss-animate';
 
 const config: Config = {
   darkMode: ['class'],
@@ -161,7 +162,7 @@ const config: Config = {
     },
   },
   plugins: [
-    require('tailwindcss-animate'),
+    tailwindcssAnimate,
     plugin(({ addVariant }) => {
       // Variant que solo aplica en dispositivos con hover (excluye touch)
       addVariant('hoverable', '@media (hover: hover) and (pointer: fine)');

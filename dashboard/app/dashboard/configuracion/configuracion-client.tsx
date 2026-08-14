@@ -348,8 +348,8 @@ function ConfigContent() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>¿Eliminar plantilla?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esta acción no se puede deshacer. Se eliminará la plantilla "
-                    {deletingPlantilla?.nombre}".
+                    Esta acción no se puede deshacer. Se eliminará la plantilla &quot;
+                    {deletingPlantilla?.nombre}&quot;.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
