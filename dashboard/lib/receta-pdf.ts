@@ -33,7 +33,7 @@ async function cargarOrganizacion(): Promise<OrganizacionInfo> {
   try {
     const res = await fetch('/api/organization');
     if (!res.ok) return {};
-    const json = await res.json();
+    const json = await res.json() as { data?: OrganizacionInfo };
     return json.data || {};
   } catch {
     return {};

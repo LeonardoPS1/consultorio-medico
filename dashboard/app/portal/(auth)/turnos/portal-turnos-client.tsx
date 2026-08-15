@@ -39,6 +39,17 @@ interface Turno {
   pagado: boolean;
 }
 
+interface ReembolsoInfo {
+  procesado: boolean;
+  mensaje?: string;
+  monto?: number | string;
+}
+
+interface CancelarResponse {
+  reembolso?: ReembolsoInfo;
+  error?: string;
+}
+
 interface Props {
   turnos: Turno[];
 }
@@ -89,7 +100,7 @@ export default function PortalTurnosClient({ turnos }: Props) {
         body: JSON.stringify({ estado: 'cancelada', motivo: 'Cancelado por el paciente' }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as CancelarResponse;
       if (res.ok) {
         setCancelados((prev) => new Set(prev).add(turnoId));
         playDelete();

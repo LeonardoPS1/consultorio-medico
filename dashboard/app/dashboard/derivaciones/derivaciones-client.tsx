@@ -154,7 +154,6 @@ function StatCard({
  *
  * @param root0
  * @param root0.initialData
- * @param root0.initialTotal
  * @param root0.initialStats
  * @param root0.initialMedicos
  * @param root0.canView
@@ -214,11 +213,11 @@ export function DerivacionesClient({
       ]);
 
       if (res.ok) {
-        const json = await res.json();
+        const json = await res.json() as { data?: DerivacionItem[] };
         setData(json.data ?? []);
       }
       if (statsRes.ok) {
-        const json = await statsRes.json();
+        const json = await statsRes.json() as StatsData;
         setStats(json);
       }
     } catch (err) {
@@ -237,7 +236,7 @@ export function DerivacionesClient({
   useEffect(() => {
     if (createOpen && medicos.length === 0) {
       fetch('/api/derivaciones?medicos=true')
-        .then((r) => r.json())
+        .then((r) => r.json() as Promise<{ data?: MedicoOption[] }>)
         .then((json) => setMedicos(json.data ?? []))
         .catch(() => {});
     }
@@ -280,7 +279,7 @@ export function DerivacionesClient({
           }),
         });
         if (consentRes.ok) {
-          const consentJson = await consentRes.json();
+          const consentJson = await consentRes.json() as { data?: { id: string } };
           consentimientoId = consentJson.data?.id || null;
         }
       }
@@ -344,7 +343,7 @@ export function DerivacionesClient({
     try {
       const res = await fetch(`/api/derivaciones/${id}`);
       if (res.ok) {
-        const json = await res.json();
+        const json = await res.json() as DerivacionItem & { data?: DerivacionItem };
         setDetail(json.data ?? json);
       }
     } catch {

@@ -30,12 +30,12 @@ import {
 import { getPortalSession } from '@/lib/portal-auth';
 
 export const POST = apiHandler(async (request: NextRequest) => {
-  const body = await request.json();
-  const { roomName, identity, role } = body as {
+  const body = (await request.json()) as {
     roomName?: string;
     identity?: string;
     role?: 'medico' | 'paciente';
   };
+  const { roomName, identity, role } = body;
 
   if (!roomName || !role) {
     fail('Faltan campos requeridos: roomName, role', 400);

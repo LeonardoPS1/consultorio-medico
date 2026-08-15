@@ -4,6 +4,7 @@
 
 import { eq, and, sql } from 'drizzle-orm';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
+import type { PreferenceRequest } from 'mercadopago/dist/clients/preference/commonTypes';
 import { paquetesPortal, suscripcionesPaciente, turnos, pacientes } from '@/drizzle/schema';
 import { db } from '@/lib/db';
 import { safeLog, safeError } from '@/lib/logger';
@@ -95,8 +96,7 @@ export async function comprarPaquete(pacienteId: string, paqueteId: string) {
   const currency = process.env.MERCADOPAGO_CURRENCY || 'CLP';
 
   const preference = new Preference(client);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const body: any = {
+  const body: PreferenceRequest = {
     items: [
       {
         id: paquete.id,

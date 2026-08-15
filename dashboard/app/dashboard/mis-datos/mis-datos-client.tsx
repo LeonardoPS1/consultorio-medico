@@ -71,7 +71,7 @@ export function MisDatosClient({ initialData, canView }: Props) {
     setLoading(true);
     try {
       const res = await fetch('/api/mis-datos', { cache: 'no-store' });
-      const data = await res.json().catch(() => null);
+      const data = await res.json().catch(() => null) as { data?: SolicitudItem[] } | null;
       if (res.ok && Array.isArray(data?.data)) {
         setItems(data.data as SolicitudItem[]);
       }
@@ -95,7 +95,7 @@ export function MisDatosClient({ initialData, canView }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
-      const data = await res.json().catch(() => null);
+      const data = await res.json().catch(() => null) as { error?: string } | null;
       if (res.ok) {
         toast({ title: 'Solicitud procesada', description: 'Se actualizó el estado de la solicitud.' });
         setItems((prev) =>

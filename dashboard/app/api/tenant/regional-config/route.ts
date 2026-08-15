@@ -24,7 +24,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     return ok({ message: 'No se puede configurar regionalización en tenant por defecto' });
   }
 
-  const body = await request.json();
+  const body = (await request.json()) as { pais?: string };
   const { pais } = body;
 
   if (!pais || !PAISES[pais]) {

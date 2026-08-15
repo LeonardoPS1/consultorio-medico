@@ -141,7 +141,7 @@ export function MedicosSection({ plan: _plan }: Props) {
   const fetchMedicos = () => {
     fetch('/api/medicos')
       .then((r) => r.json())
-      .then((d) => setMedicos(d.data || []))
+      .then((d: { data: Medico[] }) => setMedicos(d.data || []))
       .catch(() => toast({ title: 'Error al cargar médicos', variant: 'destructive' }))
       .finally(() => setLoading(false));
   };

@@ -46,7 +46,7 @@ export function ChangePasswordForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentPassword, newPassword }),
       });
-      const json = await res.json();
+      const json = (await res.json()) as { error?: string };
 
       if (json.error) {
         setError(json.error);

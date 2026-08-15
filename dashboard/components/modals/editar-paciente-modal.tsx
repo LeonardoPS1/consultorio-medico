@@ -136,7 +136,7 @@ export function EditarPacienteModal({
     if (open) {
       fetch('/api/regiones')
         .then((r) => r.json())
-        .then((data) => setRegiones(data.data || []))
+        .then((data) => setRegiones((data as { data?: Region[] }).data || []))
         .catch(() => {});
     }
   }, [open]);
@@ -151,7 +151,7 @@ export function EditarPacienteModal({
     setLoadingComunas(true);
     fetch(`/api/comunas?region_id=${regionId}`)
       .then((r) => r.json())
-      .then((data) => setComunas(data.data || []))
+      .then((data) => setComunas((data as { data?: Comuna[] }).data || []))
       .catch(() => {})
       .finally(() => setLoadingComunas(false));
   }, [regionId]);
@@ -188,12 +188,12 @@ export function EditarPacienteModal({
       });
 
       if (!res.ok) {
-        const err = await res.json();
+        const err = (await res.json()) as { error?: string };
         throw new Error(err.error || 'Error al guardar');
       }
 
-      const updated = await res.json();
-      onSaved(updated.data || updated);
+      const updated = (await res.json()) as { data: PacienteData };
+      onSaved((updated.data || updated) as PacienteData);
       onOpenChange(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error al guardar los cambios';

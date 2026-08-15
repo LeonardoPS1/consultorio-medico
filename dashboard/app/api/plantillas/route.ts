@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const parsed = createPlantillaSchema.parse(body);
 
 const [nueva] = await db.insert(plantillasMensajes).values({
@@ -111,7 +111,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const parsed = updatePlantillaSchema.parse(body);
 
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
@@ -141,7 +141,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as { id?: string };
     const { id } = body;
 
     if (!id) {

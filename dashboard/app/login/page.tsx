@@ -30,7 +30,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     fetch('/api/organization')
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<{ data?: { nombre?: string } }>)
       .then((res) => {
         setOrgNombre(resolveTenantName(res.data?.nombre));
       })
@@ -62,7 +62,7 @@ export default function LoginPage() {
     // porque signIn a veces no actualiza el contexto antes de lanzar excepción).
     try {
       const sessionRes = await fetch('/api/auth/session');
-      const sessionData = await sessionRes.json();
+      const sessionData = await sessionRes.json() as { user?: unknown };
       if (sessionData?.user) {
         // Sesión creada → login exitoso. Usamos hard navigation para asegurar
         // que la cookie de sesión se envíe al servidor en el próximo request.

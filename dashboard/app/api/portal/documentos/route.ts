@@ -5,7 +5,7 @@ import { sucursales } from '@/drizzle/tenant';
 import { db } from '@/lib/db';
 import { safeError } from '@/lib/logger';
 import { getPortalSession } from '@/lib/portal-auth';
-import { documentosService } from '@/lib/services/documentos';
+import { documentosService, type DocumentoInput } from '@/lib/services/documentos';
 
 /**
  *
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as { url?: string; tipo?: string };
     const { url, tipo } = body;
 
     if (!url || !tipo) {
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     const doc = await documentosService.crear({
       pacienteId: portalSession.pacienteId,
-      tipo,
+      tipo: tipo as DocumentoInput['tipo'],
       archivoUrl: url,
       tenantId,
     });

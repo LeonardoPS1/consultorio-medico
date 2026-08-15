@@ -183,7 +183,7 @@ export async function procesarReembolso(
       return { success: false, error: `Error de MercadoPago: ${response.status}` };
     }
 
-    const mpResult = await response.json();
+    const mpResult = (await response.json()) as { id: string };
 
     // Actualizar metadata del pago con info del reembolso
     await db

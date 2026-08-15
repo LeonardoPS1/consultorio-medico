@@ -118,7 +118,7 @@ function PendingSurveyForm({
         }),
       });
       if (!res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as { error?: string };
         throw new Error(data.error || 'Error al enviar encuesta');
       }
       setPuntaje(0);
@@ -287,12 +287,12 @@ export default function PortalEncuestasPage() {
         if (cancelled) return;
 
         if (encuestasRes.ok) {
-          const data = await encuestasRes.json();
+          const data = (await encuestasRes.json()) as Encuesta[];
           setEncuestas(Array.isArray(data) ? data : []);
         }
 
         if (pendientesRes.ok) {
-          const data = await pendientesRes.json();
+          const data = (await pendientesRes.json()) as { turnos?: TurnoPendiente[] };
           setPendientes(data.turnos || []);
         }
       } catch {

@@ -205,11 +205,21 @@ export function WebVitalsClient() {
         throw new Error('Error al cargar datos');
       }
 
-      const [statsJson, recentJson, urlJson, timelineJson, percJson, compJson, deviceJson, heatJson] =
-        await Promise.all([
-          statsRes.json(), recentRes.json(), urlRes.json(),
-          timelineRes.json(), percRes.json(), compRes.json(), deviceRes.json(), heatRes.json(),
-        ]);
+      const [
+        statsJson, recentJson, urlJson, timelineJson, percJson, compJson, deviceJson, heatJson,
+      ] = (await Promise.all([
+        statsRes.json(), recentRes.json(), urlRes.json(),
+        timelineRes.json(), percRes.json(), compRes.json(), deviceRes.json(), heatRes.json(),
+      ])) as [
+        { data?: { stats?: MetricStat[]; ratingDistribution?: RatingDist[]; total?: number } },
+        { data?: { data?: RecentEntry[] } },
+        { data?: { data?: ByUrlRow[] } },
+        { data?: { data?: TimelinePoint[]; bucket?: string } },
+        { data?: { data?: PercentileRow[] } },
+        { data?: { data?: ComparisonRow[] } },
+        { data?: { data?: DeviceRow[] } },
+        { data?: { data?: HeatmapRow[] } },
+      ];
 
       setStats(statsJson.data?.stats || []);
       setRatingDist(statsJson.data?.ratingDistribution || []);

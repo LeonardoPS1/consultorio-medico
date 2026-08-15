@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
+    const body = (await request.json()) as { tenantId?: string };
     const { tenantId } = body;
 
     if (!tenantId || typeof tenantId !== 'string') {

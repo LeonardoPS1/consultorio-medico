@@ -120,15 +120,14 @@ function useOnboarding(
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stepId }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { tip?: string; success?: boolean } | null;
 
       if (data?.tip) {
+        const tip = data.tip;
+        const status = data.success === true ? 'ai_loaded' : 'fallback';
         setTipStates((prev) => ({
           ...prev,
-          [stepId]: {
-            text: data.tip,
-            status: data.success === true ? 'ai_loaded' : 'fallback',
-          },
+          [stepId]: { text: tip, status },
         }));
       }
     } catch {

@@ -341,7 +341,7 @@ export function SidebarNav({
       try {
         const res = await fetch('/api/mensajeria-interna/no-leidos');
         if (!res.ok) return;
-        const json = await res.json();
+        const json = (await res.json()) as { data?: { count?: number } };
         setNoLeidosInternos(json.data?.count ?? 0);
       } catch {
         /* silencioso */

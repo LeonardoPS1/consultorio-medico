@@ -13,7 +13,7 @@ const reasignarSchema = z.object({
 // POST /api/waitlist/reasignar
 export const POST = apiHandler(async (request: NextRequest) => {
   await requireAuth();
-  const body = await request.json();
+  const body: unknown = await request.json();
   const parsed = reasignarSchema.parse(body);
 
   try {

@@ -11,6 +11,15 @@ import { db } from '@/lib/db';
 import { safeError } from '@/lib/logger';
 import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
 
+interface PortalTurnoBody {
+  medicoId?: string;
+  servicioId?: string;
+  fechaHora?: string;
+  motivo?: string;
+  sucursalId?: string;
+  rescheduleTurnoId?: string;
+}
+
 /**
  *
  * @param request
@@ -94,7 +103,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    const body = (await request.json()) as PortalTurnoBody;
     const { medicoId, servicioId, fechaHora, motivo, rescheduleTurnoId, sucursalId } = body;
 
     if (!medicoId || !servicioId || !fechaHora) {
@@ -113,7 +122,7 @@ export async function POST(request: NextRequest) {
       medicoId,
       servicioId,
       fechaHora,
-      motivo: motivo || null,
+      motivo: (motivo || null) as string | undefined,
       sucursalId: sucursalId || undefined,
       rescheduleTurnoId: rescheduleTurnoId || undefined,
     });

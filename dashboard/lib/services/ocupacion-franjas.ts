@@ -359,7 +359,7 @@ export function getDemoOcupacion(opts?: { semanas?: number }): OcupacionReporte 
  * @param reporte
  */
 export function construirGrillaOcupacion(reporte: OcupacionReporte): number[][] {
-  const grilla: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
+  const grilla: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0) as number[]);
   for (const f of reporte.franjas) {
     grilla[f.dia][f.hora] = f.ocupacion;
   }

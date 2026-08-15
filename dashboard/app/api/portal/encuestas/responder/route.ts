@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
+    const body: unknown = await request.json();
     const parsed = encuestaSchema.parse(body);
 
     // Verificar que el turno pertenece al paciente

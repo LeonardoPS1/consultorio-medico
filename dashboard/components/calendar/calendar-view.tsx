@@ -149,7 +149,7 @@ export function CalendarView({
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
-  const days: (number | null)[] = Array(firstDay).fill(null);
+  const days: (number | null)[] = Array<number | null>(firstDay).fill(null);
   for (let d = 1; d <= daysInMonth; d++) {
     days.push(d);
   }

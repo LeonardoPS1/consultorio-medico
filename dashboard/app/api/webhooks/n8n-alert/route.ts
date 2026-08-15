@@ -40,7 +40,14 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
+    const body = (await request.json()) as {
+      workflowId?: string;
+      workflowName?: string;
+      executionId?: string;
+      nivel?: unknown;
+      mensaje?: string;
+      metadata?: Record<string, unknown>;
+    };
     const { workflowId, workflowName, executionId, nivel, mensaje, metadata } = body;
 
     if (!workflowId || !mensaje) {
@@ -48,7 +55,7 @@ export async function POST(request: Request) {
     }
 
     const validNiveles = ['info', 'warn', 'error', 'debug'];
-    const nivelFinal = validNiveles.includes(nivel) ? nivel : 'info';
+    const nivelFinal = typeof nivel === 'string' && validNiveles.includes(nivel) ? nivel : 'info';
 
     await logWorkflowExecution({
       workflowId,

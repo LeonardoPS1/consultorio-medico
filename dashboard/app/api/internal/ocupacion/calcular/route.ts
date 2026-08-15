@@ -32,7 +32,11 @@ export const POST = apiHandler(async (request: NextRequest) => {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await request.json().catch(() => ({}));
+  const body = (await request.json().catch(() => ({}))) as {
+    tenantId?: string;
+    sucursalId?: string;
+    semanas?: string | number;
+  };
   const tenantId: string | undefined = body.tenantId;
   const sucursalId: string | undefined = body.sucursalId;
   const semanas = Number(body.semanas) || 12;

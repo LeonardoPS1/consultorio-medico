@@ -74,7 +74,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               // Fallback: verificar contra códigos de respaldo hasheados
               let parsedCodes: string[] = [];
               try {
-                parsedCodes = JSON.parse(user.backupCodes);
+                parsedCodes = JSON.parse(user.backupCodes) as string[];
               } catch {
                 /* formato inválido */
               }

@@ -2,8 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/api-auth';
 import { apiHandler, fail } from '@/lib/api-handler';
 import { notificacionesService } from '@/lib/services/notificaciones';
-import { pushService } from '@/lib/services/push';
+import { pushService, type PushSubscriptionData } from '@/lib/services/push';
 import { pushSubscriptionSchema } from '@/lib/validations';
+
+interface PushRequestBody {
+  action?: string;
+  subscription?: PushSubscriptionData;
+  userAgent?: string;
+  endpoint?: string;
+  usuarioId?: string;
+  title?: string;
+  body?: string;
+  url?: string;
+  tipo?: 'urgencia' | 'receta' | 'turno' | 'mensaje' | 'sistema';
+}
 
 // GET /api/notificaciones/push?action=public-key
 export const GET = apiHandler(async (request: NextRequest) => {
@@ -42,7 +54,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();
   const userId = session.user.id;
 
-  const body = await request.json();
+  const body = await request.json() as PushRequestBody;
   const { action } = body;
 
   switch (action) {

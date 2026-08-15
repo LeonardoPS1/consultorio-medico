@@ -144,10 +144,16 @@ export function PortalAnalyticsClient() {
 
       if (!statsRes.ok) throw new Error('Error al cargar datos');
 
-      const [statsJson, timelineJson, deviceJson, compJson, urlJson] = await Promise.all([
+      const [statsJson, timelineJson, deviceJson, compJson, urlJson] = (await Promise.all([
         statsRes.json(), timelineRes.json(), deviceRes.json(),
         compRes.json(), urlRes.json(),
-      ]);
+      ])) as [
+        { data?: { stats?: MetricStat[]; ratingDistribution?: RatingDist[]; total?: number } },
+        { data?: { data?: TimelinePoint[]; bucket?: string } },
+        { data?: { data?: DeviceRow[] } },
+        { data?: { data?: ComparisonRow[] } },
+        { data?: { data?: ByUrlRow[] } },
+      ];
 
       setStats(statsJson.data?.stats || []);
       setRatingDist(statsJson.data?.ratingDistribution || []);

@@ -91,7 +91,7 @@ export function AuditoriaClient({ initialLogs, initialTotal }: Props) {
       if (filtroAccion) params.set('accion', filtroAccion);
 
       const res = await fetch(`/api/admin/audit-logs?${params}`);
-      const data = await res.json();
+      const data = (await res.json()) as { logs?: AuditEntry[]; total?: number };
       setLogs(data.logs || []);
       setTotal(data.total || 0);
     } catch {
@@ -130,7 +130,7 @@ export function AuditoriaClient({ initialLogs, initialTotal }: Props) {
       }
 
       const res = await fetch(`/api/admin/audit-logs?${params}`, { method: 'DELETE' });
-      const data = await res.json();
+      const data = (await res.json()) as { deleted?: number };
 
       toast({
         title: 'Registros eliminados',

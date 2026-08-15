@@ -126,7 +126,7 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
     if (open) {
       fetch('/api/regiones')
         .then((r) => r.json())
-        .then((data) => setRegiones(data.data || []))
+        .then((data) => setRegiones((data as { data?: Region[] }).data || []))
         .catch(() => {});
     }
   }, [open]);
@@ -141,14 +141,15 @@ export function NuevoPacienteModal({ open, onOpenChange, onSubmit }: NuevoPacien
     setLoadingComunas(true);
     fetch(`/api/comunas?region_id=${regionId}`)
       .then((r) => r.json())
-      .then((data) => setComunas(data.data || []))
+      .then((data) => setComunas((data as { data?: Comuna[] }).data || []))
       .catch(() => {})
       .finally(() => setLoadingComunas(false));
   }, [regionId]);
 
   useEffect(() => {
+    const timeout = timeoutRef.current;
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (timeout) clearTimeout(timeout);
     };
   }, []);
 

@@ -36,7 +36,7 @@ export default function SuscripcionTab() {
 
   useEffect(() => {
     fetch('/api/pagos/status')
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<SuscripcionData & { error?: string }>)
       .then((res) => {
         if (res.error) {
           setError(res.error);
@@ -63,7 +63,11 @@ export default function SuscripcionTab() {
         body: JSON.stringify({ planId }),
       });
 
-      const json = await res.json();
+      const json = (await res.json()) as {
+        error?: string;
+        sandboxInitPoint?: string;
+        initPoint?: string;
+      };
 
       if (json.error) {
         mpWindow?.close();

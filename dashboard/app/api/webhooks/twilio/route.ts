@@ -319,11 +319,11 @@ export const POST = withRateLimit(
       const contentType = request.headers.get('content-type') || '';
 
       if (contentType.includes('application/json')) {
-        const json = await request.json();
-        from = json.From || json.from;
-        body = json.Body || json.body;
-        profileName = json.ProfileName || json.profileName || null;
-        messageSid = json.MessageSid || json.messageSid || null;
+        const json = await request.json() as Record<string, unknown>;
+        from = (json.From as string) || (json.from as string);
+        body = (json.Body as string) || (json.body as string);
+        profileName = (json.ProfileName as string) || (json.profileName as string) || null;
+        messageSid = (json.MessageSid as string) || (json.messageSid as string) || null;
 
         // Recolectar params también para JSON (necesario para validación de firma)
         Object.entries(json).forEach(([key, value]) => {

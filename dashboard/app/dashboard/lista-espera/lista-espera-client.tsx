@@ -135,7 +135,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
   const cargarMedicos = useCallback(async () => {
     try {
       const res = await fetch('/api/medicos');
-      const json = await res.json();
+      const json = (await res.json()) as { data?: { id: string; nombre: string; apellido?: string }[] };
       const lista: MedicoOption[] = (json.data || []).map(
         (m: { id: string; nombre: string; apellido?: string }) => ({
           id: m.id,
@@ -151,7 +151,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
   const cargarOfertas = useCallback(async (itemId: string) => {
     try {
       const res = await fetch(`/api/waitlist/ofertas?listaEsperaId=${itemId}`);
-      const json = await res.json();
+      const json = (await res.json()) as { data?: OfertaTurnoItem[] };
       setOfertasPorItem((prev) => ({ ...prev, [itemId]: json.data || [] }));
     } catch {
       setOfertasPorItem((prev) => ({ ...prev, [itemId]: [] }));
@@ -163,7 +163,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
     setTurnosDisponibles([]);
     try {
       const res = await fetch(`/api/waitlist/turnos-disponibles?medicoId=${medicoId}`);
-      const json = await res.json();
+      const json = (await res.json()) as { data?: TurnoDisponible[] };
       setTurnosDisponibles(json.data || []);
     } catch {
       setTurnosDisponibles([]);
@@ -177,7 +177,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
     setFranjas([]);
     try {
       const res = await fetch(`/api/waitlist/franjas?medicoId=${medicoId}&dias=7&limite=15`);
-      const json = await res.json();
+      const json = (await res.json()) as { data?: FranjaLibre[] };
       setFranjas(json.data || []);
     } catch {
       setFranjas([]);
@@ -235,7 +235,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(destino),
       });
-      const json = await res.json();
+      const json = (await res.json()) as { error?: unknown };
       if (!res.ok || json.error) {
         toast({
           title: typeof json.error === 'string' ? json.error : 'No se pudo ofrecer el turno',
@@ -276,7 +276,7 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
     setConfirmandoOferta(oferta.id);
     try {
       const res = await fetch(`/api/waitlist/ofertas/${oferta.id}/aceptar`, { method: 'POST' });
-      const json = await res.json();
+      const json = (await res.json()) as { error?: unknown };
       if (!res.ok || json.error) {
         toast({
           title:
@@ -321,11 +321,11 @@ export function ListaEsperaClient({ initialItems }: { initialItems: WaitlistItem
   const handleRefresh = async () => {
     try {
       const res = await fetch('/api/waitlist?estado=activa');
-      const json = await res.json();
-      const items = (json.data || []).map((item: Record<string, unknown>) => ({
+      const json = (await res.json()) as { data?: Partial<WaitlistItem>[] };
+      const items = (json.data || []).map((item) => ({
         ...item,
-        fechaInscripcion: new Date(item.fechaInscripcion as string),
-      }));
+        fechaInscripcion: new Date(item.fechaInscripcion as unknown as string),
+      })) as WaitlistItem[];
       setItems(items);
       toast({ title: 'Lista actualizada' });
     } catch {

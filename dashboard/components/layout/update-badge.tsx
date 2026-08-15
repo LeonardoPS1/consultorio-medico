@@ -160,10 +160,10 @@ function ChangelogModal({
     setError(false);
 
     fetch('/api/novedades')
-      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => (res.ok ? (res.json() as Promise<{ data?: NovedadApi[] }>) : null))
       .then((json) => {
         if (cancelled) return;
-        const data: NovedadApi[] = json?.data;
+        const data = json?.data;
         if (data && data.length > 0) {
           setEntries(data.map(apiToChangelog));
         } else {

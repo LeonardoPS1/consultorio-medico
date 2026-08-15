@@ -15,7 +15,10 @@ export const POST = apiHandler(async (request: NextRequest) => {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await request.json().catch(() => ({}));
+  const body = (await request.json().catch(() => ({}))) as {
+    sucursalId?: string;
+    diasAntelacion?: number;
+  };
   const sucursalId = body.sucursalId;
   const diasAntelacion = body.diasAntelacion ?? 30;
 

@@ -17,8 +17,8 @@ export function PushNotificationToggle() {
     try {
       const res = await fetch('/api/notificaciones/push?action=public-key');
       if (!res.ok) return null;
-      const data = await res.json();
-      return data.configured ? data.publicKey : null;
+      const data = (await res.json()) as { configured?: boolean; publicKey?: string };
+      return data.configured ? (data.publicKey ?? null) : null;
     } catch {
       return null;
     }
@@ -139,7 +139,7 @@ export function PushNotificationToggle() {
       });
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
+        const errData = (await res.json().catch(() => ({}))) as { error?: string };
         setErrorMessage(errData.error || 'Error al guardar la suscripción en el servidor.');
         setStatus('error');
         return;

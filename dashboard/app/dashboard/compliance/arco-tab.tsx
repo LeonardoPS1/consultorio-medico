@@ -45,8 +45,10 @@ export function ArcOTab({ initialData }: Props) {
 
       const res = await fetch(`/api/arco?${params.toString()}`);
       if (!res.ok) throw new Error('Error fetching');
-      const json = await res.json();
-      setData(json.data);
+      const json = (await res.json()) as {
+        data?: { solicitudes: SolicitudARCO[]; paginacion: Paginacion };
+      };
+      setData(json.data ?? null);
       setPagina(p);
     } catch {
       setError(true);

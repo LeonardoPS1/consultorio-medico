@@ -74,6 +74,45 @@ interface PacienteEditData {
   comunaId: string | null;
 }
 
+interface PacienteApiRow {
+  id: string;
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  email: string | null;
+  dni: string | null;
+  fechaNacimiento: string | null;
+  direccion: string | null;
+  obraSocial: string | null;
+  sistemaSalud: string | null;
+  isapreNombre: string | null;
+  prevision: string | null;
+  tramoFonasa: string | null;
+  numeroAfiliado: string | null;
+  regionId: string | null;
+  comunaId: string | null;
+  tags: string[];
+}
+
+interface PacientesListResponse {
+  data: Paciente[];
+  total: number;
+}
+
+interface ScoreEntry {
+  pacienteId: string;
+  score: number;
+  nivel: string;
+}
+
+interface ScoringResponse {
+  data?: { scores?: ScoreEntry[] };
+}
+
+interface BulkWhatsAppResponse {
+  data: { enviados: number; fallidos: number; total: number };
+}
+
 interface PacientesClientProps {
   initialPacientes: Paciente[];
   initialTotal: number;
@@ -114,7 +153,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
     try {
       const res = await fetch(`/api/pacientes/${pacienteId}`);
       if (!res.ok) throw new Error('Error al obtener datos del paciente');
-      const json = await res.json();
+      const json = (await res.json()) as PacienteApiRow & { data?: PacienteApiRow };
       const p = json.data || json;
       setEditPacienteData({
         id: p.id,
@@ -176,7 +215,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
       if (sucursalId) params.set('sucursalId', sucursalId);
       const res = await fetch(`/api/pacientes?${params.toString()}`);
       if (res.ok) {
-        const json = await res.json();
+        const json = (await res.json()) as PacientesListResponse;
         setPacientesList(json.data || []);
         setTotal(json.total ?? 0);
       }
@@ -223,7 +262,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
     if (visibleIds.length === 0) return;
     const params = new URLSearchParams({ ids: visibleIds.join(',') });
     fetch(`/api/pacientes/scoring?${params.toString()}`)
-      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => (r.ok ? (r.json() as Promise<ScoringResponse>) : null))
       .then((json) => {
         if (json?.data?.scores) {
           const map: Record<string, { score: number; nivel: string }> = {};
@@ -276,7 +315,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
         }),
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = (await res.json()) as { error?: string };
         toast({
           title: 'Error',
           description: err.error || 'Error al enviar',
@@ -284,7 +323,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
         });
         return;
       }
-      const json = await res.json();
+      const json = (await res.json()) as BulkWhatsAppResponse;
       toast({
         title: 'WhatsApp enviado',
         description: `${json.data.enviados} enviados, ${json.data.fallidos} fallidos de ${json.data.total}`,
@@ -331,7 +370,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
         body: JSON.stringify({ ...data, sucursalId }),
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = (await res.json()) as { error?: string };
         toast({
           title: 'Error',
           description: err.error || 'No se pudo crear el paciente',
@@ -339,7 +378,7 @@ export function PacientesClient({ initialPacientes, initialTotal }: PacientesCli
         });
         return;
       }
-      const json = await res.json();
+      const json = (await res.json()) as { data: PacienteApiRow };
       const created = json.data;
       const newPaciente: Paciente = {
         id: created.id,

@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  const { asunto, mensaje } = await req.json();
+  const { asunto, mensaje } = (await req.json()) as { asunto?: string; mensaje?: string };
   if (!mensaje?.trim()) {
     return NextResponse.json({ error: 'Mensaje requerido' }, { status: 400 });
   }

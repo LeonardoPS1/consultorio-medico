@@ -11,7 +11,7 @@ import { motion } from 'motion/react';
 export function LandingStars({ delay = 0 }: { delay?: number }) {
   return (
     <div className="flex gap-0.5 mb-4">
-      {[...Array(5)].map((_, i) => (
+      {Array.from({ length: 5 }).map((_, i) => (
         <motion.div
           // eslint-disable-next-line react/no-array-index-key -- estrellas decorativas estaticas
           key={i}

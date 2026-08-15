@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
 
     if (!body || typeof body !== 'object') {
       return NextResponse.json({ error: 'Body inválido' }, { status: 400 });

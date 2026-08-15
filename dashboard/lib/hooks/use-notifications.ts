@@ -49,6 +49,16 @@ interface PreferenciasNotificaciones {
   silenciarPorTipo: SilenciarPorTipo;
 }
 
+interface PreferenciasResponse {
+  data?: Partial<PreferenciasNotificaciones>;
+  urgenciasWhatsapp?: boolean;
+  resumenDiarioEmail?: boolean;
+  alertasAusentismo?: boolean;
+  nuevosPacientes?: boolean;
+  whatsappPersonal?: string;
+  silenciarPorTipo?: SilenciarPorTipo;
+}
+
 const DEFAULT_SILENCIAR: SilenciarPorTipo = {
   turno: false,
   mensaje: false,
@@ -79,7 +89,7 @@ async function fetchNotificaciones(): Promise<NotificacionesResponse> {
 async function fetchPreferencias(): Promise<PreferenciasNotificaciones> {
   const res = await fetch('/api/notificaciones?preferencias=true');
   if (!res.ok) throw new Error('Error al cargar preferencias');
-  const json = await res.json();
+  const json = (await res.json()) as PreferenciasResponse;
   return {
     urgenciasWhatsapp: json.data?.urgenciasWhatsapp ?? json.urgenciasWhatsapp ?? true,
     resumenDiarioEmail: json.data?.resumenDiarioEmail ?? json.resumenDiarioEmail ?? true,
@@ -307,7 +317,10 @@ export function useNotifications() {
     sistema: silenciadas.sistema ? 0 : conteoPorTipo.sistema,
   };
 
-  const noLeidasVisibles = Object.values(conteoPorTipoVisible).reduce((a, b) => a + b, 0);
+  const noLeidasVisibles = (Object.values(conteoPorTipoVisible) as number[]).reduce(
+    (a, b) => a + b,
+    0,
+  );
 
   // Sound effect on new notifications
   const prevNoLeidas = useRef(noLeidas);

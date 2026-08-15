@@ -542,8 +542,7 @@ Hola ${pacienteNombre}, tu turno fue agendado correctamente:
   message += `\n\nSi no puedes asistir, cancelá con anticipación desde el portal.
 🔗 ${appUrl}/portal`;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const body: any = {
+  const body: Record<string, string> = {
     To: telefono.startsWith('+') ? telefono : `+${telefono}`,
     From: fromNumber,
     Body: message,

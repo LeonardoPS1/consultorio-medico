@@ -72,7 +72,6 @@ const TIPOS = ['general', 'cirugia', 'tratamiento', 'procedimiento', 'estetica',
  *
  * @param root0
  * @param root0.initialData
- * @param root0.initialTotal
  * @param root0.initialStats
  * @param root0.canView
  */
@@ -117,11 +116,11 @@ export function ConsentimientosClient({
       ]);
 
       if (listRes.ok) {
-        const json = await listRes.json();
+        const json = (await listRes.json()) as { data?: ConsentimientoItem[] };
         setData(json.data || []);
       }
       if (statsRes.ok) {
-        const json = await statsRes.json();
+        const json = (await statsRes.json()) as ConsentimientoStats;
         setStats(json);
       }
     } catch (err) {
@@ -167,7 +166,7 @@ export function ConsentimientosClient({
         }),
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = (await res.json()) as { message?: string };
         throw new Error(err.message || 'Error al crear');
       }
       toast({ title: 'Creado', description: 'Consentimiento registrado correctamente' });
@@ -194,7 +193,7 @@ export function ConsentimientosClient({
     try {
       const res = await fetch(`/api/consentimientos/${id}`);
       if (res.ok) {
-        const json = await res.json();
+        const json = (await res.json()) as { data: ConsentimientoItem };
         setDetailData(json.data);
         setDetailOpen(true);
       }

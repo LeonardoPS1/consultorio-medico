@@ -113,7 +113,7 @@ export const pacientesService = {
           tags: Array.isArray(p.tags)
             ? p.tags
             : typeof p.tags === 'string'
-              ? JSON.parse(p.tags)
+              ? (JSON.parse(p.tags) as string[])
               : [],
         }));
         return {

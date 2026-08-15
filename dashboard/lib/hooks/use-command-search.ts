@@ -18,6 +18,40 @@ interface UseCommandSearchReturn {
   search: (query: string) => void;
 }
 
+interface PacienteRow {
+  id: string;
+  nombre: string;
+  apellido: string;
+  rut?: string | null;
+  dni?: string | null;
+  telefono?: string | null;
+}
+
+interface TurnoRow {
+  id: string;
+  motivo?: string;
+  fechaHora?: string;
+  estado?: string;
+  pacienteNombre?: string;
+  pacienteApellido?: string;
+  paciente?: { nombre?: string; apellido?: string };
+}
+
+interface ConversacionRow {
+  id: string;
+  canal?: string;
+  estado?: string;
+  pacienteNombre?: string;
+  ultimoMensaje?: string;
+}
+
+interface RecetaRow {
+  id: string;
+  medicamento?: string;
+  dosis?: string;
+  estado?: string;
+}
+
 const DEBOUNCE_MS = 250;
 const MIN_QUERY_LENGTH = 2;
 
@@ -55,8 +89,9 @@ export function useCommandSearch(): UseCommandSearchReturn {
     fetch('/api/pacientes?limit=500')
       .then((r) => r.json())
       .then((json) => {
-        const patients: SearchResult[] = (json.data || json.pacientes || []).map(
-          (p: Record<string, unknown>) => ({
+        const body = json as { data?: PacienteRow[]; pacientes?: PacienteRow[] };
+        const patients: SearchResult[] = (body.data || body.pacientes || []).map(
+          (p: PacienteRow) => ({
             id: `paciente-${p.id}`,
             label: `${p.nombre || ''} ${p.apellido || ''}`.trim() || 'Paciente',
             sublabel: [p.rut || p.dni, p.telefono].filter(Boolean).join(' · '),
@@ -111,7 +146,7 @@ export function useCommandSearch(): UseCommandSearchReturn {
 
       // 2) Turnos via API
       if (turnosRes.status === 'fulfilled' && turnosRes.value.ok) {
-        const data = await turnosRes.value.json();
+        const data = (await turnosRes.value.json()) as { turnos?: TurnoRow[]; data?: TurnoRow[] };
         const items = data.turnos ?? data.data ?? [];
         for (const t of items) {
           const nombre = t.pacienteNombre ?? t.paciente?.nombre ?? '';
@@ -129,7 +164,10 @@ export function useCommandSearch(): UseCommandSearchReturn {
 
       // 3) Conversaciones via API
       if (conversacionesRes.status === 'fulfilled' && conversacionesRes.value.ok) {
-        const data = await conversacionesRes.value.json();
+        const data = (await conversacionesRes.value.json()) as {
+          conversaciones?: ConversacionRow[];
+          data?: ConversacionRow[];
+        };
         const items = data.conversaciones ?? data.data ?? [];
         for (const c of items) {
           allResults.push({
@@ -145,7 +183,7 @@ export function useCommandSearch(): UseCommandSearchReturn {
 
       // 4) Recetas via API
       if (recetasRes.status === 'fulfilled' && recetasRes.value.ok) {
-        const data = await recetasRes.value.json();
+        const data = (await recetasRes.value.json()) as { recetas?: RecetaRow[]; data?: RecetaRow[] };
         const items = data.recetas ?? data.data ?? [];
         for (const r of items) {
           allResults.push({

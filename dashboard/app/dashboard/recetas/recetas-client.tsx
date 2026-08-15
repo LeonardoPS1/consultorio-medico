@@ -96,7 +96,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
       const url = `/api/recetas${qs ? `?${qs}` : ''}`;
       const res = await fetch(url, { cache: 'no-store' });
       if (res.ok) {
-        const json = await res.json();
+        const json = (await res.json()) as { data: Receta[] };
         setRecetas(json.data ?? []);
         return;
       }
@@ -184,7 +184,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
       });
 
       if (!res.ok) {
-        const err = await res.json();
+        const err = (await res.json()) as { error?: string };
         toast({
           title: 'Error',
           description: err.error || 'No se pudo crear la receta',
@@ -193,7 +193,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         return;
       }
 
-      const json = await res.json();
+      const json = (await res.json()) as { data: { medicamento: string } };
       void cargarRecetas(pacienteFiltro?.id, tabActivo);
       toast({
         title: 'Receta creada',
@@ -213,7 +213,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
       const res = await fetch(`/api/recetas/${receta.id}/renovar`, { method: 'POST' });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => null);
+        const err = (await res.json().catch(() => null)) as { error?: string } | null;
         toast({
           title: 'Error',
           description: err?.error || 'No se pudo renovar la receta',
@@ -222,7 +222,7 @@ export function RecetasClient({ initialRecetas }: RecetasClientProps) {
         return;
       }
 
-      const json = await res.json();
+      const json = (await res.json()) as { data: { medicamento: string; fechaFin?: string | null } };
       void cargarRecetas(pacienteFiltro?.id, tabActivo);
       toast({
         title: '🔄 Receta renovada',

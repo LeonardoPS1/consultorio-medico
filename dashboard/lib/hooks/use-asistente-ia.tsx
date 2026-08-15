@@ -186,13 +186,20 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
         }),
       });
       if (!res.ok) throw new Error('Error al comunicarse con el asistente');
-      return res.json();
+      return res.json() as Promise<{
+        data?: {
+          disponible?: boolean;
+          respuesta?: string;
+          error?: string;
+        };
+      }>;
     },
     onSuccess: (data) => {
+      const respuesta = data.data?.respuesta;
       if (data.data?.disponible) {
         setMensajes((prev) => [
           ...prev,
-          { rol: 'assistant', contenido: data.data.respuesta, timestamp: Date.now() },
+          { rol: 'assistant', contenido: respuesta ?? '', timestamp: Date.now() },
         ]);
         setDisponible(true);
         setError(null);
@@ -239,8 +246,8 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
       if (!habilitado) return [];
       const res = await fetch(`/api/ia/sugerencias?ruta=${encodeURIComponent(pathname)}`);
       if (!res.ok) return [];
-      const json = await res.json();
-      return (json.data?.sugerencias || []) as Sugerencia[];
+      const json = await res.json() as { data?: { sugerencias?: Sugerencia[] } };
+      return json.data?.sugerencias || [];
     },
     enabled: habilitado && userSettings.modo !== 'silencioso',
     refetchInterval,
@@ -260,8 +267,8 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
       if (!habilitado) return [];
       const res = await fetch(`/api/ia/sugerencias?ruta=${encodeURIComponent(pathname)}&alertas=true`);
       if (!res.ok) return [];
-      const json = await res.json();
-      return (json.data?.alertas || []) as AlertaProactiva[];
+      const json = await res.json() as { data?: { alertas?: AlertaProactiva[] } };
+      return json.data?.alertas || [];
     },
     enabled: habilitado && userSettings.modo === 'activo',
     refetchInterval: 30000,
@@ -287,7 +294,7 @@ export function AsistenteProvider({ children }: { children: ReactNode }) {
     if (!open) {
       autoInsightSentRef.current = false;
     }
-  }, [open, userSettings.modo, mensajes.length, habilitado]);
+  }, [open, userSettings.modo, mensajes.length, habilitado, enviarMensaje]);
 
   // ─── Atajos de teclado ──────────────────────────────────
   useEffect(() => {

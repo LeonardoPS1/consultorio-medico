@@ -466,7 +466,8 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
     fetch('/api/admin/features')
       .then((r) => r.json())
       .then((data) => {
-        const features = data.data?.features ?? data.features;
+        const json = data as { data?: { features?: Record<string, boolean> }; features?: Record<string, boolean> };
+        const features = json.data?.features ?? json.features;
         if (features) {
           // Inicializar: features no listados = true (habilitado por defecto)
           const initial: Record<string, boolean> = {};
@@ -548,7 +549,8 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
     fetch('/api/admin/users')
       .then((r) => r.json())
       .then((data) => {
-        const list: UserOption[] = data.data?.users ?? data.users ?? [];
+        const json = data as { data?: { users?: UserOption[] }; users?: UserOption[] };
+        const list: UserOption[] = json.data?.users ?? json.users ?? [];
         setUsers(list.map((u) => ({ id: u.id, email: u.email, nombre: u.nombre, plan: u.plan })));
       })
       .catch(() => {})
@@ -581,7 +583,11 @@ export default function SistemaTab({ isAdmin, section }: SistemaTabProps) {
     fetch(`/api/admin/users/${selectedUserId}/feature-overrides`)
       .then((r) => r.json())
       .then((data) => {
-        const overridesList = data.data?.overrides ?? data.overrides;
+        const json = data as {
+          data?: { overrides?: { featureId: string; enabled: boolean }[] };
+          overrides?: { featureId: string; enabled: boolean }[];
+        };
+        const overridesList = json.data?.overrides ?? json.overrides;
         if (overridesList) {
           const overridesMap: Record<string, boolean> = {};
           overridesList.forEach((override: { featureId: string; enabled: boolean }) => {
@@ -932,7 +938,11 @@ function PrivacidadConfigSection() {
     fetch('/api/admin/privacidad-config')
       .then((r) => r.json())
       .then((data) => {
-        const configData = data.data?.config ?? data.config;
+        const json = data as {
+          data?: { config?: { periodoRetencionBajaDias: number } };
+          config?: { periodoRetencionBajaDias: number };
+        };
+        const configData = json.data?.config ?? json.config;
         if (configData) {
           setConfig(configData);
         }
@@ -955,7 +965,7 @@ function PrivacidadConfigSection() {
           description: 'El período de retención fue actualizado.',
         });
       } else {
-        const err = await res.json().catch(() => ({}));
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
         toast({
           title: 'Error al guardar',
           description: err.error || 'Error desconocido',
@@ -1074,7 +1084,10 @@ function IaConfigSection({
     fetch('/api/admin/ia-config')
       .then((r) => r.json())
       .then((data) => {
-        const configData = data.data?.config;
+        const json = data as {
+          data?: { config?: { prompt: string; maxTokens: number; temperatura: number } };
+        };
+        const configData = json.data?.config;
         if (configData) {
           setConfig(configData);
         }
@@ -1097,7 +1110,7 @@ function IaConfigSection({
           description: 'El prompt y parámetros del asistente IA fueron actualizados.',
         });
       } else {
-        const err = await res.json().catch(() => ({}));
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
         toast({
           title: 'Error al guardar',
           description: err.error || 'Error desconocido',

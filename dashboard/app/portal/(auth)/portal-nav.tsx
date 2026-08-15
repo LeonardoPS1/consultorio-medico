@@ -185,7 +185,7 @@ export default function PortalNav() {
     try {
       const res = await fetch('/api/portal/notificaciones?count=true');
       if (res.ok) {
-        const data = await res.json();
+        const data = await res.json() as { count?: number };
         setUnreadCount(data.count ?? 0);
       }
     } catch {
@@ -199,7 +199,7 @@ export default function PortalNav() {
       try {
         const res = await fetch('/api/portal/notificaciones?count=true');
         if (res.ok) {
-          const data = await res.json();
+          const data = await res.json() as { count?: number };
           setUnreadCount(data.count ?? 0);
         }
       } catch {

@@ -22,7 +22,7 @@ export function PushNotificationToggle() {
     try {
       const res = await fetch('/api/portal/push/status');
       if (res.ok) {
-        const data = await res.json();
+        const data = await res.json() as { subscribed?: boolean; publicKey?: string };
         setSubscribed(data.subscribed ?? false);
         setPublicKey(data.publicKey ?? '');
       }
@@ -105,7 +105,7 @@ export function PushNotificationToggle() {
       });
 
       if (!res.ok) {
-        const err = await res.json();
+        const err = await res.json() as { error?: string };
         throw new Error(err.error || 'Error al suscribir');
       }
 

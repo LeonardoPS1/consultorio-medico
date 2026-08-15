@@ -121,7 +121,7 @@ export function NuevoTurnoModal({
           `/api/pacientes?search=${encodeURIComponent(pacienteSearch.trim())}&limit=8`,
         );
         if (!res.ok) throw new Error('Error en búsqueda');
-        const json = await res.json();
+        const json = await res.json() as { data: PacienteSuggestion[] };
         const list: PacienteSuggestion[] = json.data || [];
         setPacienteSuggestions(list);
         setPacienteSearchOpen(list.length > 0);
@@ -189,12 +189,15 @@ export function NuevoTurnoModal({
     fetch('/api/medicos')
       .then(async (r) => {
         if (!r.ok) {
-          const body = await r.json().catch(() => ({}));
+          const body = (await r.json().catch(() => ({}))) as {
+            error?: string;
+            detail?: string;
+          };
           throw new Error(body?.error || body?.detail || `Error ${r.status}`);
         }
         return r.json();
       })
-      .then((json) => {
+      .then((json: { data: MedicoOption[] }) => {
         if (cancelled) return;
         const lista: MedicoOption[] = json.data || [];
         setMedicos(lista);

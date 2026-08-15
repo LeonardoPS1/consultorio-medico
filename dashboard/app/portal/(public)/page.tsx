@@ -128,12 +128,13 @@ export default function PortalLogin() {
 
   useEffect(() => {
     fetch('/api/portal/auth/status')
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<{ bypass?: boolean; pacientes?: BypassPaciente[] }>)
       .then((data) => {
         setBypassActivo(data.bypass === true);
-        if (data.pacientes?.length > 0) {
-          setBypassPacientes(data.pacientes);
-          setPacienteSeleccionado(data.pacientes[0]);
+        const pacientes = data.pacientes;
+        if (pacientes && pacientes.length > 0) {
+          setBypassPacientes(pacientes);
+          setPacienteSeleccionado(pacientes[0]);
         }
       })
       .catch(() => {})
@@ -149,7 +150,7 @@ export default function PortalLogin() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pacienteId }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { redirect?: string; error?: string };
       if (res.ok && data.redirect) {
         window.location.href = data.redirect;
       } else {
@@ -183,7 +184,7 @@ export default function PortalLogin() {
       if (res.ok) {
         setStep('sent');
       } else {
-        const data = await res.json();
+        const data = (await res.json()) as { error?: string };
         setError(data.error || 'Error al solicitar acceso');
       }
     } catch {

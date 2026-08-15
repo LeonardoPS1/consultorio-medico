@@ -60,6 +60,11 @@ interface HistorialEntry {
   pacienteTelefono: string;
 }
 
+interface HistorialResponse {
+  data?: HistorialEntry[];
+  total?: number;
+}
+
 interface TipoOption {
   value: string;
   label: string;
@@ -160,8 +165,8 @@ export function HistorialClient({ initialData, initialTotal, tipos }: Props) {
       try {
         const params = buildParams(f, p);
         const res = await fetch(`/api/historial?${params}`);
-        const json = await res.json();
-        const payload = json.data ?? json;
+        const json = (await res.json()) as { data?: HistorialResponse } | HistorialResponse;
+        const payload = (json.data ?? json) as HistorialResponse | undefined;
         if (payload && Array.isArray(payload.data)) {
           setData(payload.data);
           setTotal(payload.total ?? 0);
@@ -569,7 +574,7 @@ function NuevoRegistroDialog({
           }),
         });
         if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
+          const j = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
           throw new Error(j.error || j.message || 'Error al guardar la nota SOAP');
         }
       } else {
@@ -591,7 +596,7 @@ function NuevoRegistroDialog({
           }),
         });
         if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
+          const j = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
           throw new Error(j.error || j.message || 'Error al guardar el registro');
         }
       }

@@ -121,7 +121,7 @@ export function WebhooksClient({ initialMensajes, initialTotal }: WebhooksClient
       if (!res.ok) {
         let mensaje = 'Error al cargar logs';
         try {
-          const errData = await res.json();
+          const errData = await res.json() as { error?: string };
           if (errData.error) mensaje = errData.error;
         } catch {
           // respuesta sin JSON
@@ -129,7 +129,7 @@ export function WebhooksClient({ initialMensajes, initialTotal }: WebhooksClient
         throw new Error(mensaje);
       }
 
-      const data = await res.json();
+      const data = await res.json() as { data?: MensajeLog[]; total?: number };
       setMensajes(data.data || []);
       setTotal(data.total || 0);
     } catch (err) {

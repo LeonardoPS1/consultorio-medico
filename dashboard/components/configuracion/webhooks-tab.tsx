@@ -63,6 +63,26 @@ interface WebhookLogItem {
   createdAt: string;
 }
 
+interface WebhookConfigsResponse {
+  data?: WebhookConfigItem[];
+}
+
+interface WebhookLogsResponse {
+  data?: WebhookLogItem[];
+}
+
+interface WebhookErrorResponse {
+  error?: string;
+}
+
+interface WebhookCreatedResponse {
+  data?: { secret?: string };
+}
+
+interface WebhookTestResponse {
+  data?: { ok?: boolean; statusCode?: number; error?: string };
+}
+
 interface WebhookFormProps {
   initial: WebhookConfigItem | null;
   onSave: (data: { evento: string; url: string; activo: boolean }) => Promise<void>;
@@ -175,7 +195,7 @@ export function WebhooksTab() {
     try {
       const res = await fetch('/api/webhooks/configs');
       if (!res.ok) throw new Error('Error al cargar webhooks');
-      const json = await res.json();
+      const json = (await res.json()) as WebhookConfigsResponse;
       setConfigs(json.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar');
@@ -188,7 +208,7 @@ export function WebhooksTab() {
     try {
       const res = await fetch(`/api/webhooks/logs?configId=${configId}&limit=20`);
       if (!res.ok) return;
-      const json = await res.json();
+      const json = (await res.json()) as WebhookLogsResponse;
       setLogs((prev) => ({ ...prev, [configId]: json.data || [] }));
     } catch {
       // silencioso
@@ -215,13 +235,13 @@ export function WebhooksTab() {
         body: JSON.stringify(data),
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = (await res.json()) as WebhookErrorResponse;
         throw new Error(err.error || 'Error al crear');
       }
-      const json = await res.json();
+      const json = (await res.json()) as WebhookCreatedResponse;
       setShowCreateModal(false);
       await cargarConfigs();
-      setShowSecret(json.data.secret);
+      setShowSecret(json.data?.secret ?? null);
       toast({ title: 'Webhook creado' });
     } catch (err) {
       toast({
@@ -240,7 +260,7 @@ export function WebhooksTab() {
         body: JSON.stringify(data),
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = (await res.json()) as WebhookErrorResponse;
         throw new Error(err.error || 'Error al actualizar');
       }
       setShowCreateModal(false);
@@ -277,10 +297,10 @@ export function WebhooksTab() {
     try {
       const res = await fetch(`/api/webhooks/configs/${config.id}/test`, { method: 'POST' });
       if (!res.ok) {
-        const err = await res.json();
+        const err = (await res.json()) as WebhookErrorResponse;
         throw new Error(err.error || 'Error al probar');
       }
-      const json = await res.json();
+      const json = (await res.json()) as WebhookTestResponse;
       toast({
         title: json.data?.ok ? 'Webhook funcional' : 'Webhook falló',
         description: json.data?.statusCode
@@ -304,8 +324,8 @@ export function WebhooksTab() {
     try {
       const res = await fetch(`/api/webhooks/configs/${id}/regenerate-secret`, { method: 'POST' });
       if (!res.ok) throw new Error('Error al regenerar');
-      const json = await res.json();
-      setShowSecret(json.data.secret);
+      const json = (await res.json()) as WebhookCreatedResponse;
+      setShowSecret(json.data?.secret ?? null);
       toast({ title: 'Secreto regenerado', description: 'Guardalo en un lugar seguro' });
     } catch (err) {
       toast({

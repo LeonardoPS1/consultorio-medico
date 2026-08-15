@@ -51,11 +51,14 @@ export default function VideollamadaPage({ params }: { params: Promise<{ turnoId
         });
 
         if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
+          const body = (await res.json().catch(() => ({}))) as {
+            detail?: string;
+            error?: string;
+          };
           throw new Error(body.detail || body.error || 'Error al obtener token');
         }
 
-        const data = await res.json();
+        const data = await res.json() as { token: string; identity: string };
         setToken(data.token);
         setRole('medico');
         setIdentity(data.identity || 'Médico');

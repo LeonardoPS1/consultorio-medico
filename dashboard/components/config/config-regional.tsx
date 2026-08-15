@@ -9,6 +9,11 @@ import { toast } from '@/components/ui/use-toast';
 import type { ConfigRegional } from '@/drizzle/schema';
 import { PAISES } from '@/lib/regions-data';
 
+interface RegionalConfigResponse {
+  data?: ConfigRegional;
+  message?: string;
+}
+
 /**
  *
  */
@@ -20,7 +25,7 @@ export function ConfigRegional() {
 
   useEffect(() => {
     fetch('/api/tenant/regional-config')
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<RegionalConfigResponse>)
       .then((res) => {
         if (res.data) {
           setConfig(res.data);
@@ -39,7 +44,7 @@ export function ConfigRegional() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pais: selectedPais }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as RegionalConfigResponse;
       if (data.data) setConfig(data.data);
       toast({ title: data.message || 'Configuración regional guardada' });
     } catch {

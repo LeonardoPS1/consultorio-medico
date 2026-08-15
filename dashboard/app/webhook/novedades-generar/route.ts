@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   const n8nUrl = process.env.N8N_WEBHOOK_INBOUND_URL || 'http://172.18.0.1:5678';
 
   try {
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
 
     const res = await fetch(`${n8nUrl}/webhook/novedades-generar`, {
       method: 'POST',
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(body),
     });
 
-    const data = await res.json().catch(() => null);
+    const data = (await res.json().catch(() => null)) as unknown;
 
     return NextResponse.json(data ?? { success: true }, { status: res.status });
   } catch (err) {

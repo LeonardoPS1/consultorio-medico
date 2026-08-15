@@ -30,6 +30,16 @@ export interface OllamaChatResult {
   sourceUrl: string;
 }
 
+/** Respuesta esperada de POST /v1/chat/completions (API compatible OpenAI). */
+interface ChatCompletionResponse {
+  choices?: Array<{ message?: { content?: string } }>;
+}
+
+/** Respuesta esperada de GET /api/tags. */
+interface OllamaTagsResponse {
+  models?: Array<{ name: string }>;
+}
+
 // ─── URLs disponibles ─────────────────────────────────────────
 
 const ALL_URLS = [
@@ -225,7 +235,7 @@ async function tryUrl(
       return null;
     }
 
-    const data = await res.json();
+    const data = (await res.json()) as ChatCompletionResponse;
     const content = data?.choices?.[0]?.message?.content?.trim();
 
     if (content) {
@@ -257,8 +267,8 @@ export async function listModels(): Promise<string[]> {
           signal: AbortSignal.timeout(5000),
         });
         if (res.ok) {
-          const data = await res.json();
-          return data.models?.map((m: { name: string }) => m.name) || [];
+          const data = (await res.json()) as OllamaTagsResponse;
+          return data.models?.map((m) => m.name) || [];
         }
       } catch {
         // ignore

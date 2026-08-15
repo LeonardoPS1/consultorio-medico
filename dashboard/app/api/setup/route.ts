@@ -121,7 +121,7 @@ export const GET = apiHandler(async () => {
       for (const file of files) {
         try {
           const content = fs.readFileSync(path.default.join(dataDir, file), 'utf-8');
-          const data = JSON.parse(content);
+          const data = JSON.parse(content) as unknown;
           devStats[file.replace('.json', '')] = Array.isArray(data) ? data.length : 1;
         } catch {
           /* skip */

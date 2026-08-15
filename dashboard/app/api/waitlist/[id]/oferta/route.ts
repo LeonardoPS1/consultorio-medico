@@ -25,7 +25,7 @@ export const POST = apiHandler(
   async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
     const { id } = await paramsPromise;
     await requireAuth();
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const parsed = crearOfertaSchema.parse(body);
     const oferta =
       parsed.tipo === 'turno'

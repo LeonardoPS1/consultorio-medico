@@ -131,7 +131,8 @@ export default function PortalDocumentosPage() {
     fetch('/api/portal/documentos')
       .then((res) => res.json())
       .then((data) => {
-        const list = data?.documentos || data || [];
+        const body = data as { documentos?: DocumentoMedico[] } | DocumentoMedico[];
+        const list = Array.isArray(body) ? body : body?.documentos ?? [];
         setDocs(Array.isArray(list) ? list : []);
       })
       .catch(() => {})
@@ -154,7 +155,7 @@ export default function PortalDocumentosPage() {
       uploadForm.append('source', 'portal');
       const uploadRes = await fetch('/api/upload', { method: 'POST', body: uploadForm });
       if (!uploadRes.ok) throw new Error('Error al subir archivo');
-      const { url } = await uploadRes.json();
+      const { url } = (await uploadRes.json()) as { url: string };
 
       const res = await fetch('/api/portal/documentos', {
         method: 'POST',
@@ -162,8 +163,8 @@ export default function PortalDocumentosPage() {
         body: JSON.stringify({ url, tipo: selectedTipo }),
       });
       if (!res.ok) throw new Error('Error al crear documento');
-      const data = await res.json();
-      const doc = data?.documento || data;
+      const data = (await res.json()) as { documento?: DocumentoMedico };
+      const doc = (data?.documento || data) as DocumentoMedico;
       setDocs((prev) => [doc, ...prev]);
       setProcessingId(doc.id);
       setSelectedTipo('');
@@ -180,8 +181,8 @@ export default function PortalDocumentosPage() {
       try {
         const res = await fetch('/api/portal/documentos');
         if (!res.ok) return;
-        const data = await res.json();
-        const list = data?.documentos || data || [];
+        const data = (await res.json()) as { documentos?: DocumentoMedico[] } | DocumentoMedico[];
+        const list = Array.isArray(data) ? data : data?.documentos ?? [];
         const updated = Array.isArray(list) ? list.find((d: DocumentoMedico) => d.id === id) : null;
         if (!updated) return;
         if (updated.extraccionEstado !== 'pendiente') {

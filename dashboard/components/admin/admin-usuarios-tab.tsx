@@ -127,7 +127,7 @@ export default function AdminUsuariosTab() {
     try {
       const res = await fetch(`/api/admin/users/${userId}/feature-overrides`);
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as { featureIds?: string[] };
         setEditOverrides(new Set(data.featureIds || []));
       }
     } catch {
@@ -141,7 +141,7 @@ export default function AdminUsuariosTab() {
     try {
       const res = await fetch('/api/admin/users');
       if (!res.ok) throw new Error('Error al cargar usuarios');
-      const data = await res.json();
+      const data = (await res.json()) as { users: Usuario[] };
       setUsers(data.users);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -176,7 +176,7 @@ export default function AdminUsuariosTab() {
         }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as { error?: string };
       if (!res.ok) {
         setCreateError(data.error || 'Error al crear usuario');
         setCreateLoading(false);
@@ -252,7 +252,7 @@ export default function AdminUsuariosTab() {
         body: JSON.stringify(body),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as { error?: string };
       if (!res.ok) {
         setEditError(data.error || 'Error al actualizar');
         setEditLoading(false);
@@ -267,7 +267,7 @@ export default function AdminUsuariosTab() {
       });
 
       if (!overridesRes.ok) {
-        const errData = await overridesRes.json().catch(() => ({}));
+        const errData = (await overridesRes.json().catch(() => ({}))) as { error?: string };
         setEditError(errData.error || 'Error al guardar overrides de features');
         setEditLoading(false);
         return;
@@ -290,7 +290,7 @@ export default function AdminUsuariosTab() {
       const res = await fetch(`/api/admin/users/${editingUser.id}`, {
         method: 'DELETE',
       });
-      const data = await res.json();
+      const data = (await res.json()) as { error?: string };
       if (!res.ok) {
         setEditError(data.error || 'Error al eliminar usuario');
         setDeleteLoading(false);

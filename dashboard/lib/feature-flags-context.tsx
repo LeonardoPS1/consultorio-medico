@@ -71,7 +71,7 @@ export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
         setLoading(false);
         return;
       }
-      const data = await res.json();
+      const data = await res.json() as { data?: { features?: Record<string, boolean> }; features?: Record<string, boolean> };
       const features = data.data?.features ?? data.features;
       if (features) {
         setToggles(features);
@@ -157,7 +157,7 @@ export function UserFeatureOverridesProvider({ children }: { children: ReactNode
         setLoading(false);
         return;
       }
-      const data = await res.json();
+      const data = await res.json() as { featureIds?: string[] };
       if (data.featureIds) {
         setOverrides(new Set(data.featureIds));
       }

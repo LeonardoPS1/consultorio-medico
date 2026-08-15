@@ -44,7 +44,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  const body = await request.json().catch(() => ({}));
+  const body = (await request.json().catch(() => ({}))) as { id?: string };
 
   // Si viene id, marcar una específica
   if (body.id) {

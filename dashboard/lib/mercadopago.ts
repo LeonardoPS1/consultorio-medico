@@ -8,6 +8,7 @@
  */
 
 import { MercadoPagoConfig, Preference, Payment, MerchantOrder } from 'mercadopago';
+import type { PreferenceRequest } from 'mercadopago/dist/clients/preference/commonTypes';
 import { PLANES } from '@/lib/planes';
 import type { PlanId } from '@/lib/planes';
 
@@ -49,8 +50,7 @@ export async function createTurnoPaymentPreference(
 
   const preference = new Preference(client);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const body: any = {
+  const body: PreferenceRequest = {
     items: [
       {
         id: input.turnoId,
@@ -120,8 +120,7 @@ export async function createCheckoutPreference(
 
   const preference = new Preference(client);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const body: any = {
+  const body: PreferenceRequest = {
     items: [
       {
         id: plan.id,

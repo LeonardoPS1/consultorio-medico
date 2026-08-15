@@ -25,7 +25,7 @@ export async function parseBody<T extends z.ZodType>(
   schema: T,
 ): Promise<z.infer<T>> {
   try {
-    const json = await request.json();
+    const json = (await request.json()) as unknown;
     return schema.parse(json);
   } catch (error) {
     if (error instanceof z.ZodError) {

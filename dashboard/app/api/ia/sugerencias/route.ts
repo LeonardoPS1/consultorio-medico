@@ -6,6 +6,7 @@
  */
 
 import { eq } from 'drizzle-orm';
+import { NextRequest } from 'next/server';
 import { tenants } from '@/drizzle/schema';
 import type { ConfigIa } from '@/drizzle/schema';
 import { requireAuth } from '@/lib/api-auth';
@@ -18,7 +19,7 @@ export const dynamic = 'force-dynamic';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 
-export const GET = apiHandler(async (request) => {
+export const GET = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();
   const usuarioId = session.user.id as string;
 

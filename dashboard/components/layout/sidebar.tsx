@@ -43,7 +43,7 @@ export function Sidebar() {
       try {
         const res = await fetch('/api/onboarding');
         if (res.ok) {
-          const data = await res.json();
+          const data = (await res.json()) as { completedSteps?: unknown[] };
           if (Array.isArray(data.completedSteps)) {
             const count = data.completedSteps.length;
             setOnboardingPending(count > 0 && count < totalSteps);

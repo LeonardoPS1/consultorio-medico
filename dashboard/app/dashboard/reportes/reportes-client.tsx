@@ -288,11 +288,12 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
   const [benchmarkData, setBenchmarkData] = useState<BenchComparativaResponse | null>(null);
   const [benchmarkLoading, setBenchmarkLoading] = useState(isAdvancedReports);
   const isMounted = useRef(true);
+  const hasDataRef = useRef(!!initialData);
 
   useEffect(() => {
     isMounted.current = true;
     const fetchReportes = async () => {
-      if (data) {
+      if (hasDataRef.current) {
         setIsRefreshing(true);
       } else {
         setLoading(true);
@@ -301,8 +302,11 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
       try {
         const res = await fetch(`/api/reportes?periodo=${periodo}&demo=true`);
         if (!res.ok) throw new Error(`Error ${res.status}`);
-        const json = await res.json();
-        if (isMounted.current) setData(json);
+        const json = await res.json() as ReporteApiResponse;
+        if (isMounted.current) {
+          hasDataRef.current = true;
+          setData(json);
+        }
       } catch (err) {
         console.error('[Reportes] Error fetching:', err);
         if (isMounted.current) setError('No se pudieron cargar los reportes. Intentalo de nuevo.');
@@ -315,29 +319,32 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
     };
     fetchReportes();
 
-    // Fetch benchmark anónimo (solo advanced)
-    if (isAdvancedReports && !benchmarkData) {
-      (async () => {
-        try {
-          const res = await fetch('/api/reportes/benchmark', { cache: 'no-store' });
-          if (res.status === 403) {
-            if (isMounted.current) setBenchmarkData(null);
-          } else if (!res.ok) {
-            throw new Error(`Error ${res.status}`);
-          } else {
-            const json = (await res.json()) as BenchComparativaResponse;
-            if (isMounted.current) setBenchmarkData(json);
-          }
-        } catch {
-          if (isMounted.current) setBenchmarkData(null);
-        } finally {
-          if (isMounted.current) setBenchmarkLoading(false);
-        }
-      })();
-    }
-
     return () => { isMounted.current = false; };
   }, [periodo, fetchKey]);
+
+  // Fetch benchmark anónimo (solo advanced)
+  useEffect(() => {
+    if (!isAdvancedReports || benchmarkData) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/reportes/benchmark', { cache: 'no-store' });
+        if (res.status === 403) {
+          if (!cancelled) setBenchmarkData(null);
+        } else if (!res.ok) {
+          throw new Error(`Error ${res.status}`);
+        } else {
+          const json = (await res.json()) as BenchComparativaResponse;
+          if (!cancelled) setBenchmarkData(json);
+        }
+      } catch {
+        if (!cancelled) setBenchmarkData(null);
+      } finally {
+        if (!cancelled) setBenchmarkLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isAdvancedReports, benchmarkData, fetchKey]);
 
   // Fetch mapa de ocupación (on-demand) — refetch al alternar demo/real
   useEffect(() => {
@@ -352,7 +359,7 @@ export function ReportesClient({ initialData, isAdvancedReports }: Props) {
           { cache: 'no-store' },
         );
         if (!res.ok) throw new Error(`Error ${res.status}`);
-        const json = await res.json();
+        const json = await res.json() as OcupacionReporte;
         if (!cancelled) setOcupacionData(json);
       } catch {
         if (!cancelled) setOcupacionData(null);

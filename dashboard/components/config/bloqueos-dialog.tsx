@@ -1,7 +1,7 @@
 'use client';
 
 import { Plus, Trash2, CalendarX, Calendar, Umbrella, Ban, Pencil } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -106,14 +106,14 @@ export function BloqueosDialog({
   const [editId, setEditId] = useState<string | null>(null);
   const [bloqueoHorario, setBloqueoHorario] = useState(false); // true = bloqueo por horas, false = día completo
 
-  const fetchBloqueos = () => {
+  const fetchBloqueos = useCallback(() => {
     setLoading(true);
     return fetch(`/api/medicos/${medicoId}/bloqueos`)
       .then((r) => r.json())
-      .then((d) => setBloqueos(d.data || []))
+      .then((d) => setBloqueos((d as { data?: Bloqueo[] }).data || []))
       .catch(() => toast({ title: 'Error al cargar bloqueos', variant: 'destructive' }))
       .finally(() => setLoading(false));
-  };
+  }, [medicoId]);
 
   useEffect(() => {
     if (open) {
@@ -121,7 +121,7 @@ export function BloqueosDialog({
         await fetchBloqueos();
       })();
     }
-  }, [open, medicoId]);
+  }, [open, medicoId, fetchBloqueos]);
 
   const handleCreate = async () => {
     if (!titulo.trim() || !fechaInicio || !fechaFin) return;
@@ -136,7 +136,7 @@ export function BloqueosDialog({
         body: JSON.stringify({ titulo, fechaInicio: inicio, fechaFin: fin, tipo }),
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = (await res.json()) as { error?: string };
         toast({ title: err.error || 'Error', variant: 'destructive' });
         return;
       }
@@ -180,7 +180,7 @@ export function BloqueosDialog({
         body: JSON.stringify({ titulo, fechaInicio: inicio, fechaFin: fin, tipo }),
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = (await res.json()) as { error?: string };
         toast({ title: err.error || 'Error', variant: 'destructive' });
         return;
       }

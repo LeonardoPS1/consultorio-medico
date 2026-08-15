@@ -116,12 +116,12 @@ export function MensajeriaInternaClient({
   const handleSSE = useCallback(
     (event: MessageEvent) => {
       try {
-        const data = JSON.parse(event.data);
+        const data = JSON.parse(event.data) as { conversacionId?: string };
         if (event.type === 'mensaje-interno' || event.type === 'mensaje-interno-entregado') {
           queryClient.invalidateQueries({ queryKey: ['conv-internas'] });
           if (data.conversacionId) {
             queryClient.invalidateQueries({ queryKey: ['msgs-internos', data.conversacionId] });
-            setSelectedId((prev) => prev || data.conversacionId);
+            setSelectedId((prev) => prev || data.conversacionId || null);
           }
           if (event.type === 'mensaje-interno' && data.conversacionId !== selectedIdRef.current) {
             playReceive();
@@ -167,7 +167,7 @@ export function MensajeriaInternaClient({
       if (search) params.set('search', search);
       const res = await fetch(`/api/mensajeria-interna/conversaciones?${params}`);
       if (!res.ok) throw new Error('Error al cargar conversaciones');
-      const json = await res.json();
+      const json = (await res.json()) as { data?: Conversacion[] };
       return json.data as Conversacion[];
     },
     initialData: initialConversaciones,
@@ -182,7 +182,7 @@ export function MensajeriaInternaClient({
       if (!selectedId) return [];
       const res = await fetch(`/api/mensajeria-interna/conversaciones/${selectedId}/mensajes`);
       if (!res.ok) throw new Error('Error al cargar mensajes');
-      const json = await res.json();
+      const json = (await res.json()) as { data?: Mensaje[] };
       return json.data as Mensaje[];
     },
     enabled: !!selectedId,
@@ -194,7 +194,7 @@ export function MensajeriaInternaClient({
     queryFn: async () => {
       const res = await fetch('/api/mensajeria-interna/staff');
       if (!res.ok) throw new Error('Error al cargar staff');
-      const json = await res.json();
+      const json = (await res.json()) as { data?: StaffUser[] };
       return json.data as StaffUser[];
     },
     enabled: nuevoAbierto,
@@ -210,7 +210,7 @@ export function MensajeriaInternaClient({
         body: JSON.stringify({ contenido, urgente }),
       });
       if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(json.error || 'Error al enviar mensaje');
       }
       return res.json();
@@ -237,10 +237,10 @@ export function MensajeriaInternaClient({
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(json.error || 'No se pudo crear la conversación');
       }
-      return res.json();
+      return res.json() as Promise<{ data?: Conversacion }>;
     },
     onSuccess: (data) => {
       const conv = (data?.data ?? data) as Conversacion;

@@ -1,4 +1,3 @@
-import type { ErrorEvent } from '@sentry/nextjs';
 import type * as SentryTypes from '@sentry/nextjs';
 import { safeLog, safeWarn, safeError } from '@/lib/logger';
 import { getRequestContext } from '@/lib/request-context';
@@ -39,7 +38,7 @@ export async function initGlitchtip(): Promise<void> {
         Sentry.requestDataIntegration() as never,
         Sentry.httpClientIntegration() as never,
       ],
-      beforeSend(event: ErrorEvent) {
+      beforeSend(event: SentryTypes.ErrorEvent) {
         const context = getRequestContext();
         if (context) {
           event.tags = {

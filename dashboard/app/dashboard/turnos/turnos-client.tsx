@@ -50,6 +50,19 @@ interface TurnoData {
   fecha: string;
 }
 
+interface PacienteRow {
+  id: string;
+  nombre: string;
+  apellido: string;
+}
+
+interface ApiErrorBody {
+  error?: string;
+  message?: string;
+  prodError?: string;
+  detail?: string;
+}
+
 // ─── Props ────────────────────────────────────────────────
 
 interface TurnosClientProps {
@@ -185,7 +198,7 @@ export function TurnosClient({
 
         const res = await fetch(`/api/turnos?${params.toString()}`);
         if (!res.ok) throw new Error('Error al cargar turnos');
-        const json = await res.json();
+        const json = await res.json() as { data?: TurnoData[] };
         setTurnos(json.data || []);
       } catch {
         toast({
@@ -218,7 +231,7 @@ export function TurnosClient({
 
         const res = await fetch(`/api/turnos?${params.toString()}`);
         if (!res.ok) throw new Error('Error al cargar turnos del mes');
-        const json = await res.json();
+        const json = await res.json() as { data?: TurnoData[] };
         setTurnos(json.data || []);
       } catch {
         toast({
@@ -255,7 +268,11 @@ export function TurnosClient({
         if (sucursalId) params.set('sucursalId', sucursalId);
         const res = await fetch(`/api/turnos/day-view?${params.toString()}`);
         if (!res.ok) throw new Error('Error al cargar vista del día');
-        const json = await res.json();
+        const json = await res.json() as {
+          medicos: MedicoDia[];
+          turnos: TurnoDia[];
+          fecha: string;
+        };
         setDayViewData(json);
       } catch {
         toast({
@@ -369,7 +386,7 @@ export function TurnosClient({
         );
         let pacientesJson;
         try {
-          pacientesJson = await busquedaPaciente.json();
+          pacientesJson = await busquedaPaciente.json() as { data?: PacienteRow[] };
         } catch {
           pacientesJson = { data: [] };
         }
@@ -401,7 +418,7 @@ export function TurnosClient({
                 if (!createRes.ok) {
                   const errBody = await createRes
                     .json()
-                    .catch(() => ({ error: 'Error al crear paciente' }));
+                    .catch(() => ({ error: 'Error al crear paciente' })) as ApiErrorBody;
                   toast({
                     title: 'Error',
                     description: errBody.error || 'No se pudo crear el paciente',
@@ -410,7 +427,10 @@ export function TurnosClient({
                   resolve();
                   return;
                 }
-                const createdPaciente = await createRes.json();
+                const createdPaciente = await createRes.json() as {
+                  data?: { id?: string };
+                  id?: string;
+                };
                 pacienteId = createdPaciente.data?.id || createdPaciente.id;
                 pacienteNombre = `${nombre} ${apellido}`;
                 toast({
@@ -428,7 +448,7 @@ export function TurnosClient({
       let medicoId = data.medicoId;
       if (!medicoId) {
         const medicosRes = await fetch('/api/medicos');
-        const medicosJson = await medicosRes.json();
+        const medicosJson = await medicosRes.json() as { data?: { id: string; nombre: string }[] };
         const medicosList: { id: string; nombre: string }[] = medicosJson.data || [];
         const medicoEncontrado = medicosList.find(
           (m) =>
@@ -461,7 +481,7 @@ export function TurnosClient({
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => null);
+        const err = await res.json().catch(() => null) as ApiErrorBody | null;
         if (res.status === 409) {
           setWaitlistProposal({
             pacienteId: pacienteId!,
@@ -480,7 +500,7 @@ export function TurnosClient({
         return;
       }
 
-      const json = await res.json();
+      const json = await res.json() as { data: { id: string; estado?: string; medicoId?: string; pacienteId?: string } };
       const created = json.data;
       const newTurno: TurnoData = {
         id: created.id,
@@ -517,7 +537,7 @@ export function TurnosClient({
         body: JSON.stringify({ estado: nuevoEstado }),
       });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
+        const body = await res.json().catch(() => ({})) as ApiErrorBody;
         const serverMsg = body?.prodError || body?.detail || body?.error || 'Error del servidor';
         throw new Error(serverMsg);
       }
@@ -588,7 +608,7 @@ export function TurnosClient({
         try {
           const res = await fetch(`/api/waitlist/candidatos?medicoId=${turno.medicoId}`);
           if (res.ok) {
-            const data = await res.json();
+            const data = await res.json() as { data?: WaitlistCandidate[] };
             if (data.data && data.data.length > 0) {
               setWaitlistCandidates(data.data);
               setShowWaitlistReassign({
@@ -667,7 +687,7 @@ export function TurnosClient({
           description: `${waitlistProposal.pacienteNombre} recibirá una oferta cuando haya disponibilidad.`,
         });
       } else {
-        const err = await res.json().catch(() => ({ error: 'Error al agregar' }));
+        const err = await res.json().catch(() => ({ error: 'Error al agregar' })) as ApiErrorBody;
         toast({
           title: 'Error',
           description: err.error || 'No se pudo agregar a la lista de espera',

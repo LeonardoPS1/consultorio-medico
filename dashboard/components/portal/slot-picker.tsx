@@ -92,11 +92,13 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
 
     fetch(`/api/portal/medicos/${medicoId}/slots?fecha=${selectedDate}&servicioId=${servicioId}`)
       .then((r) => r.json())
-      .then((data) => {
+      .then((data: { data?: SlotDisponible[]; error?: string }) => {
         if (data.error) throw new Error(data.error);
         setSlots(data.data ?? []);
       })
-      .catch((e) => setError(e.message))
+      .catch((e: unknown) =>
+        setError(e instanceof Error ? e.message : 'Error al cargar horarios'),
+      )
       .finally(() => setLoading(false));
   }, [medicoId, servicioId, selectedDate]);
 

@@ -4,12 +4,12 @@ import { getRequestId, getTenantId, getUserId } from '@/lib/request-context';
 
 const level = (process.env.LOG_LEVEL as pino.Level) ?? 'info';
 
-const transport =
+const transport: pino.LoggerOptions['transport'] =
   process.env.NODE_ENV === 'development'
-    ? pino.transport({
+    ? (pino.transport({
         target: 'pino/file',
         options: { destination: 1 },
-      })
+      }) as pino.LoggerOptions['transport'])
     : undefined;
 
 const baseLogger = pino({

@@ -118,6 +118,15 @@ interface HistorialRow {
   fecha: string;
 }
 
+interface HistorialResponse extends HistorialRow {
+  createdAt: string;
+}
+
+interface CertificadoData {
+  diagnostico?: string;
+  indicaciones?: string;
+}
+
 interface PacienteData {
   id: string;
   nombre: string;
@@ -318,7 +327,7 @@ export function PacienteDetalleClient({
     try {
       const res = await fetch(`/api/pacientes/${paciente.id}/certificados`);
       if (res.ok) {
-        const data = await res.json();
+        const data = await res.json() as CertificadoRow[];
         setCertificadosList(data);
         setCertLoaded(true);
       }
@@ -335,7 +344,7 @@ export function PacienteDetalleClient({
     try {
       const res = await fetch(`/api/pacientes/${paciente.id}/notas-soap`);
       if (res.ok) {
-        const data = await res.json();
+        const data = await res.json() as NotaSoapRow[];
         setNotasSoapList(data);
         setSoapLoaded(true);
       }
@@ -374,7 +383,7 @@ export function PacienteDetalleClient({
         }),
       });
       if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await res.json() as NotaSoapRow;
       const newNota: NotaSoapRow = {
         ...data,
         medicoNombre: null,
@@ -423,7 +432,7 @@ export function PacienteDetalleClient({
         },
       );
       if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await res.json() as NotaSoapRow;
       setNotasSoapList((prev) => prev.map((n) => (n.id === data.id ? { ...n, ...data } : n)));
       toast({ title: 'Nota SOAP actualizada' });
       setEditSoapDialog(null);
@@ -454,7 +463,7 @@ export function PacienteDetalleClient({
     try {
       const res = await fetch(`/api/pacientes/${paciente.id}/resumen`);
       if (!res.ok) return;
-      const data = await res.json();
+      const data = await res.json() as { contenido: string | null; generadoEn: string | null };
       if (data.contenido) {
         setResumen({ contenido: data.contenido, generadoEn: data.generadoEn || null });
         setResumenLoaded(true);
@@ -475,7 +484,7 @@ export function PacienteDetalleClient({
     setResumenLoading(true);
     try {
       const res = await fetch(`/api/pacientes/${paciente.id}/resumen`, { method: 'POST' });
-      const data = await res.json();
+      const data = await res.json() as { error?: string; contenido: string; generadoEn: string | null };
       if (!res.ok) throw new Error(data.error || 'error');
       setResumen({ contenido: data.contenido, generadoEn: data.generadoEn || null });
       setResumenLoaded(true);
@@ -516,10 +525,12 @@ export function PacienteDetalleClient({
         body: JSON.stringify(certForm),
       });
       if (!res.ok) {
-        const errBody = await res.json().catch(() => ({ error: 'Error desconocido' }));
+        const errBody = (await res.json().catch(() => ({ error: 'Error desconocido' }))) as {
+          error?: string;
+        };
         throw new Error(errBody.error || `Error ${res.status}`);
       }
-      const data = await res.json();
+      const data = await res.json() as CertificadoRow;
       toast({ title: 'Certificado creado', description: 'Abriendo vista previa...' });
 
       // Abrir PDF en nueva ventana
@@ -588,7 +599,7 @@ export function PacienteDetalleClient({
         headers: { 'Content-Type': 'application/json' },
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
+        const err = (await res.json().catch(() => ({}))) as { message?: string };
         throw new Error(err.message || 'Error al solicitar la baja');
       }
       setBajaSolicitada(true);
@@ -616,7 +627,7 @@ export function PacienteDetalleClient({
         headers: { 'Content-Type': 'application/json' },
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
+        const err = (await res.json().catch(() => ({}))) as { message?: string };
         throw new Error(err.message || 'Error al confirmar la baja');
       }
       setBajaConfirmada(true);
@@ -641,7 +652,7 @@ export function PacienteDetalleClient({
     try {
       const res = await fetch(`/api/pacientes/${paciente.id}/exportar-datos`);
       if (!res.ok) throw new Error('Error al exportar datos');
-      const data = await res.json();
+      const data = await res.json() as Record<string, unknown>;
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -688,7 +699,7 @@ export function PacienteDetalleClient({
         }),
       });
       if (!res.ok) throw new Error();
-      const { data } = await res.json();
+      const { data } = await res.json() as { data: RecetaRow };
       setRecetasList((prev) => [
         {
           id: data.id,
@@ -733,7 +744,7 @@ export function PacienteDetalleClient({
         await doSubmitReceta();
         return;
       }
-      const json = await res.json();
+      const json = await res.json() as { alertas: AlertaClinica[] };
       const lista = Array.isArray(json.alertas) ? json.alertas : [];
       if (lista.length > 0) {
         setAlertasClinicas(lista);
@@ -758,7 +769,7 @@ export function PacienteDetalleClient({
     try {
       const res = await fetch(`/api/recetas/${r.id}/renovar`, { method: 'POST' });
       if (!res.ok) throw new Error();
-      const { data } = await res.json();
+      const { data } = await res.json() as { data: RecetaRow };
       setRecetasList((prev) => [
         {
           id: data.id,
@@ -812,7 +823,7 @@ export function PacienteDetalleClient({
         body: JSON.stringify(historialForm),
       });
       if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await res.json() as HistorialResponse;
       const newEntry: HistorialRow = {
         id: data.id,
         tipo: data.tipo,
@@ -851,7 +862,7 @@ export function PacienteDetalleClient({
         },
       );
       if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await res.json() as HistorialResponse;
       setHistorialList((prev) =>
         prev.map((h) =>
           h.id === data.id
@@ -2170,7 +2181,7 @@ export function PacienteDetalleClient({
                 const data = c.descripcion
                   ? (() => {
                       try {
-                        return JSON.parse(c.descripcion);
+                        return JSON.parse(c.descripcion) as CertificadoData;
                       } catch {
                         return null;
                       }
@@ -2869,7 +2880,9 @@ export function PacienteDetalleClient({
           try {
             // Buscar médico por nombre para obtener su ID
             const medicosRes = await fetch('/api/medicos');
-            const medicosJson = await medicosRes.json();
+            const medicosJson = await medicosRes.json() as {
+              data: { id: string; nombre: string }[];
+            };
             const medicosList: { id: string; nombre: string }[] = medicosJson.data || [];
             const medicoEncontrado = medicosList.find(
               (m) =>
@@ -2898,14 +2911,17 @@ export function PacienteDetalleClient({
               }),
             });
             if (!res.ok) {
-              const err = await res.json().catch(() => null);
+              const err = (await res.json().catch(() => null)) as {
+                error?: string;
+                message?: string;
+              } | null;
               const msg = err?.error || err?.message || `Error del servidor (${res.status})`;
               console.warn('[Turnos] Error al crear turno:', res.status, msg, err);
               toast({ title: 'Error', description: msg, variant: 'destructive' });
               return;
             }
-            const json = await res.json();
-            const turno = json.data || json;
+            const json = await res.json() as { data?: TurnoRow };
+            const turno: TurnoRow = json.data || (json as unknown as TurnoRow);
             setTurnosList((prev) => [turno, ...prev]);
             toast({ title: 'Turno creado', description: `Turno agendado correctamente.` });
           } catch (error) {

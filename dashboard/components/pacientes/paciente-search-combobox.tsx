@@ -110,7 +110,7 @@ export function PacienteSearchCombobox({
           `/api/pacientes?search=${encodeURIComponent(search.trim())}&limit=8`,
         );
         if (!res.ok) throw new Error('Error en búsqueda');
-        const json = await res.json();
+        const json = (await res.json()) as { data?: PacienteResult[] };
         const list: PacienteResult[] = json.data || [];
         setResults(list);
         setOpen(list.length > 0);

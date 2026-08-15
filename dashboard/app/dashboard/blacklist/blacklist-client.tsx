@@ -69,7 +69,6 @@ interface Props {
  *
  * @param root0
  * @param root0.initialData
- * @param root0.initialTotal
  * @param root0.initialStats
  */
 export function BlacklistClient({ initialData, initialStats }: Props) {
@@ -108,11 +107,11 @@ export function BlacklistClient({ initialData, initialStats }: Props) {
       ]);
 
       if (listRes.ok) {
-        const json = await listRes.json();
+        const json = (await listRes.json()) as { data?: BlacklistEntry[] };
         setData(json.data || []);
       }
       if (statsRes.ok) {
-        const json = await statsRes.json();
+        const json = (await statsRes.json()) as BlacklistStats;
         setStats(json);
       }
     } catch (err) {
@@ -154,7 +153,7 @@ export function BlacklistClient({ initialData, initialStats }: Props) {
         }),
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = (await res.json()) as { message?: string };
         throw new Error(err.message || 'Error al crear');
       }
       toast({ title: 'Creado', description: 'Paciente bloqueado correctamente' });

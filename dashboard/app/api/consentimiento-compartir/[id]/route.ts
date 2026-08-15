@@ -16,7 +16,7 @@ export const PATCH = apiHandler(
   async (request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) => {
     const { id } = await paramsPromise;
     await requireAuth();
-    const body = await request.json();
+    const body = (await request.json()) as { accion?: string };
 
     let result;
     if (body.accion === 'firmar') {

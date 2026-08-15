@@ -5,6 +5,14 @@ import { db } from '@/lib/db';
 import { safeLog, safeError } from '@/lib/logger';
 import { transcripcionService } from '@/lib/services/transcripcion';
 
+interface LivekitWebhookBody {
+  event?: string;
+  room?: { name?: string };
+  roomName?: string;
+  egress?: { file?: { filename?: string } };
+  filename?: string;
+}
+
 /**
  *
  * @param request
@@ -16,7 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as LivekitWebhookBody;
     safeLog(`[Transcripcion] Webhook recibido: ${body.event || 'unknown'}`);
 
     if (body.event !== 'egress_ended' && body.event !== 'track_published') {

@@ -61,7 +61,7 @@ export default function ConveniosTab({ isAdmin }: ConveniosTabProps) {
     try {
       const res = await fetch('/api/convenios');
       if (res.ok) {
-        const json = await res.json();
+        const json = (await res.json()) as { data?: ConvenioItem[] };
         setConvenios(json.data ?? []);
       }
     } catch {
@@ -95,7 +95,7 @@ export default function ConveniosTab({ isAdmin }: ConveniosTabProps) {
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = (await res.json()) as { error?: string };
         throw new Error(err.error || 'Error al crear');
       }
       toast({ title: 'Convenio creado exitosamente' });

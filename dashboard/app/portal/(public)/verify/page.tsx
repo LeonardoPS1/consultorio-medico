@@ -62,7 +62,7 @@ function PortalVerifyContent() {
           router.push(destino);
         } else {
           return res.json().then(
-            (d) => d.error || 'Token inválido o expirado',
+            (d: { error?: string }) => d.error || 'Token inválido o expirado',
           );
         }
       })

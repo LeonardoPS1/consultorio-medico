@@ -58,7 +58,7 @@ export default function ApiKeysTab() {
   const loadKeys = async () => {
     try {
       const res = await fetch('/api/api-keys');
-      const data = await res.json();
+      const data = await res.json() as { apiKeys: ApiKeyItem[] };
       if (data.apiKeys) setKeys(data.apiKeys);
     } catch {
       toast({ title: 'Error al cargar API keys', variant: 'destructive' });
@@ -72,7 +72,7 @@ export default function ApiKeysTab() {
     void (async () => {
       const res = await fetch('/api/api-keys');
       if (!mounted) return;
-      const data = await res.json();
+      const data = await res.json() as { apiKeys: ApiKeyItem[] };
       if (data.apiKeys) setKeys(data.apiKeys);
       if (!mounted) return;
       setLoading(false);
@@ -356,7 +356,13 @@ function CreateApiKeyModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre: nombre.trim(), scopes: Array.from(selectedScopes) }),
       });
-      const data = await res.json();
+      const data = await res.json() as {
+        id: string;
+        fullKey: string;
+        nombre: string;
+        scopes: string[];
+        error?: string;
+      };
       if (data.fullKey) {
         onCreated(data);
         setNombre('');

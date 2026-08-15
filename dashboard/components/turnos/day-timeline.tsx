@@ -298,7 +298,7 @@ export function DayTimeline({ medicos, turnos, fecha, onTurnoClick, onSlotClick 
                   })}
 
                   {/* Clickable empty slots (30 min each) */}
-                  {blocks.map((block, blockIdx) => {
+                  {blocks.map((block) => {
                     const slots = [];
                     for (
                       let min = block.inicio;

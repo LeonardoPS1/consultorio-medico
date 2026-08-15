@@ -16,6 +16,11 @@ const ESTADOS_VALIDOS: TurnoEstado[] = [
   'no_asistio',
 ];
 
+interface BulkStatusBody {
+  turnoIds?: string[];
+  estado?: string;
+}
+
 /**
  *
  * @param request
@@ -27,7 +32,7 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const body = await request.json();
+    const body = (await request.json()) as BulkStatusBody;
     const { turnoIds, estado } = body;
 
     if (!Array.isArray(turnoIds) || turnoIds.length === 0) {

@@ -11,6 +11,21 @@ export const dynamic = 'force-dynamic';
 
 const DEFAULT_SILENCIAR = { turno: false, mensaje: false, receta: false, urgencia: false, sistema: false };
 
+interface NotificacionesPutBody {
+  urgenciasWhatsapp?: unknown;
+  resumenDiarioEmail?: unknown;
+  alertasAusentismo?: unknown;
+  nuevosPacientes?: unknown;
+  whatsappPersonal?: unknown;
+  silenciarPorTipo?: {
+    turno?: boolean;
+    mensaje?: boolean;
+    receta?: boolean;
+    urgencia?: boolean;
+    sistema?: boolean;
+  };
+}
+
 // ─── GET /api/notificaciones ────────────────────────────────
 // Query params: ?tipo=turno&soloNoLeidas=true&limit=20&offset=0&conteoPorTipo=true
 // También funciona sin params para obtener preferencias (backward compat)
@@ -70,7 +85,7 @@ export const PUT = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();
   const userId = session.user.id as string;
 
-  const body = await request.json();
+  const body = (await request.json()) as NotificacionesPutBody;
   const {
     urgenciasWhatsapp,
     resumenDiarioEmail,
@@ -142,7 +157,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();
   const userId = session.user.id as string;
 
-  const body = await request.json();
+  const body = (await request.json()) as { action?: string };
   const { action } = body;
 
   if (action === 'leidas') {

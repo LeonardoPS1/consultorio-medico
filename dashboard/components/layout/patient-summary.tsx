@@ -109,9 +109,12 @@ export function PatientSummary() {
     fetch(`/api/pacientes/scoring?ids=${patient.id}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((json) => {
-        if (json?.data?.scores) {
+        const parsed = json as {
+          data?: { scores?: { pacienteId: string; score: number; nivel?: string }[] };
+        } | null;
+        if (parsed?.data?.scores) {
           const map: Record<string, { score: number; nivel: string }> = {};
-          for (const s of json.data.scores) {
+          for (const s of parsed.data.scores) {
             map[s.pacienteId] = { score: s.score, nivel: s.nivel || 'bajo' };
           }
           setScoresMap(map);

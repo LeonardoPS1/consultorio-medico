@@ -89,7 +89,7 @@ export function ConversacionesClient({ initialConversaciones }: Props) {
 
   const handleSSEMessage = useCallback((event: MessageEvent) => {
     try {
-      const data = JSON.parse(event.data);
+      const data = JSON.parse(event.data) as { conversacionId?: string };
       const tipo = event.type;
 
       if (tipo === 'nuevo-mensaje' || tipo === 'nueva-conversacion') {
@@ -141,7 +141,7 @@ export function ConversacionesClient({ initialConversaciones }: Props) {
 
       const res = await fetch(`/api/conversaciones?${params}`);
       if (!res.ok) throw new Error('Error al cargar conversaciones');
-      const json = await res.json();
+      const json = (await res.json()) as { data?: Conversacion[] };
       return json.data as Conversacion[];
     },
     initialData: initialConversaciones,
@@ -157,7 +157,7 @@ const {
       if (!selectedId) return [];
       const res = await fetch(`/api/conversaciones/${selectedId}/mensajes`);
       if (!res.ok) throw new Error('Error al cargar mensajes');
-      const json = await res.json();
+      const json = (await res.json()) as { data?: Mensaje[] };
       return json.data as Mensaje[];
     },
     enabled: !!selectedId,

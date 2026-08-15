@@ -34,7 +34,7 @@ export default function RegistroPage() {
         body: JSON.stringify({ nombre: nombre.trim(), email: email.trim(), password }),
       });
 
-      const data = await res.json();
+      const data = await res.json() as { error?: string };
 
       if (!res.ok) {
         setError(data.error || 'Error al crear la cuenta.');

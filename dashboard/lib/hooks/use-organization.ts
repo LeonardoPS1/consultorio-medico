@@ -16,10 +16,11 @@ export function useOrganization() {
     fetch('/api/organization')
       .then((r) => r.json())
       .then((res) => {
-        if (res.data) {
-          if (res.data.avatarUrl) setAvatarUrl(res.data.avatarUrl);
-          if (res.data.firmaNombre) setOrgFirma(res.data.firmaNombre);
-          setOrgNombre(resolveTenantName(res.data?.nombre));
+        const body = res as { data?: { avatarUrl?: string; firmaNombre?: string; nombre?: string } };
+        if (body.data) {
+          if (body.data.avatarUrl) setAvatarUrl(body.data.avatarUrl);
+          if (body.data.firmaNombre) setOrgFirma(body.data.firmaNombre);
+          setOrgNombre(resolveTenantName(body.data?.nombre));
         }
       })
       .catch(() => {

@@ -77,7 +77,9 @@ async function callVisionModel(
         continue;
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as {
+        choices?: { message?: { content?: string } }[];
+      };
       const content = data.choices?.[0]?.message?.content || '';
       const cleaned = content
         .replace(/^```(?:json)?\s*/i, '')
@@ -86,7 +88,7 @@ async function callVisionModel(
 
       let parsed: Record<string, unknown>;
       try {
-        parsed = JSON.parse(cleaned);
+        parsed = JSON.parse(cleaned) as Record<string, unknown>;
       } catch {
         safeWarn(`[Vision-OCR] ${baseUrl} → respuesta no es JSON válido en ${elapsed}s`);
         continue;

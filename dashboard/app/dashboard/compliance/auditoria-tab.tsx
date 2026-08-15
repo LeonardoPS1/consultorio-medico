@@ -47,7 +47,9 @@ export function AuditoriaTab({ initialData }: Props) {
 
       const res = await fetch(`/api/auditoria-accesos?${params.toString()}`);
       if (!res.ok) throw new Error('Error fetching');
-      const json = await res.json();
+      const json = (await res.json()) as {
+        data: { accesos: AccesoAuditoria[]; paginacion: Paginacion };
+      };
       setData(json.data);
       setPagina(p);
     } catch {

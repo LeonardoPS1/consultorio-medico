@@ -135,7 +135,7 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
     try {
       const res = await fetch(`/api/documentos?pacienteId=${pacienteId}`);
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as DocumentoMedico[] | { error?: string };
         setDocs(Array.isArray(data) ? data : []);
       }
     } catch {
@@ -164,7 +164,7 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
       if (res.ok) {
         cargar();
       } else {
-        const data = await res.json().catch(() => null);
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
         setError(data?.error || 'No se pudo aprobar el documento. Intenta nuevamente.');
       }
     } catch {
@@ -187,7 +187,7 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
       if (res.ok) {
         cargar();
       } else {
-        const data = await res.json().catch(() => null);
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
         setError(data?.error || 'No se pudo rechazar el documento. Intenta nuevamente.');
       }
     } catch {
@@ -201,7 +201,7 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
 
   async function handleEditSave(id: string) {
     try {
-      const parsed = JSON.parse(editForm);
+      const parsed = JSON.parse(editForm) as Record<string, unknown>;
       setActionId(id);
       setError(null);
       const res = await fetch(`/api/documentos/${id}`, {
@@ -212,7 +212,7 @@ export function DocumentosPaciente({ pacienteId }: { pacienteId: string }) {
       if (res.ok) {
         cargar();
       } else {
-        const data = await res.json().catch(() => null);
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
         setError(data?.error || 'No se pudo guardar la edición. Intenta nuevamente.');
       }
     } catch {

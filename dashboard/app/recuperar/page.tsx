@@ -8,6 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
+interface ForgotPasswordResponse {
+  error?: string;
+  _dev?: { token: string; resetUrl: string };
+}
+
 /**
  *
  */
@@ -30,7 +35,7 @@ export default function RecuperarPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      const json = await res.json();
+      const json = (await res.json()) as ForgotPasswordResponse;
 
       if (json.error) {
         setError(json.error);

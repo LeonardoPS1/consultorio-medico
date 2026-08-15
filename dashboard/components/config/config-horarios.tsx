@@ -220,7 +220,7 @@ export function ConfigHorarios({ horarios, loading, onHorariosChange }: Props) {
                 variant="outline"
                 onClick={() => {
                   fetch('/api/horarios')
-                    .then((r) => r.json())
+                    .then((r) => r.json() as Promise<{ data?: HorarioData[] }>)
                     .then((res) => {
                       if (res.data) onHorariosChange(res.data);
                     });

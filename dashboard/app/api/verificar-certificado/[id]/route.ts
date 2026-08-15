@@ -4,6 +4,15 @@ import { historialMedico, pacientes, medicos } from '@/drizzle/schema';
 import { generarHashCertificado } from '@/lib/certificados';
 import { db } from '@/lib/db';
 
+interface CertificadoData {
+  diagnostico?: string;
+  cie10Codigo?: string | null;
+  reposoDesde?: string | null;
+  reposoHasta?: string | null;
+  reposoDias?: number | null;
+  indicaciones?: string | null;
+}
+
 /**
  * GET /api/verificar-certificado/[id]
  *
@@ -29,7 +38,9 @@ export async function GET(_request: NextRequest, { params: paramsPromise }: { pa
     }
 
     // Parsear data del certificado
-    const data = entry.descripcion ? JSON.parse(entry.descripcion) : { diagnostico: '' };
+    const data: CertificadoData = entry.descripcion
+      ? (JSON.parse(entry.descripcion) as CertificadoData)
+      : { diagnostico: '' };
 
     // Verificar hash
     const hashEsperado = generarHashCertificado({

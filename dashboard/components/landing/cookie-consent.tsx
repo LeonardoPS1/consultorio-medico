@@ -35,7 +35,7 @@ function setCookie(name: string, value: string, days = 365) {
 function parsePreferences(raw: string | null): CookiePreferences | null {
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(raw) as Partial<CookiePreferences>;
     if (typeof parsed === 'object' && parsed !== null) {
       return {
         essential: parsed.essential !== false,

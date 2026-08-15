@@ -56,9 +56,9 @@ export default function PortalConsentimientosPage() {
     setMsg(null);
     try {
       const res = await fetch(`/api/portal/consentimientos/${id}/firmar`, { method: 'POST' });
-      const data = await res.json();
+      const data = (await res.json()) as { mensaje?: string; error?: string };
       if (res.ok) {
-        setMsg({ type: 'success', text: data.mensaje });
+        setMsg({ type: 'success', text: data.mensaje ?? '' });
         cargar();
       } else {
         setMsg({ type: 'error', text: data.error || 'Error al firmar' });

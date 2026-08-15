@@ -25,16 +25,21 @@ export default function Setup2FA() {
     setLoading(true);
     try {
       const res = await fetch('/api/auth/2fa/setup');
-      const data = await res.json();
+      const data = await res.json() as {
+        error?: string;
+        secret?: string;
+        qrCode?: string;
+        backupCodes?: string[];
+      };
 
       if (data.error) {
         toast({ title: 'Error', description: data.error, variant: 'destructive' });
         return;
       }
 
-      setSecret(data.secret);
-      setQrCode(data.qrCode);
-      setBackupCodes(data.backupCodes);
+      setSecret(data.secret || '');
+      setQrCode(data.qrCode || '');
+      setBackupCodes(data.backupCodes || []);
       setStep('qr');
     } catch {
       toast({
@@ -59,7 +64,7 @@ export default function Setup2FA() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json() as { error?: string };
         toast({
           title: 'Código inválido',
           description: data.error || 'Verifica la hora de tu teléfono',

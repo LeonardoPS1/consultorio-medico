@@ -315,7 +315,7 @@ export async function syncToN8n(
         return { success: true, n8nId: n8nCredentialId };
       }
 
-      const result = await res.json();
+      const result = (await res.json()) as { id: string };
       return { success: true, n8nId: result.id };
     } catch (err) {
       // Network errors - retry
@@ -352,7 +352,9 @@ export async function getN8nCredentials(): Promise<{
       return { success: false, error: `Error ${res.status} al consultar n8n` };
     }
 
-    const result = await res.json();
+    const result = (await res.json()) as {
+      data: Array<{ id: string; name: string; type: string; updatedAt: string }>;
+    };
     return { success: true, credentials: result.data };
   } catch (err) {
     return { success: false, error: `Error de conexión: ${(err as Error).message}` };
@@ -407,7 +409,7 @@ export async function testCredentialConnection(
           signal: AbortSignal.timeout(5000),
         });
         if (res.ok) {
-          const data = await res.json();
+          const data = (await res.json()) as { models?: Array<{ name: string }> };
           const models = (data.models as Array<{ name: string }> | undefined)
             ?.map((m) => m.name)
             .join(', ') || 'desconocidos';

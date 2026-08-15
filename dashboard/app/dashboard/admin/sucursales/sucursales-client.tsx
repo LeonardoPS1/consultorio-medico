@@ -102,7 +102,7 @@ export function SucursalesClient({ initialList }: Props) {
         setShowModal(false);
         load();
       } else {
-        const err = await res.json();
+        const err = (await res.json()) as { error?: string };
         toast({ title: err.error || 'Error al guardar', variant: 'destructive' });
       }
     } catch {

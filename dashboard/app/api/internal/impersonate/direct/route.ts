@@ -17,7 +17,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
+    const body = (await request.json()) as {
+      tenantId?: string;
+      operatorId?: string;
+      operatorEmail?: string;
+      motivo?: string;
+    };
     const { tenantId, operatorId, operatorEmail, motivo } = body;
 
     if (!tenantId || !operatorId || !operatorEmail) {

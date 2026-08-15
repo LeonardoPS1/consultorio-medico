@@ -27,7 +27,7 @@ const postHandler = apiHandler(async (request: NextRequest) => {
     return success({ error: 'No autorizado' }, 401);
   }
 
-  const body = await request.json().catch(() => ({}));
+  const body = (await request.json().catch(() => ({}))) as { dias?: number };
   // Usar el valor enviado, o el configurado en DB, o el default (90)
   const dias = body.dias ?? (await getPeriodoRetencionConfig()) ?? PERIODO_RETENCION_BAJA_DIAS;
 

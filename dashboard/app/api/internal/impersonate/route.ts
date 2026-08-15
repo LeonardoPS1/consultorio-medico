@@ -5,6 +5,13 @@ import { sendEmail } from '@/lib/services/email';
 
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY;
 
+interface ImpersonateRequestBody {
+  tenantId?: string;
+  operatorId?: string;
+  operatorEmail?: string;
+  motivo?: string;
+}
+
 /**
  *
  * @param request
@@ -16,7 +23,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
+    const body = await request.json() as ImpersonateRequestBody;
     const { tenantId, operatorId, operatorEmail, motivo } = body;
 
     if (!tenantId || !operatorId || !operatorEmail) {

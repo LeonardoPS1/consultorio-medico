@@ -13,6 +13,10 @@ interface WhisperResult {
   duration: number;
 }
 
+interface OllamaChatResponse {
+  choices?: Array<{ message?: { content?: string } }>;
+}
+
 interface SoapGenerado {
   subjetivo: string;
   objetivo: string;
@@ -45,7 +49,7 @@ export const transcripcionService = {
         return null;
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as WhisperResult;
       safeLog(`[Transcripcion] Audio transcrito: ${data.text?.length || 0} chars`);
 
       return { text: data.text, duration: data.duration || 0 };
@@ -102,7 +106,7 @@ export const transcripcionService = {
         return null;
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as OllamaChatResponse;
       const content = data.choices?.[0]?.message?.content || '';
 
       const soap = JSON.parse(content) as SoapGenerado;

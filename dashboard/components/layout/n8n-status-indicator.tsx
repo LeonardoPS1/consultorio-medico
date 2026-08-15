@@ -34,7 +34,7 @@ export function N8nStatusIndicator() {
           }
           throw new Error(`HTTP ${res.status}`);
         }
-        const json = await res.json();
+        const json = (await res.json()) as { data?: N8nStats };
         if (mountedRef.current && json?.data) {
           setStats(json.data);
           setError(false);

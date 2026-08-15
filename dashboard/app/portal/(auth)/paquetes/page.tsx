@@ -28,6 +28,11 @@ interface Suscripcion {
   activa: boolean;
 }
 
+interface PaquetesResponse {
+  paquetes: Paquete[];
+  suscripciones: Suscripcion[];
+}
+
 /**
  *
  */
@@ -39,7 +44,7 @@ export default function PaquetesPage() {
 
   useEffect(() => {
     fetch('/api/portal/paquetes')
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<PaquetesResponse>)
       .then((data) => {
         setPaquetes(data.paquetes || []);
         setSuscripciones(data.suscripciones || []);
@@ -56,7 +61,7 @@ export default function PaquetesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paqueteId }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { init_point?: string; error?: string };
       if (data.init_point) {
         window.location.assign(data.init_point);
       } else {

@@ -1,10 +1,25 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
-import type { PatientPanelData, PatientSummaryLite } from '@/lib/types/patient-panel';
+import type {
+  ActiveReceta,
+  LastSoapNote,
+  PatientPanelData,
+  PatientSummaryLite,
+  UpcomingTurno,
+} from '@/lib/types/patient-panel';
 
 /** Staleness threshold: 5 minutes */
 const STALE_MS = 5 * 60 * 1000;
+
+interface PanelDetalleResponse {
+  data?:
+    | {
+        recetas?: ActiveReceta[];
+        turnos?: UpcomingTurno[];
+      }
+    | null;
+}
 
 interface PatientPanelState {
   /** Whether the sheet is open */
@@ -47,7 +62,7 @@ async function fetchPanelData(patientId: string): Promise<Omit<PatientPanelData,
   let upcomingTurnos: PatientPanelData['upcomingTurnos'] = [];
 
   if (detailRes.status === 'fulfilled' && detailRes.value.ok) {
-    const detail = await detailRes.value.json();
+    const detail = (await detailRes.value.json()) as PanelDetalleResponse;
     const d = detail.data;
     if (d) {
       activeRecetas = (d.recetas || [])
@@ -65,8 +80,12 @@ async function fetchPanelData(patientId: string): Promise<Omit<PatientPanelData,
   // Parse last SOAP
   let lastSoap: PatientPanelData['lastSoap'] = null;
   if (soapRes.status === 'fulfilled' && soapRes.value.ok) {
-    const soapJson = await soapRes.value.json();
-    const notes = soapJson.data || soapJson;
+    const soapJson = (await soapRes.value.json()) as
+      | { data?: LastSoapNote[] | null }
+      | LastSoapNote[];
+    const notes =
+      (soapJson as { data?: LastSoapNote[] | null }).data ||
+      (Array.isArray(soapJson) ? soapJson : []);
     if (Array.isArray(notes) && notes.length > 0) {
       const n = notes[0];
       lastSoap = {

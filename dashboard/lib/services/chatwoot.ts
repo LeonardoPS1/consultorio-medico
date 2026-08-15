@@ -67,9 +67,12 @@ export async function createContact(
       safeWarn(`[Chatwoot] Error creando contacto: ${res.status} ${await res.text()}`);
       return null;
     }
-    const data = await res.json();
+    const data = (await res.json()) as {
+      payload?: { contact?: ChatwootContact };
+      id?: number;
+    };
     safeLog(`[Chatwoot] Contacto creado: ${data.payload?.contact?.id || data.id}`);
-    return data.payload?.contact || data;
+    return (data.payload?.contact || data) as ChatwootContact;
   } catch (e) {
     safeError('[Chatwoot] Error en createContact:', (e as Error).message);
     return null;
@@ -95,7 +98,7 @@ export async function findContactByPhone(phoneNumber: string): Promise<ChatwootC
       },
     );
     if (!res.ok) return null;
-    const data = await res.json();
+    const data = (await res.json()) as { payload?: ChatwootContact[] };
     const contacts = data.payload || [];
     return contacts.find(
       (c: ChatwootContact) => c.phone_number?.replace(/\D/g, '') === phoneNumber.replace(/\D/g, ''),
@@ -141,7 +144,7 @@ export async function getOrCreateConversation(
       safeWarn(`[Chatwoot] Error creando conversación: ${res.status}`);
       return null;
     }
-    const data = await res.json();
+    const data = (await res.json()) as ChatwootConversation;
     return data;
   } catch (e) {
     safeError('[Chatwoot] Error en getOrCreateConversation:', (e as Error).message);

@@ -8,6 +8,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
+interface OrganizationData {
+  nombre: string;
+  eslogan: string;
+  descripcion: string;
+  logoUrl: string;
+  avatarUrl: string;
+  fondoUrl: string;
+  firmaNombre: string;
+  colorPrimario: string;
+  colorSecundario: string;
+  direccion: string;
+  ciudad: string;
+  provincia: string;
+  telefono: string;
+  telefonoSecundario: string;
+  whatsapp: string;
+  email: string;
+  emailSecundario: string;
+  sitioWeb: string;
+  redesSociales?: { instagram?: string; facebook?: string };
+}
+
 function Field({
   label,
   value,
@@ -96,7 +118,7 @@ export function PerfilOrganizacion() {
 
   useEffect(() => {
     fetch('/api/organization')
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<{ data?: OrganizationData }>)
       .then((res) => {
         if (res.data) {
           const { redesSociales, ...rest } = res.data;
@@ -131,7 +153,7 @@ export function PerfilOrganizacion() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const json = await res.json().catch(() => ({}));
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (res.ok) {
         setMensaje('ó Configuración guardada correctamente');
         setPreviewColor(data.colorPrimario);
@@ -392,7 +414,7 @@ export function PerfilOrganizacion() {
           onClick={() => {
             setMensaje('');
             fetch('/api/organization')
-              .then((r) => r.json())
+              .then((r) => r.json() as Promise<{ data?: OrganizationData }>)
               .then((res) => {
                 if (res.data) {
                   const { redesSociales, ...rest } = res.data;

@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
   let body: { paymentId?: string };
   try {
-    body = await request.json();
+    body = await request.json() as { paymentId?: string };
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
@@ -94,7 +94,7 @@ async function handleSuscripcionPayment(
 ) {
   let refData: Record<string, string> = {};
   try {
-    refData = JSON.parse(externalRef);
+    refData = JSON.parse(externalRef) as Record<string, string>;
   } catch {
     refData = { raw: externalRef };
   }

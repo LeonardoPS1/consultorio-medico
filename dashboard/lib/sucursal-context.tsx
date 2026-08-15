@@ -73,7 +73,7 @@ export function SucursalProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
         return;
       }
-      const data = await res.json();
+      const data = (await res.json()) as Sucursal[];
       if (Array.isArray(data) && data.length > 0) {
         setSucursales(data);
 

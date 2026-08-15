@@ -62,10 +62,10 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = await request.json() as { notaId?: string; accion?: string };
     const { notaId, accion } = body;
 
-    if (!notaId || !['aprobar', 'rechazar'].includes(accion)) {
+    if (!notaId || !accion || !['aprobar', 'rechazar'].includes(accion)) {
       return NextResponse.json({ error: 'notaId y accion (aprobar|rechazar) son requeridos' }, { status: 400 });
     }
 

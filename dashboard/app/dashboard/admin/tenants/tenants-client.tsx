@@ -48,8 +48,10 @@ export function TenantsClient({ initialTenants }: Props) {
     fetch('/api/admin/tenants')
       .then((r) => r.json())
       .then((res) => {
-        if (res.error) setError(res.error);
-        else setTenants(Array.isArray(res) ? res : []);
+        const body = res as Tenant[] | { error?: string };
+        const errMsg = Array.isArray(body) ? null : body.error;
+        if (errMsg) setError(errMsg);
+        else setTenants(Array.isArray(body) ? body : []);
       })
       .catch(() => setError('Error al cargar tenants'))
       .finally(() => setLoading(false));
@@ -66,7 +68,7 @@ export function TenantsClient({ initialTenants }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre: newNombre, subdomain: newSubdomain }),
       });
-      const json = await res.json();
+      const json = (await res.json()) as { error?: string };
       if (json.error) {
         setError(json.error);
       } else {

@@ -20,7 +20,23 @@ export async function generateMetadata({ params: _params }: Props): Promise<Meta
 
 export const dynamic = 'force-dynamic';
 
-async function getCertificadoData(id: string) {
+interface CertificadoData {
+  valido: boolean;
+  certificado: {
+    id: string;
+    paciente: string;
+    medico: string;
+    diagnostico: string;
+    cie10Codigo: string | null;
+    reposoDesde: string | null;
+    reposoHasta: string | null;
+    reposoDias: number | null;
+    indicaciones: string | null;
+    emitido: string;
+  };
+}
+
+async function getCertificadoData(id: string): Promise<CertificadoData | null> {
   try {
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
@@ -30,7 +46,7 @@ async function getCertificadoData(id: string) {
       cache: 'no-store',
     });
     if (!res.ok) return null;
-    return res.json();
+    return res.json() as Promise<CertificadoData>;
   } catch {
     return null;
   }

@@ -35,6 +35,13 @@ import { SlotPicker } from './slot-picker';
 
 type Step = 'medico' | 'slot' | 'confirmar' | 'pago' | 'completado';
 
+interface PagoInfoResponse {
+  preferenceId: string;
+  initPoint: string;
+  sandboxInitPoint: string;
+  error?: string;
+}
+
 const MOTIVOS_PREDEFINIDOS = [
   'Control general',
   'Dolor agudo',
@@ -192,7 +199,7 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ turnoId: turno.id }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as PagoInfoResponse;
       if (!res.ok) throw new Error(data.error || 'Error al iniciar pago');
       setPagoInfo(data);
       return data;
@@ -223,7 +230,7 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
         }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as { error?: string; turno: TurnoCreadoPortal };
       if (!res.ok) throw new Error(data.error || 'Error al agendar');
 
       setUltimoTurno(data.turno);
@@ -275,7 +282,7 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
       if (document.hidden) return;
       try {
         const res = await fetch(`/api/portal/pagos/${ultimoTurno.id}`);
-        const data = await res.json();
+        const data = (await res.json()) as { turnoPagado?: boolean };
         if (data.turnoPagado) {
           setPagoCompletado(true);
           playComplete();

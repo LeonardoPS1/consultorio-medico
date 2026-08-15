@@ -10,7 +10,7 @@ import { safeLog } from '@/lib/logger';
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as { pacienteId?: string; aceptado?: boolean };
     const { pacienteId, aceptado } = body;
 
     if (!pacienteId || typeof aceptado !== 'boolean') {

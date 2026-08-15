@@ -68,7 +68,7 @@ export default function IntegracionesDashboard({ isAdmin }: IntegracionesDashboa
     setLoading(true);
     try {
       const res = await fetch('/api/credenciales');
-      const data = await res.json();
+      const data = await res.json() as { grouped?: ServicioGrouped[] };
       if (res.ok && data.grouped) {
         setServicios(data.grouped);
       }

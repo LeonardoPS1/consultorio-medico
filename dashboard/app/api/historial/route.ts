@@ -29,6 +29,17 @@ export const GET = apiHandler(async (request: NextRequest) => {
   return success(res);
 });
 
+/** Cuerpo esperado para crear un registro de historial clínico. */
+interface HistorialBody {
+  pacienteId?: unknown;
+  tipo?: unknown;
+  titulo?: unknown;
+  descripcion?: unknown;
+  diagnosticoCodigo?: unknown;
+  diagnosticoDescripcion?: unknown;
+  visibleParaPaciente?: boolean;
+}
+
 /**
  * POST /api/historial
  * Crea un registro clínico en historial_medico.
@@ -36,7 +47,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
 export const POST = apiHandler(async (request: NextRequest) => {
   const session = await requireAuth();
 
-  const body = await request.json();
+  const body = (await request.json()) as HistorialBody;
 
   const pacienteId = String(body.pacienteId ?? '');
   const tipo = String(body.tipo ?? '');

@@ -130,7 +130,7 @@ export default function N8nClient({ initialStats }: Props) {
     setErrorWorkflows(null);
     try {
       const res = await fetch('/api/admin/n8n/workflows');
-      const json = await res.json();
+      const json = await res.json() as { error?: string; data?: N8nWorkflow[] };
       if (!res.ok) {
         setErrorWorkflows(json.error || 'Error al cargar workflows');
         setWorkflows([]);
@@ -150,7 +150,7 @@ export default function N8nClient({ initialStats }: Props) {
     setErrorExecutions(null);
     try {
       const res = await fetch('/api/admin/n8n/executions?limit=50');
-      const json = await res.json();
+      const json = await res.json() as { error?: string; data?: N8nExecution[] };
       if (!res.ok) {
         setErrorExecutions(json.error || 'Error al cargar ejecuciones');
         setExecutions([]);
@@ -175,7 +175,7 @@ export default function N8nClient({ initialStats }: Props) {
       if (logFilterNivel) params.set('nivel', logFilterNivel);
 
       const res = await fetch(`/api/admin/n8n/logs?${params}`);
-      const json = await res.json();
+      const json = await res.json() as { logs?: WorkflowLog[]; total?: number };
       setLogs(json.logs || []);
       setLogTotal(json.total || 0);
     } catch {
@@ -194,7 +194,7 @@ export default function N8nClient({ initialStats }: Props) {
         offset: String(errorOffset),
       });
       const res = await fetch(`/api/admin/n8n/errors?${params}`);
-      const json = await res.json();
+      const json = await res.json() as { errors?: WorkflowError[]; total?: number };
       setErrors(json.errors || []);
       setErrorTotal(json.total || 0);
     } catch {
@@ -208,7 +208,7 @@ export default function N8nClient({ initialStats }: Props) {
   const fetchStats = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/n8n/stats');
-      const json = await res.json();
+      const json = await res.json() as { data?: N8nStats };
       if (json.data) setStats(json.data);
     } catch {
       // silent

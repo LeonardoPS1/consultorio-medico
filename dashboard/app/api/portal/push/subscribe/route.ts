@@ -4,7 +4,7 @@
  */
 import { NextResponse } from 'next/server';
 import { getPortalSession, validateCSRFOrigin } from '@/lib/portal-auth';
-import { pushService } from '@/lib/services/push';
+import { pushService, type PushSubscriptionData } from '@/lib/services/push';
 
 /**
  *
@@ -20,7 +20,10 @@ export async function POST(req: Request) {
   }
 
   try {
-    const body = await req.json();
+    const body = (await req.json()) as {
+      subscription?: PushSubscriptionData;
+      userAgent?: string;
+    };
     const { subscription, userAgent } = body;
 
     if (!subscription || !subscription.endpoint) {

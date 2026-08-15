@@ -89,16 +89,16 @@ JSON:`;
       return null;
     }
 
-    const json = await res.json();
+    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
     const content = json?.choices?.[0]?.message?.content?.trim() || '';
-    const parsed = JSON.parse(content);
+    const parsed = JSON.parse(content) as { sentimiento?: string; score?: unknown };
 
-    if (!['positivo', 'neutral', 'negativo'].includes(parsed.sentimiento)) {
+    if (!['positivo', 'neutral', 'negativo'].includes(parsed.sentimiento ?? '')) {
       return null;
     }
 
     return {
-      sentimiento: parsed.sentimiento,
+      sentimiento: parsed.sentimiento as 'positivo' | 'neutral' | 'negativo',
       score: typeof parsed.score === 'number' ? Math.max(0, Math.min(1, parsed.score)) : 0.5,
     };
   } catch (e) {

@@ -100,7 +100,7 @@ export function NuevaRecetaModal({ open, onOpenChange, onSubmit }: NuevaRecetaMo
     try {
       const res = await fetch(`/api/pacientes?search=${encodeURIComponent(q)}&limit=8`);
       if (res.ok) {
-        const json = await res.json();
+        const json = await res.json() as { data: PacienteResult[] };
         setResults(json.data || []);
         setShowDropdown(true);
       }
@@ -179,7 +179,7 @@ export function NuevaRecetaModal({ open, onOpenChange, onSubmit }: NuevaRecetaMo
       )}&medicamento=${encodeURIComponent(medicamento.trim())}`;
       const res = await fetch(url);
       if (!res.ok) return true; // fail-open: si el check falla, no bloquear
-      const json = await res.json();
+      const json = await res.json() as { alertas: AlertaClinica[] };
       const lista: AlertaClinica[] = Array.isArray(json.alertas) ? json.alertas : [];
       if (lista.length > 0) {
         setAlertas(lista);

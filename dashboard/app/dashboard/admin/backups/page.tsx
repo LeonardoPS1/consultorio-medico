@@ -57,7 +57,7 @@ function BackupsContent() {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/backups');
-      const data = await res.json();
+      const data = await res.json() as { backups?: BackupInfo[] };
       setBackups(data.backups || []);
     } catch {
       setError('Error al cargar backups');
@@ -79,7 +79,7 @@ function BackupsContent() {
       if (res.ok) {
         await fetchBackups();
       } else {
-        const data = await res.json();
+        const data = await res.json() as { error?: string };
         setError(data.error || 'Error al crear backup');
       }
     } catch {

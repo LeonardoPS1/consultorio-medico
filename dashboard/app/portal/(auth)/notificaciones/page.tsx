@@ -70,7 +70,7 @@ export default function PortalNotificacionesPage() {
     try {
       const res = await fetch('/api/portal/notificaciones');
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as { data?: Notificacion[] };
         setNotificaciones(data.data ?? []);
       } else {
         setError('Error al cargar notificaciones');

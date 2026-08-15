@@ -21,7 +21,7 @@ export async function GET(
     if (job) {
       const state = await job.getState();
       const progress = job.progress;
-      const result = job.returnvalue;
+      const result = job.returnvalue as unknown;
       const failedReason = job.failedReason;
 
       return NextResponse.json({

@@ -49,7 +49,7 @@ export function TelemedicinaClient({ initialTurnos }: TelemedicinaClientProps) {
 
       const res = await fetch(`/api/turnos?${params.toString()}`);
       if (!res.ok) throw new Error('Error al cargar turnos virtuales');
-      const data = await res.json();
+      const data = (await res.json()) as { data?: TurnoVirtual[] };
       setTurnos(data.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');

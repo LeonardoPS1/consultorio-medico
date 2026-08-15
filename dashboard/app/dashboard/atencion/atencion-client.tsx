@@ -576,7 +576,11 @@ export function AtencionClient({ initialTurnos }: { initialTurnos: Turno[] }) {
         });
 
         if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
+          const body = (await res.json().catch(() => ({}))) as {
+            prodError?: string;
+            detail?: string;
+            error?: string;
+          };
           const serverMsg = body?.prodError || body?.detail || body?.error || '';
           const msg = serverMsg || (res.status >= 500 ? 'Error del servidor' : 'Error al guardar');
           throw new Error(msg);
@@ -724,7 +728,11 @@ export function AtencionClient({ initialTurnos }: { initialTurnos: Turno[] }) {
         });
 
         if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
+          const body = (await res.json().catch(() => ({}))) as {
+            prodError?: string;
+            detail?: string;
+            error?: string;
+          };
           const serverMsg = body?.prodError || body?.detail || body?.error || '';
           throw new Error(serverMsg || 'Error del servidor');
         }

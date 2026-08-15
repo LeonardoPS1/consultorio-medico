@@ -120,7 +120,10 @@ export default function PortalPerfilClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      const data = await res.json().catch(() => null);
+      const data = (await res.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: string;
+      } | null;
       if (res.ok && data?.ok) {
         setSolicitarResult({
           ok: true,
@@ -149,7 +152,7 @@ export default function PortalPerfilClient({
     setLoadingRegiones(true);
     fetch('/api/regiones')
       .then((r) => r.json())
-      .then((data) => setRegiones(data.data || []))
+      .then((data: { data: Region[] }) => setRegiones(data.data || []))
       .catch(() => {})
       .finally(() => setLoadingRegiones(false));
   }, []);
@@ -163,7 +166,7 @@ export default function PortalPerfilClient({
     setLoadingComunas(true);
     fetch(`/api/comunas?region_id=${regionId}`)
       .then((r) => r.json())
-      .then((data) => setComunas(data.data || []))
+      .then((data: { data: Comuna[] }) => setComunas(data.data || []))
       .catch(() => {})
       .finally(() => setLoadingComunas(false));
   }, [regionId]);
@@ -196,7 +199,7 @@ export default function PortalPerfilClient({
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       } else {
-        const data = await res.json();
+        const data = await res.json() as { error?: string };
         setError(data.error || 'Error al guardar');
       }
     } catch {

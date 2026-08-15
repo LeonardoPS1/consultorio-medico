@@ -9,6 +9,11 @@ import { setCookieWithConsent } from '@/components/landing/cookie-consent';
 const COOKIE_INSTALLED = 'pwa_installed';
 const COOKIE_DISMISSED = 'pwa_dismissed';
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
@@ -25,7 +30,7 @@ function getCookie(name: string): string | null {
  *  - El usuario la descartó (cookie)
  */
 export function PWAInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [installing, setInstalling] = useState(false);
 
   /** ¿Debemos mostrar el banner? */
@@ -47,9 +52,7 @@ export function PWAInstallPrompt() {
   const handleInstall = useCallback(async () => {
     if (!deferredPrompt) return;
     setInstalling(true);
-    // @ts-expect-error - beforeinstallprompt API no está en tipos TS
-    deferredPrompt.prompt();
-    // @ts-expect-error - userChoice tampoco está tipado
+    await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       setDeferredPrompt(null);
@@ -67,7 +70,7 @@ export function PWAInstallPrompt() {
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       if (shouldShow()) {
-        setDeferredPrompt(e);
+        setDeferredPrompt(e as BeforeInstallPromptEvent);
       }
     };
 

@@ -342,13 +342,13 @@ export const GET = apiHandler(async (request: NextRequest) => {
 // ─── POST ──────────────────────────────────────────────────
 
 export const POST = apiHandler(async (request: NextRequest) => {
-  const body: {
+  const body = (await request.json().catch(() => ({}))) as {
     name?: string;
     value?: number;
     rating?: string;
     url?: string;
     userAgent?: string;
-  } = await request.json().catch(() => ({}));
+  };
 
   if (!body.name || typeof body.value !== 'number' || !body.rating) {
     return success({ ok: true });

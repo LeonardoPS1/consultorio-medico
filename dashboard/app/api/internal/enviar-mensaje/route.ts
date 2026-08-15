@@ -14,7 +14,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  const { telefono, mensaje, conversationId } = await request.json();
+  const { telefono, mensaje, conversationId } = (await request.json()) as {
+    telefono?: string;
+    mensaje?: string;
+    conversationId?: number;
+  };
   if (!telefono || !mensaje) {
     return NextResponse.json({ error: 'Faltan campos: telefono, mensaje' }, { status: 400 });
   }

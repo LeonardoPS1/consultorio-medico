@@ -47,7 +47,7 @@ export function ComplianceClient({ initialData, initialAuditoriaData, initialArc
     try {
       const res = await fetch(`/api/compliance?periodo=${p}&demo=true`);
       if (!res.ok) throw new Error('Error fetching');
-      const json = await res.json();
+      const json = await res.json() as ComplianceData;
       setData(json);
     } catch {
       setError(true);
@@ -154,7 +154,7 @@ export function ComplianceClient({ initialData, initialAuditoriaData, initialArc
 
           {loading ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {[...Array(4)].map((_, i) => (
+              {Array.from({ length: 4 }).map((_, i) => (
                 // eslint-disable-next-line react/no-array-index-key -- skeleton placeholder
                 <Card key={i}>
                   <CardContent className="pt-6">

@@ -5,6 +5,8 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+type VerificationData = NonNullable<Parameters<typeof VerificarRecetaClient>[0]['data']>;
+
 /**
  *
  * @param root0
@@ -20,14 +22,14 @@ export async function generateMetadata({ params: _params }: Props): Promise<Meta
 
 export const dynamic = 'force-dynamic';
 
-async function getRecetaData(id: string) {
+async function getRecetaData(id: string): Promise<VerificationData | null> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://med.aicorebots.com';
     const res = await fetch(`${baseUrl}/api/verificar-receta/${id}`, {
       cache: 'no-store',
     });
     if (!res.ok) return null;
-    return res.json();
+    return (await res.json()) as VerificationData;
   } catch {
     return null;
   }

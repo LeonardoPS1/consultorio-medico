@@ -145,7 +145,7 @@ function ConfigContent() {
   // Cargar datos desde APIs
   useEffect(() => {
     fetch('/api/horarios')
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<{ data?: HorarioData[] }>)
       .then((res) => {
         if (res.data) setHorarios(res.data);
       })
@@ -153,7 +153,7 @@ function ConfigContent() {
       .finally(() => setLoading((h) => ({ ...h, horarios: false })));
 
     fetch('/api/notificaciones')
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<{ data?: NotifData }>)
       .then((res) => {
         if (res.data) setNotificaciones(res.data);
       })
@@ -161,7 +161,7 @@ function ConfigContent() {
       .finally(() => setLoading((h) => ({ ...h, notificaciones: false })));
 
     fetch('/api/equipo')
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<{ data?: MiembroEquipo[] }>)
       .then((res) => {
         if (res.data) setMiembrosEquipo(res.data);
       })
@@ -169,7 +169,7 @@ function ConfigContent() {
       .finally(() => setLoading((h) => ({ ...h, equipo: false })));
 
     fetch('/api/plantillas')
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<{ data?: PlantillaWhatsApp[] }>)
       .then((res) => {
         if (res.data) setPlantillas(res.data);
       })
@@ -321,8 +321,11 @@ function ConfigContent() {
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify(data),
                     });
-                    const result = await res.json();
-                    if (result.data) setPlantillas((prev) => [...prev, result.data]);
+                    const result = await res.json() as { data?: PlantillaWhatsApp };
+                    if (result.data) {
+                      const nuevaPlantilla = result.data;
+                      setPlantillas((prev) => [...prev, nuevaPlantilla]);
+                    }
                   }
                   setShowPlantillaModal(false);
                   setEditingPlantilla(null);

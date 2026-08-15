@@ -67,25 +67,29 @@ export function useFuzzyPatients(): UseFuzzyPatientsReturn {
     try {
       const res = await fetch(`/api/pacientes?limit=${PRELOAD_LIMIT}`);
       if (!res.ok) throw new Error('Failed to fetch patients');
-      const json = await res.json();
-      const patients: PatientSummaryLite[] = (json.data || json || []).map(
-        (p: Record<string, unknown>) => ({
-          id: p.id as string,
-          nombre: (p.nombre as string) || '',
-          apellido: (p.apellido as string) || '',
-          telefono: (p.telefono as string) || '',
-          email: (p.email as string) || null,
-          dni: (p.dni as string) || null,
-          fechaNacimiento: (p.fechaNacimiento as string) || null,
-          sistemaSalud: (p.sistemaSalud as string) || null,
-          isapreNombre: (p.isapreNombre as string) || null,
-          alergias: (p.alergias as string) || null,
-          medicacionCronica: (p.medicacionCronica as string) || null,
-          tags: (p.tags as string[]) || [],
-          totalTurnos: (p.totalTurnos as number) ?? 0,
-          totalRecetas: (p.totalRecetas as number) ?? 0,
-          totalHistorial: (p.totalHistorial as number) ?? 0,
-          totalNotasSoap: (p.totalNotasSoap as number) ?? 0,
+      const json = (await res.json()) as { data?: PatientSummaryLite[] } | PatientSummaryLite[];
+      const patients: PatientSummaryLite[] = (
+        (json as { data?: PatientSummaryLite[] }).data ||
+        (Array.isArray(json) ? json : []) ||
+        []
+      ).map(
+        (p: PatientSummaryLite) => ({
+          id: p.id,
+          nombre: p.nombre || '',
+          apellido: p.apellido || '',
+          telefono: p.telefono || '',
+          email: p.email ?? null,
+          dni: p.dni ?? null,
+          fechaNacimiento: p.fechaNacimiento ?? null,
+          sistemaSalud: p.sistemaSalud ?? null,
+          isapreNombre: p.isapreNombre ?? null,
+          alergias: p.alergias ?? null,
+          medicacionCronica: p.medicacionCronica ?? null,
+          tags: p.tags || [],
+          totalTurnos: p.totalTurnos ?? 0,
+          totalRecetas: p.totalRecetas ?? 0,
+          totalHistorial: p.totalHistorial ?? 0,
+          totalNotasSoap: p.totalNotasSoap ?? 0,
         }),
       );
 
