@@ -8,27 +8,27 @@
   container-type: inline-size;
   container-name: portal;
 
-  /* Palette — teal + violet + cálido para el paciente */
-  --portal-bg: 40 18% 96%;
+  /* Palette — azul warm para el paciente */
+  --portal-bg: 40 20% 97%;
   --portal-bg-alt: 0 0% 100%;
-  --portal-foreground: 225 18% 14%;
-  --portal-muted: 40 12% 92%;
-  --portal-muted-foreground: 225 8% 48%;
-  --portal-border: 225 8% 86%;
-  --portal-border-light: 225 6% 90%;
+  --portal-foreground: 240 7% 15%;
+  --portal-muted: 40 8% 93%;
+  --portal-muted-foreground: 240 5% 59%;
+  --portal-border: 240 8% 93%;
+  --portal-border-light: 240 6% 95%;
 
-  --portal-primary: 168 72% 38%;
-  --portal-primary-soft: 168 40% 92%;
-  --portal-primary-glow: 168 72% 38% / 0.15;
+  --portal-primary: 217 91% 53%;
+  --portal-primary-strong: 218 86% 58%;
+  --portal-primary-dark: 221 83% 45%;
+  --portal-primary-soft: 214 100% 97%;
+  --portal-primary-glow: 217 91% 53% / 0.15;
   --portal-primary-foreground: 0 0% 100%;
 
-  --portal-accent: 262 50% 52%;
-  --portal-accent-soft: 262 40% 94%;
-  --portal-accent-foreground: 0 0% 100%;
+  --portal-teal: 172 76% 38%;
 
-  --portal-destructive: 0 72% 52%;
-  --portal-success: 142 55% 38%;
-  --portal-warning: 38 85% 48%;
+  --portal-destructive: 0 84% 60%;
+  --portal-success: 160 84% 39%;
+  --portal-warning: 38 92% 50%;
 
   /* Glass */
   --portal-glass-bg: hsl(0 0% 100% / 0.75);
@@ -62,24 +62,25 @@
 }
 
 .dark .portal-layout {
-  --portal-bg: 225 12% 6%;
-  --portal-bg-alt: 225 10% 9%;
-  --portal-foreground: 225 10% 92%;
-  --portal-muted: 225 10% 12%;
-  --portal-muted-foreground: 225 8% 55%;
-  --portal-border: 225 10% 18%;
-  --portal-border-light: 225 8% 15%;
+  --portal-bg: 240 9% 8%;
+  --portal-bg-alt: 240 6% 12%;
+  --portal-foreground: 240 6% 96%;
+  --portal-muted: 240 6% 16%;
+  --portal-muted-foreground: 220 9% 66%;
+  --portal-border: 240 6% 18%;
+  --portal-border-light: 240 6% 15%;
 
-  --portal-primary: 168 70% 48%;
-  --portal-primary-soft: 168 30% 14%;
-  --portal-primary-glow: 168 70% 48% / 0.15;
+  --portal-primary: 217 91% 55%;
+  --portal-primary-strong: 218 86% 52%;
+  --portal-primary-dark: 221 83% 50%;
+  --portal-primary-soft: 217 91% 53% / 0.14;
+  --portal-primary-glow: 217 91% 53% / 0.15;
 
-  --portal-accent: 262 55% 58%;
-  --portal-accent-soft: 262 25% 14%;
+  --portal-teal: 172 66% 52%;
 
-  --portal-destructive: 0 75% 60%;
-  --portal-success: 142 55% 48%;
-  --portal-warning: 38 85% 55%;
+  --portal-destructive: 0 70% 62%;
+  --portal-success: 160 60% 55%;
+  --portal-warning: 38 85% 60%;
 
   --portal-glass-bg: hsl(225 10% 9% / 0.8);
   --portal-glass-border: hsl(225 10% 18% / 0.5);
@@ -117,8 +118,8 @@
 .portal-card {
   background: var(--portal-bg-alt);
   border: 1px solid hsl(var(--portal-border));
-  border-radius: calc(var(--radius) + 0.25rem);
-  box-shadow: var(--portal-shadow-sm);
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(30, 40, 60, 0.03), 0 2px 8px rgba(30, 40, 60, 0.05);
   transition: transform 200ms var(--portal-ease-out-quick),
               box-shadow 250ms var(--portal-ease-out-quick);
 }
@@ -152,7 +153,7 @@
 
 /* ─── Portal Active Pill (Nav) ───────────────────────────── */
 .portal-nav-pill {
-  background: hsl(var(--portal-primary) / 0.1);
+  background: hsl(var(--portal-primary-soft));
   border-radius: calc(var(--radius) + 0.125rem);
   box-shadow: 0 1px 2px hsl(var(--portal-primary) / 0.05);
 }
@@ -228,7 +229,7 @@
 
 /* ─── Responsive Touch Optimizations ─────────────────────── */
 @container portal (max-width: 640px) {
-  .portal-card { border-radius: calc(var(--radius) + 0.125rem); }
+  .portal-card { border-radius: 20px; }
 }
 @container portal (max-width: 380px) {
   /* nav items use inline min-w-[55px] via Tailwind */
@@ -247,4 +248,13 @@
     opacity: 1 !important;
     transform: none !important;
   }
+}
+
+/* ─── Portal Pulse Line (identidad) ─────────────────────── */
+.portal-pulse-line {
+  display: inline-flex;
+  align-items: center;
+}
+@keyframes portalPulseDash {
+  to { stroke-dashoffset: -24; }
 }
