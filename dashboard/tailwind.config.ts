@@ -77,8 +77,9 @@ const config: Config = {
           'border-light': 'hsl(var(--portal-border-light))',
           primary: 'hsl(var(--portal-primary))',
           'primary-soft': 'hsl(var(--portal-primary-soft))',
-          accent: 'hsl(var(--portal-accent))',
-          'accent-soft': 'hsl(var(--portal-accent-soft))',
+          'primary-strong': 'hsl(var(--portal-primary-strong))',
+          'primary-dark': 'hsl(var(--portal-primary-dark))',
+          teal: 'hsl(var(--portal-teal))',
           destructive: 'hsl(var(--portal-destructive))',
           success: 'hsl(var(--portal-success))',
           warning: 'hsl(var(--portal-warning))',
@@ -127,6 +128,10 @@ const config: Config = {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.8' },
         },
+        'pulse-line': {
+          from: { strokeDashoffset: '24' },
+          to: { strokeDashoffset: '0' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -136,6 +141,7 @@ const config: Config = {
         'scale-in': 'scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         'slide-in-right': 'slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite',
+        'pulse-line': 'pulse-line 1.2s linear infinite',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
