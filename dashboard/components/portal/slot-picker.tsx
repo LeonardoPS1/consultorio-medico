@@ -2,8 +2,8 @@
 
 import { ChevronLeft, ChevronRight, Clock, CalendarDays } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { SlotDisponible } from '@/lib/services/portal-booking';
 import { cn } from '@/lib/utils';
@@ -112,22 +112,21 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
       <PortalCard padding="sm">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <Button
+          <PortalButton
             variant="ghost"
-            size="icon"
+            className="h-8 w-8"
             aria-label="Semana anterior"
             onClick={goBack}
             disabled={weekDays[0] <= today}
-            className="h-8 w-8"
           >
             <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm font-semibold">
+          </PortalButton>
+          <span className="text-sm font-semibold text-portal-fg">
             {MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}
           </span>
-          <Button variant="ghost" size="icon" aria-label="Semana siguiente" onClick={goForward} className="h-8 w-8">
+          <PortalButton variant="ghost" className="h-8 w-8" aria-label="Semana siguiente" onClick={goForward}>
             <ChevronRight className="h-4 w-4" />
-          </Button>
+          </PortalButton>
         </div>
 
         {/* Day names */}
@@ -135,7 +134,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
           {DAY_NAMES.map((name) => (
             <div
               key={name}
-              className="text-center text-[10px] sm:text-[11px] font-medium text-muted-foreground py-1"
+              className="text-center text-[10px] sm:text-[11px] font-medium text-portal-muted-fg py-1"
             >
               {name}
             </div>
@@ -155,17 +154,17 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
                 disabled={!canBook}
                 onClick={() => canBook && setSelectedDate(dateStr)}
                 className={cn(
-                  'relative rounded-lg text-center py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all duration-150',
+                  'relative rounded-full text-center py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all duration-150',
                   'active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
-                  isSelected && 'bg-primary text-primary-foreground shadow-sm',
-                  !isSelected && canBook && 'hover:bg-accent hover:text-accent-foreground',
-                  isToday && !isSelected && 'ring-1 ring-primary/40',
-                  !canBook && 'text-muted-foreground/25 cursor-not-allowed',
+                  isSelected && 'bg-[#2563EB] text-white shadow-sm',
+                  !isSelected && canBook && 'hover:bg-portal-muted hover:text-portal-fg',
+                  isToday && !isSelected && 'ring-1 ring-[#2563EB]/40',
+                  !canBook && 'text-portal-muted-fg/25 cursor-not-allowed',
                 )}
               >
                 {d.getDate()}
                 {isToday && !isSelected && (
-                  <span className="absolute bottom-0.5 sm:bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary/60" />
+                  <span className="absolute bottom-0.5 sm:bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#2563EB]/60" />
                 )}
               </button>
             );
@@ -178,11 +177,11 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
         <div>
           {loading ? (
             <div className="space-y-3">
-              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-4 w-16 bg-portal-muted" />
               <div className="flex gap-2 flex-wrap">
                 {Array.from({ length: 5 }).map((_, i) => (
                   // eslint-disable-next-line react/no-array-index-key -- skeleton placeholder
-                  <Skeleton key={i} className="h-9 w-20 rounded-lg" />
+                  <Skeleton key={i} className="h-9 w-20 rounded-full bg-portal-muted" />
                 ))}
               </div>
             </div>
@@ -191,18 +190,18 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
               {error}
             </div>
           ) : slots.length === 0 ? (
-            <div className="rounded-lg bg-muted/30 border border-border/50 p-6 text-center">
-              <CalendarDays className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">
+            <div className="rounded-lg bg-portal-muted border border-portal-border p-6 text-center">
+              <CalendarDays className="h-8 w-8 text-portal-muted-fg/40 mx-auto mb-2" />
+              <p className="text-sm text-portal-muted-fg">
                 No hay horarios disponibles para esta fecha.
               </p>
-              <p className="text-xs text-muted-foreground/60 mt-1">Probá seleccionar otro día.</p>
+              <p className="text-xs text-portal-muted-fg/60 mt-1">Probá seleccionar otro día.</p>
             </div>
           ) : (
             <div className="space-y-3">
               {manana.length > 0 && (
                 <div>
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  <p className="text-[11px] font-semibold text-portal-muted-fg uppercase tracking-wider mb-2">
                     Mañana
                   </p>
                   <div className="flex gap-2 flex-wrap stagger-premium">
@@ -219,7 +218,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
               )}
               {tarde.length > 0 && (
                 <div>
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  <p className="text-[11px] font-semibold text-portal-muted-fg uppercase tracking-wider mb-2">
                     Tarde
                   </p>
                   <div className="flex gap-2 flex-wrap stagger-premium">
@@ -257,11 +256,11 @@ function SlotButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150',
+        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-150',
         'active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         isSelected
-          ? 'bg-primary text-primary-foreground shadow-sm'
-          : 'bg-background border border-border text-foreground hover:border-primary/50 hover:text-primary hover:bg-accent/50',
+          ? 'bg-[#2563EB] text-white shadow-[0_2px_8px_rgba(37,99,235,0.25)]'
+          : 'bg-white border border-portal-border text-portal-fg hover:border-[#2563EB] hover:text-[#2563EB] hover:bg-portal-primary/5',
       )}
     >
       <Clock className="h-3.5 w-3.5 shrink-0" />

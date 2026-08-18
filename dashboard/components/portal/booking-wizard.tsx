@@ -13,7 +13,6 @@ import { useRouter } from 'next/navigation';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
-import { Button } from '@/components/ui/button';
 import {
   CardContent,
   CardHeader,
@@ -108,14 +107,14 @@ function StepIndicator({ currentStep, showPago }: { currentStep: Step; showPago:
                 />
               )}
               <div className="flex flex-col items-center gap-1">
-                <div
-                  className={cn(
-                    'flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium transition-all duration-300',
-                    isCurrent && 'bg-portal-gradient-strong text-white shadow-[0_0_0_3px_hsl(var(--portal-primary)/0.15)] shadow-[0_1px_3px_hsl(var(--portal-primary)/0.2)]',
-                    !isCurrent && isActive && 'bg-portal-primary/15 text-portal-primary',
-                    !isCurrent && !isActive && 'bg-portal-muted text-portal-muted-fg',
-                  )}
-                >
+<div
+                className={cn(
+                  'flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium transition-all duration-300',
+                  isCurrent && 'bg-[#2563EB] text-white shadow-[0_0_0_3px_rgba(37,99,235,0.15)] shadow-[0_1px_3px_rgba(37,99,235,0.2)]',
+                  !isCurrent && isActive && 'bg-portal-muted text-portal-muted-fg',
+                  !isCurrent && !isActive && 'bg-portal-muted text-portal-muted-fg',
+                )}
+              >
                   {isActive && !isCurrent ? <Check className="h-3.5 w-3.5" /> : i + 1}
                 </div>
                 <span
@@ -321,15 +320,15 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
       exit="exit"
       className="space-y-6"
     >
-      <div>
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Stethoscope className="h-5 w-5 text-primary" />
-          Seleccioná un médico
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Elegí el profesional con quien querés agendar tu consulta.
-        </p>
-      </div>
+<div>
+         <h2 className="text-[20px] font-semibold tracking-[0.01em] text-portal-fg flex items-center gap-2">
+           <Stethoscope className="h-5 w-5 text-portal-primary" />
+           Seleccioná un médico
+         </h2>
+         <p className="text-sm text-portal-muted-fg mt-1">
+           Elegí el profesional con quien querés agendar tu consulta.
+         </p>
+       </div>
       <div className="grid gap-4 stagger-premium">
         {medicos.map((m) => (
           <DoctorCard
@@ -341,25 +340,25 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
         ))}
       </div>
       {selectedMedico && (
-        <div className="flex flex-col gap-3">
-          {selectedMedico.servicios.length > 1 && (
-            <div>
-              <label className="text-sm font-medium mb-1 block">Tipo de consulta</label>
-              <div className="flex gap-2 flex-wrap">
-                {selectedMedico.servicios.map((s) => (
-                  <Button
-                    key={s.id}
-                    variant={selectedServicio === s.id ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedServicio(s.id)}
-                  >
-                    {s.nombre}
-                    {s.precio != null ? ` · $${s.precio.toLocaleString('es-CL')}` : ''}
-                  </Button>
-                ))}
+<div className="flex flex-col gap-3">
+            {selectedMedico.servicios.length > 1 && (
+              <div>
+                <label className="text-sm font-medium mb-1 block">Tipo de consulta</label>
+                <div className="flex gap-2 flex-wrap">
+                  {selectedMedico.servicios.map((s) => (
+                    <PortalButton
+                      key={s.id}
+                      variant={selectedServicio === s.id ? 'primary' : 'secondary'}
+                      className="rounded-full h-9 px-4 text-sm"
+                      onClick={() => setSelectedServicio(s.id)}
+                    >
+                      {s.nombre}
+                      {s.precio != null ? ` · $${s.precio.toLocaleString('es-CL')}` : ''}
+                    </PortalButton>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
           {selectedMedico.servicios.length === 0 ? (
             <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
               Este médico no tiene servicios configurados. Contactá al administrador para asignar
@@ -392,17 +391,17 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
           Volver a médicos
         </PortalButton>
       </div>
-      <div>
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <CalendarIcon className="h-5 w-5 text-primary" />
-          Seleccioná un horario
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          {selectedMedico?.nombre} ·{' '}
-          {selectedServicio &&
-            selectedMedico?.servicios.find((s) => s.id === selectedServicio)?.nombre}
-        </p>
-      </div>
+<div>
+         <h2 className="text-[20px] font-semibold tracking-[0.01em] text-portal-fg flex items-center gap-2">
+           <CalendarIcon className="h-5 w-5 text-portal-primary" />
+           Seleccioná un horario
+         </h2>
+         <p className="text-sm text-portal-muted-fg mt-1">
+           {selectedMedico?.nombre} ·{' '}
+           {selectedServicio &&
+             selectedMedico?.servicios.find((s) => s.id === selectedServicio)?.nombre}
+         </p>
+       </div>
       {selectedMedico && selectedServicio && (
         <SlotPicker
           medicoId={selectedMedico.id}
@@ -472,14 +471,14 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
             <span>{selectedSlot?.duracionMinutos} min</span>
           </div>
           {selectedSlot?.precio != null && selectedSlot.precio > 0 && (
-            <div className="flex justify-between text-sm border-t pt-2">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <CreditCard className="h-4 w-4" /> Valor
-              </span>
-              <span className="font-semibold text-lg">
-                ${selectedSlot.precio.toLocaleString('es-CL')}
-              </span>
-            </div>
+<div className="flex justify-between text-sm border-t pt-2">
+               <span className="text-portal-muted-fg flex items-center gap-1">
+                 <CreditCard className="h-4 w-4" /> Valor
+               </span>
+               <span className="font-semibold text-lg text-portal-fg">
+                 ${selectedSlot.precio.toLocaleString('es-CL')}
+               </span>
+             </div>
           )}
           <div>
             <label className="text-sm font-medium mb-2 block">Motivo (opcional)</label>
@@ -491,8 +490,8 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
                   onClick={() => setMotivo(motivo === m ? '' : m)}
                   className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                     motivo === m
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background text-muted-foreground border-border hover:border-primary hover:text-primary'
+                      ? 'bg-[#2563EB] text-white border-[#2563EB]'
+                      : 'bg-portal-bg-alt text-portal-muted-fg border-portal-border hover:border-[#2563EB] hover:text-[#2563EB]'
                   }`}
                 >
                   {m}
@@ -507,16 +506,16 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
             />
           </div>
         </CardContent>
-        <CardFooter className="flex-col gap-2">
-          <PortalButton variant="primary" fullWidth onClick={handleConfirmar} disabled={loading} loading={loading}>
-            <Check className="mr-2 h-4 w-4" /> Confirmar turno
-          </PortalButton>
-          {selectedSlot?.precio != null && selectedSlot.precio > 0 && (
-            <p className="text-xs text-muted-foreground text-center">
-              El pago se procesará al confirmar
-            </p>
-          )}
-            </CardFooter>
+<CardFooter className="flex-col gap-2">
+           <PortalButton variant="primary" fullWidth onClick={handleConfirmar} disabled={loading} loading={loading}>
+             <Check className="mr-2 h-4 w-4" /> Confirmar turno
+           </PortalButton>
+           {selectedSlot?.precio != null && selectedSlot.precio > 0 && (
+             <p className="text-xs text-portal-muted-fg text-center">
+               El pago se procesará al confirmar
+             </p>
+           )}
+             </CardFooter>
           </PortalCard>
         </motion.div>
       );
@@ -532,41 +531,41 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
       className="max-w-md mx-auto"
     >
       <PortalCard padding="none">
-        <CardHeader>
-          <CardTitle
-            className="flex items-center gap-2 text-portal-fg"
-          >
-            <CreditCard
-              className="h-5 w-5 text-portal-primary"
-            />
-            Pago pendiente
-          </CardTitle>
-          <CardDescription
-            className="text-portal-muted-fg"
-          >
-            Completá el pago para confirmar tu turno. Podés pagar ahora o hacerlo después desde el
-            portal.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {ultimoTurno && (
-            <div className="text-sm space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Monto</span>
-                <span className="font-semibold text-lg">
-                  ${Number(ultimoTurno.precio).toLocaleString('es-CL')}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Médico</span>
-                <span>{ultimoTurno.medicoNombre}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Fecha</span>
-                <span>{formatDate(ultimoTurno.fechaHora as unknown as string)}</span>
-              </div>
-            </div>
-          )}
+<CardHeader>
+           <CardTitle
+             className="flex items-center gap-2 text-portal-fg"
+           >
+             <CreditCard
+               className="h-5 w-5 text-portal-primary"
+             />
+             Pago pendiente
+           </CardTitle>
+           <CardDescription
+             className="text-portal-muted-fg"
+           >
+             Completá el pago para confirmar tu turno. Podés pagar ahora o hacerlo después desde el
+             portal.
+           </CardDescription>
+         </CardHeader>
+         <CardContent className="space-y-4">
+           {ultimoTurno && (
+             <div className="text-sm space-y-2">
+               <div className="flex justify-between">
+                 <span className="text-portal-muted-fg">Monto</span>
+                 <span className="font-semibold text-lg text-portal-fg">
+                   ${Number(ultimoTurno.precio).toLocaleString('es-CL')}
+                 </span>
+               </div>
+               <div className="flex justify-between">
+                 <span className="text-portal-muted-fg">Médico</span>
+                 <span>{ultimoTurno.medicoNombre}</span>
+               </div>
+               <div className="flex justify-between">
+                 <span className="text-portal-muted-fg">Fecha</span>
+                 <span>{formatDate(ultimoTurno.fechaHora as unknown as string)}</span>
+               </div>
+             </div>
+           )}
 
           {pagoCompletado ? (
             <motion.div
@@ -622,30 +621,30 @@ export function BookingWizard({ medicos, rescheduleTurnoId }: BookingWizardProps
           className="h-10 w-10 text-portal-primary"
         />
       </motion.div>
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15, duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
-      >
-        <h2
-          className="text-xl font-semibold mb-2 text-portal-fg"
-        >
-          Turno agendado con éxito
-        </h2>
-        <p
-          className="mb-8 text-portal-muted-fg"
-        >
-          Te enviamos los detalles por WhatsApp. Recordá que podés cancelar con hasta 24h de
-          anticipación.
-        </p>
-        <Button
-          onClick={() => router.push('/portal/dashboard')}
-          variant="outline"
-          className="w-full sm:w-auto"
-        >
-          Volver al inicio
-        </Button>
-      </motion.div>
+<motion.div
+           initial={{ opacity: 0, y: 8 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ delay: 0.15, duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
+         >
+           <h2
+             className="text-xl font-semibold mb-2 text-portal-fg"
+           >
+             Turno agendado con éxito
+           </h2>
+           <p
+             className="mb-8 text-portal-muted-fg"
+           >
+             Te enviamos los detalles por WhatsApp. Recordá que podés cancelar con hasta 24h de
+             anticipación.
+           </p>
+           <PortalButton
+             onClick={() => router.push('/portal/dashboard')}
+             variant="secondary"
+             className="w-full sm:w-auto"
+           >
+             Volver al inicio
+           </PortalButton>
+         </motion.div>
     </motion.div>
   );
 
