@@ -19,6 +19,7 @@ import {
   X,
   Upload,
   ShieldCheck,
+  HelpCircle,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
@@ -65,6 +66,10 @@ const secondaryGroups: SecondaryGroup[] = [
       { href: '/portal/perfil', label: 'Perfil', icon: User },
       { href: '/portal/privacidad', label: 'Privacidad y accesos', icon: ShieldCheck },
     ],
+  },
+  {
+    label: 'Ayuda',
+    items: [{ href: '/portal/ayuda', label: 'Centro de ayuda', icon: HelpCircle }],
   },
 ];
 
@@ -185,7 +190,7 @@ export default function PortalNav() {
     try {
       const res = await fetch('/api/portal/notificaciones?count=true');
       if (res.ok) {
-        const data = await res.json() as { count?: number };
+        const data = (await res.json()) as { count?: number };
         setUnreadCount(data.count ?? 0);
       }
     } catch {
@@ -199,7 +204,7 @@ export default function PortalNav() {
       try {
         const res = await fetch('/api/portal/notificaciones?count=true');
         if (res.ok) {
-          const data = await res.json() as { count?: number };
+          const data = (await res.json()) as { count?: number };
           setUnreadCount(data.count ?? 0);
         }
       } catch {
