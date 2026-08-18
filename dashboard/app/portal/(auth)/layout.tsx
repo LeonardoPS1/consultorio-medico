@@ -7,6 +7,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { PortalLogoutButton } from '@/components/portal/logout-button';
+import { PortalSidebarDesktop } from '@/components/portal/portal-sidebar-desktop';
+import { PortalTopbar } from '@/components/portal/portal-topbar';
 import { PortalThemeToggle } from '@/components/portal/theme-toggle';
 import { safeWarn } from '@/lib/logger';
 import { getPortalSession, checkPortalFeatureAccess } from '@/lib/portal-auth';
@@ -48,58 +50,72 @@ export default async function PortalAuthLayout({ children }: { children: React.R
         }}
       />
 
-      {/* Header premium */}
-      <header
-        className="sticky top-0 z-20"
-        style={{
-          background: 'var(--portal-glass-bg)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid var(--portal-glass-border)',
-          boxShadow: 'var(--portal-shadow-sm)',
-        }}
-      >
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link
-            href="/portal/dashboard"
-            className="flex items-center gap-2.5 group"
-          >
-            {/* Logo icon with subtle gradient */}
-            <div className="h-7 w-7 rounded-lg flex items-center justify-center shadow-sm transition-transform duration-200 group-hover:scale-105 bg-portal-gradient-strong">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                className="h-4 w-4 text-white"
-              >
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-              </svg>
-            </div>
-            <div className="flex flex-col leading-tight">
-              <span className="text-sm font-semibold tracking-tight text-portal-fg">
-                Portal <span className="text-portal-primary">Salud</span>
+      {/* Desktop shell: sidebar + topbar */}
+      <div className="hidden lg:block">
+        <PortalSidebarDesktop />
+        <PortalTopbar />
+      </div>
+
+      {/* Mobile header + PortalNav (hidden on desktop) */}
+      <div className="lg:hidden">
+        {/* Header premium */}
+        <header
+          className="sticky top-0 z-20"
+          style={{
+            background: 'var(--portal-glass-bg)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid var(--portal-glass-border)',
+            boxShadow: 'var(--portal-shadow-sm)',
+          }}
+        >
+          <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+            <Link
+              href="/portal/dashboard"
+              className="flex items-center gap-2.5 group"
+            >
+              {/* Logo icon with subtle gradient */}
+              <div className="h-7 w-7 rounded-lg flex items-center justify-center shadow-sm transition-transform duration-200 group-hover:scale-105 bg-portal-gradient-strong">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  className="h-4 w-4 text-white"
+                >
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                </svg>
+              </div>
+              <div className="flex flex-col leading-tight">
+                <span className="text-sm font-semibold tracking-tight text-portal-fg">
+                  Portal <span className="text-portal-primary">Salud</span>
+                </span>
+              <span className="text-[10px] font-medium tracking-wide text-portal-muted-fg">
+                AicoreMed
               </span>
-            <span className="text-[10px] font-medium tracking-wide text-portal-muted-fg">
-              AicoreMed
-            </span>
+              </div>
+            </Link>
+
+            <div className="flex items-center gap-1">
+              <PortalThemeToggle />
+              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-0.5" />
+              <PortalLogoutButton />
             </div>
-          </Link>
-
-          <div className="flex items-center gap-1">
-            <PortalThemeToggle />
-            <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-0.5" />
-            <PortalLogoutButton />
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main content */}
-      <main id="main-content" className="max-w-2xl mx-auto px-4 py-5 pb-28 min-h-[calc(100vh-3.5rem)]">
-        <PortalContent>{children}</PortalContent>
-      </main>
+        <PortalNav />
+      </div>
 
-      <PortalNav />
+      {/* Main content — desktop has sidebar offset */}
+      <div className="lg:pl-[76px]">
+        <main
+          id="main-content"
+          className="max-w-[1200px] mx-auto px-4 py-6 pb-28 lg:pb-10 lg:px-6 min-h-[calc(100vh-3.5rem)]"
+        >
+          <PortalContent>{children}</PortalContent>
+        </main>
+      </div>
     </div>
   );
 }
