@@ -169,12 +169,26 @@ export default function PortalTurnosClient({ turnos }: Props) {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 text-portal-fg">
-                      <Calendar className="h-4 w-4 shrink-0 text-portal-primary" />
-                      <span className="font-medium truncate">
-                        {formatDate(t.fechaHora)} · {t.hora}
-                      </span>
-                    </div>
+<div className="flex items-center gap-2 mb-1 text-portal-fg">
+                       <Calendar className="h-4 w-4 shrink-0 text-portal-primary" />
+                       <span className="font-medium truncate">
+                         {formatDate(t.fechaHora)} · {t.hora}
+                       </span>
+                       <PortalBadge
+                         variant={
+                           t.estado === 'pendiente'
+                             ? 'warning'
+                             : t.estado === 'confirmada'
+                             ? 'success'
+                             : t.estado === 'en_consulta' || t.estado === 'en_atencion'
+                             ? 'primary'
+                             : 'muted'
+                         }
+                         className="text-[11px]"
+                       >
+                         {t.estado}
+                       </PortalBadge>
+                     </div>
                     <div className="text-sm mb-2 text-portal-muted-fg">
                       Dr/a. {t.medicoNombre} · {t.medicoEspecialidad}
                     </div>
@@ -183,12 +197,30 @@ export default function PortalTurnosClient({ turnos }: Props) {
                         {t.motivo}
                       </div>
                     )}
-                    <div className="flex items-center gap-3 text-xs text-portal-muted-fg/60">
-                      <span className="flex items-center gap-1">
+                    <div className="flex items-center gap-3 text-xs">
+                      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                        style={
+                          (() => {
+                            switch (t.tipoConsulta) {
+                              case 'consulta':
+                                return { backgroundColor: '#93C5FD1A', color: '#93C5FD' };
+                              case 'telemedicina':
+                              case 'control':
+                                return { backgroundColor: '#A78BFA1A', color: '#A78BFA' };
+                              case 'urgencia':
+                                return { backgroundColor: '#FBBF241A', color: '#FBBF24' };
+                              case 'procedimiento':
+                                return { backgroundColor: '#14B8A61A', color: '#14B8A6' };
+                              default:
+                                return { backgroundColor: 'hsl(var(--portal-muted))', color: 'hsl(var(--portal-muted-fg))' };
+                            }
+                          })()
+                        }
+                      >
                         {TIPO_ICONS[t.tipoConsulta] || null}
                         {t.tipoConsulta}
                       </span>
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1 text-portal-muted-fg/60">
                         <Clock className="h-3 w-3" />
                         {t.duracionMinutos} min
                       </span>
@@ -196,20 +228,20 @@ export default function PortalTurnosClient({ turnos }: Props) {
                   </div>
 
                   <div className="flex flex-col gap-1 items-end shrink-0 ml-3">
-                    {!cancelados.has(t.id) &&
-                      t.tipoConsulta === 'telemedicina' &&
-                      t.linkVideollamada && (
-                        <a
-                          href={t.linkVideollamada}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors text-portal-primary bg-portal-primary/8 hover:bg-portal-primary/12"
-                        >
-                          <Video className="h-3.5 w-3.5" />
-                          Ingresar
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      )}
+{!cancelados.has(t.id) &&
+                       t.tipoConsulta === 'telemedicina' &&
+                       t.linkVideollamada && (
+                         <a
+                           href={t.linkVideollamada}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-full transition-colors text-portal-primary bg-portal-primary/10 hover:bg-portal-primary/15"
+                         >
+                           <Video className="h-3.5 w-3.5" />
+                           Ingresar
+                           <ExternalLink className="h-3 w-3" />
+                         </a>
+                       )}
 
                     {!cancelados.has(t.id) && (
                       <div className="flex gap-1">
@@ -280,17 +312,18 @@ export default function PortalTurnosClient({ turnos }: Props) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {t.pagado && (
-                      <a
-                        href={`/api/portal/recibos/${t.id}`}
-                        target="_blank"
-                        className="text-xs font-medium flex items-center gap-1 transition-colors text-portal-primary"
-                        title="Ver recibo" rel="noreferrer"
-                      >
-                        <Receipt className="h-3.5 w-3.5" />
-                        Recibo
-                      </a>
-                    )}
+{t.pagado && (
+                       <a
+                         href={`/api/portal/recibos/${t.id}`}
+                         target="_blank"
+                         className="text-xs font-medium flex items-center gap-1 transition-colors text-portal-primary bg-portal-primary/10 hover:bg-portal-primary/15 rounded-full px-2 py-1"
+                         title="Ver recibo"
+                         rel="noreferrer"
+                       >
+                         <Receipt className="h-3.5 w-3.5" />
+                         Recibo
+                       </a>
+                     )}
                     <PortalBadge
                       variant={
                         t.estado === 'atendido'
