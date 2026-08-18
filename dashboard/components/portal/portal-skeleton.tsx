@@ -1,18 +1,19 @@
 'use client';
 
 import { motion } from 'motion/react';
+import { PulseLine } from './pulse-line';
 
 function Pulse({ className }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded-xl bg-muted ${className ?? ''}`}
+      className={`animate-pulse rounded-xl bg-portal-muted ${className ?? ''}`}
     />
   );
 }
 
 function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+    <div className="rounded-xl border border-portal-border bg-portal-bg-alt p-5 space-y-3">
       <Pulse className="h-4 w-24" />
       <Pulse className="h-8 w-32" />
       <Pulse className="h-3 w-40" />
@@ -46,9 +47,12 @@ export function PortalSkeleton() {
       className="space-y-6"
     >
       {/* Header skeleton */}
-      <div className="space-y-1">
-        <Pulse className="h-6 w-44" />
-        <Pulse className="h-4 w-60" />
+      <div className="flex items-center justify-between gap-3">
+        <div className="space-y-1">
+          <Pulse className="h-6 w-44" />
+          <Pulse className="h-4 w-60" />
+        </div>
+        <PulseLine className="text-portal-muted-fg" />
       </div>
 
       {/* Stats cards */}
@@ -66,7 +70,7 @@ export function PortalSkeleton() {
       </div>
 
       {/* List items */}
-      <div className="bg-card rounded-xl border border-border divide-y divide-border/50">
+      <div className="bg-portal-bg-alt rounded-xl border border-portal-border divide-y divide-portal-border/50">
         <SkeletonListItem />
         <SkeletonListItem />
         <SkeletonListItem />
