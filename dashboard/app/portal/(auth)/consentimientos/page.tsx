@@ -11,6 +11,7 @@ import { PortalBadge } from '@/components/portal/portal-badge';
 import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
+import { AvatarInitials } from '@/components/portal/avatar-initials';
 
 interface Consentimiento {
   id: string;
@@ -76,7 +77,7 @@ export default function PortalConsentimientosPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-1 text-portal-fg">Consentimientos</h1>
+      <h1 className="text-[20px] font-semibold tracking-[0.01em] mb-1 text-portal-fg">Consentimientos</h1>
       <p className="text-sm mb-6 text-portal-muted-fg">
         Documentos que requieren o han recibido tu firma digital
       </p>
@@ -111,24 +112,25 @@ export default function PortalConsentimientosPage() {
               <PortalCard
                 key={c.id}
                 hover
-                className={firmado ? 'border-portal-primary/30' : ''}
+                className={firmado ? 'border-portal-success/30' : ''}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       {firmado ? (
-                        <CheckCircle2 className="h-4 w-4 shrink-0 text-portal-primary" />
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-portal-success" />
                       ) : (
                         <FileText className="h-4 w-4 shrink-0 text-portal-primary" />
                       )}
                       <h3 className="font-medium truncate text-portal-fg">{c.titulo}</h3>
                       {firmado && (
-                        <PortalBadge variant="primary">
+                        <PortalBadge variant="success">
                           Firmado
+                          <CheckCircle2 className="h-3 w-3 ml-1" />
                         </PortalBadge>
                       )}
                       {!firmado && (
-                        <PortalBadge variant="warning">
+                        <PortalBadge variant="accent">
                           Pendiente
                         </PortalBadge>
                       )}
@@ -164,7 +166,8 @@ export default function PortalConsentimientosPage() {
                       <a
                         href={c.documentoPdf}
                         target="_blank"
-                        className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-xl transition-colors duration-200 text-portal-muted-fg bg-portal-muted hover:bg-hsl(var(--portal-muted) / 0.9) hover:text-hsl(var(--portal-foreground))" rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 h-9 rounded-full bg-white text-portal-fg border border-portal-border hover:bg-portal-muted transition-all duration-200"
+                        rel="noreferrer"
                       >
                         <Eye className="h-3.5 w-3.5" />
                         Ver

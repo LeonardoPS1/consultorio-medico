@@ -17,6 +17,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { PortalBadge } from '@/components/portal/portal-badge';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
+import { AvatarInitials } from '@/components/portal/avatar-initials';
 
 interface OrdenEstudio {
   id: string;
@@ -35,14 +36,19 @@ function formatDate(date: string): string {
   return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-function getTipoIcon(tipo: string) {
-  switch (tipo) {
-    case 'imagen':
-      return <Image className="h-4 w-4 text-portal-primary" />;
-    case 'laboratorio':
-    default:
-      return <FlaskConical className="h-4 w-4 text-portal-primary" />;
+function getTipoChip(tipo: string) {
+  if (tipo === 'laboratorio') {
+    return (
+      <PortalBadge variant="primary" className="text-[11px]">
+        Laboratorio
+      </PortalBadge>
+    );
   }
+  return (
+    <PortalBadge variant="primary" className="text-[11px]">
+      Imagen
+    </PortalBadge>
+  );
 }
 
 function getEstadoBadge(estado: string) {
@@ -66,7 +72,11 @@ function getEstadoBadge(estado: string) {
         </PortalBadge>
       );
     default:
-      return <span className="text-xs text-portal-muted-fg">{estado}</span>;
+      return (
+        <PortalBadge variant="muted" className="flex items-center gap-1">
+          {estado}
+        </PortalBadge>
+      );
   }
 }
 
@@ -99,10 +109,10 @@ export default function PortalOrdenesEstudioPage() {
   if (ordenes.length === 0) {
     return (
       <div>
-        <h1 className="text-2xl font-bold mb-6 text-portal-fg">Órdenes de Estudio</h1>
+        <h1 className="text-[20px] font-semibold tracking-[0.01em] mb-6 text-portal-fg">Órdenes de Estudio</h1>
         <div className="text-center py-16 text-portal-muted-fg/70">
           <div className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 bg-portal-muted">
-            <FlaskConical className="h-6 w-6" />
+            <FlaskConical className="h-6 w-6 text-portal-muted-fg" />
           </div>
           <p>No tienes órdenes de estudio</p>
           <p className="text-sm mt-2">Cuando tu médico solicite un examen, aparecerá aquí</p>
@@ -113,7 +123,7 @@ export default function PortalOrdenesEstudioPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-1 text-portal-fg">Órdenes de Estudio</h1>
+      <h1 className="text-[20px] font-semibold tracking-[0.01em] mb-1 text-portal-fg">Órdenes de Estudio</h1>
       <p className="text-sm mb-6 text-portal-muted-fg">
         Exámenes de laboratorio, imagen y otros solicitados
       </p>
@@ -125,13 +135,20 @@ export default function PortalOrdenesEstudioPage() {
               <div
                 className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-portal-muted"
               >
-                {getTipoIcon(o.tipo)}
+                {o.tipo === 'imagen' ? (
+                  <Image className="h-5 w-5 text-portal-primary" />
+                ) : (
+                  <FlaskConical className="h-5 w-5 text-portal-primary" />
+                )}
               </div>
 
               <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-3 mb-1">
+                <div className="flex items-center justify-between gap-3 mb-1 flex-wrap">
                   <h3 className="font-medium truncate text-portal-fg">{o.titulo}</h3>
-                  {getEstadoBadge(o.estado)}
+                  <div className="flex items-center gap-2">
+                    {getEstadoBadge(o.estado)}
+                    {getTipoChip(o.tipo)}
+                  </div>
                 </div>
 
                 {o.descripcion && (
@@ -143,21 +160,14 @@ export default function PortalOrdenesEstudioPage() {
                 <div className="text-xs space-x-2 text-portal-muted-fg/70">
                   <span>{formatDate(o.createdAt)}</span>
                   {o.medicoNombre && <span>· Dr/a. {o.medicoNombre}</span>}
-                  {o.tipo === 'laboratorio' && <span className="text-portal-primary">Laboratorio</span>}
-                  {o.tipo === 'imagen' && <span className="text-portal-accent">Imagen</span>}
                 </div>
 
                 {o.estado === 'completada' && o.resultadoUrl && (
                   <a
                     href={o.resultadoUrl}
                     target="_blank"
-                    className="mt-2 inline-flex items-center gap-1 text-sm font-medium"
-                    style={{
-                      color: hoverVerResultado === o.id ? 'hsl(var(--portal-primary) / 0.8)' : 'hsl(var(--portal-primary))',
-                      transition: 'color 200ms ease-out',
-                    }}
-                    onMouseEnter={() => setHoverVerResultado(o.id)}
-                    onMouseLeave={() => setHoverVerResultado(null)} rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 h-9 mt-2 rounded-full bg-white text-portal-fg border border-portal-border hover:bg-portal-muted transition-all duration-200"
+                    rel="noreferrer"
                   >
                     <FileText className="h-3.5 w-3.5" />
                     Ver resultado
