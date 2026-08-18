@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
+import { PortalBadge } from '@/components/portal/portal-badge';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
@@ -86,7 +87,7 @@ function MiniBarChart({
               style={{
                 height: `${Math.max(pct, 4)}%`,
                 background:
-                  'linear-gradient(180deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
+                  'hsl(var(--portal-primary))',
               }}
             />
             <span className="text-[8px] rotate-[-45deg] origin-left whitespace-nowrap text-portal-muted-fg/70">
@@ -104,16 +105,12 @@ function StatCard({
   icon: Icon,
   label,
   value,
-  bg,
-  iconColor,
   delay,
   suffix,
 }: {
   icon: React.ElementType;
   label: string;
   value: string | number;
-  bg: string;
-  iconColor: string;
   delay: number;
   suffix?: string;
 }) {
@@ -127,14 +124,14 @@ function StatCard({
         ease: [0.16, 1, 0.3, 1],
       }}
     >
-      <PortalCard style={{ background: bg }}>
+      <PortalCard padding="md" className="bg-portal-primary/5">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-portal-muted-fg">
             {label}
           </span>
-          <Icon className={`h-4 w-4 ${iconColor}`} />
+          <Icon className="h-4 w-4 text-portal-primary" />
         </div>
-        <p className={`text-2xl font-bold ${iconColor}`}>
+        <p className="text-2xl font-bold text-portal-primary">
           {value}
           {suffix && (
             <span className="text-sm font-normal ml-0.5">
@@ -186,7 +183,7 @@ export default function PortalReportesPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
-        <h1 className="text-2xl font-bold text-portal-fg">
+        <h1 className="text-[20px] font-semibold tracking-[0.01em] text-portal-fg">
           Mis Estadísticas
         </h1>
         <p className="text-sm mt-1 text-portal-muted-fg">
@@ -200,32 +197,24 @@ export default function PortalReportesPage() {
           icon={Calendar}
           label="Total visitas"
           value={data.totalVisitas}
-          bg="hsl(var(--portal-primary) / 0.06)"
-          iconColor=""
           delay={0}
         />
         <StatCard
           icon={Activity}
           label="Este mes"
           value={data.visitasEsteMes}
-          bg="hsl(var(--portal-accent) / 0.06)"
-          iconColor=""
           delay={0.05}
         />
         <StatCard
           icon={DollarSign}
           label="Total gastado"
           value={formatCLPrice(data.totalGastado)}
-          bg="hsl(var(--portal-primary) / 0.06)"
-          iconColor=""
           delay={0.1}
         />
         <StatCard
           icon={Syringe}
           label="Recetas activas"
           value={data.recetasActivas}
-          bg="hsl(38 92% 50% / 0.06)"
-          iconColor=""
           delay={0.15}
         />
       </div>
@@ -288,7 +277,7 @@ export default function PortalReportesPage() {
                   <div className="flex items-center gap-2">
                     <div className="w-24 h-2 rounded-full overflow-hidden bg-portal-muted">
                       <div
-                        className="h-full rounded-full transition-[width] duration-500"
+                        className="h-full rounded-full transition-[width] duration-500 bg-portal-primary"
                         style={{
                           width: `${
                             data.totalVisitas > 0
@@ -297,8 +286,6 @@ export default function PortalReportesPage() {
                                 100
                               : 0
                           }%`,
-                          background:
-                            'linear-gradient(90deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
                         }}
                       />
                     </div>

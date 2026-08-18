@@ -320,7 +320,7 @@ export default function PortalEncuestasPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
-        <h1 className="text-2xl font-bold text-portal-fg">
+        <h1 className="text-[20px] font-semibold tracking-[0.01em] text-portal-fg">
           Mis Encuestas
         </h1>
         <p className="text-sm mt-1 text-portal-muted-fg">

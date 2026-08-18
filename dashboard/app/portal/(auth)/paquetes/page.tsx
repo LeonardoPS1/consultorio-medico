@@ -7,6 +7,7 @@
 
 import { Package, ArrowRight, CreditCard } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { PortalBadge } from '@/components/portal/portal-badge';
 import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
@@ -83,12 +84,12 @@ export default function PaquetesPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-portal-fg">Paquetes de Turnos</h1>
+        <h1 className="text-[20px] font-semibold tracking-[0.01em] text-portal-fg">Paquetes de Turnos</h1>
         <p className="mt-1 text-portal-muted-fg">Ahorrá comprando turnos por adelantado</p>
       </div>
 
       {suscripcionActiva && (
-        <PortalCard className="bg-portal-primary/6 border border-portal-primary/20">
+        <PortalCard padding="md">
           <div className="flex items-center gap-3">
             <Package className="h-6 w-6 text-portal-primary" />
             <div>
@@ -98,15 +99,19 @@ export default function PaquetesPage() {
               </p>
             </div>
           </div>
-          <div className="mt-3 rounded-full h-2 overflow-hidden bg-portal-primary/12">
-            <div
-              className="h-full rounded-full"
-              style={{
-                background: 'hsl(var(--portal-primary))',
-                width: `${(suscripcionActiva.turnosRestantes / suscripcionActiva.turnosTotales) * 100}%`,
-                transition: 'width 300ms ease-out',
-              }}
-            />
+          <div className="mt-3 flex items-center gap-2">
+            <div className="flex-1 rounded-full h-2 overflow-hidden bg-portal-muted">
+              <div
+                className="h-full rounded-full bg-portal-primary"
+                style={{
+                  width: `${(suscripcionActiva.turnosRestantes / suscripcionActiva.turnosTotales) * 100}%`,
+                  transition: 'width 300ms ease-out',
+                }}
+              />
+            </div>
+            <PortalBadge variant="primary" className="text-[11px]">
+              {suscripcionActiva.turnosRestantes}/{suscripcionActiva.turnosTotales} usados
+            </PortalBadge>
           </div>
         </PortalCard>
       )}
@@ -119,7 +124,7 @@ export default function PaquetesPage() {
       ) : (
         <div className="space-y-4">
           {paquetes.map((p) => (
-            <PortalCard key={p.id} hover padding="lg" className="flex items-center justify-between">
+            <PortalCard key={p.id} hover padding="md" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h3 className="font-semibold text-portal-fg">{p.nombre}</h3>
                 {p.descripcion && (
@@ -129,16 +134,19 @@ export default function PaquetesPage() {
                   {p.cantidadTurnos} turno{p.cantidadTurnos !== 1 ? 's' : ''}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-xl font-bold text-portal-fg">
-                  ${p.precio.toLocaleString('es-CL')}
-                </p>
-                <p className="text-xs text-portal-muted-fg/70">
-                  ${Math.round(p.precio / p.cantidadTurnos).toLocaleString('es-CL')} c/u
-                </p>
+              <div className="flex flex-col md:items-end gap-2">
+                <div>
+                  <p className="text-xl font-bold text-portal-fg">
+                    ${p.precio.toLocaleString('es-CL')}
+                  </p>
+                  <p className="text-xs text-portal-muted-fg/70">
+                    ${Math.round(p.precio / p.cantidadTurnos).toLocaleString('es-CL')} c/u
+                  </p>
+                </div>
                 <PortalButton
                   onClick={() => comprarPaquete(p.id)}
                   loading={buyingId === p.id}
+                  className="w-full md:w-auto"
                 >
                   Comprar <CreditCard className="h-3.5 w-3.5" />
                 </PortalButton>
@@ -148,7 +156,7 @@ export default function PaquetesPage() {
         </div>
       )}
 
-      <PortalCard className="text-sm bg-portal-primary/6 border border-portal-primary/12 text-portal-primary">
+      <PortalCard className="text-sm bg-portal-primary/5 border border-portal-primary/10 text-portal-primary">
         <p className="font-medium mb-1">💡 ¿Cómo funciona?</p>
         <ul className="space-y-1 text-portal-primary/80">
           <li>• Comprás un paquete y los turnos se acreditan automáticamente</li>
