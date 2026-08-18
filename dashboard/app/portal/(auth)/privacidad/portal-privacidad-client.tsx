@@ -43,7 +43,7 @@ function formatFecha(date: string): string {
 export default function PortalPrivacidadClient({ accesos, pacienteNombre }: Props) {
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-2 text-portal-fg">Privacidad y accesos</h1>
+      <h1 className="text-[20px] font-semibold tracking-[0.01em] mb-2 text-portal-fg">Privacidad y accesos</h1>
       <p className="text-sm mb-6 text-portal-muted-fg">
         {pacienteNombre}, acá podés ver quién accedió a tu ficha médica y cuándo. Tus datos están
         protegidos y solo el personal autorizado del consultorio puede consultarlos.
@@ -51,49 +51,35 @@ export default function PortalPrivacidadClient({ accesos, pacienteNombre }: Prop
 
       {accesos.length > 0 ? (
         <div className="space-y-3">
-          {accesos.map((a) => (
-            <PortalCard key={a.id} hover padding="md">
-              <div className="flex items-start gap-3">
-                <div
-                  className={`mt-1 shrink-0 ${
-                    a.tipo === 'view'
-                      ? 'text-portal-primary'
-                      : a.tipo === 'export'
-                        ? 'text-portal-accent'
-                        : 'text-portal-muted-fg'
-                  }`}
-                >
-                  {a.tipo === 'view' ? (
-                    <Eye className="h-5 w-5" />
-                  ) : a.tipo === 'export' ? (
-                    <Download className="h-5 w-5" />
-                  ) : (
-                    <FileText className="h-5 w-5" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-portal-fg">{a.accion}</span>
-                    <PortalBadge
-                      variant={
-                        a.tipo === 'view' ? 'primary' : a.tipo === 'export' ? 'accent' : 'muted'
-                      }
-                    >
-                      {a.tipo === 'view'
-                        ? 'Consulta'
-                        : a.tipo === 'export'
-                          ? 'Exportación'
-                          : 'Trámite'}
-                    </PortalBadge>
+          {accesos.map((a) => {
+            const isExport = a.tipo === 'export';
+            const iconColor = isExport ? 'text-portal-primary' : a.tipo === 'view' ? 'text-portal-primary' : 'text-portal-muted-fg';
+            const badgeVariant = isExport ? 'primary' : a.tipo === 'view' ? 'primary' : 'muted';
+            const badgeLabel = isExport ? 'Exportación' : a.tipo === 'view' ? 'Consulta' : 'Trámite';
+            const icon = isExport ? <Download className="h-5 w-5" /> : a.tipo === 'view' ? <Eye className="h-5 w-5" /> : <FileText className="h-5 w-5" />;
+
+            return (
+              <PortalCard key={a.id} hover padding="md">
+                <div className="flex items-start gap-3">
+                  <div className={`mt-1 shrink-0 ${iconColor}`}>
+                    {icon}
                   </div>
-                  <div className="text-sm mt-1 text-portal-muted-fg">
-                    {a.usuario} · {formatFecha(a.fecha)}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-portal-fg">{a.accion}</span>
+                      <PortalBadge variant={badgeVariant}>
+                        {badgeLabel}
+                      </PortalBadge>
+                    </div>
+                    <div className="text-sm mt-1 text-portal-muted-fg">
+                      {a.usuario} · {formatFecha(a.fecha)}
+                    </div>
+                    {a.detalle && <p className="text-sm mt-2 text-portal-muted-fg/80">{a.detalle}</p>}
                   </div>
-                  {a.detalle && <p className="text-sm mt-2 text-portal-muted-fg/80">{a.detalle}</p>}
                 </div>
-              </div>
-            </PortalCard>
-          ))}
+              </PortalCard>
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-12">

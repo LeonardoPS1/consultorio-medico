@@ -33,7 +33,7 @@ const TIPO_ICONS: Record<string, React.ReactNode> = {
     <Calendar className="h-4 w-4 text-portal-primary" />
   ),
   mensaje: (
-    <MessageSquare className="h-4 w-4 text-portal-accent" />
+    <MessageSquare className="h-4 w-4 text-portal-primary" />
   ),
   receta: (
     <FileText className="h-4 w-4 text-portal-warning" />
@@ -113,7 +113,7 @@ export default function PortalNotificacionesPage() {
     <div className="pb-24">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-portal-fg">
+          <h1 className="text-[20px] font-semibold tracking-[0.01em] text-portal-fg">
             Notificaciones
           </h1>
           {noLeidas > 0 && (
@@ -151,17 +151,37 @@ export default function PortalNotificacionesPage() {
           </p>
         </PortalCard>
       ) : (
-        <div className="space-y-1">
-          {notificaciones.map((n) => {
-            const Icon = TIPO_ICONS[n.tipo] || TIPO_ICONS.sistema;
+        <>
+          <div className="mb-4 flex gap-2 flex-wrap">
+            <button
+              className="rounded-full px-3 py-1 text-[11px] font-medium bg-portal-primary-soft text-portal-primary"
+            >
+              Todas
+            </button>
+            <button className="rounded-full px-3 py-1 text-[11px] font-medium text-portal-muted-fg hover:bg-portal-muted">
+              No leídas
+            </button>
+            <button className="rounded-full px-3 py-1 text-[11px] font-medium text-portal-muted-fg hover:bg-portal-muted">
+              Turnos
+            </button>
+            <button className="rounded-full px-3 py-1 text-[11px] font-medium text-portal-muted-fg hover:bg-portal-muted">
+              Mensajes
+            </button>
+            <button className="rounded-full px-3 py-1 text-[11px] font-medium text-portal-muted-fg hover:bg-portal-muted">
+              Recetas
+            </button>
+          </div>
+          <div className="space-y-1">
+            {notificaciones.map((n) => {
+              const Icon = TIPO_ICONS[n.tipo] || TIPO_ICONS.sistema;
 
-            return (
-              <PortalCard
-                key={n.id}
-                hover
-                padding="sm"
-              className={cn('w-full flex items-start gap-3', n.leido ? 'bg-portal-bg-alt' : 'bg-portal-primary/5')}
-              onClick={() => {
+              return (
+                <PortalCard
+                  key={n.id}
+                  hover
+                  padding="sm"
+                  className={cn('w-full flex items-start gap-3', n.leido ? '' : 'bg-portal-primary/5')}
+                  onClick={() => {
                   if (!n.leido) marcarLeida(n.id);
                   if (n.href) window.location.href = n.href;
                 }}
@@ -192,6 +212,7 @@ export default function PortalNotificacionesPage() {
             );
           })}
         </div>
+        </>
       )}
     </div>
   );

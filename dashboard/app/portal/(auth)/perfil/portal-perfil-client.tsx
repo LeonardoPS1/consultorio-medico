@@ -20,7 +20,9 @@ import {
 import { useState, useEffect } from 'react';
 import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
+import { PortalBadge } from '@/components/portal/portal-badge';
 import { PushNotificationToggle } from '@/components/portal/PushNotificationToggle';
+import { AvatarInitials } from '@/components/portal/avatar-initials';
 import { ISAPRES_CHILENAS } from '@/lib/isapres';
 
 interface Region {
@@ -63,12 +65,7 @@ const SISTEMAS_SALUD = [
   { value: 'otro', label: 'Otro' },
 ];
 
-const inputStyle: React.CSSProperties = {
-  border: '1px solid hsl(var(--portal-border-light))',
-  background: 'hsl(var(--portal-muted) / 0.3)',
-  color: 'hsl(var(--portal-foreground))',
-  borderRadius: '0.75rem',
-};
+const inputClass = 'w-full px-3 py-2 text-sm outline-none transition-all border border-portal-border bg-white dark:bg-[#1C1C22] rounded-xl focus:border-portal-primary focus:ring-2 focus:ring-portal-primary/20';
 
 /**
  *
@@ -211,36 +208,36 @@ export default function PortalPerfilClient({
 
   return (
     <div>
-      <h1
-        className="text-2xl font-bold mb-6 text-portal-fg"
-      >
+      <h1 className="text-[20px] font-semibold tracking-[0.01em] mb-6 text-portal-fg">
         Mi Perfil
       </h1>
 
       {/* ── Datos fijos ── */}
       <PortalCard padding="md" className="mb-6">
-        <h2
-          className="text-xs font-semibold uppercase tracking-wider mb-3 text-portal-muted-fg"
-        >
+        <h2 className="text-xs font-semibold uppercase tracking-wider mb-3 text-portal-muted-fg">
           Datos personales
         </h2>
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-              <User className="h-5 w-5 shrink-0 text-portal-muted-fg/50" />
-              <div>
-                <div className="font-medium text-portal-fg">
-                  {paciente.nombre} {paciente.apellido}
-                </div>
+            <AvatarInitials
+              nombre={paciente.nombre || ''}
+              apellido={paciente.apellido || ''}
+              className="h-12 w-12 text-base"
+            />
+            <div>
+              <div className="font-medium text-portal-fg">
+                {paciente.nombre} {paciente.apellido}
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Phone className="h-5 w-5 shrink-0 text-portal-muted-fg/50" />
-              <div>
-                <div className="text-portal-fg/90">
-                  {paciente.telefono}
-                </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Phone className="h-5 w-5 shrink-0 text-portal-muted-fg/50" />
+            <div>
+              <div className="text-portal-fg/90">
+                {paciente.telefono}
               </div>
             </div>
+          </div>
           {paciente.rut && (
             <div className="flex items-center gap-3">
               <Shield className="h-5 w-5 shrink-0 text-portal-muted-fg/50" />
@@ -267,6 +264,11 @@ export default function PortalPerfilClient({
               <div>
                 <div className="capitalize text-portal-fg/90">
                   {paciente.sistemaSalud}
+                  {paciente.isapreNombre && (
+                    <PortalBadge variant="primary" className="ml-2 text-[10px]">
+                      {paciente.isapreNombre}
+                    </PortalBadge>
+                  )}
                 </div>
               </div>
             </div>
@@ -306,37 +308,21 @@ export default function PortalPerfilClient({
           <div className="space-y-4">
             {/* Email */}
             <div>
-              <label
-                className="block text-sm font-medium mb-1 text-portal-fg/80"
-              >
+              <label className="block text-sm font-medium mb-1 text-portal-fg/80">
                 Email
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 text-sm outline-none transition-all"
-                style={inputStyle}
+                className={inputClass}
                 placeholder="tu@email.com"
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor =
-                    'hsl(var(--portal-primary) / 0.5)';
-                  e.currentTarget.style.boxShadow =
-                    '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor =
-                    'hsl(var(--portal-border-light))';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
               />
             </div>
 
             {/* Sistema de salud */}
             <div>
-              <label
-                className="block text-sm font-medium mb-1 text-portal-fg/80"
-              >
+              <label className="block text-sm font-medium mb-1 text-portal-fg/80">
                 Sistema de Salud
               </label>
               <select
@@ -345,19 +331,7 @@ export default function PortalPerfilClient({
                   setSistemaSalud(e.target.value);
                   setIsapreNombre('');
                 }}
-                className="w-full px-3 py-2 text-sm outline-none transition-all"
-                style={inputStyle}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor =
-                    'hsl(var(--portal-primary) / 0.5)';
-                  e.currentTarget.style.boxShadow =
-                    '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor =
-                    'hsl(var(--portal-border-light))';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
+                className={inputClass}
               >
                 {SISTEMAS_SALUD.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -369,25 +343,13 @@ export default function PortalPerfilClient({
 
             {sistemaSalud === 'isapre' && (
               <div>
-                  <label className="block text-sm font-medium mb-1 text-portal-fg/80">
-                    Isapre
-                  </label>
+                <label className="block text-sm font-medium mb-1 text-portal-fg/80">
+                  Isapre
+                </label>
                 <select
                   value={isapreNombre}
                   onChange={(e) => setIsapreNombre(e.target.value)}
-                  className="w-full px-3 py-2 text-sm outline-none transition-all"
-                  style={inputStyle}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor =
-                      'hsl(var(--portal-primary) / 0.5)';
-                    e.currentTarget.style.boxShadow =
-                      '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor =
-                      'hsl(var(--portal-border-light))';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  className={inputClass}
                 >
                   <option value="">
                     Selecciona una Isapre...
@@ -403,9 +365,7 @@ export default function PortalPerfilClient({
 
             {/* Región */}
             <div>
-              <label
-                className="block text-sm font-medium mb-1 text-portal-fg/80"
-              >
+              <label className="block text-sm font-medium mb-1 text-portal-fg/80">
                 Región
               </label>
               <select
@@ -414,66 +374,33 @@ export default function PortalPerfilClient({
                   setRegionId(e.target.value);
                   setComunaId('');
                 }}
-                className="w-full px-3 py-2 text-sm outline-none transition-all"
-                style={inputStyle}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor =
-                    'hsl(var(--portal-primary) / 0.5)';
-                  e.currentTarget.style.boxShadow =
-                    '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor =
-                    'hsl(var(--portal-border-light))';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
+                className={inputClass}
               >
                 <option value="">
                   {loadingRegiones ? 'Cargando...' : 'Seleccionar región...'}
                 </option>
                 {regiones.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {r.numeroRomano
-                      ? `${r.numeroRomano} - `
-                      : ''}
+                    {r.numeroRomano ? `${r.numeroRomano} - ` : ''}
                     {r.nombre}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Comuna */}
+{/* Comuna */}
             <div>
-              <label
-                className="block text-sm font-medium mb-1 text-portal-fg/80"
-              >
+              <label className="block text-sm font-medium mb-1 text-portal-fg/80">
                 Comuna
               </label>
               <select
                 value={comunaId}
                 onChange={(e) => setComunaId(e.target.value)}
                 disabled={!regionId || loadingComunas}
-                className="w-full px-3 py-2 text-sm outline-none transition-all disabled:cursor-not-allowed"
-                style={{
-                  ...inputStyle,
-                  opacity: !regionId || loadingComunas ? 0.6 : 1,
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor =
-                    'hsl(var(--portal-primary) / 0.5)';
-                  e.currentTarget.style.boxShadow =
-                    '0 0 0 3px hsl(var(--portal-primary) / 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor =
-                    'hsl(var(--portal-border-light))';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
+                className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
               >
                 <option value="">
-                  {loadingComunas
-                    ? 'Cargando...'
-                    : 'Seleccionar comuna...'}
+                  {loadingComunas ? 'Cargando...' : 'Seleccionar comuna...'}
                 </option>
                 {comunas.map((c) => (
                   <option key={c.id} value={c.id}>
