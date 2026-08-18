@@ -6,7 +6,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-type BadgeVariant = 'primary' | 'success' | 'warning' | 'destructive' | 'muted' | 'accent';
+type BadgeVariant = 'primary' | 'success' | 'warning' | 'destructive' | 'muted' | 'accent' | 'teal';
 
 interface PortalBadgeProps {
   variant?: BadgeVariant;
@@ -16,12 +16,13 @@ interface PortalBadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  primary: 'bg-portal-primary/10 text-portal-primary',
-  success: 'bg-portal-success/10 text-portal-success',
-  warning: 'bg-portal-warning/10 text-portal-warning',
-  destructive: 'bg-portal-destructive/10 text-portal-destructive',
+  primary: 'bg-[#2563EB]/10 text-[#2563EB]',
+  success: 'bg-[#34D399]/15 text-[#059669] dark:text-[#34D399]',
+  warning: 'bg-[#FBBF24]/15 text-[#D97706] dark:text-[#FBBF24]',
+  destructive: 'bg-[#F87171]/15 text-[#DC2626] dark:text-[#F87171]',
   muted: 'bg-portal-muted text-portal-muted-fg',
-  accent: 'bg-portal-accent/10 text-portal-accent',
+  accent: 'bg-[#A78BFA]/15 text-[#7C3AED] dark:text-[#A78BFA]',
+  teal: 'bg-[#14B8A6]/15 text-[#0D9488] dark:text-[#2DD4BF]',
 };
 
 /**

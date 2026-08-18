@@ -17,13 +17,14 @@ interface PortalButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const BASE =
-  'rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer border-none outline-none px-5 py-2.5 h-11';
+  'rounded-full font-semibold text-sm transition-all duration-200 cursor-pointer px-6 py-2.5 h-11';
 
 const VARIANTS: Record<string, string> = {
   primary:
-    'bg-gradient-to-r from-portal-primary to-portal-accent text-white shadow-[0_4px_12px_hsl(var(--portal-primary)/0.25)] hover:shadow-[0_6px_20px_hsl(var(--portal-primary)/0.35)]',
-  secondary: 'bg-portal-muted text-portal-fg border border-portal-border-light',
-  ghost: 'bg-transparent text-portal-muted-fg/60',
+    'bg-[#2563EB] text-white shadow-[0_2px_8px_rgba(37,99,235,0.25)] hover:bg-[#3B82F6] hover:shadow-[0_4px_14px_rgba(37,99,235,0.35)]',
+  secondary:
+    'bg-white text-portal-fg border border-portal-border hover:bg-portal-muted',
+  ghost: 'bg-transparent text-portal-muted-fg hover:text-portal-fg hover:bg-portal-muted/60',
 };
 
 /**
