@@ -281,7 +281,7 @@ export default function PortalLogin() {
           className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl bg-portal-primary/6"
         />
         <div
-          className="absolute -bottom-40 -left-40 w-[30rem] h-[30rem] rounded-full blur-3xl bg-portal-accent/5"
+          className="absolute -bottom-40 -left-40 w-[30rem] h-[30rem] rounded-full blur-3xl bg-portal-primary/5"
         />
         <div
           className="absolute top-1/3 left-1/4 w-80 h-80 rounded-full blur-3xl bg-portal-primary/3"
@@ -306,7 +306,7 @@ export default function PortalLogin() {
                     variants={springPop}
                     initial="initial"
                     animate="animate"
-                    className="inline-flex items-center justify-center h-16 w-16 rounded-2xl mb-5 bg-portal-gradient-strong shadow-lg"
+                    className="inline-flex items-center justify-center h-16 w-16 rounded-2xl mb-5 bg-[#2563EB] shadow-lg"
                   >
                     <HeartPulse className="h-8 w-8 text-white" />
                   </motion.div>
@@ -474,9 +474,7 @@ export default function PortalLogin() {
                 exit="exit"
               >
                 <PortalCard padding="lg" className="text-left">
-                  <h2
-                    className="text-xl font-bold mb-1 text-portal-fg"
-                  >
+                  <h2 className="text-[20px] font-semibold tracking-[0.01em] mb-1 text-portal-fg">
                     Ingresa al Portal
                   </h2>
                   <p

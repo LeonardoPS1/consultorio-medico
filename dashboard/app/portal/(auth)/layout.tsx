@@ -46,7 +46,7 @@ export default async function PortalAuthLayout({ children }: { children: React.R
         className="fixed inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 80% 60% at 50% -20%, hsl(var(--portal-primary) / 0.06), transparent), radial-gradient(ellipse 60% 50% at 80% 80%, hsl(var(--portal-accent) / 0.04), transparent)',
+            'radial-gradient(ellipse 80% 60% at 50% -20%, hsl(var(--portal-primary) / 0.06), transparent), radial-gradient(ellipse 60% 50% at 80% 80%, hsl(var(--portal-primary) / 0.04), transparent)',
         }}
       />
 
@@ -75,7 +75,7 @@ export default async function PortalAuthLayout({ children }: { children: React.R
               className="flex items-center gap-2.5 group"
             >
               {/* Logo icon with subtle gradient */}
-              <div className="h-7 w-7 rounded-lg flex items-center justify-center shadow-sm transition-transform duration-200 group-hover:scale-105 bg-portal-gradient-strong">
+              <div className="h-7 w-7 rounded-lg flex items-center justify-center shadow-sm transition-transform duration-200 group-hover:scale-105 bg-[#2563EB]">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
