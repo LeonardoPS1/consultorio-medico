@@ -11,6 +11,7 @@
 
 import { ArrowLeft, ExternalLink, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
+import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
 import { cn } from '@/lib/utils';
 
@@ -22,12 +23,6 @@ function whatsappLink(): string | null {
   return `https://wa.me/${digits}`;
 }
 
-const PRIMARY_BTN =
-  'inline-flex items-center justify-center rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer px-5 py-2.5 h-11 w-full bg-gradient-to-r from-portal-primary to-portal-accent text-white shadow-[0_4px_12px_hsl(var(--portal-primary)/0.25)] hover:shadow-[0_6px_20px_hsl(var(--portal-primary)/0.35)] active:scale-[0.97]';
-
-const GHOST_BTN =
-  'inline-flex items-center justify-center rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer px-5 py-2.5 h-11 w-full bg-transparent text-portal-muted-fg/60 hover:text-portal-fg active:scale-[0.97]';
-
 /**
  *
  */
@@ -36,17 +31,11 @@ export default function PortalMensajesRedirectPage() {
 
   return (
     <div className="flex flex-col items-center px-4 pt-10 text-center">
-      <div
-        className="h-16 w-16 rounded-2xl flex items-center justify-center mb-5"
-        style={{
-          background:
-            'linear-gradient(135deg, hsl(var(--portal-primary)), hsl(var(--portal-accent)))',
-        }}
-      >
+      <div className="h-16 w-16 rounded-2xl flex items-center justify-center mb-5 bg-portal-primary">
         <MessageCircle className="h-8 w-8 text-white" />
       </div>
 
-      <h1 className="text-xl font-semibold text-portal-fg">
+      <h1 className="text-[20px] font-semibold tracking-[0.01em] text-portal-fg">
         Hablame por WhatsApp
       </h1>
       <p className="text-sm text-portal-muted-fg mt-2 max-w-sm">
@@ -54,10 +43,7 @@ export default function PortalMensajesRedirectPage() {
         WhatsApp. Es más rápido y podés adjuntar archivos.
       </p>
 
-      <PortalCard
-        className="mt-6 w-full max-w-sm text-left"
-        padding="lg"
-      >
+      <PortalCard className="mt-6 w-full max-w-sm text-left" padding="lg">
         <p className="text-sm text-portal-fg">
           👋 ¡Hola! Para comunicarte con el equipo médico, escribinos por
           WhatsApp y te respondemos a la brevedad.
@@ -70,7 +56,7 @@ export default function PortalMensajesRedirectPage() {
             href={waLink}
             target="_blank"
             rel="noopener noreferrer"
-            className={PRIMARY_BTN}
+            className="inline-flex items-center justify-center rounded-full font-semibold text-sm transition-all duration-200 cursor-pointer px-5 py-2.5 h-11 w-full bg-[#2563EB] text-white shadow-[0_2px_8px_rgba(37,99,235,0.25)] hover:bg-[#3B82F6] hover:shadow-[0_4px_14px_rgba(37,99,235,0.35)] active:scale-[0.97]"
           >
             Abrir WhatsApp
             <ExternalLink className="h-4 w-4 ml-2" />
@@ -82,7 +68,12 @@ export default function PortalMensajesRedirectPage() {
           </p>
         )}
 
-        <Link href="/portal/dashboard" className={cn(GHOST_BTN)}>
+        <Link
+          href="/portal/dashboard"
+          className={cn(
+            'inline-flex items-center justify-center rounded-full font-semibold text-sm transition-all duration-200 cursor-pointer px-5 py-2.5 h-11 w-full bg-white text-portal-fg border border-portal-border hover:bg-portal-muted active:scale-[0.97]'
+          )}
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Volver al inicio
         </Link>

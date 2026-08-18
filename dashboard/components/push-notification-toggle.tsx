@@ -2,6 +2,7 @@
 
 import { BellRing, BellOff, Loader2, Smartphone, AlertCircle, RefreshCw } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
+import { PulseLine } from '@/components/portal/pulse-line';
 
 /**
  *
@@ -219,8 +220,11 @@ export function PushNotificationToggle() {
 
   if (status === 'loading') {
     return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="w-4 h-4 animate-spin" />
+      <div className="flex items-center gap-2 text-sm text-portal-muted-fg">
+        <div className="flex items-center gap-1.5">
+          <PulseLine className="text-portal-primary" />
+          <Loader2 className="w-4 h-4 animate-spin" />
+        </div>
         <span>Configurando...</span>
       </div>
     );
@@ -228,7 +232,7 @@ export function PushNotificationToggle() {
 
   if (status === 'unsupported') {
     return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 text-sm text-portal-muted-fg">
         <Smartphone className="w-4 h-4" />
         <span>No soportado en este navegador</span>
       </div>
@@ -237,12 +241,12 @@ export function PushNotificationToggle() {
 
   if (status === 'error') {
     return (
-      <div className="flex items-center gap-2 text-sm text-red-600">
+      <div className="flex items-center gap-2 text-sm text-portal-destructive">
         <AlertCircle className="w-4 h-4 shrink-0" />
         <span className="text-xs">{errorMessage}</span>
         <button
           onClick={subscribe}
-          className="ml-auto shrink-0 text-xs font-medium text-primary hover:underline"
+          className="ml-auto shrink-0 text-xs font-medium text-portal-primary hover:underline"
         >
           <RefreshCw className="w-3 h-3 inline mr-0.5" />
           Reintentar
@@ -253,14 +257,14 @@ export function PushNotificationToggle() {
 
   if (status === 'denied') {
     return (
-      <div className="flex flex-col gap-1 text-sm text-amber-600">
+      <div className="flex flex-col gap-1 text-sm text-portal-warning">
         <div className="flex items-center gap-2">
           <BellOff className="w-4 h-4 shrink-0" />
           <span className="text-xs font-medium">Notificaciones bloqueadas</span>
         </div>
-        <p className="text-[11px] text-muted-foreground leading-tight ml-6">
+        <p className="text-[11px] text-portal-muted-fg leading-tight ml-6">
           Para activarlas, hacé clic en el ícono{' '}
-          <code className="text-[10px] bg-muted px-1 rounded">🔒</code> de la barra de direcciones{' '}
+          <code className="text-[10px] bg-portal-muted px-1 rounded">🔒</code> de la barra de direcciones{' '}
           <span className="hidden sm:inline">→</span>
           <br className="sm:hidden" />
           {' → '}Configuración del sitio → Notificaciones → Permitir.
@@ -272,7 +276,7 @@ export function PushNotificationToggle() {
               else checkSubscription();
             });
           }}
-          className="ml-6 text-[11px] font-medium text-amber-600 hover:text-amber-700 underline w-fit"
+          className="ml-6 text-[11px] font-medium text-portal-warning hover:text-portal-warning/80 underline w-fit"
         >
           Verificar de nuevo
         </button>
@@ -283,11 +287,11 @@ export function PushNotificationToggle() {
   if (status === 'subscribed') {
     return (
       <div className="flex items-center gap-2 text-sm">
-        <BellRing className="w-4 h-4 text-green-600 shrink-0" />
-        <span className="text-xs text-muted-foreground">Activadas</span>
+        <BellRing className="w-4 h-4 text-portal-success shrink-0" />
+        <span className="text-xs text-portal-muted-fg">Activadas</span>
         <button
           onClick={unsubscribe}
-          className="ml-auto text-xs text-muted-foreground/60 hover:text-foreground underline"
+          className="ml-auto text-xs text-portal-muted-fg/60 hover:text-portal-fg underline"
         >
           Desactivar
         </button>
@@ -298,11 +302,11 @@ export function PushNotificationToggle() {
   // inactive
   return (
     <div className="flex items-center gap-2 text-sm">
-      <BellOff className="w-4 h-4 text-muted-foreground shrink-0" />
-      <span className="text-xs text-muted-foreground">Desactivadas</span>
+      <BellOff className="w-4 h-4 text-portal-muted-fg shrink-0" />
+      <span className="text-xs text-portal-muted-fg">Desactivadas</span>
       <button
         onClick={subscribe}
-        className="ml-auto text-xs font-medium text-primary hover:text-primary/80 underline"
+        className="ml-auto text-xs font-medium text-portal-primary hover:text-portal-primary/80 underline"
       >
         Activar
       </button>

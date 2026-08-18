@@ -18,9 +18,9 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { PortalBadge } from '@/components/portal/portal-badge';
+import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
-import { Button } from '@/components/ui/button';
 
 interface DocumentoMedico {
   id: string;
@@ -245,13 +245,13 @@ export default function PortalDocumentosPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-1 text-portal-fg">Mis Documentos</h1>
+      <h1 className="text-[20px] font-semibold tracking-[0.01em] mb-1 text-portal-fg">Mis Documentos</h1>
       <p className="text-sm mb-6 text-portal-muted-fg">
         Subí estudios, recetas o certificados para procesarlos automáticamente
       </p>
 
       {confirmMessage && (
-        <div className="mb-4 p-3 rounded-xl bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-sm text-green-800 dark:text-green-200 flex items-center gap-2">
+        <div className="mb-4 p-3 rounded-xl bg-portal-success/10 border border-portal-success/20 text-sm text-portal-success dark:text-portal-success flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
           {confirmMessage}
         </div>
@@ -336,7 +336,7 @@ export default function PortalDocumentosPage() {
       {docs.length === 0 && !processingId && (
         <div className="text-center py-16 text-portal-muted-fg/70">
           <div className="rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 bg-portal-muted">
-            <FileText className="h-6 w-6" />
+            <FileText className="h-6 w-6 text-portal-muted-fg/50" />
           </div>
           <p>Aún no subiste documentos</p>
           <p className="text-sm mt-2">Subí una foto o PDF para extraer los datos automáticamente</p>
@@ -362,7 +362,7 @@ export default function PortalDocumentosPage() {
                   <p className="text-xs text-portal-muted-fg">{formatDate(doc.createdAt)}</p>
 
                   {doc.extraccionEstado === 'fallida' && (
-                    <div className="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
+                    <div className="mt-3 p-3 rounded-xl bg-portal-destructive/10 border border-portal-destructive/20 text-sm text-portal-destructive dark:text-portal-destructive">
                       <p className="font-medium mb-1">Documento guardado</p>
                       <p>
                         No se pudieron extraer los datos automáticamente. El médico lo revisará
@@ -382,12 +382,12 @@ export default function PortalDocumentosPage() {
                             onChange={(e) => setEditData(e.target.value)}
                           />
                           <div className="flex gap-2">
-                            <Button size="sm" onClick={() => handleEditSave(doc.id)}>
+                            <PortalButton variant="primary" className="px-3 py-1.5 text-sm h-9" onClick={() => handleEditSave(doc.id)}>
                               <Save className="h-3 w-3 mr-1" /> Guardar
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
+                            </PortalButton>
+                            <PortalButton variant="secondary" className="px-3 py-1.5 text-sm h-9" onClick={() => setEditingId(null)}>
                               Cancelar
-                            </Button>
+                            </PortalButton>
                           </div>
                         </div>
                       ) : (
@@ -414,7 +414,7 @@ export default function PortalDocumentosPage() {
                   )}
 
                   {doc.extraccionEstado === 'confirmado' && doc.datosExtraidos && (
-                    <div className="mt-3 p-3 rounded-xl bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 space-y-1">
+                    <div className="mt-3 p-3 rounded-xl bg-portal-success/10 border border-portal-success/20 space-y-1">
                       {Object.entries(doc.datosExtraidos).map(([key, val]) => (
                         <p key={key} className="text-sm text-portal-fg">
                           <span className="font-medium capitalize text-portal-muted-fg">
@@ -423,7 +423,7 @@ export default function PortalDocumentosPage() {
                           {String(val ?? '—')}
                         </p>
                       ))}
-                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      <p className="text-xs text-portal-success mt-1">
                         <CheckCircle2 className="h-3 w-3 inline mr-1" />
                         Confirmado — pendiente de revisión médica
                       </p>
@@ -431,7 +431,7 @@ export default function PortalDocumentosPage() {
                   )}
 
                   {doc.estadoRevision === 'rechazado' && (
-                    <div className="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
+                    <div className="mt-3 p-3 rounded-xl bg-portal-destructive/10 border border-portal-destructive/20 text-sm text-portal-destructive dark:text-portal-destructive">
                       <p className="font-medium mb-1">Documento rechazado</p>
                       <p>Tu documento fue rechazado por el médico y requiere que lo reenvíes.</p>
                       {doc.metadata && (doc.metadata as Record<string, unknown>)?.motivoRechazo ? (
@@ -485,7 +485,7 @@ export default function PortalDocumentosPage() {
                 {doc.extraccionEstado !== 'confirmado' && (
                   <button
                     onClick={() => handleDelete(doc.id)}
-                    className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-950/30 text-portal-muted-fg hover:text-red-500 transition-colors"
+                    className="p-2 rounded-lg hover:bg-portal-destructive/10 text-portal-muted-fg hover:text-portal-destructive transition-colors"
                     title="Eliminar"
                   >
                     <Trash2 className="h-4 w-4" />
