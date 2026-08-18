@@ -101,7 +101,7 @@ function StepIndicator({ currentStep, showPago }: { currentStep: Step; showPago:
                   className={cn(
                     'h-px w-6 sm:w-8 transition-[background] duration-400',
                     isActive
-                      ? 'bg-primary'
+                      ? 'bg-[#2563EB]'
                       : 'bg-border',
                   )}
                 />
@@ -111,7 +111,7 @@ function StepIndicator({ currentStep, showPago }: { currentStep: Step; showPago:
                 className={cn(
                   'flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium transition-all duration-300',
                   isCurrent && 'bg-[#2563EB] text-white shadow-[0_0_0_3px_rgba(37,99,235,0.15)] shadow-[0_1px_3px_rgba(37,99,235,0.2)]',
-                  !isCurrent && isActive && 'bg-portal-muted text-portal-muted-fg',
+                  !isCurrent && isActive && 'bg-portal-primary/15 text-portal-primary',
                   !isCurrent && !isActive && 'bg-portal-muted text-portal-muted-fg',
                 )}
               >

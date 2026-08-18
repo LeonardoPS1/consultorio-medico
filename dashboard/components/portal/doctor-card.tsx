@@ -6,12 +6,7 @@ import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { MedicoPortal } from '@/lib/services/portal-booking';
-
-interface DoctorCardProps {
-  medico: MedicoPortal;
-  selected: boolean;
-  onSelect: (medico: MedicoPortal) => void;
-}
+import { cn } from '@/lib/utils';
 
 interface DoctorCardProps {
   medico: MedicoPortal;
@@ -32,11 +27,7 @@ export function DoctorCard({ medico, selected, onSelect }: DoctorCardProps) {
       hover
       padding="none"
       onClick={() => onSelect(medico)}
-      className="cursor-pointer"
-      style={selected ? {
-        borderColor: 'hsl(var(--portal-primary) / 0.3)',
-        boxShadow: 'var(--portal-shadow-md), 0 0 0 1px hsl(var(--portal-primary) / 0.15)',
-      } : undefined}
+      className={cn('cursor-pointer', selected && 'border-portal-primary/30 shadow-[0_0_0_1px_rgba(var(--portal-primary-rgb),0.15)]')}
     >
       <CardHeader className="pb-2">
         <div className="flex items-start gap-3">

@@ -186,7 +186,7 @@ export function SlotPicker({ medicoId, servicioId, onSelectSlot, selectedSlot }:
               </div>
             </div>
           ) : error ? (
-            <div className="rounded-lg bg-destructive/5 border border-destructive/20 p-4 text-sm text-destructive text-center">
+            <div className="rounded-lg bg-portal-destructive/10 border border-portal-destructive/20 p-4 text-sm text-portal-destructive text-center">
               {error}
             </div>
           ) : slots.length === 0 ? (
