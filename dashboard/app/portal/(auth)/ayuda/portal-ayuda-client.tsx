@@ -1,6 +1,10 @@
+'use client';
+
 import { HelpCircle, ChevronDown, Search, Headset, ExternalLink } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { PortalCard, PortalButton } from '@/components/portal';
+import { PortalButton } from '@/components/portal/portal-button';
+import { PortalCard } from '@/components/portal/portal-card';
 
 interface HelpFeature {
   id: string;
@@ -184,6 +188,7 @@ const helpSections: HelpSection[] = [
 ];
 
 const PortalAyudaClient: React.FC = () => {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
@@ -311,9 +316,10 @@ const PortalAyudaClient: React.FC = () => {
 
                           {feature.link && (
                             <PortalButton
-                              href={feature.link}
-                              variant="outline"
-                              size="sm"
+                              variant="secondary"
+                              onClick={() => {
+                                if (feature.link) router.push(feature.link);
+                              }}
                               className="mt-2 inline-flex items-center"
                             >
                               Ir a {feature.title.toLowerCase()}
@@ -355,14 +361,12 @@ const PortalAyudaClient: React.FC = () => {
           </div>
         </div>
         <div className="mt-4 flex gap-3">
-          <PortalButton variant="outline" href="https://wa.me/56912345678">
+          <PortalButton
+            variant="secondary"
+            onClick={() => window.open('https://wa.me/56975680702', '_blank')}
+          >
             <span className="flex items-center gap-2">
               <span>WhatsApp</span>
-            </span>
-          </PortalButton>
-          <PortalButton href="/portal/soporte">
-            <span className="flex items-center gap-2">
-              <span>Abrir ticket</span>
             </span>
           </PortalButton>
         </div>
