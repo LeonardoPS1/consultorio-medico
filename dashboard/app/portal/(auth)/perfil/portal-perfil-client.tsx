@@ -547,7 +547,7 @@ export default function PortalPerfilClient({
                 {solicitarResult.message}
               </div>
             )}
-            <div className="flex gap-3 justify-end">
+            <div className="flex flex-wrap gap-3 justify-end">
               <PortalButton
                 variant="ghost"
                 onClick={() => setShowEliminarModal(false)}

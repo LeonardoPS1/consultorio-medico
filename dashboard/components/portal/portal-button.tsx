@@ -1,5 +1,5 @@
 /**
- * PortalButton — Botón gradiente teal→violet con micro-interacciones.
+ * PortalButton — Botón primario azul sólido radius-full con micro-interacciones.
  */
 
 'use client';
@@ -17,7 +17,7 @@ interface PortalButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const BASE =
-  'rounded-full font-semibold text-sm transition-all duration-200 cursor-pointer px-6 py-2.5 h-11';
+  'rounded-full font-semibold text-sm transition-all duration-200 cursor-pointer px-6 py-2.5 h-11 inline-flex items-center justify-center whitespace-nowrap shrink-0';
 
 const VARIANTS: Record<string, string> = {
   primary:
