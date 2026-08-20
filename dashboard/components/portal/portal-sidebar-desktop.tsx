@@ -9,7 +9,6 @@ import {
   ScrollText,
   FlaskConical,
   Upload,
-  Package,
   TrendingUp,
   ClipboardCheck,
   User,
@@ -56,7 +55,6 @@ const secondaryGroups: SecondaryGroup[] = [
   {
     label: 'Gestión',
     items: [
-      { href: '/portal/paquetes', label: 'Paquetes', icon: Package },
       { href: '/portal/reportes', label: 'Reportes', icon: TrendingUp },
       { href: '/portal/encuestas', label: 'Encuestas', icon: ClipboardCheck },
       { href: '/portal/perfil', label: 'Perfil', icon: User },

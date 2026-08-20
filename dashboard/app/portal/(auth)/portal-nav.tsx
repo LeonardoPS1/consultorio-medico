@@ -12,7 +12,6 @@ import {
   PenTool,
   ClipboardCheck,
   FlaskConical,
-  Package,
   User,
   Bell,
   LogOut,
@@ -62,7 +61,6 @@ const secondaryGroups: SecondaryGroup[] = [
   {
     label: 'Gestión',
     items: [
-      { href: '/portal/paquetes', label: 'Paquetes', icon: Package },
       { href: '/portal/perfil', label: 'Perfil', icon: User },
       { href: '/portal/privacidad', label: 'Privacidad y accesos', icon: ShieldCheck },
     ],
