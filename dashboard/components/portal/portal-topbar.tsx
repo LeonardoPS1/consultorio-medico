@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Plus, HelpCircle } from 'lucide-react';
+import { Bell, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
@@ -143,25 +143,6 @@ export function PortalTopbar() {
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center" className="text-[11px]">
               Notificaciones
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Ayuda */}
-          <Tooltip delayDuration={300}>
-            <TooltipTrigger asChild>
-              <Link
-                href="/portal/ayuda"
-                className={cn(
-                  'h-9 w-9 rounded-full flex items-center justify-center transition-colors',
-                  'text-portal-muted-fg hover:bg-portal-muted hover:text-[#2563EB]'
-                )}
-                aria-label="Centro de ayuda"
-              >
-                <HelpCircle className="h-5 w-5" />
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" align="center" className="text-[11px]">
-              Centro de ayuda
             </TooltipContent>
           </Tooltip>
 
