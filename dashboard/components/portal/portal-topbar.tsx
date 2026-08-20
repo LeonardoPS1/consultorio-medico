@@ -7,7 +7,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { AvatarInitials } from './avatar-initials';
-import { PulseLine } from './pulse-line';
 import { PortalThemeToggle } from './theme-toggle';
 
 /**
@@ -18,7 +17,7 @@ import { PortalThemeToggle } from './theme-toggle';
  */
 
 const TITLES: Record<string, { title: string; subtitle?: string; showPulse?: boolean }> = {
-  '/portal/dashboard': { title: 'Inicio', subtitle: 'Tu espacio de salud', showPulse: true },
+  '/portal/dashboard': { title: 'Portal Salud', subtitle: 'AicoreMed', showPulse: true },
   '/portal/agendar': { title: 'Agendar cita', subtitle: 'Elegí médico y horario' },
   '/portal/turnos': { title: 'Mis turnos' },
   '/portal/recetas': { title: 'Mis recetas' },
@@ -27,7 +26,6 @@ const TITLES: Record<string, { title: string; subtitle?: string; showPulse?: boo
   '/portal/consentimientos': { title: 'Docs legales' },
   '/portal/ordenes-estudio': { title: 'Órdenes de estudio' },
   '/portal/documentos': { title: 'Documentos' },
-  '/portal/paquetes': { title: 'Paquetes' },
   '/portal/reportes': { title: 'Reportes de salud' },
   '/portal/encuestas': { title: 'Encuestas' },
   '/portal/perfil': { title: 'Mi perfil' },
@@ -53,7 +51,7 @@ interface PatientName {
 
 export function PortalTopbar({ patientName }: { patientName: PatientName }) {
   const pathname = usePathname();
-  const { title, subtitle, showPulse } = TITLES[pathname] ?? { title: 'Portal', subtitle: undefined, showPulse: false };
+  const { title, subtitle } = TITLES[pathname] ?? { title: 'Portal', subtitle: undefined };
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchCount = useCallback(async () => {
@@ -84,17 +82,32 @@ export function PortalTopbar({ patientName }: { patientName: PatientName }) {
       )}
     >
       <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center gap-4">
-        {/* Izquierda: título + pulso */}
+        {/* Izquierda: logo + título (mismo estilo que mobile) */}
         <div className="flex items-center gap-3">
-          {showPulse && <PulseLine className="text-portal-primary" />}
-          <div className="flex flex-col leading-tight">
-            <h1 className="text-[20px] font-semibold tracking-[0.01em] text-portal-fg">
-              {title}
-            </h1>
-            {subtitle && (
-              <span className="text-[13px] text-portal-muted-fg">{subtitle}</span>
-            )}
-          </div>
+          <Link
+            href="/portal/dashboard"
+            className="flex items-center gap-2.5 group"
+          >
+            <div className="h-7 w-7 rounded-lg flex items-center justify-center shadow-sm transition-transform duration-200 group-hover:scale-105 bg-[#2563EB]">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                className="h-4 w-4 text-white"
+              >
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+              </svg>
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm font-semibold tracking-tight text-portal-fg">
+                Portal <span className="text-portal-primary">Salud</span>
+              </span>
+              <span className="text-[10px] font-medium tracking-wide text-portal-muted-fg">
+                AicoreMed
+              </span>
+            </div>
+          </Link>
         </div>
 
         {/* Centro: pills de acceso rápido */}

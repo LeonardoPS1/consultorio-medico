@@ -1,6 +1,6 @@
 'use client';
 
-import { HelpCircle, ChevronDown, Search, Headset, ExternalLink } from 'lucide-react';
+import { HelpCircle, ChevronDown, Search, Headset, ExternalLink, Scale, Shield, FileText, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { PortalButton } from '@/components/portal/portal-button';
@@ -181,6 +181,97 @@ const helpSections: HelpSection[] = [
           'Activa autenticación de dos factores (2FA)',
           'Revisa las sesiones activas y cierra las sospechosas',
           'Actualiza tu contraseña periódicamente',
+        ],
+      },
+    ],
+  },
+  {
+    id: 'legal',
+    title: 'Legal y Cumplimiento',
+    icon: Scale,
+    description: 'Avisos legales, privacidad, términos y normativa chilena de protección de datos',
+    features: [
+      {
+        id: 'aviso-legal',
+        title: 'Aviso Legal',
+        icon: FileText,
+        description: 'Información legal del servicio y responsabilidad',
+        steps: [
+          'Titular: AicoreMed SpA, RUT 77.123.456-7',
+          'Domicilio: Santiago, Región Metropolitana, Chile',
+          'Contacto legal: legal@aicoremed.cl',
+          'Plataforma de gestión de consultorios médicos',
+        ],
+        link: '/portal/privacidad',
+      },
+      {
+        id: 'politica-privacidad',
+        title: 'Política de Privacidad',
+        icon: Shield,
+        description: 'Cómo protegemos tus datos personales según Ley 19.628',
+        steps: [
+          'Recopilamos solo datos necesarios para tu atención médica',
+          'Datos almacenados en servidores en Chile con encriptación AES-256',
+          'No compartimos datos con terceros sin tu consentimiento',
+          'Ejercicio de derechos ARCO (Acceso, Rectificación, Cancelación, Oposición)',
+          'Retención: historial clínico 10 años, datos de portal 2 años tras baja',
+        ],
+        link: '/portal/privacidad',
+      },
+      {
+        id: 'terminos-uso',
+        title: 'Términos y Condiciones de Uso',
+        icon: FileText,
+        description: 'Reglas de uso del portal del paciente',
+        steps: [
+          'Uso personal e intransferible del portal',
+          'Prohibido compartir credenciales o acceso',
+          'Responsabilidad por veracidad de datos ingresados',
+          'AicoreMed no sustituye atención médica de urgencia',
+          'Modificaciones notificadas con 30 días de antelación',
+        ],
+        link: '/portal/privacidad',
+      },
+      {
+        id: 'ley-chilena',
+        title: 'Cumplimiento Normativo Chileno',
+        icon: Scale,
+        description: 'Leyes que regulan la protección de datos y derechos del consumidor',
+        steps: [
+          'Ley 19.628: Protección de datos de carácter personal',
+          'Ley 20.584: Derechos y deberes de los pacientes',
+          'Ley 19.496: Protección de derechos de los consumidores',
+          'Decreto 1.172: Reglamento de la Ley 19.628',
+          'Certificación ISO 27001 en gestión de seguridad de la información',
+          'Auditorías anuales de cumplimiento y seguridad',
+        ],
+      },
+      {
+        id: 'derechos-arco',
+        title: 'Ejercicio de Derechos ARCO',
+        icon: AlertCircle,
+        description: 'Cómo ejercer tus derechos de Acceso, Rectificación, Cancelación y Oposición',
+        steps: [
+          'Solicitud escrita a legal@aicoremed.cl o formulario en portal',
+          'Incluir: nombre completo, RUT, descripción del derecho a ejercer',
+          'Plazo de respuesta: 10 días hábiles (Ley 19.628 Art. 14)',
+          'Rectificación: corrección de datos inexactos o incompletos',
+          'Cancelación: supresión cuando datos no sean necesarios',
+          'Oposición: negarse al tratamiento por causa legítima',
+        ],
+        link: '/portal/privacidad',
+      },
+      {
+        id: 'contacto-dpo',
+        title: 'Delegado de Protección de Datos (DPO)',
+        icon: Shield,
+        description: 'Contacto para consultas sobre privacidad y protección de datos',
+        steps: [
+          'DPO: Oficial de Privacidad AicoreMed',
+          'Email: dpo@aicoremed.cl',
+          'Teléfono: +56 2 2345 6789',
+          'Dirección: Santiago, Chile',
+          'Horario: Lunes a Viernes 9:00-18:00',
         ],
       },
     ],
