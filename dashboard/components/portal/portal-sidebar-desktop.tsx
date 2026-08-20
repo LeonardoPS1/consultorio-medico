@@ -15,6 +15,7 @@ import {
   User,
   ShieldCheck,
   Bell,
+  HelpCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -62,6 +63,10 @@ const secondaryGroups: SecondaryGroup[] = [
       { href: '/portal/privacidad', label: 'Privacidad', icon: ShieldCheck },
     ],
   },
+  {
+    label: 'Ayuda',
+    items: [{ href: '/portal/ayuda', label: 'Centro de ayuda', icon: HelpCircle }],
+  },
 ];
 
 const SIDEBAR_WIDTH = 76;
@@ -104,7 +109,11 @@ export function PortalSidebarDesktop() {
    * @param item.label
    * @param item.icon
    */
-  const renderNavItem = (item: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }) => {
+  const renderNavItem = (item: {
+    href: string;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }) => {
     const active = isActive(item.href);
     const Icon = item.icon;
     return (
@@ -114,7 +123,9 @@ export function PortalSidebarDesktop() {
             href={item.href}
             className={cn(
               'h-11 w-11 rounded-full flex items-center justify-center transition-colors',
-              active ? 'bg-portal-primary-soft text-portal-primary' : 'text-portal-muted-fg hover:bg-portal-muted'
+              active
+                ? 'bg-portal-primary-soft text-portal-primary'
+                : 'text-portal-muted-fg hover:bg-portal-muted',
             )}
             aria-label={item.label}
             aria-current={active ? 'page' : undefined}
@@ -139,7 +150,7 @@ export function PortalSidebarDesktop() {
         className={cn(
           'fixed inset-y-0 left-0 z-30 flex flex-col items-center py-4',
           'bg-white dark:bg-[#1C1C22] border-r border-portal-border',
-          `w-[${SIDEBAR_WIDTH}px]`
+          `w-[${SIDEBAR_WIDTH}px]`,
         )}
         aria-label="Navegación principal"
       >
@@ -186,7 +197,7 @@ export function PortalSidebarDesktop() {
                 href="/portal/notificaciones"
                 className={cn(
                   'relative h-11 w-11 rounded-full flex items-center justify-center transition-colors',
-                  'text-portal-muted-fg hover:bg-portal-muted'
+                  'text-portal-muted-fg hover:bg-portal-muted',
                 )}
                 aria-label="Notificaciones"
               >
@@ -196,7 +207,7 @@ export function PortalSidebarDesktop() {
                     className={cn(
                       'absolute -top-1 -right-1 flex items-center justify-center',
                       'bg-[#2563EB] text-white rounded-full min-w-[16px] h-4 text-[10px] px-1',
-                      'font-medium leading-none'
+                      'font-medium leading-none',
                     )}
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
