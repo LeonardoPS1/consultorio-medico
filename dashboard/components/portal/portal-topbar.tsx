@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Plus } from 'lucide-react';
+import { Bell, Plus, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
@@ -44,11 +44,14 @@ const CENTER_PILLS = [
 
 /**
  * PortalTopbar — Topbar de escritorio (hidden lg:block)
- * Resuelve el título internamente vía usePathname (NO recibe props).
- * Home → 'Inicio' / 'Tu espacio de salud' estático + showPulse.
- * NO hace fetch a /api/portal/me.
+ * Recibe patientName con nombre y apellido para el avatar.
  */
-export function PortalTopbar() {
+interface PatientName {
+  nombre: string;
+  apellido: string;
+}
+
+export function PortalTopbar({ patientName }: { patientName: PatientName }) {
   const pathname = usePathname();
   const { title, subtitle, showPulse } = TITLES[pathname] ?? { title: 'Portal', subtitle: undefined, showPulse: false };
   const [unreadCount, setUnreadCount] = useState(0);
@@ -146,12 +149,31 @@ export function PortalTopbar() {
             </TooltipContent>
           </Tooltip>
 
+          {/* Ayuda */}
+          <Tooltip delayDuration={300}>
+            <TooltipTrigger asChild>
+              <Link
+                href="/portal/ayuda"
+                className={cn(
+                  'h-9 w-9 rounded-full flex items-center justify-center transition-colors',
+                  'text-portal-muted-fg hover:bg-portal-muted hover:text-[#2563EB]'
+                )}
+                aria-label="Centro de ayuda"
+              >
+                <HelpCircle className="h-5 w-5" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="center" className="text-[11px]">
+              Centro de ayuda
+            </TooltipContent>
+          </Tooltip>
+
           {/* Separador */}
           <div className="w-px h-5 bg-portal-border" aria-hidden="true" />
 
           {/* Avatar → perfil */}
           <Link href="/portal/perfil" className="h-9 w-9" aria-label="Mi perfil">
-            <AvatarInitials nombre="" apellido="" className="h-9 w-9 text-sm" />
+            <AvatarInitials nombre={patientName.nombre} apellido={patientName.apellido} className="h-9 w-9 text-sm" />
           </Link>
 
           {/* Toggle tema */}
