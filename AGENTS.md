@@ -2,9 +2,9 @@
 
 > **Archivo de referencia principal.** Debe ser consultado antes de iniciar cualquier tarea, desarrollo o debugging para entender el contexto completo del sistema, la metodología de trabajo y el estado actual.
 
-**Última actualización:** 13/08/2026
+**Última actualización:** 20/08/2026
 **Proyecto:** AicoreMed — Sistema de Gestión para Consultorios Médicos (Chile)
-**Versión actual:** 1.39.0
+**Versión actual:** 1.39.1
 **Dashboard:** https://med.aicorebots.com
 **n8n:** https://n8n.aicorebots.com
 **Repositorio:** `main` → https://github.com/LeonardoPS1/consultorio-medico
@@ -832,6 +832,9 @@ consultorio-medico/
 | **Fix columna fantasma `tipo` en recetas (bug crítico prod)** | La schema declaraba `recetas.tipo` (enum `receta_tipo`, agregado en split 150922a) pero **nunca hubo migración** que lo creara en prod y nada lo usaba. Todo `.returning()` (crear/actualizar/renovar) emitía `RETURNING ... "tipo"` → prod error 42703 "column tipo does not exist" → HTTP 500 en crear/borrar recetas. Fix: eliminadas la línea `tipo` de `drizzle/medical.ts:139` + import `recetaTipoEnum` y `tipo: r.tipo` de `app/api/portal/mis-datos/exportar/route.ts:105`. Verificado prod: DELETE y POST recetas → 200 OK. Commit `1615d26` | 13/08 |
 | **Historial recetas + ocupación por día + confirmar oferta** | Bug1: `DELETE /api/recetas/[id]` mandaba estado 'historial' pero el CHECK legacy `recetas_estado_check` de prod solo admitía activa/vencida/cancelada/renovada → 500 → historial vacío. Migración 0062 DROP+recreate CHECK con unión de estados + DEFAULT 'emitida', aplicada en prod. Bug2: filtro ocupación 'semana' daba un único punto (EXTRACT WEEK). Fix: `calcularTendencias(porDia)` agrupa por EXTRACT(DOW) 7 días Lun→Dom zero-fill, labels DIAS_ABREV. Feature: botón Confirmar en ofertas pendientes de waitlist → `POST /api/waitlist/ofertas/[id]/aceptar`. Commit `2f604a0` | 13/08 |
 | **Limpieza build: 1419 problemas corregidos** | 14 errores TS bloqueantes (conversaciones/[id], certificados, historial, exportar, servicios/[id], credenciales-tab, auth.ts), fix NFT warning (imports estáticos fs/path/zlib/stream), eslint --fix + jsdoc mode typescript en eslint.config.js (flat config autoritativo): ~1400 JSDoc autofixados. Build 0 errores/0 warnings. Commit `4ad7c3e` | 13/08 |
+| **Legal y Cumplimiento Portal Paciente** | Nueva sección `/portal/legal` separada de Ayuda con 3 documentos legales completos (Política de Privacidad, Aviso Legal, Términos y Condiciones) adaptados al paciente, conformes a Ley 19.628, 21.719, 20.584, 19.496. Tabs responsive, navegación propia en sheet "Más", Centro de Ayuda enlaza a la nueva sección. Dirección legal actualizada a Viña del Mar, Valparaíso. Commits `b098a20`, `4c497b2` | 20/08 |
+| **Enlaces iapo.cl (Landing + Dashboard)** | Footer landing: "Blog" → https://iapo.cl (misma pestaña). Footer dashboard: "Recursos para clínicas" → https://iapo.cl/prompts (misma pestaña, peso visual secundario junto a GitHub). Commits `c9ba281`, `348a4e7` | 20/08 |
+| **Integraciones: cleanup Próximamente** | Eliminada sección "Próximamente" del catálogo `/dashboard/integraciones`; solo 8 integraciones conectadas (Twilio, Google Calendar, MercadoPago, Ollama, n8n, Evolution API, Chatwoot, Metabase). Commit `9ee3814` | 20/08 |
 
 ### 🟡 Prioridad Media
 

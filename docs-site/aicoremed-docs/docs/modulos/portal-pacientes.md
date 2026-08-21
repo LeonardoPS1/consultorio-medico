@@ -142,6 +142,21 @@ consultorio.aicorebots.com → proxy.ts → isPortalDomain? (PORTAL_DOMAINS)
 4. Si la ruta no es `/portal`, `/portal/...` ni `/api/...` → `308` redirect a `/portal`.
 5. `/api/portal/*` y el resto de la API siguen funcionando bajo el mismo dominio.
 
+## Sección Legal y Cumplimiento
+
+Nueva sección separada del Centro de Ayuda en `/portal/legal` con 3 documentos legales completos adaptados al paciente y conformes a legislación chilena:
+
+| Documento | Descripción | Normativa |
+|-----------|-------------|-----------|
+| **Política de Privacidad** | Responsable/Encargado (Consultorio/AicoreMed), datos recopilados, finalidades, bases legales, IA 100% local, terceros, seguridad, retención (historial 10 años), derechos ARCO + portabilidad, DPO | Ley 19.628, 21.719, 20.584, 19.496 |
+| **Aviso Legal** | Titularidad Aicore SpA (Viña del Mar, Valparaíso), objeto, acceso magic link, propiedad intelectual, limitación responsabilidad, protección datos, derechos paciente (Ley 20.584), consumidor (Ley 19.496), jurisdicción Santiago | Ley 19.496, 20.584 |
+| **Términos y Condiciones** | Aceptación, descripción servicio, registro magic link 24h, uso adecuado/prohibiciones, propiedad intelectual (datos del paciente), privacidad, limitación responsabilidad, suscripción gratuita para paciente, baja/anonimización 90 días (WF-09), modificaciones 30 días, legislación chilena | Ley 19.628, 21.719, 20.584, 19.496 |
+
+- Navegación: grupo "Legal" en sheet "Más" (icono Scale), separado de "Ayuda"
+- UI: tabs responsive (Privacidad / Aviso Legal / Términos) + navegación móvil con swipe
+- Footer notice: emergencia médica → 131 SAMU, contacto DPO
+- Centro de Ayuda: sección legal reemplazada por enlace a `/portal/legal`
+
 ## Diseño
 
 - Sistema de diseño propio scoped bajo `.portal-layout`

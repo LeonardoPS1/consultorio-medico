@@ -10,8 +10,20 @@ export interface ChangelogEntry {
   items: string[];
 }
 
-// Actualizado: 13/08/2026 — v1.39.0 Ocupación por período + fixes atención/recetas
+// Actualizado: 20/08/2026 — v1.39.1 Legal portal, iapo.cl links, integraciones cleanup
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.39.1',
+    date: '20/08/2026',
+    title: 'Legal portal, iapo.cl links, integraciones cleanup',
+    items: [
+      'Portal del paciente: nueva sección "Legal y Cumplimiento" en /portal/legal con 3 documentos legales completos (Política de Privacidad, Aviso Legal, Términos y Condiciones) adaptados al paciente y conformes a Ley 19.628, 21.719, 20.584, 19.496. Separada del Centro de Ayuda con navegación propia.',
+      'Dirección legal actualizada: Aicore SpA en Viña del Mar, Región de Valparaíso, Chile (antes Santiago) en todos los documentos legales.',
+      'Footer landing: enlace "Blog" → https://iapo.cl en sección Compañía (misma pestaña, proyecto hermano).',
+      'Footer dashboard (producto): enlace "Recursos para clínicas" → https://iapo.cl/prompts junto a GitHub y versión, mismo peso visual secundario.',
+      'Integraciones: eliminada sección "Próximamente" del catálogo; solo se muestran las 8 integraciones conectadas (Twilio, Google Calendar, MercadoPago, Ollama, n8n, Evolution API, Chatwoot, Metabase).',
+    ],
+  },
   {
     version: '1.39.0',
     date: '13/08/2026',
