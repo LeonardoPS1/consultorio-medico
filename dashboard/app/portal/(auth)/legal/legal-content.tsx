@@ -454,7 +454,7 @@ export const legalDocuments: LegalDocument[] = [
                 +56 9 7568 0702
               </a>
             </p>
-            <p>Dirección: Santiago, Región Metropolitana, Chile</p>
+            <p>Dirección: Viña del Mar, Región de Valparaíso, Chile</p>
             <p>Horario: Lunes a Viernes 9:00–18:00</p>
           </div>
           <p className="mt-3 text-sm">
@@ -493,7 +493,7 @@ export const legalDocuments: LegalDocument[] = [
               <strong>RUT:</strong> 77.123.456-7
             </li>
             <li>
-              <strong>Domicilio:</strong> Santiago, Región Metropolitana, Chile
+              <strong>Domicilio:</strong> Viña del Mar, Región de Valparaíso, Chile
             </li>
             <li>
               <strong>Email de contacto:</strong>{' '}
@@ -728,7 +728,7 @@ export const legalDocuments: LegalDocument[] = [
                 +56 9 7568 0702
               </a>
             </p>
-            <p>Dirección: Santiago, Chile</p>
+            <p>Dirección: Viña del Mar, Región de Valparaíso, Chile</p>
           </div>
         </section>
       </>
@@ -982,7 +982,7 @@ export const legalDocuments: LegalDocument[] = [
                 +56 9 7568 0702
               </a>
             </p>
-            <p>Dirección: Santiago, Chile</p>
+            <p>Dirección: Viña del Mar, Región de Valparaíso, Chile</p>
           </div>
         </section>
       </>

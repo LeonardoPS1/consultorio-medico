@@ -25,9 +25,12 @@ export default function PortalLegalClient() {
   const handleMobileSwipe = (direction: 'left' | 'right') => {
     const currentIndex = legalDocuments.findIndex((d) => d.id === activeTab);
     let newIndex = currentIndex;
-    if (direction === 'left' && currentIndex < legalDocuments.length - 1)
+    if (direction === 'left' && currentIndex < legalDocuments.length - 1) {
       newIndex = currentIndex + 1;
-    if (direction === 'right' && currentIndex > 0) newIndex = currentIndex - 1;
+    }
+    if (direction === 'right' && currentIndex > 0) {
+      newIndex = currentIndex - 1;
+    }
     if (newIndex !== currentIndex) {
       handleTabChange(legalDocuments[newIndex].id);
     }
