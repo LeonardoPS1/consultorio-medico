@@ -18,10 +18,7 @@ export function MainContent({ children }: { children: React.ReactNode }) {
     <>
       <main
         id="main-content"
-        className={cn(
-          'flex-1 overflow-y-auto',
-          config.contentMaxWidth || 'p-3 sm:p-4 lg:p-6',
-        )}
+        className={cn('flex-1 overflow-y-auto', config.contentMaxWidth || 'p-3 sm:p-4 lg:p-6')}
       >
         <div className={cn(isCentered && 'max-w-2xl mx-auto p-3 sm:p-4 lg:p-6')}>
           <Breadcrumbs />
@@ -42,6 +39,13 @@ export function MainContent({ children }: { children: React.ReactNode }) {
               title="Código fuente en GitHub"
             >
               GitHub
+            </a>
+            <a
+              href="https://iapo.cl/prompts"
+              className="hidden sm:inline hover:text-foreground transition-colors"
+              title="Recursos y prompts para clínicas"
+            >
+              Recursos para clínicas
             </a>
             <span className="hidden sm:inline">
               v{process.env.NEXT_PUBLIC_APP_VERSION || '1.36.0'}
