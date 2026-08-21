@@ -19,6 +19,7 @@ import {
   Upload,
   ShieldCheck,
   HelpCircle,
+  Scale,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
@@ -68,6 +69,10 @@ const secondaryGroups: SecondaryGroup[] = [
   {
     label: 'Ayuda',
     items: [{ href: '/portal/ayuda', label: 'Centro de ayuda', icon: HelpCircle }],
+  },
+  {
+    label: 'Legal',
+    items: [{ href: '/portal/legal', label: 'Legal y cumplimiento', icon: Scale }],
   },
 ];
 
