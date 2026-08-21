@@ -91,7 +91,6 @@ function IntegracionCard({ item }: { item: IntegracionCatalog }) {
 
 function CatalogoTab() {
   const connected = INTEGRACIONES_CATALOG.filter((i) => i.status === 'connected');
-  const roadmap = INTEGRACIONES_CATALOG.filter((i) => i.status === 'roadmap');
 
   return (
     <div className="space-y-6">
@@ -99,10 +98,6 @@ function CatalogoTab() {
         <div className="flex items-center gap-2">
           <div className="h-3 w-3 rounded-full bg-emerald-500" />
           <span className="text-sm text-muted-foreground">{connected.length} conectadas</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-amber-500" />
-          <span className="text-sm text-muted-foreground">{roadmap.length} próximamente</span>
         </div>
       </div>
 
@@ -117,20 +112,6 @@ function CatalogoTab() {
           ))}
         </div>
       </section>
-
-      {roadmap.length > 0 && (
-        <section>
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-            <span className="h-2 w-2 rounded-full bg-amber-500" />
-            Próximamente
-          </h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {roadmap.map((item) => (
-              <IntegracionCard key={item.id} item={item} />
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 }
