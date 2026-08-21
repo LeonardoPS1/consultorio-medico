@@ -27,6 +27,7 @@ const footerLinks: Record<
       { label: 'Privacidad', href: '/privacidad' },
       { label: 'Cumplimiento', href: '/cumplimiento' },
       { label: 'Términos', href: '/terminos' },
+      { label: 'Blog', href: 'https://iapo.cl' },
     ],
   },
   contact: {
