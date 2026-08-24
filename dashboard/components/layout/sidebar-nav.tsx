@@ -35,6 +35,7 @@ import {
   Settings,
   PlugZap,
   MessagesSquare,
+  Briefcase,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -53,6 +54,7 @@ interface NavItem {
   icon: React.ElementType;
   feature?: FeatureId;
   badge?: string;
+  external?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -126,6 +128,12 @@ const navItems: NavItem[] = [
   { title: 'Soporte', href: '/dashboard/soporte', icon: LifeBuoy, feature: 'soporte' },
   { title: 'Ayuda', href: '/dashboard/ayuda', icon: BookOpen },
   { title: 'Acerca de', href: '/dashboard/acerca', icon: Info },
+  {
+    title: 'Captación 360',
+    href: 'https://captacion360.aicorebots.com',
+    icon: Briefcase,
+    external: true,
+  },
 ];
 
 interface NavItemLinkProps {
@@ -171,6 +179,25 @@ function NavItemLink({
           </>
         )}
       </Link>
+    );
+  }
+
+  if (item.external) {
+    return (
+      <a
+        href={item.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={closeMobile}
+        className={cn(
+          'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]',
+          'text-sidebar-foreground/70 hoverable:hover:bg-sidebar-accent hoverable:hover:text-white',
+        )}
+        title={collapsed ? item.title : undefined}
+      >
+        <item.icon className="h-5 w-5 shrink-0" />
+        {!collapsed && <span className="flex-1 truncate">{item.title}</span>}
+      </a>
     );
   }
 

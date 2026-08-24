@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   HelpCircle,
   Scale,
+  Briefcase,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
@@ -37,7 +38,12 @@ const primaryNav = [
 
 interface SecondaryGroup {
   label: string;
-  items: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
+  items: {
+    href: string;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    external?: boolean;
+  }[];
 }
 
 const secondaryGroups: SecondaryGroup[] = [
@@ -64,6 +70,12 @@ const secondaryGroups: SecondaryGroup[] = [
     items: [
       { href: '/portal/perfil', label: 'Perfil', icon: User },
       { href: '/portal/privacidad', label: 'Privacidad y accesos', icon: ShieldCheck },
+      {
+        href: 'https://captacion360.aicorebots.com',
+        label: 'Captación 360',
+        icon: Briefcase,
+        external: true,
+      },
     ],
   },
   {
@@ -141,19 +153,51 @@ function NavItem({
   );
 }
 
+interface SecondaryItemProps {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  active: boolean;
+  onNavigate: () => void;
+  external?: boolean;
+}
+
 function SecondaryItem({
   href,
   label,
   icon: Icon,
   active,
   onNavigate,
-}: {
-  href: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  active: boolean;
-  onNavigate: () => void;
-}) {
+  external,
+}: SecondaryItemProps) {
+  if (external) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={onNavigate}
+        className={cn(
+          'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150',
+          active
+            ? 'bg-portal-primary/10 text-portal-primary font-semibold'
+            : 'text-portal-muted-fg/70 hover:bg-portal-muted/40 hover:text-portal-fg',
+        )}
+      >
+        <div
+          className={cn(
+            'flex items-center justify-center w-8 h-8 rounded-lg',
+            active ? 'bg-portal-primary/15' : 'bg-portal-muted/50',
+          )}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <span className="text-sm">{label}</span>
+        {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-portal-primary" />}
+      </a>
+    );
+  }
+
   return (
     <Link
       href={href}
@@ -376,6 +420,7 @@ export default function PortalNav() {
                       icon={item.icon}
                       active={isActive(item.href)}
                       onNavigate={() => setSheetOpen(false)}
+                      external={item.external}
                     />
                   ))}
                 </div>
