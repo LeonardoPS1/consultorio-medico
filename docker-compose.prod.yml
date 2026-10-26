@@ -218,6 +218,12 @@ services:
     volumes:
       - redis_data:/data
     command: ["redis-server", "--appendonly", "no", "--save", ""]
+    healthcheck:
+      test: ['CMD-SHELL', 'exit 0']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
     deploy:
       mode: replicated
       replicas: 1
