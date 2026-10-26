@@ -89,11 +89,11 @@ services:
       - redis_data:/data
     command: ["redis-server", "--appendonly", "no", "--save", ""]
     healthcheck:
-      test: ['CMD-SHELL', 'exit 0']
-      interval: 5s
+      test: ['CMD-SHELL', 'redis-cli ping']
+      interval: 10s
       timeout: 3s
       retries: 5
-      start_period: 5s
+      start_period: 10s
     restart: unless-stopped
     logging:
       driver: json-file
