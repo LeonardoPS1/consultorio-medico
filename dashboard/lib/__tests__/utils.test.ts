@@ -28,12 +28,16 @@ describe('cn', () => {
 });
 
 describe('formatPhone', () => {
-  it('formatea número argentino con 549', () => {
-    expect(formatPhone('+5491155551234')).toBe('11 5555-1234');
+  it('formatea número chileno con código de país', () => {
+    expect(formatPhone('+56912345678')).toBe('+56 9 1234 5678');
   });
 
-  it('formatea número sin código de país', () => {
-    expect(formatPhone('+541155551234')).toBe('+541155551234');
+  it('formatea número chileno sin código de país', () => {
+    expect(formatPhone('912345678')).toBe('+56 9 1234 5678');
+  });
+
+  it('devuelve el número tal cual si no es chileno', () => {
+    expect(formatPhone('+5491155551234')).toBe('+5491155551234');
   });
 
   it('retorna vacío si no hay número', () => {

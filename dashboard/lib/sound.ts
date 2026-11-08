@@ -22,10 +22,18 @@ function getAudioContext(): AudioContext | null {
  */
 export function isSoundEnabled(): boolean {
   if (typeof window === 'undefined') return false;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === null) return true;
-  return stored !== 'false';
+  // matchMedia/localStorage pueden no existir o estar bloqueados
+  // (SSR, jsdom, Safari en modo privado, cookies de terceros deshabilitadas).
+  if (typeof window.matchMedia === 'function') {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+  }
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === null) return true;
+    return stored !== 'false';
+  } catch {
+    return true;
+  }
 }
 
 /**
@@ -34,7 +42,11 @@ export function isSoundEnabled(): boolean {
  */
 export function setSoundEnabled(enabled: boolean): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(STORAGE_KEY, String(enabled));
+  try {
+    window.localStorage.setItem(STORAGE_KEY, String(enabled));
+  } catch {
+    // Storage no disponible: la preferencia no persiste, pero no rompemos la UI.
+  }
 }
 
 function tone(

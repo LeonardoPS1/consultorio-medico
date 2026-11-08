@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from 'clsx';
 import { format, formatDistanceToNow, isToday, isTomorrow, isYesterday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { twMerge } from 'tailwind-merge';
+import { parseFechaCalendario } from '@/lib/fecha-calendario';
 
 /**
  * Combina clases de Tailwind de forma inteligente
@@ -12,12 +13,22 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Parses a value for display: date-only strings are treated as calendar dates
+ * (local midnight) so they never shift a day, everything else goes through the
+ * regular Date parser.
+ * @param value Raw date value
+ */
+function toDisplayDate(value: string): Date {
+  return parseFechaCalendario(value) ?? new Date(value);
+}
+
+/**
  * Formatea una fecha para mostrar
  * @param date
  * @param pattern
  */
 export function formatDate(date: Date | string, pattern: string = 'PPP') {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? toDisplayDate(date) : date;
   return format(d, pattern, { locale: es });
 }
 
@@ -113,14 +124,14 @@ export function isValidPhone(phone: string): boolean {
 export function formatPhone(phone: string) {
   if (!phone) return '';
   const cleaned = phone.replace(/\D/g, '');
-  // +569XXXXXXXX (11 dígitos después de limpiar)
+  // +569XXXXXXXX (11 dígitos con código de país)
   if (cleaned.startsWith('569') && cleaned.length === 11) {
     const n = cleaned.slice(3);
-    return `+56 9 ${n.slice(0, 4)} ${n.slice(4, 7)} ${n.slice(7)}`;
+    return `+56 9 ${n.slice(0, 4)} ${n.slice(4)}`;
   }
   // 9XXXXXXXX (9 dígitos, sin código país)
   if (cleaned.startsWith('9') && cleaned.length === 9) {
-    return `+56 9 ${cleaned.slice(1, 5)} ${cleaned.slice(5, 7)} ${cleaned.slice(7)}`;
+    return `+56 9 ${cleaned.slice(1, 5)} ${cleaned.slice(5)}`;
   }
   return phone;
 }
