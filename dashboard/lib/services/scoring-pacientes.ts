@@ -18,6 +18,13 @@
 import { and, eq, gte, lte, sql, count, inArray, isNull } from 'drizzle-orm';
 import { turnos } from '@/drizzle/schema';
 import { db } from '@/lib/db';
+import { calcularScoreDesdeFactores } from '@/lib/scoring-formula';
+import type { ScoringFactores, ScoringNivel } from '@/lib/scoring-formula';
+
+// Los tipos y la aritmética del score viven en `@/lib/scoring-formula`
+// (módulo puro, testeable sin base de datos). Se re-exportan para no
+// romper importadores previos.
+export type { ScoringNivel, ScoringFactores };
 
 // ─── Tipos ────────────────────────────────────────────
 
@@ -29,39 +36,11 @@ export interface ScoringResult {
   fechaCalculo: string;
 }
 
-export type ScoringNivel = 'bajo' | 'medio' | 'alto';
-
-export interface ScoringFactores {
-  noShows: number;
-  cancelacionesSinAviso: number;
-  totalTurnos: number;
-  turnosConfirmados: number;
-  recordatoriosLeidos: number;
-  recordatoriosEnviados: number;
-}
-
 // ─── Constantes ───────────────────────────────────────
 
 const VENTANA_DIAS = 90; // analizar últimos 90 días
-const UMBRAL_ALTO = 70;
-const UMBRAL_MEDIO = 40;
-
-// Pesos de cada factor (suman ~100)
-const PESOS = {
-  noShows: 40,
-  cancelaciones: 25,
-  confirmacion: 20,
-  recordatorios: 10,
-  asistencia: 5, // bonificación positiva
-} as const;
 
 // ─── Funciones ────────────────────────────────────────
-
-function calcularNivel(score: number): ScoringNivel {
-  if (score >= UMBRAL_ALTO) return 'alto';
-  if (score >= UMBRAL_MEDIO) return 'medio';
-  return 'bajo';
-}
 
 /**
  * Calcula el score de confiabilidad para un paciente específico.
@@ -162,45 +141,22 @@ export async function calcularScorePaciente(
     );
   const recordatoriosEnviados = Number(enviadosRow?.total ?? 0);
 
-  // ─── Cálculo de scores parciales ───────────────────
-  // No-shows: penalización proporcional (0-40)
-  const ratioNoShows = noShows / totalTurnos;
-  const scoreNoShows = Math.min(ratioNoShows * PESOS.noShows * 2, PESOS.noShows);
-
-  // Cancelaciones: penalización proporcional (0-25)
-  const ratioCancel = cancelacionesSinAviso / totalTurnos;
-  const scoreCancel = Math.min(ratioCancel * PESOS.cancelaciones * 2, PESOS.cancelaciones);
-
-  // Confirmación: inversa (menos confirmación = más riesgo) (0-20)
-  const ratioConfirm = turnosConfirmados / totalTurnos;
-  const scoreConfirm = (1 - ratioConfirm) * PESOS.confirmacion;
-
-  // Recordatorios: inversa (menos lectura = más riesgo) (0-10)
-  const ratioLectura = recordatoriosEnviados > 0 ? recordatoriosLeidos / recordatoriosEnviados : 0;
-  const scoreRecordatorios = (1 - ratioLectura) * PESOS.recordatorios;
-
-  // Asistencia histórica: bonificación por asistencias (máximo -5)
-  const asistencias = totalTurnos - noShows;
-  const bonificacion = Math.min(asistencias * 0.5, PESOS.asistencia);
-
-  // Score final (0-100)
-  const score = Math.max(
-    0,
-    Math.min(100, scoreNoShows + scoreCancel + scoreConfirm + scoreRecordatorios - bonificacion),
-  );
+  // ─── Cálculo del score ──────────────────────────────
+  const factores: ScoringFactores = {
+    noShows,
+    cancelacionesSinAviso,
+    totalTurnos,
+    turnosConfirmados,
+    recordatoriosLeidos,
+    recordatoriosEnviados,
+  };
+  const { score, nivel } = calcularScoreDesdeFactores(factores);
 
   return {
     pacienteId,
-    score: Math.round(score * 10) / 10,
-    nivel: calcularNivel(score),
-    factores: {
-      noShows,
-      cancelacionesSinAviso,
-      totalTurnos,
-      turnosConfirmados,
-      recordatoriosLeidos,
-      recordatoriosEnviados,
-    },
+    score,
+    nivel,
+    factores,
     fechaCalculo: new Date().toISOString(),
   };
 }
@@ -269,40 +225,22 @@ export async function calcularScoreBulk(
 
     if (totalTurnos === 0) continue;
 
-    // Cálculos (misma lógica que calcularScorePaciente)
-    const ratioNoShows = noShows / totalTurnos;
-    const scoreNoShows = Math.min(ratioNoShows * PESOS.noShows * 2, PESOS.noShows);
-
-    const ratioCancel = cancelacionesSinAviso / totalTurnos;
-    const scoreCancel = Math.min(ratioCancel * PESOS.cancelaciones * 2, PESOS.cancelaciones);
-
-    const ratioConfirm = turnosConfirmados / totalTurnos;
-    const scoreConfirm = (1 - ratioConfirm) * PESOS.confirmacion;
-
-    const ratioLectura =
-      recordatoriosEnviados > 0 ? recordatoriosLeidos / recordatoriosEnviados : 0;
-    const scoreRecordatorios = (1 - ratioLectura) * PESOS.recordatorios;
-
-    const asistencias = totalTurnos - noShows;
-    const bonificacion = Math.min(asistencias * 0.5, PESOS.asistencia);
-
-    const score = Math.max(
-      0,
-      Math.min(100, scoreNoShows + scoreCancel + scoreConfirm + scoreRecordatorios - bonificacion),
-    );
+    // Misma aritmética que calcularScorePaciente (fuente única: scoring-formula)
+    const factores: ScoringFactores = {
+      noShows,
+      cancelacionesSinAviso,
+      totalTurnos,
+      turnosConfirmados,
+      recordatoriosLeidos,
+      recordatoriosEnviados,
+    };
+    const { score, nivel } = calcularScoreDesdeFactores(factores);
 
     scores.push({
       pacienteId,
-      score: Math.round(score * 10) / 10,
-      nivel: calcularNivel(score),
-      factores: {
-        noShows,
-        cancelacionesSinAviso,
-        totalTurnos,
-        turnosConfirmados,
-        recordatoriosLeidos,
-        recordatoriosEnviados,
-      },
+      score,
+      nivel,
+      factores,
       fechaCalculo: new Date().toISOString(),
     });
   }
