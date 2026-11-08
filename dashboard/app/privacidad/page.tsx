@@ -46,13 +46,14 @@ export default function PrivacidadPage() {
             </div>
             <div>
               <p className="font-semibold text-foreground text-sm mb-0.5">
-                Tus datos están 100% protegidos
+                Seguridad y privacidad por diseño
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                En AiCoreMed la seguridad es nuestra prioridad. Todos los datos de salud se
-                almacenan en infraestructura propia en Chile con cifrado AES-256, autenticación
-                reforzada (2FA), y un asistente de IA que corre 100% local — tus datos nunca salen
-                de tu servidor.
+                En AiCoreMed la seguridad es una prioridad. Los datos de salud se alojan en una base
+                de datos dedicada administrada por Aicore, las credenciales se guardan cifradas con
+                AES-256-GCM, la autenticación es reforzada (2FA) y el asistente de IA se ejecuta en
+                la misma infraestructura, sin enviar información clínica a proveedores externos de
+                IA.
               </p>
             </div>
           </div>
@@ -178,7 +179,7 @@ export default function PrivacidadPage() {
             </h2>
             <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 my-4">
               <p className="text-sm font-medium text-foreground mb-1">
-                🛡️ Diferenciador clave: IA 100% Local
+                🛡️ Diferenciador clave: IA en infraestructura dedicada
               </p>
               <p className="text-sm">
                 A diferencia de otros softwares médicos, el asistente de inteligencia artificial de

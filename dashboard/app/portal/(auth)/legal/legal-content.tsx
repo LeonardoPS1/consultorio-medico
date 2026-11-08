@@ -188,7 +188,8 @@ export const legalDocuments: LegalDocument[] = [
             <ul className="list-disc pl-5 space-y-1 text-sm">
               <li>
                 El asistente de IA (<strong>Mistral</strong> via <strong>Ollama</strong>) corre{' '}
-                <strong>100% en los servidores del consultorio</strong> (on-premise / VPS privada).
+                <strong>en la infraestructura del proveedor del servicio</strong> (servidor
+                dedicado administrado por Aicore, sin dependencia de servicios de IA de terceros).
               </li>
               <li>
                 <strong>No se envían datos a APIs externas</strong> (OpenAI, Google Cloud,

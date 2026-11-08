@@ -20,7 +20,7 @@ const PROTECCIONES = [
     icono: Server,
     titulo: 'Infraestructura propia',
     descripcion:
-      'Tus datos se almacenan en servidores propios en Chile. El asistente de IA corre 100% local: la información del consultorio nunca sale de tu servidor ni se envía a terceros.',
+      'Tus datos se almacenan en una base de datos dedicada administrada por Aicore. El asistente de IA se ejecuta en la misma infraestructura: la información clínica no se envía a proveedores externos de IA.',
   },
   {
     icono: KeyRound,
@@ -91,13 +91,13 @@ export default function CumplimientoPage() {
             </div>
             <div>
               <p className="font-semibold text-foreground text-sm mb-0.5">
-                Tus datos están 100% protegidos
+                Seguridad y trazabilidad en toda la plataforma
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                En AiCoreMed la seguridad y el cumplimiento normativo son nuestra prioridad. Cada
-                clínica trabaja en un espacio aislado de las demás, todo se cifra, cada acceso queda
-                registrado y los respaldos son automáticos. Así protegemos la información de tu
-                consultorio y de tus pacientes.
+                En AiCoreMed la seguridad y el cumplimiento normativo son una prioridad. Cada
+                clínica trabaja en un espacio aislado de las demás, el tráfico viaja cifrado, cada
+                acceso queda registrado y los respaldos son automáticos. Así protegemos la
+                información de tu consultorio y de tus pacientes.
               </p>
             </div>
           </div>

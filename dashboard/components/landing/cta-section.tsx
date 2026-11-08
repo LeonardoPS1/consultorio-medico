@@ -39,13 +39,13 @@ export function CTASection({
           className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-primary/70 text-xs sm:text-sm px-4"
         >
           <span className="inline-flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" /> Datos 100% protegidos
+            <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" /> Datos cifrados y con acceso auditado
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <Lock className="h-4 w-4 sm:h-5 sm:w-5" /> IA 100% local
+            <Lock className="h-4 w-4 sm:h-5 sm:w-5" /> IA en infraestructura propia
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <Server className="h-4 w-4 sm:h-5 sm:w-5" /> Servidor propio en Chile
+            <Server className="h-4 w-4 sm:h-5 sm:w-5" /> Servidor dedicado
           </span>
         </AnimatedSection>
       </div>

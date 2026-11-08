@@ -46,13 +46,15 @@ export default function TerminosPage() {
             </div>
             <div>
               <p className="font-semibold text-foreground text-sm mb-0.5">
-                Plataforma 100% segura y conforme a la ley
+                Plataforma diseñada para cumplir la normativa chilena
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                AiCoreMed cumple con la Ley 19.628 de Chile sobre protección de datos personales.
-                Todos los datos de salud se tratan bajo estrictas medidas de seguridad: cifrado
-                AES-256, autenticación con 2FA, IA local sin acceso externo, y backup encriptado
-                diario. Tus pacientes están protegidos.
+                AiCoreMed se diseñó considerando la Ley 19.628 sobre protección de datos personales
+                y la Ley 20.584 sobre derechos y deberes de los pacientes. Los datos se tratan con
+                medidas de seguridad razonables: credenciales cifradas con AES-256-GCM,
+                autenticación con 2FA, asistente de IA en infraestructura propia y respaldo diario
+                cifrado. La adecuación de tu consultorio a la normativa debe validarse con asesoría
+                legal.
               </p>
             </div>
           </div>

@@ -30,7 +30,7 @@ export function Hero({
   badgeText = 'WhatsApp con IA · Gestión clínica · Sin ausentismo',
   titleNormal = 'Tu consultorio abierto 24/7',
   titleHighlight = 'sin tener que estar ahí',
-  subtitle = 'WhatsApp con IA, gestión clínica, portal del paciente y automatizaciones.\n              Todo en un solo panel. IA 100% local, tus datos nunca salen de tu servidor.',
+  subtitle = 'WhatsApp con IA, gestión clínica, portal del paciente y automatizaciones.\n              Todo en un solo panel. IA en infraestructura propia, sin enviar datos clínicos a terceros.',
   subtitleBold = 'Ahorrá hasta 15 horas por semana en gestión administrativa.',
   stats = [
     { value: '92%', label: 'menos ausentismo' },

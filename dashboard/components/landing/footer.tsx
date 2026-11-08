@@ -56,7 +56,7 @@ export function Footer() {
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Lock className="h-3.5 w-3.5 text-primary" />
-              <span>IA 100% local — tus datos nunca salen de tu servidor</span>
+              <span>IA en infraestructura propia — sin terceros de IA</span>
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Server className="h-3.5 w-3.5 text-primary" />
