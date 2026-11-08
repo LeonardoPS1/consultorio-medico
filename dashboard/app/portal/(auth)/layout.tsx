@@ -9,7 +9,6 @@ import { redirect } from 'next/navigation';
 import { PortalLogoutButton } from '@/components/portal/logout-button';
 import { PortalSidebarDesktop } from '@/components/portal/portal-sidebar-desktop';
 import { PortalTopbar } from '@/components/portal/portal-topbar';
-import type { PortalSession } from '@/lib/portal-auth';
 import { PortalThemeToggle } from '@/components/portal/theme-toggle';
 import { safeWarn } from '@/lib/logger';
 import { getPortalSession, checkPortalFeatureAccess } from '@/lib/portal-auth';

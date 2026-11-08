@@ -16,7 +16,7 @@
  * - proximoControlRecomendado: días para próximo control sugerido
  */
 
-import { eq, and, desc, sql, count, asc, gte, lt } from 'drizzle-orm';
+import { eq, and, desc, sql, count, asc } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { turnos, recetas, medicos, recetaEstadoEnum } from '@/drizzle/schema';
 import { db } from '@/lib/db';

@@ -7,7 +7,6 @@
 'use client';
 
 import {
-  User,
   Phone,
   Shield,
   Save,
@@ -18,11 +17,11 @@ import {
   X,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { AvatarInitials } from '@/components/portal/avatar-initials';
+import { PortalBadge } from '@/components/portal/portal-badge';
 import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
-import { PortalBadge } from '@/components/portal/portal-badge';
 import { PushNotificationToggle } from '@/components/portal/PushNotificationToggle';
-import { AvatarInitials } from '@/components/portal/avatar-initials';
 import { ISAPRES_CHILENAS } from '@/lib/isapres';
 
 interface Region {

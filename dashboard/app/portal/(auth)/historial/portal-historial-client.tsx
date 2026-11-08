@@ -8,7 +8,6 @@
 import { ClipboardList, Stethoscope, FileText } from 'lucide-react';
 import { PortalBadge } from '@/components/portal/portal-badge';
 import { PortalCard } from '@/components/portal/portal-card';
-import { AvatarInitials } from '@/components/portal/avatar-initials';
 
 interface HistorialEntry {
   id: string;

@@ -17,7 +17,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { PortalBadge } from '@/components/portal/portal-badge';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
-import { AvatarInitials } from '@/components/portal/avatar-initials';
 
 interface OrdenEstudio {
   id: string;
@@ -86,7 +85,6 @@ function getEstadoBadge(estado: string) {
 export default function PortalOrdenesEstudioPage() {
   const [ordenes, setOrdenes] = useState<OrdenEstudio[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hoverVerResultado, setHoverVerResultado] = useState<string | null>(null);
 
   const cargar = useCallback(() => {
     fetch('/api/portal/ordenes-estudio')

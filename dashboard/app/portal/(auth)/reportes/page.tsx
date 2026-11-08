@@ -7,7 +7,6 @@
 
 import {
   Calendar,
-  Syringe,
   Clock,
   TrendingUp,
   Activity,
@@ -16,7 +15,6 @@ import {
   CheckCircle,
   Pill,
   ArrowRight,
-  User,
   Shield,
 } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -263,6 +261,9 @@ function ProgressRing({
 }
 
 /* ─── Página Principal ──────────────────────────────────── */
+/**
+ *
+ */
 export default function PortalReportesPage() {
   const [data, setData] = useState<ReportesData | null>(null);
   const [loading, setLoading] = useState(true);

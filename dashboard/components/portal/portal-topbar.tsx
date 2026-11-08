@@ -16,23 +16,6 @@ import { PortalThemeToggle } from './theme-toggle';
  * NO hace fetch a /api/portal/me.
  */
 
-const TITLES: Record<string, { title: string; subtitle?: string; showPulse?: boolean }> = {
-  '/portal/dashboard': { title: 'Portal Salud', subtitle: 'AicoreMed', showPulse: true },
-  '/portal/agendar': { title: 'Agendar cita', subtitle: 'Elegí médico y horario' },
-  '/portal/turnos': { title: 'Mis turnos' },
-  '/portal/recetas': { title: 'Mis recetas' },
-  '/portal/historial': { title: 'Historial clínico' },
-  '/portal/certificados': { title: 'Certificados médicos' },
-  '/portal/consentimientos': { title: 'Docs legales' },
-  '/portal/ordenes-estudio': { title: 'Órdenes de estudio' },
-  '/portal/documentos': { title: 'Documentos' },
-  '/portal/reportes': { title: 'Reportes de salud' },
-  '/portal/encuestas': { title: 'Encuestas' },
-  '/portal/perfil': { title: 'Mi perfil' },
-  '/portal/privacidad': { title: 'Privacidad y accesos' },
-  '/portal/notificaciones': { title: 'Notificaciones' },
-};
-
 const CENTER_PILLS = [
   { href: '/portal/recetas', label: 'Recetas' },
   { href: '/portal/historial', label: 'Historial' },
@@ -49,9 +32,13 @@ interface PatientName {
   apellido: string;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.patientName
+ */
 export function PortalTopbar({ patientName }: { patientName: PatientName }) {
   const pathname = usePathname();
-  const { title, subtitle } = TITLES[pathname] ?? { title: 'Portal', subtitle: undefined };
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchCount = useCallback(async () => {

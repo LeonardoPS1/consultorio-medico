@@ -11,7 +11,6 @@ import { PortalBadge } from '@/components/portal/portal-badge';
 import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
-import { AvatarInitials } from '@/components/portal/avatar-initials';
 
 interface Consentimiento {
   id: string;

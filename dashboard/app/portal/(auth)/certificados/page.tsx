@@ -8,7 +8,6 @@
 import { FileText, Download, ExternalLink } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { PortalBadge } from '@/components/portal/portal-badge';
-import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PortalSkeleton } from '@/components/portal/portal-skeleton';
 
@@ -32,7 +31,6 @@ function formatDate(date: string): string {
 export default function PortalCertificadosPage() {
   const [certificados, setCertificados] = useState<Certificado[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/portal/certificados')
