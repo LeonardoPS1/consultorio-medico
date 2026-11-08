@@ -1,15 +1,16 @@
 // AiCoreMed — Service Worker
 // Versión determinada por sw-version.js (auto-generado en cada build)
-// Estrategia: Cache first para assets con hash, Network first para API/navegación
+// Estrategia: cache first para assets con hash y network-only para todo lo
+// autenticado (API, navegación, RSC). Nada con datos de pacientes se guarda
+// en Cache Storage: el mismo dispositivo puede ser usado por otra persona.
 // Offline: fallback a página offline.html
-// __SW_BUILD__: vfa253af1
+// __SW_BUILD__: v6eab4849
 
 importScripts('/sw-version.js');
 
 const CACHE_PREFIX = 'aicoremed';
 const CACHE_NAME = `${CACHE_PREFIX}-${SW_VERSION}`;
 const STATIC_CACHE = `${CACHE_PREFIX}-static-${SW_VERSION}`;
-const API_CACHE = `${CACHE_PREFIX}-api-${SW_VERSION}`;
 
 const PRECACHE_URLS = [
   '/offline.html',
@@ -33,8 +34,24 @@ self.addEventListener('install', (event) => {
 
 // ─── MENSAJES DESDE LA APP ──────────────────────────────────
 self.addEventListener('message', (event) => {
-  if (event.data?.type === 'SKIP_WAITING') {
+  const type = event.data?.type;
+
+  if (type === 'SKIP_WAITING') {
     self.skipWaiting();
+    return;
+  }
+
+  // Al cerrar sesión (o cambiar de usuario) se borran todas las caches para que
+  // ningún dato del usuario anterior quede en el dispositivo.
+  if (type === 'CLEAR_CACHES') {
+    event.waitUntil(
+      caches.keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .then(() => {
+          if (event.ports?.[0]) event.ports[0].postMessage({ ok: true });
+        })
+        .catch(() => undefined)
+    );
   }
 });
 
@@ -106,7 +123,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key !== CACHE_NAME && key !== STATIC_CACHE && key !== API_CACHE)
+          .filter((key) => key !== CACHE_NAME && key !== STATIC_CACHE)
           .map((key) => caches.delete(key))
       )
     ).then(() => self.clients.claim())
@@ -130,32 +147,18 @@ async function cacheFirst(request) {
   }
 }
 
-async function networkFirst(request) {
+async function networkOnlyWithOffline(request) {
   try {
     // cache: 'no-store' evita que el HTTP cache del navegador sirva
     // respuestas GET stale (la causa de listas vacías al reingresar)
-    const response = await fetch(request, { cache: 'no-store' });
-    if (response.ok && request.method === 'GET') {
-      const cache = await caches.open(API_CACHE);
-      const cacheKey = request.clone();
-      await cache.put(cacheKey, response.clone());
-    }
-    return response;
+    return await fetch(request, { cache: 'no-store' });
   } catch {
-    if (request.method === 'GET') {
+    if (request.mode === 'navigate') {
       try {
-        const cached = await caches.match(request);
-        if (cached) return cached;
+        const offline = await caches.match('/offline.html');
+        if (offline) return offline;
       } catch {
         // ignorar
-      }
-      if (request.mode === 'navigate') {
-        try {
-          const offline = await caches.match('/offline.html');
-          if (offline) return offline;
-        } catch {
-          // ignorar
-        }
       }
     }
     return new Response('Sin conexión', { status: 503, headers: { 'Content-Type': 'text/plain' } });
@@ -210,9 +213,10 @@ self.addEventListener('fetch', (event) => {
           return fetch(request);
         }
 
-        // API calls → network first (con fallback)
+        // API calls → siempre red. Las respuestas de /api/ contienen datos
+        // clínicos del usuario: no se cachean ni se sirven desde Cache Storage.
         if (url.pathname.startsWith('/api/')) {
-          return networkFirst(request);
+          return networkOnlyWithOffline(request);
         }
 
         // RSC payloads (navegación client-side) → siempre red, nunca cache.
@@ -248,9 +252,10 @@ self.addEventListener('fetch', (event) => {
           return cacheFirst(request);
         }
 
-        // Navegación (páginas) → network first con fallback a offline
+        // Navegación (páginas) → siempre red, fallback offline. El HTML de una
+        // página autenticada nunca se guarda en cache.
         if (request.mode === 'navigate') {
-          return networkFirst(request);
+          return networkOnlyWithOffline(request);
         }
 
         // Otros (manifest, etc.) → stale-while-revalidate

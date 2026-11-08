@@ -8,6 +8,7 @@ import { useSidebar } from '@/components/layout/sidebar-context';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { clearClientCaches } from '@/lib/clear-client-caches';
 import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 import { useOrganization } from '@/lib/hooks/use-organization';
 import { cn } from '@/lib/utils';
@@ -140,6 +141,7 @@ export function Sidebar() {
               } catch {
                 /* NextAuth v5 beta puede lanzar igual */
               }
+              await clearClientCaches();
               window.location.href = '/';
             }}
             title="Cerrar sesión"

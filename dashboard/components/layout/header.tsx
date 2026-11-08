@@ -30,6 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { clearClientCaches } from '@/lib/clear-client-caches';
 import { useAsistenteIA } from '@/lib/hooks/use-asistente-ia';
 import { useEffectiveSession } from '@/lib/hooks/use-effective-session';
 import { useOrganization } from '@/lib/hooks/use-organization';
@@ -172,6 +173,7 @@ export function Header() {
                     } catch {
                       /* NextAuth v5 beta puede lanzar igual */
                     }
+                    await clearClientCaches();
                     window.location.href = '/';
                   }}
                 >
