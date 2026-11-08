@@ -44,7 +44,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Pre-build check (ops-console)
         run: pnpm --filter aicore-ops run build
@@ -60,16 +60,51 @@ jobs:
             ghcr.io/${{ env.REPOSITORY_LC }}-ops:${{ github.sha }}
           platforms: linux/amd64
 
-      - name: Trigger Dokploy deploy (ops-console) via direct API
+      - name: Trigger Dokploy deploy (ops-console)
+        env:
+          DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+          DOKPLOY_OPS_APP_ID: ${{ secrets.DOKPLOY_OPS_APP_ID }}
         run: |
-          curl -s -k -X POST 'https://dokploy.aicorebots.com/api/application.deploy' \
-            -H 'accept: application/json' \
-            -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
-            -H 'Content-Type: application/json' \
-            -d '{"applicationId":"${{ secrets.DOKPLOY_OPS_APP_ID }}","cleanCache":true}'
+          set -euo pipefail
+          if [ -z "${DOKPLOY_API_KEY:-}" ] || [ -z "${DOKPLOY_OPS_APP_ID:-}" ]; then
+            echo "::error::Faltan los secretos DOKPLOY_API_KEY o DOKPLOY_OPS_APP_ID"
+            exit 1
+          fi
 
-      - name: Wait for rolling update
-        run: sleep 120
+          body=$(printf '{"applicationId":"%s","cleanCache":true}' "$DOKPLOY_OPS_APP_ID")
+          status=$(curl -sS --fail-with-body -o /tmp/deploy.json -w '%{http_code}' \
+            -X POST 'https://dokploy.aicorebots.com/api/application.deploy' \
+            -H 'accept: application/json' \
+            -H "x-api-key: ${DOKPLOY_API_KEY}" \
+            -H 'Content-Type: application/json' \
+            -d "$body") || {
+              echo "::error::Dokploy respondió ${status}: $(cat /tmp/deploy.json 2>/dev/null | head -c 500)"
+              exit 1
+            }
+
+          echo "Dokploy respondió ${status}: $(head -c 500 /tmp/deploy.json)"
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            echo "::error::Dokploy rechazó el deploy (HTTP ${status})"
+            exit 1
+          fi
+
+      - name: Wait for the ops console to answer healthy
+        env:
+          HEALTH_URL: ${{ vars.OPS_HEALTH_URL || 'https://ops.aicorebots.com/api/health' }}
+        run: |
+          set -uo pipefail
+          deadline=$((SECONDS + 600))
+          while [ $SECONDS -lt $deadline ]; do
+            code=$(curl -sS -o /tmp/health.json -w '%{http_code}' --max-time 15 "$HEALTH_URL" || true)
+            echo "health HTTP ${code}"
+            if [ "$code" = "200" ]; then
+              echo "Ops console responde 200."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::Timeout esperando ${HEALTH_URL}. Revisar el servicio en Dokploy."
+          exit 1
 
       - name: Notify deploy status
         if: always()

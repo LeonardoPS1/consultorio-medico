@@ -5,9 +5,54 @@ on:
     branches: [main]
     paths-ignore:
       - 'docs-site/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-dashboard-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20'
 
 jobs:
+  quality:
+    name: Quality gates
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          # Keep in sync with dashboard/Dockerfile (corepack prepare pnpm@11.20.0).
+          version: 11.20.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit tests
+        run: pnpm test
+
   build-and-push:
+    name: Build & deploy
+    needs: quality
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -17,18 +62,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Debug - Environment Info
-        shell: bash
+      - name: Set build metadata
         run: |
-          echo "=== Environment ==="
-          env | grep -E '^(GITHUB|DOCKER|RUNNER)' || true
-          echo "=== Docker Info ==="
-          docker version
-          echo "=== Build Context ==="
-          ls -laR
-
-      - name: Set lowercase repository name
-        run: echo "REPOSITORY_LC=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+          echo "REPOSITORY_LC=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+          echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -52,23 +89,61 @@ jobs:
           platforms: linux/amd64
           build-args: |
             GIT_COMMIT=${{ github.sha }}
-            BUILD_TIME=${{ github.event.repository.updated_at }}
+            BUILD_TIME=${{ env.BUILD_TIME }}
 
-      - name: Trigger Dokploy deploy (dashboard) via direct API
+      - name: Trigger Dokploy deploy (dashboard)
+        env:
+          DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+          DOKPLOY_APP_ID: ${{ secrets.DOKPLOY_APP_ID }}
         run: |
-          curl -s -k -X POST 'https://dokploy.aicorebots.com/api/application.deploy' \
-            -H 'accept: application/json' \
-            -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
-            -H 'Content-Type: application/json' \
-            -d '{"applicationId":"${{ secrets.DOKPLOY_APP_ID }}","cleanCache":true}'
+          set -euo pipefail
+          if [ -z "${DOKPLOY_API_KEY:-}" ] || [ -z "${DOKPLOY_APP_ID:-}" ]; then
+            echo "::error::Faltan los secretos DOKPLOY_API_KEY o DOKPLOY_APP_ID"
+            exit 1
+          fi
 
-      - name: Wait for rolling update
-        run: sleep 300
+          body=$(printf '{"applicationId":"%s","cleanCache":true}' "$DOKPLOY_APP_ID")
+          status=$(curl -sS --fail-with-body -o /tmp/deploy.json -w '%{http_code}' \
+            -X POST 'https://dokploy.aicorebots.com/api/application.deploy' \
+            -H 'accept: application/json' \
+            -H "x-api-key: ${DOKPLOY_API_KEY}" \
+            -H 'Content-Type: application/json' \
+            -d "$body") || {
+              echo "::error::Dokploy respondió ${status}: $(cat /tmp/deploy.json 2>/dev/null | head -c 500)"
+              exit 1
+            }
+
+          echo "Dokploy respondió ${status}: $(head -c 500 /tmp/deploy.json)"
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            echo "::error::Dokploy rechazó el deploy (HTTP ${status})"
+            exit 1
+          fi
+
+      - name: Wait for the deployed commit to answer healthy
+        env:
+          HEALTH_URL: ${{ vars.HEALTH_URL || 'https://med.aicorebots.com/api/health' }}
+        run: |
+          set -uo pipefail
+          deadline=$((SECONDS + 900))
+          while [ $SECONDS -lt $deadline ]; do
+            body=$(curl -sS --max-time 15 "$HEALTH_URL" || true)
+            commit=$(printf '%s' "$body" | grep -o '"commit":"[^"]*"' | head -1 | cut -d'"' -f4 || true)
+            status=$(printf '%s' "$body" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4 || true)
+            echo "health status=${status:-none} commit=${commit:-none}"
+            if [ "$commit" = "${GITHUB_SHA}" ] && [ "$status" != "error" ]; then
+              echo "Deploy verificado: commit ${GITHUB_SHA} responde sano."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::Timeout esperando el commit ${GITHUB_SHA} en ${HEALTH_URL}. Revisar el servicio en Dokploy."
+          exit 1
 
       - name: Notify deploy status
         if: always()
+        env:
+          STATUS: ${{ job.status }}
         run: |
-          STATUS="${{ job.status }}"
-          curl -s -A 'Mozilla/5.0' -X POST 'https://n8n.aicorebots.com/webhook/notify-deploy-status' \
+          curl -sS --max-time 20 -A 'Mozilla/5.0' -X POST 'https://n8n.aicorebots.com/webhook/notify-deploy-status' \
             -H 'Content-Type: application/json' \
-            -d "{\"status\":\"$STATUS\",\"workflow\":\"Build & Deploy Dashboard\",\"ref\":\"${{ github.ref }}\",\"sha\":\"${{ github.sha }}\",\"actor\":\"${{ github.actor }}\"}" || true
+            -d "{\"status\":\"${STATUS}\",\"workflow\":\"Build & Deploy Dashboard\",\"ref\":\"${GITHUB_REF}\",\"sha\":\"${GITHUB_SHA}\",\"actor\":\"${GITHUB_ACTOR}\"}" || true

@@ -38,9 +38,29 @@ jobs:
             ghcr.io/${{ env.REPOSITORY_LC }}-docs:${{ github.sha }}
 
       - name: Trigger Dokploy deploy (docs) via Dashboard proxy
+        env:
+          DEPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+          DOCS_APP_ID: ${{ secrets.DOKPLOY_DOCS_APP_ID }}
         run: |
-          curl -s -k -X POST 'https://med.aicorebots.com/api/deploy/dokploy' \
+          set -euo pipefail
+          if [ -z "${DEPLOY_API_KEY:-}" ] || [ -z "${DOCS_APP_ID:-}" ]; then
+            echo "::error::Faltan los secretos DOKPLOY_API_KEY o DOKPLOY_DOCS_APP_ID"
+            exit 1
+          fi
+
+          body=$(printf '{"applicationId":"%s"}' "$DOCS_APP_ID")
+          status=$(curl -sS --fail-with-body -o /tmp/deploy.json -w '%{http_code}' \
+            -X POST 'https://med.aicorebots.com/api/deploy/dokploy' \
             -H 'accept: application/json' \
-            -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
+            -H "x-api-key: ${DEPLOY_API_KEY}" \
             -H 'Content-Type: application/json' \
-            -d '{"applicationId":"${{ secrets.DOKPLOY_DOCS_APP_ID }}"}'
+            -d "$body") || {
+              echo "::error::La API de deploy respondió ${status}: $(cat /tmp/deploy.json 2>/dev/null | head -c 500)"
+              exit 1
+            }
+
+          echo "Deploy respondió ${status}: $(head -c 500 /tmp/deploy.json)"
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            echo "::error::La API de deploy rechazó la operación (HTTP ${status})"
+            exit 1
+          fi

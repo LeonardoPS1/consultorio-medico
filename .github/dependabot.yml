@@ -15,7 +15,6 @@ updates:
     versioning-strategy: increase
     labels:
       - "dependencies"
-      - "automerge"
     # Agrupar patches y minors en un solo PR
     groups:
       patches:
@@ -31,17 +30,18 @@ updates:
         update-types:
           - "minor"
     ignore:
-      # React 19 y Next 16 requieren migración manual
-      - dependency-name: "react"
-        versions: [">=19.0.0"]
-      - dependency-name: "react-dom"
-        versions: [">=19.0.0"]
+      # Solo se bloquean los saltos de major que requieren migración manual.
+      # Las actualizaciones de parche y de seguridad nunca deben bloquearse.
       - dependency-name: "next"
-        versions: [">=15.0.0"]
+        versions: [">=17.0.0"]
+      - dependency-name: "react"
+        versions: [">=20.0.0"]
+      - dependency-name: "react-dom"
+        versions: [">=20.0.0"]
       - dependency-name: "@types/react"
-        versions: [">=19.0.0"]
+        versions: [">=20.0.0"]
       - dependency-name: "@types/react-dom"
-        versions: [">=19.0.0"]
+        versions: [">=20.0.0"]
     commit-message:
       prefix: "chore(deps)"
 
