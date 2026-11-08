@@ -54,6 +54,14 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
 
   const body = await parseBody(request, z.record(z.string(), z.boolean()));
 
+  // Only known feature keys may be toggled. Without this check an admin (or a
+  // hijacked admin session) could stuff arbitrary keys into tenants.features_enabled.
+  const allowed = new Set(ALL_FEATURES);
+  const unknownKeys = Object.keys(body).filter((key) => !allowed.has(key));
+  if (unknownKeys.length > 0) {
+    fail(`Features desconocidas: ${unknownKeys.join(', ')}`, 400);
+  }
+
   const [tenant] = await db
     .select({ featuresEnabled: tenants.featuresEnabled })
     .from(tenants)
@@ -64,7 +72,7 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
 
   const merged: Record<string, boolean> = { ...current };
   for (const [key, value] of Object.entries(body)) {
-    merged[key] = value;
+    if (allowed.has(key)) merged[key] = value;
   }
 
   await db.update(tenants).set({ featuresEnabled: merged }).where(eq(tenants.id, tenantId));
