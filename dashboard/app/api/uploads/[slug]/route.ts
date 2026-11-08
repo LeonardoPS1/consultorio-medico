@@ -4,72 +4,111 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getPortalSession } from '@/lib/portal-auth';
+import { puedeAccederArchivo } from '@/lib/upload-access';
 import { getUploadDir } from '@/lib/upload-dir';
 
+/** Extensions that may be served, mapped to their real content type. */
+const CONTENT_TYPES: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  svg: 'image/svg+xml',
+  pdf: 'application/pdf',
+};
+
+/** Types that are safe to render inside the app (bitmap images only). */
+const INLINE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+
 /**
- * Sirve archivos subidos (imágenes) desde .data/uploads/
- * Acepta tanto sesión de dashboard (NextAuth) como sesión de portal (portal_session cookie)
- * @param request
- * @param root0
- * @param root0.params
+ * Serves a file from the uploads directory to its owner.
+ *
+ * Access requires an authenticated session (dashboard or patient portal) **and** a
+ * record that references the file inside the caller's tenant. Denials always answer
+ * 404 so a guessed file name never reveals whether the file exists.
+ * @param request Incoming request (supports `?download=1`).
+ * @param root0 Route params.
+ * @param root0.params Promise with the file slug.
+ * @returns The file stream or an error response.
  */
 export async function GET(
   request: NextRequest,
   { params: paramsPromise }: { params: Promise<{ slug: string }> },
 ) {
-  const { slug } = await paramsPromise;
   try {
-    // Intentar autenticación de dashboard primero
-    const dashboardSession = await auth();
+    const { slug } = await paramsPromise;
 
-    // Si no hay sesión de dashboard, intentar sesión de portal
+    const dashboardSession = await auth();
     const portalSession = dashboardSession?.user?.id ? null : await getPortalSession();
 
-    if (!dashboardSession?.user?.id && !portalSession?.pacienteId) {
+    const userId = dashboardSession?.user?.id;
+    const pacienteId = portalSession?.pacienteId;
+
+    if (!userId && !pacienteId) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     const filename = slug;
     const download = request.nextUrl.searchParams.get('download') === '1';
 
-    // Validar que el nombre no intente salir del directorio (path traversal)
-    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+    // Reject anything that could escape the uploads directory.
+    if (
+      !filename ||
+      filename.includes('..') ||
+      filename.includes('/') ||
+      filename.includes('\\') ||
+      filename.includes('\0')
+    ) {
       return NextResponse.json({ error: 'Nombre de archivo inválido' }, { status: 400 });
     }
 
-    const filepath = path.join(getUploadDir(), filename);
+    const ext = filename.split('.').pop()?.toLowerCase() ?? '';
+    const contentType = CONTENT_TYPES[ext];
+    if (!contentType) {
+      return NextResponse.json({ error: 'Archivo no encontrado' }, { status: 404 });
+    }
 
+    const autorizado = await puedeAccederArchivo(filename, {
+      tenantId: dashboardSession?.user?.tenantId ?? null,
+      pacienteId: pacienteId ?? null,
+    });
+
+    if (!autorizado) {
+      return NextResponse.json({ error: 'Archivo no encontrado' }, { status: 404 });
+    }
+
+    const filepath = path.join(getUploadDir(), filename);
     if (!existsSync(filepath)) {
       return NextResponse.json({ error: 'Archivo no encontrado' }, { status: 404 });
     }
 
     const buffer = await readFile(filepath);
+    const safeName = filename.replace(/["\\\r\n]/g, '');
 
-    // Determinar Content-Type por extensión
-    const ext = filename.split('.').pop()?.toLowerCase();
-    const contentTypeMap: Record<string, string> = {
-      jpg: 'image/jpeg',
-      jpeg: 'image/jpeg',
-      png: 'image/png',
-      webp: 'image/webp',
-      gif: 'image/gif',
-      svg: 'image/svg+xml',
-      pdf: 'application/pdf',
-    };
-    const contentType = contentTypeMap[ext || ''] || 'application/octet-stream';
+    // SVG stays inline so tenant logos keep rendering, but is sandboxed via CSP below.
+    const inline =
+      !download && (INLINE_TYPES.has(contentType) || contentType === 'image/svg+xml');
 
-    const headers: Record<string, string> = {
-      'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=31536000, immutable',
+    const headers: Record<string, string> = {      'Content-Type': contentType,
+      'Content-Length': String(buffer.byteLength),
+      // Never let a shared/proxy cache store clinical documents.
+      'Cache-Control': 'private, no-store, max-age=0',
+      'X-Content-Type-Options': 'nosniff',
+      'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename="${safeName}"`,
+      'Referrer-Policy': 'no-referrer',
     };
-    if (download) {
-      headers['Content-Disposition'] = `attachment; filename="${filename}"`;
+
+    // SVG can carry script; sandbox the document so it cannot act same-origin.
+    if (contentType === 'image/svg+xml') {
+      headers['Content-Security-Policy'] =
+        "default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox";
     }
 
     return new NextResponse(buffer, { headers });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Error desconocido';
-    console.error('[Upload/Serve] Error:', msg);
-    return NextResponse.json({ error: `Error al servir archivo: ${msg}` }, { status: 500 });
+    // Log internally, never expose paths or driver details to the client.
+    console.error('[Upload/Serve] Error al servir archivo:', error);
+    return NextResponse.json({ error: 'Error al servir archivo' }, { status: 500 });
   }
 }
