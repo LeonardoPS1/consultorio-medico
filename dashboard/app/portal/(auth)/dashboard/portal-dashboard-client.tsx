@@ -27,6 +27,7 @@ import { PortalButton } from '@/components/portal/portal-button';
 import { PortalCard } from '@/components/portal/portal-card';
 import { PulseLine } from '@/components/portal/pulse-line';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatFechaCalendario } from '@/lib/fecha-calendario';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -92,6 +93,14 @@ function formatCLDate(dateStr: string, pattern: string = "d 'de' MMMM, HH:mm") {
 function formatCLShort(dateStr: string) {
   const d = new Date(dateStr);
   return format(d, 'dd/MM/yyyy', { locale: es });
+}
+
+/**
+ * Formats `date` columns (`YYYY-MM-DD`) without shifting the day.
+ * @param dateStr
+ */
+function formatCLDateOnly(dateStr: string) {
+  return formatFechaCalendario(dateStr, { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function formatCLPhone(phone: string) {
@@ -949,8 +958,8 @@ export default function PortalDashboardClient({
                         </p>
                       )}
                       <div className="flex items-center gap-4 mt-2 text-[11px] text-portal-muted-fg/60">
-                        {r.fechaInicio && <span>Desde: {formatCLShort(r.fechaInicio)}</span>}
-                        {r.fechaFin && <span>Hasta: {formatCLShort(r.fechaFin)}</span>}
+                        {r.fechaInicio && <span>Desde: {formatCLDateOnly(r.fechaInicio)}</span>}
+                        {r.fechaFin && <span>Hasta: {formatCLDateOnly(r.fechaFin)}</span>}
                         {r.medicoNombre && <span>Dr/a. {r.medicoNombre}</span>}
                       </div>
                     </PortalCard>

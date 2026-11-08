@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { PortalBadge } from '@/components/portal/portal-badge';
 import { PortalCard } from '@/components/portal/portal-card';
 import { RecetaPreviewDialog } from '@/components/recetas/receta-preview-dialog';
+import { formatFechaCalendario } from '@/lib/fecha-calendario';
 import type { RecetaLike } from '@/lib/receta-pdf';
 
 interface Receta {
@@ -33,11 +34,9 @@ interface Props {
 
 function formatDate(date: string): string {
   if (!date) return '—';
-  return new Date(date).toLocaleDateString('es-CL', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  // `recetas.fecha_inicio`/`fecha_fin` are `date` columns: format them as
+  // calendar dates so they don't shift a day in Chile.
+  return formatFechaCalendario(date);
 }
 
 /**

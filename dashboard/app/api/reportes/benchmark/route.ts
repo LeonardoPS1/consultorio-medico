@@ -53,14 +53,21 @@ export const GET = apiHandler(async (_request: NextRequest) => {
     return ok({ error: 'Tu plan no incluye benchmark' }, 403);
   }
 
-  const tenantId = session.user?.tenantId ?? '00000000-0000-0000-0000-000000000000';
+  const tenantId = session.user?.tenantId;
+  if (!tenantId) {
+    // Without a resolved tenant every aggregate below would either leak data
+    // from other clinics or silently return zeros. Fail closed instead.
+    return ok({ error: 'Tenant no identificado' }, 403);
+  }
   const desde = new Date();
   desde.setDate(desde.getDate() - VENTANA_DIAS);
 
   // ─── Métricas de tu clínica (scoping vía mis_suc con RLS) ─────
   const [miFila] = await db.execute(sql`
       WITH mis_suc AS (
-      SELECT id FROM ${sucursales} WHERE ${sucursales.activo} = true
+      SELECT id FROM ${sucursales}
+      WHERE ${sucursales.activo} = true
+        AND ${sucursales.tenantId} = ${tenantId}::uuid
     )
     SELECT
       (SELECT COUNT(*)::int FROM ${pacientes}
@@ -88,7 +95,9 @@ export const GET = apiHandler(async (_request: NextRequest) => {
   // ─── NPS (cálculo separado para no multiplicar filas) ────────
   const [npsFila] = await db.execute(sql`
     WITH mis_suc AS (
-      SELECT id FROM ${sucursales} WHERE ${sucursales.activo} = true
+      SELECT id FROM ${sucursales}
+      WHERE ${sucursales.activo} = true
+        AND ${sucursales.tenantId} = ${tenantId}::uuid
     )
     SELECT CASE WHEN COUNT(*) > 0
       THEN ROUND((COUNT(*) FILTER (WHERE puntaje = 5)
