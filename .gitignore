@@ -99,3 +99,33 @@ graphify-out/
 storybook-static/
 
 *storybook.log
+
+# Archivos con cookies / sesiones exportadas (NUNCA commitear)
+cookies.txt
+*cookies*.txt
+*.har
+
+# Artefactos de despliegue con IDs internos
+deployments.json
+
+# Dumps y exports de repositorio (pueden contener secretos)
+repomix-output.xml
+compose-fixed.yml
+*.diff
+*.patch
+
+# Ruido de diagnóstico en la raíz del repo
+checkout.txt
+commit.txt
+d.txt
+deps*.txt
+diffnames.txt
+gitdiff.txt
+gitpatch.txt
+scanout.txt
+status.txt
+scan.js
+finddeps.js
+
+# Local agent scratch
+.atl/
